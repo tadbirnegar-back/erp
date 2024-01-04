@@ -1,0 +1,11 @@
+{
+    "name": "AddressMS",
+    "alias": "AddressMS",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\AddressMS\\app\\Providers\\AddressMSServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/branchms",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\BranchMS\\": "",
+            "Modules\\BranchMS\\App\\": "app/",
+            "Modules\\BranchMS\\Database\\Factories\\": "database/factories/",
+            "Modules\\BranchMS\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\BranchMS\\Tests\\": "tests/"
+        }
+    }
+}

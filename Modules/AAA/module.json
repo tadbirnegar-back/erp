@@ -1,0 +1,11 @@
+{
+    "name": "AAA",
+    "alias": "aaa",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\AAA\\app\\Providers\\AAAServiceProvider"
+    ],
+    "files": []
+}

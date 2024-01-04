@@ -1,0 +1,11 @@
+{
+    "name": "PersonMS",
+    "alias": "personms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\PersonMS\\app\\Providers\\PersonMSServiceProvider"
+    ],
+    "files": []
+}

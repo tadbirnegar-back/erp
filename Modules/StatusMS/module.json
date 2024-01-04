@@ -1,0 +1,11 @@
+{
+    "name": "StatusMS",
+    "alias": "statusms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\StatusMS\\app\\Providers\\StatusMSServiceProvider"
+    ],
+    "files": []
+}

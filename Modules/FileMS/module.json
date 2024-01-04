@@ -1,0 +1,11 @@
+{
+    "name": "FileMS",
+    "alias": "filems",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FileMS\\app\\Providers\\FileMSServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,11 @@
+{
+    "name": "BranchMS",
+    "alias": "branchms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\BranchMS\\app\\Providers\\BranchMSServiceProvider"
+    ],
+    "files": []
+}
