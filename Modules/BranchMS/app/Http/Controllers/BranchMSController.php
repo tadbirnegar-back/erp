@@ -76,7 +76,8 @@ class BranchMSController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $branch = Branch::findOrFail($id);
+//        $branch = Branch::findOrFail($id);
+        $branch = Branch::with('departments')->findOrFail($id);
         if (is_null($branch)) {
             return response()->json([
                 'error' => 'شعبه ای با این مشخصات یافت نشد'

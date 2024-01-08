@@ -1,0 +1,50 @@
+[
+    {
+        "name": "افزودن شعبه جدید",
+        "slug": "/branch/add",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست شعب",
+        "slug": "/branch/list",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده شعبه",
+        "slug": "/branch/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی شعبه",
+        "slug": "/branch/update/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش شعبه",
+        "slug": "/branch/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن دپارتمان",
+        "slug": "/branch/department/add",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده دپارتمان",
+        "slug": "/branch/department/update/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی دپارتمان",
+        "slug": "/branch/department/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    }
+]

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
     |
 */
 Route::prefix('v1')->group(function () {
-    Route::post('/register', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'register'])->middleware('auth:api');
+    Route::post('/register', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'register']);
     Route::post('/logout', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'logout'])->middleware('auth:api');
     Route::post('/login', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'loginGrant'])->name('login.login-grant');
     Route::post('/refresh', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'refreshToken']);

@@ -65,14 +65,16 @@ class User extends Authenticatable
 
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class);
+        return $this->belongsToMany(Role::class, table: 'user_role');
     }
 
-    public function permissions(): \Illuminate\Support\Collection
+    public function permissions()
     {
-        return $this->roles->flatMap(function ($role) {
-            return $role->permissions;
-        });
+        return $this->roles->flatMap->permissions;
+//        return $this->HasManyThrough(Permission::class,Role::class);
+//        return $this->roles->flatMap(function ($role) {
+//            return $role->permissions;
+//        });
     }
 
     public function person(): BelongsTo
@@ -80,7 +82,11 @@ class User extends Authenticatable
         return $this->belongsTo(Person::class);
     }
 
-
+    public function hasPermissionForRoute($route)
+    {
+        // Assuming a relationship with a permissions table
+        return $this->permissions()->where('slug', $route)->pluck('slug');
+    }
 
     public static function GetAllStatuses(): Collection
     {

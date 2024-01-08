@@ -3,6 +3,7 @@
 namespace Modules\AAA\database\seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class PermissionTypeSeeder extends Seeder
 {
@@ -11,6 +12,12 @@ class PermissionTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $permissionTypesData = json_decode(file_get_contents(realpath(__DIR__.'/permissionTypes.json')), true);
+        foreach ($permissionTypesData as $permissionType) {
+            DB::table('permission_types')->insertGetId([
+//                'id'=>$permissionType['id'],
+                'name' => $permissionType['name'],
+            ]);
+        }
     }
 }

@@ -14,6 +14,6 @@ use Modules\AAA\app\Http\Controllers\AAAController;
 |
 */
 
-Route::group([], function () {
-    Route::resource('aaa', AAAController::class)->names('aaa');
-});
+//Route::group([], function () {
+//    Route::resource('aaa', AAAController::class)->names('aaa');
+//});

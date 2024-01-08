@@ -11,6 +11,10 @@ class AAADatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            PermissionTypeSeeder::class,
+            ModuleCategorySeeder::class,
+            ModuleSeeder::class,
+        ]);
     }
 }

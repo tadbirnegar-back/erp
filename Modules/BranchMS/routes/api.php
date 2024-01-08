@@ -15,11 +15,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:api'])->prefix('v1/branch')->name('api.')->group(function () {
-    Route::post('list',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'index']);
+    Route::post('list',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'index'])->middleware('route');
     Route::post('add',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'store']);
     Route::post('{id}',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'show']);
     Route::put('{id}',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'update']);
     Route::prefix('department')->group(function () {
+        Route::post('list',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'index']);
+        Route::post('add',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'store']);
+        Route::post('{id}',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'show']);
         Route::put('{id}',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'update']);
 
     });
