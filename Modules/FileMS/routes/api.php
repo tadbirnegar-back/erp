@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('filems', fn (Request $request) => $request->user())->name('filems');
+Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/file/add', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'store']);
+    Route::delete('/file/delete/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'destroy']);
+    Route::post('/file/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'show']);
 });

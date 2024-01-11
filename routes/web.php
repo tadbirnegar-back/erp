@@ -15,4 +15,4 @@ use Illuminate\Support\Facades\Cookie;
 |
 */
 
-Route::get('/api/v1/test/rt', [\App\Http\Controllers\testController::class,'run'])->middleware('route');
+Route::get('/', [\App\Http\Controllers\testController::class,'run']);

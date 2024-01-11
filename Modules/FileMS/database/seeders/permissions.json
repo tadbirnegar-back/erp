@@ -1,0 +1,20 @@
+[
+    {
+        "name": "افزودن فایل جدید",
+        "slug": "/file/add",
+        "moduleName": "FileMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "حذف",
+        "slug": "/file/delete/{id}",
+        "moduleName": "FileMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده فایل",
+        "slug": "/file/{id}",
+        "moduleName": "FileMS",
+        "permissionTypeName": "operational"
+    }
+]

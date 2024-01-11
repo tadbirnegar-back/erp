@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use Modules\FileMS\app\Models\File;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
@@ -86,6 +87,11 @@ class User extends Authenticatable
     {
         // Assuming a relationship with a permissions table
         return $this->permissions()->where('slug', $route)->pluck('slug');
+    }
+
+    public function files()
+    {
+        return $this->hasMany(File::class,'creator_id');
     }
 
     public static function GetAllStatuses(): Collection
