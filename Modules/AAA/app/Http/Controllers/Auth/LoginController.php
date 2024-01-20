@@ -11,14 +11,35 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
+use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshTokenRepository;
+use Laravel\Passport\Token;
+use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\User;
+use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Natural;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class LoginController extends Controller
 {
 
+    public function userMobileExists(Request $request)
+    {
+        $user = User::where('mobile', '=', $request->mobile)->first();
+        if (!$user) {
+            return response()->json(['کاربری یافت نشد', 404]);
+        }
+//        return response()->json([$user->person->avatar,
+//        ]);
+
+        return response()->json([
+//            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
+            'fullName' => 'حمید هیرو'
+//            'fullName' => $user->person->display_name
+        ]);
+
+    }
 
     public function register(Request $request)
     {
@@ -85,7 +106,7 @@ class LoginController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'expires_in' => $expiration
+            'expires_in' => $expiration,
         ]);
     }
 
@@ -98,7 +119,7 @@ class LoginController extends Controller
      * @return JsonResponse
      * @authenticated
      *
-     *  @response scenario=success {
+     * @response scenario=success {
      *  "id": 4,
      *  "name": "Jessica Jones",
      *  "routes": ["/tasks"]
@@ -135,11 +156,7 @@ class LoginController extends Controller
      * @bodyparams mobile string required the mobile to logging with. Example: 9123456789
      * @bodyparams password string required the password of user to authorize.
      *
-     *  @response scenario=success {
-     *  "id": 4,
-     *  "name": "Jessica Jones",
-     *  "routes": ["/tasks"]
-     * }
+     * @response scenario=success {    "token_type": "Bearer",    "expires_in": 172800,    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9    "permissions": {    "مدیریت شعبه": {    "subPermission": [    {    "name": "افزودن شعبه جدید",    "slug": "/branch/add"    },    {    "name": "لیست شعب",    "slug": "/branch/list"    }    ],    "icon": "/static/media/dashboard-icon.07a6c4029fc7e3ba1641b4600e53a4d2.svg"    }    },    "userInfo": {    "firstName": "حمید",    "lastName": "هیرو",    "avatar": "/uploads/2024/1/10/XcHN0748082_laptop_512x512.png"    }    }
      *
      * @response 401 scenario=failure {error: Unauthorized }
      *
@@ -155,7 +172,18 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
         }
-            $baseUrl = url('/');
+        $token = auth()->user()->token();
+        if ($token) {
+            /* --------------------------- revoke access token -------------------------- */
+            $token->revoke();
+            $token->delete();
+
+            /* -------------------------- revoke refresh token -------------------------- */
+            $refreshTokenRepository = app(RefreshTokenRepository::class);
+            $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($token->id);
+        }
+
+        $baseUrl = url('/');
 
         $response = Http::post("{$baseUrl}/oauth/token", [
             'username' => $request->mobile,
@@ -178,7 +206,27 @@ class LoginController extends Controller
         $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
 
         unset($result['refresh_token']);
-        $result['user'] = $user;
+        unset($result['token_type']);
+        unset($result['expires_in']);
+
+        $permissions=$user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+        foreach ($permissions as $permission) {
+            $sidebarItems[$permission->moduleCategory->name]['subPermission'][]=[
+                'label' => $permission->name,
+                'slug' => $permission->slug,
+            ];
+            $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+        }
+
+//        $person = $user->person;
+//        $natural = $person->personable;
+        $result['permissions'] = $sidebarItems;
+        $result['userInfo'] = [
+            'firstName' => $natural->first_name ?? 'حمید',
+            'lastName' => $natural->last_name ?? 'هیرو',
+//            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
+        ];
         return response()->json($result)->withCookie($cookie);
 
 
@@ -194,7 +242,7 @@ class LoginController extends Controller
      * @bodyparams refresh_token string required the refresh token to renew the access token
      *
      *
-     *  @response scenario=success {
+     * @response scenario=success {
      *  "access_token": 'sadfafgagasegxxxxxxxxxxxxxx'
      * }
      *
@@ -227,6 +275,43 @@ class LoginController extends Controller
         if (!$response->ok()) {
             return response()->json(['error' => $result['error_description']], 500);
         }
-        return response()->json($result);
+        // Retrieve the access token
+        $token = $result['access_token'];
+        $token_parts = explode('.', $token);
+        $token_header = $token_parts[1];
+        $token_header_json = base64_decode($token_header);
+        $token_header_array = json_decode($token_header_json, true);
+        $token_id = $token_header_array['jti'];
+
+        $accessToken = Token::find($token_id);
+        $user = User::where('mobile','=',$accessToken->user_id)->first();
+
+        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+
+        $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
+
+        unset($result['refresh_token']);
+        unset($result['token_type']);
+        unset($result['expires_in']);
+
+        $permissions=$user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+        foreach ($permissions as $permission) {
+            $sidebarItems[$permission->moduleCategory->name]['subPermission'][]=[
+                'label' => $permission->name,
+                'slug' => $permission->slug,
+            ];
+            $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+        }
+
+//        $person = $user->person;
+//        $natural = $person->personable;
+        $result['permissions'] = $sidebarItems;
+        $result['userInfo'] = [
+            'firstName' => $natural->first_name ?? 'حمید',
+            'lastName' => $natural->last_name ?? 'هیرو',
+//            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
+        ];
+        return response()->json($result)->withCookie($cookie);
     }
 }

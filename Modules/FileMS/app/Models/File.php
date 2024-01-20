@@ -8,16 +8,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\FileMS\Database\factories\FileFactory;
 use Modules\StatusMS\app\Models\Status;
+use Znck\Eloquent\Relations\BelongsToThrough;
 
 class File extends Model
 {
     use HasFactory;
+    use \Znck\Eloquent\Traits\BelongsToThrough;
 
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
     public $timestamps = false;
+    protected $casts = [
+        'created_date' => 'datetime:Y-m-d',
+    ];
 
     protected static function newFactory(): FileFactory
     {
@@ -31,12 +36,19 @@ class File extends Model
 
     public function statuses(): BelongsToMany
     {
-        return $this->belongsToMany(Status::class,'file_status','file_id','status_id')->withPivot('created_date');
+        return $this->belongsToMany(Status::class, 'file_status', 'file_id', 'status_id')->withPivot('created_date');
     }
 
     public function currentStatus()
     {
         return $this->hasOne(FileStatusPivot::class)->latestOfMany();
+    }
+
+    public function mimeType(): BelongsToThrough
+    {
+        return $this->belongsToThrough(MimeType::class, Extension::class, foreignKeyLookup: [
+            MimeType::class => 'type_id'
+        ]);
     }
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection

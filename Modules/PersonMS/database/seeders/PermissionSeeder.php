@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\AAA\database\seeders;
+namespace Modules\PersonMS\database\seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;

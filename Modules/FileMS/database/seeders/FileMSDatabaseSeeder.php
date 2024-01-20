@@ -4,8 +4,7 @@ namespace Modules\FileMS\database\seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Modules\AAA\database\seeders\ModuleCategorySeeder;
-use Modules\AAA\database\seeders\ModuleSeeder;
+
 
 class FileMSDatabaseSeeder extends Seeder
 {
@@ -15,8 +14,9 @@ class FileMSDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            ModuleCategorySeeder::class,
+            ModuleCategoriesSeeder::class,
             ModuleSeeder::class,
+            PermissionsSeedSeeder::class,
             ]);
 
         $fileTypes = json_decode(file_get_contents(realpath(__DIR__ . '/fileTypes.json')), true);

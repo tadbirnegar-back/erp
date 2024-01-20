@@ -1,0 +1,37 @@
+[
+    {
+        "name": "لیست اشخاص",
+        "slug": "/person/list",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن شخص حقیقی",
+        "slug": "/person/natural/add",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن شخص حقوقی",
+        "slug": "/person/legal/add",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی شخص حقیقی",
+        "slug": "/person/natural/update/{id}",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },    {
+        "name": "بروزرسانی شخص حقوقی",
+        "slug": "/person/legal/update/{id}",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده شخص",
+        "slug": "/person/{id}",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    }
+]

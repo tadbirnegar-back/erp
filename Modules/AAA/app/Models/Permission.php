@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\AAA\Database\factories\PermissionFactory;
+use Znck\Eloquent\Traits\BelongsToThrough;
 
 class Permission extends Model
 {
@@ -30,5 +31,12 @@ class Permission extends Model
     public function permissionTypes(): HasMany
     {
         return $this->hasMany(PermissionType::class);
+    }
+
+    use BelongsToThrough;
+
+    public function moduleCategory()
+    {
+        return $this->belongsToThrough(ModuleCategory::class, Module::class);
     }
 }

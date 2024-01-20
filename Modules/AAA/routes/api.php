@@ -15,9 +15,11 @@ use Illuminate\Support\Facades\Route;
 */
 Route::prefix('v1')->group(function () {
     Route::post('/register', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'register']);
+    Route::post('/check', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'userMobileExists']);
     Route::post('/logout', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'logout'])->middleware('auth:api');
     Route::post('/login', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'loginGrant'])->name('login.login-grant');
     Route::post('/refresh', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'refreshToken']);
+    Route::post('/permission/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'index'])->middleware('auth:api');
 });
 //Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
 //    Route::get('aaa', fn (Request $request) => $request->user())->name('aaa');

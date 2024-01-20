@@ -1,0 +1,44 @@
+[
+    {
+        "name": "لیست نقش ها",
+        "slug": "/users/roles/list",
+        "moduleName": "AAA",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن نقش",
+        "slug": "/users/roles/add",
+        "moduleName": "AAA",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست کاربران",
+        "slug": "/users/list",
+        "moduleName": "AAA",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن کاربر",
+        "slug": "/users/add",
+        "moduleName": "AAA",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده کاربر",
+        "slug": "/users/{id}",
+        "moduleName": "AAA",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش کاربر",
+        "slug": "/users/update/{id}",
+        "moduleName": "AAA",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف کاربر",
+        "slug": "/users/delete/{id}",
+        "moduleName": "AAA",
+        "permissionTypeName": "operational"
+    }
+]

@@ -3,8 +3,11 @@
 namespace Modules\PersonMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\PersonMS\app\Models\Natural;
+use Modules\PersonMS\app\Models\Person;
 
 class PersonMSController extends Controller
 {
@@ -20,43 +23,44 @@ class PersonMSController extends Controller
         return response()->json($this->data);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
+    public function naturalStore(Request $request): JsonResponse
     {
-        //
+        try {
+            DB::beginTransaction();
 
-        return response()->json($this->data);
-    }
+            $naturalPerson = new Natural();
+            $naturalPerson->first_name = $request->firstName;
+            $naturalPerson->last_name = $request->lastName;
+            $naturalPerson->father_name = $request->fatherName;
+            $naturalPerson->birth_date = $request->birthDate;
+            $naturalPerson->gender_id = $request->gender;
+            $naturalPerson->isMarried = $request->marriage ?? false;
+            $naturalPerson->level_of_spouse_education = $request->levelOfSpouseEducation ?? null;
+            $naturalPerson->spouse_first_name = $request->spouseFirstName ?? null;
+            $naturalPerson->spouse_last_name = $request->spouseLastName ?? null;
+            $naturalPerson->military_service_status_id = $request->military_service_status_id ?? null;
+            $naturalPerson->mobile = $request->mobile;
+//            $naturalPerson->person()->create([
+//                'display_name' => $naturalPerson->first_name . ' ' . $naturalPerson->last_name,
+//                'national_code' => $request->national_code,
+//                'profile_picture_id' => $request->profile_picture_id,
+//                ]);
 
-    /**
-     * Show the specified resource.
-     */
-    public function show($id): JsonResponse
-    {
-        //
+//            $naturalPerson->save();
+            $person = new Person();
+            $person->display_name = $naturalPerson->first_name . ' ' . $naturalPerson->last_name;
+            $person->national_code = $request->national_code;
+            $person->profile_picture_id = $request->profile_picture_id;
 
-        return response()->json($this->data);
-    }
+            $naturalPerson->person()->save($person);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): JsonResponse
-    {
-        //
 
-        return response()->json($this->data);
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id): JsonResponse
-    {
-        //
+            DB::commit();
 
-        return response()->json($this->data);
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
+
     }
 }

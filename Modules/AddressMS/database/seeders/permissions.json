@@ -1,0 +1,26 @@
+[
+    {
+        "name": "آدرس های من",
+        "slug": "/address/list",
+        "moduleName": "AddressMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ثبت آدرس جدید",
+        "slug": "/address/add",
+        "moduleName": "AddressMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ویرایش آدرس",
+        "slug": "/address/update/{id}",
+        "moduleName": "AddressMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف آدرس",
+        "slug": "/address/delete/{id}",
+        "moduleName": "AddressMS",
+        "permissionTypeName": "operational"
+    }
+]

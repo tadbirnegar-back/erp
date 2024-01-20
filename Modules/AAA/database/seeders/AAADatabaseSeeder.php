@@ -15,6 +15,8 @@ class AAADatabaseSeeder extends Seeder
             PermissionTypeSeeder::class,
             ModuleCategorySeeder::class,
             ModuleSeeder::class,
+            PermissionSeeder::class,
+            UserStatusSeeder::class,
         ]);
     }
 }

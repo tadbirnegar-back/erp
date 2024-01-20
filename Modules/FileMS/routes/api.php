@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/file/add', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'store']);
-    Route::delete('/file/delete/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'destroy']);
-    Route::post('/file/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'show']);
+    Route::post('/files/add', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'store']);
+    Route::post('/files/list', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'index']);
+    Route::delete('/files/delete/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'destroy']);
+    Route::post('/files/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'show']);
 });

@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\FileMS\database\seeders;
+namespace Modules\PersonMS\database\seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class ModuleCategoriesSeeder extends Seeder
+class ModuleCategorySeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -18,7 +18,6 @@ class ModuleCategoriesSeeder extends Seeder
             DB::table('module_categories')->insertGetId([
                 'name' => $moduleCategory['name'],
                 'icon' => $moduleCategory['icon'],
-
             ]);
         }
         // $this->call([]);

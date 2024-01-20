@@ -14,13 +14,13 @@ return new class extends Migration
     {
         Schema::create('files', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->fulltext();
             $table->string('slug');
             $table->text('description')->nullable();
             $table->string('size',255);
 
-            $table->unsignedBigInteger('creator_id');
-            $table->unsignedBigInteger('extension_id');
+            $table->unsignedBigInteger('creator_id')->index();
+            $table->unsignedBigInteger('extension_id')->index();
 
             $table->timestamp('create_date')->useCurrent();
 

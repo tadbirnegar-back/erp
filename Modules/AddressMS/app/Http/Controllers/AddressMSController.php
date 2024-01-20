@@ -5,6 +5,7 @@ namespace Modules\AddressMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\AddressMS\app\Models\Address;
 
 class AddressMSController extends Controller
 {
@@ -25,9 +26,20 @@ class AddressMSController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        //
+        $address = new Address();
+        $address->title = $request->title;
+        $address->detail = $request->detail;
+        $address->postal_code = $request->postal_code ?? null;
+        $address->longitude = $request->longitude ?? null;
+        $address->latitude = $request->latitude ?? null;
+        $address->city_id = $request->city_id;
+        $address->status_id = Address::GetAllStatuses()->where('name','=','فعال')->first()->id;
+        $address->creator_id = \Auth::user()->id;
 
-        return response()->json($this->data);
+        $address->save();
+
+
+        return response()->json($address->id);
     }
 
     /**

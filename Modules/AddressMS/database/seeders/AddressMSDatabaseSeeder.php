@@ -33,5 +33,11 @@ class AddressMSDatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        $this->call([
+            ModuleCategorySeeder::class,
+            ModuleSeeder::class,
+            PermissionSeeder::class,
+        ]);
     }
 }

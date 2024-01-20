@@ -45,7 +45,6 @@ class User extends Authenticatable
         'remember_token',
         'created_at',
         'updated_at',
-        'person_id',
 
     ];
 
@@ -69,14 +68,21 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, table: 'user_role');
     }
 
+//    public function permissions()
+//    {
+//        return $this->roles->flatMap->permissions->moduleCategory;
+////        return $this->HasManyThrough(Permission::class,Role::class);
+////        return $this->roles->flatMap(function ($role) {
+////            return $role->permissions;
+////        });
+//    }
+    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
+
     public function permissions()
     {
-        return $this->roles->flatMap->permissions;
-//        return $this->HasManyThrough(Permission::class,Role::class);
-//        return $this->roles->flatMap(function ($role) {
-//            return $role->permissions;
-//        });
+        return $this->hasManyDeep(Permission::class, ['user_role', Role::class, 'role_permission']);
     }
+
 
     public function person(): BelongsTo
     {
@@ -89,7 +95,7 @@ class User extends Authenticatable
         return $this->permissions()->where('slug', $route)->pluck('slug');
     }
 
-    public function files()
+    public function files(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(File::class,'creator_id');
     }

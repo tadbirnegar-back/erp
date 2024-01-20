@@ -17,6 +17,7 @@ class ModuleCategorySeeder extends Seeder
         foreach ($moduleCategoriesData as $moduleCategory) {
             DB::table('module_categories')->insertGetId([
                 'name' => $moduleCategory['name'],
+                'icon' => $moduleCategory['icon'],
             ]);
         }
         // $this->call([]);

@@ -8,22 +8,92 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
+use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\Extension;
 use Modules\FileMS\app\Models\File;
+use Modules\FileMS\app\Models\MimeType;
 use Modules\StatusMS\app\Models\Status;
+use Number;
 
 class FileMSController extends Controller
 {
     public array $data = [];
 
     /**
-     * Display a listing of the resource.
+     * @Authenticated
+     * @bodyparams pageNumber int default is 1
+     * @bodyparams perPage int default is 10
+     * @bodyparams mimeTypeID int default is null
+     * @bodyparams startDate string timestamp of start date to filter default is null
+     * @bodyparams endDate string timestamp of end date to filter default is null
+     * @bodyparams fileName string the specific file name default is null
+     * @response status=200 scenario=success {"data": [{"id": 4,"link": "https://tgbot.zbbo.net/public/uploads/2024/1/17/abOeH_27e50034-f346-4f0c-bfd8-8720c17a166d.jpg","title": "_27e50034-f346-4f0c-bfd8-8720c17a166d.jpg","date": "2024-01-17 11:05:57","size": "171 KB","type": "image"}],"current_page": 1,"last_page": 15,"mimeTypes": [{"label": "document","value": 1},{"label": "audio","value": 2},{"label": "image","value": 3},{"label": "video","value": 4}]}
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        //
+        $page = $request->input('pageNumber', 1); // Default to page 1 if not provided
+        $perPage = $request->input('perPage', 10); // Default to 10 items per page if not provided
 
-        return response()->json($this->data);
+        /**
+         * @var User $user
+         */
+        $user = \Auth::user();
+
+        $filesQuery = $user->files();
+
+        // Filter based on mime type ID
+        if (isset($request->mimeTypeID)) {
+            $mimeTypeID = $request->mimeTypeID;
+            $filesQuery->whereHas('mimeType', function ($query) use ($mimeTypeID) {
+                $query->where('mime_types.id', '=', $mimeTypeID);
+            });
+        }
+
+        // Filter based on date
+        if (isset($request->startDate) && isset($request->endDate)) {
+
+            $startDate = Carbon::createFromTimestamp($request->startDate, 'Asia/Tehran')->format('Y-m-d') . ' 00:00:00';
+            $endDate = Carbon::createFromTimestamp($request->endDate, 'Asia/Tehran')->format('Y-m-d') . ' 23:59:59';
+
+            $filesQuery->whereBetween('create_date', [$startDate, $endDate]);
+        }
+        $searchTerm = $request->input('fileName', ''); // Or however you get your search term
+
+        $filesQuery->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        });
+
+        $files = $filesQuery
+            ->with('mimeType')
+            ->orderBy('create_date', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        //generate response of the query
+        $response = $files->getCollection()->transform(function ($file) {
+            return [
+                'id' => $file->id,
+                'link' => url('/') . '/' . $file->slug,
+                'title' => $file->name,
+                'date' => $file->create_date,
+                'size' => Number::fileSize($file->size),
+                'type' => $file->mimeType->name ?? null, // Include mime type name
+            ];
+        });
+
+        return response()->json([
+            'data' => $response,
+            'current_page' => $files->currentPage(),
+            'last_page' => $files->lastPage(),
+            'mimeTypes' => MimeType::all()->map(function ($item) {
+                return [
+                    'label' => $item->name,
+                    'value' => $item->id,
+                ];
+            }),
+        ]);
+
+
     }
 
     /**
@@ -44,7 +114,7 @@ class FileMSController extends Controller
         $fileName = $uploadedFile->getClientOriginalName();
         $fileSize = $uploadedFile->getSize();
         $fileExtension = $uploadedFile->getClientOriginalExtension();
-        $extension_id = Extension::where('name', '=', $fileExtension)->get(['id'])->first()->id;
+        $extension_id = Extension::where('name', '=', $fileExtension)->get(['id'])->first();
 
         if (!$extension_id) {
             return response()->json(['message' => 'فایل مجاز نمی باشد'], 400);
@@ -65,11 +135,11 @@ class FileMSController extends Controller
             $file->size = $fileSize;
             $file->description = $request->description ?? null;
             $file->creator_id = \Auth::user()->id;
-            $file->extension_id = $extension_id;
+            $file->extension_id = $extension_id->id;
             $file->slug = 'public/' . $folderPath . '/' . $nameToSave;
             $file->save();
 
-            $status = Status::where('name', '=', 'فعال')->where('model','=',File::class)->first();
+            $status = Status::where('name', '=', 'فعال')->where('model', '=', File::class)->first();
 
             $file->statuses()->attach($status->id);
             DB::commit();
@@ -80,7 +150,6 @@ class FileMSController extends Controller
             return response()->json(['message' => 'خطا در بارگزاری فایل'], 500);
 
         }
-
 
 
     }
@@ -94,15 +163,21 @@ class FileMSController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $file = File::findOrFail($id);
+        $file = File::with('mimeType')->findOrFail($id);
         if ($file === null) {
             return response()->json('فایل مورد نظر یافت نشد', 404);
         }
+        $responseArray = [
+            'id'    => $file->id,
+            'link'  => URL::to('/') . '/' . $file->slug,
+            'title' => $file->name,
+            'date'  => $file->create_date,
+            'size'  => Number::fileSize($file->size),
+            'type'  => $file->mimeType->name ?? null,
+        ];
 
-        return response()->json([
-            'id' => $file->id,
-            'slug' => url('/') . $file->slug
-        ]);
+        return response()->json($responseArray);
+
     }
 
     /**
@@ -129,7 +204,7 @@ class FileMSController extends Controller
         if ($file === null) {
             return response()->json('فایل مورد نظر یافت نشد', 404);
         }
-        $status = Status::where('name', '=', 'غیرفعال')->where('model','=',File::class)->first();
+        $status = Status::where('name', '=', 'غیرفعال')->where('model', '=', File::class)->first();
 
         $file->statuses()->attach($status->id);
 

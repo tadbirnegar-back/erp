@@ -1,19 +1,25 @@
 [
     {
         "name": "افزودن فایل جدید",
-        "slug": "/file/add",
+        "slug": "/files/add",
         "moduleName": "FileMS",
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "حذف",
-        "slug": "/file/delete/{id}",
+        "name": "لیست فایل ها",
+        "slug": "/files/list",
+        "moduleName": "FileMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "حذف فایل",
+        "slug": "/files/delete/{id}",
         "moduleName": "FileMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "مشاهده فایل",
-        "slug": "/file/{id}",
+        "slug": "/files/{id}",
         "moduleName": "FileMS",
         "permissionTypeName": "operational"
     }
