@@ -158,7 +158,7 @@ class FileMSController extends Controller
      * @Authenticated
      * @bodyparams id int required the ID of the File
      *
-     * @response status=200 scenario=file uploaded successfully {"file" : "id" , "slug" : "/path/to/file"}
+     * @response status=200 scenario=successful {"id": 147,"link": "https://tgbot.zbbo.net/public/uploads/2024/1/18/l3loH635855-aurora-borealis-wallpaper-desktop-desktop-background.jpg","title": "635855-aurora-borealis-wallpaper-desktop-desktop-background.jpg","description": null,"date": "2024-01-18 09:28:58","size": "162 KB","type": "image"}
      * @response status=404 scenario=file not found {"message" : "فایل مورد نظر یافت نشد"}
      */
     public function show($id): JsonResponse
@@ -168,12 +168,13 @@ class FileMSController extends Controller
             return response()->json('فایل مورد نظر یافت نشد', 404);
         }
         $responseArray = [
-            'id'    => $file->id,
-            'link'  => URL::to('/') . '/' . $file->slug,
+            'id' => $file->id,
+            'link' => URL::to('/') . '/' . $file->slug,
             'title' => $file->name,
-            'date'  => $file->create_date,
-            'size'  => Number::fileSize($file->size),
-            'type'  => $file->mimeType->name ?? null,
+            'description' => $file->description,
+            'date' => $file->create_date,
+            'size' => Number::fileSize($file->size),
+            'type' => $file->mimeType->name ?? null,
         ];
 
         return response()->json($responseArray);
@@ -181,13 +182,23 @@ class FileMSController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * @Authenticated
+     * @bodyparams description string The description for the uploaded file
+     *
+     * @response status=200 scenario=file uploaded successfully {"message" : "ویرایش فایل با موفقیت انجام شد"}
+     * @response status=404 scenario=file not found {"message" : "فایل مورد نظر یافت نشد"}
      */
     public function update(Request $request, $id): JsonResponse
     {
-        //
 
-        return response()->json($this->data);
+        $file = File::with('mimeType')->findOrFail($id);
+        if ($file === null) {
+            return response()->json('فایل مورد نظر یافت نشد', 404);
+        }
+        $file->description = $request->input('description') ?? null;
+
+        $file->save();
+        return response()->json(['message'=>'ویرایش فایل با موفقیت انجام شد']);
     }
 
     /**

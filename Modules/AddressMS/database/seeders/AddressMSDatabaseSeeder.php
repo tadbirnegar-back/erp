@@ -38,6 +38,8 @@ class AddressMSDatabaseSeeder extends Seeder
             ModuleCategorySeeder::class,
             ModuleSeeder::class,
             PermissionSeeder::class,
+            AddressStatusSeeder::class,
+
         ]);
     }
 }

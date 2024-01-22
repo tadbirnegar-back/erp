@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\AddressMS\app\Models\Address;
+use Modules\AddressMS\app\Models\Country;
+use Modules\AddressMS\app\Models\State;
+use Modules\FileMS\app\Models\File;
 
 class AddressMSController extends Controller
 {
@@ -16,9 +19,11 @@ class AddressMSController extends Controller
      */
     public function index(): JsonResponse
     {
-        //
+        $user = \Auth::user();
+        $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+        $response = $user->addresses()->where('status_id', '=', $statusID)->select(['id', 'title'])->get();
 
-        return response()->json($this->data);
+        return response()->json($response);
     }
 
     /**
@@ -28,18 +33,19 @@ class AddressMSController extends Controller
     {
         $address = new Address();
         $address->title = $request->title;
-        $address->detail = $request->detail;
-        $address->postal_code = $request->postal_code ?? null;
+        $address->detail = $request->address;
+        $address->postal_code = $request->postalCode ?? null;
         $address->longitude = $request->longitude ?? null;
         $address->latitude = $request->latitude ?? null;
-        $address->city_id = $request->city_id;
-        $address->status_id = Address::GetAllStatuses()->where('name','=','فعال')->first()->id;
+        $address->map_link = $request->mapLink ?? null;
+        $address->city_id = $request->cityID;
+        $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
         $address->creator_id = \Auth::user()->id;
 
         $address->save();
 
 
-        return response()->json($address->id);
+        return response()->json($address->with('city', 'state', 'country'));
     }
 
     /**
@@ -47,9 +53,25 @@ class AddressMSController extends Controller
      */
     public function show($id): JsonResponse
     {
-        //
-
-        return response()->json($this->data);
+//        $address = Address::with('city', 'state', 'country','status')->findOrFail($id);
+        $address = Address::with([
+            'city' => function ($query) {
+                $query->select('id', 'name');
+            },
+            'state' => function ($query) {
+                $query->select('id', 'name');
+            },
+            'country' => function ($query) {
+                $query->select('id', 'name');
+            },
+            'status' => function ($query) {
+                $query->select('id', 'name');
+            }
+        ])->findOrFail($id);
+        if ($address === null) {
+            return response()->json('فایل مورد نظر یافت نشد', 404);
+        }
+        return response()->json($address);
     }
 
     /**
@@ -57,7 +79,20 @@ class AddressMSController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        //
+        $address = Address::findOrFail($id);
+        if ($address === null) {
+            return response()->json('فایل مورد نظر یافت نشد', 404);
+        }
+        $address->title = $request->title;
+        $address->detail = $request->address;
+        $address->postal_code = $request->postalCode ?? null;
+        $address->longitude = $request->longitude ?? null;
+        $address->latitude = $request->latitude ?? null;
+        $address->map_link = $request->mapLink ?? null;
+        $address->city_id = $request->cityID;
+        $address->status_id = $request->statusID;
+
+        $address->save();
 
         return response()->json($this->data);
     }
@@ -65,10 +100,62 @@ class AddressMSController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id): JsonResponse
+    public function destroy(Request $request, $id): JsonResponse
     {
-        //
+        $address = Address::findOrFail($id);
+        if ($address === null) {
+            return response()->json('فایل مورد نظر یافت نشد', 404);
+        }
 
-        return response()->json($this->data);
+        $address->status_id = $request->statusID;
+
+        return response()->json('با موفقیت حذف شد');
+    }
+
+    public function countries(Request $request)
+    {
+        $countries = Country::all();
+        $response = $countries->map(function ($country) {
+            return [
+                'label' => $country->name,
+                'value' => $country->id
+            ];
+        });
+        return response()->json($response);
+    }
+
+    public function statesOfCountry(Request $request)
+    {
+        $country = Country::with('states')->findOrFail($request->countryID);
+
+        if ($country == null) {
+            return response()->json(['message' => 'موردی یافت نشد', 404]);
+        }
+        $states = $country->states->map(function ($state) {
+            return [
+                'label' => $state->name,
+                'value' => $state->id
+            ];
+        });
+
+        return response()->json($states);
+
+    }
+
+    public function citiesOfState(Request $request)
+    {
+        $state = State::with('cities')->findOrFail($request->stateID);
+
+        if ($state == null) {
+            return response()->json(['message' => 'موردی یافت نشد', 404]);
+        }
+        $cities = $state->cities->map(function ($city) {
+            return [
+                'label' => $city->name,
+                'value' => $city->id
+            ];
+        });
+
+        return response()->json($cities);
     }
 }

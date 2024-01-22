@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('postal_code')->nullable();
             $table->text('longitude')->nullable();
             $table->text('latitude')->nullable();
+            $table->text('map_link')->nullable();
 
 
             $table->unsignedBigInteger('city_id');

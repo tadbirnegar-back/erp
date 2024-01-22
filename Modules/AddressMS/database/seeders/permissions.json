@@ -18,6 +18,12 @@
         "permissionTypeName": "operational"
     },
     {
+        "name": "ویرایش آدرس",
+        "slug": "/address/edit/{id}",
+        "moduleName": "AddressMS",
+        "permissionTypeName": "operational"
+    },
+    {
         "name": "حذف آدرس",
         "slug": "/address/delete/{id}",
         "moduleName": "AddressMS",

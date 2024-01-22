@@ -1,0 +1,11 @@
+{
+    "name": "ProductMS",
+    "alias": "productms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ProductMS\\app\\Providers\\ProductMSServiceProvider"
+    ],
+    "files": []
+}

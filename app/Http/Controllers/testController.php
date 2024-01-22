@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
+use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -15,6 +16,16 @@ class testController extends Controller
 {
     public function run(): void
     {
+        DB::enableQueryLog();
+
+//        $add = Address::with('city.state.country')->find(1);
+//        $add = Address::with('city','state','country')->find(1);
+//        $add = Address::with('city')->find(1);
+        $user = User::find(1);
+        $queries = DB::getQueryLog();
+        $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+        $response = $user->addresses()->where('status_id', '=', $statusID)->select(['id', 'title'])->get();
+        dd($response);
 //        $status = Status::where('name', '=', 'فعال')->where('model','=',File::class)->first();
 //        $user = User::find(1);
 //        $role = Role::find(1);

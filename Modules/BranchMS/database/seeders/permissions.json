@@ -25,7 +25,7 @@
     },
     {
         "name": "ویرایش شعبه",
-        "slug": "/branch/{id}",
+        "slug": "/branch/edit/{id}",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
     },

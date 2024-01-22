@@ -18,5 +18,6 @@ Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(funct
     Route::post('/files/add', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'store']);
     Route::post('/files/list', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'index']);
     Route::delete('/files/delete/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'destroy']);
+    Route::put('/files/update/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'update']);
     Route::post('/files/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'show']);
 });

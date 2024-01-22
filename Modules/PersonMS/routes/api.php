@@ -14,6 +14,17 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('personms', fn (Request $request) => $request->user())->name('personms');
+Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/person/natural/add', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'naturalStore']);
+    Route::post('/person/legal/add', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, '']);
+    Route::post('/person/natural/list', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'index']);
+    Route::post('/person/legal/list', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'index']);
+    Route::delete('/person/natural/delete/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'destroy']);
+    Route::delete('/person/legal/delete/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'destroy']);
+    Route::put('/person/natural/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'update']);
+    Route::put('/person/legal/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'update']);
+    Route::post('/person/natural/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'show']);
+    Route::post('/person/legal/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'show']);
+    Route::post('/person/natural/edit/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'show']);
+    Route::post('/person/legal/edit/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'show']);
 });

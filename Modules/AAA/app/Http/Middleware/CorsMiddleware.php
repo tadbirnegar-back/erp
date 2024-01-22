@@ -29,7 +29,16 @@ class CorsMiddleware
 
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
         $response->header('Access-Control-Allow-Headers', $request->header('Access-Control-Request-Headers'));
-
+        if ($request->isMethod('OPTIONS')) {
+            return response('', 200)
+                ->withHeaders([
+                    'Access-Control-Allow-Origin' => $origin,
+                    'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
+                    'Access-Control-Allow-Headers' => $request->header('Access-Control-Request-Headers'),
+                    'Access-Control-Allow-Credentials' => 'true',
+                    // 'Cache-Control' => 'public, max-age=86400',
+                ]);
+        }
         return $response;
     }
 }

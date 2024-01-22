@@ -57,9 +57,12 @@ class PersonMSController extends Controller
 
 
             DB::commit();
+            return response()->json($this->data);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            return response()->json($this->data);
+
         }
 
     }

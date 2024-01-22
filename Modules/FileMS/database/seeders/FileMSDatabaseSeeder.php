@@ -17,6 +17,8 @@ class FileMSDatabaseSeeder extends Seeder
             ModuleCategoriesSeeder::class,
             ModuleSeeder::class,
             PermissionsSeedSeeder::class,
+            FileStatusSeeder::class,
+
             ]);
 
         $fileTypes = json_decode(file_get_contents(realpath(__DIR__ . '/fileTypes.json')), true);
