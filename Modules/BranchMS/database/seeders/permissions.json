@@ -15,7 +15,7 @@
         "name": "مشاهده شعبه",
         "slug": "/branch/{id}",
         "moduleName": "BranchMS",
-        "permissionTypeName": "sidebar"
+        "permissionTypeName": "operational"
     },
     {
         "name": "بروزرسانی شعبه",
@@ -28,22 +28,69 @@
         "slug": "/branch/edit/{id}",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
-    },
-    {
-        "name": "افزودن دپارتمان",
-        "slug": "/branch/department/add",
+    },    {
+        "name": "ویرایش شعبه",
+        "slug": "/branch/delete/{id}",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
     },
     {
+        "name": "افزودن دپارتمان",
+        "slug": "/branch/departments/add",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
         "name": "مشاهده دپارتمان",
-        "slug": "/branch/department/update/{id}",
+        "slug": "/branch/departments/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش دپارتمان",
+        "slug": "/branch/departments/edit/{id}",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "بروزرسانی دپارتمان",
-        "slug": "/branch/department/{id}",
+        "slug": "/branch/departments/update/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف دپارتمان",
+        "slug": "/branch/departments/delete/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن بخش",
+        "slug": "/branch/departments/sections/add",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ویرایش بخش",
+        "slug": "/branch/departments/sections/edit/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی بخش",
+        "slug": "/branch/departments/sections/update/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف بخش",
+        "slug": "/branch/departments/sections/update/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده بخش",
+        "slug": "/branch/departments/sections/{id}",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
     }

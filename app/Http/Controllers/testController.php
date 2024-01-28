@@ -8,7 +8,9 @@ use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Models\Address;
+use Modules\BranchMS\app\Models\Branch;
 use Modules\FileMS\app\Models\File;
+use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
@@ -16,23 +18,44 @@ class testController extends Controller
 {
     public function run(): void
     {
-        DB::enableQueryLog();
+        $filesWithActiveStatus = Branch::whereHas('status', function ($query) {
+            $query->where('name', 'فعال')
+                ->where('branch_status.create_date', function($subQuery) {
+                    $subQuery->selectRaw('MAX(create_date)')
+                        ->from('branch_status')
+                        ->whereColumn('branch_id', 'branches.id');
+                });
+        })->get();
+        dd($filesWithActiveStatus);
+////        DB::enableQueryLog();
+//
+//        $a = Natural::find(15);
+//      $b=  $a->profilePicture;
+//        $queries = DB::getQueryLog();
+//
+//        dd($b,$queries);
 
 //        $add = Address::with('city.state.country')->find(1);
 //        $add = Address::with('city','state','country')->find(1);
 //        $add = Address::with('city')->find(1);
-        $user = User::find(1);
-        $queries = DB::getQueryLog();
-        $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-        $response = $user->addresses()->where('status_id', '=', $statusID)->select(['id', 'title'])->get();
-        dd($response);
+//        $user = User::find(1);
+////        $statusID = Address::find(1);
+//        $permissions=$user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+//        foreach ($permissions as $permission) {
+//            $sidebarItems[$permission->moduleCategory->name]['subPermission'][]=[
+//                'label' => $permission->name,
+//                'slug' => $permission->slug,
+//            ];
+//            $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+//        }
+//        dd($permissions);
 //        $status = Status::where('name', '=', 'فعال')->where('model','=',File::class)->first();
 //        $user = User::find(1);
 //        $role = Role::find(1);
 //        $permissions = Permission::all('id');
 
 //        foreach ($permissions as $permission) {
-//            $role->permissions()->attach($permissions);
+//            $role->permissions()->sync($permissions);
 //        }
 
 //        $permissions = Permission::with('moduleCategory')->get();

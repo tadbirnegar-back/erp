@@ -218,14 +218,17 @@ class LoginController extends Controller
             $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
 
-//        $person = $user->person;
-//        $natural = $person->personable;
+        $person = $user->person;
+        /**
+         * @var Natural $natural
+         */
+        $natural = $person->personable;
         $result['permissions'] = $sidebarItems;
         $result['userInfo'] = [
-            'firstName' => $natural->first_name ?? 'حمید',
-            'lastName' => $natural->last_name ?? 'هیرو',
-//            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
-            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
+            'firstName' => $natural->first_name ,
+            'lastName' => $natural->last_name ,
+            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+//            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
         ];
         return response()->json($result)->withCookie($cookie);
 
@@ -303,14 +306,17 @@ class LoginController extends Controller
             $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
 
-//        $person = $user->person;
-//        $natural = $person->personable;
+        $person = $user->person;
+        /**
+         * @var Natural $natural
+        */
+        $natural = $person->personable;
         $result['permissions'] = $sidebarItems;
         $result['userInfo'] = [
-            'firstName' => $natural->first_name ?? 'حمید',
-            'lastName' => $natural->last_name ?? 'هیرو',
-//            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
-            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
+            'firstName' => $natural->first_name ,
+            'lastName' => $natural->last_name  ,
+            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+//            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
         ];
         return response()->json($result)->withCookie($cookie);
     }

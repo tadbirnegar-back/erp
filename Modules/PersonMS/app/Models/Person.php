@@ -4,6 +4,8 @@ namespace Modules\PersonMS\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
 use Modules\PersonMS\Database\factories\PersonFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -17,6 +19,7 @@ class Person extends Model
      */
     protected $fillable = [];
     protected $table = 'persons';
+    public $timestamps = false;
     protected static function newFactory(): PersonFactory
     {
         //return PersonFactory::new();
@@ -27,15 +30,17 @@ class Person extends Model
         return $this->morphTo();
     }
 
-    public function statuses()
+    public function status()
     {
-        return $this->belongsToMany(Status::class);
+        return $this->belongsToMany(Status::class)->latest('id')->take(1);
     }
 
     public function avatar()
     {
         return $this->belongsTo(File::class, 'profile_picture_id');
     }
+
+
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {

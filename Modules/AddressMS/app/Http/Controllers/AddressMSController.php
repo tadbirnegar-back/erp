@@ -15,13 +15,13 @@ class AddressMSController extends Controller
     public array $data = [];
 
     /**
-     * Display a listing of the resource.
+     * @Authenticated
      */
     public function index(): JsonResponse
     {
         $user = \Auth::user();
         $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-        $response = $user->addresses()->where('status_id', '=', $statusID)->select(['id', 'title'])->get();
+        $response = $user->addresses()->where('status_id', '=', $statusID)->orderBy('create_date', 'desc')->select(['id', 'title'])->get();
 
         return response()->json($response);
     }
@@ -31,43 +31,30 @@ class AddressMSController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $address = new Address();
-        $address->title = $request->title;
-        $address->detail = $request->address;
-        $address->postal_code = $request->postalCode ?? null;
-        $address->longitude = $request->longitude ?? null;
-        $address->latitude = $request->latitude ?? null;
-        $address->map_link = $request->mapLink ?? null;
-        $address->city_id = $request->cityID;
-        $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-        $address->creator_id = \Auth::user()->id;
-
-        $address->save();
-
+        try {
+            $address = new Address();
+            $address->title = $request->title;
+            $address->detail = $request->address;
+            $address->postal_code = $request->postalCode ?? null;
+            $address->longitude = $request->longitude ?? null;
+            $address->latitude = $request->latitude ?? null;
+            $address->map_link = $request->mapLink ?? null;
+            $address->city_id = $request->cityID;
+            $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+            $address->creator_id = \Auth::user()->id;
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage());
+        }
 
         return response()->json($address->with('city', 'state', 'country'));
     }
-
     /**
      * Show the specified resource.
      */
     public function show($id): JsonResponse
     {
-//        $address = Address::with('city', 'state', 'country','status')->findOrFail($id);
-        $address = Address::with([
-            'city' => function ($query) {
-                $query->select('id', 'name');
-            },
-            'state' => function ($query) {
-                $query->select('id', 'name');
-            },
-            'country' => function ($query) {
-                $query->select('id', 'name');
-            },
-            'status' => function ($query) {
-                $query->select('id', 'name');
-            }
-        ])->findOrFail($id);
+        $address = Address::with('city', 'state', 'country','status')->findOrFail($id);
+
         if ($address === null) {
             return response()->json('فایل مورد نظر یافت نشد', 404);
         }
@@ -90,7 +77,6 @@ class AddressMSController extends Controller
         $address->latitude = $request->latitude ?? null;
         $address->map_link = $request->mapLink ?? null;
         $address->city_id = $request->cityID;
-        $address->status_id = $request->statusID;
 
         $address->save();
 

@@ -15,7 +15,7 @@ class Department extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
-
+    public $timestamps = false;
     protected static function newFactory(): DepartmentFactory
     {
         //return DepartmentFactory::new();

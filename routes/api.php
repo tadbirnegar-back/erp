@@ -28,21 +28,4 @@ use Illuminate\Support\Facades\Route;
  *
  * @subgroup testSubGroup
  */
-Route::post('/healthcheck', function () {
-    return [
-        'status' => 'up',
-        'services' => [
-            'database' => 'up',
-            'redis' => 'up',
-        ],
-    ];
-});
-Route::post('/cookie', function (Request $request) {
-//    return view('welcome');
-//    dd(   $_COOKIE['access_token']);
-//    echo Cookie::get('access_token');
-    return response()->json($request->cookie());
-//    echo $_COOKIE['access_token'];
-
-});
 

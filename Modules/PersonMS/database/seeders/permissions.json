@@ -1,29 +1,34 @@
 [
     {
-        "name": "لیست اشخاص",
-        "slug": "/person/list",
+        "name": "لیست کسب و کار ها",
+        "slug": "/person/legal/list",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "sidebar"
+    },    {
+        "name": "لیست افراد",
+        "slug": "/person/natural/list",
         "moduleName": "PersonMS",
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "افزودن شخص حقیقی",
+        "name": "افزودن فرد",
         "slug": "/person/natural/add",
         "moduleName": "PersonMS",
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "افزودن شخص حقوقی",
+        "name": "افزودن کسب و کار",
         "slug": "/person/legal/add",
         "moduleName": "PersonMS",
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "بروزرسانی شخص حقیقی",
+        "name": "بروزرسانی فرد",
         "slug": "/person/natural/update/{id}",
         "moduleName": "PersonMS",
         "permissionTypeName": "operational"
     },    {
-        "name": "بروزرسانی شخص حقوقی",
+        "name": "بروزرسانی کسب و کار",
         "slug": "/person/legal/update/{id}",
         "moduleName": "PersonMS",
         "permissionTypeName": "operational"

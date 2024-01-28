@@ -15,18 +15,18 @@ return new class extends Migration
             $table->id();
             $table->string('first_name')->index()->fulltext();
             $table->string('last_name')->index()->fulltext();
-            $table->string('mobile')->unique()->index();
+            $table->string('mobile')->unique()->index()->nullable();
             $table->string('phone_number')->nullable()->index();
             $table->string('father_name')->nullable()->index();
-            $table->dateTime('birth_date');
-            $table->string('job');
+            $table->string('birth_date')->nullable();
+            $table->string('job')->nullable();
             $table->boolean('isMarried')->index()->nullable();
             $table->string('level_of_spouse_education')->nullable();
             $table->string('spouse_first_name')->nullable();
             $table->string('spouse_last_name')->nullable();
 
-            $table->unsignedBigInteger('home_address_id')->index();
-            $table->unsignedBigInteger('job_address_id')->index();
+            $table->unsignedBigInteger('home_address_id')->index()->nullable();
+            $table->unsignedBigInteger('job_address_id')->index()->nullable();
             $table->unsignedBigInteger('gender_id')->index();
             $table->unsignedBigInteger('military_service_status_id')->index()->nullable();
 

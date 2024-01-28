@@ -16,3 +16,4 @@ use Illuminate\Support\Facades\Cookie;
 */
 
 Route::get('/', [\App\Http\Controllers\testController::class,'run']);
+//Route::get('/a/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'legalUpdate']);

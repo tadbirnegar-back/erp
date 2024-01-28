@@ -24,10 +24,11 @@ return new class extends Migration
             $table->unsignedBigInteger('city_id');
             $table->unsignedBigInteger('status_id');
             $table->unsignedBigInteger('creator_id');
-            $table->timestamp('created_at');
+            $table->timestamp('create_date');
 
             $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('creator_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 
