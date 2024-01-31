@@ -42,11 +42,13 @@ class AddressMSController extends Controller
             $address->city_id = $request->cityID;
             $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
             $address->creator_id = \Auth::user()->id;
+            $address->save();
+            return response()->json($address->load('city', 'state', 'country'));
+
         } catch (\Exception $e) {
             return response()->json($e->getMessage());
         }
 
-        return response()->json($address->with('city', 'state', 'country'));
     }
     /**
      * Show the specified resource.

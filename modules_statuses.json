@@ -5,5 +5,6 @@
     "BranchMS": true,
     "FileMS": true,
     "AAA": true,
-    "ProductMS": true
+    "ProductMS": true,
+    "CustomerMS": true
 }

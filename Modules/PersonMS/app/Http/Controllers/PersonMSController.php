@@ -8,13 +8,21 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\AddressMS\app\Http\Controllers\AddressMSController;
 use Modules\AddressMS\app\Models\Address;
+use Modules\AddressMS\app\services\AddressService;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
 
 class PersonMSController extends Controller
 {
-    public array $data = [];
+    protected $addressService;
+
+
+
+    public function __construct(AddressService $addressService)
+    {
+        $this->addressService = $addressService;
+    }
 
     /**
      * Display a listing of the resource.
@@ -53,8 +61,17 @@ class PersonMSController extends Controller
         return response()->json($naturals);
     }
 
-    public function naturalStore(Request $request): JsonResponse
+    use AddressTrait;
+    public function naturalStore(Request $request)
     {
+//        return response()->json($request);
+//        $addressController = new AddressMSController();
+//        $a = $request->all();
+//
+//        // Directly return the JsonResponse from the store method of AddressMSController
+//        return response()->json($this->addressService->store($a));
+//    }
+
         try {
             DB::beginTransaction();
             if ($request->isNewAddress) {
@@ -69,6 +86,11 @@ class PersonMSController extends Controller
                 $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
                 $address->creator_id = \Auth::user()->id;
                 $address->save();
+                $address = new AddressMSController;
+
+                $ai = $address->store($request);
+                return response()->json([$ai,
+                ]);
                 $addressID = $address->id;
             } else {
                 $addressID = $request->homeAddressID;
@@ -112,7 +134,8 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json('خطا در وارد کردن فرد جدید', 500);
+            return response()->json($e->getMessage(), 500);
+//            return response()->json('خطا در وارد کردن فرد جدید', 500);
 
         }
 

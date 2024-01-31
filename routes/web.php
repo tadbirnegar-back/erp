@@ -15,5 +15,5 @@ use Illuminate\Support\Facades\Cookie;
 |
 */
 
-Route::get('/', [\App\Http\Controllers\testController::class,'run']);
+Route::get('/', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class,'naturalStore']);
 //Route::get('/a/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'legalUpdate']);

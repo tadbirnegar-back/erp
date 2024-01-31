@@ -1,0 +1,37 @@
+[
+    {
+        "name": "افزودن مشتری جدید",
+        "slug": "/customers/add",
+        "moduleName": "CustomerMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست مشتریان",
+        "slug": "/customers/list",
+        "moduleName": "CustomerMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده مشتری",
+        "slug": "/customers/{id}",
+        "moduleName": "CustomerMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی مشتری",
+        "slug": "/customers/update/{id}",
+        "moduleName": "CustomerMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش مشتری",
+        "slug": "/customers/edit/{id}",
+        "moduleName": "CustomerMS",
+        "permissionTypeName": "operational"
+    },    {
+        "name": "ویرایش مشتری",
+        "slug": "/customers/delete/{id}",
+        "moduleName": "CustomerMS",
+        "permissionTypeName": "operational"
+    }
+]

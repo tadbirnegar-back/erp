@@ -1,0 +1,11 @@
+{
+    "name": "CustomerMS",
+    "alias": "customerms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\CustomerMS\\app\\Providers\\CustomerMSServiceProvider"
+    ],
+    "files": []
+}

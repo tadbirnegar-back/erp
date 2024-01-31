@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/customerms",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\CustomerMS\\": "",
+            "Modules\\CustomerMS\\App\\": "app/",
+            "Modules\\CustomerMS\\Database\\Factories\\": "database/factories/",
+            "Modules\\CustomerMS\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\CustomerMS\\Tests\\": "tests/"
+        }
+    }
+}
