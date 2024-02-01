@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Modules\AddressMS\app\Http\Controllers\AddressMSController;
 use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\services\AddressService;
+use Modules\PersonMS\App\Http\Services\PersonService;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
@@ -16,14 +17,20 @@ use Modules\PersonMS\app\Models\Person;
 class PersonMSController extends Controller
 {
     protected $addressService;
+    protected $personService;
 
 
-
-    public function __construct(AddressService $addressService)
+    public function __construct(PersonService $personService, AddressService $addressService)
     {
         $this->addressService = $addressService;
+        $this->personService = $personService;
     }
 
+
+    public function personExists(Request $request)
+    {
+        $result = $this->personService->personExists($request->nationalCode);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -61,7 +68,6 @@ class PersonMSController extends Controller
         return response()->json($naturals);
     }
 
-    use AddressTrait;
     public function naturalStore(Request $request)
     {
 //        return response()->json($request);
