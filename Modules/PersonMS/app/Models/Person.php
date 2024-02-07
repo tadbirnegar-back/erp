@@ -32,7 +32,11 @@ class Person extends Model
 
     public function status()
     {
-        return $this->belongsToMany(Status::class)->latest('id')->take(1);
+        return $this->belongsToMany(Status::class)->latest('create_date')->take(1);
+    }
+    public function statuses()
+    {
+        return $this->belongsToMany(Status::class)->latest('create_date');
     }
 
     public function avatar()

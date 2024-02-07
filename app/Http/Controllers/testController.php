@@ -10,23 +10,29 @@ use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Models\Address;
 use Modules\BranchMS\app\Models\Branch;
 use Modules\FileMS\app\Models\File;
+use Modules\PersonMS\app\Http\Repositories\PersonRepository;
+use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
 class testController extends Controller
 {
-    public function run(): void
+    public function run(PersonRepository $personRepository): void
     {
-        $filesWithActiveStatus = Branch::whereHas('status', function ($query) {
-            $query->where('name', 'فعال')
-                ->where('branch_status.create_date', function($subQuery) {
-                    $subQuery->selectRaw('MAX(create_date)')
-                        ->from('branch_status')
-                        ->whereColumn('branch_id', 'branches.id');
-                });
-        })->get();
-        dd($filesWithActiveStatus);
+        $result = $personRepository->legalExists('کسب');
+//        $result = Person::with('personable', 'avatar', 'status')->where('national_code', '=', '2840127121')->first();
+//        $result = Person::where('national_code', '=', '2840127121')->first();
+        dd($result);
+//        $filesWithActiveStatus = Branch::whereHas('status', function ($query) {
+//            $query->where('name', 'فعال')
+//                ->where('branch_status.create_date', function($subQuery) {
+//                    $subQuery->selectRaw('MAX(create_date)')
+//                        ->from('branch_status')
+//                        ->whereColumn('branch_id', 'branches.id');
+//                });
+//        })->get();
+//        dd($filesWithActiveStatus);
 ////        DB::enableQueryLog();
 //
 //        $a = Natural::find(15);

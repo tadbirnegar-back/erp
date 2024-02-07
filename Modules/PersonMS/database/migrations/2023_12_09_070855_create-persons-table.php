@@ -21,6 +21,7 @@ return new class extends Migration {
 
             $table->unsignedBigInteger('profile_picture_id')->nullable();
 
+            $table->foreign('profile_picture_id')->references('id')->on('files')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

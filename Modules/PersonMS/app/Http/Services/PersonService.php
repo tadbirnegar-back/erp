@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\PersonMS\App\Http\Services;
+namespace Modules\PersonMS\app\Http\Services;
 
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 
@@ -15,8 +15,22 @@ class PersonService
     }
 
 
-    public function personExists(string $nationalCode)
+    public function naturalExists(string $nationalCode)
     {
-        return $this->personRepository->personExists($nationalCode);
+        return $this->personRepository->naturalExists($nationalCode);
+    }
+
+    public function naturalStore(array $data){
+        return $this->personRepository->naturalStore($data);
+    }
+
+    public function legalExists(string $name)
+    {
+        return $this->personRepository->legalExists($name);
+    }
+
+    public function legalStore(array $data)
+    {
+        return $this->personRepository->legalStore($data);
     }
 }

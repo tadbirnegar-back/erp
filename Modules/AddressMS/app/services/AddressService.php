@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\AddressMS\App\services;
+namespace Modules\AddressMS\app\services;
 
 use Modules\AddressMS\app\Repositories\AddressRepository;
 

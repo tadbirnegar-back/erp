@@ -38,6 +38,8 @@ class Natural extends Model
     {
         return $this->belongsTo(Address::class, 'job_address_id');
     }
-       
+
+
+
 
 }

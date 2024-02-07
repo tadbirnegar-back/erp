@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('creator_id');
-            $table->unsignedBigInteger('customer_type_id')->nullable();
-            $table->unsignedBigInteger('person_id');
-            $table->unsignedBigInteger('status_id');
+            $table->unsignedBigInteger('creator_id')->index();
+            $table->unsignedBigInteger('customer_type_id')->index()->nullable();
+            $table->unsignedBigInteger('person_id')->index();
+            $table->unsignedBigInteger('status_id')->index();
             $table->timestamp('create_date')->useCurrent();
 
 

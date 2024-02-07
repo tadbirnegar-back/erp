@@ -12,4 +12,14 @@ class CustomerService
     {
         $this->customerRepository = $customerRepository;
     }
+
+    public function store(array $data)
+    {
+        return $this->customerRepository->store($data);
+    }
+
+    public function isPersonCustomer(int $personID)
+    {
+        return $this->customerRepository->isPersonCustomer($personID);
+    }
 }

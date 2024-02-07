@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
     Route::post('/person/natural/add', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'naturalStore']);
+    Route::post('/person/natural/search', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'naturalExists']);
     Route::post('/person/legal/add', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'legalStore']);
     Route::post('/person/natural/list', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'naturalIndex']);
     Route::post('/person/legal/list', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'legalIndex']);

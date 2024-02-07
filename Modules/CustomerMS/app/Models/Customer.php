@@ -18,6 +18,7 @@ class Customer extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
+    public $timestamps = false;
 
 //    protected static function newFactory(): CustomerFactory
 //    {
@@ -42,5 +43,9 @@ class Customer extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class,'status_id');
+    }
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
     }
 }

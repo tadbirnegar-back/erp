@@ -9,28 +9,39 @@ use Illuminate\Http\Request;
 use Modules\AddressMS\app\Http\Controllers\AddressMSController;
 use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\services\AddressService;
-use Modules\PersonMS\App\Http\Services\PersonService;
+use Modules\CustomerMS\app\Http\Services\CustomerService;
+use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
 
 class PersonMSController extends Controller
 {
+
+    protected $customerService;
     protected $addressService;
     protected $personService;
 
 
-    public function __construct(PersonService $personService, AddressService $addressService)
+    public function __construct(CustomerService $customerService, PersonService $personService, AddressService $addressService)
     {
+        $this->customerService = $customerService;
         $this->addressService = $addressService;
         $this->personService = $personService;
     }
 
 
-    public function personExists(Request $request)
+    public function naturalExists(Request $request)
     {
-        $result = $this->personService->personExists($request->nationalCode);
+        $result = $this->personService->naturalExists($request->nationalCode);
+
+        if ($result == null) {
+            return response()->json(['message' => 'موردی یافت نشد']);
+        }
+
+        return $result;
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -151,7 +162,7 @@ class PersonMSController extends Controller
     {
         $natural = Natural::with('person.avatar', 'person.status', 'homeAddress.city.state.country')->findOrFail($id);
 
-        if ($natural == null || $natural->person->status[0]->name === 'غیرفعال') {
+        if ($natural == null ) {
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }
         if (\Str::contains(\request()->route()->uri(), 'person/natural/edit/{id}')) {
@@ -168,7 +179,7 @@ class PersonMSController extends Controller
     {
         $naturalPerson = Natural::findOrFail($id);
 
-        if ($naturalPerson == null || $naturalPerson->person->status[0]->name === 'غیرفعال') {
+        if ($naturalPerson == null ) {
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }
 
@@ -301,6 +312,7 @@ class PersonMSController extends Controller
     public function legalShow($id)
     {
         $legal = Legal::with('person.avatar', 'person.status', 'address.city.state.country')->findOrFail($id);
+
         if ($legal == null || $legal->person->status[0]->name === 'غیرفعال') {
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }

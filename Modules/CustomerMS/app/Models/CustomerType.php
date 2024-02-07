@@ -14,7 +14,8 @@ class CustomerType extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
-    
+    public $timestamps = false;
+
     protected static function newFactory(): CustomerTypeFactory
     {
         //return CustomerTypeFactory::new();
