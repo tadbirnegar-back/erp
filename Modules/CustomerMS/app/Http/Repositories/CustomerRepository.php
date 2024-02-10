@@ -3,6 +3,8 @@
 namespace Modules\CustomerMS\app\Http\Repositories;
 
 use Modules\CustomerMS\app\Models\Customer;
+use Modules\PersonMS\app\Models\Legal;
+use Modules\PersonMS\app\Models\Natural;
 
 class CustomerRepository
 {
@@ -11,6 +13,57 @@ class CustomerRepository
     public function __construct(Customer $customer)
     {
         $this->customer = $customer;
+    }
+
+    public function index(array $data)
+    {
+        $page = $data['pageNumber'] ?? 1;
+        $perPage = $data['perPage'] ?? 10;
+
+        $customerQuery = $this->customer::with('person.avatar');
+
+        //search by name
+        if (isset($data['customerName'])) {
+            $value = $data['customerName'];
+            $customerQuery = $customerQuery->whereHas('person', function ($query) use ($value) {
+                $query->whereRaw("MATCH(display_name) AGAINST(? IN BOOLEAN MODE)", [$value]);
+            });
+        }
+
+        //filter by legal or natural
+        if (isset($data['personableType'])) {
+            $value = $data['personableType'] == 'legal' ? Legal::class : Natural::class;
+            $customerQuery = $customerQuery->whereHas('person', function ($query) use ($value) {
+                $query->where('personable_type','=', $value);
+            });
+        }
+
+
+        $paginator = $customerQuery->orderBy('create_date', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+//        $customerQuery->orderBy('create_date', 'desc')
+//            ->paginate($perPage, ['*'], 'page', $page);
+
+        $modifiedCollection = $paginator->getCollection()->each(function ($customer) {
+            /**
+             * @var Customer $customer
+             */
+
+
+            if ($customer->person && $customer->person->avatar) {
+                $prefix = url('/') . '/';
+                if (!str_starts_with($customer->person->avatar->slug, $prefix)) {
+                    $link = $prefix . $customer->person->avatar->slug;
+                    $customer->person->avatar->slug = $link;
+                }
+                $customer->person->personable_type = $customer->person->personable_type == Legal::class ? 'legal' : 'natural';
+
+            }
+        });
+
+        $paginator->setCollection($modifiedCollection);
+
+        return $paginator;
     }
 
     public function store(array $data)

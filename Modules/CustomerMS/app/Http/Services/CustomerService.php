@@ -13,6 +13,11 @@ class CustomerService
         $this->customerRepository = $customerRepository;
     }
 
+    public function index(array $data)
+    {
+        return $this->customerRepository->index($data);
+    }
+
     public function store(array $data)
     {
         return $this->customerRepository->store($data);

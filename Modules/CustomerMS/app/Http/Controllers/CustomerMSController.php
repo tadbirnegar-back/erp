@@ -27,11 +27,12 @@ class CustomerMSController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        //
+        $data = $request->all();
+        $result = $this->customerService->index($data);
 
-        return response()->json($this->data);
+        return response()->json($result);
     }
 
     /**

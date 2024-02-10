@@ -9,6 +9,7 @@ use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Models\Address;
 use Modules\BranchMS\app\Models\Branch;
+use Modules\CustomerMS\app\Http\Repositories\CustomerRepository;
 use Modules\FileMS\app\Models\File;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 use Modules\PersonMS\app\Models\Legal;
@@ -18,9 +19,9 @@ use Modules\StatusMS\app\Models\Status;
 
 class testController extends Controller
 {
-    public function run(PersonRepository $personRepository): void
+    public function run(CustomerRepository $personRepository): void
     {
-        $result = $personRepository->legalExists('کسب');
+        $result = $personRepository->index(['pageNumber'=>1,'perPage'=>10]);
 //        $result = Person::with('personable', 'avatar', 'status')->where('national_code', '=', '2840127121')->first();
 //        $result = Person::where('national_code', '=', '2840127121')->first();
         dd($result);

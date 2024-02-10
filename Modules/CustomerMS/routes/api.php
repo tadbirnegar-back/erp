@@ -19,7 +19,7 @@ Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(funct
     Route::post('/customers/natural/search', [\Modules\CustomerMS\app\Http\Controllers\CustomerMSController::class, 'naturalIsCustomer']);
     Route::post('/customers/legal/search', [\Modules\CustomerMS\app\Http\Controllers\CustomerMSController::class, 'legalIsCustomer']);
 //    Route::post('/customers/legal/add', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'legalStore']);
-//    Route::post('/customers/natural/list', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'naturalIndex']);
+    Route::post('/customers/list', [\Modules\CustomerMS\app\Http\Controllers\CustomerMSController::class, 'index']);
 //    Route::post('/customers/legal/list', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'legalIndex']);
 //    Route::delete('/customers/natural/delete/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'naturalDestroy']);
 //    Route::delete('/customers/legal/delete/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'legalDestroy']);
