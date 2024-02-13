@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\ModuleCategory;
 use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
@@ -21,10 +22,27 @@ class testController extends Controller
 {
     public function run(CustomerRepository $personRepository): void
     {
-        $result = $personRepository->index(['pageNumber'=>1,'perPage'=>10]);
+//        $result = User::find(1);
+
+
+//        $result = Permission::with('moduleCategory')->get();
+//        $result = ModuleCategory::with('permissions')->groupBy('name','id','icon')->get();
+//        $result = ModuleCategory::with(['modules.permissions' => function ($query) {
+//            $query->where('slug', 'not like', '%update%');
+//        }])->whereHas('modules.permissions', function ($query) {
+//            $query->where('slug', 'not like', '%update%');
+//        })->get();
+
+//        $result = ModuleCategory::select('name')
+//            ->withCount('permissions') // For counting related permissions
+//            ->groupBy('name')
+//            ->get();
+//        $result = ModuleCategory::with('permissions')->groupBy('name', 'id')->get();
+
+//        $result = $personRepository->show(7);
 //        $result = Person::with('personable', 'avatar', 'status')->where('national_code', '=', '2840127121')->first();
 //        $result = Person::where('national_code', '=', '2840127121')->first();
-        dd($result);
+//        dd($result->hasPermissionForRoute('/address/{id}'));
 //        $filesWithActiveStatus = Branch::whereHas('status', function ($query) {
 //            $query->where('name', 'فعال')
 //                ->where('branch_status.create_date', function($subQuery) {
@@ -60,10 +78,8 @@ class testController extends Controller
 //        $user = User::find(1);
 //        $role = Role::find(1);
 //        $permissions = Permission::all('id');
-
-//        foreach ($permissions as $permission) {
+//
 //            $role->permissions()->sync($permissions);
-//        }
 
 //        $permissions = Permission::with('moduleCategory')->get();
 //        foreach ($permissions as $permission) {

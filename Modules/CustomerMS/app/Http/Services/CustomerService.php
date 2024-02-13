@@ -27,4 +27,9 @@ class CustomerService
     {
         return $this->customerRepository->isPersonCustomer($personID);
     }
+
+    public function show(int $id)
+    {
+        return $this->customerRepository->show($id);
+    }
 }

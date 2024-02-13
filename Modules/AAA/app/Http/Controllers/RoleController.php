@@ -5,41 +5,21 @@ namespace Modules\AAA\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\AAA\app\Models\ModuleCategory;
-use Modules\AAA\app\Models\Permission;
+use Mockery\Exception;
 use Modules\AAA\app\Models\Role;
-use Modules\AAA\app\Models\User;
 
-class PermissionController extends Controller
+class RoleController extends Controller
 {
     public array $data = [];
-
-    public function index()
-    {
-        $result = ModuleCategory::with(['permissions'])->get();
-
-
-        return response()->json($result);
-
-    }
 
     /**
      * Display a listing of the resource.
      */
-    public function userPermissionList(): JsonResponse
+    public function index(): JsonResponse
     {
-        $user = \Auth::user();
-//        $role = Role::find(1);
+        $role = Role::all();
 
-        $permissions = Permission::with('moduleCategory')->get();
-        foreach ($permissions as $permission) {
-            $a[$permission->moduleCategory->name][] = ['label' => $permission->name, 'value' => $permission->id];
-        }
-        foreach ($user->permissions as $permission) {
-            $b[] = $permission->id;
-        }
-
-        return response()->json([$a, $b]);
+        return response()->json($role);
     }
 
     /**
@@ -47,9 +27,26 @@ class PermissionController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        //
+//        return response()->json($request->permissions);
 
-        return response()->json($this->data);
+        try {
+            $role = new Role();
+            $role->name=$request->name;
+            $role->status_id = Role::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+            $role->section_id = $request->sectionID;
+
+            $role->save();
+
+            $permissions = json_decode($request->permissions);
+
+            $role->permissions()->sync($permissions);
+
+            return response()->json($role);
+        } catch (Exception $exception) {
+            return response()->json($exception->getMessage());
+
+        }
+
     }
 
     /**

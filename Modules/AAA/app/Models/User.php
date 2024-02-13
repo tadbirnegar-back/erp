@@ -94,7 +94,7 @@ class User extends Authenticatable
     public function hasPermissionForRoute($route)
     {
         // Assuming a relationship with a permissions table
-        return $this->permissions()->where('slug', $route)->pluck('slug');
+        return !($this->permissions()->where('slug','=', $route)->first() == null);
     }
 
     public function files(): \Illuminate\Database\Eloquent\Relations\HasMany

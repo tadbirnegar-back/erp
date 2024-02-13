@@ -12,6 +12,30 @@
         "permissionTypeName": "sidebar"
     },
     {
+        "name": "مشاهده نقش",
+        "slug": "/users/roles/{id}",
+        "moduleName": "AAA",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش نقش",
+        "slug": "/users/roles/edit/{id}",
+        "moduleName": "AAA",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی نقش",
+        "slug": "/users/roles/update/{id}",
+        "moduleName": "AAA",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف نقش",
+        "slug": "/users/roles/delete/{id}",
+        "moduleName": "AAA",
+        "permissionTypeName": "operational"
+    },
+    {
         "name": "لیست کاربران",
         "slug": "/users/list",
         "moduleName": "AAA",
@@ -31,6 +55,12 @@
     },
     {
         "name": "ویرایش کاربر",
+        "slug": "/users/edit/{id}",
+        "moduleName": "AAA",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی کاربر",
         "slug": "/users/update/{id}",
         "moduleName": "AAA",
         "permissionTypeName": "operational"

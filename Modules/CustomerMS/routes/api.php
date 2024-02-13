@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,11 +21,12 @@ Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(funct
     Route::post('/customers/list', [\Modules\CustomerMS\app\Http\Controllers\CustomerMSController::class, 'index']);
 //    Route::post('/customers/legal/list', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'legalIndex']);
 //    Route::delete('/customers/natural/delete/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'naturalDestroy']);
-//    Route::delete('/customers/legal/delete/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'legalDestroy']);
-//    Route::put('/customers/natural/update/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'naturalUpdate']);
+    Route::put('/customers/update/{id}', [\Modules\CustomerMS\app\Http\Controllers\CustomerMSController::class, 'update']);
 //    Route::put('/customers/legal/update/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'legalUpdate']);
-//    Route::post('/customers/natural/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'naturalShow']);
+    Route::post('/customers/{id}', [\Modules\CustomerMS\app\Http\Controllers\CustomerMSController::class, 'show']);
 //    Route::post('/customers/legal/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'legalShow']);
-//    Route::post('/customers/natural/edit/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'naturalShow']);
+    Route::post('/customers/edit/{id}', [\Modules\CustomerMS\app\Http\Controllers\CustomerMSController::class, 'show']);
 //    Route::post('/customers/legal/edit/{id}', [\Modules\customersMS\app\Http\Controllers\customersMSController::class, 'legalShow']);
+    Route::delete('/customers/delete/{id}', [\Modules\CustomerMS\app\Http\Controllers\CustomerMSController::class, 'destroy']);
+
 });

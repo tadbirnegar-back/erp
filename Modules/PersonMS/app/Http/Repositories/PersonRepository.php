@@ -161,5 +161,93 @@ class PersonRepository
         }
 
     }
+    public function naturalUpdate(array $data, $id)
+    {
+        $naturalPerson = Natural::findOrFail($id);
+
+        if ($naturalPerson == null ) {
+            return null;
+        }
+
+        try {
+            DB::beginTransaction();
+
+
+            $naturalPerson->first_name = $data['firstName'];
+            $naturalPerson->last_name = $data['lastName'];
+            $naturalPerson->mobile = $data['mobile'];
+            $naturalPerson->phone_number = $data['phoneNumber'] ?? null;
+            $naturalPerson->father_name = $data['fatherName'] ?? null;
+            $naturalPerson->birth_date = $data['dateOfBirth'] ?? null;
+            $naturalPerson->job = $data['job'] ?? null;
+            $naturalPerson->isMarried = $data['isMarried'] ?? null;
+            $naturalPerson->level_of_spouse_education = $data['levelOfSpouseEducation'] ?? null;
+            $naturalPerson->spouse_first_name = $data['spouseFirstName'] ?? null;
+            $naturalPerson->spouse_last_name = $data['spouseLastName'] ?? null;
+            $naturalPerson->home_address_id = $data['homeAddressID'] ?? null;
+            $naturalPerson->job_address_id = $data['jobAddressID'] ?? null;
+            $naturalPerson->gender_id = $data['gender'];
+            $naturalPerson->military_service_status_id = $data['militaryServiceStatusID'] ?? null;
+
+            $naturalPerson->save();
+            $person = $naturalPerson->person;
+            $person->display_name = $naturalPerson->first_name . ' ' . $naturalPerson->last_name;
+            $person->national_code = $data['nationalCode'];
+            $person->profile_picture_id = $data['avatar'] ?? null;
+
+            $naturalPerson->person()->save($person);
+            $statusID = $person->status;
+            if ($statusID[0]->id != $data['statusID']) {
+                $naturalPerson->person->status()->attach($data['statusID']);
+            }
+            DB::commit();
+            return $naturalPerson;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $e;
+
+        }
+    }
+
+    public function legalUpdate(array $data, $id)
+    {
+        $legal = Legal::findOrFail($id);
+
+        if ($legal == null ) {
+            return null;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $legal->name = $data['name'];
+            $legal->registration_number = $data['registrationNumber'] ?? null;
+            $legal->foundation_date = $data['foundationDate'] ?? null;
+            $legal->legal_type_id = $data['legalTypeID'] ?? null;
+            $legal->address_id = $data['businessAddressID'] ?? null;
+            $legal->save();
+
+            $person = $legal->person;
+            $person->display_name = $legal->name;
+            $person->national_code = $data['national_code'] ?? null;
+            $person->profile_picture_id = $data['avatar'] ?? null;
+            $person->phone = $data['phone'] ?? null;
+
+            $legal->person()->save($person);
+            $status = Person::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+            $legal->person->status()->attach($status);
+
+            DB::commit();
+            return $legal;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $e;
+
+        }
+
+    }
+
 
 }

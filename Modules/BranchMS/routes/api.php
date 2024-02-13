@@ -25,21 +25,21 @@ Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(funct
     Route::put('/branch/update/{id}',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'update']);
     Route::delete('/branch/delete/{id}',[\Modules\BranchMS\app\Http\Controllers\BranchMSController::class,'destroy']);
 
-    Route::prefix('branch')->group(function () {
-        Route::post('/departments/list',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'index']);
-        Route::post('/departments/add',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'store']);
-        Route::post('/departments/{id}',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'show']);
-        Route::post('/departments/edit/{id}',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'show']);
-        Route::put('/departments/update/{id}',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'update']);
-        Route::delete('/departments/delete/{id}',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'destroy']);
+    Route::prefix('')->group(function () {
+        Route::post('/branch/departments/list',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'index']);
+        Route::post('/branch/departments/add',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'store']);
+        Route::post('/branch/departments/{id}',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'show']);
+        Route::post('/branch/departments/edit/{id}',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'show']);
+        Route::put('/branch/departments/update/{id}',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'update']);
+        Route::delete('/branch/departments/delete/{id}',[\Modules\BranchMS\app\Http\Controllers\DepartmentController::class,'destroy']);
     });
 
-    Route::prefix('branch/departments')->group(function () {
-        Route::post('/sections/list',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'index']);
-        Route::post('/sections/add',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'store']);
-        Route::post('/sections/{id}',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'show']);
-        Route::post('/sections/edit/{id}',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'show']);
-        Route::put('/sections/update/{id}',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'update']);
-        Route::delete('/sections/delete/{id}',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'destroy']);
+    Route::prefix('')->group(function () {
+        Route::post('/branch/departments/sections/list',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'index']);
+        Route::post('/branch/departments/sections/add',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'store']);
+        Route::post('/branch/departments/sections/{id}',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'show']);
+        Route::post('/branch/departments/sections/edit/{id}',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'show']);
+        Route::put('/branch/departments/sections/update/{id}',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'update']);
+        Route::delete('/branch/departments/sections/delete/{id}',[\Modules\BranchMS\app\Http\Controllers\SectionController::class,'destroy']);
     });
 });

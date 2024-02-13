@@ -12,8 +12,14 @@
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "ویرایش آدرس",
+        "name": "بروزرسانی آدرس",
         "slug": "/address/update/{id}",
+        "moduleName": "AddressMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده آدرس",
+        "slug": "/address/{id}",
         "moduleName": "AddressMS",
         "permissionTypeName": "operational"
     },

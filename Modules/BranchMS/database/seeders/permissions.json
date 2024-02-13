@@ -28,11 +28,18 @@
         "slug": "/branch/edit/{id}",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
-    },    {
-        "name": "ویرایش شعبه",
+    },
+    {
+        "name": "حذف شعبه",
         "slug": "/branch/delete/{id}",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست دپارتمان",
+        "slug": "/branch/departments/list",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "sidebar"
     },
     {
         "name": "افزودن دپارتمان",
@@ -84,13 +91,19 @@
     },
     {
         "name": "حذف بخش",
-        "slug": "/branch/departments/sections/update/{id}",
+        "slug": "/branch/departments/sections/delete/{id}",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "مشاهده بخش",
         "slug": "/branch/departments/sections/{id}",
+        "moduleName": "BranchMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست بخش",
+        "slug": "/branch/departments/sections/list",
         "moduleName": "BranchMS",
         "permissionTypeName": "operational"
     }

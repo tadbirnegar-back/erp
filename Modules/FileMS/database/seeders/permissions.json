@@ -24,6 +24,12 @@
         "permissionTypeName": "operational"
     },
     {
+        "name": "ویرایش فایل",
+        "slug": "/files/edit/{id}",
+        "moduleName": "FileMS",
+        "permissionTypeName": "operational"
+    },
+    {
         "name": "بروزرسانی فایل",
         "slug": "/files/edit/{id}",
         "moduleName": "FileMS",

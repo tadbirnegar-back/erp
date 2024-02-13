@@ -8,7 +8,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\AddressMS\app\services\AddressService;
 use Modules\CustomerMS\app\Http\Services\CustomerService;
+use Modules\CustomerMS\app\Models\Customer;
 use Modules\PersonMS\app\Http\Services\PersonService;
+use Modules\PersonMS\app\Models\Natural;
 
 class CustomerMSController extends Controller
 {
@@ -109,9 +111,20 @@ class CustomerMSController extends Controller
      */
     public function show($id): JsonResponse
     {
-        //
+        $customer = $this->customerService->show($id);
+        if ($customer == null) {
+            return response()->json(['message' => 'مشتری ای با این مشخصات یافت نشد'], 404);
+        }
 
-        return response()->json($this->data);
+        $customer->person->avatar->slug = url('/') . '/' . $customer->person->avatar->slug;
+
+        if (\Str::contains(\request()->route()->uri(), 'customers/edit/{id}')) {
+            $statuses = Customer::GetAllStatuses();
+
+            $customer->statuses = $statuses;
+        }
+
+        return response()->json($customer);
     }
 
     /**
@@ -119,9 +132,44 @@ class CustomerMSController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        //
+        $customer = Customer::with('person')->findOrFail($id);
 
-        return response()->json($this->data);
+        if (is_null($customer)) {
+            return response()->json(['message' => 'مشتری ای با این مشخصات یافت نشد'], 404);
+        }
+        $customer->status_id = $request->statusID;
+        $customer->save();
+
+        $data = $request->all();
+        $data['userID']=\Auth::user()->id;
+        if ($request->isNewAddress) {
+            $address = $this->addressService->store($data);
+
+            if ($address instanceof \Exception) {
+//                return response()->json(['message' => 'خطا در بروزرسانی مشتری'], 500);
+                return response()->json(['message' => $address->getMessage()], 500);
+            }
+        }
+
+        if ($customer->person->personable_type == Natural::class) {
+            if (isset($address)) {
+                $data['homeAddressID'] = $address->id;
+            }
+            $personResult = $this->personService->naturalUpdate($data, $customer->person->personable_id);
+
+        }else{
+            if (isset($address)) {
+                $data['businessAddressID'] = $address->id;
+            }
+
+            $personResult = $this->personService->legalUpdate($data, $customer->person->personable_id);
+
+        }
+        if ($personResult instanceof \Exception || is_null($personResult)) {
+            return response()->json(['message' => 'خطا در بروزرسانی مشتری'], 500);
+        }
+
+        return response()->json($personResult);
     }
 
     /**
@@ -129,9 +177,18 @@ class CustomerMSController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        //
+        $customer = Customer::with('person')->findOrFail($id);
 
-        return response()->json($this->data);
+        if ($customer == null) {
+            return response()->json(['message' => 'مشتری ای با این مشخصات یافت نشد'], 404);
+        }
+
+        $status = Customer::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
+
+        $customer->status_id = $status->id;
+        $customer->save();
+
+        return response()->json(['message' => 'مشتری با موفقیت حذف شد']);
     }
 
     public function naturalIsCustomer(Request $request)

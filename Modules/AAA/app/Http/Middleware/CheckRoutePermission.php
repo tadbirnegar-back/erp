@@ -25,6 +25,6 @@ class CheckRoutePermission
         }
 
         // Handle unauthorized access (e.g., redirect, display error message)
-        return response()->json(['unauthorized route']); // Example redirect
+        return response()->json(['شما به این بخش دسترسی ندارید'],403); // Example redirect
     }
 }

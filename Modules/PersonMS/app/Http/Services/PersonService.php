@@ -33,4 +33,14 @@ class PersonService
     {
         return $this->personRepository->legalStore($data);
     }
+
+    public function naturalUpdate(array $data,int $id)
+    {
+        return $this->personRepository->naturalUpdate($data, $id);
+    }
+
+    public function legalUpdate(array $data,$id)
+    {
+        return $this->personRepository->legalUpdate($data, $id);
+    }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\AAA\Database\factories\RoleFactory;
+use Modules\StatusMS\app\Models\Status;
 
 class Role extends Model
 {
@@ -29,5 +30,10 @@ class Role extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public static function GetAllStatuses()
+    {
+        return Status::all()->where('model', '=', self::class);
     }
 }

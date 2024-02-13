@@ -4,7 +4,8 @@
         "slug": "/person/legal/list",
         "moduleName": "PersonMS",
         "permissionTypeName": "sidebar"
-    },    {
+    },
+    {
         "name": "لیست افراد",
         "slug": "/person/natural/list",
         "moduleName": "PersonMS",
@@ -27,15 +28,46 @@
         "slug": "/person/natural/update/{id}",
         "moduleName": "PersonMS",
         "permissionTypeName": "operational"
-    },    {
+    },
+    {
         "name": "بروزرسانی کسب و کار",
         "slug": "/person/legal/update/{id}",
         "moduleName": "PersonMS",
         "permissionTypeName": "operational"
     },
     {
-        "name": "مشاهده شخص",
-        "slug": "/person/{id}",
+        "name": "ویرایش فرد",
+        "slug": "/person/natural/edit/{id}",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش کسب و کار",
+        "slug": "/person/legal/edit/{id}",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده فرد",
+        "slug": "/person/natural/{id}",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده کسب و کار",
+        "slug": "/person/legal/{id}",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف فرد",
+        "slug": "/person/natural/delete/{id}",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف کسب و کار",
+        "slug": "/person/legal/delete/{id}",
         "moduleName": "PersonMS",
         "permissionTypeName": "operational"
     }

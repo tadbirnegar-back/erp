@@ -99,5 +99,18 @@ class CustomerRepository
         return $customer == true;
     }
 
+    public function show(int $id)
+    {
+        $customer = $this->customer::with('person.avatar', 'person.personable','status')->findOrFail($id);
 
+        if ($customer->person && $customer->person->personable instanceof Natural) {
+            $customer->person->load(['personable.homeAddress.city.state.country']);
+            return $customer;
+        }elseif($customer->person && $customer->person->personable instanceof Legal){
+            $customer->person->load(['personable.address.city.state.country']);
+            return $customer;
+        }else{
+            return null;
+        }
+}
 }

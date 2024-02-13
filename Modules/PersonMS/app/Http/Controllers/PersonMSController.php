@@ -81,80 +81,26 @@ class PersonMSController extends Controller
 
     public function naturalStore(Request $request)
     {
-//        return response()->json($request);
-//        $addressController = new AddressMSController();
-//        $a = $request->all();
-//
-//        // Directly return the JsonResponse from the store method of AddressMSController
-//        return response()->json($this->addressService->store($a));
-//    }
+        $data = $request->all();
+        $data['userID']=\Auth::user()->id;
 
-        try {
-            DB::beginTransaction();
-            if ($request->isNewAddress) {
-                $address = new Address();
-                $address->title = $request->title;
-                $address->detail = $request->address;
-                $address->postal_code = $request->postalCode ?? null;
-                $address->longitude = $request->longitude ?? null;
-                $address->latitude = $request->latitude ?? null;
-                $address->map_link = $request->mapLink ?? null;
-                $address->city_id = $request->cityID;
-                $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-                $address->creator_id = \Auth::user()->id;
-                $address->save();
-                $address = new AddressMSController;
+        if ($request->isNewAddress) {
+            $address = $this->addressService->store($data);
 
-                $ai = $address->store($request);
-                return response()->json([$ai,
-                ]);
-                $addressID = $address->id;
-            } else {
-                $addressID = $request->homeAddressID;
+            if ($address instanceof \Exception) {
+                return response()->json(['message' => 'خطا در بروزرسانی مشتری'], 500);
             }
 
-            $naturalPerson = new Natural();
-            $naturalPerson->first_name = $request->firstName;
-            $naturalPerson->last_name = $request->lastName;
-            $naturalPerson->mobile = $request->mobile;
-            $naturalPerson->phone_number = $request->phoneNumber ?? null;
-            $naturalPerson->father_name = $request->fatherName ?? null;
-            $naturalPerson->birth_date = $request->dateOfBirth ?? null;
-            $naturalPerson->job = $request->job ?? null;
-            $naturalPerson->isMarried = $request->isMarried ?? null;
-            $naturalPerson->level_of_spouse_education = $request->levelOfSpouseEducation ?? null;
-            $naturalPerson->spouse_first_name = $request->spouseFirstName ?? null;
-            $naturalPerson->spouse_last_name = $request->spouseLastName ?? null;
-            $naturalPerson->home_address_id = $addressID ?? null;
-            $naturalPerson->job_address_id = $request->jobAddressID ?? null;
-            $naturalPerson->gender_id = $request->gender;
-            $naturalPerson->military_service_status_id = $request->militaryServiceStatusID ?? null;
-//            $naturalPersonPerson->person()->create([
-//                'display_name' => $naturalPersonPerson->first_name . ' ' . $naturalPersonPerson->last_name,
-//                'national_code' => $request->national_code,
-//                'profile_picture_id' => $request->profile_picture_id,
-//                ]);
-
-            $naturalPerson->save();
-            $person = new Person();
-            $person->display_name = $naturalPerson->first_name . ' ' . $naturalPerson->last_name;
-            $person->national_code = $request->nationalCode;
-            $person->profile_picture_id = $request->avatar ?? null;
-
-            $naturalPerson->person()->save($person);
-            $status = Person::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-            $naturalPerson->person->status()->attach($status);
-
-
-            DB::commit();
-            return response()->json($naturalPerson);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json($e->getMessage(), 500);
-//            return response()->json('خطا در وارد کردن فرد جدید', 500);
-
         }
+        if ($address) {
+            $data['homeAddressID'] = $address->id;
+        }
+        $personResult = $this->personService->naturalStore($data);
+
+        if ($personResult instanceof \Exception) {
+                return response()->json(['message' => 'خطا در بروزرسانی مشتری'], 500);
+        }
+        return response()->json($personResult);
 
     }
 
