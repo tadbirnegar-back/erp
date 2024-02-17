@@ -21,8 +21,11 @@ Route::prefix('v1')->group(function () {
     Route::post('/refresh', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'refreshToken']);
     Route::post('/user/permissions/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'userPermissionList'])->middleware('auth:api');
     Route::post('/users/roles/add', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'store'])->middleware(['auth:api','route']);
+    Route::post('/users/roles/list', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'index'])->middleware(['auth:api','route']);
+    Route::post('/users/roles/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'show'])->middleware(['auth:api','route']);
+    Route::delete('/users/roles/delete/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'destroy'])->middleware(['auth:api','route']);
+    Route::put('/users/roles/update/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'update'])->middleware(['auth:api','route']);
+    Route::post('/users/roles/update/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'show'])->middleware(['auth:api','route'])->name('role.edit');
     Route::post('/permissions/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'index'])->middleware('auth:api');
 });
-//Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-//    Route::get('aaa', fn (Request $request) => $request->user())->name('aaa');
-//});
+

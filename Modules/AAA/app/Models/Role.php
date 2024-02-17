@@ -4,8 +4,10 @@ namespace Modules\AAA\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Modules\AAA\Database\factories\RoleFactory;
+//use Modules\AAA\Database\factories\RoleFactory;
+use Modules\BranchMS\app\Models\Section;
 use Modules\StatusMS\app\Models\Status;
 
 class Role extends Model
@@ -35,5 +37,20 @@ class Role extends Model
     public static function GetAllStatuses()
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class,'status_id');
+    }
+
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(Section::class,'section_id');
+    }
+
+    public function permissionsWithModuleCategory()
+    {
+        return $this->permissions()->with(['moduleCategory']);
     }
 }

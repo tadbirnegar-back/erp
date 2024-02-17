@@ -33,14 +33,13 @@ class LoginController extends Controller
 //        ]);
 
         return response()->json([
-//            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
-            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
-            'fullName' => 'حمید هیرو'
-//            'fullName' => $user->person->display_name
+            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+//            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
+//            'fullName' => 'حمید هیرو'
+            'fullName' => $user->person->display_name
         ]);
 
     }
-
     public function register(Request $request)
     {
 //        $validator = Validator::make($request->all(), [

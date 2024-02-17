@@ -22,6 +22,13 @@ class testController extends Controller
 {
     public function run(CustomerRepository $personRepository): void
     {
+//        $role = Role::find(2);
+
+        $role = Role::with(['permissions.moduleCategory','status','section.department.branch'])->find(1);
+
+        $permissionsGroupedByCategory = $role->permissions
+            ->groupBy('moduleCategory.name');
+        dd($role->status,$role->section,$permissionsGroupedByCategory);
 //        $result = User::find(1);
 
 

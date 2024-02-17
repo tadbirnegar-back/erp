@@ -17,7 +17,7 @@ class RoleController extends Controller
      */
     public function index(): JsonResponse
     {
-        $role = Role::all();
+        $role = Role::with('status', 'section.department.branch')->get();
 
         return response()->json($role);
     }
@@ -31,7 +31,7 @@ class RoleController extends Controller
 
         try {
             $role = new Role();
-            $role->name=$request->name;
+            $role->name = $request->name;
             $role->status_id = Role::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
             $role->section_id = $request->sectionID;
 
@@ -54,9 +54,26 @@ class RoleController extends Controller
      */
     public function show($id): JsonResponse
     {
-        //
+        $role = Role::with(['permissions.moduleCategory', 'status', 'section.department.branch'])->findOrFail($id);
 
-        return response()->json($this->data);
+
+//        $role = Role::with('permissionsWithModuleCategory','status','section.department.branch')->findOrFail($id);
+
+        if (is_null($role)) {
+            return response()->json('نقشی با این مشخصات یافت نشد', 404);
+
+        }
+        $permissionsGroupedByCategory = $role->permissions
+            ->groupBy('moduleCategory.name');
+
+        if (\request()->route()->named('role.edit')) {
+            $statuses = Role::GetAllStatuses();
+
+            return response()->json(['role' => ['permissions' => $permissionsGroupedByCategory, 'status' => $role->status, 'detail' => $role], 'statuses' => $statuses]);
+
+        }
+
+        return response()->json(['permissions' => $permissionsGroupedByCategory, 'status' => $role->status, 'detail' => $role]);
     }
 
     /**
@@ -64,9 +81,30 @@ class RoleController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        //
+        $role = Role::with('permissions')->findOrFail($id);
 
-        return response()->json($this->data);
+        if (is_null($role)) {
+            return response()->json('نقشی با این مشخصات یافت نشد', 404);
+
+        }
+        try {
+            $role->name = $request->name;
+            $role->status_id = $request->statusID;
+            $role->section_id = $request->sectionID;
+
+            $role->save();
+
+            $permissions = json_decode($request->permissions);
+
+            $role->permissions()->sync($permissions);
+
+            return response()->json('با موفقیت بروزرسانی شد');
+        } catch (Exception $exception) {
+//            return response()->json($exception->getMessage());
+            return response()->json('خطا در بروز رسانی نقش', 500);
+
+        }
+
     }
 
     /**
@@ -74,8 +112,24 @@ class RoleController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        //
+        $role = Role::findOrFail($id);
 
-        return response()->json($this->data);
+        if (is_null($role)) {
+            return response()->json('نقشی با این مشخصات یافت نشد', 404);
+
+        }
+        try {
+            $role->status_id = Role::GetAllStatuses()->where('name', '=', 'غیرفعال')->first()->id;
+
+            $role->save();
+
+
+            return response()->json('با موفقیت بروزرسانی شد');
+        } catch (Exception $exception) {
+//            return response()->json($exception->getMessage());
+            return response()->json('خطا در بروز رسانی نقش', 500);
+
+        }
+
     }
 }
