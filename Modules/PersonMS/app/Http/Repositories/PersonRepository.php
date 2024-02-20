@@ -20,7 +20,7 @@ class PersonRepository
         $this->legal = $legal;
     }
 
-    public function naturalExists(string $nationalCode)
+    public function naturalExists(string $nationalCode): Person|null
     {
         $person = $this->person::with('personable.homeAddress.city.state.country', 'avatar', 'status')->where('national_code', '=', $nationalCode)->first();
 //        if ($person && $person->personable instanceof Natural) {

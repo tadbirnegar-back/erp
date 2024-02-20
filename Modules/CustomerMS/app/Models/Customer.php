@@ -5,6 +5,7 @@ namespace Modules\CustomerMS\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\Database\factories\CustomerFactory;
 use Modules\PersonMS\app\Models\Person;
@@ -47,5 +48,10 @@ class Customer extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function customerable(): MorphTo
+    {
+        return $this->morphTo();
     }
 }

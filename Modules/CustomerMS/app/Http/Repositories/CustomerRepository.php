@@ -3,15 +3,18 @@
 namespace Modules\CustomerMS\app\Http\Repositories;
 
 use Modules\CustomerMS\app\Models\Customer;
+use Modules\CustomerMS\app\Models\ShoppingCustomer;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 
 class CustomerRepository
 {
+    protected ShoppingCustomer $shoppingCustomer;
     protected Customer $customer;
 
-    public function __construct(Customer $customer)
+    public function __construct(ShoppingCustomer $shoppingCustomer, Customer $customer)
     {
+        $this->shoppingCustomer = $shoppingCustomer;
         $this->customer = $customer;
     }
 
@@ -34,7 +37,7 @@ class CustomerRepository
         if (isset($data['personableType'])) {
             $value = $data['personableType'] == 'legal' ? Legal::class : Natural::class;
             $customerQuery = $customerQuery->whereHas('person', function ($query) use ($value) {
-                $query->where('personable_type','=', $value);
+                $query->where('personable_type', '=', $value);
             });
         }
 
@@ -71,6 +74,12 @@ class CustomerRepository
         try {
             \DB::beginTransaction();
             /**
+             * @var ShoppingCustomer $shoppingCustomer
+             */
+
+            $shoppingCustomer = new $this->shoppingCustomer();
+            $shoppingCustomer->save();
+            /**
              * @var Customer $customer
              */
             $customer = new $this->customer();
@@ -81,7 +90,8 @@ class CustomerRepository
             $status = $this->customer::GetAllStatuses()->where('name', '=', 'فعال')->first();
 
             $customer->status_id = $status->id;
-            $customer->save();
+//            $customer->save();
+            $shoppingCustomer->customer()->save($customer);
             \DB::commit();
 
             return $customer;
@@ -101,16 +111,16 @@ class CustomerRepository
 
     public function show(int $id)
     {
-        $customer = $this->customer::with('person.avatar', 'person.personable','status')->findOrFail($id);
+        $customer = $this->customer::with('person.avatar', 'person.personable', 'status','customerable')->findOrFail($id);
 
         if ($customer->person && $customer->person->personable instanceof Natural) {
             $customer->person->load(['personable.homeAddress.city.state.country']);
             return $customer;
-        }elseif($customer->person && $customer->person->personable instanceof Legal){
+        } elseif ($customer->person && $customer->person->personable instanceof Legal) {
             $customer->person->load(['personable.address.city.state.country']);
             return $customer;
-        }else{
+        } else {
             return null;
         }
-}
+    }
 }

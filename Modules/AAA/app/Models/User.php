@@ -85,6 +85,11 @@ class User extends Authenticatable
         return $this->hasManyDeep(Permission::class, ['user_role', Role::class, 'role_permission']);
     }
 
+    public function statuses()
+    {
+        return $this->belongsToMany(Status::class,'user_status');
+    }
+
 
     public function person(): BelongsTo
     {

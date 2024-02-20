@@ -17,11 +17,26 @@ class PersonService
 
     public function naturalExists(string $nationalCode)
     {
-        return $this->personRepository->naturalExists($nationalCode);
+        $result = $this->personRepository->naturalExists($nationalCode);
+
+        if (!is_null($result)) {
+            $result->avatar->slug = url('/') . '/' . $result->avatar->slug;
+            $result->personable_type = 'natural';
+
+        }
+
+        return $result;
     }
 
-    public function naturalStore(array $data){
-        return $this->personRepository->naturalStore($data);
+    public function naturalStore(array $data)
+    {
+        $result = $this->personRepository->naturalStore($data);
+//        if (!$result instanceof \Exception) {
+//            $result->person->avatar->slug = url('/') . '/' . $result->person->avatar->slug;
+//            $result->person->personable_type = 'natural';
+//
+//        }
+        return $result;
     }
 
     public function legalExists(string $name)
@@ -34,12 +49,12 @@ class PersonService
         return $this->personRepository->legalStore($data);
     }
 
-    public function naturalUpdate(array $data,int $id)
+    public function naturalUpdate(array $data, int $id)
     {
         return $this->personRepository->naturalUpdate($data, $id);
     }
 
-    public function legalUpdate(array $data,$id)
+    public function legalUpdate(array $data, $id)
     {
         return $this->personRepository->legalUpdate($data, $id);
     }

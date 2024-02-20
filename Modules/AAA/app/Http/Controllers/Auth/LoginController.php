@@ -14,14 +14,27 @@ use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\Token;
+use Modules\AAA\app\Http\Services\UserService;
 use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\User;
+use Modules\AddressMS\app\services\AddressService;
+use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Natural;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class LoginController extends Controller
 {
+
+    protected PersonService $personService;
+    protected UserService $userService;
+    protected AddressService $addressService;
+    public function __construct(PersonService $personService, UserService $userService,AddressService $addressService)
+    {
+        $this->personService = $personService;
+        $this->userService = $userService;
+        $this->addressService = $addressService;
+    }
 
     public function userMobileExists(Request $request)
     {
@@ -34,39 +47,78 @@ class LoginController extends Controller
 
         return response()->json([
             'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
-//            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
-//            'fullName' => 'حمید هیرو'
             'fullName' => $user->person->display_name
         ]);
 
     }
+
+    public function isPersonUser(Request $request)
+    {
+        $result = $this->personService->naturalExists($request->nationalCode);
+
+        if ($result === null) {
+            $message = 'notFound';
+            $data = null;
+        } else {
+            $user = $this->userService->isPersonUser($result->id);
+
+            if ($user) {
+                $message = 'user';
+                $data = $user;
+            } else {
+                $message = 'found';
+                $data = $result;
+            }
+        }
+
+        return response()->json(['data' => $data, 'message' => $message]);
+    }
+
     public function register(Request $request)
     {
-//        $validator = Validator::make($request->all(), [
-//            'name' => 'required',
-//            'email' => 'required|email|unique:users',
-//            'password' => 'required'
-//        ]);
-//
-//        if ($validator->fails()) {
-//            return response()->json($validator->errors(), 400);
-//        }
-//        try {
-//            DB::beginTransaction();
-//
-//            $natural = new Natural();
-//
-//
-//            DB::commit();
-//        } catch (\Exception $e) {
-//            DB::rollBack();
-//            // Handle the exception
-//        }
-        $user = new User();
-        $user->mobile = $request->mobile;
-//        $user->email = $request->email;
-        $user->password = bcrypt($request->password);
-        $user->save();
+
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'mobile' => [
+                'unique:users,mobile',
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $data['roles'] = json_decode($data['roles']);
+
+
+        if ($request->isNewPerson) {
+
+            if ($request->isNewAddress) {
+                $data['userID']=Auth::user()->id;
+
+                $address = $this->addressService->store($data);
+
+                if ($address instanceof \Exception) {
+                    return response()->json(['message' => 'خطا در ایجاد کاربر جدید'], 500);
+                }
+                $data['homeAddressID'] = $address->id;
+            }
+            $person = $this->personService->naturalStore($data);
+
+            if ($person instanceof \Exception) {
+
+                return response()->json(['message' => 'خطا در ثبت کاربر جدید'],500);
+            }
+
+            $data['personID'] = $person->id;
+
+        }
+        $user = $this->userService->store($data);
+
+        if ($user instanceof \Exception) {
+            return response()->json(['message' => 'خطا در ثبت کاربر جدید', 500]);
+        }
+
         return response()->json(['data' => $user]);
     }
 
@@ -118,11 +170,7 @@ class LoginController extends Controller
      * @return JsonResponse
      * @authenticated
      *
-     * @response scenario=success {
-     *  "id": 4,
-     *  "name": "Jessica Jones",
-     *  "routes": ["/tasks"]
-     * }
+     * @response scenario=success { "id": 4,"name": "Jessica Jones", "routes": ["/tasks"] }
      *
      * @response 401 scenario=failure {error: Unauthorized }
      *
@@ -208,9 +256,9 @@ class LoginController extends Controller
         unset($result['token_type']);
         unset($result['expires_in']);
 
-        $permissions=$user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+        $permissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
         foreach ($permissions as $permission) {
-            $sidebarItems[$permission->moduleCategory->name]['subPermission'][]=[
+            $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
                 'label' => $permission->name,
                 'slug' => $permission->slug,
             ];
@@ -224,8 +272,8 @@ class LoginController extends Controller
         $natural = $person->personable;
         $result['permissions'] = $sidebarItems;
         $result['userInfo'] = [
-            'firstName' => $natural->first_name ,
-            'lastName' => $natural->last_name ,
+            'firstName' => $natural->first_name,
+            'lastName' => $natural->last_name,
             'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
         ];
@@ -286,7 +334,7 @@ class LoginController extends Controller
         $token_id = $token_header_array['jti'];
 
         $accessToken = Token::find($token_id);
-        $user = User::where('mobile','=',$accessToken->user_id)->first();
+        $user = User::where('mobile', '=', $accessToken->user_id)->first();
 
         $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
 
@@ -296,9 +344,9 @@ class LoginController extends Controller
         unset($result['token_type']);
         unset($result['expires_in']);
 
-        $permissions=$user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+        $permissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
         foreach ($permissions as $permission) {
-            $sidebarItems[$permission->moduleCategory->name]['subPermission'][]=[
+            $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
                 'label' => $permission->name,
                 'slug' => $permission->slug,
             ];
@@ -308,12 +356,12 @@ class LoginController extends Controller
         $person = $user->person;
         /**
          * @var Natural $natural
-        */
+         */
         $natural = $person->personable;
         $result['permissions'] = $sidebarItems;
         $result['userInfo'] = [
-            'firstName' => $natural->first_name ,
-            'lastName' => $natural->last_name  ,
+            'firstName' => $natural->first_name,
+            'lastName' => $natural->last_name,
             'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
         ];

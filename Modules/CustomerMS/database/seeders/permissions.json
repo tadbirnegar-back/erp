@@ -28,9 +28,22 @@
         "slug": "/customers/edit/{id}",
         "moduleName": "CustomerMS",
         "permissionTypeName": "operational"
-    },    {
-        "name": "ویرایش مشتری",
+    },
+    {
+        "name": "حذف مشتری",
         "slug": "/customers/delete/{id}",
+        "moduleName": "CustomerMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "جست و جو مشتری حقیقی",
+        "slug": "/customers/natural/search",
+        "moduleName": "CustomerMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "جست و جو مشتری حقوقی",
+        "slug": "/customers/legal/search",
         "moduleName": "CustomerMS",
         "permissionTypeName": "operational"
     }

@@ -92,7 +92,7 @@ class PersonMSController extends Controller
             }
 
         }
-        if ($address) {
+        if (isset($address)) {
             $data['homeAddressID'] = $address->id;
         }
         $personResult = $this->personService->naturalStore($data);

@@ -24,11 +24,11 @@ class testController extends Controller
     {
 //        $role = Role::find(2);
 
-        $role = Role::with(['permissions.moduleCategory','status','section.department.branch'])->find(1);
-
-        $permissionsGroupedByCategory = $role->permissions
-            ->groupBy('moduleCategory.name');
-        dd($role->status,$role->section,$permissionsGroupedByCategory);
+//        $role = Role::with(['permissions.moduleCategory','status','section.department.branch'])->find(1);
+//
+//        $permissionsGroupedByCategory = $role->permissions
+//            ->groupBy('moduleCategory.name');
+//        dd($role->status,$role->section,$permissionsGroupedByCategory);
 //        $result = User::find(1);
 
 
@@ -87,7 +87,7 @@ class testController extends Controller
 //        $permissions = Permission::all('id');
 //
 //            $role->permissions()->sync($permissions);
-
+//
 //        $permissions = Permission::with('moduleCategory')->get();
 //        foreach ($permissions as $permission) {
 //            $a[$permission->moduleCategory->name][] = ['label' => $permission->name, 'value' => $permission->id];

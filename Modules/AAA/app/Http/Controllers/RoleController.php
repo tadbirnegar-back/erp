@@ -63,6 +63,7 @@ class RoleController extends Controller
             return response()->json('نقشی با این مشخصات یافت نشد', 404);
 
         }
+
         $permissionsGroupedByCategory = $role->permissions
             ->groupBy('moduleCategory.name');
 
