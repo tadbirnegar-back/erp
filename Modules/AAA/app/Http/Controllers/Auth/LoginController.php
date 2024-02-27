@@ -29,7 +29,8 @@ class LoginController extends Controller
     protected PersonService $personService;
     protected UserService $userService;
     protected AddressService $addressService;
-    public function __construct(PersonService $personService, UserService $userService,AddressService $addressService)
+
+    public function __construct(PersonService $personService, UserService $userService, AddressService $addressService)
     {
         $this->personService = $personService;
         $this->userService = $userService;
@@ -55,7 +56,7 @@ class LoginController extends Controller
     public function isPersonUser(Request $request)
     {
         $result = $this->personService->naturalExists($request->nationalCode);
-
+//        return response()->json($result);
         if ($result === null) {
             $message = 'notFound';
             $data = null;
@@ -80,7 +81,20 @@ class LoginController extends Controller
         $data = $request->all();
         $validator = Validator::make($data, [
             'mobile' => [
+                'required',
                 'unique:users,mobile',
+            ],
+            'email' => [
+                'sometimes',
+                'unique:users,email',
+            ],
+            'username' => [
+                'sometimes',
+                'unique:users,username',
+            ],
+            'nationalCode' => [
+                'required',
+                'unique:persons,national_code',
             ],
         ]);
 
@@ -94,11 +108,12 @@ class LoginController extends Controller
         if ($request->isNewPerson) {
 
             if ($request->isNewAddress) {
-                $data['userID']=Auth::user()->id;
+                $data['userID'] = Auth::user()->id;
 
                 $address = $this->addressService->store($data);
 
                 if ($address instanceof \Exception) {
+//                    return response()->json(['message' => $address->getMessage()], 500);
                     return response()->json(['message' => 'خطا در ایجاد کاربر جدید'], 500);
                 }
                 $data['homeAddressID'] = $address->id;
@@ -106,17 +121,20 @@ class LoginController extends Controller
             $person = $this->personService->naturalStore($data);
 
             if ($person instanceof \Exception) {
+//                return response()->json(['message' => $person->getMessage()], 500);
 
-                return response()->json(['message' => 'خطا در ثبت کاربر جدید'],500);
+                return response()->json(['message' => 'خطا در ثبت کاربر جدید'], 500);
             }
 
-            $data['personID'] = $person->id;
+            $data['personID'] = $person->person->id;
 
         }
         $user = $this->userService->store($data);
 
         if ($user instanceof \Exception) {
-            return response()->json(['message' => 'خطا در ثبت کاربر جدید', 500]);
+//            return response()->json(['message' => $user->getMessage()], 500);
+
+            return response()->json(['message' => 'خطا در ثبت کاربر جدید'], 500);
         }
 
         return response()->json(['data' => $user]);
@@ -218,6 +236,9 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
+        }else{
+            return response()->json(['message' => 'نام کاربری یا رمز عبور نادرست است'], 401);
+
         }
         $token = auth()->user()->token();
         if ($token) {

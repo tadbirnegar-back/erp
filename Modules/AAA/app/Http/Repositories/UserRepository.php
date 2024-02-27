@@ -46,7 +46,7 @@ class UserRepository
 
     public function show(int $id)
     {
-        $user = $this->user::with('person.avatar')->findOrFail($id);
+        $user = $this->user::with('person.avatar','person.personable','person.status','status','roles')->findOrFail($id);
 
         return $user;
     }
@@ -59,15 +59,20 @@ class UserRepository
             $user->mobile = $data['mobile'];
             $user->email = $data['email'] ?? null;
             $user->username = $data['username'] ?? null;
-            $user->person_id = $data['personID'];
-            $user->password = bcrypt($data['password']);
+            if (isset($data['password'])) {
+                $user->password = bcrypt($data['password']);
 
+            }
             $user->save();
+
+           $person= $user->person ;
+            $person->profile_picture_id = $data['avatar'] ?? null;
+            $person->save();
             $user->roles()->sync($data['roles']);
-            $status = $user->statuses()->latest()->take(1);
+            $status = $user->status;
 
             if ($data['statusID'] != $status[0]->id) {
-                $user->statuses()->attach($status[0]->id);
+                $user->statuses()->attach($data['statusID']);
             }
             return $user;
         } catch (\Exception $e) {

@@ -15,8 +15,6 @@ class UserController extends Controller
     protected UserService $userService;
 
 
-
-
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
@@ -27,9 +25,15 @@ class UserController extends Controller
      */
     public function index(): JsonResponse
     {
-        //
+        $all = User::with('roles', 'person.avatar', 'statuses')->get();
 
-        return response()->json($this->data);
+        $all->each(function ($user) {
+            if ($user->person->avatar) {
+                $user->person->avatar = url(url('/') . '/' . $user->person->avatar);
+            }
+        });
+
+        return response()->json($all);
     }
 
 
@@ -41,7 +45,7 @@ class UserController extends Controller
         $user = $this->userService->show($id);
 
         if (is_null($user)) {
-            return response()->json(['message'=>'کاربری با این مشخصات یافت نشد'],404);
+            return response()->json(['message' => 'کاربری با این مشخصات یافت نشد'], 404);
 
         }
 
@@ -61,9 +65,21 @@ class UserController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $result = $this->userService->update($request->all(),$id);
+
+        $user = User::findOrFail($id);
+
+        if (is_null($user)) {
+            return response()->json(['message' => 'کاربری با این مشخصات یافت نشد'], 404);
+
+        }
+        $data = $request->all();
+
+        $data['roles'] = json_decode($data['roles']);
+
+        $result = $this->userService->update($data, $id);
 
         if ($result instanceof \Exception) {
+            return response()->json(['message' => $result->getMessage()], 500);
             return response()->json(['message' => 'خطا در بروزرسانی کاربر'], 500);
         }
 
@@ -75,8 +91,19 @@ class UserController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        //
+        $user = User::findOrFail($id);
 
-        return response()->json($this->data);
+        if (is_null($user)) {
+            return response()->json(['message' => 'کاربری با این مشخصات یافت نشد'], 404);
+        }
+
+        $status = $user->status;
+        $disable = User::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
+
+        if ($status[0]->id != $disable->id) {
+            $user->statuses()->attach($disable->id);
+        }
+        return response()->json(['message' => 'کاربر با موفقیت حذف شد']);
     }
 }
+

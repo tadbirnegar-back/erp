@@ -11,6 +11,17 @@ class ProductMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            ModuleCategorySeeder::class,
+            ModuleSeeder::class,
+            PermissionSeeder::class,
+            UnitSeeder::class,
+            ProductStatusSeeder::class,
+            VariantGroupStatusSeeder::class,
+            VariantStatusSeeder::class,
+            UnitSeeder::class,
+
+        ]);
         // $this->call([]);
     }
 }

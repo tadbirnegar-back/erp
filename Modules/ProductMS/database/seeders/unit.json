@@ -1,0 +1,14 @@
+[
+    {
+        "name": "کیلوگرم",
+        "symbol": "kg"
+    },
+    {
+        "name": "گرم",
+        "symbol": "g"
+    },
+    {
+        "name": "عدد",
+        "symbol": "unit"
+    }
+]

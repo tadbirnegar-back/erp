@@ -15,6 +15,11 @@ return new class extends Migration
             $table->id();
 
             $table->string('name');
+            $table->unsignedBigInteger('status_id')->index();
+
+            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
+
+
         });
     }
 

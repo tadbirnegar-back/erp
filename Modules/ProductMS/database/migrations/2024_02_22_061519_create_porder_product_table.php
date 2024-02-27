@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_status', function (Blueprint $table) {
+        Schema::create('porder_product', function (Blueprint $table) {
             $table->id();
 
+            $table->unsignedBigInteger('porder_id')->index();
             $table->unsignedBigInteger('product_id')->index();
-            $table->unsignedBigInteger('status_id')->index();
-            $table->timestamp('create_date')->useCurrent();
 
+            $table->foreign('porder_id')->references('id')->on('porders')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
+
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_status');
+        Schema::dropIfExists('porder_product');
     }
 };

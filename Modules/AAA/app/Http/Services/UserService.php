@@ -26,7 +26,11 @@ class UserService
 
     public function show(int $id)
     {
-        return $this->userRepository->show($id);
+        $result= $this->userRepository->show($id);
+
+        $result->person->personable_type = 'natural';
+
+        return $result;
     }
 
     public function update(array $data, int $id)

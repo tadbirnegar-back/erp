@@ -6,5 +6,6 @@
     "FileMS": true,
     "AAA": true,
     "ProductMS": true,
-    "CustomerMS": true
+    "CustomerMS": true,
+    "Merchandise": true
 }

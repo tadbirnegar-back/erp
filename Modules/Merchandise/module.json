@@ -1,0 +1,11 @@
+{
+    "name": "Merchandise",
+    "alias": "merchandise",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Merchandise\\app\\Providers\\MerchandiseServiceProvider"
+    ],
+    "files": []
+}

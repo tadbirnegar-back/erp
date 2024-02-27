@@ -14,16 +14,23 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name')->fulltext()->index();
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->string('sale_price')->nullable();
-            $table->string('SKU')->nullable()->index();
+            $table->string('sku')->nullable()->index();
 
-            $table->integer('productable_id')->index();
-            $table->string('productable_type')->index();
-            $table->unsignedBigInteger('cover_file_id');
+//            $table->integer('productable_id')->index();
+//            $table->string('productable_type')->index();
+            $table->morphs('productable');
+
+//            $table->index('productable_id');
+//            $table->index('productable_type');
+
+            $table->unsignedBigInteger('cover_file_id')->nullable();
             $table->unsignedBigInteger('creator_id')->index();
             $table->unsignedBigInteger('parent_id')->index()->nullable();
             $table->unsignedBigInteger('unit_id')->index();
+            $table->unsignedBigInteger('product_category_id')->index()->nullable();
+            $table->unsignedBigInteger('status_id')->index();
 
             $table->timestamp('create_date')->index()->useCurrent();
 
@@ -31,6 +38,8 @@ return new class extends Migration
             $table->foreign('creator_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('parent_id')->references('id')->on($table->getTable())->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('unit_id')->references('id')->on('units')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('product_category_id')->references('id')->on('product_categories')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('status_id')->references('id')->on('statuses')->onUpdate('cascade')->onDelete('cascade');
 
 
         });

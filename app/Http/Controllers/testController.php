@@ -22,6 +22,76 @@ class testController extends Controller
 {
     public function run(CustomerRepository $personRepository): void
     {
+
+        function uniqueCombinations($arrays)
+        {
+
+            $combinations = [];
+
+            // Helper function for recursive generation
+            function generateCombinations($current, $remaining, &$combinations)
+            {
+                if (count($remaining) == 1) {
+                    foreach ($remaining[0] as $element) {
+                        $sortedCombination = array_merge($current, [$element]);
+                        sort($sortedCombination); // Sort in ascending order
+                        $combinations[] = $sortedCombination;
+                    }
+                    return;
+                }
+
+                foreach ($remaining[0] as $i => $element) {
+                    $current[] = $element;
+                    generateCombinations($current, array_slice($remaining, 1), $combinations);
+                    array_pop($current); // Backtrack
+                }
+            }
+
+            generateCombinations([], $arrays, $combinations);
+
+            return array_unique($combinations, SORT_REGULAR); // Ensure unique combinations
+        }
+
+        $data = [
+            [1, 2],
+            [7],
+            [98, 47, 14],
+            [5, 11], // Dynamic number of arrays
+        ];
+
+        $yourArray = uniqueCombinations($data);
+        $c = sort($yourArray);
+        function searchArray($arr, $searchArr) {
+            foreach ($arr as $subArr) {
+                if (is_array($subArr) && count($subArr) === count($searchArr)) { // Check for same length
+                    // Sort both arrays before comparison
+                    $sortedSubArr = $subArr;
+                    sort($sortedSubArr);
+                    $sortedSearchArr = $searchArr;
+                    sort($sortedSearchArr);
+
+
+                    if ($sortedSubArr === $sortedSearchArr) { // Match after sorting
+                        return $subArr;
+                    } else {
+                        $result = searchArray($subArr, $searchArr); // Recursive call
+                        if ($result) {
+                            return $result;
+                        }
+                    }
+                }
+            }
+            return null; // No match found
+        }
+
+        $matchingArray = searchArray($yourArray, [1, 14, 7, 5]);
+        $a = implode(',', $matchingArray);
+        $b['1,7,14,5']=['price'=>250,'combo'=>[1,7,14,5]];
+        dd($yourArray);
+
+
+//        $user = User::find(11);
+//        dd($user->status);
 //        $role = Role::find(2);
 
 //        $role = Role::with(['permissions.moduleCategory','status','section.department.branch'])->find(1);

@@ -1,0 +1,62 @@
+[
+    {
+        "name": "لیست محصولات",
+        "slug": "/products/list",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن محصول",
+        "slug": "/products/add",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده محصول",
+        "slug": "/products/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی محصول",
+        "slug": "/products/update/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف محصول",
+        "slug": "/products/delete/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست متغیر",
+        "slug": "/products/variants/list",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن متغیر",
+        "slug": "/products/variants/add",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده متغیر",
+        "slug": "/products/variants/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی متغیر",
+        "slug": "/products/variants/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف متغیر",
+        "slug": "/products/variants/delete/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    }
+]

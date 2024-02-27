@@ -88,6 +88,9 @@ class User extends Authenticatable
     public function statuses()
     {
         return $this->belongsToMany(Status::class,'user_status');
+    }    public function status()
+    {
+        return $this->belongsToMany(Status::class,'user_status')->latest('create_date')->take(1);
     }
 
 

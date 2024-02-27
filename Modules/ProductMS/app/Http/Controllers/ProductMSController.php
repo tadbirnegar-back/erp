@@ -5,10 +5,12 @@ namespace Modules\ProductMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Merchandise\app\Http\Services\MerchandiseService;
 
 class ProductMSController extends Controller
 {
     public array $data = [];
+
 
     /**
      * Display a listing of the resource.
@@ -25,7 +27,7 @@ class ProductMSController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        //
+
 
         return response()->json($this->data);
     }
@@ -59,4 +61,6 @@ class ProductMSController extends Controller
 
         return response()->json($this->data);
     }
+
+
 }

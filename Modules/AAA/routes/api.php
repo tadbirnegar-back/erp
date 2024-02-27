@@ -15,21 +15,24 @@ use Illuminate\Support\Facades\Route;
 */
 Route::prefix('v1')->group(function () {
     Route::post('/users/add', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'register'])->middleware('auth:api');
-    Route::post('/users/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'show'])->middleware('auth:api','route');
-    Route::put('/users/update/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'show'])->middleware('auth:api','route');
-    Route::post('/users/update/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'update'])->middleware('auth:api','route')->named('user.edit');
+    Route::post('/users/list', [\Modules\AAA\app\Http\Controllers\UserController::class, 'index'])->middleware('auth:api');
+    Route::delete('/users/delete/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'destroy'])->middleware('auth:api','route');
+    Route::post('/users/update/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'show'])->middleware('auth:api','route')->name('user.edit');
+    Route::put('/users/update/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'update'])->middleware('auth:api','route');
     Route::post('/check', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'userMobileExists']);
     Route::post('users/logout', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'logout'])->middleware('auth:api');
     Route::post('/login', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'loginGrant'])->name('login.login-grant');
     Route::post('/refresh', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'refreshToken']);
     Route::post('/users/permissions/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'userPermissionList'])->middleware('auth:api');
     Route::post('/users/roles/add', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'store'])->middleware(['auth:api','route']);
-    Route::post('/users/search', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'isPersonUser'])->middleware(['auth:api']);
+    Route::post('/users/natural/search', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'isPersonUser'])->middleware(['auth:api']);
     Route::post('/users/roles/list', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'index'])->middleware(['auth:api','route']);
     Route::post('/users/roles/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'show'])->middleware(['auth:api','route']);
     Route::delete('/users/roles/delete/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'destroy'])->middleware(['auth:api','route']);
     Route::put('/users/roles/update/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'update'])->middleware(['auth:api','route']);
     Route::post('/users/roles/update/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'show'])->middleware(['auth:api','route'])->name('role.edit');
     Route::post('/permissions/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'index'])->middleware('auth:api');
+    Route::post('/users/view/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'show'])->middleware('auth:api','route');
+
 });
 

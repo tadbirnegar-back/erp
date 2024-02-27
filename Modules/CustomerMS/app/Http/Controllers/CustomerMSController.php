@@ -116,7 +116,10 @@ class CustomerMSController extends Controller
             return response()->json(['message' => 'مشتری ای با این مشخصات یافت نشد'], 404);
         }
 
-        $customer->person->avatar->slug = url('/') . '/' . $customer->person->avatar->slug;
+        if (!is_null($customer->person->avatar)) {
+            $customer->person->avatar->slug = url('/') . '/' . $customer->person->avatar->slug;
+
+        }
 
         if (\Str::contains(\request()->route()->uri(), 'customers/edit/{id}')) {
             $statuses = Customer::GetAllStatuses();

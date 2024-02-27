@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Modules\AddressMS\app\Http\Controllers\AddressMSController;
 use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\services\AddressService;
@@ -82,7 +83,23 @@ class PersonMSController extends Controller
     public function naturalStore(Request $request)
     {
         $data = $request->all();
-        $data['userID']=\Auth::user()->id;
+        $validator = Validator::make($data, [
+
+            'nationalCode' => [
+                'sometimes',
+                'unique:persons,national_code',
+            ],
+            'mobile' => [
+                'sometimes',
+                'unique:naturals,mobile',
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $data['userID'] = \Auth::user()->id;
 
         if ($request->isNewAddress) {
             $address = $this->addressService->store($data);
@@ -98,7 +115,7 @@ class PersonMSController extends Controller
         $personResult = $this->personService->naturalStore($data);
 
         if ($personResult instanceof \Exception) {
-                return response()->json(['message' => 'خطا در بروزرسانی مشتری'], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی مشتری'], 500);
         }
         return response()->json($personResult);
 
@@ -108,7 +125,7 @@ class PersonMSController extends Controller
     {
         $natural = Natural::with('person.avatar', 'person.status', 'homeAddress.city.state.country')->findOrFail($id);
 
-        if ($natural == null ) {
+        if ($natural == null) {
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }
         if (\Str::contains(\request()->route()->uri(), 'person/natural/edit/{id}')) {
@@ -125,7 +142,7 @@ class PersonMSController extends Controller
     {
         $naturalPerson = Natural::findOrFail($id);
 
-        if ($naturalPerson == null ) {
+        if ($naturalPerson == null) {
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }
 
