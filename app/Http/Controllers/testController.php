@@ -16,6 +16,8 @@ use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
+use Modules\ProductMS\app\Models\Variant;
+use Modules\ProductMS\app\Models\VariantGroup;
 use Modules\StatusMS\app\Models\Status;
 
 class testController extends Controller
@@ -23,71 +25,152 @@ class testController extends Controller
     public function run(CustomerRepository $personRepository): void
     {
 
-        function uniqueCombinations($arrays)
-        {
+        $a = Variant::find([1,3,17],['name']);
+        $b = 'شلوار';
 
-            $combinations = [];
-
-            // Helper function for recursive generation
-            function generateCombinations($current, $remaining, &$combinations)
-            {
-                if (count($remaining) == 1) {
-                    foreach ($remaining[0] as $element) {
-                        $sortedCombination = array_merge($current, [$element]);
-                        sort($sortedCombination); // Sort in ascending order
-                        $combinations[] = $sortedCombination;
-                    }
-                    return;
-                }
-
-                foreach ($remaining[0] as $i => $element) {
-                    $current[] = $element;
-                    generateCombinations($current, array_slice($remaining, 1), $combinations);
-                    array_pop($current); // Backtrack
-                }
+        /**
+         * @var Variant $item
+         */
+        foreach ($a as $key => $item) {
+            if (!(end($a) === $key)) {
+                $b .= ' - ' . $item->name;
+            }else{
+                $b .= ' ' . $item->name;
             }
-
-            generateCombinations([], $arrays, $combinations);
-
-            return array_unique($combinations, SORT_REGULAR); // Ensure unique combinations
         }
 
-        $data = [
-            [1, 2],
-            [7],
-            [98, 47, 14],
-            [5, 11], // Dynamic number of arrays
-        ];
+        dd($b);
+//        $a = '{
+//    "variantGroupName": "جنس",
+//    "variants": "[{\"variantName\":\"نقره ای\",\"id\":7,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"برنزی\",\"id\":8,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"شیشه ای\",\"id\":9,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"چدنی\",\"id\":10,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"استیل\",\"id\":11,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"جدید\"},{\"variantName\":\"جدید 2\"}]",
+//    "deleted": "[{\"variantName\":\"اهنی\",\"id\":4,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"طلایی\",\"id\":5,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"آلومینیومی\",\"id\":6,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"چوبی\",\"id\":3,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"اهنی\",\"id\":4,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"طلایی\",\"id\":5,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"آلومینیومی\",\"id\":6,\"status_id\":\"19\",\"variant_group_id\":\"13\"}]"
+//}
+//';
+//        $b=json_decode($a,true);
+//        dd(json_decode($b['variants'], true));
+//        $variantGroupId = 123; // Replace 123 with the specific variant group ID
+//
+//        $variantGroup = VariantGroup::with('status', 'variants.status')
+//            ->where('id', $variantGroupId)
+//            ->whereHas('status', function ($query) {
+//                $query->where('name', 'active');
+//            })
+//            ->with(['variants' => function ($query) {
+//                $query->whereHas('status', function ($query) {
+//                    $query->where('name', 'active');
+//                });
+//            })
+//            ->first();
+//        $activeVariantGroups = VariantGroup::whereHas('status', function ($statusQuery) {
+//            $statusQuery->where('name', 'فعال');
+//        })
+//            ->orWhereHas('variants', function ($query) {
+//                $query->whereHas('status', function ($nestedStatusQuery) {
+//                    $nestedStatusQuery->where('name', 'فعال');
+//                });
+//            })
+//            ->get();
 
-        $yourArray = uniqueCombinations($data);
-        $c = sort($yourArray);
-        function searchArray($arr, $searchArr) {
-            foreach ($arr as $subArr) {
-                if (is_array($subArr) && count($subArr) === count($searchArr)) { // Check for same length
-                    // Sort both arrays before comparison
-                    $sortedSubArr = $subArr;
-                    sort($sortedSubArr);
-                    $sortedSearchArr = $searchArr;
-                    sort($sortedSearchArr);
+//        $activeVariantGroups = VariantGroup::with(['variants' => function ($query) {
+//            $query->whereHas('status', function ($statusQuery) {
+//                $statusQuery->where('name', 'فعال');
+//            });
+//        },'status'=>function ($q) {
+//            $q->whereHas('status', function ($statusQuery) {
+//                $statusQuery->where('name', 'فعال');
+//            });
+//
+//        }])->get();
 
 
-                    if ($sortedSubArr === $sortedSearchArr) { // Match after sorting
-                        return $subArr;
-                    } else {
-                        $result = searchArray($subArr, $searchArr); // Recursive call
-                        if ($result) {
-                            return $result;
-                        }
-                    }
-                }
-            }
-            return null; // No match found
-        }
+//        $variantGroups = VariantGroup::whereHas('status', function ($query) {
+//            $query->where('name', 'فعال');
+//        })->with(['variants' => function ($query) {
+//            $query->whereHas('status', function ($query) {
+//                $query->where('name', 'فعال');
+//            });
+//        }])->findOrFail(12);
+//        $variantGroups = VariantGroup::
+//            whereHas('status', function ($query) {
+//                $query->where('name', 'فعال');
+//            })
+//            ->with(['variants' => function ($query) {
+//                $query->whereHas('status', function ($query) {
+//                    $query->where('name', 'فعال');
+//                });
+//            }])
+//            ->findOrFail(12);
+//        dd($variantGroups);
+//        $user = User::find(1);
+//        $permissions = $user->permissions()->with(['moduleCategory', 'permissionTypes'])->get();
+//
+//        dd($permissions->groupBy('permissionTypes.name'));
 
-        $matchingArray = searchArray($yourArray, [1, 14, 7, 5]);
-        $a = implode(',', $matchingArray);
-        $b['1,7,14,5']=['price'=>250,'combo'=>[1,7,14,5]];
-        dd($yourArray);
+//        function uniqueCombinations($arrays)
+//        {
+//
+//            $combinations = [];
+//
+//            // Helper function for recursive generation
+//            function generateCombinations($current, $remaining, &$combinations)
+//            {
+//                if (count($remaining) == 1) {
+//                    foreach ($remaining[0] as $element) {
+//                        $sortedCombination = array_merge($current, [$element]);
+//                        sort($sortedCombination); // Sort in ascending order
+//                        $combinations[] = $sortedCombination;
+//                    }
+//                    return;
+//                }
+//
+//                foreach ($remaining[0] as $i => $element) {
+//                    $current[] = $element;
+//                    generateCombinations($current, array_slice($remaining, 1), $combinations);
+//                    array_pop($current); // Backtrack
+//                }
+//            }
+//
+//            generateCombinations([], $arrays, $combinations);
+//
+//            return array_unique($combinations, SORT_REGULAR); // Ensure unique combinations
+//        }
+//
+//        $data = [
+//            [1, 2],
+//            [7],
+//            [98, 47, 14],
+//            [5, 11], // Dynamic number of arrays
+//        ];
+//
+//        $yourArray = uniqueCombinations($data);
+//        $c = sort($yourArray);
+//        function searchArray($arr, $searchArr) {
+//            foreach ($arr as $subArr) {
+//                if (is_array($subArr) && count($subArr) === count($searchArr)) { // Check for same length
+//                    // Sort both arrays before comparison
+//                    $sortedSubArr = $subArr;
+//                    sort($sortedSubArr);
+//                    $sortedSearchArr = $searchArr;
+//                    sort($sortedSearchArr);
+//
+//
+//                    if ($sortedSubArr === $sortedSearchArr) { // Match after sorting
+//                        return $subArr;
+//                    } else {
+//                        $result = searchArray($subArr, $searchArr); // Recursive call
+//                        if ($result) {
+//                            return $result;
+//                        }
+//                    }
+//                }
+//            }
+//            return null; // No match found
+//        }
+//
+//        $matchingArray = searchArray($yourArray, [1, 14, 7, 5]);
+//        $a = implode(',', $matchingArray);
+//        $b['1,7,14,5']=['price'=>250,'combo'=>[1,7,14,5]];
+//        dd($yourArray);
 
 
 //        $user = User::find(11);
@@ -155,7 +238,7 @@ class testController extends Controller
 //        $user = User::find(1);
 //        $role = Role::find(1);
 //        $permissions = Permission::all('id');
-//
+////
 //            $role->permissions()->sync($permissions);
 //
 //        $permissions = Permission::with('moduleCategory')->get();

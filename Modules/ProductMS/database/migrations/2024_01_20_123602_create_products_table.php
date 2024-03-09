@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
+            Schema::disableForeignKeyConstraints();
             $table->id();
             $table->string('name')->fulltext()->index();
             $table->text('description')->nullable();
@@ -28,7 +29,7 @@ return new class extends Migration
             $table->unsignedBigInteger('cover_file_id')->nullable();
             $table->unsignedBigInteger('creator_id')->index();
             $table->unsignedBigInteger('parent_id')->index()->nullable();
-            $table->unsignedBigInteger('unit_id')->index();
+            $table->unsignedBigInteger('unit_id')->index()->nullable();
             $table->unsignedBigInteger('product_category_id')->index()->nullable();
             $table->unsignedBigInteger('status_id')->index();
 

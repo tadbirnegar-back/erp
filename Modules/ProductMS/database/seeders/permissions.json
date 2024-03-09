@@ -1,61 +1,91 @@
 [
     {
         "name": "لیست محصولات",
-        "slug": "/products/list",
+        "slug": "/products/merchandise/list",
         "moduleName": "ProductMS",
         "permissionTypeName": "sidebar"
     },
     {
         "name": "افزودن محصول",
-        "slug": "/products/add",
+        "slug": "/products/merchandise/add",
         "moduleName": "ProductMS",
         "permissionTypeName": "sidebar"
     },
     {
         "name": "مشاهده محصول",
-        "slug": "/products/{id}",
+        "slug": "/products/merchandise/{id}",
         "moduleName": "ProductMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "بروزرسانی محصول",
-        "slug": "/products/update/{id}",
+        "slug": "/products/merchandise/update/{id}",
         "moduleName": "ProductMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "حذف محصول",
-        "slug": "/products/delete/{id}",
+        "slug": "/products/merchandise/delete/{id}",
         "moduleName": "ProductMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "لیست متغیر",
-        "slug": "/products/variants/list",
+        "slug": "/products/merchandise/variants/list",
         "moduleName": "ProductMS",
         "permissionTypeName": "sidebar"
     },
     {
         "name": "افزودن متغیر",
-        "slug": "/products/variants/add",
+        "slug": "/products/merchandise/variants/add",
         "moduleName": "ProductMS",
         "permissionTypeName": "sidebar"
     },
     {
         "name": "مشاهده متغیر",
-        "slug": "/products/variants/{id}",
+        "slug": "/products/merchandise/variants/{id}",
         "moduleName": "ProductMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "بروزرسانی متغیر",
-        "slug": "/products/variants/{id}",
+        "slug": "/products/merchandise/variants/update/{id}",
         "moduleName": "ProductMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "حذف متغیر",
-        "slug": "/products/variants/delete/{id}",
+        "slug": "/products/merchandise/variants/delete/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست دسته بندی",
+        "slug": "/products/merchandise/category/list",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن دسته بندی",
+        "slug": "/products/merchandise/category/add",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده دسته بندی",
+        "slug": "/products/merchandise/category/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی دسته بندی",
+        "slug": "/products/merchandise/category/update/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف دسته بندی",
+        "slug": "/products/merchandise/category/delete/{id}",
         "moduleName": "ProductMS",
         "permissionTypeName": "operational"
     }

@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('merchandise', fn (Request $request) => $request->user())->name('merchandise');
+Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/products/merchandise/add', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'store']);
+    Route::get('/products/merchandise/add', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'addBaseInfo']);
+    Route::post('/products/merchandise/list', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'index']);
+    Route::put('/products/merchandise/update/{id}', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'update']);
+    Route::post('/products/merchandise/{id}', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'show']);
+    Route::post('/products/merchandise/update/{id}', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'show']);
+    Route::delete('/products/merchandise/delete/{id}', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'destroy']);
 });

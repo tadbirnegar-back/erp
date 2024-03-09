@@ -28,9 +28,9 @@ class Permission extends Model
         return $this->belongsToMany(Role::class);
     }
 
-    public function permissionTypes(): HasMany
+    public function permissionTypes()
     {
-        return $this->hasMany(PermissionType::class);
+        return $this->belongsTo(PermissionType::class,'permission_type_id');
     }
 
     use BelongsToThrough;

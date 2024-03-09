@@ -277,8 +277,8 @@ class LoginController extends Controller
         unset($result['token_type']);
         unset($result['expires_in']);
 
-        $permissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
-        foreach ($permissions as $permission) {
+        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+        foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
                 'label' => $permission->name,
                 'slug' => $permission->slug,
@@ -286,12 +286,26 @@ class LoginController extends Controller
             $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
 
+        $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
+        foreach ($operationalPermissions as $permission) {
+            $operationalItems[$permission->moduleCategory->name]['subPermission'][] = [
+                'label' => $permission->name,
+                'slug' => $permission->slug,
+            ];
+            $operationalItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+        }
+
+//        $permissions = $user->permissions()->with(['moduleCategory', 'permissionTypes'])->get();
+
+
         $person = $user->person;
         /**
          * @var Natural $natural
          */
         $natural = $person->personable;
-        $result['permissions'] = $sidebarItems;
+//        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
+        $result['operational'] = $operationalItems;
+        $result['sidebar'] = $sidebarItems;
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
@@ -365,8 +379,8 @@ class LoginController extends Controller
         unset($result['token_type']);
         unset($result['expires_in']);
 
-        $permissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
-        foreach ($permissions as $permission) {
+        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+        foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
                 'label' => $permission->name,
                 'slug' => $permission->slug,
@@ -374,12 +388,26 @@ class LoginController extends Controller
             $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
 
+        $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
+        foreach ($operationalPermissions as $permission) {
+            $operationalItems[$permission->moduleCategory->name]['subPermission'][] = [
+                'label' => $permission->name,
+                'slug' => $permission->slug,
+            ];
+            $operationalItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+        }
+
+//        $permissions = $user->permissions()->with(['moduleCategory', 'permissionTypes'])->get();
+
+
         $person = $user->person;
         /**
          * @var Natural $natural
          */
         $natural = $person->personable;
-        $result['permissions'] = $sidebarItems;
+//        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
+        $result['operational'] = $operationalItems;
+        $result['sidebar'] = $sidebarItems;
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
@@ -387,5 +415,6 @@ class LoginController extends Controller
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
         ];
         return response()->json($result)->withCookie($cookie);
+
     }
 }

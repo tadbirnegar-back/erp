@@ -7,5 +7,7 @@
     "AAA": true,
     "ProductMS": true,
     "CustomerMS": true,
-    "Merchandise": true
+    "Merchandise": true,
+    "HRMS": true,
+    "FormGMS": true
 }

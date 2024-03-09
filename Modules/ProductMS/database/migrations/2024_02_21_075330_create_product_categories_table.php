@@ -16,8 +16,10 @@ return new class extends Migration
 
             $table->string('name');
             $table->unsignedBigInteger('parent_id')->index()->nullable();
+            $table->unsignedBigInteger('status_id')->index()->nullable();
 
             $table->foreign('parent_id')->references('id')->on($table->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('status_id')->references('id')->on('statuses')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

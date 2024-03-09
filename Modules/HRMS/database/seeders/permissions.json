@@ -1,0 +1,122 @@
+[
+    {
+        "name": "لیست کارمندان",
+        "slug": "/hrm/employee/add",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن کارمند",
+        "slug": "/hrm/employee/add",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده محصول",
+        "slug": "/hrm/employee/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی محصول",
+        "slug": "/hrm/employee/update/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف محصول",
+        "slug": "/hrm/employee/delete/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست سمت",
+        "slug": "/hrm/positions/list",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن سمت",
+        "slug": "/hrm/positions/add",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده سمت",
+        "slug": "/hrm/positions/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی سمت",
+        "slug": "/hrm/positions/update/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف سمت",
+        "slug": "/hrm/positions/delete/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست مهارت",
+        "slug": "/hrm/skills/list",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن مهارت",
+        "slug": "/hrm/skills/add",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده مهارت",
+        "slug": "/hrm/skills/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی مهارت",
+        "slug": "/hrm/skills/update/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف مهارت",
+        "slug": "/hrm/skills/delete/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست سطح سازمانی",
+        "slug": "/hrm/levels/list",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن سطح سازمانی",
+        "slug": "/hrm/levels/add",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده سطح سازمانی",
+        "slug": "/hrm/levels/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی سطح سازمانی",
+        "slug": "/hrm/levels/update/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف سطح سازمانی",
+        "slug": "/hrm/levels/delete/{id}",
+        "moduleName": "ProductMS",
+        "permissionTypeName": "operational"
+    }
+]

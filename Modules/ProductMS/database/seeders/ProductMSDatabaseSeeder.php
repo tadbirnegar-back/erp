@@ -19,6 +19,7 @@ class ProductMSDatabaseSeeder extends Seeder
             ProductStatusSeeder::class,
             VariantGroupStatusSeeder::class,
             VariantStatusSeeder::class,
+            ProductCategorySeeder::class,
             UnitSeeder::class,
 
         ]);

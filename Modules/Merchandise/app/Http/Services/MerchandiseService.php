@@ -24,4 +24,10 @@ class MerchandiseService
     {
         return $this->merchandiseRepository->update($data, $id);
     }
+
+    public function index(int $pageNumber = 1, int $perPage = 10)
+    {
+        return $this->merchandiseRepository->index($pageNumber, $perPage);
+    }
+
 }

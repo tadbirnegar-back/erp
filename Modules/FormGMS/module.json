@@ -1,0 +1,11 @@
+{
+    "name": "FormGMS",
+    "alias": "formgms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FormGMS\\app\\Providers\\FormGMSServiceProvider"
+    ],
+    "files": []
+}

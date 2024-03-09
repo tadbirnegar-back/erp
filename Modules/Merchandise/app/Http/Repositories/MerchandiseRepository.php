@@ -33,7 +33,7 @@ class MerchandiseRepository
             $merch = new $this->merchandise();
 
 
-            $merch->package_breadth = $data['packageBreadth'] ?? null;
+            $merch->package_breadth = $data['packageLength'] ?? null;
             $merch->package_height = $data['packageHeight'] ?? null;
             $merch->package_weight = $data['packageWeight'] ?? null;
             $merch->package_width = $data['packageWidth'] ?? null;
@@ -120,5 +120,15 @@ class MerchandiseRepository
             return $e;
 
         }
+    }
+
+    public function index(int $pageNumber=1,int $perPage=10)
+    {
+        $productsQuery = $this->merchandise::with('product');
+
+
+        $result= $productsQuery->paginate($perPage, page: $pageNumber);
+
+        return $result;
     }
 }
