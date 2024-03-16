@@ -1,0 +1,11 @@
+{
+    "name": "SettingsMS",
+    "alias": "settingsms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\SettingsMS\\app\\Providers\\SettingsMSServiceProvider"
+    ],
+    "files": []
+}

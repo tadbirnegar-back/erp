@@ -21,5 +21,10 @@ class RelativeService
         return $this->relativeRepository->store($data);
     }
 
+    public function update(array $data,int $id)
+    {
+        return $this->relativeRepository->update($data, $id);
+    }
+
 
 }

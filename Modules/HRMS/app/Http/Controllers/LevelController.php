@@ -42,7 +42,8 @@ class LevelController extends Controller
         $level = $this->levelService->store($data);
 
         if ($level instanceof \Exception) {
-            return response()->json(['message'=>'خطا در ایجاد سطح جدید'],500);
+            return response()->json(['message'=>$level->getMessage()],500);
+//            return response()->json(['message'=>'خطا در ایجاد سطح جدید'],500);
 
         }
 

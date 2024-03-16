@@ -11,6 +11,14 @@ class FormGMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            ModuleCategorySeeder::class,
+            ModuleSeeder::class,
+            PermissionSeeder::class,
+            FieldTypeSeeder::class,
+            FormStatusSeeder::class,
+
+        ]);
         // $this->call([]);
     }
 }

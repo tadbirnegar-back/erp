@@ -11,6 +11,21 @@ class HRMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            ModuleCategorySeeder::class,
+            ModuleSeeder::class,
+            PermissionSeeder::class,
+            LevelOfEducationSeeder::class,
+            LevelStatusSeeder::class,
+            MilitaryServiceStatusSeeder::class,
+            PositionStatusSeeder::class,
+            SkillStatusSeeder::class,
+            WorkForceStatusSeeder::class,
+            RelativeTypeSeeder::class,
+
+
+
+        ]);
         // $this->call([]);
     }
 }

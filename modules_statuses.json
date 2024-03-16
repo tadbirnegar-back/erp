@@ -9,5 +9,7 @@
     "CustomerMS": true,
     "Merchandise": true,
     "HRMS": true,
-    "FormGMS": true
+    "FormGMS": true,
+    "SettingsMS": true,
+    "WidgetsMS": true
 }

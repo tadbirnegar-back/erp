@@ -1,7 +1,7 @@
 [
     {
         "name": "لیست کارمندان",
-        "slug": "/hrm/employee/add",
+        "slug": "/hrm/employee/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     },
@@ -12,19 +12,19 @@
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "مشاهده محصول",
+        "name": "مشاهده کارمند",
         "slug": "/hrm/employee/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
     },
     {
-        "name": "بروزرسانی محصول",
+        "name": "بروزرسانی کارمند",
         "slug": "/hrm/employee/update/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
     },
     {
-        "name": "حذف محصول",
+        "name": "حذف کارمند",
         "slug": "/hrm/employee/delete/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
@@ -92,31 +92,31 @@
     {
         "name": "لیست سطح سازمانی",
         "slug": "/hrm/levels/list",
-        "moduleName": "ProductMS",
+        "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     },
     {
         "name": "افزودن سطح سازمانی",
         "slug": "/hrm/levels/add",
-        "moduleName": "ProductMS",
+        "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     },
     {
         "name": "مشاهده سطح سازمانی",
         "slug": "/hrm/levels/{id}",
-        "moduleName": "ProductMS",
+        "moduleName": "HRMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "بروزرسانی سطح سازمانی",
         "slug": "/hrm/levels/update/{id}",
-        "moduleName": "ProductMS",
+        "moduleName": "HRMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "حذف سطح سازمانی",
         "slug": "/hrm/levels/delete/{id}",
-        "moduleName": "ProductMS",
+        "moduleName": "HRMS",
         "permissionTypeName": "operational"
     }
 ]

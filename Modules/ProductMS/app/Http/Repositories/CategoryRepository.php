@@ -16,6 +16,14 @@ class CategoryRepository
         $this->category = $category;
     }
 
+    public function index()
+    {
+        $categories = ProductCategory::with('status')->whereHas('status', function ($query) {
+            $query->where('name', 'فعال');
+        })->get();
+
+        return $categories;
+    }
     public function store(array $data)
     {
 

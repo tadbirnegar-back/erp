@@ -22,5 +22,10 @@ class ResumeService
         return $this->resumeRepository->store($data);
     }
 
+    public function update(array $data,int $id)
+    {
+        return $this->resumeRepository->update($data, $id);
+    }
+
 
 }

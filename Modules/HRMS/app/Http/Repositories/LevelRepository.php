@@ -29,7 +29,9 @@ class LevelRepository
             \DB::beginTransaction();
             $level = new $this->level();
             $level->name = $data['levelName'];
-            $level->status_id = $data['statusID'];
+            $status = $this->level::GetAllStatuses()->where('name', '=', 'فعال')->first();
+
+            $level->status_id = $status->id;
             $level->save();
             \DB::commit();
             return $level;
@@ -46,7 +48,7 @@ class LevelRepository
             \DB::beginTransaction();
             $level = $this->level::findOrFail($ID);
             $level->name = $data['levelName'];
-            $level->status_id = $data['statusID'];
+//            $level->status_id = $data['statusID'];
             $level->save();
             \DB::commit();
             return $level;

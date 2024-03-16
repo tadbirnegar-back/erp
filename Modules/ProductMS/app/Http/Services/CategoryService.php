@@ -17,6 +17,11 @@ class CategoryService
     }
 
 
+    public function index()
+    {
+        return $this->categoryRepository->index();
+    }
+
     public function store(array $data)
     {
         return $this->categoryRepository->store($data);

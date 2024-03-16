@@ -9,20 +9,20 @@ use Modules\PersonMS\app\Models\Person;
 
 class PersonRepository
 {
-    protected $person;
-    protected $natural;
-    protected $legal;
-
-    public function __construct(Natural $natural, Legal $legal, Person $person)
-    {
-        $this->person = $person;
-        $this->natural = $natural;
-        $this->legal = $legal;
-    }
+//    protected $person;
+//    protected $natural;
+//    protected $legal;
+//
+//    public function __construct(Natural $natural, Legal $legal, Person $person)
+//    {
+//        $this->person = $person;
+//        $this->natural = $natural;
+//        $this->legal = $legal;
+//    }
 
     public function naturalExists(string $nationalCode): Person|null
     {
-        $person = $this->person::with('personable.homeAddress.city.state.country', 'avatar', 'status')->where('national_code', '=', $nationalCode)->first();
+        $person = Person::with('personable.homeAddress.city.state.country', 'avatar', 'status')->where('national_code', '=', $nationalCode)->first();
 //        if ($person && $person->personable instanceof Natural) {
 //            // If personable is an instance of Natural, load the address relationship specifically for this instance
 //            $person->load(['personable.homeAddress.city.state.country']); // Ensure that the relationship path is correct
@@ -58,7 +58,7 @@ class PersonRepository
 //                $addressID = $data['homeAddressID;
 //            }
 
-            $naturalPerson = new $this->natural;
+            $naturalPerson = new Natural();
             $naturalPerson->first_name = $data['firstName'];
             $naturalPerson->last_name = $data['lastName'];
             $naturalPerson->mobile = $data['mobile'] ?? null;
@@ -66,7 +66,7 @@ class PersonRepository
             $naturalPerson->father_name = $data['fatherName'] ?? null;
             $naturalPerson->birth_date = $data['dateOfBirth'] ?? null;
             $naturalPerson->job = $data['job'] ?? null;
-            $naturalPerson->isMarried = $data['isMarried'] ?? null;
+            $naturalPerson->isMarried = $data['isMarried'] ? 1 : 0;
             $naturalPerson->level_of_spouse_education = $data['levelOfSpouseEducation'] ?? null;
             $naturalPerson->spouse_first_name = $data['spouseFirstName'] ?? null;
             $naturalPerson->spouse_last_name = $data['spouseLastName'] ?? null;
@@ -78,10 +78,12 @@ class PersonRepository
 
             $naturalPerson->save();
 
-            $person = new $this->person;
+            $person = new Person();
             $person->display_name = $naturalPerson->first_name . ' ' . $naturalPerson->last_name;
             $person->national_code = $data['nationalCode'];
             $person->profile_picture_id = $data['avatar'] ?? null;
+            $person->email = $data['email'] ?? null;
+            $person->phone = $data['phone'] ?? null;
 
             $naturalPerson->person()->save($person);
             $status = Person::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
@@ -103,7 +105,7 @@ class PersonRepository
     public function legalExists(string $name)
     {
 
-        $result = $this->legal::with('address.city.state.country', 'person.statuses', 'person.avatar')->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", $name)->get();
+        $result = Legal::with('address.city.state.country', 'person.statuses', 'person.avatar')->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", $name)->get();
         return $result;
 
 
@@ -132,7 +134,7 @@ class PersonRepository
 //                $addressID = $request->businessAddressID ?? null;
 //            }
 
-            $legal = new $this->legal;
+            $legal = new Legal();
             $legal->name = $data['name'];
             $legal->registration_number = $data['registrationNumber'] ?? null;
             $legal->foundation_date = $data['foundationDate'] ?? null;
@@ -161,11 +163,12 @@ class PersonRepository
         }
 
     }
+
     public function naturalUpdate(array $data, $id)
     {
         $naturalPerson = Natural::findOrFail($id);
 
-        if ($naturalPerson == null ) {
+        if ($naturalPerson == null) {
             return null;
         }
 
@@ -180,7 +183,7 @@ class PersonRepository
             $naturalPerson->father_name = $data['fatherName'] ?? null;
             $naturalPerson->birth_date = $data['dateOfBirth'] ?? null;
             $naturalPerson->job = $data['job'] ?? null;
-            $naturalPerson->isMarried = $data['isMarried'] ?? null;
+            $naturalPerson->isMarried = $data['isMarried'] ? 1 : 0;
             $naturalPerson->level_of_spouse_education = $data['levelOfSpouseEducation'] ?? null;
             $naturalPerson->spouse_first_name = $data['spouseFirstName'] ?? null;
             $naturalPerson->spouse_last_name = $data['spouseLastName'] ?? null;
@@ -197,7 +200,7 @@ class PersonRepository
 
             $naturalPerson->person()->save($person);
             $statusID = $person->status;
-            if ($statusID[0]->id != $data['statusID']) {
+            if (isset($data['statusID']) && $statusID[0]->id != $data['statusID']) {
                 $naturalPerson->person->status()->attach($data['statusID']);
             }
             DB::commit();
@@ -214,7 +217,7 @@ class PersonRepository
     {
         $legal = Legal::findOrFail($id);
 
-        if ($legal == null ) {
+        if ($legal == null) {
             return null;
         }
 

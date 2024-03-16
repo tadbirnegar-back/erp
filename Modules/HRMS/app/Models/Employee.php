@@ -16,6 +16,7 @@ class Employee extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
+    public $timestamps = false;
 
     protected static function newFactory(): EmployeeFactory
     {
@@ -27,7 +28,7 @@ class Employee extends Model
         return $this->morphOne(WorkForce::class,'workforceable');
     }
 
-    public function possitions(): BelongsToMany
+    public function positions(): BelongsToMany
     {
         return $this->belongsToMany(Position::class,'employee_position');
     }

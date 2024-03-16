@@ -1,0 +1,50 @@
+[
+    {
+        "name": "لیست فرم ها",
+        "slug": "/forms/list",
+        "moduleName": "FormGMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن فرم",
+        "slug": "/forms/add",
+        "moduleName": "FormGMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده فرم",
+        "slug": "/forms/{id}",
+        "moduleName": "FormGMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی فرم",
+        "slug": "/forms/update/{id}",
+        "moduleName": "FormGMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف فرم",
+        "slug": "/forms/delete/{id}",
+        "moduleName": "FormGMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست پاسخ ها",
+        "slug": "/forms/answers/list",
+        "moduleName": "FormGMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده پاسخ",
+        "slug": "/forms/answers/{id}",
+        "moduleName": "FormGMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف پاسخ",
+        "slug": "/forms/answers/delete/{id}",
+        "moduleName": "FormGMS",
+        "permissionTypeName": "operational"
+    }
+]

@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
+Route::middleware(['auth:api'])->prefix('v1')->group(function () {
+    Route::post('/products/merchandise/list/filter', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'indexFilterData']);
+});
 Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(function () {
     Route::post('/products/merchandise/add', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'store']);
     Route::get('/products/merchandise/add', [\Modules\Merchandise\app\Http\Controllers\MerchandiseController::class, 'addBaseInfo']);

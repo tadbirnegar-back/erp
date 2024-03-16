@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->string('university_name');
             $table->string('field_of_study');
-            $table->timestamp('start_date');
+            $table->timestamp('start_date')->nullable();
             $table->timestamp('end_date')->nullable();
             $table->string('average')->nullable();
             $table->unsignedBigInteger('work_force_id');

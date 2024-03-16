@@ -20,9 +20,10 @@ class MerchandiseController extends Controller
     protected CategoryService $categoryService;
 
 
-    public function __construct(MerchandiseService $merchandiseService)
+    public function __construct(MerchandiseService $merchandiseService, CategoryService $categoryService)
     {
         $this->merchandiseService = $merchandiseService;
+        $this->categoryService = $categoryService;
     }
 
     /**
@@ -33,7 +34,7 @@ class MerchandiseController extends Controller
         $pageNumber = $request->input('pageNumber', 1);
         $perPage = $request->input('perPage', 10);
 
-        $result = $this->merchandiseService->index($pageNumber,$perPage);
+        $result = $this->merchandiseService->index($pageNumber, $perPage);
 
         return response()->json($result);
     }
@@ -243,5 +244,13 @@ class MerchandiseController extends Controller
         })->get();
 
         return response()->json($data);
+    }
+
+    public function indexFilterData()
+    {
+        $result['category'] = $this->categoryService->index();
+        $result['statuses'] = MerchandiseProduct::GetAllStatuses();
+
+        return response()->json($result);
     }
 }

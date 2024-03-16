@@ -13,6 +13,9 @@ class EmployeeService
         $this->employeeRepository = $employeeRepository;
     }
 
+    public function index(int $perPage=10,int $pageNumber=1,array $data=[]){
+        return $this->employeeRepository->index($perPage, $pageNumber, $data);
+    }
 
     public function isPersonEmployee(int $personID)
     {
@@ -22,6 +25,11 @@ class EmployeeService
     public function store(array $data)
     {
         return $this->store($data);
+    }
+
+    public function update(array $data,int $id)
+    {
+        return $this->employeeRepository->update($data, $id);
     }
 
 

@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('report_records', function (Blueprint $table) {
             $table->id();
 
-            $table->string('value');
+            $table->text('value');
 
             $table->unsignedBigInteger('field_id')->index();
-            $table->unsignedBigInteger('option_id')->index();
+//            $table->unsignedBigInteger('option_id')->index();
             $table->unsignedBigInteger('report_id')->index();
 
             $table->foreign('field_id')->references('id')->on('fields')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('option_id')->references('id')->on('options')->onDelete('cascade')->onUpdate('cascade');
+//            $table->foreign('option_id')->references('id')->on('options')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('report_id')->references('id')->on('reports')->onDelete('cascade')->onUpdate('cascade');
         });
     }

@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/widgetsms",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\WidgetsMS\\": "",
+            "Modules\\WidgetsMS\\App\\": "app/",
+            "Modules\\WidgetsMS\\Database\\Factories\\": "database/factories/",
+            "Modules\\WidgetsMS\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\WidgetsMS\\Tests\\": "tests/"
+        }
+    }
+}

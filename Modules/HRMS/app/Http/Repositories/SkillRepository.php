@@ -31,7 +31,8 @@ class SkillRepository
              */
             $skill = new $this->skill();
             $skill->name = $data['skillName'];
-            $skill->status_id = $data['statusID'];
+            $status = $this->skill::GetAllStatuses()->where('name', '=', 'فعال')->first();
+            $skill->status_id = $status->id;;
             $skill->save();
             \DB::commit();
             return $skill;
@@ -59,7 +60,7 @@ class SkillRepository
             $skill =  $this->skill::findOrFail($id);
 
             $skill->name = $data['skillName'];
-            $skill->status_id = $data['statusID'];
+//            $skill->status_id = $data['statusID'];
             $skill->save();
             \DB::commit();
             return $skill;

@@ -311,6 +311,8 @@ class LoginController extends Controller
             'lastName' => $natural->last_name,
             'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
+            $result['roles'] = $user->roles,
+
         ];
         return response()->json($result)->withCookie($cookie);
 
@@ -413,6 +415,8 @@ class LoginController extends Controller
             'lastName' => $natural->last_name,
             'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
+            $result['roles'] = $user->roles,
+
         ];
         return response()->json($result)->withCookie($cookie);
 

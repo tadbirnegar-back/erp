@@ -4,8 +4,11 @@ namespace Modules\HRMS\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\HRMS\Database\factories\WorkForceFactory;
+use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
 class WorkForce extends Model
@@ -16,6 +19,7 @@ class WorkForce extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
+    public $timestamps = false;
 
     protected static function newFactory(): WorkForceFactory
     {
@@ -30,6 +34,31 @@ class WorkForce extends Model
     public function statuses(): BelongsToMany
     {
         return $this->belongsToMany(Status::class,'status_work_force');
+    }
+
+    public function person(): BelongsTo
+    {
+        return $this->belongsTo(Person::class,'person_id');
+    }
+
+    public function relatives(): HasMany
+    {
+        return $this->hasMany(Relative::class);
+    }
+
+    public function resumes(): HasMany
+    {
+        return $this->hasMany(Resume::class);
+    }
+
+    public function educationalRecords(): HasMany
+    {
+        return $this->hasMany(EducationalRecord::class);
+    }
+
+    public function militaryStatus(): BelongsTo
+    {
+        return $this->belongsTo(MilitaryServiceStatus::class);
     }
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection

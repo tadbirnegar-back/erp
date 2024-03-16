@@ -2,6 +2,7 @@
 
 namespace Modules\Merchandise\app\Http\Repositories;
 
+use Illuminate\Database\Eloquent\Builder;
 use Mockery\Exception;
 use Modules\Merchandise\app\Models\MerchandiseProduct;
 use Modules\ProductMS\app\Models\Product;
@@ -72,7 +73,7 @@ class MerchandiseRepository
 
     }
 
-    public function update(array $data,int $id)
+    public function update(array $data, int $id)
     {
 
         try {
@@ -122,12 +123,28 @@ class MerchandiseRepository
         }
     }
 
-    public function index(int $pageNumber=1,int $perPage=10)
+    public function index(int $pageNumber = 1, int $perPage = 10, array $data = [])
     {
-        $productsQuery = $this->merchandise::with('product');
+        $productsQuery = $this->merchandise::with('product')
+            ->whereHas('product', function ($query) {
+                $query->whereNull('parent_id');
+            });
 
 
-        $result= $productsQuery->paginate($perPage, page: $pageNumber);
+        $categoryId = $data['categoryID'] ?? null;
+        $statusId = $data['statusID'] ?? null;
+
+
+        $productsQuery->when($categoryId !== null, function (Builder $query) use ($categoryId) {
+            $query->where('category_id', $categoryId);
+        });
+
+        $productsQuery->when($statusId !== null, function (Builder $query) use ($statusId) {
+            $query->where('status_id', $statusId);
+        });
+
+
+        $result = $productsQuery->paginate($perPage, page: $pageNumber);
 
         return $result;
     }

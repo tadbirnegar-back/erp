@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('company_name');
             $table->timestamp('start_date');
             $table->timestamp('end_date')->nullable();
-            $table->string('position');
+            $table->string('position')->nullable();
+            $table->string('city')->nullable();
             $table->string('salary')->nullable();
             $table->unsignedBigInteger('work_force_id');
 

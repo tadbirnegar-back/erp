@@ -14,6 +14,14 @@ class PositionController extends Controller
     protected PositionService $positionService;
 
     /**
+     * @param PositionService $positionService
+     */
+    public function __construct(PositionService $positionService)
+    {
+        $this->positionService = $positionService;
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(): JsonResponse

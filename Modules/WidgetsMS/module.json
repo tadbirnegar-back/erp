@@ -1,0 +1,11 @@
+{
+    "name": "WidgetsMS",
+    "alias": "widgetsms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\WidgetsMS\\app\\Providers\\WidgetsMSServiceProvider"
+    ],
+    "files": []
+}

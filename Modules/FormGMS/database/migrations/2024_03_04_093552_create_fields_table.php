@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
 
             $table->string('label');
-            $table->boolean('isRequired')->default(false);
-            $table->unsignedBigInteger('part_id')->index();
-            $table->unsignedBigInteger('type_id')->index();
+            $table->string('placeholder')->nullable();
+            $table->boolean('is_required')->default(false);
+            $table->unsignedBigInteger('part_id')->index()->nullable();
+            $table->unsignedBigInteger('type_id')->index()->nullable();
 
 
             $table->foreign('part_id')->references('id')->on('parts')->onDelete('cascade')->onUpdate('cascade');

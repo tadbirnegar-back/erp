@@ -12,6 +12,7 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\BranchMS\app\Models\Branch;
 use Modules\CustomerMS\app\Http\Repositories\CustomerRepository;
 use Modules\FileMS\app\Models\File;
+use Modules\FormGMS\app\Models\Field;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
@@ -19,27 +20,72 @@ use Modules\PersonMS\app\Models\Person;
 use Modules\ProductMS\app\Models\Variant;
 use Modules\ProductMS\app\Models\VariantGroup;
 use Modules\StatusMS\app\Models\Status;
+use Str;
 
 class testController extends Controller
 {
-    public function run(CustomerRepository $personRepository): void
+    public function run(): void
     {
+//        $data = [
+//            [
+//                'id'=>1,
+//                'label' => 'edited', // Field label
+//                'is_required' => false,
+//                'part_id' => 1,
+//                'type_id' => 3,
+//                'options' => [ // Options for this field
+//                    ['label' => 'Mr.'],
+//                    ['label' => 'Ms.'],
+//                    ['label' => 'Dr.'],
+//                ],
+//            ],
+//            [
+//                'id'=>null,
+//                'label' => 'Email Address',
+//                'is_required' => true,
+//                'part_id' => 1,
+//                'type_id' => 2,
+//            ],
+//            // ... more fields ...
+//        ];
+        $json = json_decode('
+        {
+    "formName": "اخلال در روند",
+    "fields": "[{\"label\":\"نام شخص مخل\",\"typeID\":1,\"isRequired\":true,\"placeholder\":\"نام شخص مخل را وارد کنید\",\"id\":26},{\"label\":\"علت اخلال\",\"typeID\":2,\"placeholder\":\"علت اخلال را وارد کنید\",\"id\":27},{\"label\":\"قابل بخشش\",\"typeID\":3,\"options\":[{\"label\":\"بله\",\"id\":16},{\"label\":\"خیر\",\"id\":17},{\"label\":\"شاید\",\"id\":null}],\"placeholder\":\"قابل بخشش را وارد کنید\",\"id\":28}]"
+}
 
-        $a = Variant::find([1,3,17],['name']);
-        $b = 'شلوار';
+', true);
 
-        /**
-         * @var Variant $item
-         */
-        foreach ($a as $key => $item) {
-            if (!(end($a) === $key)) {
-                $b .= ' - ' . $item->name;
-            }else{
-                $b .= ' ' . $item->name;
-            }
-        }
 
-        dd($b);
+//        $r = Field::upsert($data, ['id']);
+//        $r = json_encode($data);
+        $a = json_decode($json['fields'], true);
+
+//        dd($a);
+        $c = collect($a)->whereNull('options');
+        $transformedCollection = $c->map(function ($item) {
+            $newItem = [
+                'name' => $item['label'],
+                'type_id' => $item['typeID'], // Assuming you want to keep the case for typeID
+                'is_required' => $item['isRequired']??false, // Assuming you want to keep the case for isRequired
+                'placeholder' => $item['placeholder'],
+            ];
+
+            // Add new keys if needed
+            $newItem['new_key'] = 'new_value';
+
+            return $newItem;
+        });
+//        $collection = $c->mapWithKeys(function ($item) {
+//            dd($item);
+////            $snakeCaseKey = Str::snake($item['label']);
+////            return [$snakeCaseKey => $item];
+//        });
+        dd($transformedCollection);
+
+
+
+
 //        $a = '{
 //    "variantGroupName": "جنس",
 //    "variants": "[{\"variantName\":\"نقره ای\",\"id\":7,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"برنزی\",\"id\":8,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"شیشه ای\",\"id\":9,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"چدنی\",\"id\":10,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"استیل\",\"id\":11,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"جدید\"},{\"variantName\":\"جدید 2\"}]",
@@ -236,6 +282,15 @@ class testController extends Controller
 //        dd($permissions);
 //        $status = Status::where('name', '=', 'فعال')->where('model','=',File::class)->first();
 //        $user = User::find(1);
+//        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+//        foreach ($sidebarPermissions as $permission) {
+//            $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
+//                'label' => $permission->name,
+//                'slug' => $permission->slug,
+//            ];
+//            $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+//        }
+//        dd($sidebarPermissions);
 //        $role = Role::find(1);
 //        $permissions = Permission::all('id');
 ////

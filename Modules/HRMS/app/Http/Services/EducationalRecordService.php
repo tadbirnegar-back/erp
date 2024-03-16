@@ -20,6 +20,9 @@ class EducationalRecordService
     {
         return $this->educationalRecordRepository->store($data);
     }
-
+    public function update(array $data,int $id)
+    {
+        return $this->educationalRecordRepository->update($data, $id);
+    }
 
 }

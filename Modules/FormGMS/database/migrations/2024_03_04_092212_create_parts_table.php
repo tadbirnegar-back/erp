@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('parts', function (Blueprint $table) {
             $table->id();
 
-            $table->string('name');
-            $table->unsignedBigInteger('field_id')->index();
+            $table->string('name')->nullable();
+            $table->unsignedBigInteger('form_id')->index();
 
-            $table->foreign('field_id')->references('id')->on('fields')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('form_id')->references('id')->on('forms')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 
