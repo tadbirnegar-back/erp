@@ -17,8 +17,10 @@ return new class extends Migration
 
             $table->string('label');
             $table->unsignedBigInteger('field_id')->index();
+            $table->unsignedBigInteger('status_id')->index();
 
 
+            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('field_id')->references('id')->on('fields')->onDelete('cascade')->onUpdate('cascade');
         });
     }

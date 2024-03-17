@@ -2,11 +2,13 @@
 
 namespace Modules\FormGMS\app\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\FormGMS\Database\factories\FieldsFactory;
+use Modules\StatusMS\app\Models\Status;
 
 class Field extends Model
 {
@@ -49,6 +51,11 @@ class Field extends Model
     public function options(): HasMany
     {
         return $this->hasMany(Option::class);
+    }
+
+    public static function GetAllStatuses(): Collection
+    {
+        return Status::all()->where('model', '=', self::class);
     }
 
 }

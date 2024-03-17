@@ -21,7 +21,7 @@ class FieldRepository
     public function store(array $data)
     {
         try {
-            \DB::beginTransaction();
+//            \DB::beginTransaction();
 
             /** @var Field $field */
             $field = new Field;
@@ -34,13 +34,13 @@ class FieldRepository
 
             $field->save();
 
-            \DB::commit();
+//            \DB::commit();
 
             return $field;
 
         } catch (\Exception $e) {
 
-            \DB::rollBack();
+//            \DB::rollBack();
 
             return $e;
 
@@ -51,15 +51,31 @@ class FieldRepository
     {
         $dataToInsert = $this->dataPreparation($data, $partID);
         try {
-            \DB::beginTransaction();
+//            \DB::beginTransaction();
             $fields = Field::insert($dataToInsert);
-            \DB::commit();
+//            \DB::commit();
             return $fields;
         }catch (Exception $e){
-            \DB::rollBack();
+//            \DB::rollBack();
             return $e;
         }
     }
+
+    public function update(array|collection $data,int $partID)
+    {
+        $dataToUpsert = $this->dataPreparation($data, $partID);
+        $field = Field::updateOrCreate($dataToUpsert);
+
+        return $field;
+    }
+
+    public function bulkUpdate(array|Collection $data,int $partID)
+    {
+        $dataToUpsert = $this->dataPreparation($data, $partID);
+        $result = Field::upsert($dataToUpsert, ['id']);
+        return $result;
+    }
+
     private function dataPreparation(array|Collection $data,int $partID)
     {
         if (!($data instanceof Collection)) {
@@ -73,6 +89,7 @@ class FieldRepository
                 'is_required' => $field['isRequired'] ?? false,
                 'part_id' => $partID,
                 'type_id' => $field['typeID'],
+                'id'=> $field['id'] ?? null,
             ];
 
         });

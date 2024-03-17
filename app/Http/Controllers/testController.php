@@ -13,6 +13,7 @@ use Modules\BranchMS\app\Models\Branch;
 use Modules\CustomerMS\app\Http\Repositories\CustomerRepository;
 use Modules\FileMS\app\Models\File;
 use Modules\FormGMS\app\Models\Field;
+use Modules\FormGMS\app\Models\Form;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
@@ -26,6 +27,12 @@ class testController extends Controller
 {
     public function run(): void
     {
+//        $f = Form::findOrFail([10,11]);
+//        $f = Form::findOrFail(10)->parts()->orderBy('id','desc')->first();
+//        $formAndFirstPart = Form::with(['parts' => function ($query) {
+//            $query->orderBy('id','desc')->take(1);
+//        }])->findOrFail(10);
+//        dd($f);
 //        $data = [
 //            [
 //                'id'=>1,
@@ -55,19 +62,35 @@ class testController extends Controller
 }
 
 ', true);
+        $form = Form::with('part')->findOrFail(10);
+        $part = $form->part[0];
+//        dd($part);
+        $fieldData = json_decode($json['fields'], true);
+        $fieldData = array_map(function ($field) use ($part) {
+            $field['partID'] = $part->id;
+            return $field;
 
+        }, $fieldData);
+        $fieldCollection = collect($fieldData);
+        $fieldsWithoutOptions = $fieldCollection->whereNull('options');
+        $fieldsWithOptions = $fieldCollection->whereNotNull('options');
+//        $fieldCollection = $fieldCollection->map(function ($field) use ($part) {
+//            $field['partID']=$part->id;
+//            return $field;
+//        });
+        dd($fieldsWithoutOptions, $fieldsWithOptions);
 
 //        $r = Field::upsert($data, ['id']);
 //        $r = json_encode($data);
         $a = json_decode($json['fields'], true);
-
+        dd($a);
 //        dd($a);
         $c = collect($a)->whereNull('options');
         $transformedCollection = $c->map(function ($item) {
             $newItem = [
                 'name' => $item['label'],
                 'type_id' => $item['typeID'], // Assuming you want to keep the case for typeID
-                'is_required' => $item['isRequired']??false, // Assuming you want to keep the case for isRequired
+                'is_required' => $item['isRequired'] ?? false, // Assuming you want to keep the case for isRequired
                 'placeholder' => $item['placeholder'],
             ];
 
@@ -82,8 +105,6 @@ class testController extends Controller
 ////            return [$snakeCaseKey => $item];
 //        });
         dd($transformedCollection);
-
-
 
 
 //        $a = '{

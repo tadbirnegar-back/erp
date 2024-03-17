@@ -17,6 +17,8 @@ class FormGMSDatabaseSeeder extends Seeder
             PermissionSeeder::class,
             FieldTypeSeeder::class,
             FormStatusSeeder::class,
+            FieldStatusSeeder::class,
+            OptionStatusSeeder::class,
 
         ]);
         // $this->call([]);

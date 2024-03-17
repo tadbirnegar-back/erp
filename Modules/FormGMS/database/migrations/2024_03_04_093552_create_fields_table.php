@@ -18,11 +18,12 @@ return new class extends Migration
             $table->string('placeholder')->nullable();
             $table->boolean('is_required')->default(false);
             $table->unsignedBigInteger('part_id')->index()->nullable();
-            $table->unsignedBigInteger('type_id')->index()->nullable();
+            $table->unsignedBigInteger('type_id')->index()->nullable();            $table->unsignedBigInteger('status_id')->index();
 
 
             $table->foreign('part_id')->references('id')->on('parts')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('type_id')->references('id')->on('field_types')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

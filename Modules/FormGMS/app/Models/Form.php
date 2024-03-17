@@ -40,6 +40,16 @@ class Form extends Model
         return $this->belongsTo(Status::class,'status_id');
     }
 
+    public function parts(): HasMany
+    {
+        return $this->hasMany(Part::class);
+    }
+
+    public function part(): HasMany
+    {
+        return $this->hasMany(Part::class)->orderBy('id','desc')->take(1);
+    }
+
     public static function GetAllStatuses(): Collection
     {
         return Status::all()->where('model', '=', self::class);

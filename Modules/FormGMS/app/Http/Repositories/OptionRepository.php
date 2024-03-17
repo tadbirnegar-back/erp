@@ -17,7 +17,7 @@ class OptionRepository
 //    }
 
 
-    public function store(array $json,int $fieldID)
+    public function bulkStore(array $json,int $fieldID)
     {
         $dataToInsert = $this->dataPreparation($json, $fieldID);
         try {
@@ -42,6 +42,14 @@ class OptionRepository
         }
     }
 
+    public function bulkUpdate(array $data,int $fieldID)
+    {
+        $dataToUpsert = $this->dataPreparation($data, $fieldID);
+        $result = Option::upsert($dataToUpsert,['id']);
+
+        return $result;
+    }
+
     private function dataPreparation(array $arrayOfOptions,int $fieldID)
     {
 //        $arrayOfOptions = json_decode($json, true);
@@ -50,6 +58,8 @@ class OptionRepository
             return [
                 'label' => $data['label'],
                 'field_id' => $fieldID,
+                'id' => $data['id'] ?? null,
+
             ];
         },$arrayOfOptions);
 
