@@ -9,21 +9,14 @@ use Modules\PersonMS\app\Models\Natural;
 
 class CustomerRepository
 {
-    protected ShoppingCustomer $shoppingCustomer;
-    protected Customer $customer;
 
-    public function __construct(ShoppingCustomer $shoppingCustomer, Customer $customer)
-    {
-        $this->shoppingCustomer = $shoppingCustomer;
-        $this->customer = $customer;
-    }
 
     public function index(array $data)
     {
         $page = $data['pageNumber'] ?? 1;
         $perPage = $data['perPage'] ?? 10;
 
-        $customerQuery = $this->customer::with('person.avatar');
+        $customerQuery = Customer::with('person.avatar');
 
         //search by name
         if (isset($data['customerName'])) {
@@ -77,17 +70,17 @@ class CustomerRepository
              * @var ShoppingCustomer $shoppingCustomer
              */
 
-            $shoppingCustomer = new $this->shoppingCustomer();
+            $shoppingCustomer = new ShoppingCustomer();
             $shoppingCustomer->save();
             /**
              * @var Customer $customer
              */
-            $customer = new $this->customer();
+            $customer = new Customer();
             $customer->creator_id = $data['userID'];
             $customer->person_id = $data['personID'];
             $customer->customer_type_id = $data['customerTypeID'] ?? null;
 
-            $status = $this->customer::GetAllStatuses()->where('name', '=', 'فعال')->first();
+            $status = Customer::GetAllStatuses()->where('name', '=', 'فعال')->first();
 
             $customer->status_id = $status->id;
 //            $customer->save();
@@ -105,13 +98,13 @@ class CustomerRepository
 
     public function isPersonCustomer(int $personID)
     {
-        $customer = $this->customer::where('person_id', '=', $personID)->first();
+        $customer = Customer::where('person_id', '=', $personID)->first();
         return $customer == true;
     }
 
     public function show(int $id)
     {
-        $customer = $this->customer::with('person.avatar', 'person.personable', 'status','customerable')->findOrFail($id);
+        $customer = Customer::with('person.avatar', 'person.personable', 'status','customerable')->findOrFail($id);
 
         if ($customer->person && $customer->person->personable instanceof Natural) {
             $customer->person->load(['personable.homeAddress.city.state.country']);

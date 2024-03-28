@@ -34,23 +34,23 @@ use function PHPUnit\Framework\isEmpty;
 class EmployeeController extends Controller
 {
 //    public array $data = [];
-//    protected EmployeeRepository $employeeService;
-//    protected PersonRepository $personService;
-//    protected AddressRepository $addressService;
-//    protected RelativeRepository $relativeService;
-//    protected ResumeRepository $resumeService;
-//    protected EducationalRecordRepository $educationalRecordService;
-//
-//
-//    public function __construct(EmployeeRepository $employeeService, PersonRepository $personService, AddressRepository $addressService, RelativeRepository $relativeService, ResumeRepository $resumeService, EducationalRecordRepository $educationalRecordService)
-//    {
-//        $this->employeeService = $employeeService;
-//        $this->personService = $personService;
-//        $this->addressService = $addressService;
-//        $this->relativeService = $relativeService;
-//        $this->resumeService = $resumeService;
-//        $this->educationalRecordService = $educationalRecordService;
-//    }
+    protected EmployeeRepository $employeeService;
+    protected PersonRepository $personService;
+    protected AddressRepository $addressService;
+    protected RelativeRepository $relativeService;
+    protected ResumeRepository $resumeService;
+    protected EducationalRecordRepository $educationalRecordService;
+
+
+    public function __construct(EmployeeRepository $employeeService, PersonRepository $personService, AddressRepository $addressService, RelativeRepository $relativeService, ResumeRepository $resumeService, EducationalRecordRepository $educationalRecordService)
+    {
+        $this->employeeService = $employeeService;
+        $this->personService = $personService;
+        $this->addressService = $addressService;
+        $this->relativeService = $relativeService;
+        $this->resumeService = $resumeService;
+        $this->educationalRecordService = $educationalRecordService;
+    }
 
 
     /**

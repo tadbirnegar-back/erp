@@ -26,9 +26,11 @@ class AddressRepository
             $address->longitude = $data['longitude'] ?? null;
             $address->latitude = $data['latitude'] ?? null;
             $address->map_link = $data['mapLink'] ?? null;
-            $address->city_id = $data['cityID'];
+            $address->town_id = $data['townID'];
+            $address->village_id = $data['villageID'] ?? null;
+            $address->person_id = $data['personID'] ?? null;
             $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-            $address->creator_id = $data['userID'];
+            $address->creator_id = $data['userID']??null;
             $address->save();
             \DB::commit();
             return $address->load('city', 'state', 'country');

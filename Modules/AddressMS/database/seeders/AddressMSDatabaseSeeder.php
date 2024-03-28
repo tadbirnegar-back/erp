@@ -2,6 +2,7 @@
 
 namespace Modules\AddressMS\database\seeders;
 
+
 use Illuminate\Database\Seeder;
 
 use Illuminate\Support\Facades\DB;
@@ -15,31 +16,37 @@ class AddressMSDatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        $statesData = json_decode(file_get_contents(realpath(__DIR__.'/cities.json')), true);
-
-        $country = DB::table('countries')->insertGetId([
-            'name' => 'ایران',
-        ]);
-        foreach ($statesData as $stateData) {
-            $stateId = DB::table('states')->insertGetId([
-                'name' => $stateData['name'],
-                'country_id' => $country,
-            ]);
-
-            foreach ($stateData['cities'] as $cityName) {
-                DB::table('cities')->insert([
-                    'name' => $cityName,
-                    'state_id' => $stateId,
-                ]);
-            }
-        }
-
-        $this->call([
-            ModuleCategorySeeder::class,
-            ModuleSeeder::class,
-            PermissionSeeder::class,
-            AddressStatusSeeder::class,
-
-        ]);
+//        $statesData = json_decode(file_get_contents(realpath(__DIR__.'/cities.json')), true);
+//
+//        $country = DB::table('countries')->insertGetId([
+//            'name' => 'ایران',
+//        ]);
+//        foreach ($statesData as $stateData) {
+//            $stateId = DB::table('states')->insertGetId([
+//                'name' => $stateData['name'],
+//                'country_id' => $country,
+//            ]);
+//
+//            foreach ($stateData['cities'] as $cityName) {
+//                DB::table('cities')->insert([
+//                    'name' => $cityName,
+//                    'state_id' => $stateId,
+//                ]);
+//            }
+//        }
+//
+//        $this->call([
+//            ModuleCategorySeeder::class,
+//            ModuleSeeder::class,
+//            PermissionSeeder::class,
+//            AddressStatusSeeder::class,
+//
+//        ]);
+//        $this->call(CountriesTableSeeder::class);
+//        $this->call(StatesTableSeeder::class);
+//        $this->call(CitiesTableSeeder::class);
+//        $this->call(DistrictsTableSeeder::class);
+//        $this->call(TownsTableSeeder::class);
+        $this->call(VillagesTableSeeder::class);
     }
 }

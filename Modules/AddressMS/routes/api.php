@@ -26,5 +26,8 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/countries', [\Modules\AddressMS\app\Http\Controllers\AddressMSController::class, 'countries']);
     Route::post('/states', [\Modules\AddressMS\app\Http\Controllers\AddressMSController::class, 'statesOfCountry']);
     Route::post('/cities', [\Modules\AddressMS\app\Http\Controllers\AddressMSController::class, 'citiesOfState']);
+    Route::post('/districts', [\Modules\AddressMS\app\Http\Controllers\AddressMSController::class, 'districtsOfCity']);
+    Route::post('/towns', [\Modules\AddressMS\app\Http\Controllers\AddressMSController::class, 'townsOfDistrict']);
+    Route::post('/villages', [\Modules\AddressMS\app\Http\Controllers\AddressMSController::class, 'villagesOfTown']);
 });
 

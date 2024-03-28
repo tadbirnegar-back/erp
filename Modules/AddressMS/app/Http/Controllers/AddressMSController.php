@@ -6,8 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\AddressMS\app\Models\Address;
+use Modules\AddressMS\app\Models\City;
 use Modules\AddressMS\app\Models\Country;
+use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\State;
+use Modules\AddressMS\app\Models\Town;
+use Modules\AddressMS\app\Models\Village;
 use Modules\FileMS\app\Models\File;
 
 class AddressMSController extends Controller
@@ -103,28 +107,17 @@ class AddressMSController extends Controller
     public function countries(Request $request)
     {
         $countries = Country::all();
-        $response = $countries->map(function ($country) {
-            return [
-                'label' => $country->name,
-                'value' => $country->id
-            ];
-        });
-        return response()->json($response);
+
+        return response()->json($countries);
     }
 
     public function statesOfCountry(Request $request)
     {
-        $country = Country::with('states')->findOrFail($request->countryID);
-
-        if ($country == null) {
+        $states = State::where('country_id','=',$request->countryID)->get(['id','name']);
+        if ($states == null) {
             return response()->json(['message' => 'موردی یافت نشد', 404]);
         }
-        $states = $country->states->map(function ($state) {
-            return [
-                'label' => $state->name,
-                'value' => $state->id
-            ];
-        });
+
 
         return response()->json($states);
 
@@ -132,18 +125,50 @@ class AddressMSController extends Controller
 
     public function citiesOfState(Request $request)
     {
-        $state = State::with('cities')->findOrFail($request->stateID);
+        $cities = City::where('state_id','=',$request->stateID)->get(['id','name']);
 
-        if ($state == null) {
+        if ($cities == null) {
             return response()->json(['message' => 'موردی یافت نشد', 404]);
         }
-        $cities = $state->cities->map(function ($city) {
-            return [
-                'label' => $city->name,
-                'value' => $city->id
-            ];
-        });
 
         return response()->json($cities);
     }
+
+    public function districtsOfCity(Request $request)
+    {
+        $districts = District::where('city_id','=',$request->cityID)->get(['id','name']);
+
+        if (is_null($districts) ) {
+            return response()->json(['message' => 'موردی یافت نشد', 404]);
+        }
+
+
+        return response()->json($districts);
+    }
+
+
+    public function townsOfDistrict(Request $request)
+    {
+        $districts = Town::where('district_id','=',$request->districtID)->get(['id','name']);
+
+        if (is_null($districts) ) {
+            return response()->json(['message' => 'موردی یافت نشد', 404]);
+        }
+
+        return response()->json($districts);
+    }
+
+
+    public function villagesOfTown(Request $request)
+    {
+        $districts = Village::where('town_id','=',$request->townID)->get(['id','name']);
+
+        if (is_null($districts) ) {
+            return response()->json(['message' => 'موردی یافت نشد', 404]);
+        }
+
+        return response()->json($districts);
+    }
+
+
 }

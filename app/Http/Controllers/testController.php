@@ -11,6 +11,8 @@ use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Models\Address;
 use Modules\BranchMS\app\Models\Branch;
 use Modules\CustomerMS\app\Http\Repositories\CustomerRepository;
+use Modules\CustomerMS\app\Models\Customer;
+use Modules\CustomerMS\app\Models\ShoppingCustomer;
 use Modules\FileMS\app\Models\File;
 use Modules\FormGMS\app\Models\Field;
 use Modules\FormGMS\app\Models\Form;
@@ -25,94 +27,19 @@ use Str;
 
 class testController extends Controller
 {
+
     public function run(): void
     {
-//        $f = Form::findOrFail([10,11]);
-//        $f = Form::findOrFail(10)->parts()->orderBy('id','desc')->first();
-//        $formAndFirstPart = Form::with(['parts' => function ($query) {
-//            $query->orderBy('id','desc')->take(1);
-//        }])->findOrFail(10);
-//        dd($f);
-//        $data = [
-//            [
-//                'id'=>1,
-//                'label' => 'edited', // Field label
-//                'is_required' => false,
-//                'part_id' => 1,
-//                'type_id' => 3,
-//                'options' => [ // Options for this field
-//                    ['label' => 'Mr.'],
-//                    ['label' => 'Ms.'],
-//                    ['label' => 'Dr.'],
-//                ],
-//            ],
-//            [
-//                'id'=>null,
-//                'label' => 'Email Address',
-//                'is_required' => true,
-//                'part_id' => 1,
-//                'type_id' => 2,
-//            ],
-//            // ... more fields ...
-//        ];
-        $json = json_decode('
-        {
-    "formName": "اخلال در روند",
-    "fields": "[{\"label\":\"نام شخص مخل\",\"typeID\":1,\"isRequired\":true,\"placeholder\":\"نام شخص مخل را وارد کنید\",\"id\":26},{\"label\":\"علت اخلال\",\"typeID\":2,\"placeholder\":\"علت اخلال را وارد کنید\",\"id\":27},{\"label\":\"قابل بخشش\",\"typeID\":3,\"options\":[{\"label\":\"بله\",\"id\":16},{\"label\":\"خیر\",\"id\":17},{\"label\":\"شاید\",\"id\":null}],\"placeholder\":\"قابل بخشش را وارد کنید\",\"id\":28}]"
-}
+        DB::enableQueryLog();
 
-', true);
-        $form = Form::with('part')->findOrFail(10);
-        $part = $form->part[0];
-//        dd($part);
-        $fieldData = json_decode($json['fields'], true);
-        $fieldData = array_map(function ($field) use ($part) {
-            $field['partID'] = $part->id;
-            return $field;
+        $c = ShoppingCustomer::with(['customer.person.personable'])->findOrFail(9);
+        $queryLog = DB::getQueryLog();
+//        $lastQuery = end($queryLog);
 
-        }, $fieldData);
-        $fieldCollection = collect($fieldData);
-        $fieldsWithoutOptions = $fieldCollection->whereNull('options');
-        $fieldsWithOptions = $fieldCollection->whereNotNull('options');
-//        $fieldCollection = $fieldCollection->map(function ($field) use ($part) {
-//            $field['partID']=$part->id;
-//            return $field;
-//        });
-        dd($fieldsWithoutOptions, $fieldsWithOptions);
+// Output the last query executed
+        dd($queryLog);
 
-//        $r = Field::upsert($data, ['id']);
-//        $r = json_encode($data);
-        $a = json_decode($json['fields'], true);
-        dd($a);
-//        dd($a);
-        $c = collect($a)->whereNull('options');
-        $transformedCollection = $c->map(function ($item) {
-            $newItem = [
-                'name' => $item['label'],
-                'type_id' => $item['typeID'], // Assuming you want to keep the case for typeID
-                'is_required' => $item['isRequired'] ?? false, // Assuming you want to keep the case for isRequired
-                'placeholder' => $item['placeholder'],
-            ];
-
-            // Add new keys if needed
-            $newItem['new_key'] = 'new_value';
-
-            return $newItem;
-        });
-//        $collection = $c->mapWithKeys(function ($item) {
-//            dd($item);
-////            $snakeCaseKey = Str::snake($item['label']);
-////            return [$snakeCaseKey => $item];
-//        });
-        dd($transformedCollection);
-
-
-//        $a = '{
-//    "variantGroupName": "جنس",
-//    "variants": "[{\"variantName\":\"نقره ای\",\"id\":7,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"برنزی\",\"id\":8,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"شیشه ای\",\"id\":9,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"چدنی\",\"id\":10,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"استیل\",\"id\":11,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"جدید\"},{\"variantName\":\"جدید 2\"}]",
-//    "deleted": "[{\"variantName\":\"اهنی\",\"id\":4,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"طلایی\",\"id\":5,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"آلومینیومی\",\"id\":6,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"چوبی\",\"id\":3,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"اهنی\",\"id\":4,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"طلایی\",\"id\":5,\"status_id\":\"19\",\"variant_group_id\":\"13\"},{\"variantName\":\"آلومینیومی\",\"id\":6,\"status_id\":\"19\",\"variant_group_id\":\"13\"}]"
-//}
-//';
+        dd($c);
 //        $b=json_decode($a,true);
 //        dd(json_decode($b['variants'], true));
 //        $variantGroupId = 123; // Replace 123 with the specific variant group ID

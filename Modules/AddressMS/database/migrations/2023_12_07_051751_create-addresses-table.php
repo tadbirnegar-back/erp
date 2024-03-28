@@ -12,6 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('addresses', function (Blueprint $table) {
+            Schema::disableForeignKeyConstraints();
+
             $table->id();
             $table->string('title');
             $table->text('detail');
@@ -21,12 +23,12 @@ return new class extends Migration
             $table->text('map_link')->nullable();
 
 
-            $table->unsignedBigInteger('city_id');
+            $table->unsignedBigInteger('town_id');
             $table->unsignedBigInteger('status_id');
-            $table->unsignedBigInteger('creator_id');
+            $table->unsignedBigInteger('creator_id')->nullable();
             $table->timestamp('create_date');
 
-            $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('town_id')->references('id')->on('towns')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('creator_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
         });

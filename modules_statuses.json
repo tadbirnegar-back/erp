@@ -11,5 +11,6 @@
     "HRMS": true,
     "FormGMS": true,
     "SettingsMS": true,
-    "WidgetsMS": true
+    "WidgetsMS": true,
+    "LMS": true
 }

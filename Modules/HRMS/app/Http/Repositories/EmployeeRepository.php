@@ -45,7 +45,7 @@ class EmployeeRepository
              */
             $workForce = new WorkForce();
             $workForce->person_id = $data['personID'];
-            $workForce->isMarried = $data['isMarried'] == true;
+            $workForce->isMarried = $data['isMarried'] ?1:0;
             $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
 
             $employee->workForce()->save($workForce);
@@ -54,12 +54,18 @@ class EmployeeRepository
 
             $workForce->statuses()->attach($workForceStatus->id);
 
-            $positionsAsArray = json_decode($data['positions'], true);
-            $levelsAsArray = json_decode($data['levels'], true);
+            if (isset($data['positions'])) {
+                $positionsAsArray = json_decode($data['positions'], true);
+                $employee->possitions()->sync($positionsAsArray);
+            }
+
+            if (isset($data['levels'])) {
+                $levelsAsArray = json_decode($data['levels'], true);
+                $employee->levels()->sync($levelsAsArray);
+            }
 
 
-            $employee->possitions()->sync($positionsAsArray);
-            $employee->levels()->sync($levelsAsArray);
+
             \DB::commit();
             return $employee;
         } catch (\Exception $e) {

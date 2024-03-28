@@ -8,14 +8,11 @@ class UserRepository
 {
     protected User $user;
 
-    public function __construct(User $user)
-    {
-        $this->user = $user;
-    }
+
 
     public function isPersonUser(int $personID)
     {
-        $result = $this->user::where('person_id', '=', $personID)->first();
+        $result = User::where('person_id', '=', $personID)->first();
         return $result;
     }
 
@@ -26,7 +23,7 @@ class UserRepository
             /**
              * @var User $user
              */
-            $user = new $this->user;
+            $user = new User;
             $user->mobile = $data['mobile'];
             $user->email = $data['email'] ?? null;
             $user->username = $data['username'] ?? null;
@@ -34,8 +31,10 @@ class UserRepository
             $user->password = bcrypt($data['password']);
 
             $user->save();
-            $user->roles()->sync($data['roles']);
-            $status = $this->user::GetAllStatuses()->where('name', '=', 'فعال')->first();
+            if (isset($data['roles'])) {
+                $user->roles()->sync($data['roles']);
+            }
+            $status = User::GetAllStatuses()->where('name', '=', 'فعال')->first();
             $user->statuses()->attach($status->id);
             return $user;
         } catch (\Exception $e) {
@@ -46,7 +45,7 @@ class UserRepository
 
     public function show(int $id)
     {
-        $user = $this->user::with('person.avatar','person.personable','person.status','status','roles')->findOrFail($id);
+        $user = User::with('person.avatar','person.personable','person.status','status','roles')->findOrFail($id);
 
         return $user;
     }
@@ -55,7 +54,7 @@ class UserRepository
     {
         try {
 
-            $user = $this->user::findOrFail($id);
+            $user = User::findOrFail($id);
             $user->mobile = $data['mobile'];
             $user->email = $data['email'] ?? null;
             $user->username = $data['username'] ?? null;

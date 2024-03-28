@@ -66,7 +66,10 @@ class PersonRepository
             $naturalPerson->father_name = $data['fatherName'] ?? null;
             $naturalPerson->birth_date = $data['dateOfBirth'] ?? null;
             $naturalPerson->job = $data['job'] ?? null;
-            $naturalPerson->isMarried = $data['isMarried'] ? 1 : 0;
+            if (isset($data['isMarried'])) {
+                $naturalPerson->isMarried = $data['isMarried'] ? 1 : 0;
+            }
+
             $naturalPerson->level_of_spouse_education = $data['levelOfSpouseEducation'] ?? null;
             $naturalPerson->spouse_first_name = $data['spouseFirstName'] ?? null;
             $naturalPerson->spouse_last_name = $data['spouseLastName'] ?? null;
@@ -183,7 +186,9 @@ class PersonRepository
             $naturalPerson->father_name = $data['fatherName'] ?? null;
             $naturalPerson->birth_date = $data['dateOfBirth'] ?? null;
             $naturalPerson->job = $data['job'] ?? null;
-            $naturalPerson->isMarried = $data['isMarried'] ? 1 : 0;
+            if (isset($data['isMarried'])) {
+                $naturalPerson->isMarried = $data['isMarried'] ? 1 : 0;
+            }
             $naturalPerson->level_of_spouse_education = $data['levelOfSpouseEducation'] ?? null;
             $naturalPerson->spouse_first_name = $data['spouseFirstName'] ?? null;
             $naturalPerson->spouse_last_name = $data['spouseLastName'] ?? null;

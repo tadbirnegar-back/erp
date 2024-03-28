@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
         Schema::create('cities', function (Blueprint $table) {
+            Schema::disableForeignKeyConstraints();
+
             $table->id();
-            $table->string('name');
+            $table->string('name')->fulltext();
+            $table->string('amar_code')->index();
 
             $table->unsignedBigInteger('state_id');
 

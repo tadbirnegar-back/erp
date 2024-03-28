@@ -41,13 +41,13 @@ class LoginController extends Controller
     {
         $user = User::where('mobile', '=', $request->mobile)->first();
         if (!$user) {
-            return response()->json(['کاربری یافت نشد', 404]);
+            return response()->json(['کاربری یافت نشد'],404);
         }
 //        return response()->json([$user->person->avatar,
 //        ]);
 
         return response()->json([
-            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => (!is_null($user->person->avatar)) ? url('/') . '/' . $user->person->avatar->slug : null,
             'fullName' => $user->person->display_name
         ]);
 
@@ -309,7 +309,7 @@ class LoginController extends Controller
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => !is_null($user->person->avatar)? url('/') . '/' . $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
             $result['roles'] = $user->roles,
 

@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('states', function (Blueprint $table) {
+            Schema::disableForeignKeyConstraints();
             $table->id();
-            $table->string('name');
+            $table->string('name')->fulltext();
+            $table->string('amar_code')->index();
 
             $table->unsignedBigInteger('country_id');
 
