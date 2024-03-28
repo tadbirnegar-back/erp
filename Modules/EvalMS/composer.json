@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/evalms",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\EvalMS\\": "",
+            "Modules\\EvalMS\\App\\": "app/",
+            "Modules\\EvalMS\\Database\\Factories\\": "database/factories/",
+            "Modules\\EvalMS\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\EvalMS\\Tests\\": "tests/"
+        }
+    }
+}

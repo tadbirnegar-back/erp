@@ -12,5 +12,6 @@
     "FormGMS": true,
     "SettingsMS": true,
     "WidgetsMS": true,
-    "LMS": true
+    "LMS": true,
+    "EvalMS": true
 }

@@ -1,0 +1,11 @@
+{
+    "name": "EvalMS",
+    "alias": "evalms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EvalMS\\app\\Providers\\EvalMSServiceProvider"
+    ],
+    "files": []
+}
