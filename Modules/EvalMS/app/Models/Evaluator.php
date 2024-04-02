@@ -13,8 +13,9 @@ class Evaluator extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
-    
+    protected $fillable = ['sum','average','evaluation_id','user_id','parent_id'];
+    public $timestamps = false;
+
     protected static function newFactory(): EvaluatorFactory
     {
         //return EvaluatorFactory::new();

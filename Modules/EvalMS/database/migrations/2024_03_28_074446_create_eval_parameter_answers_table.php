@@ -12,6 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('eval_parameter_answers', function (Blueprint $table) {
+            Schema::disableForeignKeyConstraints();
+
             $table->id();
             $table->longText('value');
 

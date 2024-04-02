@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('size',255);
 
-            $table->unsignedBigInteger('creator_id')->index();
+            $table->unsignedBigInteger('creator_id')->index()->nullable();
             $table->unsignedBigInteger('extension_id')->index();
 
             $table->timestamp('create_date')->useCurrent();

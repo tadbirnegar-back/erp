@@ -6,8 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\AAA\app\Http\Repositories\UserRepository;
+use Modules\AAA\app\Models\Role;
 use Modules\AddressMS\app\Repositories\AddressRepository;
 use Modules\CustomerMS\app\Http\Repositories\CustomerRepository;
+use Modules\FileMS\app\Http\Repositories\FileRepository;
+use Modules\FileMS\app\Models\Extension;
+use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Repositories\EmployeeRepository;
 use Modules\LMS\app\Http\Repository\StudentRepository;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
@@ -32,11 +36,13 @@ class StudentController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->all();
+        $uploadedFile = $request->file('file');
+
+
 
         try {
             \DB::beginTransaction();
             $personService = new PersonRepository();
-
             $personResult = isset($request->personID)
                 ? $personService->naturalUpdate($data, $data['personID'])
                 : $personService->naturalStore($data);
@@ -65,11 +71,33 @@ class StudentController extends Controller
 
             $userService = new UserRepository();
             $userResult = $userService->store($data);
+
+            $studentRoles = Role::where('name', '=', 'فراگیر')->first('id');
+
+            $userResult->roles()->sync($studentRoles);
             $data['userID'] = $userResult->id;
+            if (!is_null($uploadedFile)) {
+                $data['fileName'] = $uploadedFile->getClientOriginalName();
+                $data['fileSize'] = $uploadedFile->getSize();
+                $fileExtension = $uploadedFile->getClientOriginalExtension();
+                $extension_id = Extension::where('name', '=', $fileExtension)->get(['id'])->first();
+
+                if (is_null($extension_id)) {
+                    return response()->json(['message' => 'فایل مجاز نمی باشد'], 400);
+                }
+                $data['extensionID'] = $extension_id->id;
+
+                $file = FileRepository::store($uploadedFile, $data);
+                if ($file instanceof File) {
+                    $data['avatar'] = $file->id;
+                }
+                $personService->naturalUpdate($data, $personResult->id);
+
+            }
 
             //check if person is employee and insert it if not
             $employeeService = new EmployeeRepository();
-            $personEmployee = $employeeService->isPersonEmployee($personResult->id) ?? $employeeService->store($data);
+            $personEmployee = is_null($employeeService->isPersonEmployee($personResult->person->id)) ?$employeeService->update($data,$personResult->person->workForce->id): $employeeService->store($data);
 
 
             $studentService = new StudentRepository();

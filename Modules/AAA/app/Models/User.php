@@ -16,6 +16,7 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
+use Modules\WidgetsMS\app\Models\Widget;
 
 class User extends Authenticatable
 {
@@ -113,6 +114,20 @@ class User extends Authenticatable
     public function addresses(): HasMany
     {
         return $this->hasMany(Address::class,'creator_id');
+    }
+
+    public function widgets()
+    {
+        return $this->permissions()
+        ->whereHas('permissionTypes', function ($query) {
+            $query->where('name', 'widget');
+        });
+    }
+
+    public function activeWidgets()
+    {
+        return $this->hasMany(Widget::class)
+            ->where('isActivated', true);
     }
 
     public static function GetAllStatuses(): Collection

@@ -14,7 +14,8 @@ class EvalParameterAnswer extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
-    
+    public $timestamps = false;
+
     protected static function newFactory(): EvalParameterAnswerFactory
     {
         //return EvalParameterAnswerFactory::new();

@@ -6,5 +6,9 @@
     {
         "id": "2",
         "name": "operational"
+    },
+    {
+        "id": "3",
+        "name": "widget"
     }
 ]

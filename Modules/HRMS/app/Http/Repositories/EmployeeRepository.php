@@ -130,7 +130,7 @@ class EmployeeRepository
 
     public function isPersonEmployee(int $personID)
     {
-        $workForce = WorkForce::where('person_id', '=', $personID)->where('workforceable_type', '=', Employee::class)->first();
+        $workForce = WorkForce::where('person_id', '=', $personID)->where('workforceable_type', '=', Employee::class)->exists();
 
         return $workForce;
     }

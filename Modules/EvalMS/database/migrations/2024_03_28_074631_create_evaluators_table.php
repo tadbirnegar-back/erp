@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('evaluators', function (Blueprint $table) {
+            Schema::disableForeignKeyConstraints();
             $table->id();
             $table->integer('sum')->nullable();
             $table->integer('average')->nullable();
-            $table->unsignedBigInteger('parent_id');
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->unsignedBigInteger('evaluation_id');
             $table->unsignedBigInteger('user_id');
 

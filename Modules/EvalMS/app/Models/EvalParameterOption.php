@@ -14,7 +14,8 @@ class EvalParameterOption extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
-    
+    public $timestamps = false;
+
     protected static function newFactory(): EvalParameterOptionFactory
     {
         //return EvalParameterOptionFactory::new();

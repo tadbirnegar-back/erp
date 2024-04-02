@@ -11,6 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('eval_parameters', function (Blueprint $table) {
+            Schema::disableForeignKeyConstraints();
             $table->id();
             $table->string('title');
             $table->text('description');
@@ -19,7 +20,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('eval_indicator_id');
             $table->unsignedBigInteger('eval_parameter_type_id');
 
-            $table->foreign('eval_indicator_id')->references('id')->on('eval_indicators')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('eval_indicator_id')->references('id')->on('evaluator_indicators')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('eval_parameter_type_id')->references('id')->on('eval_parameter_types')->onDelete('cascade')->onUpdate('cascade');
         });
     }

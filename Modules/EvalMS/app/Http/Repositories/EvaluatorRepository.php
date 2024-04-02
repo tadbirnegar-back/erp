@@ -21,7 +21,7 @@ class EvaluatorRepository
     public static function evaluatorStore(array|collection $data, int $evaluationID, int $userID)
     {
         $dataToInsert = self::dataPreparation($data, $evaluationID, $userID);
-
+//        return $dataToInsert;
         $result = Evaluator::create($dataToInsert);
 
         return $result;
@@ -31,22 +31,31 @@ class EvaluatorRepository
 
     private static function dataPreparation(array|collection $data, int $evaluationID, int $userID)
     {
-        if (!($data instanceof Collection)) {
-            $data = collect($data);
+        if (($data instanceof Collection)) {
+            $data = $data->toArray();
         }
 
-        $answers = $data->map(function ($answer) use ($evaluationID, $userID) {
-            return [
-                'sum' => $answer['sum'] ?? null,
-                'average' => $answer['average'] ?? null,
-                'parent_id' => $answer['parentID'] ?? null,
-                'evaluation_id' => $evaluationID,
-                'user_id' => $userID,
-            ];
+//        $answers = $data->map(function ($answer) use ($evaluationID, $userID) {
+//            return [
+//                'sum' => $answer['sum'] ?? null,
+//                'average' => $answer['average'] ?? null,
+//                'parent_id' => $answer['parentID'] ?? null,
+//                'evaluation_id' => $evaluationID,
+//                'user_id' => $userID,
+//            ];
+//
+//        });
 
-        });
+        $evalData = [
+            'sum' => $data['sum'] ?? null,
+            'average' => $data['average'] ?? null,
+            'parent_id' => $data['parentID'] ?? null,
+            'evaluation_id' => $evaluationID,
+            'user_id' => $userID,
 
-        return $answers->toArray();
+        ];
+
+        return $evalData;
     }
 
 

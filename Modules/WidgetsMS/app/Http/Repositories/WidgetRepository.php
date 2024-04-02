@@ -29,4 +29,25 @@ class WidgetRepository
         }
 
     }
+
+    public static function extractor(array $targetURIs)
+    {
+        $routes = \Route::getRoutes()->getRoutes();
+        $matchingRoutes = [];
+
+        foreach ($targetURIs as $targetURI) {
+            foreach ($routes as $route) {
+                if (str_contains($route->uri(),$targetURI)) {
+                    $action = $route->getAction();
+                    $matchingRoutes[$targetURI] = [
+                        'controller' => explode('@', $action['controller'])[0],
+                        'method' => $route->getActionMethod(),
+                    ];
+                    break; // Exit inner loop after finding a match for the current targetURI
+                }
+            }
+        }
+
+        return $matchingRoutes;
+    }
 }

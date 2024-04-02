@@ -11,6 +11,9 @@ class EvalMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+         $this->call([
+             ModuleSeeder::class,
+             PermissionSeeder::class,
+         ]);
     }
 }

@@ -23,23 +23,76 @@ use Modules\PersonMS\app\Models\Person;
 use Modules\ProductMS\app\Models\Variant;
 use Modules\ProductMS\app\Models\VariantGroup;
 use Modules\StatusMS\app\Models\Status;
+use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
 use Str;
 
 class testController extends Controller
 {
 
+
     public function run(): void
     {
-        DB::enableQueryLog();
+        $className = "Modules\AAA\app\Http\widgets\UserWidgets";
+        $methodName = "getUserInfo";
 
-        $c = ShoppingCustomer::with(['customer.person.personable'])->findOrFail(9);
-        $queryLog = DB::getQueryLog();
-//        $lastQuery = end($queryLog);
+// Call the method using call_user_func()
+        $result = call_user_func([$className, $methodName],1);
 
-// Output the last query executed
-        dd($queryLog);
+        $user = User::find(1);
+//        $sidebarPermissions = $user->permissions()
+//            ->whereHas('permissionTypes', function ($query) {
+//                $query->where('name', 'widget');
+//            })
+//            ->get();
+        $a = $user->load('activeWidgets.permission');
+        dd($user);
+        $activeWidgets = $a->activeWidgets;
+        $allPermissions = $activeWidgets->map(function ($widget) {
+            return $widget->permission->slug; // Extract permission model
+        });
+//        dd($allPermissions->toArray());
+        $b = WidgetRepository::extractor($allPermissions->toArray());
+//        dd($b);
+        foreach ($b as $key=> $item) {
 
-        dd($c);
+            $res[$key] = call_user_func([$item['controller'],$item['method']],$user->id);
+        }
+        dd($res);
+
+//        $routes = \Route::getRoutes()->getRoutes();
+////        dd($routes);
+//        $targetURI = 'users/roles/list';
+//
+//        $matchingRoute = null;
+//
+//        foreach ($routes as $route) {
+//            if (str_contains($route->uri(),$targetURI)) {
+//                $action = $route->getAction();
+//                $matchingRoute = [
+//                    'controller' => explode('@', $action['controller'])[0],
+//                    'method' => $route->getActionMethod(),
+//                ];
+//                break; // Exit loop after finding the first matching route
+//            }
+//        }
+//
+//        if ($matchingRoute) {
+//            echo "Controller: " . $matchingRoute['controller'];
+//            echo "<br> Method: " . $matchingRoute['method'];
+//        } else {
+//            echo "Route 'user/profile' not found.";
+//        }
+
+//        DB::enableQueryLog();
+//
+//        $c = ShoppingCustomer::with(['customer.person.personable'])->findOrFail(9);
+//        $queryLog = DB::getQueryLog();
+////        $lastQuery = end($queryLog);
+//
+//// Output the last query executed
+//        dd($queryLog);
+//
+//        dd($c);
 //        $b=json_decode($a,true);
 //        dd(json_decode($b['variants'], true));
 //        $variantGroupId = 123; // Replace 123 with the specific variant group ID

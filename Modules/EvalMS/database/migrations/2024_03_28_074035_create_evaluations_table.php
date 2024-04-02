@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('max_value');
             $table->boolean('isRequired');
             $table->timestamp('create_date')->useCurrent();
-            $table->timestamp('expire_date');
+            $table->timestamp('expire_date')->nullable();
 
         });
     }

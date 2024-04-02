@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
+use Modules\EvalMS\app\Models\Evaluation;
+use Modules\EvalMS\app\Models\Evaluator;
 
 class EvaluatorController extends Controller
 {
@@ -24,13 +26,23 @@ class EvaluatorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request,$id): JsonResponse
     {
         $data = $request->all();
+        $data['userID'] = \Auth::user()->id;
+
+//        $hasEvaluated = Evaluator::where('user_id', $data['userID'])
+//            ->where('evaluation_id', $id)
+//            ->exists();
+//        if ($hasEvaluated) {
+//            return response()->json(['message' => 'شما قبلا در این نظر سنجی شرکت کرده اید'],400);
+//
+//        }
         try {
             \DB::beginTransaction();
-            $data['userID'] = \Auth::user()->id;
-            $evaluator = EvaluatorRepository::evaluatorStore($data, $data['evaluation'], $data['userID']);
+            $evaluator = EvaluatorRepository::evaluatorStore($data, $id, $data['userID']);
+//            return response()->json(['message' => $evaluator]);
+
             $answers = json_decode($data['answers'], true);
             $evalAnswers = EvaluatorRepository::answerStore($answers, $evaluator->id);
 

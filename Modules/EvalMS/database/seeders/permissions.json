@@ -1,0 +1,14 @@
+[
+    {
+        "name": "لیست ارزیابی",
+        "slug": "/evaluations/list",
+        "moduleName": "EvalMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "شرکت در ارزیابی",
+        "slug": "/evaluations/partake/{id}",
+        "moduleName": "EvalMS",
+        "permissionTypeName": "operational"
+    }
+]

@@ -1,0 +1,38 @@
+[
+    {
+        "name": "لیست فراگیر",
+        "slug": "/students/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن فراگیر",
+        "slug": "/hrm/students/add",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ثبت نام فراگیر",
+        "slug": "/dehyari/add",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده فراگیر",
+        "slug": "/students/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی فراگیر",
+        "slug": "/students/update/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف فراگیر",
+        "slug": "/students/delete/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    }
+]

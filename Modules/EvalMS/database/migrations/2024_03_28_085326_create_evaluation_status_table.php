@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('evaluation_status', function (Blueprint $table) {
+            Schema::disableForeignKeyConstraints();
 
             $table->unsignedBigInteger('evaluation_id');
             $table->unsignedBigInteger('status_id');

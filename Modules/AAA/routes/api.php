@@ -34,5 +34,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/permissions/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'index'])->middleware('auth:api');
     Route::post('/users/view/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'show'])->middleware('auth:api','route');
 
+    Route::get('/user/profile', [\Modules\AAA\app\Http\widgets\UserWidgets::class, 'getUserInfo']);
+
 });
 

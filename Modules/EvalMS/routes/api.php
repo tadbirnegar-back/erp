@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('evalms', fn (Request $request) => $request->user())->name('evalms');
+Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/evaluations/partake/{id}', [\Modules\EvalMS\app\Http\Controllers\EvaluatorController::class, 'store']);
+});
+
+Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
+//    Route::post('/evaluations/add', [\Modules\EvalMS\app\Http\Controllers\EvaluatorController::class, 'store']);
+    Route::post('/evaluations/list', [\Modules\EvalMS\app\Http\Controllers\EvaluationController::class, 'index']);
+//    Route::delete('/evaluations/delete/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'destroy']);
+//    Route::put('/evaluations/update/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'update']);
+    Route::get('/evaluations/partake/{id}', [\Modules\EvalMS\app\Http\Controllers\EvaluationController::class, 'show']);
 });

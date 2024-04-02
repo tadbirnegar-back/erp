@@ -5,8 +5,10 @@ namespace Modules\PersonMS\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Models\WorkForce;
 use Modules\PersonMS\Database\factories\PersonFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -42,6 +44,11 @@ class Person extends Model
     public function avatar()
     {
         return $this->belongsTo(File::class, 'profile_picture_id');
+    }
+
+    public function workForce(): HasOne
+    {
+        return $this->hasOne(WorkForce::class,'person_id');
     }
 
 
