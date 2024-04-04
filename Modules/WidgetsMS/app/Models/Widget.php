@@ -16,7 +16,8 @@ class Widget extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
-
+    protected $casts = ['isActivated' => 'boolean'];
+    public $timestamps = false;
     protected static function newFactory(): WidgetFactory
     {
         //return WidgetFactory::new();

@@ -12,8 +12,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Modules\AAA\app\Models\User;
+use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
+use Modules\WidgetsMS\app\Models\Widget;
+use Str;
 use Symfony\Component\HttpFoundation\Cookie;
-
 
 
 class AAAController extends Controller
@@ -69,6 +71,47 @@ class AAAController extends Controller
 
         return response()->json($this->data);
     }
+
+    public function activeWidgets()
+    {
+        $user = \Auth::user();
+
+//        $user->load('activeWidgets');
+
+        $activeWidgets = $user->activeWidgets;
+
+        $allPermissions = $activeWidgets->map(function ($widget) {
+            return $widget->permission->slug; // Extract permission model
+        });
+
+        $functions = WidgetRepository::extractor($allPermissions->toArray());
+
+        $widgetData = [];
+        foreach ($functions as $key => $item) {
+
+            $widgetData[] = [
+                'name' => Str::replace('/', '', $key),
+                'data' => call_user_func([$item['controller'], $item['method']
+                 ]
+                    , $user)];
+        }
+
+        return response()->json($widgetData);
+
+    }
+
+    public function widgets()
+    {
+        $user = \Auth::user();
+//        $user->load('widgets');
+
+
+        return response()->json($user->widgets);
+
+
+    }
+
+
 
     // --------------------------------------------------------------------
 

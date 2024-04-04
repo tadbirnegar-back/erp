@@ -7,6 +7,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\AAA\app\Http\Services\UserService;
 use Modules\AAA\app\Models\User;
+use Modules\AddressMS\app\Repositories\AddressRepository;
+use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 
 class UserController extends Controller
 {
@@ -104,6 +106,80 @@ class UserController extends Controller
             $user->statuses()->attach($disable->id);
         }
         return response()->json(['message' => 'کاربر با موفقیت حذف شد']);
+    }
+
+    public function updateUserInfo(Request $request)
+    {
+        $data = $request->all();
+
+        $user = \Auth::user();
+        try {
+            \DB::beginTransaction();
+            $data['userID'] = $user->id;
+            if ($data['username'] !== '') {
+                $user->username = $data['username'];
+                $user->save();
+            }
+            $person = $user->person;
+
+            if ($request->isNewAddress) {
+                $addressService = new AddressRepository();
+                $data['personID'] = $person->id;
+                $address = $addressService->store($data);
+
+                if ($address instanceof \Exception) {
+                    return response()->json(['message' => 'خطا در وارد کردن آدرس'], 500);
+                }
+                $data['homeAddressID'] = $address->id;
+
+            }
+            $personService = new PersonRepository();
+            $personResult = $personService->naturalUpdate($data,$person->personable_id);
+
+            if ($personResult instanceof \Exception) {
+                return response()->json(['message' => $personResult->getMessage()], 500);
+//            return response()->json(['message' => 'خطا در افزودن شخص'], 500);
+            }
+            \DB::commit();
+
+            return response()->json(['message' => 'با موفقیت ویرایش شد']);
+        }catch (\Exception $e){
+            \DB::rollBack();
+//            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی کاربر'], 500);
+
+        }
+
+    }
+
+    public function profile()
+    {
+        $user = \Auth::user();
+        $user->load('person.avatar', 'person.personable.homeAddress.village','person.personable.homeAddress.town.district.city.state.country');
+
+        return response()->json($user);
+    }
+
+    public function updatePassword(Request $request)
+    {
+
+
+        $user = \Auth::user();
+
+        if (\Hash::check($request->currentPassword, $user->password)) {
+            $user->password = \Hash::make($request->newPassword);
+            $user->save();
+            $message = 'با موفقیت بروزرسانی شد';
+            $statusCode=200;
+        }else{
+            $message = 'رمز فعلی نادرست است';
+            $statusCode = 401;
+
+        }
+
+
+
+        return response()->json(['message' => $message], $statusCode);
     }
 }
 

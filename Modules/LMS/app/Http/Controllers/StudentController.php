@@ -107,7 +107,7 @@ class StudentController extends Controller
             return response()->json([$customerResult]);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+//            return response()->json(['message' => $e->getMessage()], 500);
             return response()->json(['message' => 'خطا در ایجاد فراگیر جدید'], 500);
 
         }

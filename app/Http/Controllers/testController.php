@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Modules\AAA\app\Models\ModuleCategory;
 use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\Role;
@@ -32,32 +34,49 @@ class testController extends Controller
 
     public function run(): void
     {
-        $className = "Modules\AAA\app\Http\widgets\UserWidgets";
-        $methodName = "getUserInfo";
+        $start = now();
+//        $x = \Http::get('https://api.keybit.ir/hadis/');
+        $x = Http::pool(fn(Pool $pool) =>[
+            $pool->get('https://api.keybit.ir/hadis/'),
+            $pool->get('https://api.codebazan.ir/monasebat/'),
+
+        ] );
+//        $j = $x->body();
+//        $d = json_decode($j, true);
+        dd($x,now()->diffInMilliseconds($start));
+//        $className = "Modules\AAA\app\Http\widgets\UserWidgets";
+//        $methodName = "getUserInfo";
 
 // Call the method using call_user_func()
-        $result = call_user_func([$className, $methodName],1);
+//        $result = call_user_func([$className, $methodName],1);
 
         $user = User::find(1);
+//        $user->load('widgets');
+//        dd($user->widgets);
+//        dd($user->load('person','roles'));
 //        $sidebarPermissions = $user->permissions()
 //            ->whereHas('permissionTypes', function ($query) {
 //                $query->where('name', 'widget');
 //            })
 //            ->get();
-        $a = $user->load('activeWidgets.permission');
-        dd($user);
-        $activeWidgets = $a->activeWidgets;
+//         $user->load('activeWidgets.permission');
+        $activeWidgets = $user->activeWidgets;
+
         $allPermissions = $activeWidgets->map(function ($widget) {
             return $widget->permission->slug; // Extract permission model
         });
 //        dd($allPermissions->toArray());
         $b = WidgetRepository::extractor($allPermissions->toArray());
 //        dd($b);
-        foreach ($b as $key=> $item) {
+        foreach ($b as $key => $item) {
 
-            $res[$key] = call_user_func([$item['controller'],$item['method']],$user->id);
+            $widgetData[] = [
+                'name' => Str::replace('/', '', $key),
+                'data' => call_user_func([$item['controller'], $item['method']
+                    ]
+                    , $user)];
         }
-        dd($res);
+        dd($widgetData);
 
 //        $routes = \Route::getRoutes()->getRoutes();
 ////        dd($routes);

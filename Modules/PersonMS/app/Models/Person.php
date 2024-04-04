@@ -5,6 +5,7 @@ namespace Modules\PersonMS\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
@@ -49,6 +50,11 @@ class Person extends Model
     public function workForce(): HasOne
     {
         return $this->hasOne(WorkForce::class,'person_id');
+    }
+
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
     }
 
 

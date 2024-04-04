@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Modules\AddressMS\app\Models\Address;
+use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -83,7 +84,8 @@ class User extends Authenticatable
 
     public function permissions()
     {
-        return $this->hasManyDeep(Permission::class, ['user_role', Role::class, 'role_permission']);
+        return $this->hasManyDeep(Permission::class, ['user_role', Role::class, 'role_permission'])
+            ->distinct();
     }
 
     public function statuses()
@@ -119,15 +121,24 @@ class User extends Authenticatable
     public function widgets()
     {
         return $this->permissions()
-        ->whereHas('permissionTypes', function ($query) {
-            $query->where('name', 'widget');
-        });
+            ->whereHas('permissionTypes', function ($query) {
+                $query->where('name', 'widget');
+            })
+            ->with(['widgets' => function ($query) {
+                $query->where('user_id', $this->id);
+            }]);
+
     }
 
-    public function activeWidgets()
+    public function activeWidgets(): HasMany
     {
         return $this->hasMany(Widget::class)
-            ->where('isActivated', true);
+            ->where('isActivated', true)->with('permission');
+    }
+
+    public function evaluators()
+    {
+        return $this->hasMany(Evaluator::class);
     }
 
     public static function GetAllStatuses(): Collection

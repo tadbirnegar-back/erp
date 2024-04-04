@@ -12,6 +12,7 @@ use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\State;
 use Modules\AddressMS\app\Models\Town;
 use Modules\AddressMS\app\Models\Village;
+use Modules\AddressMS\app\Repositories\AddressRepository;
 use Modules\FileMS\app\Models\File;
 
 class AddressMSController extends Controller
@@ -25,7 +26,7 @@ class AddressMSController extends Controller
     {
         $user = \Auth::user();
         $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-        $response = $user->addresses()->where('status_id', '=', $statusID)->orderBy('create_date', 'desc')->select(['id', 'title'])->get();
+        $response = $user->person->addresses()->where('status_id', '=', $statusID)->orderBy('create_date', 'desc')->select(['id', 'title'])->get();
 
         return response()->json($response);
     }
@@ -59,7 +60,7 @@ class AddressMSController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $address = Address::with('city', 'state', 'country','status')->findOrFail($id);
+        $address = Address::with('village','town.district.city.addresses.city.state.country','status')->findOrFail($id);
 
         if ($address === null) {
             return response()->json('فایل مورد نظر یافت نشد', 404);
@@ -76,15 +77,9 @@ class AddressMSController extends Controller
         if ($address === null) {
             return response()->json('فایل مورد نظر یافت نشد', 404);
         }
-        $address->title = $request->title;
-        $address->detail = $request->address;
-        $address->postal_code = $request->postalCode ?? null;
-        $address->longitude = $request->longitude ?? null;
-        $address->latitude = $request->latitude ?? null;
-        $address->map_link = $request->mapLink ?? null;
-        $address->city_id = $request->cityID;
-
-        $address->save();
+        $data = $request->all();
+        $addressService = new AddressRepository();
+        $addressResult = $addressService->update($data, $id);
 
         return response()->json($this->data);
     }
@@ -100,7 +95,7 @@ class AddressMSController extends Controller
         }
 
         $address->status_id = $request->statusID;
-
+        $address->save();
         return response()->json('با موفقیت حذف شد');
     }
 

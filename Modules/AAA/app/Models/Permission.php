@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\AAA\Database\factories\PermissionFactory;
+use Modules\WidgetsMS\app\Models\Widget;
 use Znck\Eloquent\Traits\BelongsToThrough;
 
 class Permission extends Model
@@ -38,5 +39,10 @@ class Permission extends Model
     public function moduleCategory()
     {
         return $this->belongsToThrough(ModuleCategory::class, Module::class);
+    }
+
+    public function widgets(): HasMany
+    {
+        return $this->hasMany(Widget::class);
     }
 }

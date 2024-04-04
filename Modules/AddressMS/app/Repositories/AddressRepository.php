@@ -33,7 +33,34 @@ class AddressRepository
             $address->creator_id = $data['userID']??null;
             $address->save();
             \DB::commit();
-            return $address->load('city', 'state', 'country');
+            return $address->load('village','town.district.city.state.country');
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return $e;
+        }
+
+    }
+
+    public function update(array $data,int $id)
+    {
+        try {
+            \DB::beginTransaction();
+            $address = Address::find($id);
+//            $address = new Address();
+            $address->title = $data['title'];
+            $address->detail = $data['address'];
+            $address->postal_code = $data['postalCode'] ?? null;
+            $address->longitude = $data['longitude'] ?? null;
+            $address->latitude = $data['latitude'] ?? null;
+            $address->map_link = $data['mapLink'] ?? null;
+            $address->town_id = $data['townID'];
+            $address->village_id = $data['villageID'] ?? null;
+            $address->person_id = $data['personID'] ?? null;
+            $address->creator_id = $data['userID']??null;
+            $address->save();
+            \DB::commit();
+            return $address->load('village','town.district.city.state.country');
 
         } catch (\Exception $e) {
             \DB::rollBack();

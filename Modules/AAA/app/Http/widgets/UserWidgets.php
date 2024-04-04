@@ -6,11 +6,22 @@ use Modules\AAA\app\Models\User;
 
 class UserWidgets
 {
-    public static function getUserInfo(int $userID)
+    public static function getUserInfo(User $user)
     {
-        $user = User::with('person.avatar','roles')->find($userID);
+        $user->load('person.avatar','roles');
 
-        return $user;
+        $data = [
+            'person' => $user->person,
+            'roles' => $user->roles,
+
+        ];
+
+        return $data;
+    }
+
+    public static function calendar(User $user)
+    {
+        return null;
     }
 
 }

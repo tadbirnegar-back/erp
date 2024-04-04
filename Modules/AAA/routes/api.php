@@ -33,8 +33,23 @@ Route::prefix('v1')->group(function () {
     Route::post('/users/roles/update/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'show'])->middleware(['auth:api','route'])->name('role.edit');
     Route::post('/permissions/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'index'])->middleware('auth:api');
     Route::post('/users/view/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'show'])->middleware('auth:api','route');
+    Route::post('/users/widgets/active', [\Modules\AAA\app\Http\Controllers\AAAController::class, 'activeWidgets'])->middleware('auth:api');
 
-    Route::get('/user/profile', [\Modules\AAA\app\Http\widgets\UserWidgets::class, 'getUserInfo']);
+
+    Route::get('/widget/profile', [\Modules\AAA\app\Http\widgets\UserWidgets::class, 'getUserInfo']);
+
+    Route::get('/widget/calendar', [\Modules\AAA\app\Http\widgets\UserWidgets::class, 'calendar']);
+
+    //settings route
+    Route::post('/setting/widgets', [\Modules\AAA\app\Http\Controllers\AAAController::class, 'widgets'])->middleware('auth:api');
+
+    Route::put('/setting/widgets', [\Modules\WidgetsMS\app\Http\Controllers\WidgetsMSController::class, 'update'])->middleware('auth:api');
+
+    Route::post('/setting/profile', [\Modules\AAA\app\Http\Controllers\UserController::class, 'profile'])->middleware('auth:api');
+
+    Route::put('/setting/profile', [\Modules\AAA\app\Http\Controllers\UserController::class, 'updateUserInfo'])->middleware('auth:api');
+
+    Route::put('/setting/security', [\Modules\AAA\app\Http\Controllers\UserController::class, 'updatePassword'])->middleware('auth:api');
 
 });
 

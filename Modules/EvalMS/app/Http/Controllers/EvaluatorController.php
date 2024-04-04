@@ -86,4 +86,18 @@ class EvaluatorController extends Controller
 
         return response()->json($this->data);
     }
+    public function hasEvaluationRecord(Request $request,$evaluationId)
+    {
+
+
+        $user = \Auth::user();
+
+        $recordExists = $user->evaluators()
+            ->where('evaluation_id', $evaluationId)
+            ->exists();
+
+        return response()->json([
+            'hasRecord' => $recordExists,
+        ]);
+    }
 }

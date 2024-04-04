@@ -2,6 +2,8 @@
 
 namespace Modules\WidgetsMS\app\Http\Repositories;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Modules\WidgetsMS\app\Models\Widget;
 
 class WidgetRepository
@@ -49,5 +51,30 @@ class WidgetRepository
         }
 
         return $matchingRoutes;
+    }
+
+    public static function widgetsUpdate(array|collection $data,int $userID)
+    {
+        $dataToUpsert = self::dataPreparation($data, $userID);
+
+        $result = Widget::upsert($dataToUpsert, 'id');
+        return $result;
+    }
+
+    private static function dataPreparation(array|collection $data, int $userID)
+    {
+        if (!$data instanceof collection) {
+            $data=collect($data);
+        }
+        $data = $data->map(function ($w) use ($userID) {
+            return [
+                'id' => $w['widgetID'] ?? null,
+                'isActivated' => $w['isActivated'] === true ? 1 : 0,
+                'permission_id' => $w['permissionID'],
+                'user_id' => $userID
+            ];
+        });
+
+        return $data->toArray();
     }
 }

@@ -21,6 +21,8 @@ use Modules\AddressMS\app\services\AddressService;
 use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Natural;
+use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
+use Str;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class LoginController extends Controller

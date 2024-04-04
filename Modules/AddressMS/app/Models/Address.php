@@ -32,6 +32,16 @@ class Address extends Model
         return $this->belongsTo(City::class);
     }
 
+    public function village(): BelongsTo
+    {
+        return $this->belongsTo(Village::class);
+    }
+
+    public function town(): BelongsTo
+    {
+        return $this->belongsTo(Town::class);
+    }
+
     use \Znck\Eloquent\Traits\BelongsToThrough;
 
     public function state()

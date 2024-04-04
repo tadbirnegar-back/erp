@@ -5,6 +5,7 @@ namespace Modules\WidgetsMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
 
 class WidgetsMSController extends Controller
 {
@@ -43,11 +44,28 @@ class WidgetsMSController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request): JsonResponse
     {
-        //
 
-        return response()->json($this->data);
+        $data = $request->all();
+        $user = \Auth::user();
+        try {
+            \DB::beginTransaction();
+            $widgets = json_decode($data['widgets'], true);
+
+            $upsert = WidgetRepository::widgetsUpdate($widgets, $user->id);
+
+            \DB::commit();
+            return response()->json(['message'=>'با موفقیت ثبت شد']);
+
+        }catch (\Exception $e){
+            \DB::rollBack();
+//            return response()->json(['message'=>$e->getMessage()]);
+            return response()->json(['message'=>'خطا در ثبت تغییرات']);
+
+        }
+
+
     }
 
     /**
