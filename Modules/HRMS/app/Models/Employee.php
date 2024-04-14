@@ -30,11 +30,11 @@ class Employee extends Model
 
     public function positions(): BelongsToMany
     {
-        return $this->belongsToMany(Position::class,'employee_position');
+        return $this->belongsToMany(Position::class,'recruitment_scripts');
     }
 
     public function levels(): BelongsToMany
     {
-        return $this->belongsToMany(Level::class,'employee_level');
+        return $this->belongsToMany(Level::class,'recruitment_scripts');
     }
 }

@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Route;
 
 
 
-Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'store']);
+Route::middleware([])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'store'])->middleware(['auth:api','route']);
     Route::get('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'addEmployeeBaseInfo']);
 //    Route::post('/products/merchandise/variants/list', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'index']);
 //    Route::put('/products/merchandise/variants/update/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'update']);
@@ -28,8 +28,12 @@ Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(funct
 //    Route::delete('/products/merchandise/variants/delete/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'destroy']);
 });
 
-Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/employee/natural/search', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'isPersonEmployee']);
+Route::middleware([])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/employee/natural/search', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'isPersonEmployee'])->middleware('auth:api');
+    Route::post('/recruitment/list/state_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'stateOfcs']);
+    Route::post('/recruitment/list/city_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cityOfcs']);
+    Route::post('/recruitment/list/district_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'districtOfcs']);
+    Route::post('/recruitment/list/village_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'villageOfcs']);
 
 });
 

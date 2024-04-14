@@ -14,9 +14,11 @@ use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\Token;
+use Modules\AAA\app\Http\Repositories\OtpRepository;
 use Modules\AAA\app\Http\Services\UserService;
 use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\User;
+use Modules\AAA\app\Notifications\OtpNotification;
 use Modules\AddressMS\app\services\AddressService;
 use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Models\Person;
@@ -43,7 +45,7 @@ class LoginController extends Controller
     {
         $user = User::where('mobile', '=', $request->mobile)->first();
         if (!$user) {
-            return response()->json(['کاربری یافت نشد'],404);
+            return response()->json(['کاربری یافت نشد'], 404);
         }
 //        return response()->json([$user->person->avatar,
 //        ]);
@@ -238,7 +240,7 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-        }else{
+        } else {
             return response()->json(['message' => 'نام کاربری یا رمز عبور نادرست است'], 401);
 
         }
@@ -306,12 +308,12 @@ class LoginController extends Controller
          */
         $natural = $person->personable;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
-        $result['operational'] = $operationalItems;
-        $result['sidebar'] = $sidebarItems;
+        $result['operational'] = $operationalItems ?? null;
+        $result['sidebar'] = $sidebarItems ?? null;
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => !is_null($user->person->avatar)? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => !is_null($user->person->avatar) ? url('/') . '/' . $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
             $result['roles'] = $user->roles,
 
@@ -410,12 +412,122 @@ class LoginController extends Controller
          */
         $natural = $person->personable;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
-        $result['operational'] = $operationalItems;
-        $result['sidebar'] = $sidebarItems;
+        $result['operational'] = $operationalItems ?? null;
+        $result['sidebar'] = $sidebarItems ?? null;
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => $user->person->avatar->slug != null ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => $user->person->avatar != null ? url('/') . '/' . $user->person->avatar->slug : null,
+            $result['roles'] = $user->roles,
+
+        ];
+        return response()->json($result)->withCookie($cookie);
+
+    }
+
+    /* -------------------------- login by otp -------------------------- */
+
+    public function generateOtp(Request $request)
+    {
+        $user = User::where('mobile', $request->mobile)->first();
+
+        if (is_null($user)) {
+            return response()->json(['message' => 'کاربری یافت نشد'], 404);
+        }
+
+        $otpCode = rand(1000, 99999);
+
+
+        $data = [
+            'code' => $otpCode,
+            'userID' => $user->id,
+            'isUsed' => false,
+            'expireDate' => Carbon::now()->addMinutes(3),
+
+        ];
+
+        $otp = OtpRepository::store($data);
+        if (is_null($otp)) {
+            return response()->json(['message' => 'خطا در ارسال رمز یکبار مصرف'], 500);
+
+        }
+        $user->notify(new OtpNotification($otpCode));
+        return response()->json(['message' => 'رمز یکبارمصرف ارسال شد']);
+
+    }
+
+    public function otpLogin(Request $request)
+    {
+
+        $user = User::where('mobile', $request->mobile)->first();
+
+        if (is_null($user)) {
+            return response()->json(['message' => 'کاربری یافت نشد'], 404);
+        }
+
+        $baseUrl = url('/');
+
+        $response = Http::post("{$baseUrl}/oauth/token", [
+            'username' => $request->mobile,
+            'otp' => $request->otp,
+//            'otp_verifier' => 'otp ver',
+            'client_id' => config('passport.password_grant_client.id'),
+            'client_secret' => config('passport.password_grant_client.secret'),
+            'grant_type' => 'otp_grant'
+        ]);
+
+        $result = json_decode($response->getBody(), true);
+
+        if (array_key_exists('error', $result)) {
+            return response()->json(['message' => 'کد وارد شده نادرست است'], 401);
+        }
+
+        if (!$response->ok()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+
+        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+
+        $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
+
+        unset($result['refresh_token']);
+        unset($result['token_type']);
+        unset($result['expires_in']);
+
+        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+        foreach ($sidebarPermissions as $permission) {
+            $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
+                'label' => $permission->name,
+                'slug' => $permission->slug,
+            ];
+            $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+        }
+
+        $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
+        foreach ($operationalPermissions as $permission) {
+            $operationalItems[$permission->moduleCategory->name]['subPermission'][] = [
+                'label' => $permission->name,
+                'slug' => $permission->slug,
+            ];
+            $operationalItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+        }
+
+//        $permissions = $user->permissions()->with(['moduleCategory', 'permissionTypes'])->get();
+
+
+        $person = $user->person;
+        /**
+         * @var Natural $natural
+         */
+        $natural = $person->personable;
+//        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
+        $result['operational'] = $operationalItems ?? null;
+        $result['sidebar'] = $sidebarItems ?? null;
+        $result['userInfo'] = [
+            'firstName' => $natural->first_name,
+            'lastName' => $natural->last_name,
+            'avatar' => !is_null($user->person->avatar) ? url('/') . '/' . $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
             $result['roles'] = $user->roles,
 

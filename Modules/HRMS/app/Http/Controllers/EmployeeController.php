@@ -11,6 +11,7 @@ use Modules\AddressMS\app\Repositories\AddressRepository;
 use Modules\AddressMS\app\services\AddressService;
 use Modules\HRMS\app\Http\Repositories\EducationalRecordRepository;
 use Modules\HRMS\app\Http\Repositories\EmployeeRepository;
+use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
 use Modules\HRMS\app\Http\Repositories\RelativeRepository;
 use Modules\HRMS\app\Http\Repositories\ResumeRepository;
 use Modules\HRMS\app\Http\Services\EducationalRecordService;
@@ -30,6 +31,7 @@ use Modules\HRMS\app\Models\Skill;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 use Modules\PersonMS\app\Http\Services\PersonService;
 use function PHPUnit\Framework\isEmpty;
+use function Sodium\add;
 
 class EmployeeController extends Controller
 {
@@ -82,6 +84,7 @@ class EmployeeController extends Controller
             $address = $addressService->store($data);
 
             if ($address instanceof \Exception) {
+//                return response()->json(['message' => $address->getMessage()], 500);
                 return response()->json(['message' => 'خطا در وارد کردن آدرس'], 500);
             }
 
@@ -97,6 +100,7 @@ class EmployeeController extends Controller
             return response()->json(['message' => $personResult->getMessage()], 500);
 //            return response()->json(['message' => 'خطا در افزودن شخص'], 500);
         }
+        $data['personID'] = $personResult->person->id;
         /**
          * @var Employee $employee
          */
@@ -104,13 +108,21 @@ class EmployeeController extends Controller
         $employee = $employeeService->store($data);
 
         if ($employee instanceof \Exception) {
+            return response()->json(['message' => $employee->getMessage()], 500);
             return response()->json(['message' => 'خطا در افزودن کارمند'], 500);
         }
 
         //additional info insertion
-        $educationalRecordService = new EducationalRecordRepository();
+        if (isset($data['educations'])) {
+            $educationalRecordService = new EducationalRecordRepository();
 
-        $educations = $educationalRecordService->store($data['educations'],$employee->workForce->id);
+            $educations = $educationalRecordService->store($data['educations'],$employee->workForce->id);
+
+            if ($educations instanceof \Exception) {
+                return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
+            }
+        }
+
 
 //        $educationalData = json_decode($data['educations'], true);
 //
@@ -118,33 +130,53 @@ class EmployeeController extends Controller
 //            $datum['workForceID'] = $employee->workForce->id;
 //            $education = $educationalRecordService->store($datum);
 
-            if ($educations instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
-            }
-//        }
-        $relativeService = new RelativeRepository();
 
-        $relative = $relativeService->store($data['relatives'],$employee->workForce->id);
+//        }
+
+        if (isset($data['relatives'])) {
+            $relativeService = new RelativeRepository();
+
+            $relative = $relativeService->store($data['relatives'],$employee->workForce->id);
+
+            if ($relative instanceof \Exception) {
+                return response()->json(['message' => 'خطا در افزودن '], 500);
+            }
+        }
+
 
 //        $relativeData = json_decode($data['relatives'], true);
 //
 //        foreach ($relativeData as $datum) {
 //            $datum['WorkForceID'] = $employee->workForce->id;
 //
-            if ($relative instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
-            }
+
 //        }
 
 //        $resumesData = json_decode($data['resumes'], true);
-        $resumeService = new ResumeRepository();
-//
-//        foreach ($resumesData as $datum) {
-//            $datum['WorkForceID'] = $employee->workForce->id;
+
+        if (isset($data['resumes'])) {
+            $resumeService = new ResumeRepository();
             $resume = $resumeService->store($data['resumes'],$employee->workForce->id);
             if ($resume instanceof \Exception) {
                 return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
             }
+        }
+
+
+        if (isset($data['recruitmentRecords'])) {
+            $rs = json_decode($data['recruitmentRecords'], true);
+
+            $rsRes = RecruitmentScriptRepository::store($rs, $employee->id);
+
+            if ($rsRes instanceof \Exception) {
+                return response()->json(['message' => 'خطا در افزودن کارمند'], 500);
+            }
+        }
+
+//
+//        foreach ($resumesData as $datum) {
+//            $datum['WorkForceID'] = $employee->workForce->id;
+
 //        }
 
 
@@ -305,10 +337,14 @@ class EmployeeController extends Controller
     public function addEmployeeBaseInfo()
     {
         $user = \Auth::user();
-        $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-        $response = $user->addresses()->where('status_id', '=', $statusID)->orderBy('create_date', 'desc')->select(['id', 'title'])->get();
+        if (!is_null($user)) {
+            $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+            $response = $user->addresses()->where('status_id', '=', $statusID)->orderBy('create_date', 'desc')->select(['id', 'title'])->get();
+            $data['addressList'] = $response;
 
-        $data['addressList'] = $response;
+        }
+
+
         $data['msStatusList']=MilitaryServiceStatus::all();
         $data['positionList']=Position::all();
         $data['levelList'] = Level::all();

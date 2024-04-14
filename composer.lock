@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "50aed66202787fc9ed323a365a7afd39",
+    "content-hash": "8eb013af68621bd5561bdea890c88037",
     "packages": [
         {
             "name": "brick/math",
@@ -6822,6 +6822,104 @@
                 "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/v2.2.7"
             },
             "time": "2023-12-08T13:03:43+00:00"
+        },
+        {
+            "name": "tzsk/sms",
+            "version": "8.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tzsk/sms.git",
+                "reference": "b5d29cced5fe5466e64d26d2158d9ad5248c10a4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tzsk/sms/zipball/b5d29cced5fe5466e64d26d2158d9ad5248c10a4",
+                "reference": "b5d29cced5fe5466e64d26d2158d9ad5248c10a4",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0",
+                "illuminate/http": "^8.0|^9.0|^10.0|^11.0",
+                "illuminate/support": "^8.0|^9.0|^10.0|^11.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "aws/aws-sdk-php": "^3.87",
+                "kavenegar/php": "^1.2",
+                "laravel/legacy-factories": "^1.0",
+                "laravel/pint": "^1.5",
+                "mediaburst/clockworksms": "^2.0",
+                "melipayamak/php": "^1.0.0",
+                "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0",
+                "phpunit/phpunit": "^9.3|^10.5",
+                "sms77/api": "^v2.4.0",
+                "smsgatewayme/client": "^0.0.1",
+                "twilio/sdk": "^7.3",
+                "vimeo/psalm": "^5.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Tzsk\\Sms\\SmsServiceProvider"
+                    ],
+                    "aliases": {
+                        "Sms": "Tzsk\\Sms\\Facades\\Sms"
+                    }
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Helper.php"
+                ],
+                "psr-4": {
+                    "Tzsk\\Sms\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kazi Ahmed",
+                    "email": "mailtokmahmed@gmail.com",
+                    "homepage": "https://github.com/tzsk",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Laravel SMS Gateway Integration Package",
+            "homepage": "https://github.com/tzsk/sms",
+            "keywords": [
+                "laravel SMS gateway me",
+                "laravel SmsGateWay24",
+                "laravel farazsms",
+                "laravel kavenegar",
+                "laravel link mobility",
+                "laravel melipayamak",
+                "laravel sms gateway",
+                "laravel smsir",
+                "laravel textlocal",
+                "laravel tsms",
+                "laravel twilio",
+                "sms",
+                "tzsk"
+            ],
+            "support": {
+                "issues": "https://github.com/tzsk/sms/issues",
+                "source": "https://github.com/tzsk/sms/tree/8.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://paypal.me/KMAhmed",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/tzsk",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-03-12T13:05:02+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

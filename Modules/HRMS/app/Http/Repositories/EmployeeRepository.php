@@ -20,12 +20,12 @@ class EmployeeRepository
 //        $this->workForce = $workForce;
 //    }
 
-    public function index(int $perPage=10,int $pageNumber=1,array $data=[])
+    public function index(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $employeeQuery = Employee::with('workForce.person.personable','workForce.statuses','positions');
+        $employeeQuery = Employee::with('workForce.person.personable', 'workForce.statuses', 'positions');
 
 
-       $result= $employeeQuery->paginate($perPage, page: $pageNumber);
+        $result = $employeeQuery->paginate($perPage, page: $pageNumber);
 
         return $result;
     }
@@ -34,18 +34,18 @@ class EmployeeRepository
     public function store(array $data)
     {
         try {
-            \DB::beginTransaction();
+//            \DB::beginTransaction();
 
             $employee = new Employee();
 
             $employee->save();
-            /**
-             * @var WorkForce $workForce
-             * @var Employee $employee
-             */
+//            /**
+//             * @var WorkForce $workForce
+//             * @var Employee $employee
+//             */
             $workForce = new WorkForce();
             $workForce->person_id = $data['personID'];
-            $workForce->isMarried = $data['isMarried'] ?1:0;
+            $workForce->isMarried = isset($data['isMarried']) && $data['isMarried']===true ? 1 : 0;
             $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
 
             $employee->workForce()->save($workForce);
@@ -63,23 +63,27 @@ class EmployeeRepository
                 $levelsAsArray = json_decode($data['levels'], true);
                 $employee->levels()->sync($levelsAsArray);
             }
+            if (isset($data['skills'])) {
 
+                $skills = json_decode($data['skills'], true);
 
+                $workForce->skills()->sync($skills);
+            }
 
-            \DB::commit();
+//            \DB::commit();
             return $employee;
         } catch (\Exception $e) {
-            \DB::rollBack();
+//            \DB::rollBack();
             return $e;
         }
     }
 
-    public function update(array $data,$id)
+    public function update(array $data, $id)
     {
         try {
-            \DB::beginTransaction();
+//            \DB::beginTransaction();
 
-            $employee =  Employee::with('workForce')->findOrFail($id);
+            $employee = Employee::with('workForce')->findOrFail($id);
 
             if (is_null($employee)) {
                 return null;
@@ -95,7 +99,7 @@ class EmployeeRepository
              */
             $workForce = $employee->workForce;
             $workForce->person_id = $data['personID'];
-            $workForce->isMarried = $data['isMarried'] == true;
+            $workForce->isMarried = $data['isMarried'] ?1:0;
             $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
 
             $employee->workForce()->save($workForce);
@@ -104,20 +108,26 @@ class EmployeeRepository
 
             $workForce->statuses()->attach($workForceStatus->id);
 
-            $skills = json_decode($data['skills'],true);
 
-            $workForce->skills()->sync($skills);
+            if (isset($data['positions'])) {
+                $positionsAsArray = json_decode($data['positions'], true);
+                $employee->possitions()->sync($positionsAsArray);
+            }
 
-            $positionsAsArray = json_decode($data['positions'], true);
-            $levelsAsArray = json_decode($data['levels'], true);
+            if (isset($data['levels'])) {
+                $levelsAsArray = json_decode($data['levels'], true);
+                $employee->levels()->sync($levelsAsArray);
+            }
+            if (isset($data['skills'])) {
 
+                $skills = json_decode($data['skills'], true);
 
-            $employee->positions()->sync($positionsAsArray);
-            $employee->levels()->sync($levelsAsArray);
-            \DB::commit();
+                $workForce->skills()->sync($skills);
+            }
+//            \DB::commit();
             return $employee;
         } catch (\Exception $e) {
-            \DB::rollBack();
+//            \DB::rollBack();
             return $e;
         }
     }

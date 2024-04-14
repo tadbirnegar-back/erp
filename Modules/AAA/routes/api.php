@@ -23,6 +23,8 @@ Route::prefix('v1')->group(function () {
     Route::post('users/logout', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'logout'])->middleware('auth:api');
     Route::post('/login', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'loginGrant'])->name('login.login-grant');
     Route::post('/refresh', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'refreshToken']);
+    Route::post('/otp/request', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'generateOtp']);
+    Route::post('/otp/verify', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'otpLogin']);
     Route::post('/users/permissions/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'userPermissionList'])->middleware('auth:api');
     Route::post('/users/roles/add', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'store'])->middleware(['auth:api','route']);
     Route::post('/users/natural/search', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'isPersonUser'])->middleware(['auth:api']);

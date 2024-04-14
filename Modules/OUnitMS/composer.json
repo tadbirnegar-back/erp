@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/ounitms",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\OUnitMS\\": "",
+            "Modules\\OUnitMS\\App\\": "app/",
+            "Modules\\OUnitMS\\Database\\Factories\\": "database/factories/",
+            "Modules\\OUnitMS\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\OUnitMS\\Tests\\": "tests/"
+        }
+    }
+}

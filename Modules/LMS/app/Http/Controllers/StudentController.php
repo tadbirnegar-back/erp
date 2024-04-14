@@ -5,6 +5,7 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Http\Repositories\UserRepository;
 use Modules\AAA\app\Models\Role;
 use Modules\AddressMS\app\Repositories\AddressRepository;
@@ -13,6 +14,7 @@ use Modules\FileMS\app\Http\Repositories\FileRepository;
 use Modules\FileMS\app\Models\Extension;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Repositories\EmployeeRepository;
+use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
 use Modules\LMS\app\Http\Repository\StudentRepository;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 
@@ -36,6 +38,24 @@ class StudentController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->all();
+        $validator = Validator::make($data, [
+            'mobile' => [
+                'required',
+                'unique:users,mobile',
+            ],
+            'username' => [
+                'sometimes',
+                'unique:users,username',
+            ],
+//            'nationalCode' => [
+//                'required',
+//                'unique:persons,national_code',
+//            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
         $uploadedFile = $request->file('file');
 
 
@@ -48,9 +68,9 @@ class StudentController extends Controller
                 : $personService->naturalStore($data);
 
 
-            if ($personResult instanceof \Exception) {
-                return response()->json($personResult->getMessage());
-            }
+//            if ($personResult instanceof \Exception) {
+//                return response()->json($personResult->getMessage());
+//            }
 
             $data['personID'] = $personResult->person->id;
 
@@ -65,7 +85,7 @@ class StudentController extends Controller
 //                }
 
                 $data['homeAddressID'] = $address->id;
-
+                $personService->naturalUpdate($data, $personResult->id);
             }
 
 
@@ -97,9 +117,26 @@ class StudentController extends Controller
 
             //check if person is employee and insert it if not
             $employeeService = new EmployeeRepository();
-            $personEmployee = is_null($employeeService->isPersonEmployee($personResult->person->id)) ?$employeeService->update($data,$personResult->person->workForce->id): $employeeService->store($data);
 
+            $personEmployee = $employeeService->isPersonEmployee($personResult->person->id)
+                ? $employeeService->update($data,$personResult->person->workForce->id)
+                : $employeeService->store($data);
+//        dd($personResult, $personEmployee);
+//        return response()->json(['message' => $personEmployee], 500);
+            if ($personEmployee instanceof Extension) {
+                return response()->json(['message' => $personEmployee->getMessage()], 500);
 
+            }
+
+            if (isset($data['recruitmentRecords'])) {
+                $rs = json_decode($data['recruitmentRecords'], true);
+
+                $rsRes = RecruitmentScriptRepository::store($rs, $personEmployee->id);
+
+                if ($rsRes instanceof \Exception) {
+                    return response()->json(['message' => $rsRes->getMessage()], 500);
+                }
+            }
             $studentService = new StudentRepository();
             $customerResult = $studentService->isPersonStudent($data['personID']) ?? $studentService->store($data);
             \DB::commit();
@@ -109,7 +146,7 @@ class StudentController extends Controller
             \DB::rollBack();
 //            return response()->json(['message' => $e->getMessage()], 500);
             return response()->json(['message' => 'خطا در ایجاد فراگیر جدید'], 500);
-
+//
         }
 
 

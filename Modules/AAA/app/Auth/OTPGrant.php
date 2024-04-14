@@ -2,10 +2,13 @@
 
 namespace Modules\AAA\app\Auth;
 
+use Mockery\Exception;
+use Modules\AAA\app\Http\Repositories\OtpRepository;
 use RuntimeException;
 use Illuminate\Http\Request;
 //use App\Exceptions\OtpException;
 use Laravel\Passport\Bridge\User;
+use Modules\AAA\app\Models\User as UserModel;
 use League\OAuth2\Server\RequestEvent;
 //use App\Auth\Grants\OtpVerifierFactory;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,6 +18,7 @@ use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\ResponseTypes\ResponseTypeInterface;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
+use function Laravel\Prompts\error;
 
 
 class OTPGrant extends AbstractGrant
@@ -65,26 +69,38 @@ class OTPGrant extends AbstractGrant
             throw OAuthServerException::invalidRequest('otp');
         }
 
-        $otpVerifierParam = $this->getRequestParameter('otp_verifier', $request);
-
-        $otpVerifier = OtpVerifierFactory::getOtpVerifier(
-            $this->getRequestParameter('otp_verifier', $request, 'BL_INTERNAL')
-        );
-
-        if ( is_null($otpVerifier) ) {
-            throw OtpException::invalidOtpVerifier();
-        }
-
-        $isValidOtp = $otpVerifier->verify($otp);
-
-        if (!$isValidOtp){
-            throw OtpException::invalidOtp();
-        }
-
         $username = $this->getRequestParameter('username', $request);
         if (is_null($username)) {
             throw OAuthServerException::invalidRequest('username');
         }
+
+        $userToVerify = UserModel::where('mobile', $username)->first();
+        if (is_null($userToVerify)) {
+            throw OAuthServerException::invalidRequest('username');
+        }
+//        $otpVerifierParam = $this->getRequestParameter('otp_verifier', $request);
+
+//        $otpVerifier = OtpVerifierFactory::getOtpVerifier(
+//            $this->getRequestParameter('otp_verifier', $request, 'BL_INTERNAL')
+//        );
+//
+//        if ( is_null($otpVerifier) ) {
+//            throw OtpException::invalidOtpVerifier();
+//        }
+//
+        $isValidOtp = OtpRepository::verify($userToVerify->id,$otp);
+        if (is_null($isValidOtp)) {
+            throw OAuthServerException::invalidCredentials();
+
+        }
+        $isValidOtp->isUsed = 1;
+        $isValidOtp->save();
+//
+//        if (!$isValidOtp){
+//            throw OtpException::invalidOtp();
+//        }
+
+
 
         $user = $this->getUserEntityByUserOtp(
             $username,
@@ -109,7 +125,7 @@ class OTPGrant extends AbstractGrant
             throw new RuntimeException('Unable to determine authentication model from configuration.');
         }
 
-        $user = (new $model)->where('username', $username)->first();
+        $user = (new $model)->where('mobile', $username)->first();
 
         if (is_null($user)) {
             return;

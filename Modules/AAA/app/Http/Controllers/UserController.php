@@ -5,6 +5,7 @@ namespace Modules\AAA\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Http\Services\UserService;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Repositories\AddressRepository;
@@ -111,15 +112,30 @@ class UserController extends Controller
     public function updateUserInfo(Request $request)
     {
         $data = $request->all();
-
         $user = \Auth::user();
+
+        $validator = Validator::make($data, [
+            'mobile' => [
+                'required',
+                'unique:users,mobile,'.$user->id,
+            ],
+            'username' => [
+                'sometimes',
+                'unique:users,username,'.$user->id,
+            ]
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
         try {
             \DB::beginTransaction();
             $data['userID'] = $user->id;
-            if ($data['username'] !== '') {
+//            if ($data['username'] !== '') {
                 $user->username = $data['username'];
+                $user->mobile = $data['mobile'];
                 $user->save();
-            }
+//            }
             $person = $user->person;
 
             if ($request->isNewAddress) {
@@ -141,8 +157,8 @@ class UserController extends Controller
 //            return response()->json(['message' => 'خطا در افزودن شخص'], 500);
             }
             \DB::commit();
-
-            return response()->json(['message' => 'با موفقیت ویرایش شد']);
+            $user->load('person.avatar', 'person.personable');
+            return response()->json(['message' => 'با موفقیت ویرایش شد','data'=>$user]);
         }catch (\Exception $e){
             \DB::rollBack();
 //            return response()->json(['message' => $e->getMessage()], 500);

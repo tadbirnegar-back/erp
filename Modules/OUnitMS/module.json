@@ -1,0 +1,11 @@
+{
+    "name": "OUnitMS",
+    "alias": "ounitms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\OUnitMS\\app\\Providers\\OUnitMSServiceProvider"
+    ],
+    "files": []
+}
