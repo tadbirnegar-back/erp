@@ -92,9 +92,9 @@ class RecruitmentScriptController extends Controller
 
     public function villageOfcs(Request $request)
     {
-        $states = VillageOfc::with('organizationUnit')->where('district_ofc_id',$request->districtOfcID)->get();
+        $districtOfc = DistrictOfc::with(['villageOfcs.organizationUnit'])->find($request->districtOfcID);
 
-        return response()->json($states);
+        return response()->json($districtOfc->villageOfcs);
 
     }
 }

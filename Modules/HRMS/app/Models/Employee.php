@@ -5,6 +5,7 @@ namespace Modules\HRMS\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Modules\HRMS\Database\factories\EmployeeFactory;
 
@@ -36,5 +37,10 @@ class Employee extends Model
     public function levels(): BelongsToMany
     {
         return $this->belongsToMany(Level::class,'recruitment_scripts');
+    }
+
+    public function recruitmentScripts(): HasMany
+    {
+        return $this->hasMany(RecruitmentScript::class, 'employee_id');
     }
 }

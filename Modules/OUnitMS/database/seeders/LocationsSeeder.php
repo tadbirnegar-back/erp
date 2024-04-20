@@ -7,6 +7,7 @@ use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
 class LocationsSeeder extends Seeder
@@ -18,7 +19,7 @@ class LocationsSeeder extends Seeder
     {
         $villages = json_decode(file_get_contents(realpath(__DIR__ . '/locations.json')), true);
         $records = array_reduce($villages, function ($records, $village) {
-            $records[$village[0]][$village[1]][] = $village[3];
+            $records[$village[0]][$village[1]][$village[2]][] = $village[3];
             return $records;
         }, []);
 
@@ -40,7 +41,7 @@ class LocationsSeeder extends Seeder
             $cityOfc->state_ofc_id = $state->id;
             $cityOfc->save();
 
-            $cityOunit =new OrganizationUnit([
+            $cityOunit = new OrganizationUnit([
                 'name' => $city,
                 'head_id' => null,
 
@@ -50,12 +51,12 @@ class LocationsSeeder extends Seeder
 
             $cityOfc->organizationUnit()->save($cityOunit);
 
-            foreach ($districts as $district => $villages) {
+            foreach ($districts as $district => $towns) {
                 $districtOfc = new DistrictOfc();
                 $districtOfc->city_ofc_id = $cityOfc->id;
                 $districtOfc->save();
 
-                $districtOunit =new OrganizationUnit([
+                $districtOunit = new OrganizationUnit([
                     'name' => $district,
                     'head_id' => null,
 
@@ -65,25 +66,39 @@ class LocationsSeeder extends Seeder
 
                 $districtOfc->organizationUnit()->save($districtOunit);
 
+                foreach ($towns as $town => $villages) {
 
-                foreach ($villages as $village) {
-                    $villageOfc = new VillageOfc();
-                    $villageOfc->district_ofc_id = $districtOfc->id;
-                    $villageOfc->save();
+                    $townOfc = new TownOfc();
+                    $townOfc->district_ofc_id = $districtOfc->id;
+                    $townOfc->save();
 
-                    $villageOunit =new OrganizationUnit([
-                        'name' => $village,
+                    $townOunit = new OrganizationUnit([
+                        'name' => $town,
                         'head_id' => null,
 
                     ]);
+
+                    $townOfc->organizationUnit()->save($townOunit);
+
+                    foreach ($villages as $village) {
+                        $villageOfc = new VillageOfc();
+                        $villageOfc->town_ofc_id = $townOfc->id;
+                        $villageOfc->save();
+
+                        $villageOunit = new OrganizationUnit([
+                            'name' => $village,
+                            'head_id' => null,
+
+                        ]);
 //                    $villageOunit->name = $village;
 //                    $villageOunit->head_id = null;
 
-                    $villageOfc->organizationUnit()->save($villageOunit);
+                        $villageOfc->organizationUnit()->save($villageOunit);
+                    }
                 }
 
-            }
 
+            }
 
 
         }

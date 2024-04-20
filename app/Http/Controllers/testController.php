@@ -16,6 +16,8 @@ use Modules\AddressMS\app\Models\City;
 use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\Town;
 use Modules\AddressMS\app\Models\Village;
+use Modules\HRMS\app\Models\Employee;
+use Modules\OUnitMS\app\Notifications\VerifyInfoNotification;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 use Tzsk\Sms\Facades\Sms;
 
@@ -25,13 +27,43 @@ class testController extends Controller
 
     public function run()
     {
-        $villages = json_decode(file_get_contents(realpath(__DIR__ . '/agh.json')), true);
-//        $a = [];
-        $records = array_reduce($villages, function ($records, $village) {
-            $records[$village[0]][$village[1]][] = $village[3];
-            return $records;
-        }, []);
-        dd($records);
+
+        $user = User::find(1);
+        dd($user);
+//        $user->load('person.personable.homeAddress', 'person.avatar', 'person.workForce.workforceable');
+//        dd($user);
+//        $workForce = $user->person->workForce;
+//
+//        if ($workForce->workforceable_type === Employee::class) {
+//            $rs = $workForce->workforceable->recruitmentScripts;
+//        }
+//        $data = [
+//            'info' => $user->person,
+//            'recruitmentScripts' => $rs ?? null,
+//
+//        ];
+//        $user->load('person.workForce.workForceable');
+//        $workForce = $user->person->workForce->workForceable;
+//        if ($workForce instanceof Employee) {
+//            $rs = $workForce->recruitmentScripts;
+//        }
+//        $notif=$user->notifications()->where('type', '=', VerifyInfoNotification::class)->first();
+//        if (is_null($notif)) {
+//            $user->notify(new VerifyInfoNotification());
+//            return $user->notifications()->where('type', '=', VerifyInfoNotification::class)->first();
+//        } elseif (!$notif->read()) {
+//            $notif->markAsRead();
+//            dd( $notif);
+//        }
+//        $a = convertToDbFriendly('٦٦٦٦٦ ميزان تحقق بودجه مصوب دهياري');
+//        dd($a);
+//        $villages = json_decode(file_get_contents(realpath(__DIR__ . '/agh.json')), true);
+////        $a = [];
+//        $records = array_reduce($villages, function ($records, $village) {
+//            $records[$village[0]][$village[1]][$village[2]][] = $village[3];
+//            return $records;
+//        }, []);
+//        dd($records);
 
 //        $districtsNotFound = [];
 //        $townNotFound = [];

@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('ounitms', fn (Request $request) => $request->user())->name('ounitms');
+Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/hrm/verified', [\Modules\OUnitMS\app\Http\Controllers\VerifyInfoConformationController::class, 'hasVerified']);
+
+    Route::get('/hrm/confirm', [\Modules\OUnitMS\app\Http\Controllers\VerifyInfoConformationController::class, 'show']);
+
+    Route::post('/hrm/verify', [\Modules\OUnitMS\app\Http\Controllers\VerifyInfoConformationController::class, 'verify']);
+    Route::put('/hrm/employee/confirm/edit', [\Modules\OUnitMS\app\Http\Controllers\VerifyInfoConformationController::class, 'update'])->middleware(['auth:api']);
 });

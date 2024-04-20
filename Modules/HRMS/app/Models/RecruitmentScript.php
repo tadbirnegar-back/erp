@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\StatusMS\app\Models\Status;
 
 class RecruitmentScript extends Model
@@ -24,6 +25,21 @@ class RecruitmentScript extends Model
     public function status()
     {
         return $this->belongsToMany(Status::class,'recruitment_script_status');
+    }
+
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class);
+    }
+
+    public function organizationUnit(): BelongsTo
+    {
+        return $this->belongsTo(OrganizationUnit::class);
+    }
+
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Position::class);
     }
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {

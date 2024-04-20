@@ -134,7 +134,9 @@ class StudentController extends Controller
                 $rsRes = RecruitmentScriptRepository::store($rs, $personEmployee->id);
 
                 if ($rsRes instanceof \Exception) {
-                    return response()->json(['message' => $rsRes->getMessage()], 500);
+//                    return response()->json(['message' => $rsRes->getMessage()], 500);
+                    return response()->json(['message' => 'خطا در ایجاد فراگیر جدید'], 500);
+
                 }
             }
             $studentService = new StudentRepository();

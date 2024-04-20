@@ -15,10 +15,10 @@ return new class extends Migration
         Schema::create('village_ofcs', function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedBigInteger('district_ofc_id');
+            $table->unsignedBigInteger('town_ofc_id');
 
 
-            $table->foreign('district_ofc_id')->references('id')->on('district_ofcs');
+            $table->foreign('town_ofc_id')->references('id')->on('town_ofcs');
         });
     }
 

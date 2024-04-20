@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('recruitment_script_id');
             $table->unsignedBigInteger('status_id');
+            $table->timestamp('create_date')->useCurrent();
 
             $table->foreign('recruitment_script_id')->references('id')->on('recruitment_scripts')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');

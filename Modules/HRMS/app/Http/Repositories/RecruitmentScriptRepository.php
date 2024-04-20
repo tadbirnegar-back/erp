@@ -23,11 +23,30 @@ class RecruitmentScriptRepository
 
             }
             return $result;
-        }catch (Exception $e){
+        } catch (Exception $e) {
             return $e;
         }
 
     }
+
+    public static function bulkUpdate(array|collection $data, int $employeeID)
+    {
+        $dataToUpsert = self::dataPreparation($data, $employeeID);
+        $result = RecruitmentScript::upsert($dataToUpsert->toArray(), ['id']);
+        return $result;
+    }
+
+    public static function delete(array $data)
+    {
+        $rses = RecruitmentScript::find($data);
+        $deleteStatus = RecruitmentScript::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
+        foreach ($rses as $item) {
+            $item->status()->attach($deleteStatus->id);
+        }
+
+        return true;
+}
+
 
     private static function dataPreparation(array|collection $data, int $employeeID)
     {
@@ -37,6 +56,7 @@ class RecruitmentScriptRepository
 
         $data = $data->map(function ($RS) use ($employeeID) {
             return [
+                'id' => $RS['rsID'] ?? null,
                 'employee_id' => $employeeID,
                 'organization_unit_id' => $RS['ounitID'],
                 'level_id' => $RS['levelID'],
