@@ -160,7 +160,7 @@ class EvaluatorRepository
             'parent_id' => $data['parentID'] ?? null,
             'evaluation_id' => $evaluationID,
             'user_id' => $userID,
-            'organization_unit_id' => $organizationUnitID ?? null
+            'organization_unit_id' => $data['organizationUnitID'] ?? null
 
         ];
 
