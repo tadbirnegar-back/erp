@@ -32,4 +32,9 @@ class VillageOfc extends Model
     {
         return $this->belongsTo(TownOfc::class);
     }
+
+    public function parent()
+    {
+        return $this->townOfc();
+    }
 }

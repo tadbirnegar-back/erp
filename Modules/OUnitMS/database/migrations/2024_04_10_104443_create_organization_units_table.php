@@ -17,7 +17,7 @@ return new class extends Migration
             $table->morphs('unitable');
             $table->unsignedBigInteger('head_id')->nullable();
 
-            $table->foreign('head_id')->references('id')->on('employees')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('head_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

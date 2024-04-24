@@ -5,6 +5,7 @@ namespace Modules\OUnitMS\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Modules\OUnitMS\Database\factories\DistrictOfcFactory;
 
@@ -37,4 +38,19 @@ class DistrictOfc extends Model
     {
         return $this->hasManyThrough(VillageOfc::class, TownOfc::class);
 }
+
+    public function parent()
+    {
+        return $this->cityOfc();
+}
+
+    public function townOfcs(): HasMany
+    {
+        return $this->hasMany(TownOfc::class, 'district_ofc_id');
+    }
+
+    public function children()
+    {
+        return $this->townOfcs();
+    }
 }

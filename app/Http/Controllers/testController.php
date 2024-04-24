@@ -3,23 +3,13 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
-use Illuminate\Http\Client\Pool;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Mockery\Exception;
-use Modules\AAA\app\Http\Repositories\OtpRepository;
 use Modules\AAA\app\Models\User;
-use Modules\AAA\app\Notifications\OtpNotification;
-use Modules\AAA\app\Notifications\TestNotification;
-use Modules\AddressMS\app\Models\City;
-use Modules\AddressMS\app\Models\District;
-use Modules\AddressMS\app\Models\Town;
-use Modules\AddressMS\app\Models\Village;
-use Modules\HRMS\app\Models\Employee;
-use Modules\OUnitMS\app\Notifications\VerifyInfoNotification;
-use Tzsk\Sms\Exceptions\InvalidMessageException;
-use Tzsk\Sms\Facades\Sms;
+
+use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
+use Modules\EvalMS\app\Models\Evaluation;
+use Modules\EvalMS\app\Models\Evaluator;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+
 
 class testController extends Controller
 {
@@ -27,9 +17,150 @@ class testController extends Controller
 
     public function run()
     {
+        // Eager load evaluators with specific organization units and their person data
+$r=[
+    // Eager load parameters with answers and filter evaluators
+    'parameters' => function ($query) {
+        $query->with([
+            'evalParameterAnswers' => function ($query) {
+                $query->with([
+                    'evaluator' => function ($query) {
+                        $query->whereIn('user_id', [1, 20, 30])
+                            ->whereIn('organization_unit_id', [2547, 3856]);
+                    },
+                    'evaluator.person' // Already eager loaded in evaluation
+                ]);
+            }
+        ])->paginate(10,['*'],'page',1);
+    }
+];
+        if (true) {
+            $r['evaluators'] =
+                 function ($query) {
+                    $query->whereIn('organization_unit_id', [2547, 3856])
+                        ->with('organizationUnit.person');
+                };
+                }
+            ;
 
-        $user = User::find(1);
-        dd($user);
+        $evaluation = Evaluation::with($r)
+            ->find(1);
+
+        dd($evaluation);
+//        $evaluation = Evaluation::with('parameters')->find(1);
+        $evaluation = Evaluation::with(['evaluators' => function ($query) {
+            $query->whereIn('organization_unit_id', [2547, 3856])->with('organizationUnit.person');
+        }])->find(1);
+
+
+
+        $parameters = $evaluation->parameters()->with(['evalParameterAnswers.evaluator' => function ($query) {
+            $query->whereIn('user_id', [1, 20, 30])
+                ->whereIn('organization_unit_id', [2547, 3856]);
+        }])->with('evalParameterAnswers.evaluator.person')->paginate(10);
+//        $parameters = Evaluation::with('parameters.evalParameterAnswers.evaluator.person')->find(1)->paginate(10);
+
+        dd($evaluation, $parameters->getCollection()->toArray());
+        $filteredParameters = $evaluation->parameters()
+            ->with('evalParameterAnswers.evaluator')
+            ->whereHas('evalParameterAnswers.evaluator', function ($query) {
+                $query->whereIn('user_id', [1, 20, 30])
+                    ->whereIn('organization_unit_id', [2547, 3856]);
+            })
+            ->paginate(1); // Adjust page size as needed
+        dd($filteredParameters->getCollection()->toArray());
+
+//        $userx = User::find(1);
+//        $a = EvaluatorRepository::getOunitsWithSubsOfUser($userx, loadHeads: true);
+////        dd($a);
+//        $b = $a->pluck('organizationUnit.head.id')->reject(function ($head) {
+//            return $head === null;
+//        })->unique();
+//
+//        $formarz=Evaluation::with(['parameters.evalParameterAnswers.evaluator'=>function ($query) {
+//$query->whereIn('user_id', [1, 20, 30])
+//    ->whereIn('organization_unit_id', [2547,3856])
+//->with(['organizationUnit','person'])
+//            ->withDefault();
+//        }])->find(1)->paginate(10);
+//        dd($formarz);
+
+//        dd($b);
+//        $aa = OrganizationUnit::with(['head.evaluator' => function ($query) use ($b) {
+//            $query->where('evaluation_id', 1)->whereIn('user_id',$b)->with('evalParameterAnswers.evalParameter');
+//        }])->find(3856);
+//        $evaluators=Evaluator::where('evaluation_id', 1)->where('organization_unit_id',3856)->whereIn('user_id',[1,2,3])->with(['evalParameterAnswers.evalParameter'])->get();
+//        $grouped = $evaluators->groupBy(function ($evaluator) {
+//            dd($evaluator);
+//            return $evaluator->evalParameter;
+//        })->map(function ($group) {
+//            return $group->pluck('evalParameterAnswers');
+//        });
+//        dd($grouped);
+        /**
+         * @var OrganizationUnit $head
+         */
+//        $x = $a->each(function ($head) {
+//            $head->load(['organizationUnit.head.evaluators' => function ($query) {
+//                $query->where('evaluation_id', 1)->where('organization_unit_id',1)->with('evalParameterAnswers.evalParameter');;
+//            }]);
+//        });
+
+//        $y = json_encode($x->toArray());
+//        echo '<pre>' . var_export($x->toArray(), true) . '</pre>';
+//        exit();
+//        dd($x);
+//dd($x->each(function ($head) {
+//            $head->organizationUnit->head->evaluators->groupBy(function ($evaluator) {
+//                return $evaluator->evalParameterAnswers->pluck('evalParameter.name')->implode(',');
+//            });
+//        })->toArray());
+        $c = EvaluatorRepository::evalOfOunits($b->toArray(), 1);
+        dd(json_encode($c));
+
+//        $eval = Evaluation::with(['organizationUnits'=>function ($query) {
+//            $query->whereIn('organization_unit_id', [1, 2, 3, 4]);
+//        }])->find(1);
+//        dd($eval);
+//        $ous = $user->organizationUnits;
+//        dd($ous);
+//        $ou = OrganizationUnit::find(3856);
+//        $parents = [];
+//        /**
+//         * @var VillageOfc $model
+//         */
+//
+//        foreach ($ous as $key => $ou) {
+//            $model = $ou->unitable()->with(['organizationUnit.head','organizationUnit.evaluations'])->first();
+////        while ($model instanceof StateOfc === false) {
+//            while (method_exists($model, 'parent') === true) {
+//                $parents[$key][] = $model;
+//                $model = $model->parent()->with(['organizationUnit.head','organizationUnit.evaluations'])->first();
+////            dd($model);
+//
+//            }
+//            $parents[$key][] = $model->load(['organizationUnit.head','organizationUnit.evaluations']);
+//
+//        }
+//        $a = collect($parents)->flatten(1)->unique();
+//
+//        $b = $a->pluck('organizationUnit')->flatten(2);
+//
+//        dd($b);
+//            ->pluck('head');
+
+//        $b = $a->pluck('organizationUnit')
+//            ->pluck('head')
+//            ->reject(function ($id) {
+//                return $id === null;
+//            })->unique();
+
+//User::doesntHave()
+//        dd($b);
+//        dd($parents);
+
+//        $user = User::find(1);
+//        dd($user);
 //        $user->load('person.personable.homeAddress', 'person.avatar', 'person.workForce.workforceable');
 //        dd($user);
 //        $workForce = $user->person->workForce;

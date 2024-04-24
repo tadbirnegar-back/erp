@@ -3,8 +3,11 @@
 namespace Modules\EvalMS\app\Http\Repositories;
 
 use Illuminate\Support\Collection;
+use Modules\AAA\app\Models\User;
 use Modules\EvalMS\app\Models\EvalParameterAnswer;
+use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EvaluatorRepository
 {
@@ -29,6 +32,111 @@ class EvaluatorRepository
     }
 
 
+//    public static function getOunitsWithSubsOfUser(User $user)
+//    {
+//        $ous = $user->organizationUnits;
+//        $children = [];
+//
+//
+//        foreach ($ous as $key => $ou) {
+//            $model = $ou->unitable()->with(['organizationUnit.evaluations','organizationUnit.heads'])->first();
+//            while (method_exists($model, 'children') === true) {
+//                $children[$key][] = $model;
+//                $model = $model->children()->with(['organizationUnit.evaluations','organizationUnit.heads'])->first();
+//
+//            }
+//            $children[$key][] = $model->load(['organizationUnit.evaluations','organizationUnit.heads']);
+//
+//        }
+//        $uniqueUnits = collect($children)->flatten(1)->unique();
+//
+//        return $uniqueUnits;
+//    }
+
+    public static function getOunitsWithSubsOfUser(User $user, bool $loadEvaluations = false, bool $loadHeads = false)
+    {
+        $ous = $user->organizationUnits;
+        $children = [];
+
+        foreach ($ous as $key => $ou) {
+            $model = $ou->unitable()->when($loadEvaluations, function ($query) {
+                return $query->with('organizationUnit.evaluations');
+            })->when($loadHeads, function ($query) {
+                return $query->with('organizationUnit.head');
+            })->first();
+
+            while (method_exists($model, 'children')) {
+                $children[$key][] = $model;
+                $model = $model->children()->when($loadEvaluations, function ($query) {
+                    return $query->with('organizationUnit.evaluations');
+                })->when($loadHeads, function ($query) {
+                    return $query->with('organizationUnit.head');
+                })->first();
+            }
+
+            $children[$key][] = $model->load(['organizationUnit' => function ($query) use ($loadEvaluations, $loadHeads) {
+                if ($loadEvaluations) {
+                    $query->with('evaluations');
+                }
+                if ($loadHeads) {
+                    $query->with('head');
+                }
+            }]);
+        }
+
+        $uniqueUnits = collect($children)->flatten(1)->unique();
+
+        return $uniqueUnits;
+    }
+
+    public static function evalOfOunits(array $ounitIDs, int $EvalID)
+    {
+        $eval = Evaluation::with(['organizationUnits' => function ($query) use ($ounitIDs) {
+            $query->whereIn('organization_unit_id', $ounitIDs);
+        }])->find($EvalID);
+
+        return $eval;
+    }
+
+    public static function getEvalOunitHistory(int $evalID, int $ounitID, array $userIDs, int $pageNum = 1, int $perPage = 10)
+    {
+
+        $relations = [
+            // Eager load parameters with answers and filter evaluators
+            'parameters' => function ($query) use ($ounitID, $userIDs, $pageNum, $perPage) {
+                $query->with([
+                    'evalParameterAnswers' => function ($query) use ($ounitID, $userIDs) {
+                        $query->with([
+                            'evaluator' => function ($query) use ($ounitID, $userIDs) {
+                                $query->whereIn('user_id', $userIDs)
+                                    ->where('organization_unit_id', $ounitID);
+                            },
+                            'evaluator.person' // Already eager loaded in evaluation
+                        ]);
+                    }
+                ])->paginate($perPage, ['*'], 'page', $pageNum);
+            }
+        ];
+
+        if ($pageNum == 1) {
+            $relations['evaluators'] = function ($query) use ($ounitID, $userIDs) {
+                $query->whereIn('user_id', $userIDs)
+                    ->where('organization_unit_id', $ounitID)
+                    ->with('organizationUnit.person');
+            };
+        }
+
+        $evaluation = Evaluation::with($relations)
+            ->find($evalID);
+        $totalParameters = $evaluation->parameters()->count();
+        $totalPages = ceil($totalParameters / 10);
+        return [
+            'data' => $evaluation,
+            'currentPage' => $pageNum,
+            'lastPage' => $totalPages
+        ];
+    }
+
     private static function dataPreparation(array|collection $data, int $evaluationID, int $userID)
     {
         if (($data instanceof Collection)) {
@@ -52,6 +160,7 @@ class EvaluatorRepository
             'parent_id' => $data['parentID'] ?? null,
             'evaluation_id' => $evaluationID,
             'user_id' => $userID,
+            'organization_unit_id' => $organizationUnitID ?? null
 
         ];
 

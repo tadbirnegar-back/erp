@@ -31,4 +31,9 @@ class EvalParameter extends Model
     {
         return $this->belongsTo(EvalParameterType::class,'eval_parameter_type_id');
     }
+
+    public function evalParameterAnswers(): HasMany
+    {
+        return $this->hasMany(EvalParameterAnswer::class, 'eval_parameter_id');
+    }
 }

@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::post('/evaluations/partake/{id}', [\Modules\EvalMS\app\Http\Controllers\EvaluatorController::class, 'store']);
+
+    Route::post('/evaluations/preview/{evalID}/unit/{ounitID}', [\Modules\EvalMS\app\Http\Controllers\EvaluatorController::class, 'store']);
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {

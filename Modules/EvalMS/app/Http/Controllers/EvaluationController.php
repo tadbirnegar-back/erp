@@ -5,6 +5,7 @@ namespace Modules\EvalMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
 use Modules\EvalMS\app\Models\Evaluation;
 
 class EvaluationController extends Controller
@@ -36,9 +37,32 @@ class EvaluationController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $eval = Evaluation::with('parts.indicators.parameters.parameterType','parts.indicators.parameters.options')->findOrFail($id);
+//        $eval = Evaluation::with('parts.indicators.parameters.parameterType','parts.indicators.parameters.options')->findOrFail($id);
+//
 
-        return response()->json($eval);
+        $user = \Auth::user();
+        $a = EvaluatorRepository::getOunitsWithSubsOfUser($user);
+        $ounitIDs = $a->pluck('organizationUnit.id');
+        $result = EvaluatorRepository::evalOfOunits($ounitIDs->toArray(), $id);
+
+        return response()->json($result);
+
+    }
+
+    public function ounitHistory(Request $request, $evalID, $ounitID)
+    {
+        $user = \Auth::user();
+
+        $usersUnits = EvaluatorRepository::getOunitsWithSubsOfUser($user, loadHeads: true);
+        $headIDs = $usersUnits->pluck('organizationUnit.head.id');
+
+        $pageNum = $request->pageNume ?? 1;
+        $perPage = $request->perPage ?? 10;
+
+        $result = EvaluatorRepository::getEvalOunitHistory($evalID, $ounitID, $headIDs, $pageNum, $perPage);
+
+        return response()->json($result);
+
     }
 
     /**
