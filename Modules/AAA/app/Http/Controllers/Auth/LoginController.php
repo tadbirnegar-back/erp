@@ -284,8 +284,8 @@ class LoginController extends Controller
         $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
         foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
-                'label' => $permission->name,
-                'slug' => $permission->slug,
+                'label' => $permission?->name,
+                'slug' => $permission?->slug,
             ];
             $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
@@ -293,8 +293,8 @@ class LoginController extends Controller
         $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
         foreach ($operationalPermissions as $permission) {
             $operationalItems[$permission->moduleCategory->name]['subPermission'][] = [
-                'label' => $permission->name,
-                'slug' => $permission->slug,
+                'label' => $permission?->name,
+                'slug' => $permission?->slug,
             ];
             $operationalItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
@@ -388,8 +388,8 @@ class LoginController extends Controller
         $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
         foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
-                'label' => $permission->name,
-                'slug' => $permission->slug,
+                'label' => $permission?->name,
+                'slug' => $permission?->slug,
             ];
             $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
@@ -397,8 +397,8 @@ class LoginController extends Controller
         $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
         foreach ($operationalPermissions as $permission) {
             $operationalItems[$permission->moduleCategory->name]['subPermission'][] = [
-                'label' => $permission->name,
-                'slug' => $permission->slug,
+                'label' => $permission?->name,
+                'slug' => $permission?->slug,
             ];
             $operationalItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
@@ -498,8 +498,8 @@ class LoginController extends Controller
         $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
         foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
-                'label' => $permission->name,
-                'slug' => $permission->slug,
+                'label' => $permission?->name,
+                'slug' => $permission?->slug,
             ];
             $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
@@ -507,8 +507,8 @@ class LoginController extends Controller
         $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
         foreach ($operationalPermissions as $permission) {
             $operationalItems[$permission->moduleCategory->name]['subPermission'][] = [
-                'label' => $permission->name,
-                'slug' => $permission->slug,
+                'label' => $permission?->name,
+                'slug' => $permission?->slug,
             ];
             $operationalItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }

@@ -19,7 +19,7 @@ class Evaluator extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['sum','average','evaluation_id','user_id','parent_id'];
+    protected $fillable = ['sum','average','evaluation_id','user_id','parent_id','organization_unit_id'];
     public $timestamps = false;
 
     protected static function newFactory(): EvaluatorFactory
@@ -40,6 +40,11 @@ class Evaluator extends Model
     public function evaluation(): BelongsTo
     {
         return $this->belongsTo(Evaluation::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     use BelongsToThrough;

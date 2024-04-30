@@ -17,6 +17,9 @@ class AAADatabaseSeeder extends Seeder
             ModuleSeeder::class,
             PermissionSeeder::class,
             UserStatusSeeder::class,
+
+            DehyarsImportSeeder::class,
+
         ]);
     }
 }

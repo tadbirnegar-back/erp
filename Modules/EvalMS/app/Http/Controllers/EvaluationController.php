@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
 use Modules\EvalMS\app\Models\Evaluation;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class EvaluationController extends Controller
 {
@@ -35,15 +36,59 @@ class EvaluationController extends Controller
     /**
      * Show the specified resource.
      */
-    public function show($id): JsonResponse
+    public function show(Request $request, $evalID, $ounitID): JsonResponse
+    {
+//        $eval = Evaluation::with('parts.indicators.parameters.parameterType', 'parts.indicators.parameters.options')->findOrFail($id);
+//
+
+//        $user = \Auth::user();
+//        $a = EvaluatorRepository::getOunitsWithSubsOfUser($user);
+//        $ounitIDs = $a->pluck('organizationUnit.id');
+//        $result = EvaluatorRepository::evalOfOunits($ounitIDs->toArray(), $id);
+//
+        $ounit = OrganizationUnit::findOrFail($ounitID);
+
+//        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
+
+        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
+
+//        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
+//            return $head === null;
+//        })->unique()->toArray();
+
+        $headIDs = $whoToFill->pluck('organizationUnit.head.id')->reject(function ($head) {
+            return $head === null;
+        })->unique()->toArray();
+//        $unitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
+//            return $head === null;
+//        })->unique()->toArray();
+
+//        $pageNum = $request->pageNum ?? 1;
+//        $perPage = $request->perPage ?? 10;
+
+        $result = EvaluatorRepository::getEvalOunitHistory($evalID, $ounitID, $headIDs);
+        $result['relatedUnits'] = $whoToFill;
+        return response()->json($result);
+//        return response()->json($eval);
+
+    }
+
+    public function detail($id): JsonResponse
     {
 //        $eval = Evaluation::with('parts.indicators.parameters.parameterType','parts.indicators.parameters.options')->findOrFail($id);
 //
 
         $user = \Auth::user();
-        $a = EvaluatorRepository::getOunitsWithSubsOfUser($user);
-        $ounitIDs = $a->pluck('organizationUnit.id');
-        $result = EvaluatorRepository::evalOfOunits($ounitIDs->toArray(), $id);
+        $usersUnits = EvaluatorRepository::getOunits($user);
+        if (!is_null($usersUnits)) {
+            $ounitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
+                return $head === null;
+            })->unique()->toArray();
+        } else {
+            $ounitIDs = [];
+        }
+
+        $result = EvaluatorRepository::evalOfOunits($ounitIDs, $id);
 
         return response()->json($result);
 
@@ -52,15 +97,36 @@ class EvaluationController extends Controller
     public function ounitHistory(Request $request, $evalID, $ounitID)
     {
         $user = \Auth::user();
+        $recordExists = $user->evaluators()
+            ->where('evaluation_id', $evalID)
+            ->where('organization_unit_id',$ounitID)
+            ->exists();
 
-        $usersUnits = EvaluatorRepository::getOunitsWithSubsOfUser($user, loadHeads: true);
-        $headIDs = $usersUnits->pluck('organizationUnit.head.id');
 
-        $pageNum = $request->pageNume ?? 1;
+
+        $ounit = OrganizationUnit::findOrFail($ounitID);
+
+//        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
+
+        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
+
+//        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
+//            return $head === null;
+//        })->unique()->toArray();
+
+        $headIDs = $whoToFill->pluck('organizationUnit.head.id')->reject(function ($head) {
+            return $head === null;
+        })->unique()->toArray();
+//        $unitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
+//            return $head === null;
+//        })->unique()->toArray();
+
+        $pageNum = $request->pageNum ?? 1;
         $perPage = $request->perPage ?? 10;
 
         $result = EvaluatorRepository::getEvalOunitHistory($evalID, $ounitID, $headIDs, $pageNum, $perPage);
-
+        $result['relatedUnits'] = $whoToFill;
+        $result['hasRecord'] = $recordExists;
         return response()->json($result);
 
     }

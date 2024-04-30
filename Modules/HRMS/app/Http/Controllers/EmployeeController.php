@@ -108,7 +108,7 @@ class EmployeeController extends Controller
         $employee = $employeeService->store($data);
 
         if ($employee instanceof \Exception) {
-            return response()->json(['message' => $employee->getMessage()], 500);
+//            return response()->json(['message' => $employee->getMessage()], 500);
             return response()->json(['message' => 'خطا در افزودن کارمند'], 500);
         }
 
@@ -260,7 +260,7 @@ class EmployeeController extends Controller
                 $relative = $this->relativeService->update($datum, $datum['id']);
 
             } else {
-                $relative = $this->relativeService->store($datum);
+                $relative = $this->relativeService->store($datum,$datum['WorkForceID']);
 
             }
 

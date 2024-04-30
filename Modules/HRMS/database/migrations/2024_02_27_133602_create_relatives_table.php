@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('full_name');
             $table->string('birthdate')->nullable();
-            $table->string('mobile');
+            $table->string('mobile')->nullable();
             $table->unsignedBigInteger('level_of_educational_id')->nullable();
             $table->unsignedBigInteger('relative_type_id')->nullable();
             $table->unsignedBigInteger('work_force_id');

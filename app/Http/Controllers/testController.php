@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\Permission;
+use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 
 use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 
 class testController extends Controller
@@ -17,317 +20,364 @@ class testController extends Controller
 
     public function run()
     {
-        // Eager load evaluators with specific organization units and their person data
-$r=[
-    // Eager load parameters with answers and filter evaluators
-    'parameters' => function ($query) {
-        $query->with([
-            'evalParameterAnswers' => function ($query) {
-                $query->with([
-                    'evaluator' => function ($query) {
-                        $query->whereIn('user_id', [1, 20, 30])
-                            ->whereIn('organization_unit_id', [2547, 3856]);
-                    },
-                    'evaluator.person' // Already eager loaded in evaluation
-                ]);
-            }
-        ])->paginate(10,['*'],'page',1);
-    }
-];
-        if (true) {
-            $r['evaluators'] =
-                 function ($query) {
-                    $query->whereIn('organization_unit_id', [2547, 3856])
-                        ->with('organizationUnit.person');
-                };
-                }
-            ;
 
-        $evaluation = Evaluation::with($r)
-            ->find(1);
-
-        dd($evaluation);
-//        $evaluation = Evaluation::with('parameters')->find(1);
-        $evaluation = Evaluation::with(['evaluators' => function ($query) {
-            $query->whereIn('organization_unit_id', [2547, 3856])->with('organizationUnit.person');
-        }])->find(1);
-
-
-
-        $parameters = $evaluation->parameters()->with(['evalParameterAnswers.evaluator' => function ($query) {
-            $query->whereIn('user_id', [1, 20, 30])
-                ->whereIn('organization_unit_id', [2547, 3856]);
-        }])->with('evalParameterAnswers.evaluator.person')->paginate(10);
-//        $parameters = Evaluation::with('parameters.evalParameterAnswers.evaluator.person')->find(1)->paginate(10);
-
-        dd($evaluation, $parameters->getCollection()->toArray());
-        $filteredParameters = $evaluation->parameters()
-            ->with('evalParameterAnswers.evaluator')
-            ->whereHas('evalParameterAnswers.evaluator', function ($query) {
-                $query->whereIn('user_id', [1, 20, 30])
-                    ->whereIn('organization_unit_id', [2547, 3856]);
-            })
-            ->paginate(1); // Adjust page size as needed
-        dd($filteredParameters->getCollection()->toArray());
-
-//        $userx = User::find(1);
-//        $a = EvaluatorRepository::getOunitsWithSubsOfUser($userx, loadHeads: true);
-////        dd($a);
-//        $b = $a->pluck('organizationUnit.head.id')->reject(function ($head) {
-//            return $head === null;
-//        })->unique();
+        $user = User::find(1);
 //
-//        $formarz=Evaluation::with(['parameters.evalParameterAnswers.evaluator'=>function ($query) {
-//$query->whereIn('user_id', [1, 20, 30])
-//    ->whereIn('organization_unit_id', [2547,3856])
-//->with(['organizationUnit','person'])
-//            ->withDefault();
-//        }])->find(1)->paginate(10);
-//        dd($formarz);
+        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+        dd($sidebarPermissions->pluck('moduleCategory'));
+//        $pers = Permission::all(['id']);
+//
+//        $role = Role::find(1);
+//        $role->permissions()->sync($pers);
 
-//        dd($b);
-//        $aa = OrganizationUnit::with(['head.evaluator' => function ($query) use ($b) {
-//            $query->where('evaluation_id', 1)->whereIn('user_id',$b)->with('evalParameterAnswers.evalParameter');
-//        }])->find(3856);
-//        $evaluators=Evaluator::where('evaluation_id', 1)->where('organization_unit_id',3856)->whereIn('user_id',[1,2,3])->with(['evalParameterAnswers.evalParameter'])->get();
-//        $grouped = $evaluators->groupBy(function ($evaluator) {
-//            dd($evaluator);
-//            return $evaluator->evalParameter;
-//        })->map(function ($group) {
-//            return $group->pluck('evalParameterAnswers');
-//        });
-//        dd($grouped);
-        /**
-         * @var OrganizationUnit $head
-         */
-//        $x = $a->each(function ($head) {
-//            $head->load(['organizationUnit.head.evaluators' => function ($query) {
-//                $query->where('evaluation_id', 1)->where('organization_unit_id',1)->with('evalParameterAnswers.evalParameter');;
-//            }]);
-//        });
-
-//        $y = json_encode($x->toArray());
-//        echo '<pre>' . var_export($x->toArray(), true) . '</pre>';
-//        exit();
+//        $phoneNumber = "09148007792";
+//        $trimmedPhoneNumber = ltrim($phoneNumber, "0");
+//        dd($trimmedPhoneNumber);
+//        $user = User::find(57);
+//
+//        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
+//        $x = $usersUnits[73];
 //        dd($x);
-//dd($x->each(function ($head) {
-//            $head->organizationUnit->head->evaluators->groupBy(function ($evaluator) {
-//                return $evaluator->evalParameterAnswers->pluck('evalParameter.name')->implode(',');
-//            });
-//        })->toArray());
-        $c = EvaluatorRepository::evalOfOunits($b->toArray(), 1);
-        dd(json_encode($c));
+//        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
+//            return $head === null;
+//        })->unique()->toArray();
+//        $unitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
+//            return $head === null;
+//        })->unique()->toArray();
+//
+//        $pageNum = $request->pageNum ?? 1;
+//        $perPage = $request->perPage ?? 10;
 
-//        $eval = Evaluation::with(['organizationUnits'=>function ($query) {
-//            $query->whereIn('organization_unit_id', [1, 2, 3, 4]);
+//        $result = EvaluatorRepository::getEvalOunitHistory(1, 3669,$unitIDs, $headIDs, $pageNum, $perPage);
+//        dd($result['data']->parameters[0]);
+////        $b = OrganizationUnit::where('unitable_type', VillageOfc::class)->get(['id']);
+////        $e = Evaluation::find(1);
+////        $e->organizationUnits()->sync($b);
+////        dd($b);
+////        $user = User::find(1);
+////        $usersUnits= EvaluatorRepository::getOunits($user);
+//////        dd($usersUnits);
+//////        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
+//////            return $head === null;
+//////        })->unique()->toArray();
+////        $unitIDs = $usersUnits->pluck('organizationUnit.id')->toArray();
+////        dd($unitIDs);
+////        $b = EvaluatorRepository::evalOfOunits($unitIDs, 1);
+////        dd($unitIDs);
+//        // Eager load evaluators with specific organization units and their person data
+//$r=[
+//    // Eager load parameters with answers and filter evaluators
+//    'parameters' => function ($query) {
+//        $query->with([
+//            'evalParameterAnswers' => function ($query) {
+//                $query->with([
+//                    'evaluator' => function ($query) {
+//                        $query->whereIn('user_id', [1, 20, 30])
+//                            ->whereIn('organization_unit_id', [2547, 3856]);
+//                    },
+//                    'evaluator.person' // Already eager loaded in evaluation
+//                ]);
+//            }
+//        ])->paginate(10,['*'],'page',1);
+//    }
+//];
+//        if (true) {
+//            $r['evaluators'] =
+//                 function ($query) {
+//                    $query->whereIn('organization_unit_id', [2547, 3856])
+//                        ->with('organizationUnit.person');
+//                };
+//                }
+//            ;
+//
+//        $evaluation = Evaluation::with($r)
+//            ->find(1);
+//
+//        dd($evaluation);
+////        $evaluation = Evaluation::with('parameters')->find(1);
+//        $evaluation = Evaluation::with(['evaluators' => function ($query) {
+//            $query->whereIn('organization_unit_id', [2547, 3856])->with('organizationUnit.person');
 //        }])->find(1);
-//        dd($eval);
-//        $ous = $user->organizationUnits;
-//        dd($ous);
+//
+//
+//
+//        $parameters = $evaluation->parameters()->with(['evalParameterAnswers.evaluator' => function ($query) {
+//            $query->whereIn('user_id', [1, 20, 30])
+//                ->whereIn('organization_unit_id', [2547, 3856]);
+//        }])->with('evalParameterAnswers.evaluator.person')->paginate(10);
+////        $parameters = Evaluation::with('parameters.evalParameterAnswers.evaluator.person')->find(1)->paginate(10);
+//
+//        dd($evaluation, $parameters->getCollection()->toArray());
+//        $filteredParameters = $evaluation->parameters()
+//            ->with('evalParameterAnswers.evaluator')
+//            ->whereHas('evalParameterAnswers.evaluator', function ($query) {
+//                $query->whereIn('user_id', [1, 20, 30])
+//                    ->whereIn('organization_unit_id', [2547, 3856]);
+//            })
+//            ->paginate(1); // Adjust page size as needed
+//        dd($filteredParameters->getCollection()->toArray());
+//
+////        $userx = User::find(1);
+////        $a = EvaluatorRepository::getOunitsWithSubsOfUser($userx, loadHeads: true);
+//////        dd($a);
+////        $b = $a->pluck('organizationUnit.head.id')->reject(function ($head) {
+////            return $head === null;
+////        })->unique();
+////
+////        $formarz=Evaluation::with(['parameters.evalParameterAnswers.evaluator'=>function ($query) {
+////$query->whereIn('user_id', [1, 20, 30])
+////    ->whereIn('organization_unit_id', [2547,3856])
+////->with(['organizationUnit','person'])
+////            ->withDefault();
+////        }])->find(1)->paginate(10);
+////        dd($formarz);
+//
+////        dd($b);
+////        $aa = OrganizationUnit::with(['head.evaluator' => function ($query) use ($b) {
+////            $query->where('evaluation_id', 1)->whereIn('user_id',$b)->with('evalParameterAnswers.evalParameter');
+////        }])->find(3856);
+////        $evaluators=Evaluator::where('evaluation_id', 1)->where('organization_unit_id',3856)->whereIn('user_id',[1,2,3])->with(['evalParameterAnswers.evalParameter'])->get();
+////        $grouped = $evaluators->groupBy(function ($evaluator) {
+////            dd($evaluator);
+////            return $evaluator->evalParameter;
+////        })->map(function ($group) {
+////            return $group->pluck('evalParameterAnswers');
+////        });
+////        dd($grouped);
+//        /**
+//         * @var OrganizationUnit $head
+//         */
+////        $x = $a->each(function ($head) {
+////            $head->load(['organizationUnit.head.evaluators' => function ($query) {
+////                $query->where('evaluation_id', 1)->where('organization_unit_id',1)->with('evalParameterAnswers.evalParameter');;
+////            }]);
+////        });
+//
+////        $y = json_encode($x->toArray());
+////        echo '<pre>' . var_export($x->toArray(), true) . '</pre>';
+////        exit();
+////        dd($x);
+////dd($x->each(function ($head) {
+////            $head->organizationUnit->head->evaluators->groupBy(function ($evaluator) {
+////                return $evaluator->evalParameterAnswers->pluck('evalParameter.name')->implode(',');
+////            });
+////        })->toArray());
+//        $c = EvaluatorRepository::evalOfOunits($b->toArray(), 1);
+//        dd(json_encode($c));
+//
+////        $eval = Evaluation::with(['organizationUnits'=>function ($query) {
+////            $query->whereIn('organization_unit_id', [1, 2, 3, 4]);
+////        }])->find(1);
+////        dd($eval);
+////        $ous = $user->organizationUnits;
+////        dd($ous);
 //        $ou = OrganizationUnit::find(3856);
 //        $parents = [];
 //        /**
 //         * @var VillageOfc $model
 //         */
 //
-//        foreach ($ous as $key => $ou) {
+////        foreach ($ous as $key => $ou) {
+////            dd($ou);
 //            $model = $ou->unitable()->with(['organizationUnit.head','organizationUnit.evaluations'])->first();
 ////        while ($model instanceof StateOfc === false) {
 //            while (method_exists($model, 'parent') === true) {
-//                $parents[$key][] = $model;
+//                $parents[] = $model;
 //                $model = $model->parent()->with(['organizationUnit.head','organizationUnit.evaluations'])->first();
 ////            dd($model);
 //
 //            }
-//            $parents[$key][] = $model->load(['organizationUnit.head','organizationUnit.evaluations']);
-//
-//        }
-//        $a = collect($parents)->flatten(1)->unique();
-//
-//        $b = $a->pluck('organizationUnit')->flatten(2);
-//
-//        dd($b);
-//            ->pluck('head');
-
-//        $b = $a->pluck('organizationUnit')
-//            ->pluck('head')
-//            ->reject(function ($id) {
-//                return $id === null;
-//            })->unique();
-
-//User::doesntHave()
-//        dd($b);
+//            $parents[] = $model->load(['organizationUnit.head','organizationUnit.evaluations']);
+//////
+////        }
 //        dd($parents);
 
-//        $user = User::find(1);
-//        dd($user);
-//        $user->load('person.personable.homeAddress', 'person.avatar', 'person.workForce.workforceable');
-//        dd($user);
-//        $workForce = $user->person->workForce;
+////        $a = collect($parents)->flatten(1)->unique();
+////
+////        $b = $a->pluck('organizationUnit')->flatten(2);
+////
+////        dd($b);
+////            ->pluck('head');
 //
-//        if ($workForce->workforceable_type === Employee::class) {
-//            $rs = $workForce->workforceable->recruitmentScripts;
-//        }
-//        $data = [
-//            'info' => $user->person,
-//            'recruitmentScripts' => $rs ?? null,
+////        $b = $a->pluck('organizationUnit')
+////            ->pluck('head')
+////            ->reject(function ($id) {
+////                return $id === null;
+////            })->unique();
 //
-//        ];
-//        $user->load('person.workForce.workForceable');
-//        $workForce = $user->person->workForce->workForceable;
-//        if ($workForce instanceof Employee) {
-//            $rs = $workForce->recruitmentScripts;
-//        }
-//        $notif=$user->notifications()->where('type', '=', VerifyInfoNotification::class)->first();
-//        if (is_null($notif)) {
-//            $user->notify(new VerifyInfoNotification());
-//            return $user->notifications()->where('type', '=', VerifyInfoNotification::class)->first();
-//        } elseif (!$notif->read()) {
-//            $notif->markAsRead();
-//            dd( $notif);
-//        }
-//        $a = convertToDbFriendly('٦٦٦٦٦ ميزان تحقق بودجه مصوب دهياري');
-//        dd($a);
-//        $villages = json_decode(file_get_contents(realpath(__DIR__ . '/agh.json')), true);
-////        $a = [];
-//        $records = array_reduce($villages, function ($records, $village) {
-//            $records[$village[0]][$village[1]][$village[2]][] = $village[3];
-//            return $records;
-//        }, []);
-//        dd($records);
-
-//        $districtsNotFound = [];
-//        $townNotFound = [];
-//        $villageNotFound = [];
+////User::doesntHave()
+////        dd($b);
+////        dd($parents);
 //
+////        $user = User::find(1);
+////        dd($user);
+////        $user->load('person.personable.homeAddress', 'person.avatar', 'person.workForce.workforceable');
+////        dd($user);
+////        $workForce = $user->person->workForce;
+////
+////        if ($workForce->workforceable_type === Employee::class) {
+////            $rs = $workForce->workforceable->recruitmentScripts;
+////        }
+////        $data = [
+////            'info' => $user->person,
+////            'recruitmentScripts' => $rs ?? null,
+////
+////        ];
+////        $user->load('person.workForce.workForceable');
+////        $workForce = $user->person->workForce->workForceable;
+////        if ($workForce instanceof Employee) {
+////            $rs = $workForce->recruitmentScripts;
+////        }
+////        $notif=$user->notifications()->where('type', '=', VerifyInfoNotification::class)->first();
+////        if (is_null($notif)) {
+////            $user->notify(new VerifyInfoNotification());
+////            return $user->notifications()->where('type', '=', VerifyInfoNotification::class)->first();
+////        } elseif (!$notif->read()) {
+////            $notif->markAsRead();
+////            dd( $notif);
+////        }
+////        $a = convertToDbFriendly('٦٦٦٦٦ ميزان تحقق بودجه مصوب دهياري');
+////        dd($a);
+////        $villages = json_decode(file_get_contents(realpath(__DIR__ . '/agh.json')), true);
+//////        $a = [];
+////        $records = array_reduce($villages, function ($records, $village) {
+////            $records[$village[0]][$village[1]][$village[2]][] = $village[3];
+////            return $records;
+////        }, []);
+////        dd($records);
 //
-//
-//
-//        foreach ($records as $key => $record) {
-//            $city = City::where('name', $key)->first();
-//            if (!is_null($city)) {
-//                foreach ($record as $district => $towns) {
-//                    $dist = District::where('name', $district)->where('city_id',$city->id)->first();
-//
-//                    if (is_null($dist)) {
-//                        $districtsNotFound[] = $district;
-//                    }else{
-//                        foreach ($towns as $town => $villages) {
-//                            $twn = Town::where('name', $town)->where('district_id', $dist->id)->first();
-//                            if (is_null($twn)) {
-//                                $townNotFound[$key][$district][] = $town;
-//                            }else{
-//                                foreach ($villages as $village) {
-//                                    $vlg = Village::where('name', $village)->where('town_id', $twn->id)->first();
-//                                    if (is_null($vlg)) {
-//                                        $villageNotFound[$key][$district][$town][] = $village;
-//
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//
-//                }
-//            }
-//        }
-//        dd($districtsNotFound,$townNotFound,$villageNotFound);
-//        foreach ($villages as $village) {
-//
-//            $a[$village[0]][$village[1]][$village[2]][] = $village[3];
-//        }
-//        dd($a);
-//        dd($moduleCategoriesData);
-
-
-//        $user = User::where('mobile', '9360390070')->first();
-//
-//        $a = OtpRepository::verify($user->id, 29199);
-//        dd($a);
-
-
-//        $baseUrl = url('/');
-//
-//        $response = Http::post("{$baseUrl}/oauth/token", [
-//            'username' => '9360390070',
-//            'otp' => '291991',
-////            'otp_verifier' => 'otp ver',
-//            'client_id' => config('passport.password_grant_client.id'),
-//            'client_secret' => config('passport.password_grant_client.secret'),
-//            'grant_type' => 'otp_grant'
-//        ]);
-//
-//
-//        $result = json_decode($response->getBody(), true);
-//        dd($result);
-//        $a = now()->toDateTimeString();
-//        dd($a);
-//        $url = "https://ippanel.com/services.jspd";
-//
-//        $rcpt_nm = array('9372283246');
-//        $param = array
-//        (
-//            'uname'=>'09141492090',
-//            'pass'=>'1680162675Behrad!',
-//            'from'=>'+9890005476',
-//            'message'=>'تست',
-//            'to'=>json_encode($rcpt_nm),
-//            'op'=>'send'
-//        );
-//
-//        $handler = curl_init($url);
-//        curl_setopt($handler, CURLOPT_CUSTOMREQUEST, "POST");
-//        curl_setopt($handler, CURLOPT_POSTFIELDS, $param);
-//        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
-//        $response2 = curl_exec($handler);
-//
-//        $response2 = json_decode($response2);
-//        $res_code = $response2[0];
-//        $res_data = $response2[1];
-//        dd($response2);
-
-
-//// Get current time in Tehran timezone
-//        $now = Carbon::now('Asia/Tehran');
-//
-//// Create a Carbon object for the end of the day (23:59) in Tehran timezone
-//        $endOfToday = $now->clone()->setTime(23, 59);
-//
-//// Calculate the difference in minutes
-//        $minutesRemaining = $endOfToday->diffInMinutes($now);
-////        dd($minutesRemaining);
-//        $start = now();
-//        $hadis = Cache::get('hadis_data');
-//        $event = Cache::get('event');
-//
-//        if (!$hadis || !$event) {
-//            $pools=Http::pool(fn(Pool $pool)=>[
-//                $pool->get('https://api.keybit.ir/hadis'),
-//                $pool->get('https://one-api.ir/time/?token=712671:661250a3a5a8a&action=date&date=today'),
-//
-//            ]);
-//            Cache::put('hadis_data', $pools[0]->body(), $minutesRemaining);
-//            Cache::put('event', $pools[1]->body(), $minutesRemaining);
-//        }
+////        $districtsNotFound = [];
+////        $townNotFound = [];
+////        $villageNotFound = [];
+////
+////
+////
+////
+////        foreach ($records as $key => $record) {
+////            $city = City::where('name', $key)->first();
+////            if (!is_null($city)) {
+////                foreach ($record as $district => $towns) {
+////                    $dist = District::where('name', $district)->where('city_id',$city->id)->first();
+////
+////                    if (is_null($dist)) {
+////                        $districtsNotFound[] = $district;
+////                    }else{
+////                        foreach ($towns as $town => $villages) {
+////                            $twn = Town::where('name', $town)->where('district_id', $dist->id)->first();
+////                            if (is_null($twn)) {
+////                                $townNotFound[$key][$district][] = $town;
+////                            }else{
+////                                foreach ($villages as $village) {
+////                                    $vlg = Village::where('name', $village)->where('town_id', $twn->id)->first();
+////                                    if (is_null($vlg)) {
+////                                        $villageNotFound[$key][$district][$town][] = $village;
+////
+////                                    }
+////                                }
+////                            }
+////                        }
+////                    }
+////
+////
+////                }
+////            }
+////        }
+////        dd($districtsNotFound,$townNotFound,$villageNotFound);
+////        foreach ($villages as $village) {
+////
+////            $a[$village[0]][$village[1]][$village[2]][] = $village[3];
+////        }
+////        dd($a);
+////        dd($moduleCategoriesData);
 //
 //
+////        $user = User::where('mobile', '9360390070')->first();
+////
+////        $a = OtpRepository::verify($user->id, 29199);
+////        dd($a);
 //
 //
-//        dd(now()->diffInMilliseconds($start),[Cache::get('hadis_data'),Cache::get('event')]);
-
-
-//        try {
-//            $user = User::find(1);
-//            $user->notify(new TestNotification());
-//            \Notification::send($user, new TestNotification());
-//            Sms::via('farazsms')->send('این یک پیام تست برای ارسال پیامک از فرازاس ام اس است', function($sms) {
-//                $sms->to(['09372283246']);
-//            });
-//        } catch (InvalidMessageException $exception) {
-//            dd($exception->getMessage());
-//        }
-//        $jalaliDate = JalaliCalendar::fromGregorian('2020-05-24');
-//        dd($jalaliDate);
+////        $baseUrl = url('/');
+////
+////        $response = Http::post("{$baseUrl}/oauth/token", [
+////            'username' => '9360390070',
+////            'otp' => '291991',
+//////            'otp_verifier' => 'otp ver',
+////            'client_id' => config('passport.password_grant_client.id'),
+////            'client_secret' => config('passport.password_grant_client.secret'),
+////            'grant_type' => 'otp_grant'
+////        ]);
+////
+////
+////        $result = json_decode($response->getBody(), true);
+////        dd($result);
+////        $a = now()->toDateTimeString();
+////        dd($a);
+////        $url = "https://ippanel.com/services.jspd";
+////
+////        $rcpt_nm = array('9372283246');
+////        $param = array
+////        (
+////            'uname'=>'09141492090',
+////            'pass'=>'1680162675Behrad!',
+////            'from'=>'+9890005476',
+////            'message'=>'تست',
+////            'to'=>json_encode($rcpt_nm),
+////            'op'=>'send'
+////        );
+////
+////        $handler = curl_init($url);
+////        curl_setopt($handler, CURLOPT_CUSTOMREQUEST, "POST");
+////        curl_setopt($handler, CURLOPT_POSTFIELDS, $param);
+////        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+////        $response2 = curl_exec($handler);
+////
+////        $response2 = json_decode($response2);
+////        $res_code = $response2[0];
+////        $res_data = $response2[1];
+////        dd($response2);
+//
+//
+////// Get current time in Tehran timezone
+////        $now = Carbon::now('Asia/Tehran');
+////
+////// Create a Carbon object for the end of the day (23:59) in Tehran timezone
+////        $endOfToday = $now->clone()->setTime(23, 59);
+////
+////// Calculate the difference in minutes
+////        $minutesRemaining = $endOfToday->diffInMinutes($now);
+//////        dd($minutesRemaining);
+////        $start = now();
+////        $hadis = Cache::get('hadis_data');
+////        $event = Cache::get('event');
+////
+////        if (!$hadis || !$event) {
+////            $pools=Http::pool(fn(Pool $pool)=>[
+////                $pool->get('https://api.keybit.ir/hadis'),
+////                $pool->get('https://one-api.ir/time/?token=712671:661250a3a5a8a&action=date&date=today'),
+////
+////            ]);
+////            Cache::put('hadis_data', $pools[0]->body(), $minutesRemaining);
+////            Cache::put('event', $pools[1]->body(), $minutesRemaining);
+////        }
+////
+////
+////
+////
+////        dd(now()->diffInMilliseconds($start),[Cache::get('hadis_data'),Cache::get('event')]);
+//
+//
+////        try {
+////            $user = User::find(1);
+////            $user->notify(new TestNotification());
+////            \Notification::send($user, new TestNotification());
+////            Sms::via('farazsms')->send('این یک پیام تست برای ارسال پیامک از فرازاس ام اس است', function($sms) {
+////                $sms->to(['09372283246']);
+////            });
+////        } catch (InvalidMessageException $exception) {
+////            dd($exception->getMessage());
+////        }
+////        $jalaliDate = JalaliCalendar::fromGregorian('2020-05-24');
+////        dd($jalaliDate);
     }
 }

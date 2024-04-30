@@ -57,7 +57,7 @@ class OtpNotification extends Notification
     {
         try {
             $a= (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=eivaknyxkdkvvr5 \n verification-code={$this->otpCode}")
+            ->send("patterncode=l9i5x7nfvw7oofq \n verification-code={$this->otpCode}")
                 ->to($notifiable->mobile);
 
 

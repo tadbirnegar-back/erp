@@ -1,13 +1,19 @@
 [
     {
-        "name": "لیست ارزیابی",
+        "name": "ارزیابی سازمان شهرداریها و دهیاریهای کشور",
         "slug": "/evaluations/list",
         "moduleName": "EvalMS",
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "شرکت در ارزیابی",
-        "slug": "/evaluations/partake/{id}",
+        "name": "ارزیابی دفتر امور روستایی و شوراهای استانداری",
+        "slug": null,
+        "moduleName": "EvalMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ارزیابی آموزشی",
+        "slug": null,
         "moduleName": "EvalMS",
         "permissionTypeName": "operational"
     }

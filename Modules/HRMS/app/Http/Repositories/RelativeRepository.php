@@ -16,7 +16,7 @@ class RelativeRepository
 //        $this->relative = $relative;
 //    }
 
-    public function store(string $json,int $workForceID)
+    public function store(string $json, int $workForceID)
     {
 
         $dataToInsert = $this->dataPreparation($json, $workForceID);
@@ -38,7 +38,7 @@ class RelativeRepository
 //
 //            $relative->save();
             \DB::commit();
-           $records = Relative::orderBy('id', 'desc')->take(count($dataToInsert))->get();
+            $records = Relative::orderBy('id', 'desc')->take(count($dataToInsert))->get();
 
             return $records;
         } catch (\Exception $e) {
@@ -59,7 +59,7 @@ class RelativeRepository
 
             $relative->full_name = $data['fullName'];
             $relative->birthdate = $data['birthdate'] ?? null;
-            $relative->mobile = $data['mobile'];
+            $relative->mobile = $data['mobile'] ?? null;
             $relative->level_of_educational_id = $data['levelOfEducationalID'] ?? null;
             $relative->relative_type_id = $data['relativeTypeID'] ?? null;
             $relative->work_force_id = $data['workForceID'];
@@ -84,7 +84,7 @@ class RelativeRepository
             return [
                 'full_name' => $data['fullName'],
                 'birthdate' => $data['birthdate'] ?? null,
-                'mobile' => $data['mobile'],
+                'mobile' => $data['mobile'] ?? null,
                 'level_of_educational_id' => $data['levelOfEducationalId'] ?? null,
                 'relative_type_id' => $data['relativeTypeId'] ?? null,
                 'work_force_id' => $workForceID,

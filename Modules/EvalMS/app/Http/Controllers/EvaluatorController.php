@@ -26,7 +26,7 @@ class EvaluatorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request,$id): JsonResponse
+    public function store(Request $request, $evalID, $ounitID): JsonResponse
     {
         $data = $request->all();
         $data['userID'] = \Auth::user()->id;
@@ -40,7 +40,8 @@ class EvaluatorController extends Controller
 //        }
         try {
             \DB::beginTransaction();
-            $evaluator = EvaluatorRepository::evaluatorStore($data, $id, $data['userID']);
+            $data['organizationUnitID'] = $ounitID;
+            $evaluator = EvaluatorRepository::evaluatorStore($data, $evalID, $data['userID']);
 //            return response()->json(['message' => $evaluator]);
 
             $answers = json_decode($data['answers'], true);
@@ -86,16 +87,60 @@ class EvaluatorController extends Controller
 
         return response()->json($this->data);
     }
-    public function hasEvaluationRecord(Request $request,$evaluationId)
+    public function hasEvaluationRecord()
     {
 
 
         $user = \Auth::user();
 
-        $recordExists = $user->evaluators()
-            ->where('evaluation_id', $evaluationId)
-            ->exists();
+        $assignedEvals = $user->load(['organizationUnits.evaluations.evaluators'=>function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        }]);
 
+        if (is_null($user->organizationUnits)) {
+            $recordExists = true;
+        }else{
+            $hasAtLeastOneEvaluation = false;
+            $allEmpty = true;
+
+            foreach ($assignedEvals->organizationUnits as $organizationUnit) {
+                if (! $organizationUnit->evaluations->isEmpty()) {
+                    $hasAtLeastOneEvaluation = true;
+                    break; // Exit loop if at least one evaluation is found
+                }
+                $allEmpty = $allEmpty && $organizationUnit->evaluations->isEmpty();
+            }
+            if ($hasAtLeastOneEvaluation) {
+                $filledEvaluations = [];
+                $unfilledEvaluations = [];
+
+                foreach ($assignedEvals->organizationUnits as $organizationUnit) {
+                    foreach ($organizationUnit->evaluations as $evaluation) {
+                        // Check if user has filled the evaluation (replace 'evaluator_id' with your actual column name)
+                        foreach ($evaluation->evaluators as $evaluator) {
+                            if ($evaluator->user_id === $user->id ) {
+                                $filledEvaluations[] = $evaluation;
+                            } else {
+                                $unfilledEvaluations[] = $evaluation;
+                            }
+                        }
+
+
+                    }
+                }
+
+                // Handle unfilled evaluations (optional)
+                if (!empty($unfilledEvaluations)) {
+                    // Access details of unfilled evaluations here (e.g., loop and print names)
+                    $recordExists = true;
+                }else{
+                    $recordExists = false;
+                }
+
+            }else{
+                $recordExists = true;
+            }
+    }
         return response()->json([
             'hasRecord' => $recordExists,
         ]);

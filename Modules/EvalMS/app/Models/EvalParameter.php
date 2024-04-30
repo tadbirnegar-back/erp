@@ -36,4 +36,29 @@ class EvalParameter extends Model
     {
         return $this->hasMany(EvalParameterAnswer::class, 'eval_parameter_id');
     }
+
+    public function evalIndicator(): BelongsTo
+    {
+        return $this->belongsTo(EvaluatorIndicator::class,'eval_indicator_id');
+    }
+
+    use \Znck\Eloquent\Traits\BelongsToThrough;
+
+    public function evalPart()
+    {
+        return $this->belongsToThrough(EvalPart::class,EvaluatorIndicator::class,foreignKeyLookup: [
+            EvaluatorIndicator::class => 'eval_indicator_id',
+            EvalPart::class => 'eval_part_id',
+
+        ]);
+    }
+
+    public function evaluator()
+    {
+        return $this->belongsToThrough(Evaluator::class,EvalParameterAnswer::class,foreignKeyLookup: [
+            EvalParameterAnswer::class => 'eval_parameter_id',
+            Evaluator::class => 'evaluator_id',
+
+        ]);
+    }
 }

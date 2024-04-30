@@ -16,6 +16,7 @@ use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\OUnitMS\app\Notifications\VerifyInfoNotification;
+use Modules\OUnitMS\app\Notifications\VerifyInfoSuccessNotification;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 
 class VerifyInfoConformationController extends Controller
@@ -127,6 +128,8 @@ class VerifyInfoConformationController extends Controller
 
         }
         $hasConfirmed = true;
+        $user->notify(new VerifyInfoSuccessNotification());
+
         return response()->json(['hasConfirmed' => $hasConfirmed]);
     }
 
@@ -191,6 +194,7 @@ class VerifyInfoConformationController extends Controller
 
             if (!is_null($notif) && !$notif->read()) {
                 $notif->markAsRead();
+                $user->notify(new VerifyInfoSuccessNotification());
 
             }
             DB::commit();
@@ -200,7 +204,7 @@ class VerifyInfoConformationController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-                    return response()->json(['message' => $e->getMessage()], 500);
+//                    return response()->json(['message' => $e->getMessage()], 500);
 
             return response()->json(['hasConfirmed' => false,'message'=>'خطا در تایید اطلاعات'],500);
         }

@@ -34,8 +34,8 @@ class PersonRepository
 
     public function naturalStore(array $data): Natural|\Exception
     {
-        try {
-            DB::beginTransaction();
+//        try {
+//            DB::beginTransaction();
 //            if ($data['isNewAddress) {
 //                $address = new Address();
 //                $address->title = $data['title;
@@ -93,15 +93,15 @@ class PersonRepository
             $naturalPerson->person->status()->attach($status);
 
 
-            DB::commit();
+//            DB::commit();
             return $naturalPerson;
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $e;
+//        } catch (\Exception $e) {
+//            DB::rollBack();
+//            return $e;
 //            return response()->json('خطا در وارد کردن فرد جدید', 500);
 
-        }
+//        }
 
     }
 
