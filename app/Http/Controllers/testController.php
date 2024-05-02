@@ -3,15 +3,17 @@
 namespace App\Http\Controllers;
 
 
+//use DB;
 use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 
-use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
-use Modules\EvalMS\app\Models\Evaluation;
-use Modules\EvalMS\app\Models\Evaluator;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\VillageOfc;
+//use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
+//use Modules\EvalMS\app\Models\Evaluation;
+//use Modules\EvalMS\app\Models\Evaluator;
+//use Modules\OUnitMS\app\Models\OrganizationUnit;
+//use Modules\OUnitMS\app\Models\VillageOfc;
+//use PDO;
 
 
 class testController extends Controller
@@ -20,13 +22,19 @@ class testController extends Controller
 
     public function run()
     {
-
-        $user = User::find(1);
+//        $connection = DB::connection()->getPdo();
+//        $statement = $connection->prepare('SHOW TABLES');
+//        $statement->execute();
+//        $tables = $statement->fetchAll(PDO::FETCH_COLUMN);
+//        $tableString = implode(', ', $tables);
 //
-        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
-        dd($sidebarPermissions->pluck('moduleCategory'));
+//        echo $tableString;
+//        $user = User::find(1);
+////
+//        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+//        dd($sidebarPermissions->pluck('moduleCategory'));
 //        $pers = Permission::all(['id']);
-//
+//////
 //        $role = Role::find(1);
 //        $role->permissions()->sync($pers);
 

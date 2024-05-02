@@ -33,7 +33,7 @@ class RoleController extends Controller
             $role = new Role();
             $role->name = $request->name;
             $role->status_id = Role::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-            $role->section_id = $request->sectionID;
+            $role->section_id = $request->sectionID ?? null;
 
             $role->save();
 

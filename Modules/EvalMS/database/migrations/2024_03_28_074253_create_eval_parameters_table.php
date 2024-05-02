@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->string('title');
             $table->text('description');
             $table->integer('weight');
+            $table->text('circle_of_inclusion')->default('کلیه دهیاری ها')->nullable();
+            $table->text('related_legal_citation')->nullable();
 
             $table->unsignedBigInteger('eval_indicator_id');
             $table->unsignedBigInteger('eval_parameter_type_id');

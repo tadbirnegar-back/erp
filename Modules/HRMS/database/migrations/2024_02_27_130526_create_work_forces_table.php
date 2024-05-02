@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->morphs('workforceable');
             $table->boolean('isMarried');
             $table->unsignedBigInteger('person_id');
-            $table->unsignedBigInteger('military_service_status_id');
+            $table->unsignedBigInteger('military_service_status_id')->nullable();
 
 
             $table->foreign('person_id')->references('id')->on('persons')->onDelete('cascade')->onUpdate('cascade');
