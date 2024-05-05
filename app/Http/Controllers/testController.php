@@ -7,13 +7,16 @@ namespace App\Http\Controllers;
 use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
+use Modules\OUnitMS\app\Models\CityOfc;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
-//use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
-//use Modules\EvalMS\app\Models\Evaluation;
-//use Modules\EvalMS\app\Models\Evaluator;
-//use Modules\OUnitMS\app\Models\OrganizationUnit;
-//use Modules\OUnitMS\app\Models\VillageOfc;
-//use PDO;
+use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
+use Modules\EvalMS\app\Models\Evaluation;
+use Modules\EvalMS\app\Models\Evaluator;
+use Modules\OUnitMS\app\Models\TownOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
+use PDO;
 
 
 class testController extends Controller
@@ -22,6 +25,51 @@ class testController extends Controller
 
     public function run()
     {
+//        $a = OrganizationUnit::where('head_id', '!=', null)->get('id');
+//        $b = Evaluation::find(1)->organizationUnits()->sync($a);
+//        dd($a);
+//        \Artisan::call('module:seed AAA');
+//        $ounit = OrganizationUnit::findOrFail(3856);
+//
+////        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
+//
+//        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
+////        dd($whoToFill);
+//
+//
+//        $filteredModels = $whoToFill->filter(function ($model) {
+//            return $model->organizationunit->head && $model->organizationunit->head->id === 1;
+//        });
+//
+//        $highestIndex = $filteredModels->keys()->max();
+//
+//        $filteredCollection = $whoToFill->filter(function ($model, $index) use ($highestIndex) {
+//            return $index <= $highestIndex;
+//        });
+//        dd($filteredCollection);
+//        $city = OrganizationUnit::with('unitable')->where('name', 'پلدشت')->where('unitable_type', CityOfc::class)->first();
+////        dd($city);
+//
+//        $dcName = 'مرکزی';
+//
+//        $district = DistrictOfc::whereHas('organizationUnit', function ($query) use ($dcName) {
+//            $query->where('name', $dcName);
+//        })->where('city_ofc_id', $city->unitable->id)->first();
+////        dd($district->organizationUnit);
+//        $townName = 'چایپاسارشرقی';
+//
+//        $town = TownOfc::whereHas('organizationUnit', function ($query) use ($townName) {
+//            $query->where('name', $townName);
+//        })->where('district_ofc_id', $district->id)->first();
+////        dd($town->organizationUnit);
+//
+//        $villName = 'پزیک';
+//
+//        $village = VillageOfc::whereHas('organizationUnit', function ($query) use ($villName) {
+//            $query->where('name', $villName);
+//        })->where('town_ofc_id', $town->id)->first();
+//
+//        dd(OrganizationUnit::where('name',$villName)->first());
 //        $connection = DB::connection()->getPdo();
 //        $statement = $connection->prepare('SHOW TABLES');
 //        $statement->execute();

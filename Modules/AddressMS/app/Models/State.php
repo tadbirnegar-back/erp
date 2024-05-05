@@ -14,7 +14,7 @@ class State extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
-
+    public $timestamps = false;
     protected static function newFactory(): StateFactory
     {
         //return StateFactory::new();

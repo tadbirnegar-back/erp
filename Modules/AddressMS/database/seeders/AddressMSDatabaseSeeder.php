@@ -36,17 +36,18 @@ class AddressMSDatabaseSeeder extends Seeder
 //        }
 //
         $this->call([
-            ModuleCategorySeeder::class,
-            ModuleSeeder::class,
-            PermissionSeeder::class,
-            AddressStatusSeeder::class,
+//            ModuleCategorySeeder::class,
+//            ModuleSeeder::class,
+//            PermissionSeeder::class,
+//            AddressStatusSeeder::class,
+              LocationsSeeder::class,
 
         ]);
-        $this->call(CountriesTableSeeder::class);
-        $this->call(StatesTableSeeder::class);
-        $this->call(CitiesTableSeeder::class);
-        $this->call(DistrictsTableSeeder::class);
-        $this->call(TownsTableSeeder::class);
-        $this->call(VillagesTableSeeder::class);
+//        $this->call(CountriesTableSeeder::class);
+//        $this->call(StatesTableSeeder::class);
+//        $this->call(CitiesTableSeeder::class);
+//        $this->call(DistrictsTableSeeder::class);
+//        $this->call(TownsTableSeeder::class);
+//        $this->call(VillagesTableSeeder::class);
     }
 }

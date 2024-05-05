@@ -12,13 +12,13 @@ class AAADatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PermissionTypeSeeder::class,
-            ModuleCategorySeeder::class,
-            ModuleSeeder::class,
-            PermissionSeeder::class,
-            UserStatusSeeder::class,
+//            PermissionTypeSeeder::class,
+//            ModuleCategorySeeder::class,
+//            ModuleSeeder::class,
+//            PermissionSeeder::class,
+//            UserStatusSeeder::class,
 
-//            DehyarsImportSeeder::class,
+            DehyarsImportSeeder::class,
 
         ]);
     }

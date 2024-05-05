@@ -71,6 +71,7 @@ class EmployeeRepository
             }
 
 //            \DB::commit();
+            $employee->load('workForce');
             return $employee;
         } catch (\Exception $e) {
 //            \DB::rollBack();
@@ -140,9 +141,12 @@ class EmployeeRepository
 
     public function isPersonEmployee(int $personID)
     {
-        $workForce = WorkForce::where('person_id', '=', $personID)->where('workforceable_type', '=', Employee::class)->exists();
-
-        return $workForce;
+//        $workForce = WorkForce::where('person_id', '=', $personID)->where('workforceable_type', '=', Employee::class)->with('person')->first();
+        $employee = Employee::whereHas('workforce', function ($query) use ($personID) {
+            $query->where('person_id', '=', $personID);
+            // Add additional conditions for workforce here (optional)
+        })->with('workforce')->first();
+        return $employee;
     }
 
 

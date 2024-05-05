@@ -113,8 +113,17 @@ class EvaluationController extends Controller
 //        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
 //            return $head === null;
 //        })->unique()->toArray();
+        $filteredModels = $whoToFill->filter(function ($model) use ($user){
+            return $model->organizationunit->head && $model->organizationunit->head->id === $user->id;
+        });
 
-        $headIDs = $whoToFill->pluck('organizationUnit.head.id')->reject(function ($head) {
+        $highestIndex = $filteredModels->keys()->max();
+
+        $filteredCollection = $whoToFill->filter(function ($model, $index) use ($highestIndex) {
+            return $index <= $highestIndex;
+        });
+
+        $headIDs = $filteredCollection->pluck('organizationUnit.head.id')->reject(function ($head) {
             return $head === null;
         })->unique()->toArray();
 //        $unitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
