@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('status_id')->index();
-            $table->unsignedBigInteger('section_id')->index();
+            $table->unsignedBigInteger('section_id')->index()->nullable();
 
 
             $table->foreign('section_id')->references('id')->on('sections')->onDelete('cascade')->onUpdate('cascade');

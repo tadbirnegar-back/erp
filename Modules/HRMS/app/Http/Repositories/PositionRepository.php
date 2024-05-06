@@ -30,7 +30,7 @@ class PositionRepository
              */
             $position = new $this->position();
             $position->name = $data['positionName'];
-            $position->section_id = $data['sectionID'];
+            $position->section_id = $data['sectionID']??null;
             $status = $this->position::GetAllStatuses()->where('name', '=', 'فعال')->first();
             $position->status_id = $status->id;
             $position->save();

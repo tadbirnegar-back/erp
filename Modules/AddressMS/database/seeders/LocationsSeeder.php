@@ -3,6 +3,7 @@
 namespace Modules\AddressMS\database\seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Modules\AddressMS\app\Models\City;
 use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\State;
@@ -30,22 +31,23 @@ class LocationsSeeder extends Seeder
 
 //        $state = new StateOfc();
 //        $state->save();
-        $state = new State([
-            'name' => 'آذربایجان غربی',
-            'country_id' => 1
+        DB::transaction(function () use ($records) {
+            $state = new State([
+                'name' => 'آذربایجان غربی',
+                'country_id' => 1
 
-        ]);
+            ]);
 //        $ounit->name = 'آذربایجان غربی';
 //        $ounit->head_id = null;
-        $state->save();
+            $state->save();
 
 
-        foreach ($records as $city => $districts) {
+            foreach ($records as $city => $districts) {
 
-            $cityOfc = new City();
-            $cityOfc->name = $city;
-            $cityOfc->state_id = $state->id;
-            $cityOfc->save();
+                $cityOfc = new City();
+                $cityOfc->name = $city;
+                $cityOfc->state_id = $state->id;
+                $cityOfc->save();
 
 //            $cityOunit = new OrganizationUnit([
 //                'name' => $city,
@@ -57,11 +59,11 @@ class LocationsSeeder extends Seeder
 
 //            $cityOfc->save();
 
-            foreach ($districts as $district => $towns) {
-                $districtOfc = new District();
-                $districtOfc->name = $district;
-                $districtOfc->city_id = $cityOfc->id;
-                $districtOfc->save();
+                foreach ($districts as $district => $towns) {
+                    $districtOfc = new District();
+                    $districtOfc->name = $district;
+                    $districtOfc->city_id = $cityOfc->id;
+                    $districtOfc->save();
 
 //                $districtOunit = new OrganizationUnit([
 //                    'name' => $district,
@@ -73,12 +75,12 @@ class LocationsSeeder extends Seeder
 
 //                $districtOfc->organizationUnit()->save($districtOunit);
 
-                foreach ($towns as $town => $villages) {
+                    foreach ($towns as $town => $villages) {
 
-                    $townOfc = new Town();
-                    $townOfc->name = $town;
-                    $townOfc->district_id = $districtOfc->id;
-                    $townOfc->save();
+                        $townOfc = new Town();
+                        $townOfc->name = $town;
+                        $townOfc->district_id = $districtOfc->id;
+                        $townOfc->save();
 
 //                    $townOunit = new OrganizationUnit([
 //                        'name' => $town,
@@ -88,11 +90,11 @@ class LocationsSeeder extends Seeder
 //
 //                    $townOfc->organizationUnit()->save($townOunit);
 
-                    foreach ($villages as $village) {
-                        $villageOfc = new Village();
-                        $villageOfc->name = $village;
-                        $villageOfc->town_id = $townOfc->id;
-                        $villageOfc->save();
+                        foreach ($villages as $village) {
+                            $villageOfc = new Village();
+                            $villageOfc->name = $village;
+                            $villageOfc->town_id = $townOfc->id;
+                            $villageOfc->save();
 
 //                        $villageOunit = new OrganizationUnit([
 //                            'name' => $village,
@@ -103,14 +105,16 @@ class LocationsSeeder extends Seeder
 //                    $villageOunit->head_id = null;
 
 //                        $villageOfc->organizationUnit()->save($villageOunit);
+                        }
                     }
+
+
                 }
 
 
             }
+        });
 
-
-        }
         // $this->call([]);
     }
 }

@@ -38,7 +38,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/users/widgets/active', [\Modules\AAA\app\Http\Controllers\AAAController::class, 'activeWidgets'])->middleware('auth:api');
 
 
-    Route::get('/widget/profile', [\Modules\AAA\app\Http\widgets\UserWidgets::class, 'getUserInfo']);
+    Route::get('/widget/profile', [\Modules\AAA\app\Http\Widgets\UserWidgets::class, 'getUserInfo']);
 
     Route::get('/widget/calendar', [\Modules\AAA\app\Http\widgets\UserWidgets::class, 'calendar']);
 

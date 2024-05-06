@@ -16,7 +16,9 @@ use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
 use PDO;
+use Str;
 
 
 class testController extends Controller
@@ -25,6 +27,25 @@ class testController extends Controller
 
     public function run()
     {
+        $user = User::find(1);
+        $activeWidgets = $user->activeWidgets;
+
+        $allPermissions = $activeWidgets->map(function ($widget) {
+            return $widget->permission->slug; // Extract permission model
+        });
+
+        $functions = WidgetRepository::extractor($allPermissions->toArray());
+
+        $widgetData = [];
+        foreach ($functions as $key => $item) {
+
+            $widgetData[] = [
+                'name' => Str::replace('/', '', $key),
+                'data' => call_user_func([$item['controller'], $item['method']
+                    ]
+                    , $user)];
+        }
+        dd($widgetData);
 //        $a = OrganizationUnit::where('head_id', '!=', null)->get('id');
 //        $b = Evaluation::find(1)->organizationUnits()->sync($a);
 //        dd($a);
