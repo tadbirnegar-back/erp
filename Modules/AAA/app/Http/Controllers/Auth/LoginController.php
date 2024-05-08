@@ -105,6 +105,7 @@ class LoginController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
+        $data['userID'] = Auth::user()->id;
 
         $data['roles'] = json_decode($data['roles']);
 
@@ -112,7 +113,6 @@ class LoginController extends Controller
         if ($request->isNewPerson) {
 
             if ($request->isNewAddress) {
-                $data['userID'] = Auth::user()->id;
 
                 $address = $this->addressService->store($data);
 
@@ -136,7 +136,7 @@ class LoginController extends Controller
         $user = $this->userService->store($data);
 
         if ($user instanceof \Exception) {
-//            return response()->json(['message' => $user->getMessage()], 500);
+            return response()->json(['message' => $user->getMessage()], 500);
 
             return response()->json(['message' => 'خطا در ثبت کاربر جدید'], 500);
         }

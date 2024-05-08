@@ -12,6 +12,7 @@
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "nwidart/laravel-modules": "^10.0",
+        "shetabit/payment": "^5.8",
         "staudenmeir/belongs-to-through": "^2.15",
         "staudenmeir/eloquent-has-many-deep": "^1.19",
         "tzsk/sms": "^8.0"

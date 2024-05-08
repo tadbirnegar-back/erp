@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 
 //use DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Models\Permission;
 use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
@@ -18,34 +20,64 @@ use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
 use PDO;
+use Shetabit\Multipay\Exceptions\InvalidPaymentException;
+use Shetabit\Multipay\Invoice;
 use Str;
-
+use Shetabit\Payment\Facade\Payment;
 
 class testController extends Controller
 {
+    public function callback(Request $request)
+    {
 
+        try {
+            $a = 1;
+            $receipt = Payment::amount(1000)->transactionId($request->Authority)->verify();
+
+            // You can show payment referenceId to the user.
+            echo $receipt->getReferenceId();
+            echo 'verify';
+
+        } catch (InvalidPaymentException $exception) {
+            /**
+            when payment is not verified, it will throw an exception.
+            We can catch the exception to handle invalid payments.
+            getMessage method, returns a suitable message that can be used in user interface.
+             **/
+            dd($a);
+            echo $exception->getMessage();
+        }
+//        dd($request->all());
+    }
 
     public function run()
     {
-        $user = User::find(1);
-        $activeWidgets = $user->activeWidgets;
 
-        $allPermissions = $activeWidgets->map(function ($widget) {
-            return $widget->permission->slug; // Extract permission model
-        });
+        $invoice = (new Invoice)->amount(1000);
+        return Payment::via('zarinpal')->purchase($invoice, function ($driver, $transactionId) use ($invoice) {
+//            dd(get);
 
-        $functions = WidgetRepository::extractor($allPermissions->toArray());
-
-        $widgetData = [];
-        foreach ($functions as $key => $item) {
-
-            $widgetData[] = [
-                'name' => Str::replace('/', '', $key),
-                'data' => call_user_func([$item['controller'], $item['method']
-                    ]
-                    , $user)];
-        }
-        dd($widgetData);
+            // Store transactionId in database as we need it to verify payment in the future.
+        })->pay()->render();
+//        $user = User::find(1);
+//        $activeWidgets = $user->activeWidgets;
+//
+//        $allPermissions = $activeWidgets->map(function ($widget) {
+//            return $widget->permission->slug; // Extract permission model
+//        });
+//
+//        $functions = WidgetRepository::extractor($allPermissions->toArray());
+//
+//        $widgetData = [];
+//        foreach ($functions as $key => $item) {
+//
+//            $widgetData[] = [
+//                'name' => Str::replace('/', '', $key),
+//                'data' => call_user_func([$item['controller'], $item['method']
+//                    ]
+//                    , $user)];
+//        }
+//        dd($widgetData);
 //        $a = OrganizationUnit::where('head_id', '!=', null)->get('id');
 //        $b = Evaluation::find(1)->organizationUnits()->sync($a);
 //        dd($a);

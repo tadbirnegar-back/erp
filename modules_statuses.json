@@ -14,5 +14,6 @@
     "WidgetsMS": true,
     "LMS": true,
     "EvalMS": true,
-    "OUnitMS": true
+    "OUnitMS": true,
+    "Gateway": true
 }

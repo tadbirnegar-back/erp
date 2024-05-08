@@ -117,11 +117,15 @@ class UserController extends Controller
         $validator = Validator::make($data, [
             'mobile' => [
                 'required',
-                'unique:users,mobile,'.$user->id,
+                'unique:users,mobile,' . $user->id,
             ],
             'username' => [
                 'sometimes',
-                'unique:users,username,'.$user->id,
+                'unique:users,username,' . $user->id,
+            ],
+            'nationalCode' => [
+                'required',
+                'unique:persons,national_code,' . $user->person->id,
             ]
         ]);
 
@@ -131,10 +135,10 @@ class UserController extends Controller
         try {
             \DB::beginTransaction();
             $data['userID'] = $user->id;
-//            if ($data['username'] !== '') {
-                $user->username = $data['username'];
-                $user->mobile = $data['mobile'];
-                $user->save();
+//            if (isset($data['username'])) {
+            $user->username = $data['username'] ?? null;
+            $user->mobile = $data['mobile'];
+            $user->save();
 //            }
             $person = $user->person;
 
@@ -150,7 +154,7 @@ class UserController extends Controller
 
             }
             $personService = new PersonRepository();
-            $personResult = $personService->naturalUpdate($data,$person->personable_id);
+            $personResult = $personService->naturalUpdate($data, $person->personable_id);
 
             if ($personResult instanceof \Exception) {
                 return response()->json(['message' => $personResult->getMessage()], 500);
@@ -158,10 +162,10 @@ class UserController extends Controller
             }
             \DB::commit();
             $user->load('person.avatar', 'person.personable');
-            return response()->json(['message' => 'با موفقیت ویرایش شد','data'=>$user]);
-        }catch (\Exception $e){
+            return response()->json(['message' => 'با موفقیت ویرایش شد', 'data' => $user]);
+        } catch (\Exception $e) {
             \DB::rollBack();
-//            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
             return response()->json(['message' => 'خطا در بروزرسانی کاربر'], 500);
 
         }
@@ -171,7 +175,7 @@ class UserController extends Controller
     public function profile()
     {
         $user = \Auth::user();
-        $user->load('person.avatar', 'person.personable.homeAddress.village','person.personable.homeAddress.town.district.city.state.country');
+        $user->load('person.avatar', 'person.personable.homeAddress.village', 'person.personable.homeAddress.town.district.city.state.country');
 
         return response()->json($user);
     }
@@ -186,13 +190,12 @@ class UserController extends Controller
             $user->password = \Hash::make($request->newPassword);
             $user->save();
             $message = 'با موفقیت بروزرسانی شد';
-            $statusCode=200;
-        }else{
+            $statusCode = 200;
+        } else {
             $message = 'رمز فعلی نادرست است';
             $statusCode = 401;
 
         }
-
 
 
         return response()->json(['message' => $message], $statusCode);

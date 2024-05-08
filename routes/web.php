@@ -16,4 +16,5 @@ use Illuminate\Support\Facades\Cookie;
 */
 
 Route::get('/', [\App\Http\Controllers\testController::class,'run']);
+Route::get('/callback', [\App\Http\Controllers\testController::class,'callback']);
 Route::get('/a/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'show']);

@@ -30,7 +30,7 @@ class PositionRepository
              */
             $position = new $this->position();
             $position->name = $data['positionName'];
-            $position->section_id = $data['sectionID']??null;
+            $position->section_id = $data['sectionID'] ?? null;
             $status = $this->position::GetAllStatuses()->where('name', '=', 'فعال')->first();
             $position->status_id = $status->id;
             $position->save();
@@ -53,7 +53,7 @@ class PositionRepository
              */
             $position = $this->position::findOrFail($ID);
             $position->name = $data['positionName'];
-            $position->section_id = $data['sectionID'];
+            $position->section_id = $data['sectionID'] ?? null;
 //            $position->status_id = $data['statusID'];
             $position->save();
             \DB::commit();
@@ -67,6 +67,6 @@ class PositionRepository
 
     public function show(int $id)
     {
-        return $this->position::with('status','section.department.branch')->findOrFail($id);
+        return $this->position::with('status', 'section.department.branch')->findOrFail($id);
     }
 }
