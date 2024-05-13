@@ -15,6 +15,7 @@ use Laravel\Passport\HasApiTokens;
 use Modules\AddressMS\app\Models\Address;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
+use Modules\Gateway\app\Models\Payment;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -150,6 +151,16 @@ class User extends Authenticatable
     public function organizationUnits(): HasMany
     {
         return $this->hasMany(OrganizationUnit::class, 'head_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'user_id');
+    }
+
+    public function payment(): HasOne
+    {
+        return $this->hasOne(Payment::class, 'user_id');
     }
 
     public static function GetAllStatuses(): Collection

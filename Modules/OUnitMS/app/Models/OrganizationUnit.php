@@ -11,11 +11,13 @@ use Modules\AAA\app\Models\User;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
+use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 use Znck\Eloquent\Traits\BelongsToThrough;
 
 class OrganizationUnit extends Model
 {
     use HasFactory;
+    use HasRecursiveRelationships;
 
     /**
      * The attributes that are mass assignable.

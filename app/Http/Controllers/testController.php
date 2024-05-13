@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 
 //use DB;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Models\Permission;
@@ -16,6 +17,7 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
+use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
@@ -24,7 +26,7 @@ use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Multipay\Invoice;
 use Str;
 use Shetabit\Payment\Facade\Payment;
-
+use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
 class testController extends Controller
 {
     public function callback(Request $request)
@@ -33,7 +35,7 @@ class testController extends Controller
         try {
             $a = 1;
             $receipt = Payment::amount(1000)->transactionId($request->Authority)->verify();
-
+            dd($receipt);
             // You can show payment referenceId to the user.
             echo $receipt->getReferenceId();
             echo 'verify';
@@ -52,13 +54,73 @@ class testController extends Controller
 
     public function run()
     {
+//        dd(opcache_get_status());
+        $ounit = OrganizationUnit::with(['ancestorsAndSelf.head'])->findOrFail(3735);
 
-        $invoice = (new Invoice)->amount(1000);
-        return Payment::via('zarinpal')->purchase($invoice, function ($driver, $transactionId) use ($invoice) {
-//            dd(get);
+        $whoToFill = $ounit->ancestorsAndSelf;
+//        $ous = $whoToFill->filter(function ($ou) {
+//
+//        });
+        dd($whoToFill);
+//        $user = User::find(1);
+//        $s = OrganizationUnit::withMaxDepth(-4, function ()  {
+//            return OrganizationUnit::find(290)->ancestors;
+//        });
+//        dd($user->organizationUnits);
+//        $c = OrganizationUnit::find(3731)->descendantsAndSelf->toTree();
+//        dd($c->toJson());
+//        $filters = $user->organizationUnits->map(function ($organizationUnit, int $key) {
+//            return $organizationUnit->descendantsAndSelf->toTree();
+//        });
+////////////        dd($filters);
+//        dd($user->organizationUnits->where('unitable_type',CityOfc::class)->first());
 
-            // Store transactionId in database as we need it to verify payment in the future.
-        })->pay()->render();
+
+
+//        $b = $s->descendantsAndSelf;
+//        $a = OrganizationUnit::with('descendantsAndSelf')->find(3);
+//        dd($a->descendantsAndSelf->toTree());
+//        dd($user->organizationUnits->pluck('descendantsAndSelf')->flatten()->unique('id'));
+//
+
+//        dd($a);
+//        dd($a->organizationUnits->pluck('descendantsAndSelf')->flatten());
+
+
+
+//        $b = $a->organizationUnits[0]->descendantsAndSelf->pluck('id');
+//        $c = $b->collect();
+//        $X = $a->organizationUnits->pluck('descendantsAndSelf')->map(function ($organizationUnit, int $key) {
+//            return $organizationUnit->pluck('id');
+//        })->flatten()->unique();
+
+//        $X = $a->organizationUnits->pluck('descendantsAndSelf')->flatten()
+////            ->unique() // Directly unique based on 'id' field
+//            ->values()->pluck('unitable_type')->unique();
+//
+//        dd($X);
+//        dd(get_class_methods($b));
+//        $user = User::find(9);
+//        $b = OrganizationUnit::find(178)->unitable;
+//        $usersUnits = EvaluatorRepository::getOunits($user);
+//        if (!is_null($usersUnits)) {
+//            $ounitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
+//                return $head === null;
+//            })->unique()->toArray();
+//
+//            $a = $usersUnits->pluck('organizationUnit.unitable_type')->unique()->toArray();
+////            dd($a);
+//        } else {
+//            $ounitIDs = [];
+//        }
+//        $result = EvaluatorRepository::getOunitsWithSubsOfUser($b, );
+//        dd($result);
+//        $invoice = (new Invoice)->amount(1000);
+//        return Payment::via('zarinpal')->purchase($invoice, function ($driver, $transactionId) use ($invoice) {
+////            dd(get);
+//
+//            // Store transactionId in database as we need it to verify payment in the future.
+//        })->pay()->render();
 //        $user = User::find(1);
 //        $activeWidgets = $user->activeWidgets;
 //
@@ -83,19 +145,21 @@ class testController extends Controller
 //        dd($a);
 //        \Artisan::call('module:seed AAA');
 //        $ounit = OrganizationUnit::findOrFail(3856);
-//
-////        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
-//
+////
+//////        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
+////
 //        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
-////        dd($whoToFill);
-//
-//
-//        $filteredModels = $whoToFill->filter(function ($model) {
+//////        dd($whoToFill);
+////
+////
+//        $highestIndex = $whoToFill->search(function ($model) {
 //            return $model->organizationunit->head && $model->organizationunit->head->id === 1;
 //        });
 //
-//        $highestIndex = $filteredModels->keys()->max();
-//
+////        dd($filteredModels);
+////
+////        $highestIndex = $filteredModels->keys()->max();
+////
 //        $filteredCollection = $whoToFill->filter(function ($model, $index) use ($highestIndex) {
 //            return $index <= $highestIndex;
 //        });

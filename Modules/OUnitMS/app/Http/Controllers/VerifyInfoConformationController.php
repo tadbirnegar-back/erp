@@ -11,6 +11,7 @@ use Mockery\Exception;
 use Modules\AddressMS\app\Repositories\AddressRepository;
 use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
 use Modules\HRMS\app\Models\Employee;
+use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
@@ -22,7 +23,7 @@ use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 class VerifyInfoConformationController extends Controller
 {
     public array $data = [];
-
+use VerifyInfoRepository;
     /**
      * Display a listing of the resource.
      */
@@ -102,18 +103,8 @@ class VerifyInfoConformationController extends Controller
     public function hasVerified()
     {
         $user = \Auth::user();
+        $hasConfirmed = $this->userVerified($user);
 
-        $notif = $user->notifications()->where('type', '=', VerifyInfoNotification::class)->first();
-
-        if (is_null($notif)) {
-            $user->notify(new VerifyInfoNotification());
-            $hasConfirmed = false;
-        } elseif (!$notif->read()) {
-            $hasConfirmed = false;
-
-        } else {
-            $hasConfirmed = true;
-        }
         return response()->json(['hasConfirmed' => $hasConfirmed]);
     }
 

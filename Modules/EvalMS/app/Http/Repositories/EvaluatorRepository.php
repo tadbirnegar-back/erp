@@ -76,6 +76,7 @@ class EvaluatorRepository
 
 
     }
+
     public static function getOunitsWithSubsOfUser(Model $model, bool $loadEvaluations = false, bool $loadHeads = false)
     {
 
@@ -133,25 +134,23 @@ class EvaluatorRepository
         $parents = [];
 
 
-        $model = $ou->unitable()->with(['organizationUnit.head.person','organizationUnit.evaluations'])->first();
+        $model = $ou->unitable()->with(['organizationUnit.head.person', 'organizationUnit.evaluations'])->first();
         while (method_exists($model, 'parent') === true) {
             $parents[] = $model;
-            $model = $model->parent()->with(['organizationUnit.head.person','organizationUnit.evaluations'])->first();
+            $model = $model->parent()->with(['organizationUnit.head.person', 'organizationUnit.evaluations'])->first();
 
         }
-        $parents[] = $model->load(['organizationUnit.head.person','organizationUnit.evaluations']);
+        $parents[] = $model->load(['organizationUnit.head.person', 'organizationUnit.evaluations']);
         $result = collect($parents);
         return $result;
     }
 
-    public static function evalOfOunits(array $ounitIDs, int $EvalID)
+    public static function evalOfOunits(array $ounitIDs, int $EvalID, int $perPage = 10, int $pageNum = 1)
     {
-        $eval = Evaluation::with(['organizationUnits' => function ($query) use ($ounitIDs) {
-            $query->whereIn('organization_unit_id', $ounitIDs);
-        }])->find($EvalID);
+        $eval = Evaluation::find($EvalID);
+        $organizationUnits = $eval->organizationUnits()->whereIn('organization_unit_id', $ounitIDs)->paginate($perPage, page: $pageNum);
 
-
-        return $eval;
+        return ['eval' => $eval, 'organizationUnits' => $organizationUnits];
     }
 
 //    public static function getEvalOunitHistory(int $evalID, array $ounitID, array $userIDs, int $pageNum = 1, int $perPage = 10)
@@ -193,7 +192,7 @@ class EvaluatorRepository
 //            'lastPage' => $totalPages
 //        ];
 //    }
-    public static function getEvalOunitHistory(int $evalID,int $organizationID, array $userIDs, int $pageNum = 0, int $perPage = 0)
+    public static function getEvalOunitHistory(int $evalID, int $organizationID, array $userIDs, int $pageNum = 0, int $perPage = 0)
     {
 
 //        $relations = [

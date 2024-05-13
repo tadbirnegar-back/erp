@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Multipay\Invoice;
 use Shetabit\Payment\Facade\Payment;
@@ -13,6 +14,8 @@ use \Modules\Gateway\app\Models\Payment as PG;
 
 class GatewayController extends Controller
 {
+    use PaymentRepository;
+
     public array $data = [];
 
     /**
@@ -20,11 +23,16 @@ class GatewayController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $page = $request->pageNum ?? 1;
-        $perPage = $request->perPage ?? 10;
-        $list = PG::with('status', 'user')->paginate($perPage, page: $page);
+        $user = \Auth::user();
 
-        return response()->json($list);
+//        $page = $request->pageNum ?? 1;
+//        $perPage = $request->perPage ?? 10;
+//        $list = PG::with('status', 'user')->paginate($perPage, page: $page);
+        $list = $user->load('person')->payments()
+            ->with(['status']) // Eager load the 'status' relationship
+            ->get();
+//        ->paginate($perPage, page: $page);
+        return response()->json(['person' => $user->person, 'payments' => $list]);
     }
 
     /**
@@ -73,21 +81,8 @@ class GatewayController extends Controller
             $user = \Auth::user();
 
             $amount = 1000;
-            $invoice = (new Invoice)->amount($amount);
-
-
-            return Payment::via('zarinpal')->purchase($invoice, function ($driver, $transactionId) use ($user, $amount) {
-
-                $status = PG::GetAllStatuses()->where('name', 'در انتظار پرداخت')->first();
-
-
-                $payment = new PG();
-                $payment->user_id = $user->id;
-                $payment->authority = $transactionId;
-                $payment->amount = $amount;
-                $payment->status = $status->id;
-                $payment->save();
-            })->pay()->toJson();
+            $result = $this->generatePayGate($user, $amount);
+            return response()->json($result);
         } catch (\Exception $e) {
             return response()->json(['message' => 'خطا در اتصال یه درگاه بانکی'], 500);
         }
@@ -113,7 +108,8 @@ class GatewayController extends Controller
         }
         try {
 
-            $payment = PG::where('authority', $request->authority)->first();
+//            $payment = PG::where('authority', $request->authority)->first();
+            $payment = $user->payments()->where('authority', $request->authority)->first();
             $status = PG::GetAllStatuses()->where('name', 'پرداخت شده')->first();
 
             $receipt = Payment::amount(1000)->transactionId($request->authority)->verify();
@@ -122,24 +118,25 @@ class GatewayController extends Controller
             $transactionid = $receipt->getReferenceId();
 
             $payment->transactionid = $transactionid;
-            $payment->purchase_date = $receipt->getDate()->timestamp;
-            $payment->status = $status->id;
+            $payment->purchase_date = $receipt->getDate();
+            $payment->status_id = $status->id;
             $payment->save();
 
-
-            return response()->json(['message' => 'پرداخت شما با موفقیت انجام شد']);
+            $payment->load('person');
+            return response()->json(['data' => $payment, 'message' => 'پرداخت شما با موفقیت انجام شد']);
 
         } catch (InvalidPaymentException $exception) {
-            if ($exception->getCode() == 101 && isset($receipt) && isset($payment) && is_null($payment->transactionid)) {
-                $payment->transactionid = $transactionid;
-                $payment->purchase_date = $receipt->getDate()->timestamp;
-                $payment->status = $status->id;
-                $payment->save();
+            if ($exception->getCode() == 101) {
+                $payment?->load('person');
+                return response()->json(['message' => $exception->getMessage(), 'data' => $payment ?? null]);
+            } elseif ($exception->getCode() == -51) {
+                $status = PG::GetAllStatuses()->where('name', 'پرداخت ناموفق')->first();
 
-                return response()->json(['message' => $exception->getMessage()]);
+                $payment->status_id = $status->id;
+                $payment->save();
             }
 
-            return response()->json(['message' => $exception->getMessage()],400);
+            return response()->json(['message' => $exception->getMessage()], 400);
 
         }
     }

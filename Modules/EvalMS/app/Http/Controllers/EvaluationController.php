@@ -16,10 +16,15 @@ class EvaluationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $evals = Evaluation::all();
+        $name = $request->name ?? null;
+        $evals = Evaluation::when($name, function ($query) use ($name) {
+            $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$name]);
 
+        })->get();
+
+//        $evals = Evaluation::all();
         return response()->json($evals);
     }
 
@@ -73,24 +78,47 @@ class EvaluationController extends Controller
 
     }
 
-    public function detail($id): JsonResponse
+    public function detail(Request $request, $id): JsonResponse
     {
 //        $eval = Evaluation::with('parts.indicators.parameters.parameterType','parts.indicators.parameters.options')->findOrFail($id);
 //
 
+        $perPage = $request->perPage ?? 10;
+        $pageNum = $request->pageNum ?? 1;
         $user = \Auth::user();
-        $usersUnits = EvaluatorRepository::getOunits($user);
-        if (!is_null($usersUnits)) {
-            $ounitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
-                return $head === null;
-            })->unique()->toArray();
+//        $usersUnits = EvaluatorRepository::getOunits($user);
+//        $usersUnits=$user->organizationUnits->pluck('descendantsAndSelf')->map(function ($organizationUnit, int $key) {
+//            return $organizationUnit->pluck('id');
+//        })->flatten()->unique();
+
+        if (isset($request->filterUnit)) {
+            $usersUnits = OrganizationUnit::with('descendantsAndSelf')->find($request->filterUnit)
+                ->descendantsAndSelf;
+
         } else {
-            $ounitIDs = [];
+            $user->load('organizationUnits.descendantsAndSelf');
+            $usersUnits = $user->organizationUnits
+                ->pluck('descendantsAndSelf');
         }
 
-        $result = EvaluatorRepository::evalOfOunits($ounitIDs, $id);
+        $usersUnits = $usersUnits
+            ->flatten()
+            ->values()
+            ->pluck('id');
 
-        return response()->json($result);
+//        if (!is_null($usersUnits)) {
+//            $ounitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
+//                return $head === null;
+//            })->unique()->toArray();
+//        } else {
+//            $ounitIDs = [];
+//        }
+
+        $result = EvaluatorRepository::evalOfOunits($usersUnits->toArray(), $id, $perPage, $pageNum);
+        $filters = $user->organizationUnits->map(function ($organizationUnit, int $key) {
+            return $organizationUnit->descendantsAndSelf->toTree();
+        });
+        return response()->json(['result' => $result, 'filter' => $filters]);
 
     }
 
@@ -99,31 +127,30 @@ class EvaluationController extends Controller
         $user = \Auth::user();
         $recordExists = $user->evaluators()
             ->where('evaluation_id', $evalID)
-            ->where('organization_unit_id',$ounitID)
+            ->where('organization_unit_id', $ounitID)
             ->exists();
 
 
-
-        $ounit = OrganizationUnit::findOrFail($ounitID);
+        $ounit = OrganizationUnit::with(['ancestorsAndSelf.head.person'])->findOrFail($ounitID);
 
 //        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
 
-        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
+//        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
+        $whoToFill = $ounit->ancestorsAndSelf;
 
 //        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
 //            return $head === null;
 //        })->unique()->toArray();
-        $filteredModels = $whoToFill->filter(function ($model) use ($user){
-            return $model->organizationunit->head && $model->organizationunit->head->id === $user->id;
-        });
+//        $filteredModels = $whoToFill->filter(function ($model) use ($user) {
+//            return $model->organizationunit?->head && $model->organizationunit?->head->id === $user->id;
+//        });
+//
+//        $highestIndex = $filteredModels->keys()->max();
+//        $filteredCollection = $whoToFill->filter(function ($model, $index) use ($highestIndex) {
+//            return $index <= $highestIndex;
+//        });
 
-        $highestIndex = $filteredModels->keys()->max();
-
-        $filteredCollection = $whoToFill->filter(function ($model, $index) use ($highestIndex) {
-            return $index <= $highestIndex;
-        });
-
-        $headIDs = $filteredCollection->pluck('organizationUnit.head.id')->reject(function ($head) {
+        $headIDs = $whoToFill->pluck('head.id')->reject(function ($head) {
             return $head === null;
         })->unique()->toArray();
 //        $unitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {

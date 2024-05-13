@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AAA\app\Models\User;
 use Modules\Gateway\Database\factories\PaymentFactory;
+use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
 class Payment extends Model
@@ -32,6 +33,13 @@ class Payment extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);
+    }
+
+    use \Znck\Eloquent\Traits\BelongsToThrough;
+
+    public function person()
+    {
+        return $this->belongsToThrough(Person::class, [User::class]);
     }
 
     public static function GetAllStatuses(): Collection

@@ -26,7 +26,7 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 //    Route::delete('/evaluations/delete/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'destroy']);
 //    Route::put('/evaluations/update/{id}', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'update']);
     Route::get('/evaluations/partake/{evalID}/unit/{ounitID}', [\Modules\EvalMS\app\Http\Controllers\EvaluationController::class, 'show']);
-    Route::get('/evaluations/detail/{id}', [\Modules\EvalMS\app\Http\Controllers\EvaluationController::class, 'detail']);
+    Route::post('/evaluations/detail/{id}', [\Modules\EvalMS\app\Http\Controllers\EvaluationController::class, 'detail']);
 
     Route::post('/evaluations/partake/check', [\Modules\EvalMS\app\Http\Controllers\EvaluatorController::class, 'hasEvaluationRecord']);
 });
