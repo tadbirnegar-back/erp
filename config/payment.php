@@ -312,6 +312,7 @@ return [
             'mode' => 'sandbox', // can be normal, sandbox, zaringate
             'merchantId' => 'ef52aebf-91c3-4945-968e-30660820c2d4',
 //          'callbackUrl' => 'https://tgbot.zbbo.net/callback',
+//          'callbackUrl' => 'https://ostan.zbbo.net/payment/result',
             'callbackUrl' => 'http://127.0.0.1:3000/payment/result',
             'description' => 'payment using zarinpal',
             'currency' => 'T', //Can be R, T (Rial, Toman)

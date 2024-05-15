@@ -55,15 +55,18 @@ class EvaluationController extends Controller
 
 //        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
 
-        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
+//        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
 
 //        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
 //            return $head === null;
 //        })->unique()->toArray();
-
-        $headIDs = $whoToFill->pluck('organizationUnit.head.id')->reject(function ($head) {
+        $whoToFill = $ounit->ancestorsAndSelf;
+        $headIDs = $whoToFill->pluck('head.id')->reject(function ($head) {
             return $head === null;
         })->unique()->toArray();
+//        $headIDs = $whoToFill->pluck('organizationUnit.head.id')->reject(function ($head) {
+//            return $head === null;
+//        })->unique()->toArray();
 //        $unitIDs = $usersUnits->pluck('organizationUnit.id')->reject(function ($head) {
 //            return $head === null;
 //        })->unique()->toArray();

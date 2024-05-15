@@ -1,0 +1,8 @@
+[
+    {
+        "name": "لیست پرداخت ها",
+        "slug": "/payments/list",
+        "moduleName": "Gateway",
+        "permissionTypeName": "sidebar"
+    }
+]

@@ -21,6 +21,7 @@ use Modules\AAA\app\Models\User;
 use Modules\AAA\app\Notifications\OtpNotification;
 use Modules\AddressMS\app\services\AddressService;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Natural;
@@ -311,7 +312,7 @@ use VerifyInfoRepository;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
         $result['operational'] = $operationalItems ?? null;
         $result['sidebar'] = $sidebarItems ?? null;
-        $result['hasPayed'] = $user->payment()->where('purchase_date','!=',null)->exists();
+        $result['hasPayed'] = !($user->organizationUnits()->where('unitable_type','=',VillageOfc::class)->whereDoesntHave('payments')->exists());
         $result['confirmed'] = $this->userVerified($user);
 
         $result['userInfo'] = [
@@ -418,7 +419,7 @@ use VerifyInfoRepository;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
         $result['operational'] = $operationalItems ?? null;
         $result['sidebar'] = $sidebarItems ?? null;
-        $result['hasPayed'] = $user->payment()->where('purchase_date','!=',null)->exists();
+        $result['hasPayed'] = !($user->organizationUnits()->where('unitable_type','=',VillageOfc::class)->whereDoesntHave('payments')->exists());
         $result['confirmed'] = $this->userVerified($user);
 
         $result['userInfo'] = [
@@ -539,7 +540,7 @@ use VerifyInfoRepository;
             $result['roles'] = $user->roles,
 
         ];
-        $result['hasPayed'] = $user->payment()->where('purchase_date','!=',null)->exists();
+        $result['hasPayed'] = !($user->organizationUnits()->where('unitable_type','=',VillageOfc::class)->whereDoesntHave('payments')->exists());
         $result['confirmed'] = $this->userVerified($user);
         return response()->json($result)->withCookie($cookie);
 

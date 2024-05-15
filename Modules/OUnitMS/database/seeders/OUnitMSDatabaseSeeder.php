@@ -14,7 +14,8 @@ class OUnitMSDatabaseSeeder extends Seeder
          $this->call([
 //             OrganizationUnitStatusSeeder::class,
 //             LocationsSeeder::class,
-             OrganizationParentSeeder::class,
+//             OrganizationParentSeeder::class,
+             VillageOfcDegreeSeeder::class,
 
          ]);
     }

@@ -20,6 +20,7 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
+use Modules\WidgetsMS\app\Models\Widget;
 
 class DehyarsImportSeeder extends Seeder
 {
@@ -132,10 +133,11 @@ class DehyarsImportSeeder extends Seeder
                     $village = VillageOfc::whereHas('organizationUnit', function ($query) use ($villName) {
                         $query->where('name', $villName);
                     })->where('town_ofc_id', $town->id)->first();
-
-                    if (is_null($village)) {
-                        dd($villager);
-                    }
+                    $village->degree = $villager['degree'] ?? '1';
+                    $village->save();
+//                    if (is_null($village)) {
+//                        dd($villager);
+//                    }
                     $vilageOU = $village->organizationUnit;
 
                     $vilageOU->head_id = $userResult->id;
@@ -156,6 +158,11 @@ class DehyarsImportSeeder extends Seeder
 
                     $studentService = new StudentRepository();
                     $customerResult = $studentService->isPersonStudent($villager['personID']) ?? $studentService->store($villager);
+                    $w = new Widget();
+                    $w->user_id = $userResult->id;
+                    $w->permission_id = 116;
+                    $w->isActivated = 1;
+                    $w->save();
 
                 }
 

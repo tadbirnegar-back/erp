@@ -4,6 +4,7 @@ namespace Modules\Gateway\database\seeders;
 
 use Illuminate\Database\Seeder;
 
+
 class GatewayDatabaseSeeder extends Seeder
 {
     /**
@@ -11,6 +12,13 @@ class GatewayDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+         $this->call([
+
+             ModuleCategorySeeder::class,
+             ModuleSeeder::class,
+             PermissionSeeder::class,
+//             StatusSeeder::class,
+
+         ]);
     }
 }

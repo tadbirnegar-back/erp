@@ -216,6 +216,7 @@ return [
 		"file" => "فایل",
 		"fullname" => "نام کامل",
         "melli_code" => "کد ملی",
+        "nationalCode" => "کد ملی",
         "national_number" => "کد ملی",
         "postal_code" => "کد پستی",
         "zip_code" => "کد پستی",
@@ -223,6 +224,6 @@ return [
         "passport_no" => "شماره پاسپورت",
 		"sheba_number" => "شماره شبا",
 		"iban" => "شماره شبا",
-		"accountـnumber" => "شماره حساب"		
+		"accountـnumber" => "شماره حساب"
     ],
 ];

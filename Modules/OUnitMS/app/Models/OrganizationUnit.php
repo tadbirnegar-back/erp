@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
 use Modules\EvalMS\app\Models\Evaluation;
+use Modules\Gateway\app\Models\Payment;
 use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
@@ -49,5 +51,10 @@ class OrganizationUnit extends Model
     public function person()
     {
         return $this->belongsToThrough(Person::class, User::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'organization_unit_id');
     }
 }

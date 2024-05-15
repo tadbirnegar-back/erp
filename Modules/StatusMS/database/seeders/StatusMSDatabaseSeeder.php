@@ -2,6 +2,7 @@
 
 namespace Modules\StatusMS\database\seeders;
 
+use Database\Seeders\StatusesTableSeeder;
 use Illuminate\Database\Seeder;
 
 class StatusMSDatabaseSeeder extends Seeder
@@ -11,6 +12,8 @@ class StatusMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(StatusesTableSeeder::class);
+
         // $this->call([]);
     }
 }

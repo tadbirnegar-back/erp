@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('lms', fn (Request $request) => $request->user())->name('lms');
-});
+//Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
+//    Route::get('lms', fn (Request $request) => $request->user())->name('lms');
+//});
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/students/search', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'isPersonStudent']);

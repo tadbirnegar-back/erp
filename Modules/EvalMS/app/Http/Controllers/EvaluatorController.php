@@ -97,7 +97,7 @@ class EvaluatorController extends Controller
             $query->where('user_id', $user->id);
         }]);
 
-        if (is_null($user->organizationUnits)) {
+        if (is_null($user->organizationUnits) || is_null($user->organizationUnits->pluck('evaluations'))) {
             $recordExists = true;
         }else{
             $hasAtLeastOneEvaluation = false;

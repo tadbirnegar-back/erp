@@ -27,6 +27,7 @@ use Shetabit\Multipay\Invoice;
 use Str;
 use Shetabit\Payment\Facade\Payment;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
+
 class testController extends Controller
 {
     public function callback(Request $request)
@@ -42,9 +43,9 @@ class testController extends Controller
 
         } catch (InvalidPaymentException $exception) {
             /**
-            when payment is not verified, it will throw an exception.
-            We can catch the exception to handle invalid payments.
-            getMessage method, returns a suitable message that can be used in user interface.
+             * when payment is not verified, it will throw an exception.
+             * We can catch the exception to handle invalid payments.
+             * getMessage method, returns a suitable message that can be used in user interface.
              **/
             dd($a);
             echo $exception->getMessage();
@@ -54,14 +55,59 @@ class testController extends Controller
 
     public function run()
     {
+//        $user = User::find(1939);
+//        $user->organizationUnits()
+//            ->where('unitable_type', VillageOfc::class)
+////            ->whereHas('unitable', function ($query) {
+////                $query->whereNotNull('degree');
+////            })
+//            ->get();
+////        dd($user);
+//        $user->load(['organizationUnits' => function ($query) {
+//            $query->where('unitable_type', VillageOfc::class)
+//                ->whereHas('unitable', function ($query) {
+//                    $query->whereNotNull('degree');
+//                })
+//                ->whereDoesntHave('payments')->with(['unitable']);
+//        }]);
+////            dd($user->organizationUnits);
+//
+//
+//        $user = User::with(['organizationUnits' => function ($query) {
+//            $query->where('unitable_type', VillageOfc::class)->with('unitable');
+//        }])->find(1939);
+//        $degs = $user->organizationUnits->pluck('unitable.degree')->reject(function ($dg) {
+//            return $dg === null;
+//        });
+//        dd($degs);
+////        $degs = $user->organizationUnits->pluck('unitable.degree');
+////        $degs = ['1', '2', '4', '5',
+////        ];
+////        $degs = collect($degs);
+//        $amount = 0;
+//        $degs->each(function ($deg) use (&$amount) {
+//            $deg = (int)$deg;
+//
+////            $currentAmount = 0; // Initialize a variable for current increment
+//            $currentAmount = match ($deg) {
+//                1, 2 => 400000,
+//                3, 4 => 600000,
+//                5, 6 => 850000,
+//                default => 0,
+//            };
+//
+//            $amount += $currentAmount;
+//        });
+//
+//        dd($amount);
 //        dd(opcache_get_status());
-        $ounit = OrganizationUnit::with(['ancestorsAndSelf.head'])->findOrFail(3735);
+//        $ounit = OrganizationUnit::with(['ancestorsAndSelf.head'])->findOrFail(3735);
 
-        $whoToFill = $ounit->ancestorsAndSelf;
+//        $whoToFill = $ounit->ancestorsAndSelf;
 //        $ous = $whoToFill->filter(function ($ou) {
 //
 //        });
-        dd($whoToFill);
+//        dd($whoToFill);
 //        $user = User::find(1);
 //        $s = OrganizationUnit::withMaxDepth(-4, function ()  {
 //            return OrganizationUnit::find(290)->ancestors;
@@ -76,7 +122,6 @@ class testController extends Controller
 //        dd($user->organizationUnits->where('unitable_type',CityOfc::class)->first());
 
 
-
 //        $b = $s->descendantsAndSelf;
 //        $a = OrganizationUnit::with('descendantsAndSelf')->find(3);
 //        dd($a->descendantsAndSelf->toTree());
@@ -85,7 +130,6 @@ class testController extends Controller
 
 //        dd($a);
 //        dd($a->organizationUnits->pluck('descendantsAndSelf')->flatten());
-
 
 
 //        $b = $a->organizationUnits[0]->descendantsAndSelf->pluck('id');

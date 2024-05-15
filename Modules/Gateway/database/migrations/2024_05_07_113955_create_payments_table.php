@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->string('authority')->unique();
+            $table->string('authority');
             $table->string('amount')->index();
             $table->string('transactionid')->index()->nullable();
             $table->unsignedBigInteger('user_id');

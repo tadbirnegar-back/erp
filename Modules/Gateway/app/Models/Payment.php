@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AAA\app\Models\User;
 use Modules\Gateway\Database\factories\PaymentFactory;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
@@ -42,6 +43,10 @@ class Payment extends Model
         return $this->belongsToThrough(Person::class, [User::class]);
     }
 
+    public function organizationUnit(): BelongsTo
+    {
+        return $this->belongsTo(OrganizationUnit::class,'organization_unit_id');
+    }
     public static function GetAllStatuses(): Collection
     {
         return Status::all()->where('model', '=', self::class);

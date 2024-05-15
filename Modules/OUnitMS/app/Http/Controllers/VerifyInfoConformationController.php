@@ -23,7 +23,8 @@ use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 class VerifyInfoConformationController extends Controller
 {
     public array $data = [];
-use VerifyInfoRepository;
+    use VerifyInfoRepository;
+
     /**
      * Display a listing of the resource.
      */
@@ -59,13 +60,13 @@ use VerifyInfoRepository;
              */
             $employee = $workForce->workForceable;
             $rs = $employee->recruitmentScripts()->whereHas('status', function ($query) {
-            $query->where('name', 'فعال')
-                ->where('recruitment_script_status.create_date', function($subQuery) {
-                    $subQuery->selectRaw('MAX(create_date)')
-                        ->from('recruitment_script_status')
-                        ->whereColumn('recruitment_script_id', 'recruitment_scripts.id');
-                });
-        })->with(['level', 'position', 'organizationUnit.unitable'])->get();
+                $query->where('name', 'فعال')
+                    ->where('recruitment_script_status.create_date', function ($subQuery) {
+                        $subQuery->selectRaw('MAX(create_date)')
+                            ->from('recruitment_script_status')
+                            ->whereColumn('recruitment_script_id', 'recruitment_scripts.id');
+                    });
+            })->with(['level', 'position', 'organizationUnit.unitable'])->get();
         }
         if (isset($rs)) {
             foreach ($rs as $ounit) {
@@ -137,6 +138,10 @@ use VerifyInfoRepository;
                 'required',
                 'unique:users,mobile,' . $user->id,
             ],
+            'nationalCode' => [
+                'required',
+                'unique:persons,national_code,' . $user->person->id,
+            ],
 
         ]);
 
@@ -190,14 +195,14 @@ use VerifyInfoRepository;
             }
             DB::commit();
 
-            return response()->json(['hasConfirmed' => true,'message'=>'اطلاعات با موفقیت تکمیل و تایید شد']);
+            return response()->json(['hasConfirmed' => true, 'message' => 'اطلاعات با موفقیت تکمیل و تایید شد']);
 
 
         } catch (Exception $e) {
             DB::rollBack();
 //                    return response()->json(['message' => $e->getMessage()], 500);
 
-            return response()->json(['hasConfirmed' => false,'message'=>'خطا در تایید اطلاعات'],500);
+            return response()->json(['hasConfirmed' => false, 'message' => 'خطا در تایید اطلاعات'], 500);
         }
 
     }
