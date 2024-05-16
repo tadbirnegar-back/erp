@@ -24,7 +24,11 @@ class OrganizationUnit extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = ['name',
+    'unitable_id',
+    'unitable_type',
+    'head_id',
+    'parent_id',];
     public $timestamps = false;
     protected static function newFactory(): OrganizationUnitFactory
     {

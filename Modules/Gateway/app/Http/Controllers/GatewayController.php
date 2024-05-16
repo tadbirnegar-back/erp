@@ -91,6 +91,7 @@ class GatewayController extends Controller
             $result = $this->generatePayGate($user);
             return response()->json($result);
         } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
             return response()->json(['message' => 'خطا در اتصال یه درگاه بانکی'], 500);
         }
 

@@ -22,7 +22,7 @@ class EmployeeRepository
 
     public function index(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $employeeQuery = Employee::with('workForce.person.personable', 'workForce.statuses', 'positions');
+        $employeeQuery = Employee::with('workForce.person.personable', 'workForce.statuses', 'positions')->distinct();
 
 
         $result = $employeeQuery->paginate($perPage, page: $pageNumber);

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'store'])->middleware(['auth:api','route']);
     Route::get('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'addEmployeeBaseInfo']);
+    Route::post('/hrm/employee/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'index']);
 //    Route::post('/products/merchandise/variants/list', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'index']);
 //    Route::put('/products/merchandise/variants/update/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'update']);
 //    Route::post('/products/merchandise/variants/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'show']);

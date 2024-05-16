@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\AddressMS\app\Repositories\AddressRepository;
+use Modules\FileMS\app\Http\Repositories\FileRepository;
+use Modules\FileMS\app\Models\Extension;
+use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
 use Modules\HRMS\app\Models\Employee;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
@@ -171,7 +174,26 @@ class VerifyInfoConformationController extends Controller
             $naturalResult = $personService->naturalUpdate($data, $data['naturalID']);
 
             $data['personID'] = $naturalResult->person->id;
+            $uploadedFile = $request->file('file');
 
+            if (!is_null($uploadedFile)) {
+                $data['fileName'] = $uploadedFile->getClientOriginalName();
+                $data['fileSize'] = $uploadedFile->getSize();
+                $fileExtension = $uploadedFile->getClientOriginalExtension();
+                $extension_id = Extension::where('name', '=', $fileExtension)->get(['id'])->first();
+
+                if (is_null($extension_id)) {
+                    return response()->json(['message' => 'فایل مجاز نمی باشد'], 400);
+                }
+                $data['extensionID'] = $extension_id->id;
+
+                $file = FileRepository::store($uploadedFile, $data);
+                if ($file instanceof File) {
+                    $data['avatar'] = $file->id;
+                }
+                $personService->naturalUpdate($data, $naturalResult->id);
+
+            }
 
             if (isset($data['recruitmentRecords'])) {
                 $personEmployee = $naturalResult->person->workForce;
