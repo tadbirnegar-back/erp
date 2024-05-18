@@ -76,7 +76,7 @@ class DehyarsImportSeeder extends Seeder
 //
 //                dd($userResult);
 //                }
-                    $studentRoles = Role::where('name', '=', 'فراگیر')->first('id');
+                    $studentRoles = Role::where('name', '=', 'کاربر')->first('id');
 
                     $userResult->roles()->sync($studentRoles);
                     $villager['userID'] = $userResult->id;

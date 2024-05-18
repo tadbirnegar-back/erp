@@ -92,7 +92,7 @@ class StudentController extends Controller
             $userService = new UserRepository();
             $userResult = $userService->store($data);
 
-            $studentRoles = Role::where('name', '=', 'فراگیر')->first('id');
+            $studentRoles = Role::where('name', '=', 'کاربر')->first('id');
 
             $userResult->roles()->sync($studentRoles);
             $data['userID'] = $userResult->id;
