@@ -26,9 +26,11 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $all = User::with('roles', 'person.avatar', 'statuses')->get();
+        $perPage = $request->perPage ?? 10;
+        $pageNum = $request->pageNum ?? 1;
+        $all = User::with('roles', 'person.avatar', 'statuses')->paginate($perPage,page: $pageNum);
 
         $all->each(function ($user) {
             if ($user->person->avatar) {
@@ -165,7 +167,7 @@ class UserController extends Controller
             return response()->json(['message' => 'با موفقیت ویرایش شد', 'data' => $user]);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+//            return response()->json(['message' => $e->getMessage()], 500);
             return response()->json(['message' => 'خطا در بروزرسانی کاربر'], 500);
 
         }

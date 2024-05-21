@@ -27,4 +27,14 @@ class UserWidgets
         return null;
     }
 
+    public static function userOunits(User $user)
+    {
+        $user->load('organizationUnits.unitable','organizationUnits.ancestors');
+
+        return $user->organizationUnits;
+    }
+
+
+
+
 }

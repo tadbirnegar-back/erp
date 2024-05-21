@@ -40,7 +40,8 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/widget/profile', [\Modules\AAA\app\Http\Widgets\UserWidgets::class, 'getUserInfo']);
 
-    Route::get('/widget/calendar', [\Modules\AAA\app\Http\widgets\UserWidgets::class, 'calendar']);
+    Route::get('/widget/calendar', [\Modules\AAA\app\Http\Widgets\UserWidgets::class, 'calendar']);
+    Route::get('/widget/village_ofc', [\Modules\AAA\app\Http\Widgets\UserWidgets::class, 'userOunits']);
 
     //settings route
     Route::post('/setting/widgets', [\Modules\AAA\app\Http\Controllers\AAAController::class, 'widgets'])->middleware('auth:api');

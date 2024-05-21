@@ -10,6 +10,7 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
+use Morilog\Jalali\Jalalian;
 
 class testController extends Controller
 {
@@ -17,10 +18,12 @@ class testController extends Controller
 
     {
 
+        $a = Jalalian::fromFormat('Y/m/d', '1397/01/18');
+        dd($a->toCarbon()->timestamp);
 
-        $user = User::find(1906);
-        $user->roles()->sync([2,
-        ]);
+//        $user = User::find(1906);
+//        $user->roles()->sync([2,
+//        ]);
 //        \DB::transaction(function () {
 //            $state = new StateOfc();
 //            $state->save();

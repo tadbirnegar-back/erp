@@ -20,7 +20,9 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
+use Modules\PersonMS\app\Models\Natural;
 use Modules\WidgetsMS\app\Models\Widget;
+use Morilog\Jalali\Jalalian;
 
 class DehyarsImportSeeder extends Seeder
 {
@@ -47,6 +49,17 @@ class DehyarsImportSeeder extends Seeder
                         $villager['personID'] = $personResult->person->id;
 
                     } else {
+                        /**
+                         * @var  Natural $natural
+                         */
+                        $natural = $personResult->personable;
+                        if (isset($villager['dateOfBirth'])) {
+                            $ts = Jalalian::fromFormat('Y/m/d', $villager['dateOfBirth'])->toCarbon();
+                            $natural->birth_date = $ts->toDateTimeString();
+                        }
+                        $natural->bc_code = $villager['bc_code'] ?? null;
+                        $natural->save();
+
                         $villager['personID'] = $personResult->id;
 
                     }
@@ -87,8 +100,6 @@ class DehyarsImportSeeder extends Seeder
                     $employee = $employeeService->isPersonEmployee($villager['personID']);
 
 
-
-
                     if (is_null($employee)) {
                         $employee = $employeeService->store($villager);
                     }
@@ -105,12 +116,15 @@ class DehyarsImportSeeder extends Seeder
                     $educationalRecord->save();
 
 
-                    $relative = new Relative();
+                    if (isset($villager['fatherName'])) {
+                        $relative = new Relative();
 
-                    $relative->full_name = $villager['fatherName'] ?? null . ' ' . $villager['lastName'];
-                    $relative->work_force_id = $employee->workForce->id;
+                        $relative->full_name = isset($villager['fatherName']) ? $villager['fatherName'] . ' ' . $villager['lastName']:null;
+                        $relative->work_force_id = $employee->workForce->id;
 
-                    $relative->save();
+                        $relative->save();
+                    }
+
 
                     $city = OrganizationUnit::with('unitable')->where('name', $villager['city'])->where('unitable_type', CityOfc::class)->first();
 
@@ -133,7 +147,26 @@ class DehyarsImportSeeder extends Seeder
                     $village = VillageOfc::whereHas('organizationUnit', function ($query) use ($villName) {
                         $query->where('name', $villName);
                     })->where('town_ofc_id', $town->id)->first();
-                    $village->degree = $villager['degree'] ?? '1';
+                    if (is_null($village)) {
+                        dd($villName);
+                    }
+                    $village->degree = isset($villager['degree']) ? $villager['degree']:'1';
+                    $village->hierarchy_code=$villager['hierarchyCode']??null;
+                    $village->national_uid=$villager['nationalUID']??null;
+                    $village->abadi_code=$villager['abadiCode']??null;
+                    $village->population_1395=$villager['population_1395']??null;
+                    $village->household_1395=$villager['household_1395']??null;
+                    $village->isFarm=$villager['isFarm']=='خیر'?0:1;
+                    $village->isTourism=isset($villager['isTourism'])?($villager['isTourism']=='*'?1:0):0;
+                    $village->isAttached_to_city=$villager['isAttached_to_city']=='خیر'?0:1;
+                    $village->hasLicense=$villager['hasLicense']=='دارد'?1:0;
+                    $village->license_number=$villager['license_number']??null;
+                    if (isset($villager['license_date'])) {
+                        $ld = Jalalian::fromFormat('Y/m/d', $villager['license_date'])->toCarbon();
+                        $village->license_date = $ld->toDateTimeString();
+                    }
+                    $village->ofc_code=$villager['ofc_code']??null;
+
                     $village->save();
 //                    if (is_null($village)) {
 //                        dd($villager);
@@ -145,24 +178,48 @@ class DehyarsImportSeeder extends Seeder
 
                     $status = RecruitmentScript::GetAllStatuses()->where('name', '=', 'فعال')->first();
 
-                    $rs = new RecruitmentScript();
-                    $rs->organization_unit_id = $village->organizationUnit->id;
-                    $rs->employee_id = $employee->id;
-                    $rs->level_id = 1;
-                    $rs->position_id = 1;
-                    $rs->create_date = $villager['rsDate'] ?? null;
-                    $rs->save();
+                    $empRses = $employee->recruitmentScripts;
+                    if (is_null($empRses)) {
+                        $rs = new RecruitmentScript();
+                        $rs->organization_unit_id = $village->organizationUnit->id;
+                        $rs->employee_id = $employee->id;
+                        $rs->level_id = 1;
+                        $rs->position_id = 1;
+                        $rs->create_date = $villager['rsDate'] ?? null;
+                        $rs->save();
+                        $rs->status()->attach($status->id);
 
-                    $rs->status()->attach($status->id);
+                    }else{
+                        foreach ($empRses as $rs) {
+                            $rs->organization_unit_id = $village->organizationUnit->id;
+                            $rs->employee_id = $employee->id;
+                            $rs->level_id = 1;
+                            $rs->position_id = 1;
+                            if (isset($villager['rsDate'])) {
+                                $tss = Jalalian::fromFormat('Y/m/d', $villager['rsDate'])->toCarbon();
+                                $rs->create_date = $tss->toDateTimeString();
+                            }else{
+                            $rs->create_date =  null;
+
+                            }
+                            $rs->save();
+                        }
+                    }
+
+
 
 
                     $studentService = new StudentRepository();
                     $customerResult = $studentService->isPersonStudent($villager['personID']) ?? $studentService->store($villager);
-                    $w = new Widget();
-                    $w->user_id = $userResult->id;
-                    $w->permission_id = 116;
-                    $w->isActivated = 1;
-                    $w->save();
+                    $w = Widget::where('user_id', $userResult->id)->where('permission_id', 116)->where('isActivated', 1)->first();
+                    if (is_null($w)) {
+                        $w = new Widget();
+                        $w->user_id = $userResult->id;
+                        $w->permission_id = 116;
+                        $w->isActivated = 1;
+                        $w->save();
+                    }
+
 
                 }
 

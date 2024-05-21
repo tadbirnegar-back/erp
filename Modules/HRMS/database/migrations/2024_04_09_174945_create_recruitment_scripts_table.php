@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('organization_unit_id');
             $table->unsignedBigInteger('level_id');
             $table->unsignedBigInteger('position_id');
+            $table->dateTime('create_date');
 
             $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('organization_unit_id')->references('id')->on('organization_units')->onDelete('cascade')->onUpdate('cascade');

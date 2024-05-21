@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('mobile')->unique()->index()->nullable();
             $table->string('phone_number')->nullable()->index();
             $table->string('father_name')->nullable()->index();
-            $table->string('birth_date')->nullable();
+            $table->dateTime('birth_date')->nullable();
             $table->string('job')->nullable();
             $table->boolean('isMarried')->index()->nullable();
             $table->string('level_of_spouse_education')->nullable();

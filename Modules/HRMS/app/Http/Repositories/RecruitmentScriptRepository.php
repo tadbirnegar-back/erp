@@ -5,8 +5,6 @@ namespace Modules\HRMS\app\Http\Repositories;
 use Illuminate\Support\Collection;
 use Mockery\Exception;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\OUnitMS\app\Models\DistrictOfc;
-use Modules\OUnitMS\app\Models\VillageOfc;
 
 class RecruitmentScriptRepository
 {
@@ -45,7 +43,7 @@ class RecruitmentScriptRepository
         }
 
         return true;
-}
+    }
 
 
     private static function dataPreparation(array|collection $data, int $employeeID)
@@ -61,6 +59,7 @@ class RecruitmentScriptRepository
                 'organization_unit_id' => $RS['ounitID'],
                 'level_id' => $RS['levelID'],
                 'position_id' => $RS['positionID'],
+                'create_date' => $RS['rsDate'] ?? null,
 
             ];
         });
