@@ -185,7 +185,7 @@ class PersonRepository
             $naturalPerson->phone_number = $data['phoneNumber'] ?? null;
             $naturalPerson->father_name = $data['fatherName'] ?? null;
             $naturalPerson->birth_date = $data['dateOfBirth'] ?? null;
-            $naturalPerson->bc_code = $villager['bcCode'] ?? null;
+            $naturalPerson->bc_code = $data['bcCode'] ?? null;
             $naturalPerson->job = $data['job'] ?? null;
             if (isset($data['isMarried'])) {
                 $naturalPerson->isMarried = $data['isMarried'] ? 1 : 0;

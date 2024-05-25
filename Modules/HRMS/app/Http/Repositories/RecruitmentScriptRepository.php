@@ -30,7 +30,25 @@ class RecruitmentScriptRepository
     public static function bulkUpdate(array|collection $data, int $employeeID)
     {
         $dataToUpsert = self::dataPreparation($data, $employeeID);
-        $result = RecruitmentScript::upsert($dataToUpsert->toArray(), ['id']);
+        $insertCount = $dataToUpsert->where('id', null)->count();
+        $result = RecruitmentScript::upsert($dataToUpsert->toArray(), ['id'],
+//            [
+//            'employee_id',
+//            'organization_unit_id',
+//            'level_id',
+//            'position_id',
+//            'create_date',
+//        ]
+        );
+
+        if ($insertCount > 0) {
+            $activeStatus = RecruitmentScript::GetAllStatuses()->where('name', '=', 'فعال')->first();
+
+            $rses = RecruitmentScript::orderBy('id', 'desc')->take($result)->get();
+            $rses->map(function (RecruitmentScript $recruitmentScript) use ($activeStatus) {
+                $recruitmentScript->status()->attach($activeStatus->id);
+            });
+        }
         return $result;
     }
 

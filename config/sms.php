@@ -83,7 +83,7 @@ return [
         ],
         'farazsms' => [
             'url' => '188.0.240.110/services.jspd',
-            'username' => '09141492090',
+            'username' => '091414920901',
             'password' => '1680162675Behrad',
             'from' => '+9890005476',
         ],

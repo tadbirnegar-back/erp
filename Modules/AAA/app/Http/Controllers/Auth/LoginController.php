@@ -21,6 +21,7 @@ use Modules\AAA\app\Models\User;
 use Modules\AAA\app\Notifications\OtpNotification;
 use Modules\AddressMS\app\services\AddressService;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Models\Person;
@@ -312,7 +313,12 @@ use VerifyInfoRepository;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
         $result['operational'] = $operationalItems ?? null;
         $result['sidebar'] = $sidebarItems ?? null;
-        $result['hasPayed'] = !($user->organizationUnits()->where('unitable_type','=',VillageOfc::class)->whereDoesntHave('payments')->exists());
+        $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+            ->whereNotNull('organization_units.head_id')
+            ->where('organization_units.unitable_type', VillageOfc::class)
+            ->whereDoesntHave('payments')
+            ->whereNotNull('village_ofcs.degree')
+            ->exists());
         $result['confirmed'] = $this->userVerified($user);
 
         $result['userInfo'] = [
@@ -419,7 +425,12 @@ use VerifyInfoRepository;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
         $result['operational'] = $operationalItems ?? null;
         $result['sidebar'] = $sidebarItems ?? null;
-        $result['hasPayed'] = !($user->organizationUnits()->where('unitable_type','=',VillageOfc::class)->whereDoesntHave('payments')->exists());
+        $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+            ->whereNotNull('organization_units.head_id')
+            ->where('organization_units.unitable_type', VillageOfc::class)
+            ->whereDoesntHave('payments')
+            ->whereNotNull('village_ofcs.degree')
+            ->exists());
         $result['confirmed'] = $this->userVerified($user);
 
         $result['userInfo'] = [
@@ -540,7 +551,12 @@ use VerifyInfoRepository;
             $result['roles'] = $user->roles,
 
         ];
-        $result['hasPayed'] = !($user->organizationUnits()->where('unitable_type','=',VillageOfc::class)->whereDoesntHave('payments')->exists());
+        $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+            ->whereNotNull('organization_units.head_id')
+            ->where('organization_units.unitable_type', VillageOfc::class)
+            ->whereDoesntHave('payments')
+            ->whereNotNull('village_ofcs.degree')
+            ->exists());
         $result['confirmed'] = $this->userVerified($user);
         return response()->json($result)->withCookie($cookie);
 

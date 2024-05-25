@@ -23,7 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('level_of_educational_id')->nullable();
 
 
-            $table->foreign('level_of_educational_id')->references('id')->on('levels_of_educational')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('level_of_educational_id')->references('id')->on('levels_of_education')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('work_force_id')->references('id')->on('work_forces')->onDelete('cascade')->onUpdate('cascade');
 
         });

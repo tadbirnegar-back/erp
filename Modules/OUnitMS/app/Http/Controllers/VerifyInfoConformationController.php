@@ -12,11 +12,14 @@ use Modules\AddressMS\app\Repositories\AddressRepository;
 use Modules\FileMS\app\Http\Repositories\FileRepository;
 use Modules\FileMS\app\Models\Extension;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Http\Repositories\EducationalRecordRepository;
 use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
+use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\OUnitMS\app\Notifications\VerifyInfoNotification;
@@ -54,7 +57,7 @@ class VerifyInfoConformationController extends Controller
     public function show(): JsonResponse
     {
         $user = \Auth::user();
-        $user->load('person.personable.homeAddress.village', 'person.personable.homeAddress.town.district.city.state.country', 'person.avatar', 'person.workForce.workforceable');
+        $user->load('person.personable.homeAddress.village', 'person.personable.homeAddress.town.district.city.state.country', 'person.avatar', 'person.workForce.workforceable', 'person.workForce.educationalRecords.levelOfEducation');
         $workForce = $user->person->workForce;
 
         if ($workForce->workforceable_type === Employee::class) {
@@ -201,6 +204,20 @@ class VerifyInfoConformationController extends Controller
 
                 $rsRes = RecruitmentScriptRepository::bulkUpdate($rs, $personEmployee->workforceable_id);
 
+                // Extract the organization unit IDs
+                $ouIds = array_column($rs, 'ounitID');
+
+                // Find all organization units in bulk
+                $organizationUnits = OrganizationUnit::find($ouIds);
+
+                // Update the head_id for each organization unit
+                $organizationUnits->each(function ($ou) use ($user) {
+                    $ou->head_id = $user->id;
+                    $ou->save();
+                });
+
+                // Save all changes
+//                OrganizationUnit::update($organizationUnits->toArray());
             }
             if (isset($data['deletedRecruitmentRecords'])) {
                 $deletedRs = json_decode($data['deletedRecruitmentRecords'], true);
@@ -208,6 +225,25 @@ class VerifyInfoConformationController extends Controller
                 $deleteRsResult = RecruitmentScriptRepository::delete($deletedRs);
 
             }
+
+            if (isset($data['educationalRecords'])) {
+//                if (!isset($personEmployee)) {
+                $personEmployee = $naturalResult->person->workForce;
+
+//                }
+//                $edus = json_decode($data['educationalRecords'],true);
+
+                $eduRes = EducationalRecordRepository::bulkUpdate($data['educationalRecords'], $personEmployee->id);
+            }
+
+            if (isset($data['deletedEducationalRecords'])) {
+                $edus = json_decode($data['deletedEducationalRecords'], true);
+                foreach ($edus as $id) {
+                    EducationalRecord::find($id)->delete();
+                }
+            }
+
+
             $notif = $user->unreadNotifications()->where('type', '=', VerifyInfoNotification::class)->first();
 
             if (!is_null($notif) && !$notif->read()) {
@@ -222,7 +258,7 @@ class VerifyInfoConformationController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-//                    return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
 
             return response()->json(['hasConfirmed' => false, 'message' => 'خطا در تایید اطلاعات'], 500);
         }

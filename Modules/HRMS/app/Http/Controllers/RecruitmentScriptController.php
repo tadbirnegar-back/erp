@@ -12,7 +12,6 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 
 class RecruitmentScriptController extends Controller
 {
-    public array $data = [];
 
     /**
      * Display a listing of the resource.
@@ -92,7 +91,9 @@ class RecruitmentScriptController extends Controller
 
     public function villageOfcs(Request $request)
     {
-        $districtOfc = DistrictOfc::with(['villageOfcs.organizationUnit'])->find($request->districtOfcID);
+        $districtOfc = DistrictOfc::with(['villageOfcs'=>function ($query) {
+            $query->where('hasLicense',true)->with('organizationUnit');
+        }])->find($request->districtOfcID);
 
         return response()->json($districtOfc->villageOfcs);
 

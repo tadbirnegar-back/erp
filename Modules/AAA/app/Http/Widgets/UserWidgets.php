@@ -16,7 +16,14 @@ class UserWidgets
         $data = [
             'person' => $user->person,
             'roles' => $user->roles,
-            'position' => $user->person->workForce->workforceable->recruitmentScripts,
+            'position' => $user->person->workForce->workforceable->recruitmentScripts()->whereHas('status', function ($query) {
+        $query->where('name', 'فعال')
+            ->where('recruitment_script_status.create_date', function ($subQuery) {
+                $subQuery->selectRaw('MAX(create_date)')
+                    ->from('recruitment_script_status')
+                    ->whereColumn('recruitment_script_id', 'recruitment_scripts.id');
+            });
+    })->with(['level', 'position', 'organizationUnit.unitable'])->get(),
         ];
 
         return $data;

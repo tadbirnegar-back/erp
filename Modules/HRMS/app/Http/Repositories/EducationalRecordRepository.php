@@ -2,8 +2,10 @@
 
 namespace Modules\HRMS\app\Http\Repositories;
 
+use Illuminate\Support\Collection;
 use Mockery\Exception;
 use Modules\HRMS\app\Models\EducationalRecord;
+use Modules\HRMS\app\Models\RecruitmentScript;
 
 class EducationalRecordRepository
 {
@@ -21,7 +23,7 @@ class EducationalRecordRepository
     {
 
 
-        $dataToInsert = $this->dataPreparation($jsonData, $workForceID);
+        $dataToInsert = self::dataPreparation($jsonData, $workForceID);
 
         /**
          * @var EducationalRecord $educationalRecord
@@ -91,15 +93,22 @@ class EducationalRecordRepository
         }
     }
 
-    private function dataPreparation(string $json, int $workForceID)
+    public static function bulkUpdate(string $data, int $workForceID)
+    {
+        $dataToUpsert = self::dataPreparation($data, $workForceID);
+        $result = EducationalRecord::upsert($dataToUpsert, ['id']);
+        return $result;
+    }
+    private static function dataPreparation(string $json, int $workForceID)
     {
         $educations = json_decode($json, true);
 
         $recordsToInsert = array_map(function ($data) use ($workForceID) {
             return [
-                'university_name' => $data['universityName'],
-                'field_of_study' => $data['fieldOfStudy'],
-                'start_date' => $data['startDate'],
+                'id' => $data['erID'] ?? null,
+                'university_name' => $data['universityName'] ?? null,
+                'field_of_study' => $data['fieldOfStudy'] ?? null,
+                'start_date' => $data['startDate'] ?? null,
                 'end_date' => $data['endDate'] ?? null,
                 'average' => $data['average'] ?? null,
                 'work_force_id' => $workForceID,

@@ -13,6 +13,7 @@ use Modules\EvalMS\app\Models\Evaluation;
 use Modules\Gateway\app\Models\Payment;
 use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
+use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 use Znck\Eloquent\Traits\BelongsToThrough;
 
@@ -60,5 +61,10 @@ class OrganizationUnit extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'organization_unit_id');
+    }
+
+    public function statuses()
+    {
+        return $this->belongsToMany(Status::class,'recruitment_script_status');
     }
 }

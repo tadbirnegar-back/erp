@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 
 use Modules\AAA\app\Models\User;
+use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
+use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -18,8 +21,27 @@ class testController extends Controller
 
     {
 
-        $a = Jalalian::fromFormat('Y/m/d', '1397/01/18');
-        dd($a->toCarbon()->timestamp);
+
+//        $user = User::find(1889);
+//        $workForce = $user->person->workForce;
+////        $user->load('organizationUnits.statuses');
+//        $employee = $workForce->workForceable;
+//        /**
+//         * @var Employee $employee
+//         */
+//        $a = $employee->load('recruitmentScripts.status');
+//        dd($a);
+//        $organizationUnits = $user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+////            ->where('organization_units.head_id', 1905)
+//            ->whereNotNull('organization_units.head_id')
+//            ->where('organization_units.unitable_type', VillageOfc::class)
+//            ->whereDoesntHave('payments')
+//            ->whereNotNull('village_ofcs.degree')
+//            ->exists();
+//
+//        dd($organizationUnits);
+//        $a = Jalalian::fromFormat('Y/m/d', '1397/01/18');
+//        dd($a->toCarbon()->timestamp);
 
 //        $user = User::find(1906);
 //        $user->roles()->sync([2,
