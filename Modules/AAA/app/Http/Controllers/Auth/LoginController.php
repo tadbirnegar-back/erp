@@ -313,13 +313,22 @@ use VerifyInfoRepository;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
         $result['operational'] = $operationalItems ?? null;
         $result['sidebar'] = $sidebarItems ?? null;
-        $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
-            ->whereNotNull('organization_units.head_id')
-            ->where('organization_units.unitable_type', VillageOfc::class)
-            ->whereDoesntHave('payments')
-            ->whereNotNull('village_ofcs.degree')
-            ->exists());
-        $result['confirmed'] = $this->userVerified($user);
+
+        $roles = $user->roles->pluck('name');
+
+        if (in_array('کاربر', $roles->toArray())) {
+            $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+                ->whereNotNull('organization_units.head_id')
+                ->where('organization_units.unitable_type', VillageOfc::class)
+                ->whereDoesntHave('payments')
+                ->whereNotNull('village_ofcs.degree')
+                ->exists());
+            $result['confirmed'] = $this->userVerified($user);
+        }else{
+            $result['hasPayed'] = true;
+            $result['confirmed'] = true;
+        }
+
 
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
@@ -425,13 +434,20 @@ use VerifyInfoRepository;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
         $result['operational'] = $operationalItems ?? null;
         $result['sidebar'] = $sidebarItems ?? null;
-        $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
-            ->whereNotNull('organization_units.head_id')
-            ->where('organization_units.unitable_type', VillageOfc::class)
-            ->whereDoesntHave('payments')
-            ->whereNotNull('village_ofcs.degree')
-            ->exists());
-        $result['confirmed'] = $this->userVerified($user);
+        $roles = $user->roles->pluck('name');
+
+        if (in_array('کاربر', $roles->toArray())) {
+            $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+                ->whereNotNull('organization_units.head_id')
+                ->where('organization_units.unitable_type', VillageOfc::class)
+                ->whereDoesntHave('payments')
+                ->whereNotNull('village_ofcs.degree')
+                ->exists());
+            $result['confirmed'] = $this->userVerified($user);
+        }else{
+            $result['hasPayed'] = true;
+            $result['confirmed'] = true;
+        }
 
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
@@ -551,13 +567,20 @@ use VerifyInfoRepository;
             $result['roles'] = $user->roles,
 
         ];
-        $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
-            ->whereNotNull('organization_units.head_id')
-            ->where('organization_units.unitable_type', VillageOfc::class)
-            ->whereDoesntHave('payments')
-            ->whereNotNull('village_ofcs.degree')
-            ->exists());
-        $result['confirmed'] = $this->userVerified($user);
+        $roles = $user->roles->pluck('name');
+
+        if (in_array('کاربر', $roles->toArray())) {
+            $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+                ->whereNotNull('organization_units.head_id')
+                ->where('organization_units.unitable_type', VillageOfc::class)
+                ->whereDoesntHave('payments')
+                ->whereNotNull('village_ofcs.degree')
+                ->exists());
+            $result['confirmed'] = $this->userVerified($user);
+        }else{
+            $result['hasPayed'] = true;
+            $result['confirmed'] = true;
+        }
         return response()->json($result)->withCookie($cookie);
 
     }
