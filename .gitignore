@@ -17,4 +17,4 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-testController.php
+app/Http/Controllers/testController.php
