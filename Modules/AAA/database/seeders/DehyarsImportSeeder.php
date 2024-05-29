@@ -31,7 +31,7 @@ class DehyarsImportSeeder extends Seeder
      */
     public function run(): void
     {
-        $villagers = json_decode(file_get_contents(realpath(__DIR__ . '/dehyars2.json')), true);
+        $villagers = json_decode(file_get_contents(realpath(__DIR__ . '/dehyars3.json')), true);
 
 //        try {
 //        \DB::beginTransaction();
@@ -45,6 +45,10 @@ class DehyarsImportSeeder extends Seeder
 
                     if (is_null($personResult)) {
                         $villager['gender'] = $villager['gender'] == 'مرد' ? 1 : 2;
+                        if (isset($villager['dateOfBirth'])) {
+                            $ts = Jalalian::fromFormat('Y/m/d', $villager['dateOfBirth'])->toCarbon();
+                            $villager['dateOfBirth'] = $ts->toDateTimeString();
+                        }
                         $personResult = $personService->naturalStore($villager);
                         $villager['personID'] = $personResult->person->id;
 
@@ -57,7 +61,7 @@ class DehyarsImportSeeder extends Seeder
                             $ts = Jalalian::fromFormat('Y/m/d', $villager['dateOfBirth'])->toCarbon();
                             $natural->birth_date = $ts->toDateTimeString();
                         }
-                        $natural->bc_code = $villager['bc_code'] ?? null;
+                        $natural->bc_code = $villager['bcCode'] ?? null;
                         $natural->save();
 
                         $villager['personID'] = $personResult->id;
@@ -104,26 +108,31 @@ class DehyarsImportSeeder extends Seeder
                         $employee = $employeeService->store($villager);
                     }
 
-                    $educationalRecord = new EducationalRecord();
-                    $edu = $villager['education'] ?? 'لیسانس';
-                    $lvlOfEdu = LevelOfEducation::where('name', '%like%', $edu)->first();
+                    if (empty($employee->workForce->educationalRecords->toArray())) {
+                        $educationalRecord = new EducationalRecord();
+                        $edu = $villager['education'] ?? 'کارشناسی';
+                        $lvlOfEdu = LevelOfEducation::where('name', 'like', $edu)->first();
 
 
-                    $educationalRecord->field_of_study = $villager['major'] ?? 'تجربی';
-                    $educationalRecord->work_force_id = $employee->workForce->id;
-                    $educationalRecord->level_of_educational_id = $lvlOfEdu->id ?? null;
+                        $educationalRecord->field_of_study = $villager['major'] ?? 'تجربی';
+                        $educationalRecord->work_force_id = $employee->workForce->id;
+                        $educationalRecord->level_of_educational_id = $lvlOfEdu->id ?? null;
 
-                    $educationalRecord->save();
-
-
-                    if (isset($villager['fatherName'])) {
-                        $relative = new Relative();
-
-                        $relative->full_name = isset($villager['fatherName']) ? $villager['fatherName'] . ' ' . $villager['lastName']:null;
-                        $relative->work_force_id = $employee->workForce->id;
-
-                        $relative->save();
+                        $educationalRecord->save();
                     }
+
+
+                    if (empty($employee->workForce->relatives->toArray())) {
+                        if (isset($villager['fatherName'])) {
+                            $relative = new Relative();
+
+                            $relative->full_name = isset($villager['fatherName']) ? $villager['fatherName'] . ' ' . $villager['lastName']:null;
+                            $relative->work_force_id = $employee->workForce->id;
+
+                            $relative->save();
+                        }
+                    }
+
 
 
                     $city = OrganizationUnit::with('unitable')->where('name', $villager['city'])->where('unitable_type', CityOfc::class)->first();
@@ -150,24 +159,24 @@ class DehyarsImportSeeder extends Seeder
                     if (is_null($village)) {
                         dd($villName);
                     }
-                    $village->degree = isset($villager['degree']) ? $villager['degree']:'1';
-                    $village->hierarchy_code=$villager['hierarchyCode']??null;
-                    $village->national_uid=$villager['nationalUID']??null;
-                    $village->abadi_code=$villager['abadiCode']??null;
-                    $village->population_1395=$villager['population_1395']??null;
-                    $village->household_1395=$villager['household_1395']??null;
-                    $village->isFarm=$villager['isFarm']=='خیر'?0:1;
-                    $village->isTourism=isset($villager['isTourism'])?($villager['isTourism']=='*'?1:0):0;
-                    $village->isAttached_to_city=$villager['isAttached_to_city']=='خیر'?0:1;
-                    $village->hasLicense=$villager['hasLicense']=='دارد'?1:0;
-                    $village->license_number=$villager['license_number']??null;
-                    if (isset($villager['license_date'])) {
-                        $ld = Jalalian::fromFormat('Y/m/d', $villager['license_date'])->toCarbon();
-                        $village->license_date = $ld->toDateTimeString();
-                    }
-                    $village->ofc_code=$villager['ofc_code']??null;
-
-                    $village->save();
+//                    $village->degree = isset($villager['degree']) ? $villager['degree']:'1';
+//                    $village->hierarchy_code=$villager['hierarchyCode']??null;
+//                    $village->national_uid=$villager['nationalUID']??null;
+//                    $village->abadi_code=$villager['abadiCode']??null;
+//                    $village->population_1395=$villager['population_1395']??null;
+//                    $village->household_1395=$villager['household_1395']??null;
+//                    $village->isFarm=$villager['isFarm']=='خیر'?0:1;
+//                    $village->isTourism=isset($villager['isTourism'])?($villager['isTourism']=='*'?1:0):0;
+//                    $village->isAttached_to_city=$villager['isAttached_to_city']=='خیر'?0:1;
+//                    $village->hasLicense=$villager['hasLicense']=='دارد'?1:0;
+//                    $village->license_number=$villager['license_number']??null;
+//                    if (isset($villager['license_date'])) {
+//                        $ld = Jalalian::fromFormat('Y/m/d', $villager['license_date'])->toCarbon();
+//                        $village->license_date = $ld->toDateTimeString();
+//                    }
+//                    $village->ofc_code=$villager['ofc_code']??null;
+//
+//                    $village->save();
 //                    if (is_null($village)) {
 //                        dd($villager);
 //                    }
@@ -178,33 +187,39 @@ class DehyarsImportSeeder extends Seeder
 
                     $status = RecruitmentScript::GetAllStatuses()->where('name', '=', 'فعال')->first();
 
-                    $empRses = $employee->recruitmentScripts;
-                    if (is_null($empRses)) {
+//                    $empRses = $employee->recruitmentScripts;
+//                    if (empty($empRses->toArray())) {
                         $rs = new RecruitmentScript();
                         $rs->organization_unit_id = $village->organizationUnit->id;
                         $rs->employee_id = $employee->id;
                         $rs->level_id = 1;
                         $rs->position_id = 1;
+                    if (isset($villager['rsDate'])) {
+                                $tss = Jalalian::fromFormat('Y/m/d', $villager['rsDate'])->toCarbon();
+                        $villager['rsDate'] = $tss->toDateTimeString();
+                            }
                         $rs->create_date = $villager['rsDate'] ?? null;
                         $rs->save();
                         $rs->status()->attach($status->id);
 
-                    }else{
-                        foreach ($empRses as $rs) {
-                            $rs->organization_unit_id = $village->organizationUnit->id;
-                            $rs->employee_id = $employee->id;
-                            $rs->level_id = 1;
-                            $rs->position_id = 1;
-                            if (isset($villager['rsDate'])) {
-                                $tss = Jalalian::fromFormat('Y/m/d', $villager['rsDate'])->toCarbon();
-                                $rs->create_date = $tss->toDateTimeString();
-                            }else{
-                            $rs->create_date =  null;
-
-                            }
-                            $rs->save();
-                        }
-                    }
+//                    }else{
+//                        foreach ($empRses as $rs) {
+//                            $rs->organization_unit_id = $village->organizationUnit->id;
+//                            $rs->employee_id = $employee->id;
+//                            $rs->level_id = 1;
+//                            $rs->position_id = 1;
+//                            if (isset($villager['rsDate'])) {
+//                                $tss = Jalalian::fromFormat('Y/m/d', $villager['rsDate'])->toCarbon();
+//                                $rs->create_date = $tss->toDateTimeString();
+//                            }else{
+//                            $rs->create_date =  null;
+//
+//                            }
+//                            $rs->save();
+//                            $rs->status()->sync([$status->id]);
+//
+//                        }
+//                    }
 
 
 
@@ -219,8 +234,15 @@ class DehyarsImportSeeder extends Seeder
                         $w->isActivated = 1;
                         $w->save();
                     }
+                    $ws = Widget::where('user_id', $userResult->id)->where('permission_id', 122)->where('isActivated', 1)->first();
 
-
+                    if (is_null($ws)) {
+                        $ws = new Widget();
+                        $ws->user_id = $userResult->id;
+                        $ws->permission_id = 122;
+                        $ws->isActivated = 1;
+                        $ws->save();
+                    }
                 }
 
 
