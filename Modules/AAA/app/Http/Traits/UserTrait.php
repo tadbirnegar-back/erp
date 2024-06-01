@@ -3,80 +3,83 @@
 namespace Modules\AAA\app\Http\Traits;
 
 use Modules\AAA\app\Models\User;
+use Modules\PersonMS\app\Models\Person;
 
 trait UserTrait
 {
-    protected User $user;
 
 
-
-    public function isPersonUser(int $personID)
+    public function isPersonUserCheck(Person $person): User
     {
-        $result = User::where('person_id', '=', $personID)->first();
+        $result = User::where('person_id', '=', $person->id)->first();
         return $result;
     }
 
-    public function store(array $data)
+    public function storeUser(array $data)
     {
 
-        try {
-            /**
-             * @var User $user
-             */
-            $user = new User;
-            $user->mobile = $data['mobile'];
-            $user->email = $data['email'] ?? null;
-            $user->username = $data['username'] ?? null;
-            $user->person_id = $data['personID'];
-            $user->password = bcrypt($data['password']);
 
-            $user->save();
-            if (isset($data['roles'])) {
-                $user->roles()->sync($data['roles']);
-            }
-            $status = User::GetAllStatuses()->where('name', '=', 'فعال')->first();
-            $user->statuses()->attach($status->id);
-            return $user;
-        } catch (\Exception $e) {
-            return $e;
+        $user = new User;
+        $user->mobile = $data['mobile'];
+        $user->email = $data['email'] ?? null;
+        $user->username = $data['username'] ?? null;
+        $user->person_id = $data['personID'];
+        $user->password = bcrypt($data['password']);
+
+        $user->save();
+        if (isset($data['roles'])) {
+            $user->roles()->sync($data['roles']);
         }
+        $status = User::GetAllStatuses()->where('name', '=', 'فعال')->first();
+        $user->statuses()->attach($status->id);
+        return $user;
 
     }
 
-    public function show(int $id)
+    public function showUser(User $user)
     {
-        $user = User::with('person.avatar','person.personable','person.status','status','roles')->findOrFail($id);
+        $user->load('person.avatar', 'person.personable', 'person.status', 'status', 'roles');
 
         return $user;
     }
 
-    public function update(array $data, int $id)
+    public function updateUser(array $data, User $user)
     {
-        try {
 
-            $user = User::findOrFail($id);
-            $user->mobile = $data['mobile'];
-            $user->email = $data['email'] ?? null;
-            $user->username = $data['username'] ?? null;
-            if (isset($data['password'])) {
-                $user->password = bcrypt($data['password']);
 
-            }
-            $user->save();
+        $user->mobile = $data['mobile'];
+        $user->email = $data['email'] ?? null;
+        $user->username = $data['username'] ?? null;
+        if (isset($data['password'])) {
+            $user->password = bcrypt($data['password']);
 
-            $person= $user->person ;
-            $person->profile_picture_id = $data['avatar'] ?? null;
-            $person->save();
+        }
+        $user->save();
+
+        $person = $user->person;
+        $person->profile_picture_id = $data['avatar'] ?? null;
+        $person->save();
+        if (isset($data['roles'])) {
+
+            $data['roles'] = json_decode($data['roles']);
             $user->roles()->sync($data['roles']);
-            $status = $user->status;
 
-            if ($data['statusID'] != $status[0]->id) {
-                $user->statuses()->attach($data['statusID']);
-            }
-            return $user;
-        } catch (\Exception $e) {
-            return $e;
         }
 
+        $status = $user->status;
+
+        if ($data['statusID'] != $status[0]->id) {
+            $user->statuses()->attach($data['statusID']);
+        }
+        return $user;
+
+    }
+
+    public function mobileExists(string $mobile)
+    {
+        $user = User::with('person.avatar')->where('mobile', '=', $mobile)
+        ->first();
+
+        return $user;
     }
 }

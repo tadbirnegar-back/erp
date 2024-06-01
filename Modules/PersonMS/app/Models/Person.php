@@ -12,6 +12,7 @@ use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\PersonMS\Database\factories\PersonFactory;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\LaravelAdjacencyList\Tests\IdeHelper\Models\User;
 
 class Person extends Model
 {
@@ -57,6 +58,10 @@ class Person extends Model
         return $this->hasMany(Address::class);
     }
 
+    public function user(): HasOne
+    {
+        return $this->hasOne(User::class, 'person_id');
+    }
 
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection

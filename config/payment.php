@@ -309,8 +309,8 @@ return [
             'zaringateApiPaymentUrl' => 'https://www.zarinpal.com/pg/StartPay/:authority/ZarinGate',
             'zaringateApiVerificationUrl' => 'https://ir.zarinpal.com/pg/services/WebGate/wsdl',
 
-            'mode' => 'sandbox', // can be normal, sandbox, zaringate
-            'merchantId' => 'ef52aebf-91c3-4945-968e-30660820c2d4',
+            'mode' => 'normal', // can be normal, sandbox, zaringate
+            'merchantId' => '57ba27f4-2d07-4c52-850f-ef56ba4139de',
             'callbackUrl' => 'https://panel.il-yar.ir/payment/result',
 //          'callbackUrl' => 'https://ostan.zbbo.net/payment/result',
 //            'callbackUrl' => 'http://127.0.0.1:3000/payment/result',

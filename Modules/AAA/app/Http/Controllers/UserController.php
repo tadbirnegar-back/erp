@@ -6,22 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Modules\AAA\app\Http\Services\UserService;
+use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
-use Modules\AddressMS\app\Repositories\AddressRepository;
-use Modules\PersonMS\app\Http\Repositories\PersonRepository;
+use Modules\AddressMS\app\Traits\AddressTrait;
+use Modules\PersonMS\app\Http\Traits\PersonTrait;
 
 class UserController extends Controller
 {
-    public array $data = [];
-
-    protected UserService $userService;
 
 
-    public function __construct(UserService $userService)
-    {
-        $this->userService = $userService;
-    }
+    use UserTrait, AddressTrait, PersonTrait;
+
 
     /**
      * Display a listing of the resource.
@@ -30,7 +25,7 @@ class UserController extends Controller
     {
         $perPage = $request->perPage ?? 10;
         $pageNum = $request->pageNum ?? 1;
-        $all = User::with('roles', 'person.avatar', 'statuses')->paginate($perPage,page: $pageNum);
+        $all = User::with('roles', 'person.avatar', 'statuses')->paginate($perPage, page: $pageNum);
 
         $all->each(function ($user) {
             if ($user->person->avatar) {
@@ -47,12 +42,10 @@ class UserController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $user = $this->userService->show($id);
+        $user = User::findOr($id, fn() => response()->json('کاربری با این مشخصات یافت نشد', 404));
 
-        if (is_null($user)) {
-            return response()->json(['message' => 'کاربری با این مشخصات یافت نشد'], 404);
+        $user = $this->showUser($user);
 
-        }
 
         if (\request()->route()->named('user.edit')) {
             $statuses = User::GetAllStatuses();
@@ -71,24 +64,25 @@ class UserController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
 
-        $user = User::findOrFail($id);
+        $user = User::findOr($id, fn() => response()->json(['message' => 'کاربری با این مشخصات یافت نشد'], 404));
 
-        if (is_null($user)) {
-            return response()->json(['message' => 'کاربری با این مشخصات یافت نشد'], 404);
+        try {
+            \DB::beginTransaction();
+            $data = $request->all();
 
-        }
-        $data = $request->all();
 
-        $data['roles'] = json_decode($data['roles']);
+            $result = $this->updateUser($data, $user);
+            \DB::commit();
+            return response()->json(['message' => 'با موفقیت بروز رسانی شد']);
 
-        $result = $this->userService->update($data, $id);
 
-        if ($result instanceof \Exception) {
-            return response()->json(['message' => $result->getMessage()], 500);
+        } catch (\Exception $e) {
+            \DB::rollBack();
             return response()->json(['message' => 'خطا در بروزرسانی کاربر'], 500);
+
         }
 
-        return response()->json(['message' => 'با موفقیت بروز رسانی شد']);
+
     }
 
     /**
@@ -96,19 +90,25 @@ class UserController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $user = User::findOrFail($id);
+        $user = User::findOr($id, fn() => response()->json(['message' => 'کاربری با این مشخصات یافت نشد'], 404));
 
-        if (is_null($user)) {
-            return response()->json(['message' => 'کاربری با این مشخصات یافت نشد'], 404);
+        try {
+            \DB::beginTransaction();
+            $status = $user->status;
+            $disable = User::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
+
+            if ($status[0]->id != $disable->id) {
+                $user->statuses()->attach($disable->id);
+            }
+            \DB::commit();
+            return response()->json(['message' => 'کاربر با موفقیت حذف شد']);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف کاربر'], 500);
+
         }
 
-        $status = $user->status;
-        $disable = User::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
-
-        if ($status[0]->id != $disable->id) {
-            $user->statuses()->attach($disable->id);
-        }
-        return response()->json(['message' => 'کاربر با موفقیت حذف شد']);
     }
 
     public function updateUserInfo(Request $request)
@@ -138,36 +138,25 @@ class UserController extends Controller
             \DB::beginTransaction();
             $data['userID'] = $user->id;
 //            if (isset($data['username'])) {
-            $user->username = $data['username'] ?? null;
-            $user->mobile = $data['mobile'];
-            $user->save();
+            $this->updateUser($data, $user);
 //            }
             $person = $user->person;
 
             if ($request->isNewAddress) {
-                $addressService = new AddressRepository();
                 $data['personID'] = $person->id;
-                $address = $addressService->store($data);
+                $address = $this->addressStore($data);
 
-                if ($address instanceof \Exception) {
-                    return response()->json(['message' => 'خطا در وارد کردن آدرس'], 500);
-                }
                 $data['homeAddressID'] = $address->id;
 
             }
-            $personService = new PersonRepository();
-            $personResult = $personService->naturalUpdate($data, $person->personable_id);
+            $personResult = $this->naturalUpdate($data, $person->personable);
 
-            if ($personResult instanceof \Exception) {
-                return response()->json(['message' => $personResult->getMessage()], 500);
-//            return response()->json(['message' => 'خطا در افزودن شخص'], 500);
-            }
+
             \DB::commit();
             $user->load('person.avatar', 'person.personable');
             return response()->json(['message' => 'با موفقیت ویرایش شد', 'data' => $user]);
         } catch (\Exception $e) {
             \DB::rollBack();
-//            return response()->json(['message' => $e->getMessage()], 500);
             return response()->json(['message' => 'خطا در بروزرسانی کاربر'], 500);
 
         }
