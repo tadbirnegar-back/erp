@@ -29,17 +29,27 @@ class LoginController extends Controller
 {
     use VerifyInfoRepository, UserTrait, PersonTrait, AddressTrait;
 
-    protected PersonService $personService;
-    protected UserService $userService;
-    protected AddressService $addressService;
-
-    public function __construct(PersonService $personService, UserService $userService, AddressService $addressService)
-    {
-        $this->personService = $personService;
-        $this->userService = $userService;
-        $this->addressService = $addressService;
-    }
-
+    /**
+     * Check if a user's mobile number exists.
+     * @Authenticated
+     * @group AAA
+     *
+     * @subgroup User Existance
+     * @bodyParam mobile string required The mobile number of the user.
+     *
+     * @response 200 {
+     *     "avatar": "http://example.com/avatar.jpg",
+     *     "fullName": "John Doe"
+     * }
+     *
+     * @response 422 {
+     *     "errors": {
+     *         "mobile": [
+     *             "The mobile field is required."
+     *         ]
+     *     }
+     * }
+     */
     public function userMobileExists(Request $request)
     {
         $data = $request->all();
@@ -137,10 +147,10 @@ class LoginController extends Controller
 
                 $data['homeAddressID'] = $address->id;
             }
-            $person = $this->naturalStore($data);
+            $natural = $this->naturalStore($data);
 
 
-            $data['personID'] = $person->person->id;
+            $data['personID'] = $natural->person->id;
 
         }
         $user = $this->storeUser($data);
@@ -149,44 +159,6 @@ class LoginController extends Controller
         return response()->json(['data' => $user]);
     }
 
-    public function login(Request $request)
-    {
-        $credentials = $request->only(['mobile', 'password']);
-//        $validator = Validator::make($credentials, [
-//            'email' => 'required|email',
-//            'password' => 'required'
-//        ]);
-//
-//        if ($validator->fails()) {
-//            return response()->json($validator->errors(), 400);
-//        }
-
-
-        if (!auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-        $token = auth()->user()->token();
-
-        /* --------------------------- revoke access token -------------------------- */
-        $token->revoke();
-        $token->delete();
-
-        /* -------------------------- revoke refresh token -------------------------- */
-        $refreshTokenRepository = app(RefreshTokenRepository::class);
-        $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($token->id);
-
-
-        /* ------------ Create a new personal access token for the user. ------------ */
-        $tokenData = auth()->user()->createToken('MyApiToken');
-        $token = $tokenData->accessToken;
-        $expiration = $tokenData->token->expires_at->diffInSeconds(Carbon::now());
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'expires_in' => $expiration,
-        ]);
-    }
 
     public function getUser()
     {

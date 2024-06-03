@@ -30,7 +30,7 @@ trait UserTrait
         if (isset($data['roles'])) {
             $user->roles()->sync($data['roles']);
         }
-        $status = User::GetAllStatuses()->where('name', '=', 'فعال')->first();
+        $status = $this->activeUserStatus();
         $user->statuses()->attach($status->id);
         return $user;
 
@@ -81,5 +81,20 @@ trait UserTrait
         ->first();
 
         return $user;
+    }
+
+    public function activeUserStatus()
+    {
+        return User::GetAllStatuses()->firstWhere('name', '=', 'فعال');
+    }
+
+    public function inactiveUserStatus()
+    {
+        return User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+    }
+
+    public function allUserStats()
+    {
+        return User::GetAllStatuses();
     }
 }

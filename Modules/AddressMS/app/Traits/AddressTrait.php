@@ -8,7 +8,7 @@ trait AddressTrait
 {
     public function addressStore(array $data)
     {
-        $status = Address::GetAllStatuses()->where('name', '=', 'فعال')->first();
+        $status = $this->activeAddressStatus();
 
         $address = new Address;
         $address->title = $data['title'];
@@ -44,5 +44,24 @@ trait AddressTrait
         return $address->load('village', 'town.district.city.state.country');
 
 
+    }
+
+    public function addressShow(int $id)
+    {
+        return Address::with('village','town.district.city.addresses.city.state.country','status')->findOrFail($id);
+    }
+    public function activeAddressStatus()
+    {
+        return Address::GetAllStatuses()->firstWhere('name', '=', 'فعال');
+    }
+
+    public function inactiveAddressStatus()
+    {
+        return Address::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+    }
+
+    public function allAddressStats()
+    {
+        return Address::GetAllStatuses();
     }
 }

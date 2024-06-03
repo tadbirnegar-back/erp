@@ -5,6 +5,7 @@ namespace Modules\AddressMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\Models\City;
 use Modules\AddressMS\app\Models\Country;
@@ -12,12 +13,13 @@ use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\State;
 use Modules\AddressMS\app\Models\Town;
 use Modules\AddressMS\app\Models\Village;
-use Modules\AddressMS\app\Repositories\AddressRepository;
-use Modules\FileMS\app\Models\File;
+use Modules\AddressMS\app\Traits\AddressTrait;
 
 class AddressMSController extends Controller
 {
-    public array $data = [];
+    use AddressTrait;
+
+//    public array $data = [];
 
     /**
      * @Authenticated
@@ -25,7 +27,7 @@ class AddressMSController extends Controller
     public function index(): JsonResponse
     {
         $user = \Auth::user();
-        $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+        $statusID = $this->activeAddressStatus()->id;
         $response = $user->person->addresses()->where('status_id', '=', $statusID)->orderBy('create_date', 'desc')->select(['id', 'title'])->get();
 
         return response()->json($response);
@@ -37,30 +39,27 @@ class AddressMSController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $address = new Address();
-            $address->title = $request->title;
-            $address->detail = $request->address;
-            $address->postal_code = $request->postalCode ?? null;
-            $address->longitude = $request->longitude ?? null;
-            $address->latitude = $request->latitude ?? null;
-            $address->map_link = $request->mapLink ?? null;
-            $address->city_id = $request->cityID;
-            $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-            $address->creator_id = \Auth::user()->id;
-            $address->save();
-            return response()->json($address->load('city', 'state', 'country'));
+            \DB::beginTransaction();
+            $data = $request->all();
+            $data['userID'] = \Auth::user()->id;
+
+            $address = $this->addressStore($data);
+            \DB::commit();
+            return response()->json($address->load('village', 'town.district.city.state.country'));
 
         } catch (\Exception $e) {
-            return response()->json($e->getMessage());
+            \DB::rollBack();
+            return response()->json(['message' => 'خطا در ثبت آدرس جدید'], 500);
         }
 
     }
+
     /**
      * Show the specified resource.
      */
     public function show($id): JsonResponse
     {
-        $address = Address::with('village','town.district.city.addresses.city.state.country','status')->findOrFail($id);
+        $address = $this->addressShow($id);
 
         if ($address === null) {
             return response()->json('فایل مورد نظر یافت نشد', 404);
@@ -78,10 +77,9 @@ class AddressMSController extends Controller
             return response()->json('فایل مورد نظر یافت نشد', 404);
         }
         $data = $request->all();
-        $addressService = new AddressRepository();
-        $addressResult = $addressService->update($data, $id);
+        $addressResult = $this->addressUpdate($data,$address);
 
-        return response()->json($this->data);
+        return response()->json(['message'=>'باموفقیت ویرایش شد']);
     }
 
     /**
@@ -89,13 +87,17 @@ class AddressMSController extends Controller
      */
     public function destroy(Request $request, $id): JsonResponse
     {
-        $address = Address::findOrFail($id);
-        if ($address === null) {
+        $address = Address::findOr($id, function () {
             return response()->json('فایل مورد نظر یافت نشد', 404);
+        });
+
+        $status = $this->inactiveAddressStatus()->id;
+
+        if ($status->id !== $address->status_id) {
+            $address->status_id = $status->id;
+            $address->save();
         }
 
-        $address->status_id = $request->statusID;
-        $address->save();
         return response()->json('با موفقیت حذف شد');
     }
 
@@ -108,9 +110,22 @@ class AddressMSController extends Controller
 
     public function statesOfCountry(Request $request)
     {
-        $states = State::where('country_id','=',$request->countryID)->get(['id','name']);
-        if ($states == null) {
-            return response()->json(['message' => 'موردی یافت نشد', 404]);
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'countryID' => [
+                'required',
+            ],
+
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+
+        $states = State::where('country_id', '=', $request->countryID)->get(['id', 'name']);
+        if ($states->isEmpty()) {
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
         }
 
 
@@ -120,9 +135,21 @@ class AddressMSController extends Controller
 
     public function citiesOfState(Request $request)
     {
-        $cities = City::where('state_id','=',$request->stateID)->get(['id','name']);
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'stateID' => [
+                'required',
+            ],
 
-        if ($cities == null) {
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $cities = City::where('state_id', '=', $request->stateID)->get(['id', 'name']);
+
+        if ($cities->isEmpty()) {
             return response()->json(['message' => 'موردی یافت نشد', 404]);
         }
 
@@ -131,9 +158,21 @@ class AddressMSController extends Controller
 
     public function districtsOfCity(Request $request)
     {
-        $districts = District::where('city_id','=',$request->cityID)->get(['id','name']);
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'cityID' => [
+                'required',
+            ],
 
-        if (is_null($districts) ) {
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $districts = District::where('city_id', '=', $request->cityID)->get(['id', 'name']);
+
+        if ($districts->isEmpty()) {
             return response()->json(['message' => 'موردی یافت نشد', 404]);
         }
 
@@ -144,9 +183,21 @@ class AddressMSController extends Controller
 
     public function townsOfDistrict(Request $request)
     {
-        $districts = Town::where('district_id','=',$request->districtID)->get(['id','name']);
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'districtID' => [
+                'required',
+            ],
 
-        if (is_null($districts) ) {
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $districts = Town::where('district_id', '=', $request->districtID)->get(['id', 'name']);
+
+        if ($districts->isEmpty()) {
             return response()->json(['message' => 'موردی یافت نشد', 404]);
         }
 
@@ -156,9 +207,21 @@ class AddressMSController extends Controller
 
     public function villagesOfTown(Request $request)
     {
-        $districts = Village::where('town_id','=',$request->townID)->get(['id','name']);
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'townID' => [
+                'required',
+            ],
 
-        if (is_null($districts) ) {
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $districts = Village::where('town_id', '=', $request->townID)->get(['id', 'name']);
+
+        if (is_null($districts)) {
             return response()->json(['message' => 'موردی یافت نشد', 404]);
         }
 

@@ -48,7 +48,7 @@ class UserController extends Controller
 
 
         if (\request()->route()->named('user.edit')) {
-            $statuses = User::GetAllStatuses();
+            $statuses = $this->allUserStats();
 
             return response()->json(['user' => $user, 'statuses' => $statuses]);
 
@@ -95,7 +95,7 @@ class UserController extends Controller
         try {
             \DB::beginTransaction();
             $status = $user->status;
-            $disable = User::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
+            $disable = $this->inactiveUserStatus();
 
             if ($status[0]->id != $disable->id) {
                 $user->statuses()->attach($disable->id);
