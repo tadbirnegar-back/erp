@@ -18,8 +18,8 @@ class AAADatabaseSeeder extends Seeder
 //            PermissionSeeder::class,
 //            UserStatusSeeder::class,
 
-//            DehyarsImportSeeder::class,
-            PrefectsSeeder::class,
+            DehyarsImportSeeder::class,
+            // PrefectsSeeder::class,
 
         ]);
     }
