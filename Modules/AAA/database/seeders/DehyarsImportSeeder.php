@@ -189,18 +189,18 @@ class DehyarsImportSeeder extends Seeder
 
 //                    $empRses = $employee->recruitmentScripts;
 //                    if (empty($empRses->toArray())) {
-                        $rs = new RecruitmentScript();
-                        $rs->organization_unit_id = $village->organizationUnit->id;
-                        $rs->employee_id = $employee->id;
-                        $rs->level_id = 1;
-                        $rs->position_id = 1;
+                    $rs = new RecruitmentScript();
+                    $rs->organization_unit_id = $village->organizationUnit->id;
+                    $rs->employee_id = $employee->id;
+                    $rs->level_id = 1;
+                    $rs->position_id = 1;
                     if (isset($villager['rsDate'])) {
-                                $tss = Jalalian::fromFormat('Y/m/d', $villager['rsDate'])->toCarbon();
+                        $tss = Jalalian::fromFormat('Y/m/d', $villager['rsDate'])->toCarbon();
                         $villager['rsDate'] = $tss->toDateTimeString();
-                            }
-                        $rs->create_date = $villager['rsDate'] ?? null;
-                        $rs->save();
-                        $rs->status()->attach($status->id);
+                    }
+                    $rs->create_date = $villager['rsDate'] ?? null;
+                    $rs->save();
+                    $rs->status()->attach($status->id);
 
 //                    }else{
 //                        foreach ($empRses as $rs) {

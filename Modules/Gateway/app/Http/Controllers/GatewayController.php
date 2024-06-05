@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Modules\AAA\app\Models\User;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
@@ -30,6 +31,9 @@ class GatewayController extends Controller
 //        $perPage = $request->perPage ?? 10;
 //        $list = PG::with('status', 'user')->paginate($perPage, page: $page);
         $list = $user->load('person')->payments()
+            ->whereHas('status', function ($query) {
+                $query->where('name', 'پرداخت شده');
+            })
             ->with(['status','organizationUnit']) // Eager load the 'status' relationship
             ->get();
 //        ->paginate($perPage, page: $page);
@@ -81,9 +85,15 @@ class GatewayController extends Controller
         try {
             $user = \Auth::user();
             $user->load(['organizationUnits' => function ($query) {
-                $query->where('unitable_type', VillageOfc::class)->whereDoesntHave('payments')->with(['unitable']);
+                $query->where('unitable_type', VillageOfc::class)
+                    ->whereDoesntHave('payments', function ($query) {
+                        $query->whereHas('status', function ($query) {
+                            $query->whereNot('name', 'پرداخت شده');
+                        });
+                    })
+                    ->with(['unitable']);
             }]);
-            if (is_null($user->organizationUnits)) {
+            if ($user->organizationUnits->isEmpty()) {
                 return response()->json(['message' => 'شما مجاز به پرداخت نمی باشید'], 403);
             }
 
@@ -91,6 +101,7 @@ class GatewayController extends Controller
             $result = $this->generatePayGate($user);
             return response()->json($result);
         } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
             return response()->json(['message' => 'خطا در اتصال یه درگاه بانکی'], 500);
         }
 
@@ -132,9 +143,12 @@ class GatewayController extends Controller
 
 //            $currentAmount = 0; // Initialize a variable for current increment
                 $currentAmount = match ($deg) {
-                    1, 2 => 400000,
-                    3, 4 => 600000,
-                    5, 6 => 850000,
+                    1 => 780000,
+                    2 => 890000,
+                    3 => 1000000,
+                    4 => 1220000,
+                    5 => 1320000,
+                    6 => 1450000,
                     default => 0,
                 };
 
@@ -179,14 +193,14 @@ class GatewayController extends Controller
                 return response()->json(['message' => $exception->getMessage(), 'data' => $factor ?? null]);
             } elseif ($exception->getCode() == -51) {
                 $status = PG::GetAllStatuses()->where('name', 'پرداخت ناموفق')->first();
-                $payments->each(function (Payment $payment) use ( $status) {
+                $payments->each(function ($payment) use ( $status) {
                     $payment->status_id = $status->id;
                     $payment->save();
                 });
 
             }
 
-            return response()->json(['message' => $exception->getMessage()], 400);
+            return response()->json(['message' => 'درصورت بروز مشکل با پشتیبانی تماس بگیرید'], 400);
 
         }
     }

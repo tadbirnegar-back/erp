@@ -66,7 +66,10 @@ class RecruitmentScriptController extends Controller
 
     public function stateOfcs(Request $request)
     {
-        $states = StateOfc::with('organizationUnit')->get();
+        $states = StateOfc::with('organizationUnit')
+            //exclude EastAzerbaijan state from loading
+            ->whereIntegerNotInRaw('id',[3])
+            ->get();
 
         return response()->json($states);
 

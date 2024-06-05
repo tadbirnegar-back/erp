@@ -19,7 +19,7 @@ class AAADatabaseSeeder extends Seeder
 //            UserStatusSeeder::class,
 
             DehyarsImportSeeder::class,
-           // PrefectsSeeder::class,
+            // PrefectsSeeder::class,
 
         ]);
     }

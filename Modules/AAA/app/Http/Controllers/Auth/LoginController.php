@@ -294,7 +294,11 @@ class LoginController extends Controller
             $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
                 ->whereNotNull('organization_units.head_id')
                 ->where('organization_units.unitable_type', VillageOfc::class)
-                ->whereDoesntHave('payments')
+                ->whereDoesntHave('payments', function ($query) {
+                    $query->whereHas('status', function ($query) {
+                        $query->where('name', 'پرداخت شده');
+                    });
+                })
                 ->whereNotNull('village_ofcs.degree')
                 ->exists());
             $result['confirmed'] = $this->userVerified($user);
@@ -414,7 +418,11 @@ class LoginController extends Controller
             $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
                 ->whereNotNull('organization_units.head_id')
                 ->where('organization_units.unitable_type', VillageOfc::class)
-                ->whereDoesntHave('payments')
+                ->whereDoesntHave('payments', function ($query) {
+                    $query->whereHas('status', function ($query) {
+                        $query->where('name', 'پرداخت شده');
+                    });
+                })
                 ->whereNotNull('village_ofcs.degree')
                 ->exists());
             $result['confirmed'] = $this->userVerified($user);
@@ -547,7 +555,11 @@ class LoginController extends Controller
             $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
                 ->whereNotNull('organization_units.head_id')
                 ->where('organization_units.unitable_type', VillageOfc::class)
-                ->whereDoesntHave('payments')
+                ->whereDoesntHave('payments', function ($query) {
+                    $query->whereHas('status', function ($query) {
+                        $query->where('name', 'پرداخت شده');
+                    });
+                })
                 ->whereNotNull('village_ofcs.degree')
                 ->exists());
             $result['confirmed'] = $this->userVerified($user);
