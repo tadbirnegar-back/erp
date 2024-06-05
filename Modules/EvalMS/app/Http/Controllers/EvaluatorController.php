@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
+use Modules\EvalMS\App\Http\Traits\EvaluatorTrait;
 
 class EvaluatorController extends Controller
 {
+    use EvaluatorTrait;
     public array $data = [];
 
     /**
@@ -39,11 +41,11 @@ class EvaluatorController extends Controller
         try {
             \DB::beginTransaction();
             $data['organizationUnitID'] = $ounitID;
-            $evaluator = EvaluatorRepository::evaluatorStore($data, $evalID, $data['userID']);
+            $evaluator = $this->evaluatorStore($data, $evalID, $data['userID']);
 //            return response()->json(['message' => $evaluator]);
 
             $answers = json_decode($data['answers'], true);
-            $evalAnswers = EvaluatorRepository::answerStore($answers, $evaluator->id);
+            $evalAnswers = $this->answerStore($answers, $evaluator->id);
 
             \DB::commit();
             return response()->json(['message' => 'باموفقیت ثبت شد']);

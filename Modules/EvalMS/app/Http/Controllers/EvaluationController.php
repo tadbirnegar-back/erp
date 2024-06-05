@@ -5,12 +5,13 @@ namespace Modules\EvalMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
+use Modules\EvalMS\App\Http\Traits\EvaluatorTrait;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class EvaluationController extends Controller
 {
+    use EvaluatorTrait;
     public array $data = [];
 
     /**
@@ -47,15 +48,15 @@ class EvaluationController extends Controller
 //
 
 //        $user = \Auth::user();
-//        $a = EvaluatorRepository::getOunitsWithSubsOfUser($user);
+//        $a = $this->getOunitsWithSubsOfUser($user);
 //        $ounitIDs = $a->pluck('organizationUnit.id');
-//        $result = EvaluatorRepository::evalOfOunits($ounitIDs->toArray(), $id);
+//        $result = $this->evalOfOunits($ounitIDs->toArray(), $id);
 //
         $ounit = OrganizationUnit::findOrFail($ounitID);
 
-//        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
+//        $usersUnits = $this->getOunits($user, loadHeads: true);
 
-//        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
+//        $whoToFill = $this->getOunitsParents($ounit);
 
 //        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
 //            return $head === null;
@@ -74,7 +75,7 @@ class EvaluationController extends Controller
 //        $pageNum = $request->pageNum ?? 1;
 //        $perPage = $request->perPage ?? 10;
 
-        $result = EvaluatorRepository::getEvalOunitHistory($evalID, $ounitID, $headIDs);
+        $result = $this->getEvalOunitHistory($evalID, $ounitID, $headIDs);
         $result['relatedUnits'] = $whoToFill;
         return response()->json($result);
 //        return response()->json($eval);
@@ -89,7 +90,7 @@ class EvaluationController extends Controller
         $perPage = $request->perPage ?? 10;
         $pageNum = $request->pageNum ?? 1;
         $user = \Auth::user();
-//        $usersUnits = EvaluatorRepository::getOunits($user);
+//        $usersUnits = $this->getOunits($user);
 //        $usersUnits=$user->organizationUnits->pluck('descendantsAndSelf')->map(function ($organizationUnit, int $key) {
 //            return $organizationUnit->pluck('id');
 //        })->flatten()->unique();
@@ -117,10 +118,8 @@ class EvaluationController extends Controller
 //            $ounitIDs = [];
 //        }
 
-        $result = EvaluatorRepository::evalOfOunits($usersUnits->toArray(), $id, $perPage, $pageNum);
-        $filters = $user->organizationUnits->map(function ($organizationUnit, int $key) {
-            return $organizationUnit->descendantsAndSelf->toTree();
-        });
+        $result = $this->evalOfOunits($usersUnits->toArray(), $id, $perPage, $pageNum);
+        $filters = $user->organizationUnits->map(fn($organizationUnit, int $key) => $organizationUnit->descendantsAndSelf->toTree());
         return response()->json(['result' => $result, 'filter' => $filters]);
 
     }
@@ -136,9 +135,9 @@ class EvaluationController extends Controller
 
         $ounit = OrganizationUnit::with(['ancestorsAndSelf.head.person'])->findOrFail($ounitID);
 
-//        $usersUnits = EvaluatorRepository::getOunits($user, loadHeads: true);
+//        $usersUnits = $this->getOunits($user, loadHeads: true);
 
-//        $whoToFill = EvaluatorRepository::getOunitsParents($ounit);
+//        $whoToFill = $this->getOunitsParents($ounit);
         $whoToFill = $ounit->ancestorsAndSelf;
 
 //        $headIDs = $usersUnits->pluck('organizationUnit.head.id')->reject(function ($head) {
@@ -163,7 +162,7 @@ class EvaluationController extends Controller
         $pageNum = $request->pageNum ?? 1;
         $perPage = $request->perPage ?? 10;
 
-        $result = EvaluatorRepository::getEvalOunitHistory($evalID, $ounitID, $headIDs, $pageNum, $perPage);
+        $result = $this->getEvalOunitHistory($evalID, $ounitID, $headIDs, $pageNum, $perPage);
         $result['relatedUnits'] = $whoToFill;
         $result['hasRecord'] = $recordExists;
         return response()->json($result);
