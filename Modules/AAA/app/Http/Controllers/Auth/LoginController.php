@@ -14,6 +14,7 @@ use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\Token;
+use Mockery\Exception;
 use Modules\AAA\app\Http\Repositories\OtpRepository;
 use Modules\AAA\app\Http\Services\UserService;
 use Modules\AAA\app\Models\Permission;
@@ -238,111 +239,111 @@ use VerifyInfoRepository;
      */
     public function loginGrant(Request $request)
     {
+            $credentials = $request->only('mobile', 'password');
 
-        $credentials = $request->only('mobile', 'password');
+            if (Auth::attempt($credentials)) {
+                $user = Auth::user();
+            } else {
+                return response()->json(['message' => 'نام کاربری یا رمز عبور نادرست است'], 401);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-        } else {
-            return response()->json(['message' => 'نام کاربری یا رمز عبور نادرست است'], 401);
+            }
+            $token = auth()->user()->token();
+            if ($token) {
+                /* --------------------------- revoke access token -------------------------- */
+                $token->revoke();
+                $token->delete();
 
-        }
-        $token = auth()->user()->token();
-        if ($token) {
-            /* --------------------------- revoke access token -------------------------- */
-            $token->revoke();
-            $token->delete();
+                /* -------------------------- revoke refresh token -------------------------- */
+                $refreshTokenRepository = app(RefreshTokenRepository::class);
+                $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($token->id);
+            }
 
-            /* -------------------------- revoke refresh token -------------------------- */
-            $refreshTokenRepository = app(RefreshTokenRepository::class);
-            $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($token->id);
-        }
+            $baseUrl = url('/');
 
-        $baseUrl = url('/');
-
-        $response = Http::post("{$baseUrl}/oauth/token", [
-            'username' => $request->mobile,
-            'password' => $request->password,
-            'client_id' => config('passport.password_grant_client.id'),
-            'client_secret' => config('passport.password_grant_client.secret'),
-            'grant_type' => 'password'
-        ]);
-
-
-        $result = json_decode($response->getBody(), true);
-
-        if (!$response->ok()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
+            $response = Http::post("{$baseUrl}/oauth/token", [
+                'username' => $request->mobile,
+                'password' => $request->password,
+                'client_id' => config('passport.password_grant_client.id'),
+                'client_secret' => config('passport.password_grant_client.secret'),
+                'grant_type' => 'password'
+            ]);
 
 
-        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+            $result = json_decode($response->getBody(), true);
 
-        $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
+            if (!$response->ok()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
 
-        unset($result['refresh_token']);
-        unset($result['token_type']);
-        unset($result['expires_in']);
 
-        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
-        foreach ($sidebarPermissions as $permission) {
-            $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
-                'label' => $permission?->name,
-                'slug' => $permission?->slug,
-            ];
-            $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
-        }
+            $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
 
-        $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
-        foreach ($operationalPermissions as $permission) {
-            $operationalItems[$permission->moduleCategory->name]['subPermission'][] = [
-                'label' => $permission?->name,
-                'slug' => $permission?->slug,
-            ];
-            $operationalItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
-        }
+            $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
+
+            unset($result['refresh_token']);
+            unset($result['token_type']);
+            unset($result['expires_in']);
+
+            $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+            foreach ($sidebarPermissions as $permission) {
+                $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
+                    'label' => $permission?->name,
+                    'slug' => $permission?->slug,
+                ];
+                $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+            }
+
+            $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
+            foreach ($operationalPermissions as $permission) {
+                $operationalItems[$permission->moduleCategory->name]['subPermission'][] = [
+                    'label' => $permission?->name,
+                    'slug' => $permission?->slug,
+                ];
+                $operationalItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
+            }
 
 //        $permissions = $user->permissions()->with(['moduleCategory', 'permissionTypes'])->get();
 
 
-        $person = $user->person;
-        /**
-         * @var Natural $natural
-         */
-        $natural = $person->personable;
+            $person = $user->person;
+            /**
+             * @var Natural $natural
+             */
+            $natural = $person->personable;
 //        $result['permissions'] = $permissions->groupBy('permissionTypes.name');
-        $result['operational'] = $operationalItems ?? null;
-        $result['sidebar'] = $sidebarItems ?? null;
+            $result['operational'] = $operationalItems ?? null;
+            $result['sidebar'] = $sidebarItems ?? null;
 
-        $roles = $user->roles->pluck('name');
+            $roles = $user->roles->pluck('name');
 
-        if (in_array('کاربر', $roles->toArray())) {
-            $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
-                ->whereNotNull('organization_units.head_id')
-                ->where('organization_units.unitable_type', VillageOfc::class)
-                ->whereDoesntHave('payments', function ($query) {
-                    $query->whereHas('status', function ($query) {
-                        $query->where('name', 'پرداخت شده');
-                    });
-                })
-                ->whereNotNull('village_ofcs.degree')
-                ->exists());
-            $result['confirmed'] = $this->userVerified($user);
-        }else{
-            $result['hasPayed'] = true;
-            $result['confirmed'] = true;
-        }
+            if (in_array('کاربر', $roles->toArray())) {
+                $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+                    ->whereNotNull('organization_units.head_id')
+                    ->where('organization_units.unitable_type', VillageOfc::class)
+                    ->whereDoesntHave('payments', function ($query) {
+                        $query->whereHas('status', function ($query) {
+                            $query->where('name', 'پرداخت شده');
+                        });
+                    })
+                    ->whereNotNull('village_ofcs.degree')
+                    ->exists());
+                $result['confirmed'] = $this->userVerified($user);
+            }else{
+                $result['hasPayed'] = true;
+                $result['confirmed'] = true;
+            }
 
 
-        $result['userInfo'] = [
-            'firstName' => $natural->first_name,
-            'lastName' => $natural->last_name,
-            'avatar' => !is_null($user->person->avatar) ? url('/') . '/' . $user->person->avatar->slug : null,
+            $result['userInfo'] = [
+                'firstName' => $natural->first_name,
+                'lastName' => $natural->last_name,
+                'avatar' => !is_null($user->person->avatar) ? url('/') . '/' . $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
-            $result['roles'] = $user->roles,
+                $result['roles'] = $user->roles,
 
-        ];
-        return response()->json($result)->withCookie($cookie);
+            ];
+            return response()->json($result)->withCookie($cookie);
+
 
 
     }
