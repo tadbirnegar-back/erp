@@ -30,11 +30,11 @@ class GatewayController extends Controller
 //        $page = $request->pageNum ?? 1;
 //        $perPage = $request->perPage ?? 10;
 //        $list = PG::with('status', 'user')->paginate($perPage, page: $page);
-        $list = $user->load('person')->payments()
+        $list = $user->load('person.personable')->payments()
             ->whereHas('status', function ($query) {
                 $query->where('name', 'پرداخت شده');
             })
-            ->with(['status','organizationUnit']) // Eager load the 'status' relationship
+            ->with(['status','organizationUnit.unitable','organizationUnit.ancestorsAndSelf']) // Eager load the 'status' relationship
             ->get();
 //        ->paginate($perPage, page: $page);
         return response()->json(['person' => $user->person, 'payments' => $list]);
@@ -88,7 +88,7 @@ class GatewayController extends Controller
                 $query->where('unitable_type', VillageOfc::class)
                     ->whereDoesntHave('payments', function ($query) {
                         $query->whereHas('status', function ($query) {
-                            $query->whereNot('name', 'پرداخت شده');
+                            $query->where('name', 'پرداخت شده');
                         });
                     })
                     ->with(['unitable']);
@@ -101,7 +101,6 @@ class GatewayController extends Controller
             $result = $this->generatePayGate($user);
             return response()->json($result);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
             return response()->json(['message' => 'خطا در اتصال یه درگاه بانکی'], 500);
         }
 
@@ -127,12 +126,13 @@ class GatewayController extends Controller
         try {
 
 //            $payment = PG::where('authority', $request->authority)->first();
-            $payments = $user->payments()->where('authority', $request->authority)->get();
+            $payments = $user->payments()->where('authority', $request->authority)->with('organizationUnit.unitable')->get();
+
             $status = PG::GetAllStatuses()->where('name', 'پرداخت شده')->first();
             $user->load(['organizationUnits' => function ($query) {
                 $query->where('unitable_type', VillageOfc::class)->with('unitable');
             }]);
-            $degs = $user->organizationUnits->pluck('unitable.degree');
+            $degs = $payments->pluck('organizationUnit.unitable.degree');
 //                ->reject(function ($dg) {
 //                return $dg === null;
 //            });
@@ -143,12 +143,12 @@ class GatewayController extends Controller
 
 //            $currentAmount = 0; // Initialize a variable for current increment
                 $currentAmount = match ($deg) {
-                    1 => 780000,
-                    2 => 890000,
-                    3 => 1000000,
-                    4 => 1220000,
-                    5 => 1320000,
-                    6 => 1450000,
+                    1 => 350000,
+                    2 => 450000,
+                    3 => 500000,
+                    4 => 600000,
+                    5 => 700000,
+                    6 => 750000,
                     default => 0,
                 };
 
@@ -160,7 +160,7 @@ class GatewayController extends Controller
             // You can show payment referenceId to the user.
             $transactionid = $receipt->getReferenceId();
 
-            $payments->each(function (PG $payment) use ($transactionid, $receipt, $status) {
+            $payments->each(function ($payment) use ($transactionid, $receipt, $status) {
                 $payment->transactionid = $transactionid;
                 $payment->purchase_date = $receipt->getDate();
                 $payment->status_id = $status->id;

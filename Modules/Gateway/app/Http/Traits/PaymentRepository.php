@@ -21,12 +21,12 @@ trait PaymentRepository
 
 //            $currentAmount = 0; // Initialize a variable for current increment
             $currentAmount = match ($deg) {
-                1 => 780000,
-                2 => 890000,
-                3 => 1000000,
-                4 => 1220000,
-                5 => 1320000,
-                6 => 1450000,
+                1 => 350000,
+                2 => 450000,
+                3 => 500000,
+                4 => 600000,
+                5 => 700000,
+                6 => 750000,
                 default => 0,
             };
 
@@ -47,12 +47,12 @@ trait PaymentRepository
 
 //            $currentAmount = 0; // Initialize a variable for current increment
                     $currentAmount = match ($deg) {
-                        1 => 780000,
-                        2 => 890000,
-                        3 => 1000000,
-                        4 => 1220000,
-                        5 => 1320000,
-                        6 => 1450000,
+                        1 => 350000,
+                        2 => 450000,
+                        3 => 500000,
+                        4 => 600000,
+                        5 => 700000,
+                        6 => 750000,
                         default => 0,
                     };
 

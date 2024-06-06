@@ -311,7 +311,7 @@ return [
 
             'mode' => 'normal', // can be normal, sandbox, zaringate
             'merchantId' => '57ba27f4-2d07-4c52-850f-ef56ba4139de',
-            'callbackUrl' => 'https://panel.il-yar.ir/payment/result',
+            'callbackUrl' => 'https://panel.samadiran.ir/payment/result',
 //          'callbackUrl' => 'https://ostan.zbbo.net/payment/result',
 //            'callbackUrl' => 'http://127.0.0.1:3000/payment/result',
             'description' => 'payment using zarinpal',

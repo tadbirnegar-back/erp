@@ -19,3 +19,5 @@ yarn-error.log
 /.vscode
 ofogh-task
 /ofogh-task
+app/Http/Controllers/testController.php
+testController.php
