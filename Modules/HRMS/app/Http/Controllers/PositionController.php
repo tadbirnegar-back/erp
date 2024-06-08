@@ -6,27 +6,29 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\HRMS\app\Http\Services\PositionService;
+use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Models\Position;
 
 class PositionController extends Controller
 {
+    use PositionTrait;
     public array $data = [];
-    protected PositionService $positionService;
+//    protected PositionService $positionService;
 
-    /**
-     * @param PositionService $positionService
-     */
-    public function __construct(PositionService $positionService)
-    {
-        $this->positionService = $positionService;
-    }
+//    /**
+//     * @param PositionService $positionService
+//     */
+//    public function __construct(PositionService $positionService)
+//    {
+//        $this->positionService = $positionService;
+//    }
 
     /**
      * Display a listing of the resource.
      */
     public function index(): JsonResponse
     {
-        $result = $this->positionService->index();
+        $result = $this->positionIndex();
 
         return response()->json($result);
     }
@@ -38,7 +40,7 @@ class PositionController extends Controller
     {
         $data = $request->all();
 
-        $position = $this->positionService->store($data);
+        $position = $this->positionStore($data);
         if ($position instanceof \Exception) {
             return response()->json(['message'=>'خطا در ایجاد سمت جدید'],500);
 
@@ -51,7 +53,7 @@ class PositionController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $result = $this->positionService->show($id);
+        $result = $this->positionShow($id);
         if (is_null($result)) {
             return response()->json(['message'=>'موزدی یافت نشد'],404);
 
@@ -64,9 +66,13 @@ class PositionController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        $result = Position::findOr($id,function (){
+            return response()->json(['message'=>'موزدی یافت نشد'],404);
+        });
+
         $data = $request->all();
 
-        $level = $this->positionService->update($data,$id);
+        $level = $this->positionUpdate($data,$result);
 
         if ($level instanceof \Exception) {
             return response()->json(['message'=>'خطا در بروزرسانی سمت '],500);
@@ -81,14 +87,11 @@ class PositionController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $result = Position::findOrFail($id);
-
-        if (is_null($result)) {
+        $result = Position::findOr($id,function (){
             return response()->json(['message'=>'موزدی یافت نشد'],404);
+        });
 
-        }
-
-        $status = Position::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
+        $status = $this->inactivePositionStatus();
 
         $result->status_id = $status->id;
         $result->save();

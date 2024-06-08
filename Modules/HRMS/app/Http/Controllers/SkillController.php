@@ -6,20 +6,22 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\HRMS\app\Http\Services\SkillService;
+use Modules\HRMS\App\Http\Traits\SkillTrait;
 use Modules\HRMS\app\Models\Skill;
 
 class SkillController extends Controller
 {
-    public array $data = [];
-    protected SkillService $skillService;
-
-    /**
-     * @param SkillService $skillService
-     */
-    public function __construct(SkillService $skillService)
-    {
-        $this->skillService = $skillService;
-    }
+    use SkillTrait;
+//    public array $data = [];
+//    protected SkillService $skillService;
+//
+//    /**
+//     * @param SkillService $skillService
+//     */
+//    public function __construct(SkillService $skillService)
+//    {
+//        $this->skillService = $skillService;
+//    }
 
 
     /**
@@ -27,7 +29,7 @@ class SkillController extends Controller
      */
     public function index(): JsonResponse
     {
-        $result = $this->skillService->index();
+        $result = $this->skillIndex();
 
         return response()->json($result);
     }
@@ -39,7 +41,7 @@ class SkillController extends Controller
     {
         $data = $request->all();
 
-        $skill = $this->skillService->store($data);
+        $skill = $this->skillStore($data);
         if ($skill instanceof \Exception) {
             return response()->json(['message'=>'خطا در ایجاد مهارت جدید'],500);
 
@@ -52,7 +54,7 @@ class SkillController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $skill = $this->skillService->show($id);
+        $skill = $this->skillShow($id);
 
         if (is_null($skill)) {
             return response()->json(['message'=>'موزدی یافت نشد'],404);
@@ -67,16 +69,22 @@ class SkillController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        $result = Skill::findOr($id,function (){
+            return response()->json(['message'=>'موزدی یافت نشد'],404);
+        });
         $data = $request->all();
+        try {
+            \DB::beginTransaction();
+            $level = $this->skillUpdate($data,$result);
 
-        $level = $this->skillService->update($data,$id);
-
-        if ($level instanceof \Exception) {
+            \DB::commit();
+            return response()->json(['message'=>'بروزرسانی مهارت با موفقیت انجام شد']);
+        }catch (\Exception $e){
+            \DB::rollBack();
             return response()->json(['message'=>'خطا در بروزرسانی مهارت '],500);
-
         }
 
-        return response()->json(['message'=>'بروزرسانی مهارت با موفقیت انجام شد']);
+
     }
 
     /**
@@ -84,14 +92,11 @@ class SkillController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $result = Skill::findOrFail($id);
-
-        if (is_null($result)) {
+        $result = Skill::findOr($id,function (){
             return response()->json(['message'=>'موزدی یافت نشد'],404);
+        });
 
-        }
-
-        $status = Skill::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
+        $status = $this->inactiveSkillStatus();
 
         $result->status_id = $status->id;
         $result->save();
