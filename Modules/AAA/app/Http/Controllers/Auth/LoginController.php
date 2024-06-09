@@ -72,6 +72,7 @@ use VerifyInfoRepository;
             $user = $this->userService->isPersonUser($result->id);
 
             if ($user) {
+                $user->load('person');
                 $message = 'user';
                 $data = $user;
             } else {
