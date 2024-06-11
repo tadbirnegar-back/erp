@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Http;
 use Modules\AAA\app\Models\User;
+use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\Gateway\app\Models\Payment as PG;
 use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
@@ -27,97 +28,99 @@ class testController extends Controller
     use PaymentRepository;
     public function run()
     {
-        try {
-
-//            $payment = PG::where('authority', $request->authority)->first();
-            $user=User::find(1889);
-            $payments = $user->payments()->where('authority', 'A00000000000000000000000000015dw78yq')->with('organizationUnit.unitable')->get();
-
-            $status = PG::GetAllStatuses()->where('name', 'پرداخت شده')->first();
-
-//            $user->load(['organizationUnits' => function ($query) {
-//                $query->where('unitable_type', VillageOfc::class)
-//                    ->whereDoesntHave('payments', function ($query) {
-//                        $query->whereHas('status', function ($query) {
-//                            $query->where('name', 'پرداخت شده');
-//                        });
-//                    })
-//                    ->with(['unitable']);
-//            }]);
-//            dd($payments->pluck('organizationUnit.unitable.degree'));
-            $degs = $payments->pluck('organizationUnit.unitable.degree');
-//                ->reject(function ($dg) {
-//                return $dg === null;
+        return response()->json(File::find(113));
+//        symlink('/home/a/Desktop/projects/ofogh-task/storage/app/public', '/home/a/Desktop/projects/ofogh-task/public/newsc');
+//        try {
+//
+////            $payment = PG::where('authority', $request->authority)->first();
+//            $user=User::find(1889);
+//            $payments = $user->payments()->where('authority', 'A00000000000000000000000000015dw78yq')->with('organizationUnit.unitable')->get();
+//
+//            $status = PG::GetAllStatuses()->where('name', 'پرداخت شده')->first();
+//
+////            $user->load(['organizationUnits' => function ($query) {
+////                $query->where('unitable_type', VillageOfc::class)
+////                    ->whereDoesntHave('payments', function ($query) {
+////                        $query->whereHas('status', function ($query) {
+////                            $query->where('name', 'پرداخت شده');
+////                        });
+////                    })
+////                    ->with(['unitable']);
+////            }]);
+////            dd($payments->pluck('organizationUnit.unitable.degree'));
+//            $degs = $payments->pluck('organizationUnit.unitable.degree');
+////                ->reject(function ($dg) {
+////                return $dg === null;
+////            });
+//
+//            $amount = 0;
+//            $degs->each(function ($deg) use (&$amount) {
+//                $deg = (int)$deg;
+//
+////            $currentAmount = 0; // Initialize a variable for current increment
+//                $currentAmount = match ($deg) {
+//                    1 => 350000,
+//                    2 => 4500,
+//                    3 => 500000,
+//                    4 => 600000,
+//                    5 => 700000,
+//                    6 => 750000,
+//                    default => 0,
+//                };
+//
+//                $amount += $currentAmount;
 //            });
-
-            $amount = 0;
-            $degs->each(function ($deg) use (&$amount) {
-                $deg = (int)$deg;
-
-//            $currentAmount = 0; // Initialize a variable for current increment
-                $currentAmount = match ($deg) {
-                    1 => 350000,
-                    2 => 4500,
-                    3 => 500000,
-                    4 => 600000,
-                    5 => 700000,
-                    6 => 750000,
-                    default => 0,
-                };
-
-                $amount += $currentAmount;
-            });
-            dd($amount);
-            $receipt = Payment::amount($amount)->transactionId($request->authority)->verify();
-
-            // You can show payment referenceId to the user.
-            $transactionid = $receipt->getReferenceId();
-
-            $payments->each(function ($payment) use ($transactionid, $receipt, $status) {
-                $payment->transactionid = $transactionid;
-                $payment->purchase_date = $receipt->getDate();
-                $payment->status_id = $status->id;
-                $payment->save();
-            });
-            $user->load('person');
-
-            $factor = [
-                'transactionid' => $transactionid,
-                'purchase_date' => $receipt->getDate(),
-                'amount'=>$amount,
-                'status'=>$status,
-                'person' => $user->person,
-
-            ];
-
-            return response()->json(['data' => $factor, 'message' => 'پرداخت شما با موفقیت انجام شد']);
-
-        } catch (InvalidPaymentException $exception) {
-            return response()->json(['message' => $exception->getMessage()], 400);
-
-            if ($exception->getCode() == 101) {
-                $user?->load('person');
-                $factor = [
-                    'transactionid' => $payments[0]->transactionid,
-                    'purchase_date' => $payments[0]->purchase_date,
-                    'amount'=>$amount,
-                    'status'=>$status,
-                    'person' => $user->person,
-
-                ];
-                return response()->json(['message' => $exception->getMessage(), 'data' => $factor ?? null]);
-            } elseif ($exception->getCode() == -51) {
-                $status = PG::GetAllStatuses()->where('name', 'پرداخت ناموفق')->first();
-                $payments->each(function ($payment) use ( $status) {
-                    $payment->status_id = $status->id;
-                    $payment->save();
-                });
-
-            }
-
-            return response()->json(['message' => 'درصورت بروز مشکل با پشتیبانی تماس بگیرید'], 400);
-
-        }
+//            dd($amount);
+//            $receipt = Payment::amount($amount)->transactionId($request->authority)->verify();
+//
+//            // You can show payment referenceId to the user.
+//            $transactionid = $receipt->getReferenceId();
+//
+//            $payments->each(function ($payment) use ($transactionid, $receipt, $status) {
+//                $payment->transactionid = $transactionid;
+//                $payment->purchase_date = $receipt->getDate();
+//                $payment->status_id = $status->id;
+//                $payment->save();
+//            });
+//            $user->load('person');
+//
+//            $factor = [
+//                'transactionid' => $transactionid,
+//                'purchase_date' => $receipt->getDate(),
+//                'amount'=>$amount,
+//                'status'=>$status,
+//                'person' => $user->person,
+//
+//            ];
+//
+//            return response()->json(['data' => $factor, 'message' => 'پرداخت شما با موفقیت انجام شد']);
+//
+//        } catch (InvalidPaymentException $exception) {
+//            return response()->json(['message' => $exception->getMessage()], 400);
+//
+//            if ($exception->getCode() == 101) {
+//                $user?->load('person');
+//                $factor = [
+//                    'transactionid' => $payments[0]->transactionid,
+//                    'purchase_date' => $payments[0]->purchase_date,
+//                    'amount'=>$amount,
+//                    'status'=>$status,
+//                    'person' => $user->person,
+//
+//                ];
+//                return response()->json(['message' => $exception->getMessage(), 'data' => $factor ?? null]);
+//            } elseif ($exception->getCode() == -51) {
+//                $status = PG::GetAllStatuses()->where('name', 'پرداخت ناموفق')->first();
+//                $payments->each(function ($payment) use ( $status) {
+//                    $payment->status_id = $status->id;
+//                    $payment->save();
+//                });
+//
+//            }
+//
+//            return response()->json(['message' => 'درصورت بروز مشکل با پشتیبانی تماس بگیرید'], 400);
+//
+//        }
 
 //        $receipt = Payment::amount(4500)->transactionId('A000000000000000000000000000rn2ygyxq')->verify();
 //        dd($receipt);

@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Modules\AAA\app\Models\User;
+use Modules\FileMS\app\Http\Traits\FileTrait;
 use Modules\FileMS\app\Models\Extension;
 use Modules\FileMS\app\Models\File;
 use Modules\FileMS\app\Models\MimeType;
@@ -18,6 +19,7 @@ use Number;
 
 class FileMSController extends Controller
 {
+    use FileTrait;
     public array $data = [];
 
     /**
@@ -111,8 +113,6 @@ class FileMSController extends Controller
 //            'file' => 'required|file|max:2048' // Adjust the maximum file size as needed
 //        ]);
         $uploadedFile = $request->file('file');
-        $fileName = $uploadedFile->getClientOriginalName();
-        $fileSize = $uploadedFile->getSize();
         $fileExtension = $uploadedFile->getClientOriginalExtension();
         $extension_id = Extension::where('name', '=', $fileExtension)->get(['id'])->first();
 
@@ -124,27 +124,26 @@ class FileMSController extends Controller
 
 
         try {
-            // Create a folder path based on the current year, month, and day
-            $folderPath = 'uploads/' . $currentDate->year . '/' . $currentDate->month . '/' . $currentDate->day;
-            $nameToSave = \Str::random(5) . $fileName;
-            $uploadedFile->move(public_path($folderPath), $nameToSave);
-
             DB::beginTransaction();
-            $file = new File();
-            $file->name = $fileName;
-            $file->size = $fileSize;
-            $file->description = $request->description ?? null;
-            $file->creator_id = \Auth::user()->id;
-            $file->extension_id = $extension_id->id;
-            $file->slug = 'public/' . $folderPath . '/' . $nameToSave;
-            $file->save();
+            $uploadedFile = $request->file('file');
+            $data['fileName'] = $uploadedFile->getClientOriginalName();
+            $data['fileSize'] = $uploadedFile->getSize();
+            $fileExtension = $uploadedFile->getClientOriginalExtension();
+            $extension = Extension::where('name', '=', $fileExtension)->get(['id'])->first();
+
+            if (!$extension) {
+                return response()->json(['message' => 'فایل مجاز نمی باشد'], 400);
+            }
+            $filePath= $this->putFileIntoStorage($uploadedFile);
+
+            $file= $this->storeFile($data, $extension,$filePath);
 
             $status = Status::where('name', '=', 'فعال')->where('model', '=', File::class)->first();
 
             $file->statuses()->attach($status->id);
             DB::commit();
 
-            return response()->json(['file' => $file->id]);
+            return response()->json(['file' => $file]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در بارگزاری فایل'], 500);
@@ -220,5 +219,10 @@ class FileMSController extends Controller
         $file->statuses()->attach($status->id);
 
         return response()->json(['message' => 'با موفقیت حذف شد']);
+    }
+
+    public function testUpload(Request $request)
+    {
+
     }
 }

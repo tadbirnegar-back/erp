@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
-use Modules\EvalMS\App\Http\Traits\EvaluatorTrait;
+use Modules\EvalMS\app\Http\Traits\EvaluatorTrait;
 
 class EvaluatorController extends Controller
 {

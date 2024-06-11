@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\HRMS\app\Http\Services\SkillService;
-use Modules\HRMS\App\Http\Traits\SkillTrait;
+use Modules\HRMS\app\Http\Traits\SkillTrait;
 use Modules\HRMS\app\Models\Skill;
 
 class SkillController extends Controller

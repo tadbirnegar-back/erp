@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\EvalMS\App\Http\Traits;
+namespace Modules\EvalMS\app\Http\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;

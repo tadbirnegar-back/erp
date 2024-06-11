@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\CustomerMS\App\Http\Traits;
+namespace Modules\CustomerMS\app\Http\Traits;
 
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\CustomerMS\app\Models\ShoppingCustomer;

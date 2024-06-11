@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Mockery\Exception;
 use Modules\AddressMS\app\Traits\AddressTrait;
-use Modules\CustomerMS\App\Http\Traits\CustomerTrait;
+use Modules\CustomerMS\app\Http\Traits\CustomerTrait;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Natural;

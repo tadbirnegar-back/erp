@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\HRMS\App\Http\Traits;
+namespace Modules\HRMS\app\Http\Traits;
 
 use Modules\HRMS\app\Models\Skill;
 
