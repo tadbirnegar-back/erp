@@ -3,28 +3,21 @@
 namespace Modules\CustomerMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use http\Env\Response;
+use Auth;
+use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\AddressMS\app\services\AddressService;
-use Modules\CustomerMS\app\Http\Services\CustomerService;
+use Mockery\Exception;
+use Modules\AddressMS\app\Traits\AddressTrait;
+use Modules\CustomerMS\app\Http\Traits\CustomerTrait;
 use Modules\CustomerMS\app\Models\Customer;
-use Modules\PersonMS\app\Http\Services\PersonService;
+use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Natural;
 
 class CustomerMSController extends Controller
 {
-    public array $data = [];
-    protected $personService;
-    protected $customerService;
-    protected $addressService;
+    use PersonTrait, AddressTrait, CustomerTrait;
 
-    public function __construct(CustomerService $customerService, PersonService $personService, AddressService $addressService)
-    {
-        $this->personService = $personService;
-        $this->customerService = $customerService;
-        $this->addressService = $addressService;
-    }
 
     /**
      * Display a listing of the resource.
@@ -32,7 +25,7 @@ class CustomerMSController extends Controller
     public function index(Request $request): JsonResponse
     {
         $data = $request->all();
-        $result = $this->customerService->index($data);
+        $result = $this->customerIndex($data);
 
         return response()->json($result);
     }
@@ -43,67 +36,58 @@ class CustomerMSController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->all();
-        $data['userID'] = \Auth::user()->id;
+        $data['userID'] = Auth::user()->id;
+        try {
+            DB::beginTransaction();
+            if ($request->personableType == 'natural') {
 
-        if ($request->personableType == 'natural') {
+                if ($request->isNewNatural) {
 
-            if ($request->isNewNatural) {
+                    if ($request->isNewAddress) {
+                        $address = $this->addressStore($data);
 
-                if ($request->isNewAddress) {
-                    $address = $this->addressService->store($data);
-                    if ($address instanceof \Exception) {
-//                        return response()->json(['message' => $address->getMessage()], 500);
-                        return response()->json(['message' => 'خطا در ایجاد مشتری'], 500);
+                        $data['homeAddressID'] = $address->id;
                     }
-                    $data['homeAddressID'] = $address->id;
+
+                    $naturalResult = $this->naturalStore($data);
+
+                    $data['personID'] = $naturalResult->person->id;
                 }
 
-                $naturalResult = $this->personService->naturalStore($data);
-                if ($naturalResult instanceof \Exception) {
-//                    return response()->json(['message' => $naturalResult->getMessage()], 500);
-                    return response()->json(['message' => 'خطا در ایجاد مشتری'], 500);
-                }
-                $data['personID'] = $naturalResult->person->id;
-            }
-
-
-        } else {
-            if ($request->isNewLegal) {
-
-                if ($request->isNewAddress) {
-                    $address = $this->addressService->store($data);
-                    if ($address instanceof \Exception) {
-
-                        return response()->json(['message' => 'خطا در ایجاد مشتری'], 500);
-                    }
-                    $data['businessAddressID'] = $address->id;
-                }
-
-                $legalPerson = $this->personService->legalStore($data);
-
-                if ($legalPerson instanceof \Exception) {
-                    return response()->json(['message' => 'خطا در ایجاد مشتری'], 500);
-                }
-
-                $data['personID'] = $legalPerson->person->id;
 
             } else {
-                if ($this->customerService->isPersonCustomer($data['personID'])) {
-                    $message = 'customer';
+                if ($request->isNewLegal) {
 
-                    return response()->json(['message' => $message]);
-//                    $data = $result;
+                    if ($request->isNewAddress) {
+                        $address = $this->addressStore($data);
+                        $data['businessAddressID'] = $address->id;
+                    }
+
+                    $legalPerson = $this->legalStore($data);
+
+
+                    $data['personID'] = $legalPerson->person->id;
+
+                } else {
+                    if ($this->isPersonCustomer($data['personID'])) {
+                        $message = 'customer';
+
+                        return response()->json(['message' => $message]);
+                    }
                 }
             }
+
+            $insertedCustomer = $this->customerStore($data);
+
+            DB::commit();
+
+            return response()->json($insertedCustomer);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ثبت مشتری'], 500);
+
         }
 
-        $insertedCustomer = $this->customerService->store($data);
-
-        if ($insertedCustomer instanceof \Exception) {
-            return response()->json(['message' => 'خطا در ایجاد مشتری'], 500);
-        }
-
-        return response()->json($insertedCustomer);
     }
 
     /**
@@ -111,10 +95,12 @@ class CustomerMSController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $customer = $this->customerService->show($id);
-        if ($customer == null) {
+        $customer = Customer::findOr($id, function () {
             return response()->json(['message' => 'مشتری ای با این مشخصات یافت نشد'], 404);
-        }
+        });
+
+        $customer = $this->customerShow($id);
+
 
         if (!is_null($customer->person->avatar)) {
             $customer->person->avatar->slug = url('/') . '/' . $customer->person->avatar->slug;
@@ -122,7 +108,7 @@ class CustomerMSController extends Controller
         }
 
         if (\Str::contains(\request()->route()->uri(), 'customers/edit/{id}')) {
-            $statuses = Customer::GetAllStatuses();
+            $statuses = $this->allCustomerStats();
 
             $customer->statuses = $statuses;
         }
@@ -135,44 +121,44 @@ class CustomerMSController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $customer = Customer::with('person')->findOrFail($id);
-
-        if (is_null($customer)) {
+        $customer = Customer::findOr($id, function () {
             return response()->json(['message' => 'مشتری ای با این مشخصات یافت نشد'], 404);
-        }
-        $customer->status_id = $request->statusID;
-        $customer->save();
+        });
+
 
         $data = $request->all();
-        $data['userID']=\Auth::user()->id;
-        if ($request->isNewAddress) {
-            $address = $this->addressService->store($data);
+        $data['userID'] = Auth::user()->id;
+        try {
+            DB::beginTransaction();
+            $this->customerUpdate($data, $customer);
 
-            if ($address instanceof \Exception) {
-//                return response()->json(['message' => 'خطا در بروزرسانی مشتری'], 500);
-                return response()->json(['message' => $address->getMessage()], 500);
-            }
-        }
+            if ($request->isNewAddress) {
+                $address = $this->addressStore($data);
 
-        if ($customer->person->personable_type == Natural::class) {
-            if (isset($address)) {
-                $data['homeAddressID'] = $address->id;
-            }
-            $personResult = $this->personService->naturalUpdate($data, $customer->person->personable_id);
-
-        }else{
-            if (isset($address)) {
-                $data['businessAddressID'] = $address->id;
             }
 
-            $personResult = $this->personService->legalUpdate($data, $customer->person->personable_id);
+            if ($customer->person->personable_type == Natural::class) {
+                if (isset($address)) {
+                    $data['homeAddressID'] = $address->id;
+                }
+                $personResult = $this->naturalUpdate($data, $customer->person->personable_id);
 
-        }
-        if ($personResult instanceof \Exception || is_null($personResult)) {
+            } else {
+                if (isset($address)) {
+                    $data['businessAddressID'] = $address->id;
+                }
+
+                $personResult = $this->legalUpdate($data, $customer->person->personable_id);
+
+            }
+            DB::commit();
+
+            return response()->json($personResult);
+        } catch (Exception $e) {
+            DB::rollBack();
             return response()->json(['message' => 'خطا در بروزرسانی مشتری'], 500);
         }
 
-        return response()->json($personResult);
     }
 
     /**
@@ -180,27 +166,32 @@ class CustomerMSController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $customer = Customer::with('person')->findOrFail($id);
-
-        if ($customer == null) {
+        $customer = Customer::findOr($id, function () {
             return response()->json(['message' => 'مشتری ای با این مشخصات یافت نشد'], 404);
+        });
+
+
+        try {
+            DB::beginTransaction();
+            $result = $this->customerDestroy($customer);
+            DB::commit();
+
+            return response()->json(['message' => 'مشتری با موفقیت حذف شد']);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'مشتری با موفقیت حذف شد'], 500);
         }
 
-        $status = Customer::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
 
-        $customer->status_id = $status->id;
-        $customer->save();
-
-        return response()->json(['message' => 'مشتری با موفقیت حذف شد']);
     }
 
     public function naturalIsCustomer(Request $request)
     {
-        $result = $this->personService->naturalExists($request->nationalCode);
+        $result = $this->naturalExists($request->nationalCode);
         if ($result == null) {
             $message = 'notFound';
             $data = null;
-        } elseif ($this->customerService->isPersonCustomer($result->id)) {
+        } elseif ($this->isPersonCustomer($result->id)) {
             $message = 'customer';
             $data = $result;
         } else {
@@ -213,7 +204,7 @@ class CustomerMSController extends Controller
 
     public function legalIsCustomer(Request $request)
     {
-        $result = $this->personService->legalExists($request->businessName);
+        $result = $this->legalExists($request->businessName);
 
 
         return response()->json($result);

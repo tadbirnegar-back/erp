@@ -29,3 +29,4 @@ use Illuminate\Support\Facades\Route;
  * @subgroup testSubGroup
  */
 
+Route::post('/file/upload', [\Modules\FileMS\app\Http\Controllers\FileMSController::class, 'testUpload']);

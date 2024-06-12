@@ -3,12 +3,15 @@
 namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Mockery\Exception;
 use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\Repositories\AddressRepository;
 use Modules\AddressMS\app\services\AddressService;
+use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\HRMS\app\Http\Repositories\EducationalRecordRepository;
 use Modules\HRMS\app\Http\Repositories\EmployeeRepository;
 use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
@@ -18,6 +21,11 @@ use Modules\HRMS\app\Http\Services\EducationalRecordService;
 use Modules\HRMS\app\Http\Services\EmployeeService;
 use Modules\HRMS\app\Http\Services\RelativeService;
 use Modules\HRMS\app\Http\Services\ResumeService;
+use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
+use Modules\HRMS\app\Http\Traits\EmployeeTrait;
+use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Http\Traits\RelativeTrait;
+use Modules\HRMS\app\Http\Traits\ResumeTrait;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\Level;
@@ -30,29 +38,32 @@ use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\Skill;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 use Modules\PersonMS\app\Http\Services\PersonService;
+use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use function PHPUnit\Framework\isEmpty;
 use function Sodium\add;
 
 class EmployeeController extends Controller
 {
+    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait;
+
 //    public array $data = [];
-    protected EmployeeRepository $employeeService;
-    protected PersonRepository $personService;
-    protected AddressRepository $addressService;
-    protected RelativeRepository $relativeService;
-    protected ResumeRepository $resumeService;
-    protected EducationalRecordRepository $educationalRecordService;
-
-
-    public function __construct(EmployeeRepository $employeeService, PersonRepository $personService, AddressRepository $addressService, RelativeRepository $relativeService, ResumeRepository $resumeService, EducationalRecordRepository $educationalRecordService)
-    {
-        $this->employeeService = $employeeService;
-        $this->personService = $personService;
-        $this->addressService = $addressService;
-        $this->relativeService = $relativeService;
-        $this->resumeService = $resumeService;
-        $this->educationalRecordService = $educationalRecordService;
-    }
+//    protected EmployeeRepository $employeeService;
+//    protected PersonRepository $personService;
+//    protected AddressRepository $addressService;
+//    protected RelativeRepository $relativeService;
+//    protected ResumeRepository $resumeService;
+//    protected EducationalRecordRepository $educationalRecordService;
+//
+//
+//    public function __construct(EmployeeRepository $employeeService, PersonRepository $personService, AddressRepository $addressService, RelativeRepository $relativeService, ResumeRepository $resumeService, EducationalRecordRepository $educationalRecordService)
+//    {
+//        $this->employeeService = $employeeService;
+//        $this->personService = $personService;
+//        $this->addressService = $addressService;
+//        $this->relativeService = $relativeService;
+//        $this->resumeService = $resumeService;
+//        $this->educationalRecordService = $educationalRecordService;
+//    }
 
 
     /**
@@ -64,7 +75,7 @@ class EmployeeController extends Controller
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
-        $result = $this->employeeService->index($perPage, $pageNum, $data);
+        $result = $this->employeeIndex($perPage, $pageNum, $data);
 
         return response()->json($result);
     }
@@ -76,112 +87,65 @@ class EmployeeController extends Controller
     {
         $data = $request->all();
 
+        try {
+            DB::beginTransaction();
 
-        $data['userID'] = \Auth::user()->id;
+            $data['userID'] = \Auth::user()->id;
 
-        if ($request->isNewAddress) {
-            $addressService = new AddressRepository();
-            $address = $addressService->store($data);
+            if ($request->isNewAddress) {
+                $address = $this->addressStore($data);
 
-            if ($address instanceof \Exception) {
-//                return response()->json(['message' => $address->getMessage()], 500);
-                return response()->json(['message' => 'خطا در وارد کردن آدرس'], 500);
+                $data['homeAddressID'] = $address->id;
+
             }
 
-            $data['homeAddressID'] = $address->id;
+            $personResult = isset($request->personID) ?
+                $this->naturalUpdate($data, $data['personID']) :
+                $this->naturalStore($data);
 
-        }
-        $personService = new PersonRepository();
-        $personResult = isset($request->personID) ?
-            $personService->naturalUpdate($data, $data['personID']) :
-            $personService->naturalStore($data);
+            $data['personID'] = $personResult->person->id;
 
-        if ($personResult instanceof \Exception) {
-            return response()->json(['message' => $personResult->getMessage()], 500);
-//            return response()->json(['message' => 'خطا در افزودن شخص'], 500);
-        }
-        $data['personID'] = $personResult->person->id;
-        /**
-         * @var Employee $employee
-         */
-        $employeeService = new EmployeeRepository();
-        $employee = $employeeService->store($data);
+            $employee = $this->employeeStore($data);
 
-        if ($employee instanceof \Exception) {
-//            return response()->json(['message' => $employee->getMessage()], 500);
+
+            //additional info insertion
+            if (isset($data['educations'])) {
+                $edus = json_decode($data['educations'], true);
+
+                $educations = $this->EducationalRecordStore($edus, $employee->workForce->id);
+
+            }
+
+
+            if (isset($data['relatives'])) {
+                $rels = json_decode($data['relatives'], true);
+
+                $relatives = $this->RelativeStore($rels, $employee->workForce->id);
+
+            }
+
+
+            if (isset($data['resumes'])) {
+                $resumes = json_decode($data['resumes'], true);
+
+                $resume = $this->resumeStore($resumes, $employee->workForce->id);
+
+            }
+
+
+            if (isset($data['recruitmentRecords'])) {
+                $rs = json_decode($data['recruitmentRecords'], true);
+
+                $rsRes = $this->rsStore($rs, $employee->id);
+
+            }
+            DB::commit();
+            return response()->json($employee);
+
+        } catch (Exception $e) {
+            DB::rollBack();
             return response()->json(['message' => 'خطا در افزودن کارمند'], 500);
         }
-
-        //additional info insertion
-        if (isset($data['educations'])) {
-            $educationalRecordService = new EducationalRecordRepository();
-
-            $educations = $educationalRecordService->store($data['educations'],$employee->workForce->id);
-
-            if ($educations instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
-            }
-        }
-
-
-//        $educationalData = json_decode($data['educations'], true);
-//
-//        foreach ($educationalData as $datum) {
-//            $datum['workForceID'] = $employee->workForce->id;
-//            $education = $educationalRecordService->store($datum);
-
-
-//        }
-
-        if (isset($data['relatives'])) {
-            $relativeService = new RelativeRepository();
-
-            $relative = $relativeService->store($data['relatives'],$employee->workForce->id);
-
-            if ($relative instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن '], 500);
-            }
-        }
-
-
-//        $relativeData = json_decode($data['relatives'], true);
-//
-//        foreach ($relativeData as $datum) {
-//            $datum['WorkForceID'] = $employee->workForce->id;
-//
-
-//        }
-
-//        $resumesData = json_decode($data['resumes'], true);
-
-        if (isset($data['resumes'])) {
-            $resumeService = new ResumeRepository();
-            $resume = $resumeService->store($data['resumes'],$employee->workForce->id);
-            if ($resume instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
-            }
-        }
-
-
-        if (isset($data['recruitmentRecords'])) {
-            $rs = json_decode($data['recruitmentRecords'], true);
-
-            $rsRes = RecruitmentScriptRepository::store($rs, $employee->id);
-
-            if ($rsRes instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن کارمند'], 500);
-            }
-        }
-
-//
-//        foreach ($resumesData as $datum) {
-//            $datum['WorkForceID'] = $employee->workForce->id;
-
-//        }
-
-
-        return response()->json($employee);
-
     }
 
     /**
@@ -189,12 +153,18 @@ class EmployeeController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $employee = Employee::with('positions', 'levels', 'workForce.person.avatar', 'workForce.militaryStatus', 'workForce.educationalRecords', 'workForce.resumes', 'workForce.skills')->findOrFail($id);
-
-        if (is_null($employee)) {
-            return response()->json(['message' => 'موردی یافت نشد'], 404);
-
-        }
+        $employee = Employee::with(
+            'positions',
+            'levels',
+            'workForce.person.avatar',
+            'workForce.militaryStatus',
+            'workForce.educationalRecords',
+            'workForce.resumes',
+            'workForce.skills')
+            ->findOr($id, function () {
+                return response()
+                    ->json(['message' => 'موردی یافت نشد'], 404);
+            });
 
         return response()->json($employee);
     }
@@ -204,106 +174,73 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        $employee = Employee::with(
+
+            'workForce.person',
+        )
+            ->findOr($id, function () {
+                return response()
+                    ->json(['message' => 'موردی یافت نشد'], 404);
+            });
+
         $data = $request->all();
 
 
-        $data['userID'] = \Auth::user()->id;
+        try {
+            DB::beginTransaction();
+            $data['userID'] = \Auth::user()->id;
 
-        if ($request->isNewAddress) {
-            $address = $this->addressService->store($data);
-
-            if ($address instanceof \Exception) {
-                return response()->json(['message' => 'خطا در وارد کردن آدرس'], 500);
-            }
-
-            $data['homeAddressID'] = $address->id;
-
-        }
-
-        $personResult = $this->personService->naturalUpdate($data, $data['personID']);
+            if ($request->isNewAddress) {
+                $address = $this->addressStore($data);
 
 
-        if ($personResult instanceof \Exception) {
-            return response()->json(['message' => 'خطا در بروزرسانی شخص'], 500);
-        }
-
-        /**
-         * @var Employee $employee
-         */
-        $employee = $this->employeeService->update($data, $id);
-
-        if ($employee instanceof \Exception) {
-            return response()->json(['message' => 'خطا در بروزرسانی کارمند'], 500);
-        }
-
-        $educationalData = json_decode($data['educations'], true);
-
-        foreach ($educationalData as $datum) {
-            $datum['WorkForceID'] = $employee->workForce->id;
-            if (isset($datum['id'])) {
-                $education = $this->educationalRecordService->update($datum, $datum['id']);
-
-            } else {
-                $education = $this->educationalRecordService->store($datum);
-            }
-
-            if ($education instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
-            }
-        }
-
-        $relativeData = json_decode($data['relatives'], true);
-
-        foreach ($relativeData as $datum) {
-            $datum['WorkForceID'] = $employee->workForce->id;
-            if (isset($datum['id'])) {
-                $relative = $this->relativeService->update($datum, $datum['id']);
-
-            } else {
-                $relative = $this->relativeService->store($datum,$datum['WorkForceID']);
+                $data['homeAddressID'] = $address->id;
 
             }
 
+            $personResult = $this->naturalUpdate($data, $employee->workForce->person->personable_id);
 
-            if ($relative instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
+
+            /**
+             * @var Employee $employee
+             */
+            $employee = $this->employeeUpdate($data, $id);
+
+
+            $educationalData = json_decode($data['educations'], true);
+            $educationalUpsert = $this->EducationalRecordBulkUpdate($educationalData, $employee->workForce->id);
+
+
+            $relativeData = json_decode($data['relatives'], true);
+            $relatives = $this->relativeBulkUpdate($relativeData, $employee->workForce->id);
+
+            $resumesData = json_decode($data['resumes'], true);
+            $resumes = $this->resumeUpdate($resumesData, $employee->workForce->id);
+
+            //delete deleted workforce detail
+            if (isset($data['deletedEducations'])) {
+                $deletedEducations = json_decode($data['deletedEducations'], true);
+                EducationalRecord::destroy($deletedEducations);
             }
-        }
 
-        $resumesData = json_decode($data['resumes'], true);
-
-        foreach ($resumesData as $datum) {
-            $datum['WorkForceID'] = $employee->workForce->id;
-            if (isset($datum['id'])) {
-                $resume = $this->resumeService->update($datum, $datum['id']);
-
-            } else {
-                $resume = $this->resumeService->store($datum);
-
+            if (isset($data['deletedResumes'])) {
+                $deletedResumes = json_decode($data['deletedResumes'], true);
+                Resume::destroy($deletedResumes);
             }
 
-
-            if ($resume instanceof \Exception) {
-                return response()->json(['message' => 'خطا در افزودن تحصیلات'], 500);
+            if (isset($data['deletedRelatives'])) {
+                $deletedRelatives = json_decode($data['deletedRelatives'], true);
+                Relative::destroy($deletedRelatives);
             }
-        }
 
-        //delete deleted workforce detail
-        $deletedEducations = json_decode($data['deletedEducations'], true);
-        if (!isEmpty($deletedEducations) || !is_null($deletedEducations)) {
-            $deleteResult = EducationalRecord::destroy($deletedEducations);
-        }
-        $deletedResumes = json_decode($data['deletedResumes'], true);
-        if (!isEmpty($deletedResumes) || !is_null($deletedResumes)) {
-            $deleteResult = Resume::destroy($deletedResumes);
-        }
-        $deletedRelatives = json_decode($data['deletedRelatives'], true);
-        if (!isEmpty($deletedRelatives) || !is_null($deletedRelatives)) {
-            $deleteResult = Relative::destroy($deletedEducations);
-        }
+DB::commit();
+            return response()->json(['message' => 'با موفقیت بروزرسانی شد']);
 
-        return response()->json(['message' => 'با موفقیت بروزرسانی شد']);
+        }catch (Exception $e){
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در بروزرسانی کارمند'],500);
 
+        }
     }
 
     /**
@@ -318,11 +255,11 @@ class EmployeeController extends Controller
 
     public function isPersonEmployee(Request $request)
     {
-        $result = $this->personService->naturalExists($request->nationalCode);
+        $result = $this->naturalExists($request->nationalCode);
         if ($result == null) {
             $message = 'notFound';
             $data = null;
-        } elseif ($this->employeeService->isPersonEmployee($result->id)) {
+        } elseif ($this->isEmployee($result->id)) {
             $message = 'employee';
             $data = $result;
         } else {
@@ -338,15 +275,16 @@ class EmployeeController extends Controller
     {
         $user = \Auth::user();
         if (!is_null($user)) {
-            $statusID = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+            $statusID = $this->activeAddressStatus()->id;
+
             $response = $user->addresses()->where('status_id', '=', $statusID)->orderBy('create_date', 'desc')->select(['id', 'title'])->get();
             $data['addressList'] = $response;
 
         }
 
 
-        $data['msStatusList']=MilitaryServiceStatus::all();
-        $data['positionList']=Position::all();
+        $data['msStatusList'] = MilitaryServiceStatus::all();
+        $data['positionList'] = Position::all();
         $data['levelList'] = Level::all();
         $data['skillList'] = Skill::all();
         $data['educationGradeList'] = LevelOfEducation::all();

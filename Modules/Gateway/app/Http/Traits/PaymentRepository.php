@@ -13,9 +13,7 @@ trait PaymentRepository
     {
 
 
-        $degs = $user->organizationUnits->pluck('unitable.degree')->reject(function ($dg) {
-            return $dg === null;
-        });
+        $degs = $user->organizationUnits->pluck('unitable.degree')->reject(fn($dg) => $dg === null);
 
         $amount = 0;
         $degs->each(function ($deg) use (&$amount) {

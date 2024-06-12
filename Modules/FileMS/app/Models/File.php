@@ -55,4 +55,9 @@ class File extends Model
     {
         return Status::all()->where('model', '=', self::class);
     }
+
+    public function getSlugAttribute($value)
+    {
+        return config('app.url') . '/' . $value;
+    }
 }

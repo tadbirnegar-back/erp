@@ -4,7 +4,9 @@
         "docx": ".docx",
         "pdf": ".pdf",
         "zip": ".zip",
-        "xml": ".xml"
+        "xml": ".xml",
+        "csv": ".csv",
+        "xlsx": ".xlsx"
     },
     "audio": {
         "mp3": ".mp3",
