@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Modules\AAA\app\Models\User as AAAUser;
 use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Models\WorkForce;
@@ -60,7 +61,7 @@ class Person extends Model
 
     public function user(): HasOne
     {
-        return $this->hasOne(User::class, 'person_id');
+        return $this->hasOne(AAAUser::class, 'person_id');
     }
 
 

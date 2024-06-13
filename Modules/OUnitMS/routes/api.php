@@ -22,3 +22,11 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::post('/hrm/verify', [\Modules\OUnitMS\app\Http\Controllers\VerifyInfoConformationController::class, 'verify']);
     Route::put('/hrm/employee/confirm/edit', [\Modules\OUnitMS\app\Http\Controllers\VerifyInfoConformationController::class, 'update'])->middleware(['auth:api']);
 });
+
+
+Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
+
+    Route::post('/oms/cityofc/list', [\Modules\OUnitMS\app\Http\Controllers\OUnitMSController::class, 'citiesIndex']);    Route::post('/oms/cityofc/add', [\Modules\OUnitMS\app\Http\Controllers\OUnitMSController::class, 'cityStore']);
+
+    Route::post('/oms/employee/search', [\Modules\OUnitMS\app\Http\Controllers\OUnitMSController::class, 'searchEmployees']);
+});

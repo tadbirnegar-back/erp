@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('organization_units', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->index();
+            $table->string('name')->index()->fulltext();
             $table->morphs('unitable');
             $table->unsignedBigInteger('head_id')->nullable();
 
