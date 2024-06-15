@@ -11,6 +11,7 @@ use Modules\Gateway\app\Models\Payment as PG;
 use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -28,7 +29,19 @@ class testController extends Controller
     use PaymentRepository;
     public function run()
     {
-        return response()->json(File::find(113));
+        $a=OrganizationUnit::with(['person'])->findOr(3864,function (){
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
+        });
+        dd($a);
+//        $searchTerm = 'حمید';
+//        $a=WorkForce::where('workforceable_type', Employee::class)
+//            ->whereHas('person', function ($query) use ($searchTerm) {
+//                $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm]);
+//            })
+//            ->with('person')
+//            ->get();
+//        dd($a->pluck('person.display_name'));
+//        return response()->json(File::find(113));
 //        symlink('/home/a/Desktop/projects/ofogh-task/storage/app/public', '/home/a/Desktop/projects/ofogh-task/public/newsc');
 //        try {
 //
