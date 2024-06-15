@@ -8,6 +8,7 @@ use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
 trait OrganizationUnitTrait
@@ -59,13 +60,14 @@ trait OrganizationUnitTrait
     public function farmandariStore(array $data)
     {
         $cityOfc = new CityOfc();
-        $cityOfc->state_ofc_id = $data['stateOfcID'];
+        $ounit = OrganizationUnit::with('unitable')->find($data['stateOfcID']);
+        $cityOfc->state_ofc_id = $ounit->unitable->id;
         $cityOfc->save();
 
         $organizationUnit = new OrganizationUnit();
         $organizationUnit->name = $data['name'];
         $organizationUnit->head_id = $data['headID'] ?? null;
-
+        $organizationUnit->parent_id = $ounit->id;
         $cityOfc->organizationUnit()->save($organizationUnit);
 
 //        $status = $this->activeOrganizationUnitStatus();
@@ -74,11 +76,14 @@ trait OrganizationUnitTrait
         return $cityOfc;
     }
 
-    public function bakhshdariIndex($searchTerm = null, int $perPage = 10, int $pageNum = 1)
+    public function bakhshdariIndex($searchTerm = null, $parentID = null, int $perPage = 10, int $pageNum = 1)
     {
         $districts = OrganizationUnit::where('unitable_type', DistrictOfc::class)
             ->when($searchTerm, function ($query) use ($searchTerm) {
                 $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+            })
+            ->when($parentID, function ($query) use ($parentID) {
+                $query->where('parent_id', $parentID);
             })
             ->with(['head', 'ancestorsAndSelf'])
             ->paginate($perPage, page: $pageNum);
@@ -90,26 +95,69 @@ trait OrganizationUnitTrait
     public function bakhshdariStore(array $data)
     {
         $districtOfc = new DistrictOfc();
-        $districtOfc->city_ofc_id = $data['cityOfcID'];
+        $ounit = OrganizationUnit::with('unitable')->find($data['ounitID']);
+
+        $districtOfc->city_ofc_id = $ounit->unitable->id;
         $districtOfc->save();
 
         $organizationUnit = new OrganizationUnit();
         $organizationUnit->name = $data['name'];
         $organizationUnit->head_id = $data['headID'] ?? null;
+        $organizationUnit->parent_id = $ounit->id;
 
         $districtOfc->organizationUnit()->save($organizationUnit);
 
-        $status = $this->activeOrganizationUnitStatus();
-        $organizationUnit->statuses()->attach($status->id);
+//        $status = $this->activeOrganizationUnitStatus();
+//        $organizationUnit->statuses()->attach($status->id);
 
         return $districtOfc;
     }
 
-    public function dehestanIndex($searchTerm = null, int $perPage = 10, int $pageNum = 1)
+    public function dehestanIndex($searchTerm = null, $parentID = null, int $perPage = 10, int $pageNum = 1)
+    {
+        $districts = OrganizationUnit::where('unitable_type', TownOfc::class)
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+            })
+            ->when($parentID, function ($query) use ($parentID) {
+                $query->where('parent_id', $parentID);
+            })
+            ->with(['head', 'ancestorsAndSelf'])
+            ->paginate($perPage, page: $pageNum);
+
+
+        return $districts;
+    }
+
+    public function dehestanStore(array $data)
+    {
+        $ounit = OrganizationUnit::with('unitable')->find($data['ounitID']);
+
+        $townOfc = new TownOfc();
+        $townOfc->district_ofc_id = $ounit->unitable->id;
+        $townOfc->save();
+
+        $organizationUnit = new OrganizationUnit();
+        $organizationUnit->name = $data['name'];
+        $organizationUnit->head_id = $data['headID'] ?? null;
+        $organizationUnit->parent_id = $ounit->id;
+
+        $townOfc->organizationUnit()->save($organizationUnit);
+
+//        $status = $this->activeOrganizationUnitStatus();
+//        $organizationUnit->statuses()->attach($status->id);
+
+        return $townOfc;
+    }
+
+    public function dehyariIndex($searchTerm = null,$parentID = null, int $perPage = 10, int $pageNum = 1)
     {
         $villages = OrganizationUnit::where('unitable_type', VillageOfc::class)
             ->when($searchTerm, function ($query) use ($searchTerm) {
                 $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+            })
+            ->when($parentID, function ($query) use ($parentID) {
+                $query->where('parent_id', $parentID);
             })
             ->with(['head', 'ancestorsAndSelf'])
             ->paginate($perPage, page: $pageNum);
@@ -118,10 +166,12 @@ trait OrganizationUnitTrait
         return $villages;
     }
 
-    public function dehestanStore(array $data)
+    public function dehyariStore(array $data)
     {
+        $ounit = OrganizationUnit::with('unitable')->find($data['ounitID']);
+
         $villageOfc = VillageOfc::create([
-            'town_ofc_id' => $data['townOfcID'] ?? null,
+            'town_ofc_id' => $ounit->unitable->id,
             'hierarchy_code' => $data['hierarchyCode'] ?? null,
             'national_uid' => $data['nationalUID'] ?? null,
             'abadi_code' => $data['abadiCode'] ?? null,
@@ -141,11 +191,12 @@ trait OrganizationUnitTrait
         $organizationUnit = new OrganizationUnit();
         $organizationUnit->name = $data['name'];
         $organizationUnit->head_id = $data['headID'] ?? null;
+        $organizationUnit->parent_id = $ounit->id;
 
         $villageOfc->organizationUnit()->save($organizationUnit);
 
-        $status = $this->activeOrganizationUnitStatus();
-        $organizationUnit->statuses()->attach($status->id);
+//        $status = $this->activeOrganizationUnitStatus();
+//        $organizationUnit->statuses()->attach($status->id);
 
         return $villageOfc;
     }
@@ -166,7 +217,7 @@ trait OrganizationUnitTrait
             })
             ->with(['person' => function ($query) use ($searchTerm) {
                 $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
-            },'person.user'])
+            }, 'person.user'])
             ->get();
 
 

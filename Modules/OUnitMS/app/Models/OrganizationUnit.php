@@ -56,7 +56,10 @@ class OrganizationUnit extends Model
 
     public function person()
     {
-        return $this->belongsToThrough(Person::class, User::class);
+        return $this->belongsToThrough(Person::class, User::class,foreignKeyLookup: [
+            User::class => 'head_id',
+            Person::class => 'person_id'
+        ]);
     }
 
     public function payments(): HasMany

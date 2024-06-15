@@ -15,7 +15,20 @@ class VillageOfc extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = ['town_ofc_id',
+    'degree',
+    'hierarchy_code',
+    'national_uid',
+    'abadi_code',
+    'ofc_code',
+    'population_1395',
+    'household_1395',
+    'isTourism',
+    'isFarm',
+    'isAttached_to_city',
+    'hasLicense',
+    'license_number',
+    'license_date',];
     public $timestamps = false;
 
     protected static function newFactory(): VillageOfcFactory

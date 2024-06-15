@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
 class RecruitmentScriptController extends Controller
@@ -86,6 +87,14 @@ class RecruitmentScriptController extends Controller
     public function districtOfcs(Request $request)
     {
         $states = DistrictOfc::with('organizationUnit')->where('city_ofc_id',$request->cityOfcID)->get();
+
+        return response()->json($states);
+
+    }
+
+    public function townOfcs(Request $request)
+    {
+        $states = TownOfc::with('organizationUnit')->where('district_ofc_id',$request->districtOfcID)->get();
 
         return response()->json($states);
 

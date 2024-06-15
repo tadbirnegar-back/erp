@@ -61,8 +61,8 @@ class OUnitMSController extends Controller
 
         $ounit = OrganizationUnit::where('unitable_type', StateOfc::class)
             ->findOr($data['ounitID'], function () {
-            return response()->json(['message' => 'استانداری نامعتبر'], 404);
-        });
+                return response()->json(['message' => 'استانداری نامعتبر'], 404);
+            });
         try {
             DB::beginTransaction();
             $data['stateOfcID'] = $ounit->unitable_id;
@@ -79,9 +79,10 @@ class OUnitMSController extends Controller
     public function districtsIndex(Request $request)
     {
         $searchTerm = $request->name ?? null;
+        $ounitID = $request->cityOfcID ?? null;
         $perPage = $request->perPage ?? 10;
         $page = $request->pageNum ?? 1;
-        $districts = $this->bakhshdariIndex($searchTerm, $perPage, $page);
+        $districts = $this->bakhshdariIndex($searchTerm, $ounitID, $perPage, $page);
 
         return response()->json($districts);
     }
@@ -102,18 +103,20 @@ class OUnitMSController extends Controller
         }
     }
 
-    public function villageIndex(Request $request)
+    public function townIndex(Request $request)
     {
         $searchTerm = $request->name ?? null;
         $perPage = $request->perPage ?? 10;
         $page = $request->pageNum ?? 1;
+        $ounitID = $request->districtOfcID ?? null;
 
-        $districts = $this->dehestanIndex($searchTerm, $perPage, $page);
+
+        $districts = $this->dehestanIndex($searchTerm, $ounitID, $perPage, $page);
 
         return response()->json($districts);
     }
 
-    public function villageStore(Request $request)
+    public function townStore(Request $request)
     {
         $data = $request->all();
 
@@ -125,7 +128,35 @@ class OUnitMSController extends Controller
             return response()->json($city);
         } catch (Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ایجاد بخشداری جدید'], 500);
+            return response()->json(['message' => 'خطا در ایجاد دهستان جدید'], 500);
+        }
+    }
+
+    public function villageIndex(Request $request)
+    {
+        $searchTerm = $request->name ?? null;
+        $perPage = $request->perPage ?? 10;
+        $page = $request->pageNum ?? 1;
+        $ounitID = $request->townOfcID ?? null;
+
+        $districts = $this->dehyariIndex($searchTerm, $ounitID, $perPage, $page);
+
+        return response()->json($districts);
+    }
+
+    public function villageStore(Request $request)
+    {
+        $data = $request->all();
+
+        try {
+            DB::beginTransaction();
+            $city = $this->dehyariStore($data);
+            DB::commit();
+
+            return response()->json($city);
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ایجاد دهیاری جدید'], 500);
         }
     }
 
@@ -151,6 +182,13 @@ class OUnitMSController extends Controller
 
         return response()->json($employees);
 
+    }
+
+    public function show($id)
+    {
+        return OrganizationUnit::with(['unitable','ancestorsAndSelf','person'])->findOr($id,function (){
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
+        });
     }
 
 }
