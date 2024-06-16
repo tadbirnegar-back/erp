@@ -27,11 +27,11 @@ class UserController extends Controller
         $pageNum = $request->pageNum ?? 1;
         $all = User::with('roles', 'person.avatar', 'statuses')->paginate($perPage, page: $pageNum);
 
-        $all->each(function ($user) {
-            if ($user->person->avatar) {
-                $user->person->avatar = url(url('/') . '/' . $user->person->avatar);
-            }
-        });
+//        $all->each(function ($user) {
+//            if ($user->person->avatar) {
+//                $user->person->avatar =  $user->person->avatar);
+//            }
+//        });
 
         return response()->json($all);
     }

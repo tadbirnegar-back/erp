@@ -44,5 +44,9 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/oms/organization_unit/{id}', [\Modules\OUnitMS\app\Http\Controllers\OUnitMSController::class, 'show']);
 
+    Route::post('/oms/organization_unit/update/{id}', [\Modules\OUnitMS\app\Http\Controllers\OUnitMSController::class, 'show']);
+
+    Route::put('/oms/organization_unit/update/{id}', [\Modules\OUnitMS\app\Http\Controllers\OUnitMSController::class, 'update']);
+
     Route::post('/oms/employee/search', [\Modules\OUnitMS\app\Http\Controllers\OUnitMSController::class, 'searchEmployees']);
 });

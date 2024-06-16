@@ -67,7 +67,7 @@ class LoginController extends Controller
         $user = $this->mobileExists($request->mobile);
 
         return response()->json([
-            'avatar' => (!is_null($user->person->avatar)) ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => (!is_null($user->person->avatar)) ? $user->person->avatar->slug : null,
             'fullName' => $user->person->display_name
         ]);
 
@@ -312,7 +312,7 @@ class LoginController extends Controller
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => !is_null($user->person->avatar) ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => !is_null($user->person->avatar) ?$user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
             $result['roles'] = $user->roles,
 
@@ -435,7 +435,7 @@ class LoginController extends Controller
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => $user->person->avatar != null ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => $user->person->avatar != null ? $user->person->avatar->slug : null,
             $result['roles'] = $user->roles,
 
         ];
@@ -545,7 +545,7 @@ class LoginController extends Controller
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => !is_null($user->person->avatar) ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => !is_null($user->person->avatar) ? $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
             $result['roles'] = $user->roles,
 
@@ -686,7 +686,7 @@ class LoginController extends Controller
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => !is_null($user->person->avatar) ? url('/') . '/' . $user->person->avatar->slug : null,
+            'avatar' => !is_null($user->person->avatar) ?  $user->person->avatar->slug : null,
             'roles' => $user->roles,
         ];
 
