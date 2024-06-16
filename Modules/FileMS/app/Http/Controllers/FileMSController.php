@@ -75,7 +75,7 @@ class FileMSController extends Controller
         $response = $files->getCollection()->transform(function ($file) {
             return [
                 'id' => $file->id,
-                'link' => url('/') . '/' . $file->slug,
+                'link' => $file->slug,
                 'title' => $file->name,
                 'date' => $file->create_date,
                 'size' => Number::fileSize($file->size),

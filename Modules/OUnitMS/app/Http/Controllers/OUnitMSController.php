@@ -11,8 +11,13 @@ use Mockery\Exception;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
+use Modules\OUnitMS\app\Models\CityOfc;
+use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\TownOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\PersonMS\app\Models\Person;
 
 class OUnitMSController extends Controller
 {
@@ -186,9 +191,52 @@ class OUnitMSController extends Controller
 
     public function show($id)
     {
-        return OrganizationUnit::with(['unitable','ancestorsAndSelf','person'])->findOr($id,function (){
+        return OrganizationUnit::with(['unitable', 'ancestorsAndSelf', 'person.user'])->findOr($id, function () {
             return response()->json(['message' => 'موردی یافت نشد'], 404);
         });
+    }
+
+    public function update(Request $request, $id)
+    {
+        $data = $request->all();
+        $ounit = OrganizationUnit::with('unitable')->findOr($id, function () {
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
+        });
+
+
+        $type = $ounit->unitable_type;
+
+        try {
+            DB::beginTransaction();
+            switch ($type) {
+
+                case CityOfc::class:
+                    $this->updateCity($data,$ounit);
+                    break;
+
+                case DistrictOfc::class:
+                $this->updateDistrict($data,$ounit);
+                break;
+
+                case TownOfc::class:
+                    $this->updateTown($data,$ounit);
+                    break;
+
+                case VillageOfC::class:
+                    $this->updateVillage($data,$ounit);
+                    break;
+                default:
+                    return response()->json(['message' => 'نوع وارد شده با معتبر'], 422);
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'باموفقیت بروزرسانی شد']);
+
+        }catch (Exception $exception){
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در بروز رسانی'], 404);
+        }
+
     }
 
 }

@@ -102,10 +102,10 @@ class CustomerMSController extends Controller
         $customer = $this->customerShow($id);
 
 
-        if (!is_null($customer->person->avatar)) {
-            $customer->person->avatar->slug = url('/') . '/' . $customer->person->avatar->slug;
-
-        }
+//        if (!is_null($customer->person->avatar)) {
+//            $customer->person->avatar->slug = $customer->person->avatar->slug;
+//
+//        }
 
         if (\Str::contains(\request()->route()->uri(), 'customers/edit/{id}')) {
             $statuses = $this->allCustomerStats();

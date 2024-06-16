@@ -222,4 +222,86 @@ trait OrganizationUnitTrait
 
 
     }
+
+    public function updateCity(array $data,OrganizationUnit $organizationUnit)
+    {
+        $parentUnit = OrganizationUnit::find($data['ounitID']);
+        /**
+         * @var CityOfc $cityOfc
+         */
+        $cityOfc = $organizationUnit->unitable;
+        $cityOfc->state_ofc_id = $parentUnit->unitable_id;
+        $cityOfc->save();
+
+        $organizationUnit->name = $data['name'];
+        $organizationUnit->head_id = $data['headID'] ?? null;
+        $organizationUnit->parent_id = $data['ounitID'] ?? null;
+        $organizationUnit->save();
+        return $organizationUnit;
+    }
+
+    public function updateDistrict(array $data,OrganizationUnit $organizationUnit)
+    {
+        $parentUnit = OrganizationUnit::find($data['ounitID']);
+        /**
+         * @var DistrictOfc $districtOfc
+         */
+        $districtOfc = $organizationUnit->unitable;
+        $districtOfc->city_ofc_id = $parentUnit->unitable_id;
+        $districtOfc->save();
+
+        $organizationUnit->name = $data['name'];
+        $organizationUnit->head_id = $data['headID'] ?? null;
+        $organizationUnit->parent_id = $data['ounitID'] ?? null;
+        $organizationUnit->save();
+        return $organizationUnit;
+    }
+
+    public function updateTown(array $data,OrganizationUnit $organizationUnit)
+    {
+        $parentUnit = OrganizationUnit::find($data['ounitID']);
+        /**
+         * @var TownOfc $townOfc
+         */
+        $townOfc = $organizationUnit->unitable;
+        $townOfc->district_ofc_id = $parentUnit->unitable_id;
+        $townOfc->save();
+
+        $organizationUnit->name = $data['name'];
+        $organizationUnit->head_id = $data['headID'] ?? null;
+        $organizationUnit->parent_id = $data['ounitID'] ?? null;
+        $organizationUnit->save();
+        return $organizationUnit;
+    }
+
+    public function updateVillage(array $data,OrganizationUnit $organizationUnit)
+    {
+        $parentUnit = OrganizationUnit::find($data['ounitID']);
+
+        $villageOfc = $organizationUnit->unitable;
+
+        $villageOfc->fill([
+            'town_ofc_id' => $parentUnit->unitable_id,
+            'hierarchy_code' => $data['hierarchyCode'] ?? null,
+            'national_uid' => $data['nationalUID'] ?? null,
+            'abadi_code' => $data['abadiCode'] ?? null,
+            'ofc_code' => $data['ofcCode'] ?? null,
+            'population_1395' => $data['population1395'] ?? null,
+            'household_1395' => $data['household1395'] ?? null,
+            'isTourism' => $data['isTourism'] ?? null,
+            'isFarm' => $data['isFarm'] ?? null,
+            'isAttached_to_city' => $data['isAttachedToCity'] ?? null,
+            'hasLicense' => $data['hasLicense'] ?? null,
+            'license_number' => $data['licenseNumber'] ?? null,
+            'license_date' => $data['licenseDate'] ?? null,
+            'degree' => $data['degree'] ?? null,
+        ]);
+        $villageOfc->save();
+
+        $organizationUnit->name = $data['name'];
+        $organizationUnit->head_id = $data['headID'] ?? null;
+        $organizationUnit->parent_id = $data['ounitID'] ?? null;
+        $organizationUnit->save();
+        return $organizationUnit;
+    }
 }

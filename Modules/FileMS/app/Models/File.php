@@ -58,6 +58,6 @@ class File extends Model
 
     public function getSlugAttribute($value)
     {
-        return config('app.url') . '/' . $value;
+        return url('/') . '/' . $value;
     }
 }

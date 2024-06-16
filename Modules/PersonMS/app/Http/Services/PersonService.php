@@ -20,7 +20,7 @@ class PersonService
         $result = $this->personRepository->naturalExists($nationalCode);
 
         if (!is_null($result)) {
-            $result->avatar->slug = url('/') . '/' . $result->avatar->slug;
+//            $result->avatar->slug = url('/') . '/' . $result->avatar->slug;
             $result->personable_type = 'natural';
 
         }
