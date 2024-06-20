@@ -9,12 +9,42 @@ trait EmployeeTrait
 {
     public function employeeIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $employeeQuery = Employee::with('workForce.person.personable', 'workForce.statuses', 'positions')->distinct();
+        $employeeQuery = Employee::with('person', 'status', 'positions')->distinct();
 
+        $searchTerm = $data['name'] ?? null;
 
+        $employeeQuery->when($searchTerm, function ($query, $searchTerm) {
+            $query->whereHas('person', function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
+                    ->orWhere('display_name', 'LIKE', '%' . $searchTerm . '%')
+                    ->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm])
+                    ->orderByDesc('relevance');
+            })
+                ->with(['person' => function ($query) use ($searchTerm) {
+                    $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
+                }, 'person.user']);
+        });
+        $employeeQuery->orderBy('id', 'desc');
         $result = $employeeQuery->paginate($perPage, page: $pageNumber);
 
         return $result;
+    }
+
+    public function getEmployeesByPersonName(string $searchTerm)
+    {
+        return WorkForce::where('workforceable_type', Employee::class)
+            ->whereHas('person', function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
+                    ->orWhere('display_name', 'LIKE', '%' . $searchTerm . '%')
+                    ->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm])
+                    ->orderByDesc('relevance');
+            })
+            ->with(['person' => function ($query) use ($searchTerm) {
+                $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
+            }, 'person.user'])
+            ->get();
+
+
     }
 
 
@@ -22,74 +52,74 @@ trait EmployeeTrait
     {
 
 
-            $employee = new Employee();
+        $employee = new Employee();
 
-            $employee->save();
+        $employee->save();
 
-            $workForce = new WorkForce();
-            $workForce->person_id = $data['personID'];
-            $workForce->isMarried = isset($data['isMarried']) && $data['isMarried']===true ? 1 : 0;
-            $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
+        $workForce = new WorkForce();
+        $workForce->person_id = $data['personID'];
+        $workForce->isMarried = isset($data['isMarried']) && $data['isMarried'] === true ? 1 : 0;
+        $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
 
-            $employee->workForce()->save($workForce);
+        $employee->workForce()->save($workForce);
 
-            $workForceStatus = WorkForce::GetAllStatuses()->where('name', '=', 'فعال')->first();
+        $workForceStatus = $this->activeWorkForceStatus();
 
-            $workForce->statuses()->attach($workForceStatus->id);
+        $workForce->statuses()->attach($workForceStatus->id);
 
-            if (isset($data['positions'])) {
-                $positionsAsArray = json_decode($data['positions'], true);
-                $employee->possitions()->sync($positionsAsArray);
-            }
+        if (isset($data['positions'])) {
+            $positionsAsArray = json_decode($data['positions'], true);
+            $employee->possitions()->sync($positionsAsArray);
+        }
 
-            if (isset($data['levels'])) {
-                $levelsAsArray = json_decode($data['levels'], true);
-                $employee->levels()->sync($levelsAsArray);
-            }
-            if (isset($data['skills'])) {
+        if (isset($data['levels'])) {
+            $levelsAsArray = json_decode($data['levels'], true);
+            $employee->levels()->sync($levelsAsArray);
+        }
+        if (isset($data['skills'])) {
 
-                $skills = json_decode($data['skills'], true);
+            $skills = json_decode($data['skills'], true);
 
-                $workForce->skills()->sync($skills);
-            }
+            $workForce->skills()->sync($skills);
+        }
 
-            $employee->load('workForce');
-            return $employee;
+        $employee->load('workForce');
+        return $employee;
 
     }
 
     public function employeeUpdate(array $data, Employee $employee)
     {
 
-            $workForce = $employee->workForce;
-            $workForce->person_id = $data['personID'];
-            $workForce->isMarried = $data['isMarried'] ?1:0;
-            $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
+        $workForce = $employee->workForce;
+        $workForce->person_id = $data['personID'];
+        $workForce->isMarried = $data['isMarried'] ? 1 : 0;
+        $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
 
-            $employee->workForce()->save($workForce);
+        $employee->workForce()->save($workForce);
 
-            $workForceStatus = $this->activeWorkForceStatus();
+        $workForceStatus = $this->activeWorkForceStatus();
 
-            $workForce->statuses()->attach($workForceStatus->id);
+        $workForce->statuses()->attach($workForceStatus->id);
 
 
-            if (isset($data['positions'])) {
-                $positionsAsArray = json_decode($data['positions'], true);
-                $employee->possitions()->sync($positionsAsArray);
-            }
+        if (isset($data['positions'])) {
+            $positionsAsArray = json_decode($data['positions'], true);
+            $employee->possitions()->sync($positionsAsArray);
+        }
 
-            if (isset($data['levels'])) {
-                $levelsAsArray = json_decode($data['levels'], true);
-                $employee->levels()->sync($levelsAsArray);
-            }
-            if (isset($data['skills'])) {
+        if (isset($data['levels'])) {
+            $levelsAsArray = json_decode($data['levels'], true);
+            $employee->levels()->sync($levelsAsArray);
+        }
+        if (isset($data['skills'])) {
 
-                $skills = json_decode($data['skills'], true);
+            $skills = json_decode($data['skills'], true);
 
-                $workForce->skills()->sync($skills);
-            }
+            $workForce->skills()->sync($skills);
+        }
 
-            return $employee;
+        return $employee;
 
     }
 

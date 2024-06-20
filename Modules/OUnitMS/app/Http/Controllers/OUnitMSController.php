@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
@@ -21,7 +22,7 @@ use Modules\PersonMS\app\Models\Person;
 
 class OUnitMSController extends Controller
 {
-    use OrganizationUnitTrait;
+    use OrganizationUnitTrait,EmployeeTrait;
 
     public function statesIndex(Request $request)
     {

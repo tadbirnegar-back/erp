@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AAA\app\Models\User as AAAUser;
 use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\PersonMS\Database\factories\PersonFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -69,4 +70,19 @@ class Person extends Model
     {
         return Status::all()->where('model', '=', self::class);
     }
+
+
+    public function employee()
+    {
+        return $this->hasOneThrough(
+            Employee::class,       // Final model: Employee
+            WorkForce::class,      // Intermediate model: WorkForce
+            'person_id',           // Foreign key on WorkForce model (references Person's primary key)
+            'id',                  // Foreign key on Employee model (references WorkForce's primary key)
+            'id',                  // Local key on Person model (primary key of Person)
+            'workforceable_id'     // Local key on WorkForce model (references Employee's primary key)
+        )->where('workforceable_type', Employee::class); // Ensures WorkForce entry is related to Employee
+    }
+
+
 }

@@ -71,4 +71,9 @@ class WorkForce extends Model
     {
         return $this->morphTo();
     }
+
+//    public function statusWorkForces()
+//    {
+//        return $this->hasMany(StatusWorkForce::class);
+//    }
 }

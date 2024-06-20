@@ -206,22 +206,6 @@ trait OrganizationUnitTrait
         return OrganizationUnit::GetAllStatuses()->firstWhere('name', 'فعال');
     }
 
-    public function getEmployeesByPersonName(string $searchTerm)
-    {
-        return WorkForce::where('workforceable_type', Employee::class)
-            ->whereHas('person', function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
-                    ->orWhere('display_name', 'LIKE', '%' . $searchTerm . '%')
-                    ->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm])
-                    ->orderByDesc('relevance');
-            })
-            ->with(['person' => function ($query) use ($searchTerm) {
-                $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
-            }, 'person.user'])
-            ->get();
-
-
-    }
 
     public function updateCity(array $data,OrganizationUnit $organizationUnit)
     {
