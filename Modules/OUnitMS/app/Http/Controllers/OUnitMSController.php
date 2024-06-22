@@ -240,4 +240,24 @@ class OUnitMSController extends Controller
 
     }
 
+    public function search(Request $request)
+    {
+        $data=request()->all();
+
+        $validator = Validator::make($data, [
+            'name' => ['required']
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+       $result= $this->searchOunitByname($data['name']);
+
+
+        return response()->json($result);
+    }
+
+
+
 }

@@ -28,6 +28,7 @@ use Modules\HRMS\app\Http\Traits\RelativeTrait;
 use Modules\HRMS\app\Http\Traits\ResumeTrait;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\LevelOfEducation;
 use Modules\HRMS\app\Models\MilitaryServiceStatus;
@@ -289,6 +290,7 @@ DB::commit();
         $data['skillList'] = Skill::all();
         $data['educationGradeList'] = LevelOfEducation::all();
         $data['relativeList'] = RelativeType::all();
+        $data['hireTypes'] = HireType::with('contractType')->get();
 
         return response()->json($data);
 
