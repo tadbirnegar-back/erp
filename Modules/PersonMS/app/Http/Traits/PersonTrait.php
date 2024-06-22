@@ -10,9 +10,9 @@ trait PersonTrait
 {
     public function naturalExists(string $nationalCode): Person|null
     {
-        $person = Person::where('personable_type',Natural::class)
+        $person = Person::where('personable_type', Natural::class)
             ->where('national_code', '=', $nationalCode)
-            ->with('user','personable.homeAddress.city.state.country', 'avatar', 'status')
+            ->with('user', 'personable.homeAddress.city.state.country', 'avatar', 'status')
             ->first();
 
 
@@ -39,7 +39,13 @@ trait PersonTrait
             'home_address_id' => $data['homeAddressID'] ?? null,
             'job_address_id' => $data['jobAddressID'] ?? null,
             'gender_id' => $data['gender'],
-            'military_service_status_id' => $data['militaryServiceStatusID'] ?? null,
+            'bc_issue_date' => $data['bcIssueDate'] ?? null,
+            'bc_issue_location' => $data['bcIssueLocation'] ?? null,
+            'bc_serial' => $data['bcSerial'] ?? null,
+            'religion' => $data['religion'] ?? null,
+            'religion_type' => $data['religionType'] ?? null,
+
+
         ]);
 
 
@@ -56,7 +62,7 @@ trait PersonTrait
 
         $naturalPerson->person()->save($person);
 
-        $status = Person::GetAllStatuses()->where('name', '=', 'فعال')->first();
+        $status = $this->activePersonStatus();
 
         $naturalPerson->person->status()->attach($status->id);
 
@@ -95,7 +101,7 @@ trait PersonTrait
         $person->phone = $data['phone'] ?? null;
 
         $legal->person()->save($person);
-        $status = Person::GetAllStatuses()->where('name', '=', 'فعال')->first();
+        $status = $this->activePersonStatus();
         $legal->person->status()->attach($status->id);
 
 
@@ -108,24 +114,28 @@ trait PersonTrait
     {
 
 
-        $naturalPerson->first_name = $data['firstName'];
-        $naturalPerson->last_name = $data['lastName'];
-        $naturalPerson->mobile = $data['mobile'];
-        $naturalPerson->phone_number = $data['phoneNumber'] ?? null;
-        $naturalPerson->father_name = $data['fatherName'] ?? null;
-        $naturalPerson->birth_date = $data['dateOfBirth'] ?? null;
-        $naturalPerson->bc_code = $data['bcCode'] ?? null;
-        $naturalPerson->job = $data['job'] ?? null;
-        if (isset($data['isMarried'])) {
-            $naturalPerson->isMarried = $data['isMarried'] ? 1 : 0;
-        }
-        $naturalPerson->level_of_spouse_education = $data['levelOfSpouseEducation'] ?? null;
-        $naturalPerson->spouse_first_name = $data['spouseFirstName'] ?? null;
-        $naturalPerson->spouse_last_name = $data['spouseLastName'] ?? null;
-        $naturalPerson->home_address_id = $data['homeAddressID'] ?? null;
-        $naturalPerson->job_address_id = $data['jobAddressID'] ?? null;
-        $naturalPerson->gender_id = $data['gender'];
-        $naturalPerson->military_service_status_id = $data['militaryServiceStatusID'] ?? null;
+        $naturalPerson->fill([
+        'first_name' => $data['firstName'],
+        'last_name' => $data['lastName'],
+        'mobile' => $data['mobile'] ?? null,
+        'phone_number' => $data['phoneNumber'] ?? null,
+        'father_name' => $data['fatherName'] ?? null,
+        'birth_date' => $data['dateOfBirth'] ?? null,
+        'bc_code' => $data['bcCode'] ?? null,
+        'job' => $data['job'] ?? null,
+        'isMarried' => $data['isMarried'] ?? null,
+        'level_of_spouse_education' => $data['levelOfSpouseEducation'] ?? null,
+        'spouse_first_name' => $data['spouseFirstName'] ?? null,
+        'spouse_last_name' => $data['spouseLastName'] ?? null,
+        'home_address_id' => $data['homeAddressID'] ?? null,
+        'job_address_id' => $data['jobAddressID'] ?? null,
+        'gender_id' => $data['gender'],
+        'bc_issue_date' => $data['bcIssueDate'] ?? null,
+        'bc_issue_location' => $data['bcIssueLocation'] ?? null,
+        'bc_serial' => $data['bcSerial'] ?? null,
+        'religion' => $data['religion'] ?? null,
+        'religion_type' => $data['religionType'] ?? null,
+    ]);
 
         $naturalPerson->save();
 
@@ -162,11 +172,16 @@ trait PersonTrait
         $person->phone = $data['phone'] ?? null;
 
         $legal->person()->save($person);
-        $status = Person::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-        $legal->person->status()->attach($status);
+        $status = $this->activePersonStatus();
+        $legal->person->status()->attach($status->id);
 
         return $legal;
 
 
+    }
+
+    public function activePersonStatus()
+    {
+        return Person::GetAllStatuses()->firstWhere('name', '=', 'فعال');
     }
 }
