@@ -44,7 +44,7 @@ class OrganizationUnit extends Model
 
     public function head(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'head_id');
     }
 
     public function evaluations(): BelongsToMany

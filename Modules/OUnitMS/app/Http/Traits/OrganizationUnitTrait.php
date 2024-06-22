@@ -150,7 +150,7 @@ trait OrganizationUnitTrait
         return $townOfc;
     }
 
-    public function dehyariIndex($searchTerm = null,$parentID = null, int $perPage = 10, int $pageNum = 1)
+    public function dehyariIndex($searchTerm = null, $parentID = null, int $perPage = 10, int $pageNum = 1)
     {
         $villages = OrganizationUnit::where('unitable_type', VillageOfc::class)
             ->when($searchTerm, function ($query) use ($searchTerm) {
@@ -207,7 +207,7 @@ trait OrganizationUnitTrait
     }
 
 
-    public function updateCity(array $data,OrganizationUnit $organizationUnit)
+    public function updateCity(array $data, OrganizationUnit $organizationUnit)
     {
         $parentUnit = OrganizationUnit::find($data['ounitID']);
         /**
@@ -224,7 +224,7 @@ trait OrganizationUnitTrait
         return $organizationUnit;
     }
 
-    public function updateDistrict(array $data,OrganizationUnit $organizationUnit)
+    public function updateDistrict(array $data, OrganizationUnit $organizationUnit)
     {
         $parentUnit = OrganizationUnit::find($data['ounitID']);
         /**
@@ -241,7 +241,7 @@ trait OrganizationUnitTrait
         return $organizationUnit;
     }
 
-    public function updateTown(array $data,OrganizationUnit $organizationUnit)
+    public function updateTown(array $data, OrganizationUnit $organizationUnit)
     {
         $parentUnit = OrganizationUnit::find($data['ounitID']);
         /**
@@ -258,7 +258,7 @@ trait OrganizationUnitTrait
         return $organizationUnit;
     }
 
-    public function updateVillage(array $data,OrganizationUnit $organizationUnit)
+    public function updateVillage(array $data, OrganizationUnit $organizationUnit)
     {
         $parentUnit = OrganizationUnit::find($data['ounitID']);
 
@@ -287,5 +287,15 @@ trait OrganizationUnitTrait
         $organizationUnit->parent_id = $data['ounitID'] ?? null;
         $organizationUnit->save();
         return $organizationUnit;
+    }
+
+    public function searchOunitByname(string $searchTerm)
+    {
+        $result = OrganizationUnit::whereRaw(
+            "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
+            [$searchTerm]
+        )->get();
+
+        return $result;
     }
 }
