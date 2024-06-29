@@ -1,0 +1,22 @@
+[
+    {
+        "title": "حکم پایان خدمت",
+        "employee_status": "فعال",
+        "issue_time": "اتمام دوران مکاری"
+    },
+    {
+        "title": "حکم استخدام",
+        "employee_status": "فعال",
+        "issue_time": "شروع به همکاری"
+    },
+    {
+        "title": "مرخصی زایمان",
+        "employee_status": "غیرفعال",
+        "issue_time": "دوران همکاری"
+    },
+    {
+        "title": "ترک کار",
+        "employee_status": "غیرفعال",
+        "issue_time": "قطع همکاری"
+    }
+]

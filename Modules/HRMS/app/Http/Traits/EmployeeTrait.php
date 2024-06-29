@@ -2,11 +2,24 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use DB;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\HireType;
+use Modules\HRMS\app\Models\IssueTime;
+use Modules\HRMS\app\Models\ScriptAgent;
 use Modules\HRMS\app\Models\WorkForce;
 
 trait EmployeeTrait
 {
+    private array $compatibleIssueTimes = [
+        null => ['شروع به همکاری'],
+        'قطع همکاری' => ['شروع به همکاری'],
+        'اتمام دوران همکاری' => ['شروع به همکاری'],
+        'شروع همکاری' => ['دوران همکاری', 'اتمام دوران همکاری', 'قطع همکاری'],
+        'دوران همکاری' => ['دوران همکاری', 'اتمام دوران همکاری', 'قطع همکاری'],
+
+    ];
+
     public function employeeIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $employeeQuery = Employee::with('person', 'status', 'positions')->distinct();
@@ -142,5 +155,47 @@ trait EmployeeTrait
     {
         return WorkForce::GetAllStatuses()
             ->firstWhere('name', '=', 'فعال');
+    }
+
+    public function addEmployeeScriptTypes()
+    {
+        $result = IssueTime::firstWhere('title', 'شروع به همکاری')->with('scriptTypes');
+
+        return $result->scriptTypes;
+    }
+
+    public function loadLatestActiveScript(Employee $employee)
+    {
+        return $employee->load(['latestRecruitmentScript' => function ($query) {
+            $query->where('expire_date', '>', now())
+                ->whereDoesntHave('latestStatus', function ($query) {
+                    $query->where('name', '=', 'غیرفعال');
+                })->with('issueTime');
+        }]);
+    }
+
+    public function getCompatibleIssueTimesByName(string $name = null)
+    {
+        $compatibleIssueTimes = $this->compatibleIssueTimes[$name];
+        $issueTimes = IssueTime::whereIn('title', $compatibleIssueTimes)
+            ->with('scriptTypes')
+            ->get();
+
+        return $issueTimes->scriptTypes;
+    }
+
+    public function getScriptAgentCombos(HireType $hireType,ScriptAgent $scriptAgent)
+    {
+        $hireTypeId = $hireType->id;
+        $scriptTypeId = $scriptAgent->id;
+
+        $scriptAgents = DB::table('script_agent_combos')
+            ->join('script_agents', 'script_agent_combos.script_agent_id', '=', 'script_agents.id')
+            ->where('script_agent_combos.hire_type_id', $hireTypeId)
+            ->where('script_agent_combos.script_type_id', $scriptTypeId)
+            ->select('script_agents.*', 'script_agent_combos.default_value')
+            ->get();
+
+        return $scriptAgents;
     }
 }

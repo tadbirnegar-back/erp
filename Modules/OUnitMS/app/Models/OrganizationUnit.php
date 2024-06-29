@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\Gateway\app\Models\Payment;
+use Modules\HRMS\app\Models\Position;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -70,6 +72,17 @@ class OrganizationUnit extends Model
     public function statuses()
     {
         return $this->belongsToMany(Status::class,'recruitment_script_status');
+    }
+
+    public function recruitmentScripts(): HasMany
+    {
+        return $this->hasMany(RecruitmentScript::class, 'organization_unit_id');
+    }
+
+
+    public function positions(): BelongsToMany
+    {
+        return $this->belongsToMany(Position::class,'organization_unit_position');
     }
 
     public static function GetAllStatuses(): Collection

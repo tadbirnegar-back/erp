@@ -40,6 +40,11 @@ class Position extends Model
         return $this->belongsTo(Section::class);
     }
 
+    public function levels(): BelongsToMany
+    {
+        return $this->belongsToMany(Level::class,'level_position');
+    }
+
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {

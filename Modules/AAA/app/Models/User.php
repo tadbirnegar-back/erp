@@ -16,6 +16,7 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -163,6 +164,16 @@ class User extends Authenticatable
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class, 'user_id');
+    }
+
+    public function recruitmentScript()
+    {
+        return $this->hasManyThrough(RecruitmentScript::class,OrganizationUnit::class,'head_id','organization_unit_id');
+    }
+    public function latestRecruitmentScript()
+    {
+//        return $this->recruitmentScript()->orderBy('create_date')->take(1);
+        return $this->recruitmentScript()->latest('create_date')->take(1);
     }
 
     public static function GetAllStatuses(): Collection

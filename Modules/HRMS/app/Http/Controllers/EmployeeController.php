@@ -29,6 +29,7 @@ use Modules\HRMS\app\Http\Traits\ResumeTrait;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
+use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\LevelOfEducation;
 use Modules\HRMS\app\Models\MilitaryServiceStatus;
@@ -36,10 +37,14 @@ use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
+use Modules\HRMS\app\Models\ScriptAgent;
+use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Models\Skill;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
 use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
+use Modules\PersonMS\app\Models\Religion;
+use Modules\PersonMS\app\Models\ReligionType;
 use function PHPUnit\Framework\isEmpty;
 use function Sodium\add;
 
@@ -105,15 +110,15 @@ class EmployeeController extends Controller
                 $this->naturalStore($data);
 
             $data['personID'] = $personResult->person->id;
+            $personAsEmployee = $this->isEmployee($data['personID']);
+            $employee = !is_null($personAsEmployee) ? $this->employeeUpdate($data, $personAsEmployee) : $this->employeeStore($data);
 
-            $employee = $this->employeeStore($data);
-
-
+$workForce = $employee->workForce;
             //additional info insertion
             if (isset($data['educations'])) {
                 $edus = json_decode($data['educations'], true);
 
-                $educations = $this->EducationalRecordStore($edus, $employee->workForce->id);
+                $educations = $this->EducationalRecordStore($edus, $workForce->id);
 
             }
 
@@ -121,7 +126,7 @@ class EmployeeController extends Controller
             if (isset($data['relatives'])) {
                 $rels = json_decode($data['relatives'], true);
 
-                $relatives = $this->RelativeStore($rels, $employee->workForce->id);
+                $relatives = $this->RelativeStore($rels, $workForce->id);
 
             }
 
@@ -129,7 +134,7 @@ class EmployeeController extends Controller
             if (isset($data['resumes'])) {
                 $resumes = json_decode($data['resumes'], true);
 
-                $resume = $this->resumeStore($resumes, $employee->workForce->id);
+                $resume = $this->resumeStore($resumes, $workForce->id);
 
             }
 
@@ -234,12 +239,12 @@ class EmployeeController extends Controller
                 Relative::destroy($deletedRelatives);
             }
 
-DB::commit();
+            DB::commit();
             return response()->json(['message' => 'با موفقیت بروزرسانی شد']);
 
-        }catch (Exception $e){
+        } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی کارمند'],500);
+            return response()->json(['message' => 'خطا در بروزرسانی کارمند'], 500);
 
         }
     }
@@ -290,9 +295,52 @@ DB::commit();
         $data['skillList'] = Skill::all();
         $data['educationGradeList'] = LevelOfEducation::all();
         $data['relativeList'] = RelativeType::all();
-        $data['hireTypes'] = HireType::with('contractType')->get();
+        $data['religion'] = Religion::all();
+        $data['religionType'] = ReligionType::all();
+
 
         return response()->json($data);
 
+    }
+
+    public function findPersonToInsertAsEmployee(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'nationalCode' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+//        $person = $this->latestScriptByNationalCode($data['nationalCode']);
+
+        $person = $this->naturalExists($request->nationalCode);
+        $employee = $person ? $this->isEmployee($person->id) : null;
+
+        $message = $person ? ($employee ? 'employee' : 'found') : 'notFound';
+        $data = $person?->setAttribute('employee', $employee);
+
+        if ($employee) {
+            $employee = $this->loadLatestActiveScript($employee);
+            $scriptTypes = $this->getCompatibleIssueTimesByName($employee->latestRecruitmentScript ? $employee->latestRecruitmentScript->issueTime->title : null);
+            $employee->setAttribute('scriptTypes', $scriptTypes);
+        }
+
+        return response()->json(['data' => $data, 'message' => $message]);
+
+
+    }
+
+    public function agentCombos(Request $request)
+    {
+        $data = $request->all();
+
+        $hireType = HireType::find($data['hireTypeID']);
+        $scriptAgent = ScriptAgent::find($data['scriptAgentID']);
+
+        $result = $this->getScriptAgentCombos($hireType, $scriptAgent);
+
+        return response()->json($result);
     }
 }

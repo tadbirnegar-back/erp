@@ -4,20 +4,29 @@ namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\ScriptAgentScript;
 
 trait RecruitmentScriptTrait
 {
+    use EmployeeTrait;
     public function rsStore(array|collection $data, int $employeeID)
     {
         $dataToInsert = $this->rsDataPreparation($data, $employeeID);
 
         $status = $this->activeRsStatus();
         $result = [];
-        foreach ($dataToInsert as $item) {
-            $ounit = RecruitmentScript::create($item);
-            $ounit->status()->attach($status->id);
-            $result[] = $ounit;
-
+        foreach ($dataToInsert as $key=> $item) {
+            $rs = RecruitmentScript::create($item);
+            $rs->status()->attach($status->id);
+            $agents = json_decode($data[$key],true);
+            foreach ($agents as $agent) {
+                ScriptAgentScript::create([
+                    'contract' => $agent['contract'],
+                    'script_id' => $rs->id,
+                    'script_agent_id' => $agent['agentID'],
+                ]);
+            }
+            $result[] = $rs;
         }
         return $result;
 
@@ -66,7 +75,13 @@ trait RecruitmentScriptTrait
             'level_id' => $RS['levelID'],
             'position_id' => $RS['positionID'],
             'create_date' => $RS['rsDate'] ?? null,
-
+            'description' => $RS['description'] ?? null,
+            'hire_type_id' => $RS['hireTypeID'] ?? null,
+            'job_id' => $RS['jobID'] ?? null,
+            'operator_id' => $RS['operatorID'] ?? null,
+            'script_type_id' => $RS['scriptTypeID'] ?? null,
+            'start_date' => $RS['startDate'] ?? null,
+            'expire_date' => $RS['expireDate'] ?? null,
         ]);
         return $data;
     }
@@ -79,5 +94,10 @@ trait RecruitmentScriptTrait
     public function inActiveRsStatus()
     {
         return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+    }
+
+    public function pendingRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'در انتظار');
     }
 }

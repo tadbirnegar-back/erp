@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('script_type_id')->nullable()->after('position_id');;
 
             $table->dateTime('start_date')->nullable()->after('create_date');
-            $table->dateTime('expired_date')->nullable();
+            $table->dateTime('expire_date')->nullable();
 
 
             $table->foreign('hire_type_id')->references('id')->on('hire_types')->onDelete('cascade')->onUpdate('cascade');

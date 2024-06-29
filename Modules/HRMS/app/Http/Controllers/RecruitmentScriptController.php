@@ -5,8 +5,12 @@ namespace Modules\HRMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\HRMS\app\Models\HireType;
+use Modules\HRMS\app\Models\Job;
+use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -109,5 +113,22 @@ class RecruitmentScriptController extends Controller
 
         return response()->json($districtOfc->villageOfcs);
 
+    }
+
+    public function addRecruitmentScriptBaseInfo(Request $request)
+    {
+        $data = $request->all();
+
+        $result['hireTypes']=HireType::all();
+        $result['jobs']=Job::all();
+        $ounit = OrganizationUnit::with('positions.levels')->find($data['ounitID']);
+        $result['OunitDetails']=$ounit->positions;
+
+        return response()->json($result);
+    }
+
+    public function getScriptAgentCombos()
+    {
+        
     }
 }

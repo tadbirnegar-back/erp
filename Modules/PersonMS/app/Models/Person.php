@@ -11,6 +11,7 @@ use Modules\AAA\app\Models\User as AAAUser;
 use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\PersonMS\Database\factories\PersonFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -26,6 +27,7 @@ class Person extends Model
     protected $fillable = [];
     protected $table = 'persons';
     public $timestamps = false;
+
     protected static function newFactory(): PersonFactory
     {
         //return PersonFactory::new();
@@ -40,6 +42,7 @@ class Person extends Model
     {
         return $this->belongsToMany(Status::class)->latest('create_date')->take(1);
     }
+
     public function statuses()
     {
         return $this->belongsToMany(Status::class)->latest('create_date');
@@ -52,7 +55,7 @@ class Person extends Model
 
     public function workForce(): HasOne
     {
-        return $this->hasOne(WorkForce::class,'person_id');
+        return $this->hasOne(WorkForce::class, 'person_id');
     }
 
     public function addresses(): HasMany
@@ -82,6 +85,28 @@ class Person extends Model
             'id',                  // Local key on Person model (primary key of Person)
             'workforceable_id'     // Local key on WorkForce model (references Employee's primary key)
         )->where('workforceable_type', Employee::class); // Ensures WorkForce entry is related to Employee
+    }
+
+    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
+
+    public function latestRecruitmentScript()
+    {
+        return $this->hasOneDeep(
+            RecruitmentScript::class,
+            [WorkForce::class, Employee::class], // Intermediate models
+            [
+                'person_id',                // Foreign key on the WorkForce model
+                'id',         // Foreign key on the Employee model
+                'employee_id'               // Foreign key on the RecruitmentScript model
+            ],
+            [
+                'id',                       // Local key on the current model
+                'workforceable_id',                       // Local key on the WorkForce model
+                'id'                        // Local key on the Employee model
+            ]
+        )
+            ->where('workforceable_type', Employee::class)
+            ->latest('create_date');
     }
 
 

@@ -95,13 +95,13 @@ class Employee extends Model
             ->latest('create_date');
     }
 
-    public function postTags()
+    public function latestRecruitmentScript()
     {
-        return $this->hasManyDeep(
-            Status::class,
-            [WorkForce::class, 'work_forces'],
-            [null, ['workforceable_type', 'workforceable_id'], 'id'],
-            [null, null, 'tag_id']
-        );
+        return $this->hasOne(RecruitmentScript::class)->latestOfMany();
+    }
+
+    public static function GetAllStatuses()
+    {
+        return Status::all()->where('model', '=', self::class);
     }
 }

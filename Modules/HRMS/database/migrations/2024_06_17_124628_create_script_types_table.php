@@ -16,9 +16,11 @@ return new class extends Migration
             $table->string('title');
             $table->unsignedBigInteger('issue_time_id')->nullable();
             $table->unsignedBigInteger('employee_status_id')->nullable()
-                ->comment('the status employee should be set aftergetting this type of recruitment script');
+                ->comment('the status employee should be set after getting this type of recruitment script');
 
             $table->foreign('issue_time_id')->references('id')->on('issue_times')->onDelete('set null');
+
+            $table->foreign('employee_status_id')->references('id')->on('statuses')->onDelete('set null');
         });
     }
 

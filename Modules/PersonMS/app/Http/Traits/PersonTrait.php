@@ -42,8 +42,8 @@ trait PersonTrait
             'bc_issue_date' => $data['bcIssueDate'] ?? null,
             'bc_issue_location' => $data['bcIssueLocation'] ?? null,
             'bc_serial' => $data['bcSerial'] ?? null,
-            'religion' => $data['religion'] ?? null,
-            'religion_type' => $data['religionType'] ?? null,
+            'religion_id' => $data['religionID'] ?? null,
+            'religion_type_id' => $data['religionTypeID'] ?? null,
 
 
         ]);
@@ -115,26 +115,26 @@ trait PersonTrait
 
 
         $naturalPerson->fill([
-        'first_name' => $data['firstName'],
-        'last_name' => $data['lastName'],
-        'mobile' => $data['mobile'] ?? null,
-        'phone_number' => $data['phoneNumber'] ?? null,
-        'father_name' => $data['fatherName'] ?? null,
-        'birth_date' => $data['dateOfBirth'] ?? null,
-        'bc_code' => $data['bcCode'] ?? null,
-        'job' => $data['job'] ?? null,
-        'isMarried' => $data['isMarried'] ?? null,
-        'level_of_spouse_education' => $data['levelOfSpouseEducation'] ?? null,
-        'spouse_first_name' => $data['spouseFirstName'] ?? null,
-        'spouse_last_name' => $data['spouseLastName'] ?? null,
-        'home_address_id' => $data['homeAddressID'] ?? null,
-        'job_address_id' => $data['jobAddressID'] ?? null,
-        'gender_id' => $data['gender'],
-        'bc_issue_date' => $data['bcIssueDate'] ?? null,
-        'bc_issue_location' => $data['bcIssueLocation'] ?? null,
-        'bc_serial' => $data['bcSerial'] ?? null,
-        'religion' => $data['religion'] ?? null,
-        'religion_type' => $data['religionType'] ?? null,
+            'first_name' => $data['firstName'],
+            'last_name' => $data['lastName'],
+            'mobile' => $data['mobile'] ?? null,
+            'phone_number' => $data['phoneNumber'] ?? null,
+            'father_name' => $data['fatherName'] ?? null,
+            'birth_date' => $data['dateOfBirth'] ?? null,
+            'bc_code' => $data['bcCode'] ?? null,
+            'job' => $data['job'] ?? null,
+            'isMarried' => $data['isMarried'] ?? null,
+            'level_of_spouse_education' => $data['levelOfSpouseEducation'] ?? null,
+            'spouse_first_name' => $data['spouseFirstName'] ?? null,
+            'spouse_last_name' => $data['spouseLastName'] ?? null,
+            'home_address_id' => $data['homeAddressID'] ?? null,
+            'job_address_id' => $data['jobAddressID'] ?? null,
+            'gender_id' => $data['gender'],
+            'bc_issue_date' => $data['bcIssueDate'] ?? null,
+            'bc_issue_location' => $data['bcIssueLocation'] ?? null,
+            'bc_serial' => $data['bcSerial'] ?? null,
+            'religion_id' => $data['religionID'] ?? null,
+            'religion_type_id' => $data['religionTypeID'] ?? null,
     ]);
 
         $naturalPerson->save();
@@ -178,6 +178,18 @@ trait PersonTrait
         return $legal;
 
 
+    }
+
+    public function latestScriptByNationalCode(string $nationalCode)
+    {
+      return  Person::where('national_code',$nationalCode)->whereHas('latestRecruitmentScript', function ($query) {
+
+            $query->where('expire_date', '>', now())
+                ->whereDoesntHave('latestStatus',function ($query) {
+                    $query->where('name','=','غیرفعال');
+                });
+
+        })->with(['latestRecruitmentScript.issueTime'])->first();
     }
 
     public function activePersonStatus()
