@@ -8,7 +8,6 @@ use Modules\HRMS\app\Models\ScriptAgentScript;
 
 trait RecruitmentScriptTrait
 {
-    use EmployeeTrait;
     public function rsStore(array|collection $data, int $employeeID)
     {
         $dataToInsert = $this->rsDataPreparation($data, $employeeID);
