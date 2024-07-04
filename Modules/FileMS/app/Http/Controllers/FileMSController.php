@@ -168,7 +168,7 @@ class FileMSController extends Controller
         }
         $responseArray = [
             'id' => $file->id,
-            'link' => URL::to('/') . '/' . $file->slug,
+            'link' => $file->slug,
             'title' => $file->name,
             'description' => $file->description,
             'date' => $file->create_date,
