@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('script_agent_combos', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedBigInteger('default_value');

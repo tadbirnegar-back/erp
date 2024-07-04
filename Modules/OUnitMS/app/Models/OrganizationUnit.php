@@ -82,7 +82,7 @@ class OrganizationUnit extends Model
 
     public function positions(): BelongsToMany
     {
-        return $this->belongsToMany(Position::class,'organization_unit_position');
+        return $this->belongsToMany(Position::class,'ounit_position','ounit_id','position_id');
     }
 
     public static function GetAllStatuses(): Collection

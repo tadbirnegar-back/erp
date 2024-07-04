@@ -13,7 +13,7 @@ class IssueTimesSeeder extends Seeder
     public function run(): void
     {
         // $this->call([]);
-        $issueTimes = json_decode(file_get_contents(realpath(__DIR__.'/IssueTimes.json')), true);
+        $issueTimes = json_decode(file_get_contents(realpath(__DIR__.'/issueTimes.json')), true);
 
         IssueTime::insert($issueTimes);
     }

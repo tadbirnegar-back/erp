@@ -45,6 +45,7 @@ use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Religion;
 use Modules\PersonMS\app\Models\ReligionType;
+use Modules\StatusMS\app\Models\Status;
 use function PHPUnit\Framework\isEmpty;
 use function Sodium\add;
 
@@ -342,5 +343,15 @@ $workForce = $employee->workForce;
         $result = $this->getScriptAgentCombos($hireType, $scriptAgent);
 
         return response()->json($result);
+    }
+
+    public function employeeListFilter()
+    {
+        $response['statuses'] = Status::where('model',Employee::class)->get();
+        $response['positions'] = Position::all();
+        $response['scriptTypes'] = ScriptType::all();
+
+        return response()->json($response);
+
     }
 }

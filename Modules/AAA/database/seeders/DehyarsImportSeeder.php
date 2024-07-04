@@ -31,7 +31,7 @@ class DehyarsImportSeeder extends Seeder
      */
     public function run(): void
     {
-        $villagers = json_decode(file_get_contents(realpath(__DIR__ . '/dehyars3.json')), true);
+        $villagers = json_decode(file_get_contents(realpath(__DIR__ . '/testd.json')), true);
 
 //        try {
 //        \DB::beginTransaction();

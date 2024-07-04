@@ -20,6 +20,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::table('naturals', function (Blueprint $table) {
             $table->dateTime('bc_issue_date')->nullable();
             $table->string('bc_issue_location')->nullable();

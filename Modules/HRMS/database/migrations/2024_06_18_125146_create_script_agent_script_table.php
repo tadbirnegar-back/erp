@@ -10,11 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('script_agent_script', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('contract');
             $table->unsignedBigInteger('script_id');
-            $table->unsignedBigInteger('script_agant_id');
+            $table->unsignedBigInteger('script_agent_id');
 
             $table->foreign('script_id')->references('id')->on('recruitment_scripts')->onDelete('cascade')->onUpdate('cascade');
 

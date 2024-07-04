@@ -10,6 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('conformation_type_script_type', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('conformation_type_id');

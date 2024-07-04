@@ -19,7 +19,7 @@ class ScriptTypeSeeder extends Seeder
         $scriptTypes=$scriptTypes->map(function ($scriptType) {
             $status= Employee::GetAllStatuses()->firstWhere('name',$scriptType['employee_status']);
 
-            $issueTime=IssueTime::firstWhere('title',$scriptType['issue_time'])->first();
+            $issueTime=IssueTime::firstWhere('title',$scriptType['issue_time']);
             return [
                 'title' => $scriptType['title'],
                 'employee_status_id' => $status->id,

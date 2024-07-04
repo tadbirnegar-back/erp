@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::table('recruitment_scripts', function (Blueprint $table) {
-            $table->text('description')->nullable()->after('id');
             $table->unsignedBigInteger('hire_type_id')->nullable()->after('position_id');
             $table->unsignedBigInteger('job_id')->nullable()->after('position_id');;
             $table->unsignedBigInteger('operator_id')->nullable()->after('position_id');;

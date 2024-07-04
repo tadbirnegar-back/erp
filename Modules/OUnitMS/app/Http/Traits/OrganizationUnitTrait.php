@@ -294,7 +294,7 @@ trait OrganizationUnitTrait
         $result = OrganizationUnit::whereRaw(
             "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
             [$searchTerm]
-        )->get();
+        )->with(['positions.levels','person','ancestors'])->get();
 
         return $result;
     }

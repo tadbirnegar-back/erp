@@ -22,6 +22,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'store'])->middleware(['auth:api','route']);
     Route::get('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'addEmployeeBaseInfo']);
     Route::post('/hrm/employee/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'index']);
+    Route::get('/hrm/employee/list/filter',  [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'employeeListFilter']);
 //    Route::post('/products/merchandise/variants/list', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'index']);
 //    Route::put('/products/merchandise/variants/update/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'update']);
 //    Route::post('/products/merchandise/variants/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'show']);
@@ -30,7 +31,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 });
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/employee/natural/search', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'isPersonEmployee'])->middleware('auth:api');
+    Route::post('/employee/natural/search', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'findPersonToInsertAsEmployee'])->middleware('auth:api');
     Route::post('/recruitment/list/state_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'stateOfcs']);
     Route::post('/recruitment/list/city_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cityOfcs']);
     Route::post('/recruitment/list/district_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'districtOfcs']);

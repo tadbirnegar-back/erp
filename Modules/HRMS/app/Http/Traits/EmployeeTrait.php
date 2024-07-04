@@ -8,6 +8,7 @@ use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\IssueTime;
 use Modules\HRMS\app\Models\ScriptAgent;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\PersonMS\app\Models\Person;
 
 trait EmployeeTrait
 {
@@ -22,9 +23,12 @@ trait EmployeeTrait
 
     public function employeeIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $employeeQuery = Employee::with('person', 'status', 'positions')->distinct();
+        $employeeQuery = Employee::with('person.avatar', 'status', 'positions')->distinct();
 
         $searchTerm = $data['name'] ?? null;
+        $position = $data['positionID'] ?? null;
+        $scriptType = $data['scriptTypeID'] ?? null;
+        $status = $data['statusID'] ?? null;
 
         $employeeQuery->when($searchTerm, function ($query, $searchTerm) {
             $query->whereHas('person', function ($query) use ($searchTerm) {
@@ -35,8 +39,24 @@ trait EmployeeTrait
             })
                 ->with(['person' => function ($query) use ($searchTerm) {
                     $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
-                }, 'person.user']);
+                }, 'person.user','person.avatar']);
         });
+        $employeeQuery->when($position, function ($query, $position) {
+            $query->whereHas('latestRecruitmentScript', function ($query) use ($position) {
+                $query->where('position_id', '=', $position);
+            });
+        });
+
+        $employeeQuery->when($scriptType, function ($query, $scriptType) {
+            $query->whereHas('latestRecruitmentScript', function ($query) use ($scriptType) {
+                $query->where('script_type_id', '=', $scriptType);
+            });
+        });
+//        $employeeQuery->when($status, function ($query, $status) {
+//            $query->whereHas('س', function ($query) use ($status) {
+//                $query->where('id', '=', $status);
+//            });
+//        });
         $employeeQuery->orderBy('id', 'desc');
         $result = $employeeQuery->paginate($perPage, page: $pageNumber);
 
@@ -151,6 +171,11 @@ trait EmployeeTrait
         return $employee;
     }
 
+    public function hasEmployee(Person $person)
+    {
+        return $person->employee;
+    }
+
     public function activeWorkForceStatus()
     {
         return WorkForce::GetAllStatuses()
@@ -181,7 +206,7 @@ trait EmployeeTrait
             ->with('scriptTypes')
             ->get();
 
-        return $issueTimes->scriptTypes;
+        return $issueTimes->pluck('scriptTypes');
     }
 
     public function getScriptAgentCombos(HireType $hireType,ScriptAgent $scriptAgent)

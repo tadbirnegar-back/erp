@@ -22,7 +22,7 @@ use Modules\PersonMS\app\Models\Person;
 
 class OUnitMSController extends Controller
 {
-    use OrganizationUnitTrait,EmployeeTrait;
+    use OrganizationUnitTrait, EmployeeTrait;
 
     public function statesIndex(Request $request)
     {
@@ -212,19 +212,19 @@ class OUnitMSController extends Controller
             switch ($type) {
 
                 case CityOfc::class:
-                    $this->updateCity($data,$ounit);
+                    $this->updateCity($data, $ounit);
                     break;
 
                 case DistrictOfc::class:
-                $this->updateDistrict($data,$ounit);
-                break;
+                    $this->updateDistrict($data, $ounit);
+                    break;
 
                 case TownOfc::class:
-                    $this->updateTown($data,$ounit);
+                    $this->updateTown($data, $ounit);
                     break;
 
                 case VillageOfC::class:
-                    $this->updateVillage($data,$ounit);
+                    $this->updateVillage($data, $ounit);
                     break;
                 default:
                     return response()->json(['message' => 'نوع وارد شده با معتبر'], 422);
@@ -233,7 +233,7 @@ class OUnitMSController extends Controller
             DB::commit();
             return response()->json(['message' => 'باموفقیت بروزرسانی شد']);
 
-        }catch (Exception $exception){
+        } catch (Exception $exception) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در بروز رسانی'], 404);
         }
@@ -242,7 +242,7 @@ class OUnitMSController extends Controller
 
     public function search(Request $request)
     {
-        $data=request()->all();
+        $data = $request->all();
 
         $validator = Validator::make($data, [
             'name' => ['required']
@@ -252,12 +252,11 @@ class OUnitMSController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-       $result= $this->searchOunitByname($data['name']);
+        $result = $this->searchOunitByname($data['name']);
 
 
         return response()->json($result);
     }
-
 
 
 }

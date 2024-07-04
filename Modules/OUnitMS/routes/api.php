@@ -51,6 +51,6 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/oms/employee/search', [OUnitMSController::class, 'searchEmployees']);
 
-    Route::post('/oms/organization_units/search', [OUnitMSController::class, 'search']);
+    Route::post('/oms/organization-unit/search', [OUnitMSController::class, 'search']);
 
 });
