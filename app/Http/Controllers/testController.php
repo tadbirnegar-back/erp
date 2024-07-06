@@ -23,6 +23,30 @@ class testController extends Controller
 
     public function run()
     {
+//        $organizationUnitIds = OrganizationUnit::whereHas('payments', function ($query) {
+//            $query->where('status_id', 46)
+//                ->where('user_id','!=',1905);
+//        })->with('head.person','ancestors','unitable')->get();
+//
+//// Start the table
+//        $html = '<table>';
+//        $html .= '<tr><th>دهیاری</th><th>نام دهیار</th><th>شهرستان</th><th>کد آبادی</th></tr>';
+//
+//// Loop through the data and add it to the table
+//        foreach ($organizationUnitIds as $organizationUnit) {
+//            $html .= '<tr>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head->person->display_name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestors[2]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->abadi_code) . '</td>';
+//            $html .= '</tr>';
+//        }
+//
+//// End the table
+//        $html .= '</table>';
+//
+//// Print the table
+//        echo $html;
 //        try {
 //
 ////            $payment = PG::where('authority', $request->authority)->first();
