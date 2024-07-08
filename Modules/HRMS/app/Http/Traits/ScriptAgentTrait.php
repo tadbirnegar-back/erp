@@ -8,7 +8,12 @@ trait ScriptAgentTrait
 {
     public function createScriptAgent(array $data): ScriptAgent
     {
-        return ScriptAgent::create($data);
+        $scriptAgent = new ScriptAgent();
+        $scriptAgent->title = $data['title'];
+        $scriptAgent->script_agent_type_id = $data['scriptAgentTypeID'];
+        $scriptAgent->save();
+
+        return $scriptAgent;
     }
 
     public function getSingleScriptAgent(int $id): ?ScriptAgent
@@ -21,16 +26,18 @@ trait ScriptAgentTrait
         return ScriptAgent::all();
     }
 
-    public function updateScriptAgent(int $id, array $data): ScriptAgent
+    public function updateScriptAgent(ScriptAgent $scriptAgent, array $data): ScriptAgent
     {
-        $scriptAgent = ScriptAgent::findOrFail($id);
-        $scriptAgent->update($data);
+        $scriptAgent->title = $data['title'] ?? $scriptAgent->title;
+        $scriptAgent->script_agent_type_id = $data['scriptAgentTypeID'] ?? $scriptAgent->script_agent_type_id;
+        $scriptAgent->save();
+
         return $scriptAgent;
     }
 
     public function deleteScriptAgent(int $id): bool
     {
         $scriptAgent = ScriptAgent::findOrFail($id);
-        return $scriptAgent?->delete();
+        return $scriptAgent->delete();
     }
 }

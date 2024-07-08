@@ -1,0 +1,61 @@
+<?php
+
+namespace Modules\HRMS\app\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Modules\HRMS\app\Http\Traits\ConfirmationTypeTrait;
+use Modules\HRMS\app\Http\Traits\HireTypeTrait;
+use Modules\HRMS\app\Http\Traits\JobTrait;
+use Modules\HRMS\app\Http\Traits\LevelTrait;
+use Modules\HRMS\app\Http\Traits\PositionTrait;
+use Modules\HRMS\app\Http\Traits\ScriptAgentTypesTrait;
+use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
+use Modules\HRMS\app\Http\Traits\SkillTrait;
+use Modules\HRMS\app\Models\ContractType;
+use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\IssueTime;
+
+class HRMConfigController extends Controller
+{
+    use ScriptTypeTrait, ConfirmationTypeTrait, ScriptAgentTypesTrait, HireTypeTrait, ScriptAgentTypesTrait,SkillTrait,LevelTrait
+        ,JobTrait,PositionTrait;
+
+    public function configList()
+    {
+        $config['script_types'] = $this->getListOfScriptTypes();
+
+//        $config['script_types_issue_time']
+
+        $config['issue_times'] = IssueTime::all();
+        $config['employee_status_list'] = Employee::GetAllStatuses();
+
+        $config['confirmation_types'] = $this->getAllConformationTypes();
+
+        $config['script_agent_types'] = $this->getListOfScriptAgentTypes();
+
+        $config['hire_types'] = $this->getAllHireTypes();
+
+        $config['value_types'] = [
+            ['title' => "مقدار ثابت", 'id' => 1],
+            ['title' => "بر اساس فرمول", 'id' => 2],
+        ];
+        $config['formula_list']=[
+      [ 'title'=> "فرمول یک", 'id'=> 1 ],
+      [ 'title'=> "فرمول دو", 'id'=> 2 ],
+    ];
+
+        $config['script_agents']=$this->getListOfScriptAgentTypes();
+
+        $config['contract_types'] = ContractType::all();
+
+        $config['skills'] = $this->skillIndex();
+        $config['levels'] = $this->levelIndex();
+        $config['jobs'] = $this->getListOfJobs();
+        $config['positions'] = $this->positionIndex();
+
+        return response()->json($config);
+
+    }
+}

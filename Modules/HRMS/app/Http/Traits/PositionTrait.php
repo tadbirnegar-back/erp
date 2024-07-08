@@ -19,11 +19,14 @@ trait PositionTrait
         $position = new Position();
         $position->name = $data['positionName'];
         $position->section_id = $data['sectionID'] ?? null;
-
         $status = $this->activePositionStatus();
-
         $position->status_id = $status->id;
         $position->save();
+
+        // Attach levels
+        if (isset($data['levelIDs']) && is_array($data['levelIDs'])) {
+            $position->levels()->sync($data['levelIDs']);
+        }
 
         return $position;
 
@@ -36,6 +39,10 @@ trait PositionTrait
         $position->name = $data['positionName'];
         $position->section_id = $data['sectionID'] ?? null;
         $position->save();
+
+        if (isset($data['levelIDs']) && is_array($data['levelIDs'])) {
+            $position->levels()->sync($data['levelIDs']);
+        }
 
         return $position;
 

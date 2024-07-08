@@ -23,6 +23,39 @@ class testController extends Controller
 
     public function run()
     {
+
+
+        $usersWithReadNotificationsButNoPaymentsWithStatus46 = User::whereHas('notifications'
+//  , function ($query) {
+//             $query->whereNotNull('read_at');
+//         }
+        )->whereDoesntHave('payments'
+            , function ($query) {
+                $query->where('status_id', 46);
+            }
+        )->with('person','organizationUnits.ancestors','payments')->get();
+        // dd($usersWithReadNotificationsButNoPaymentsWithStatus46->pluck('id'));
+        $html = '<table>';
+        $html .= '<tr><th>دخیار</th><th>دهیاری</th><th>کد آبادی</th><th>شهرستان</th></tr>';
+
+        foreach ($usersWithReadNotificationsButNoPaymentsWithStatus46 as $user) {
+            foreach ($user->organizationUnits as $unit) {
+                $html .= '<tr>';
+                $html .= '<td>' . htmlspecialchars($user->person->display_name) . '</td>';
+                $html .= '<td>' . htmlspecialchars($unit->name) . '</td>';
+                $html .= '<td>' . htmlspecialchars($unit->unitable->abadi_code) . '</td>';
+                $html .= '<td>' . htmlspecialchars($unit->ancestors[2]->name) . '</td>';
+                $html .= '</tr>';
+            }
+            // If the user has no organization units, print just the user's name with "No Units"
+            if (count($user->organizationUnits) == 0) {
+                $html .= '<tr><td>' . htmlspecialchars($user->person->display_name) . '</td><td>No Units</td></tr>';
+            }
+        }
+
+        $html .= '</table>';
+
+        echo $html;
 //        $organizationUnitIds = OrganizationUnit::whereHas('payments', function ($query) {
 //            $query->where('status_id', 46)
 //                ->where('user_id','!=',1905);

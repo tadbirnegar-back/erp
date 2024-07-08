@@ -23,7 +23,7 @@ trait ScriptTypeTrait
     }
     public function getListOfScriptTypes()
     {
-        return ScriptType::all();
+        return ScriptType::with('issueTime','employeeStatus','confirmationTypes')->get();
     }
     public function updateScriptType(ScriptType $scriptType, array $data): ScriptType
     {

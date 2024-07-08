@@ -6,14 +6,14 @@ use Modules\HRMS\app\Models\Level;
 
 trait LevelTrait
 {
-    public function index()
+    public function levelIndex()
     {
         $result = Level::all();
 
         return $result;
     }
 
-    public function store(array $data)
+    public function storeLevel(array $data)
     {
 
         $level = new Level;
@@ -28,17 +28,16 @@ trait LevelTrait
 
     }
 
-    public function update(array $data, int $ID)
+    public function updateLevel( Level $level,array $data)
     {
 
-            $level = Level::findOrFail($ID);
             $level->name = $data['levelName'];
             $level->save();
             return $level;
 
     }
 
-    public function show(int $ID)
+    public function showLevel(int $ID)
     {
         return Level::findOrFail($ID);
     }

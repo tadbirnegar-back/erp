@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\HRMS\Database\factories\ConformationTypeFactory;
 
-class ConformationType extends Model
+class ConfirmationType extends Model
 {
     use HasFactory;
 
@@ -21,7 +21,7 @@ class ConformationType extends Model
 
     public function ScriptType(): BelongsToMany
     {
-        return $this->belongsToMany(ScriptType::class, 'conformation_type_script_type')->withPivot('option_id', 'priority');
+        return $this->belongsToMany(ScriptType::class, 'confirmation_type_script_type')->withPivot('option_id', 'priority');
     }
 
 }
