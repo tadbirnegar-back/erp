@@ -36,4 +36,14 @@ class ScriptType extends Model
     {
         return $this->belongsToMany(ConfirmationType::class, 'confirmation_type_script_type')->withPivot('option_id', 'priority');
     }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
+    }
 }
