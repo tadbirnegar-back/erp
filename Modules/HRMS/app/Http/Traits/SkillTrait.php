@@ -6,9 +6,13 @@ use Modules\HRMS\app\Models\Skill;
 
 trait SkillTrait
 {
+    private string $skillActiveName = 'فعال';
+    private string $skillInactiveName = 'غیرفعال';
     public function skillIndex()
     {
-        $result = Skill::all();
+        $result = Skill::whereHas('status', function ($query) {
+            $query->where('name', '=', $this->skillActiveName);
+        })->get();
 
         return $result;
     }
@@ -18,7 +22,7 @@ trait SkillTrait
 
 
         $skill = new Skill();
-        $skill->name = $data['skillName'];
+        $skill->name = $data['title'];
         $status = $this->activeSkillStatus();
         $skill->status_id = $status->id;;
         $skill->save();
@@ -35,7 +39,7 @@ trait SkillTrait
     public function skillUpdate(array $data, Skill $skill)
     {
 
-            $skill->name = $data['skillName'];
+            $skill->name = $data['title'];
             $skill->save();
             return $skill;
 
@@ -44,12 +48,12 @@ trait SkillTrait
 
     public function activeSkillStatus()
     {
-        return Skill::GetAllStatuses()->firstWhere('name', '=', 'فعال');
+        return Skill::GetAllStatuses()->firstWhere('name', '=', $this->skillActiveName);
     }
 
     public function inactiveSkillStatus()
     {
-        return Skill::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+        return Skill::GetAllStatuses()->firstWhere('name', '=', $this->skillInactiveName);
     }
 
 }

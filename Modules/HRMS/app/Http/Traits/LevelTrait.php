@@ -6,9 +6,13 @@ use Modules\HRMS\app\Models\Level;
 
 trait LevelTrait
 {
+     private string $activeLevelName = 'فعال';
+     private string $inactiveLevelName = 'غیرفعال';
     public function levelIndex()
     {
-        $result = Level::all();
+        $result = Level::whereHas('status', function ($query) {
+            $query->where('name', '=', $this->activeLevelName);
+        })->get();
 
         return $result;
     }
@@ -17,7 +21,7 @@ trait LevelTrait
     {
 
         $level = new Level;
-        $level->name = $data['levelName'];
+        $level->name = $data['title'];
 
         $status = $this->activeLevelStatus();
 
@@ -31,7 +35,7 @@ trait LevelTrait
     public function updateLevel( Level $level,array $data)
     {
 
-            $level->name = $data['levelName'];
+            $level->name = $data['title'];
             $level->save();
             return $level;
 
@@ -44,6 +48,10 @@ trait LevelTrait
 
     public function activeLevelStatus()
     {
-        return Level::GetAllStatuses()->firstWhere('name', '=', 'فعال');
+        return Level::GetAllStatuses()->firstWhere('name', '=', $this->activeLevelName);
+    }
+    public function inactiveLevelStatus()
+    {
+        return Level::GetAllStatuses()->firstWhere('name', '=', $this->inactiveLevelName);
     }
 }

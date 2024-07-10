@@ -75,5 +75,23 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::delete('/hrm/script-agent-type/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController::class, 'destroy']);
 
 
+    Route::post('/hrm/jobs/add', [\Modules\HRMS\app\Http\Controllers\JobController::class, 'store']);
+    Route::put('/hrm/jobs/update/{id}', [\Modules\HRMS\app\Http\Controllers\JobController::class, 'update']);
+
+    Route::delete('/hrm/jobs/delete/{id}', [\Modules\HRMS\app\Http\Controllers\JobController::class, 'destroy']);
+
+
+    Route::post('/hrm/hire-types/add', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'store']);
+    Route::put('/hrm/hire-types/update/{id}', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'update']);
+
+    Route::delete('/hrm/hire-types/delete/{id}', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'destroy']);
+
+
+    Route::post('/hrm/script-types/add', [\Modules\HRMS\app\Http\Controllers\ScriptTypeController::class, 'store']);
+    Route::put('/hrm/script-types/update/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptTypeController::class, 'update']);
+
+    Route::delete('/hrm/script-types/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptTypeController::class, 'destroy']);
+
+
 });
 

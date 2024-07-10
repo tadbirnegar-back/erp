@@ -8,6 +8,8 @@ use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\Gateway\app\Models\Payment as PG;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -19,11 +21,10 @@ use Shetabit\Payment\Facade\Payment;
 
 class testController extends Controller
 {
-    use PaymentRepository;
+    use PaymentRepository,PositionTrait;
 
     public function run()
     {
-
 
         $usersWithReadNotificationsButNoPaymentsWithStatus46 = User::whereHas('notifications'
 //  , function ($query) {

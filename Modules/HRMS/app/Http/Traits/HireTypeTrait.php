@@ -6,13 +6,19 @@ use Modules\HRMS\app\Models\HireType;
 
 trait HireTypeTrait
 {
+    private string $activeHireName = 'فعال';
+    private string $inactiveHireName = 'غیرفعال';
+
     public function createHireType(array $data): HireType
     {
         $hireType = new HireType();
         $hireType->title = $data['title'];
-        $hireType->work_hour = $data['work_hour'];
-        $hireType->contract_type_id = $data['contract_type_id'];
+        $hireType->work_hour = $data['workHour'];
+        $hireType->contract_type_id = $data['contractTypeID'];
+        $hireType->status_id = $this->activeHireTypeStatus()->id;
         $hireType->save();
+        $hireType->load('contractType');
+
 
         return $hireType;
     }
@@ -24,23 +30,36 @@ trait HireTypeTrait
 
     public function getAllHireTypes()
     {
-        return HireType::all();
+        return HireType::whereHas('status', function ($query) {
+            $query->where('name', '=', $this->activeHireName);
+        })->with('contractType')->get();
     }
 
-    public function updateHireType(int $id, array $data): HireType
+    public function updateHireType(HireType $hireType, array $data): HireType
     {
-        $hireType = HireType::findOrFail($id);
         $hireType->title = $data['title'] ?? $hireType->title;
-        $hireType->work_hour = $data['work_hour'] ?? $hireType->work_hour;
-        $hireType->contract_type_id = $data['contract_type_id'] ?? $hireType->contract_type_id;
-        $hireType->save();
+        $hireType->work_hour = $data['workHour'] ?? $hireType->work_hour;
+        $hireType->contract_type_id = $data['contractTypeID'] ?? $hireType->contract_type_id;
 
+        $hireType->save();
+        $hireType->load('contractType');
         return $hireType;
     }
 
-    public function deleteHireType(int $id): bool
+    public function deleteHireType(HireType $hireType)
     {
-        $hireType = HireType::findOrFail($id);
-        return $hireType->delete();
+        $hireType->status_id = $this->inactiveHireTypeStatus()->id;
+        $hireType->save();
+        return $hireType;
+    }
+
+    public function activeHireTypeStatus()
+    {
+        return HireType::GetAllStatuses()->firstWhere('name', '=', $this->activeHireName);
+    }
+
+    public function inactiveHireTypeStatus()
+    {
+        return HireType::GetAllStatuses()->firstWhere('name', '=', $this->inactiveHireName);
     }
 }

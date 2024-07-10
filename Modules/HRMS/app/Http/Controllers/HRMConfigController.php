@@ -5,6 +5,8 @@ namespace Modules\HRMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Http\Enums\ProceduresEnum;
 use Modules\HRMS\app\Http\Traits\ConfirmationTypeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
 use Modules\HRMS\app\Http\Traits\JobTrait;
@@ -19,19 +21,19 @@ use Modules\HRMS\app\Models\IssueTime;
 
 class HRMConfigController extends Controller
 {
-    use ScriptTypeTrait, ConfirmationTypeTrait, ScriptAgentTypesTrait, HireTypeTrait, ScriptAgentTypesTrait,SkillTrait,LevelTrait
-        ,JobTrait,PositionTrait;
+    use ScriptTypeTrait, ConfirmationTypeTrait, ScriptAgentTypesTrait, HireTypeTrait, ScriptAgentTypesTrait, SkillTrait, LevelTrait
+        , JobTrait, PositionTrait;
 
     public function configList()
     {
         $config['script_types'] = $this->getListOfScriptTypes();
 
 //        $config['script_types_issue_time']
-
+        $config['ounitCategories'] = OunitCategoryEnum::ounitCatList();
         $config['issue_times'] = IssueTime::all();
         $config['employee_status_list'] = Employee::GetAllStatuses();
 
-        $config['confirmation_types'] = $this->getAllConformationTypes();
+        $config['confirmation_types'] = ProceduresEnum::proceduresList();
 
         $config['script_agent_types'] = $this->getListOfScriptAgentTypes();
 
@@ -41,12 +43,12 @@ class HRMConfigController extends Controller
             ['title' => "مقدار ثابت", 'id' => 1],
             ['title' => "بر اساس فرمول", 'id' => 2],
         ];
-        $config['formula_list']=[
-      [ 'title'=> "فرمول یک", 'id'=> 1 ],
-      [ 'title'=> "فرمول دو", 'id'=> 2 ],
-    ];
+        $config['formula_list'] = [
+            ['title' => "فرمول یک", 'id' => 1],
+            ['title' => "فرمول دو", 'id' => 2],
+        ];
 
-        $config['script_agents']=$this->getListOfScriptAgentTypes();
+        $config['script_agents'] = $this->getListOfScriptAgentTypes();
 
         $config['contract_types'] = ContractType::all();
 

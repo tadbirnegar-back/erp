@@ -6,14 +6,19 @@ use Modules\HRMS\app\Models\Job;
 
 trait JobTrait
 {
+    private string $activeJobName = 'فعال';
+    private string $inactiveJobName = 'غیرفعال';
+
     public function createJob(array $data): Job
     {
         $job = new Job();
         $job->title = $data['title'];
         $job->description = $data['description'] ?? null;
-        $job->introduction_video_id = $data['videoID'] ?? null;
+        $job->introduction_video_id = $data['introVideoID'] ?? null;
+        $status = $this->activeJobStatus();
+        $job->status_id = $status->id;
         $job->save();
-
+        $job->load('introVideo');
         return $job;
     }
 
@@ -24,22 +29,40 @@ trait JobTrait
 
     public function getListOfJobs()
     {
-        return Job::all();
+        return Job::whereHas('status', function ($query) {
+            $query->where('name', '=', $this->activeJobName);
+        })->with('introVideo')->get();
     }
 
     public function updateJob(Job $job, array $data): Job
     {
-        $job->title = $data['title'] ?? $job->title;
-        $job->description = $data['description'] ?? $job->description;
-        $job->introduction_video_id = $data['videoID'] ?? $job->introduction_video_id;
+        $job->title = $data['title'] ?? null;
+        $job->description = $data['description'] ?? null;
+        $job->introduction_video_id = $data['introVideoID'] ?? null;
         $job->save();
+
+        $job->load('introVideo');
+
 
         return $job;
     }
 
-    public function deleteJob(int $id): bool
+    public function deleteJob(Job $job)
     {
-        $job = Job::findOrFail($id);
-        return $job->delete();
+        $status = $this->inactiveJobStatus();
+        $job->status_id = $status->id;
+        $job->save();
+        return $job;
     }
+
+    public function activeJobStatus()
+    {
+        return Job::GetAllStatuses()->firstWhere('name', '=', $this->activeJobName);
+    }
+
+    public function inactiveJobStatus()
+    {
+        return Job::GetAllStatuses()->firstWhere('name', '=', $this->inactiveJobName);
+    }
+
 }

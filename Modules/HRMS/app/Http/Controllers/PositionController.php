@@ -38,14 +38,22 @@ class PositionController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $data = $request->all();
 
-        $position = $this->positionStore($data);
-        if ($position instanceof \Exception) {
-            return response()->json(['message'=>'خطا در ایجاد سمت جدید'],500);
+        try {
+            \DB::beginTransaction();
 
+
+            $data = $request->all();
+
+            $pos = $this->positionStore($data);
+
+            \DB::commit();
+
+            return response()->json($pos);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['message' => 'خطا در ایجاد سمت', 'error' => $e->getMessage()], 500);
         }
-        return response()->json($position);
     }
 
     /**
@@ -70,16 +78,21 @@ class PositionController extends Controller
             return response()->json(['message'=>'موزدی یافت نشد'],404);
         });
 
-        $data = $request->all();
+        try {
+            \DB::beginTransaction();
 
-        $level = $this->positionUpdate($data,$result);
 
-        if ($level instanceof \Exception) {
-            return response()->json(['message'=>'خطا در بروزرسانی سمت '],500);
+            $data = $request->all();
 
+            $pos = $this->positionUpdate($data, $result);
+
+            \DB::commit();
+
+            return response()->json($pos);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['message' => 'خطا در بروزرسانی سمت', 'error' => $e->getMessage()], 500);
         }
-
-        return response()->json(['message'=>'بروزرسانی سمت با موفقیت انجام شد']);
     }
 
     /**
@@ -91,10 +104,7 @@ class PositionController extends Controller
             return response()->json(['message'=>'موزدی یافت نشد'],404);
         });
 
-        $status = $this->inactivePositionStatus();
-
-        $result->status_id = $status->id;
-        $result->save();
+        $status = $this->positionDelete($result);
 
         return response()->json(['message'=>'سمت با موفقیت حذف شد']);
     }
