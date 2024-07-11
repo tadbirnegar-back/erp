@@ -18,7 +18,18 @@ class ConfirmationType extends Model
     //protected $fillable = [];
 
     public $timestamps = false;
+    protected $appends = ['identify'];
 
+    public function getIdentifyAttribute()
+    {
+        $optionID = $this->pivot ? $this->pivot->option_id : null;
+        $optionType = $this->pivot ? $this->pivot->option_type : null;
+        if ($optionType == null) {
+            return null;
+        }
+        $result = $optionType::procedureIdentifier($optionID);
+        return $result;
+    }
     public function ScriptType(): BelongsToMany
     {
         return $this->belongsToMany(ScriptType::class, 'confirmation_type_script_type')->withPivot('option_id', 'priority');

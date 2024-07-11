@@ -24,23 +24,25 @@ class ScriptType extends Model
 
     public function issueTime(): BelongsTo
     {
-        return $this->belongsTo(IssueTime::class,'issue_time_id');
+        return $this->belongsTo(IssueTime::class, 'issue_time_id');
     }
 
     public function employeeStatus(): BelongsTo
     {
-        return $this->belongsTo(Status::class,'employee_status_id');
+        return $this->belongsTo(Status::class, 'employee_status_id');
     }
 
     public function confirmationTypes(): BelongsToMany
     {
-        return $this->belongsToMany(ConfirmationType::class, 'confirmation_type_script_type')->withPivot('option_id', 'priority');
+        return $this->belongsToMany(ConfirmationType::class, 'confirmation_type_script_type')->withPivot('id','option_id', 'option_type', 'priority');
     }
 
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);
     }
+
+
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {

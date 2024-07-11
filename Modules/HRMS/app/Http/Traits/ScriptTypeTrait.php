@@ -18,19 +18,13 @@ trait ScriptTypeTrait
         $scriptType->title = $data['title'];
         $scriptType->issue_time_id = $data['issueTimeID'] ?? null;
         $scriptType->employee_status_id = $data['employeeStatusID'] ?? null;
+        $scriptType->status_id = $this->activeScriptTypeStatus()->id;
         $scriptType->save();
 
         $confirmationTypeScriptType = json_decode($data['confirmationTypes'], true);
+        $preparedData = $this->confirmationScriptDataPreparation($scriptType, $confirmationTypeScriptType);
 
-        foreach ($confirmationTypeScriptType as $key => $item) {
-            $cs = new ConfirmationTypeScriptType();
-            $cs->script_type_id = $scriptType->id;
-            $cs->confirmation_type_id = $item['confirmationTypeID'];
-            $cs->option_id = $item['optionID'] ?? null;
-            $cs->option_type = ProceduresEnum::from($item['confirmationTypeID'])->getOptionType();
-            $cs->priority = $key + 1;
-            $cs->save();
-        }
+        ConfirmationTypeScriptType::insert($preparedData->toArray());
 
         return $scriptType;
     }
@@ -54,6 +48,11 @@ trait ScriptTypeTrait
         $scriptType->employee_status_id = $data['employee_status_id'] ?? $scriptType->employee_status_id;
         $scriptType->save();
 
+        $confirmationTypeScriptType = json_decode($data['confirmationTypes'], true);
+        $preparedData = $this->confirmationScriptDataPreparation($scriptType, $confirmationTypeScriptType);
+
+        ConfirmationTypeScriptType::upsert($preparedData->toArray(), ['id']);
+
         return $scriptType;
     }
 
@@ -66,12 +65,12 @@ trait ScriptTypeTrait
 
     public function activeScriptTypeStatus()
     {
-        return ScriptType::firstWhere('status_id', $this->activeStatus);
+        return ScriptType::GetAllStatuses()->firstWhere('name', $this->activeStatus);
     }
 
     public function inactiveScriptTypeScript()
     {
-        return ScriptType::firstWhere('status_id', $this->inactiveStatus);
+        return ScriptType::GetAllStatuses()->firstWhere('name', $this->inactiveStatus);
     }
 
     private function confirmationScriptDataPreparation(ScriptType $scriptType, array|Collection $data)
@@ -80,14 +79,17 @@ trait ScriptTypeTrait
             $data = collect($data);
         }
 
-        $data = $data->map(fn($key, $item) => [
-            'id' => $item['id'] ?? null,
-            'script_type_id' => $scriptType->id,
-            'confirmation_type_id' => $item['confirmationTypeID'],
-            'option_id' => $item['optionID'] ?? null,
-            'option_type' => ProceduresEnum::from($item['confirmationTypeID'])->getOptionType(),
-            'priority' => $key + 1,
-        ]);
+        $data = $data->map(function ($item, $key) use ($scriptType) {
+            $procedure = ProceduresEnum::from($item['confirmationTypeID'])->getOptionType();
+            return [
+                'id' => $item['pivotID'] ?? null,
+                'script_type_id' => $scriptType->id,
+                'confirmation_type_id' => $item['confirmationTypeID'],
+                'option_id' => $item['optionID'] ?? null,
+                'option_type' => $procedure,
+                'priority' => $key + 1,
+            ];
+        });
 
         return $data;
     }
