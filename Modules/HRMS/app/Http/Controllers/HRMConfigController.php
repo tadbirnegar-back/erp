@@ -5,6 +5,7 @@ namespace Modules\HRMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\HRMS\app\Http\Enums\FormulaEnum;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Enums\ProceduresEnum;
 use Modules\HRMS\app\Http\Traits\ConfirmationTypeTrait;
@@ -12,6 +13,7 @@ use Modules\HRMS\app\Http\Traits\HireTypeTrait;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
+use Modules\HRMS\app\Http\Traits\ScriptAgentTrait;
 use Modules\HRMS\app\Http\Traits\ScriptAgentTypesTrait;
 use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
 use Modules\HRMS\app\Http\Traits\SkillTrait;
@@ -21,7 +23,7 @@ use Modules\HRMS\app\Models\IssueTime;
 
 class HRMConfigController extends Controller
 {
-    use ScriptTypeTrait, ConfirmationTypeTrait, ScriptAgentTypesTrait, HireTypeTrait, ScriptAgentTypesTrait, SkillTrait, LevelTrait
+    use ScriptTypeTrait, ConfirmationTypeTrait, ScriptAgentTypesTrait, HireTypeTrait, ScriptAgentTrait, SkillTrait, LevelTrait
         , JobTrait, PositionTrait;
 
     public function configList()
@@ -43,12 +45,9 @@ class HRMConfigController extends Controller
             ['title' => "مقدار ثابت", 'id' => 1],
             ['title' => "بر اساس فرمول", 'id' => 2],
         ];
-        $config['formula_list'] = [
-            ['title' => "فرمول یک", 'id' => 1],
-            ['title' => "فرمول دو", 'id' => 2],
-        ];
+        $config['formula_list'] = FormulaEnum::FormulaList();
 
-        $config['script_agents'] = $this->getListOfScriptAgentTypes();
+        $config['script_agents'] = $this->getListOfScriptAgents();
 
         $config['contract_types'] = ContractType::all();
 

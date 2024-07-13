@@ -25,7 +25,7 @@ trait ScriptTypeTrait
         $preparedData = $this->confirmationScriptDataPreparation($scriptType, $confirmationTypeScriptType);
 
         ConfirmationTypeScriptType::insert($preparedData->toArray());
-
+        $scriptType->load('issueTime', 'employeeStatus', 'confirmationTypes');
         return $scriptType;
     }
 
@@ -44,15 +44,15 @@ trait ScriptTypeTrait
     public function updateScriptType(ScriptType $scriptType, array $data): ScriptType
     {
         $scriptType->title = $data['title'] ?? $scriptType->title;
-        $scriptType->issue_time_id = $data['issue_time_id'] ?? $scriptType->issue_time_id;
-        $scriptType->employee_status_id = $data['employee_status_id'] ?? $scriptType->employee_status_id;
+        $scriptType->issue_time_id = $data['issueTimeID'] ?? $scriptType->issue_time_id;
+        $scriptType->employee_status_id = $data['employeeStatusID'] ?? $scriptType->employee_status_id;
         $scriptType->save();
 
         $confirmationTypeScriptType = json_decode($data['confirmationTypes'], true);
         $preparedData = $this->confirmationScriptDataPreparation($scriptType, $confirmationTypeScriptType);
 
         ConfirmationTypeScriptType::upsert($preparedData->toArray(), ['id']);
-
+        $scriptType->load('issueTime', 'employeeStatus', 'confirmationTypes');
         return $scriptType;
     }
 
