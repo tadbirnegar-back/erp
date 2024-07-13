@@ -93,5 +93,11 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::delete('/hrm/script-types/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptTypeController::class, 'destroy']);
 
 
+    Route::post('/hrm/script-agents/add', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'store']);
+    Route::put('/hrm/script-agents/update/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'update']);
+
+    Route::delete('/hrm/script-agents/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'destroy']);
+
+
 });
 

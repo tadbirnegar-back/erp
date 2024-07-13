@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::disableForeignKeyConstraints();
         Schema::create('script_agent_combos', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedBigInteger('default_value');
+            $table->unsignedBigInteger('default_value')->nullable();
             $table->text('formula')->nullable();
             $table->unsignedBigInteger('hire_type_id');
             $table->unsignedBigInteger('script_agent_id');

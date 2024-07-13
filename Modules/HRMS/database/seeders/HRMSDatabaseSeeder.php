@@ -28,8 +28,8 @@ class HRMSDatabaseSeeder extends Seeder
 //            ScriptAgentTypeStatusSeeder::class,
 //JobStatusSeeder::class,
 //            HireTypeStatusSeeder::class,
-ScriptTypeStatusSeeder::class,
-
+//ScriptTypeStatusSeeder::class,
+ScriptAgentStatusSeeder::class,
         ]);
         // $this->call([]);
     }
