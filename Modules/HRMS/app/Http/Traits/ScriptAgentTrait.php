@@ -22,6 +22,7 @@ trait ScriptAgentTrait
         $combos = json_decode($data['combos'], true);
         $preparedCombos = $this->comboDataPreparation($combos, $scriptAgent);
         ScriptAgentCombo::insert($preparedCombos->toArray());
+$scriptAgent->load('scriptAgentType','scriptTypes.pivot.hireType');
 
         return $scriptAgent;
     }
@@ -35,7 +36,7 @@ trait ScriptAgentTrait
     {
         $scriptAgents= ScriptAgent::whereHas('status', function ($query) {
             $query->where('name', $this->activeStatus);
-        })->with('scriptTypes.pivot.hireType')->get();
+        })->with('scriptAgentType','scriptTypes.pivot.hireType')->get();
 
         return $scriptAgents;
     }
@@ -46,13 +47,19 @@ trait ScriptAgentTrait
         $scriptAgent->script_agent_type_id = $data['scriptAgentTypeID'] ?? $scriptAgent->script_agent_type_id;
         $scriptAgent->save();
 
+        $combos = json_decode($data['combos'], true);
+        $preparedCombos = $this->comboDataPreparation($combos, $scriptAgent);
+        ScriptAgentCombo::upsert($preparedCombos->toArray(),['id']);
+       $scriptAgent->load('scriptAgentType','scriptTypes.pivot.hireType');
+
         return $scriptAgent;
     }
 
-    public function deleteScriptAgent(int $id): bool
+    public function deleteScriptAgent(ScriptAgent $scriptAgent)
     {
-        $scriptAgent = ScriptAgent::findOrFail($id);
-        return $scriptAgent->delete();
+        $scriptAgent->status_id = $this->inactiveScriptAgentStatus()->id;
+        $scriptAgent->save();
+        return $scriptAgent;
     }
 
     private function comboDataPreparation(array|Collection $data, ScriptAgent $scriptAgent)

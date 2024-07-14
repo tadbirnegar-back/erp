@@ -21,7 +21,6 @@ class HireType extends Model
 
     public $timestamps = false;
 
-
     public function contractType(): BelongsTo
     {
         return $this->belongsTo(ContractType::class, 'contract_type_id');
@@ -30,7 +29,7 @@ class HireType extends Model
     public function getFormulaAttribute()
     {
         $formulaID = $this->pivot ? $this->pivot->formula : null;
-        if(is_null($formulaID)){
+        if (is_null($formulaID)) {
             return null;
         }
         return FormulaEnum::from($formulaID)->getLabelAndValue();
