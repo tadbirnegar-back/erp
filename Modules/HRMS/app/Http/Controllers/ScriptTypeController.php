@@ -48,7 +48,9 @@ class ScriptTypeController extends Controller
             $scriptType = $this->updateScriptType($scriptType, $data);
 
             $deletedSTCTids = json_decode($data['deletedSTCTids'], true);
-            $scTypes = ConfirmationTypeScriptType::whereIntegerInRaw('id', $deletedSTCTids)->delete();
+          if (!empty($deletedSTCTids)) {
+              $scTypes = ConfirmationTypeScriptType::whereIntegerInRaw('id', $deletedSTCTids)->delete();
+            }
             DB::commit();
             return response()->json($scriptType);
         } catch (Exception $e) {

@@ -42,7 +42,7 @@ use JobTrait;
             \DB::rollBack();
 
             // Return an error response
-            return response()->json(['message' => 'Failed to create job', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ایجاد شغل', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -80,7 +80,7 @@ $job = Job::findOr($id,function (){
             \DB::rollBack();
 
             // Return an error response
-            return response()->json(['message' => 'Failed to update job', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی شغل', 'error' => $e->getMessage()], 500);
         }
     }
 

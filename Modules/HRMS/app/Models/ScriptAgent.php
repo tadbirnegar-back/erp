@@ -28,7 +28,7 @@ class ScriptAgent extends Model
     {
         return $this->belongsToMany(ScriptType::class, 'script_agent_combos')
             ->using(ScriptAgentCombo::class)
-            ->withPivot('default_value', 'formula', 'hire_type_id');
+            ->withPivot('id','default_value', 'formula', 'hire_type_id');
     }
 
     public function hireTypes(): BelongsToMany

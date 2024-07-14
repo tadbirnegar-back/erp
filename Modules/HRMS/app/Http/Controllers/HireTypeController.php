@@ -33,7 +33,7 @@ class HireTypeController extends Controller
             return response()->json($hireType);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'Failed to create hire type', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ایجاد نوع استخدام', 'error' => $e->getMessage()], 500);
         }
 
 
@@ -53,7 +53,7 @@ class HireTypeController extends Controller
             return response()->json($hireType);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'Failed to update hire type', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی نوع استخدام', 'error' => $e->getMessage()], 500);
         }
 
     }
