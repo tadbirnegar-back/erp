@@ -23,9 +23,12 @@ use Modules\HRMS\app\Http\Services\RelativeService;
 use Modules\HRMS\app\Http\Services\ResumeService;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
+use Modules\HRMS\app\Http\Traits\HireTypeTrait;
+use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Http\Traits\RelativeTrait;
 use Modules\HRMS\app\Http\Traits\ResumeTrait;
+use Modules\HRMS\app\Http\Traits\SkillTrait;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
@@ -51,7 +54,7 @@ use function Sodium\add;
 
 class EmployeeController extends Controller
 {
-    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait;
+    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait;
 
 //    public array $data = [];
 //    protected EmployeeRepository $employeeService;
@@ -114,7 +117,7 @@ class EmployeeController extends Controller
             $personAsEmployee = $this->isEmployee($data['personID']);
             $employee = !is_null($personAsEmployee) ? $this->employeeUpdate($data, $personAsEmployee) : $this->employeeStore($data);
 
-$workForce = $employee->workForce;
+            $workForce = $employee->workForce;
             //additional info insertion
             if (isset($data['educations'])) {
                 $edus = json_decode($data['educations'], true);
@@ -151,7 +154,7 @@ $workForce = $employee->workForce;
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن کارمند'], 500);
+            return response()->json(['message' => 'خطا در افزودن کارمند', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -291,13 +294,12 @@ $workForce = $employee->workForce;
 
 
         $data['msStatusList'] = MilitaryServiceStatus::all();
-        $data['positionList'] = Position::all();
-        $data['levelList'] = Level::all();
-        $data['skillList'] = Skill::all();
+        $data['skillList'] = $this->skillIndex();
         $data['educationGradeList'] = LevelOfEducation::all();
         $data['relativeList'] = RelativeType::all();
         $data['religion'] = Religion::all();
         $data['religionType'] = ReligionType::all();
+        $data['hireTypes'] = $this->getAllHireTypes();
 
 
         return response()->json($data);
@@ -325,10 +327,11 @@ $workForce = $employee->workForce;
         if ($employee) {
             $employee = $this->loadLatestActiveScript($employee);
             $scriptTypes = $this->getCompatibleIssueTimesByName($employee->latestRecruitmentScript ? $employee->latestRecruitmentScript->issueTime->title : null);
-            $employee->setAttribute('scriptTypes', $scriptTypes);
+        } else {
+            $scriptTypes = $this->getCompatibleIssueTimesByName();
         }
 
-        return response()->json(['data' => $data, 'message' => $message]);
+        return response()->json(['data' => $data, 'scriptTypes' => $scriptTypes, 'message' => $message]);
 
 
     }
@@ -347,7 +350,7 @@ $workForce = $employee->workForce;
 
     public function employeeListFilter()
     {
-        $response['statuses'] = Status::where('model',Employee::class)->get();
+        $response['statuses'] = Status::where('model', Employee::class)->get();
         $response['positions'] = Position::all();
         $response['scriptTypes'] = ScriptType::all();
 

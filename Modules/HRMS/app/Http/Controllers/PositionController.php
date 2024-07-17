@@ -8,10 +8,12 @@ use Illuminate\Http\Request;
 use Modules\HRMS\app\Http\Services\PositionService;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Models\Position;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class PositionController extends Controller
 {
     use PositionTrait;
+
     public array $data = [];
 //    protected PositionService $positionService;
 
@@ -31,6 +33,16 @@ class PositionController extends Controller
         $result = $this->positionIndex();
 
         return response()->json($result);
+    }
+
+    public function getByOrganizationUnit(Request $request): JsonResponse
+    {
+        $ounit = OrganizationUnit::with('positions.levels')->findOr($request->ounitID, function () {
+            return response()->json(['message' => 'واحد سازمانی یافت نشد'], 404);
+        });
+
+        return response()->json($ounit->positions);
+
     }
 
     /**
@@ -63,7 +75,7 @@ class PositionController extends Controller
     {
         $result = $this->positionShow($id);
         if (is_null($result)) {
-            return response()->json(['message'=>'موزدی یافت نشد'],404);
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
 
         }
         return response()->json($result);
@@ -74,8 +86,8 @@ class PositionController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $result = Position::findOr($id,function (){
-            return response()->json(['message'=>'موزدی یافت نشد'],404);
+        $result = Position::findOr($id, function () {
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
         });
 
         try {
@@ -100,12 +112,12 @@ class PositionController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $result = Position::findOr($id,function (){
-            return response()->json(['message'=>'موزدی یافت نشد'],404);
+        $result = Position::findOr($id, function () {
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
         });
 
         $status = $this->positionDelete($result);
 
-        return response()->json(['message'=>'سمت با موفقیت حذف شد']);
+        return response()->json(['message' => 'سمت با موفقیت حذف شد']);
     }
 }

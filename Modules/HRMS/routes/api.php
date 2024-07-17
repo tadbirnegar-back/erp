@@ -98,6 +98,6 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
     Route::delete('/hrm/script-agents/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'destroy']);
 
-
+    Route::post('/hrm/ounit/positions/list', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'getByOrganizationUnit']);
 });
 
