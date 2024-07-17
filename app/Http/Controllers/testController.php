@@ -8,6 +8,8 @@ use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\Gateway\app\Models\Payment as PG;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -19,10 +21,66 @@ use Shetabit\Payment\Facade\Payment;
 
 class testController extends Controller
 {
-    use PaymentRepository;
+    use PaymentRepository,PositionTrait;
 
     public function run()
     {
+
+        $usersWithReadNotificationsButNoPaymentsWithStatus46 = User::whereHas('notifications'
+//  , function ($query) {
+//             $query->whereNotNull('read_at');
+//         }
+        )->whereDoesntHave('payments'
+            , function ($query) {
+                $query->where('status_id', 46);
+            }
+        )->with('person','organizationUnits.ancestors','payments')->get();
+        // dd($usersWithReadNotificationsButNoPaymentsWithStatus46->pluck('id'));
+        $html = '<table>';
+        $html .= '<tr><th>دخیار</th><th>دهیاری</th><th>کد آبادی</th><th>شهرستان</th></tr>';
+
+        foreach ($usersWithReadNotificationsButNoPaymentsWithStatus46 as $user) {
+            foreach ($user->organizationUnits as $unit) {
+                $html .= '<tr>';
+                $html .= '<td>' . htmlspecialchars($user->person->display_name) . '</td>';
+                $html .= '<td>' . htmlspecialchars($unit->name) . '</td>';
+                $html .= '<td>' . htmlspecialchars($unit->unitable->abadi_code) . '</td>';
+                $html .= '<td>' . htmlspecialchars($unit->ancestors[2]->name) . '</td>';
+                $html .= '</tr>';
+            }
+            // If the user has no organization units, print just the user's name with "No Units"
+            if (count($user->organizationUnits) == 0) {
+                $html .= '<tr><td>' . htmlspecialchars($user->person->display_name) . '</td><td>No Units</td></tr>';
+            }
+        }
+
+        $html .= '</table>';
+
+        echo $html;
+//        $organizationUnitIds = OrganizationUnit::whereHas('payments', function ($query) {
+//            $query->where('status_id', 46)
+//                ->where('user_id','!=',1905);
+//        })->with('head.person','ancestors','unitable')->get();
+//
+//// Start the table
+//        $html = '<table>';
+//        $html .= '<tr><th>دهیاری</th><th>نام دهیار</th><th>شهرستان</th><th>کد آبادی</th></tr>';
+//
+//// Loop through the data and add it to the table
+//        foreach ($organizationUnitIds as $organizationUnit) {
+//            $html .= '<tr>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head->person->display_name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestors[2]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->abadi_code) . '</td>';
+//            $html .= '</tr>';
+//        }
+//
+//// End the table
+//        $html .= '</table>';
+//
+//// Print the table
+//        echo $html;
 //        try {
 //
 ////            $payment = PG::where('authority', $request->authority)->first();

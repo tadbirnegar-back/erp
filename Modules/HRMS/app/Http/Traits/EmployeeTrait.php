@@ -206,7 +206,7 @@ trait EmployeeTrait
             ->with('scriptTypes')
             ->get();
 
-        return $issueTimes->pluck('scriptTypes');
+        return $issueTimes->pluck('scriptTypes')->flatten();
     }
 
     public function getScriptAgentCombos(HireType $hireType,ScriptAgent $scriptAgent)

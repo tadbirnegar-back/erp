@@ -24,10 +24,12 @@ class HRMSDatabaseSeeder extends Seeder
 //            WorkForceStatusSeeder::class,
 //            RelativeTypeSeeder::class,
 //IssueTimesSeeder::class,
-            ScriptTypeSeeder::class,
-
-
-
+//            ScriptTypeSeeder::class,
+//            ScriptAgentTypeStatusSeeder::class,
+//JobStatusSeeder::class,
+//            HireTypeStatusSeeder::class,
+//ScriptTypeStatusSeeder::class,
+ScriptAgentStatusSeeder::class,
         ]);
         // $this->call([]);
     }

@@ -6,20 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\HRMS\app\Http\Services\LevelService;
+use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Models\Level;
 
 class LevelController extends Controller
 {
-    public array $data = [];
-    protected LevelService $levelService;
-
-    /**
-     * @param LevelService $levelService
-     */
-    public function __construct(LevelService $levelService)
-    {
-        $this->levelService = $levelService;
-    }
+    use LevelTrait;
 
 
     /**
@@ -37,17 +29,23 @@ class LevelController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $data = $request->all();
+        try {
+            \DB::beginTransaction();
 
-        $level = $this->levelService->store($data);
+            $data = $request->all();
+            $level = $this->storeLevel($data);
 
-        if ($level instanceof \Exception) {
-            return response()->json(['message'=>$level->getMessage()],500);
-//            return response()->json(['message'=>'خطا در ایجاد سطح جدید'],500);
+            if ($level instanceof \Exception) {
+                \DB::rollBack();
+                return response()->json(['message' => $level->getMessage()], 500);
+            }
 
+            \DB::commit();
+            return response()->json($level);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => $e->getMessage()], 500);
         }
-
-        return response()->json($level);
     }
 
     /**
@@ -55,9 +53,9 @@ class LevelController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $result = $this->levelService->show($id);
+        $result = $this->showLevel($id);
         if (is_null($result)) {
-            return response()->json(['message'=>'موزدی یافت نشد'],404);
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
 
         }
         return response()->json($result);
@@ -68,16 +66,25 @@ class LevelController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $data = $request->all();
+        try {
+            \DB::beginTransaction();
+            $level = Level::findOr($id, function () {
+                return response()->json(['message' => 'موزدی یافت نشد'], 404);
+            });
+            $data = $request->all();
+            $level = $this->updateLevel($level, $data);
 
-        $level = $this->levelService->update($data,$id);
+            if ($level instanceof \Exception) {
+                \DB::rollBack();
+                return response()->json(['message' => 'خطا در بروزرسانی سطح '], 500);
+            }
 
-        if ($level instanceof \Exception) {
-            return response()->json(['message'=>'خطا در بروزرسانی سطح '],500);
-
+            \DB::commit();
+            return response()->json($level);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => $e->getMessage()], 500);
         }
-
-        return response()->json(['message'=>'بروزرسانی سطح با موفقیت انجام شد']);
 
     }
 
@@ -89,15 +96,15 @@ class LevelController extends Controller
         $result = Level::findOrFail($id);
 
         if (is_null($result)) {
-            return response()->json(['message'=>'موزدی یافت نشد'],404);
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
 
         }
 
-        $status = Level::GetAllStatuses()->where('name', '=', 'غیرفعال')->first();
+        $status = $this->inactiveLevelStatus();
 
         $result->status_id = $status->id;
         $result->save();
 
-        return response()->json(['message'=>'سطح با موفقیت حذف شد']);
+        return response()->json(['message' => 'سطح با موفقیت حذف شد']);
     }
 }

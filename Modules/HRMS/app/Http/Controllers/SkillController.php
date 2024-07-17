@@ -39,14 +39,21 @@ class SkillController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $data = $request->all();
+     try {
+    \DB::beginTransaction();
+    $data = $request->all();
 
-        $skill = $this->skillStore($data);
-        if ($skill instanceof \Exception) {
-            return response()->json(['message'=>'خطا در ایجاد مهارت جدید'],500);
+    $skill = $this->skillStore($data);
+    if ($skill instanceof \Exception) {
+        return response()->json(['message' => 'خطا در ایجاد مهارت جدید'], 500);
+    }
 
-        }
-        return response()->json($skill);
+    \DB::commit();
+    return response()->json($skill);
+} catch (\Exception $e) {
+    \DB::rollBack();
+    return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => $e->getMessage()], 500);
+}
     }
 
     /**
@@ -78,10 +85,10 @@ class SkillController extends Controller
             $level = $this->skillUpdate($data,$result);
 
             \DB::commit();
-            return response()->json(['message'=>'بروزرسانی مهارت با موفقیت انجام شد']);
+            return response()->json($level);
         }catch (\Exception $e){
             \DB::rollBack();
-            return response()->json(['message'=>'خطا در بروزرسانی مهارت '],500);
+            return response()->json(['message'=>'خطا در بروزرسانی مهارت ','error'=>$e->getMessage()],500);
         }
 
 

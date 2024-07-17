@@ -11,15 +11,15 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::create('conformation_type_script_type', function (Blueprint $table) {
+        Schema::create('confirmation_type_script_type', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('conformation_type_id');
+            $table->unsignedBigInteger('confirmation_type_id');
             $table->unsignedBigInteger('script_type_id');
             $table->unsignedBigInteger('option_id')->nullable();
             $table->unsignedBigInteger('priority')->nullable();
 
 
-            $table->foreign('conformation_type_id')->references('id')->on('conformation_types')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('confirmation_type_id')->references('id')->on('confirmation_types')->onDelete('cascade')->onUpdate('cascade');
 
             $table->foreign('script_type_id')->references('id')->on('script_types')->onDelete('cascade')->onUpdate('cascade');
 
@@ -31,6 +31,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('conformation_type_script_type');
+        Schema::dropIfExists('confirmation_type_script_type');
     }
 };

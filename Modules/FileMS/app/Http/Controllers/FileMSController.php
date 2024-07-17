@@ -78,7 +78,7 @@ class FileMSController extends Controller
                 'link' => $file->slug,
                 'title' => $file->name,
                 'date' => $file->create_date,
-                'size' => Number::fileSize($file->size),
+                'size' => $file->size,
                 'type' => $file->mimeType->name ?? null, // Include mime type name
             ];
         });

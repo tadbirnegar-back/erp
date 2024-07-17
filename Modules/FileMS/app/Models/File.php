@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Number;
 use Modules\FileMS\Database\factories\FileFactory;
 use Modules\StatusMS\app\Models\Status;
 use Znck\Eloquent\Relations\BelongsToThrough;
@@ -59,5 +60,10 @@ class File extends Model
     public function getSlugAttribute($value)
     {
         return url('/') . '/' . $value;
+    }
+
+    public function getSizeAttribute($value)
+    {
+        return  Number::fileSize($value);
     }
 }
