@@ -4,8 +4,8 @@ namespace Modules\HRMS\app\Http\Enums;
 
 enum FormulaEnum: int
 {
-case Formula1 = 1;
-case Formula2 = 2;
+    case Formula1 = 1;
+    case Formula2 = 2;
 
     public function getLabel()
     {
@@ -14,6 +14,7 @@ case Formula2 = 2;
             self::Formula2 => 'فرمول دو',
         };
     }
+
     public function getLabelAndValue()
     {
         return [
@@ -21,6 +22,15 @@ case Formula2 = 2;
             'value' => $this->value
         ];
     }
+
+    public function getPrice()
+    {
+        return match ($this) {
+            self::Formula1 => '1000000',
+            self::Formula2 => '1200000',
+        };
+    }
+
     public static function formulaList()
     {
         $cats = collect(self::cases());

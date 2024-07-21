@@ -32,7 +32,7 @@ class ConfirmationType extends Model
     }
     public function ScriptType(): BelongsToMany
     {
-        return $this->belongsToMany(ScriptType::class, 'confirmation_type_script_type')->withPivot('option_id', 'priority');
+        return $this->belongsToMany(ScriptType::class, 'confirmation_type_script_type')->withPivot('option_id', 'priority','option_type');
     }
 
 }

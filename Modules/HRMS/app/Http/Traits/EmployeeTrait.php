@@ -3,10 +3,12 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use DB;
+use Modules\HRMS\app\Http\Enums\FormulaEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\IssueTime;
 use Modules\HRMS\app\Models\ScriptAgent;
+use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\PersonMS\app\Models\Person;
 
@@ -209,17 +211,29 @@ trait EmployeeTrait
         return $issueTimes->pluck('scriptTypes')->flatten();
     }
 
-    public function getScriptAgentCombos(HireType $hireType,ScriptAgent $scriptAgent)
+    public function getScriptAgentCombos(HireType $hireType,ScriptType $scriptType)
     {
         $hireTypeId = $hireType->id;
-        $scriptTypeId = $scriptAgent->id;
+        $scriptTypeId = $scriptType->id;
 
-        $scriptAgents = DB::table('script_agent_combos')
-            ->join('script_agents', 'script_agent_combos.script_agent_id', '=', 'script_agents.id')
-            ->where('script_agent_combos.hire_type_id', $hireTypeId)
-            ->where('script_agent_combos.script_type_id', $scriptTypeId)
-            ->select('script_agents.*', 'script_agent_combos.default_value')
-            ->get();
+//        $scriptAgents = DB::table('script_agent_combos')
+//            ->join('script_types', 'script_agent_combos.script_type_id', '=', 'script_types.id')
+//            ->where('script_agent_combos.hire_type_id', $hireTypeId)
+//            ->where('script_agent_combos.script_type_id', $scriptTypeId)
+//            ->select('script_agents.*', 'script_agent_combos.default_value')
+//            ->get();
+
+        $hireType->load(['scriptAgents'=>function ($query) use ($scriptTypeId) {
+            $query->where('script_type_id', $scriptTypeId);
+
+        }]);
+        $scriptAgents = $hireType->scriptAgents;
+
+        $scriptAgents->each(function ($scriptAgent){
+            if (!is_null($scriptAgent->pivot->formula)) {
+                $scriptAgent->pivot->default_value = FormulaEnum::from($scriptAgent->pivot->formula)->getPrice();
+            }
+        });
 
         return $scriptAgents;
     }

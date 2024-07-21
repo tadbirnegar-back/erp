@@ -77,6 +77,11 @@ class RecruitmentScript extends Model
         return $this->belongsToThrough(IssueTime::class,ScriptType::class);
 }
 
+    public function scriptType(): BelongsTo
+    {
+        return $this->belongsTo(ScriptType::class);
+    }
+
     public function scriptAgents(): BelongsToMany
     {
         return $this->belongsToMany(ScriptAgent::class, 'script_agent_script', 'script_id', 'script_agent_id');
