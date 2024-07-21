@@ -5,6 +5,7 @@ namespace Modules\HRMS\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
 use Modules\HRMS\Database\factories\HireTypeFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -20,6 +21,7 @@ class HireType extends Model
     //protected $fillable = [];
 
     public $timestamps = false;
+    protected $appends = ['formula'];
 
     public function contractType(): BelongsTo
     {
@@ -35,6 +37,14 @@ class HireType extends Model
         return FormulaEnum::from($formulaID)->getLabelAndValue();
 
     }
+
+    public function scriptAgents(): BelongsToMany
+    {
+        return $this->belongsToMany(ScriptAgent::class,'script_agent_combos')
+//            ->using(ScriptAgentCombo::class)
+            ->withPivot('formula','default_value');
+    }
+
 
     public function status(): BelongsTo
     {

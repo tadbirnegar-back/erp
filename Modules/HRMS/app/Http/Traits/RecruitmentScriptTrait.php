@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
+use Modules\HRMS\app\Models\ConfirmationType;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptAgentScript;
 
@@ -12,19 +13,29 @@ trait RecruitmentScriptTrait
     {
         $dataToInsert = $this->rsDataPreparation($data, $employeeID);
 
-        $status = $this->activeRsStatus();
+        $status = $this->pendingRsStatus();
         $result = [];
-        foreach ($dataToInsert as $key=> $item) {
+        foreach ($dataToInsert as $key => $item) {
             $rs = RecruitmentScript::create($item);
             $rs->status()->attach($status->id);
-            $agents = json_decode($data[$key],true);
+            $agents = json_decode($data[$key], true);
             foreach ($agents as $agent) {
-                ScriptAgentScript::create([
+                $scriptAgentScript = ScriptAgentScript::create([
                     'contract' => $agent['contract'],
                     'script_id' => $rs->id,
                     'script_agent_id' => $agent['agentID'],
                 ]);
+
+                $rs->setAttribute('scriptAgentScript', $scriptAgentScript);
             }
+            $rs->load('scriptType.confirmationTypes');
+
+            $conformationTypes = $rs->scriptType->confirmationTypes;
+
+            $conformationTypes->each(function (ConfirmationType $confirmationType) {
+                 $confirmationType->pivot->option_id;
+                 $confirmationType->pivot->option_type;
+            });
             $result[] = $rs;
         }
         return $result;

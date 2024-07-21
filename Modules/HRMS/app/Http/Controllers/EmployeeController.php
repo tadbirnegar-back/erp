@@ -24,6 +24,7 @@ use Modules\HRMS\app\Http\Services\ResumeService;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
+use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Http\Traits\RelativeTrait;
@@ -54,7 +55,7 @@ use function Sodium\add;
 
 class EmployeeController extends Controller
 {
-    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait;
+    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait,JobTrait;
 
 //    public array $data = [];
 //    protected EmployeeRepository $employeeService;
@@ -293,13 +294,11 @@ class EmployeeController extends Controller
         }
 
 
-        $data['msStatusList'] = MilitaryServiceStatus::all();
         $data['skillList'] = $this->skillIndex();
-        $data['educationGradeList'] = LevelOfEducation::all();
-        $data['relativeList'] = RelativeType::all();
         $data['religion'] = Religion::all();
         $data['religionType'] = ReligionType::all();
         $data['hireTypes'] = $this->getAllHireTypes();
+        $data['jobs'] = $this->getListOfJobs();
 
 
         return response()->json($data);
@@ -341,9 +340,9 @@ class EmployeeController extends Controller
         $data = $request->all();
 
         $hireType = HireType::find($data['hireTypeID']);
-        $scriptAgent = ScriptAgent::find($data['scriptAgentID']);
+        $scriptType = ScriptType::find($data['scriptTypeID']);
 
-        $result = $this->getScriptAgentCombos($hireType, $scriptAgent);
+        $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
         return response()->json($result);
     }
