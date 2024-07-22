@@ -25,6 +25,10 @@ class testController extends Controller
 
     public function run()
     {
+        $a = Employee::
+        with('person.user')->
+        find(1905);
+        dd($a);
 
         $usersWithReadNotificationsButNoPaymentsWithStatus46 = User::whereHas('notifications'
 //  , function ($query) {

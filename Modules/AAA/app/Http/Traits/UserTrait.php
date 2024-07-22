@@ -68,7 +68,7 @@ trait UserTrait
 
         $status = $user->status;
 
-        if ($data['statusID'] != $status[0]->id) {
+        if (isset($data['statusID'])&&$data['statusID'] != $status[0]->id) {
             $user->statuses()->attach($data['statusID']);
         }
         return $user;

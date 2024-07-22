@@ -9,6 +9,8 @@ use Modules\HRMS\app\Models\ScriptAgentScript;
 
 trait RecruitmentScriptTrait
 {
+    use ScriptAgentScriptTrait;
+
     public function rsStore(array|collection $data, int $employeeID)
     {
         $dataToInsert = $this->rsDataPreparation($data, $employeeID);
@@ -16,26 +18,15 @@ trait RecruitmentScriptTrait
         $status = $this->pendingRsStatus();
         $result = [];
         foreach ($dataToInsert as $key => $item) {
+
             $rs = RecruitmentScript::create($item);
             $rs->status()->attach($status->id);
-            $agents = json_decode($data[$key], true);
-            foreach ($agents as $agent) {
-                $scriptAgentScript = ScriptAgentScript::create([
-                    'contract' => $agent['contract'],
-                    'script_id' => $rs->id,
-                    'script_agent_id' => $agent['agentID'],
-                ]);
 
-                $rs->setAttribute('scriptAgentScript', $scriptAgentScript);
-            }
+            $agents = json_decode($data[$key]['scriptAgents'], true);
+            $scriptAgentsScripts = $this->sasStore($agents, $rs);
             $rs->load('scriptType.confirmationTypes');
 
-            $conformationTypes = $rs->scriptType->confirmationTypes;
 
-            $conformationTypes->each(function (ConfirmationType $confirmationType) {
-                 $confirmationType->pivot->option_id;
-                 $confirmationType->pivot->option_type;
-            });
             $result[] = $rs;
         }
         return $result;
@@ -98,7 +89,7 @@ trait RecruitmentScriptTrait
 
     public function activeRsStatus()
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'فعال');
     }
 
     public function inActiveRsStatus()

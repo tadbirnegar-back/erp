@@ -157,7 +157,7 @@ class UserController extends Controller
             return response()->json(['message' => 'با موفقیت ویرایش شد', 'data' => $user]);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی کاربر'], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی کاربر','error'=>$e->getMessage()], 500);
 
         }
 

@@ -19,8 +19,9 @@ class ScriptApprovingList extends Model
 
     //protected $fillable = [];
 
-    public $timestamps = false;
-
+    public $timestamps = true;
+    const CREATED_AT = 'create_date';
+    const UPDATED_AT = 'update_date';
     public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -51,4 +52,10 @@ class ScriptApprovingList extends Model
     {
         return $this->employee()->person();
     }
+
+    public static function GetAllStatuses()
+    {
+        return Status::all()->where('model', '=', self::class);
+    }
+
 }

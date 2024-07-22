@@ -24,7 +24,7 @@ class Person extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+//    protected $fillable = [];
     protected $table = 'persons';
     public $timestamps = false;
 

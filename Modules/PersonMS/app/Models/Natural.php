@@ -16,7 +16,22 @@ class Natural extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = ['first_name',
+    'last_name',
+    'mobile',
+    'phone_number',
+    'father_name',
+    'birth_date',
+    'job',
+    'isMarried',
+    'level_of_spouse_education',
+    'spouse_first_name',
+    'spouse_last_name',
+    'home_address_id',
+    'job_address_id',
+    'gender_id',
+    'military_service_status_id',
+    'bc_code',];
     public $timestamps = false;
 
     protected static function newFactory(): NaturalFactory

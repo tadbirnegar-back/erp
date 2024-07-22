@@ -21,6 +21,7 @@ use Modules\HRMS\app\Http\Services\EducationalRecordService;
 use Modules\HRMS\app\Http\Services\EmployeeService;
 use Modules\HRMS\app\Http\Services\RelativeService;
 use Modules\HRMS\app\Http\Services\ResumeService;
+use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
@@ -50,12 +51,10 @@ use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Religion;
 use Modules\PersonMS\app\Models\ReligionType;
 use Modules\StatusMS\app\Models\Status;
-use function PHPUnit\Framework\isEmpty;
-use function Sodium\add;
 
 class EmployeeController extends Controller
 {
-    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait,JobTrait;
+    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait,JobTrait,ApprovingListTrait;
 
 //    public array $data = [];
 //    protected EmployeeRepository $employeeService;
@@ -148,6 +147,10 @@ class EmployeeController extends Controller
                 $rs = json_decode($data['recruitmentRecords'], true);
 
                 $rsRes = $this->rsStore($rs, $employee->id);
+                $rsRes = collect($rsRes);
+                $rsRes->each(function ($rs) {
+                    $this->approvingStore($rs);
+                });
 
             }
             DB::commit();
