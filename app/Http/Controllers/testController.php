@@ -19,9 +19,9 @@ $user=User::with(['organizationUnits'])->find(1955);
 
 $a=$user->organizationUnits[0]->descendants()->whereDepth(2)->with(['person','ancestors','payments'=>function ($query) {
     $query->where('status_id', '=', '46');
-}])->get();
+},'evaluators'])->get();
 
-        dd($a->pluck('person')->flatten());
+        dd($a->pluck('payments')->flatten());
     }
 
 }
