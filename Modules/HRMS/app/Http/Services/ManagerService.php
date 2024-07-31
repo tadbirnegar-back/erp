@@ -19,9 +19,7 @@ class ManagerService
     {
         $ou = $script->load('organizationUnit.head');
 
-        $result[0]['assignedUserID'] = $ou->head->id;
-        $result[0]['priority'] = '1';
-        $result[0]['statusID'] = self::pendingForCurrentUserStatus()->id;
+        $result[0]['assignedUserID'] = $ou->head?->id;
         $result[0]['scriptID'] = $script->id;
 
         return $result;

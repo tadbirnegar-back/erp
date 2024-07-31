@@ -24,7 +24,16 @@ class Person extends Model
     /**
      * The attributes that are mass assignable.
      */
-//    protected $fillable = [];
+    protected $fillable = [
+        'display_name',
+        'national_code',
+        'email',
+        'phone',
+        'personable_id',
+        'personable_type',
+        'create_date',
+        'profile_picture_id',
+    ];
     protected $table = 'persons';
     public $timestamps = false;
 

@@ -27,7 +27,7 @@ trait ScriptAgentScriptTrait
                 'id' => $sas['sasID'] ?? null,
                 'contract' => $sas['defaultValue'],
                 'script_agent_id' => $sas['scriptAgentID'],
-                'script_id' => $sas['scriptID'],
+                'script_id' => $script->id,
             ];
         });
 

@@ -84,6 +84,28 @@ class RecruitmentScript extends Model
 
     public function scriptAgents(): BelongsToMany
     {
-        return $this->belongsToMany(ScriptAgent::class, 'script_agent_script', 'script_id', 'script_agent_id');
+        return $this->belongsToMany(ScriptAgent::class, 'script_agent_script', 'script_id', 'script_agent_id')
+            ->withPivot('contract');
     }
+
+    public function hireType(): BelongsTo
+    {
+        return $this->belongsTo(HireType::class);
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function job(): BelongsTo
+    {
+        return $this->belongsTo(Job::class);
+    }
+
+    public function approvers()
+    {
+        return $this->hasMany(ScriptApprovingList::class, 'script_id');
+    }
+
 }

@@ -3,10 +3,19 @@
 namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Mockery\Exception;
+use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Http\Traits\HireTypeTrait;
+use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
+use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\Job;
+use Modules\HRMS\app\Models\ScriptApprovingList;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -17,63 +26,13 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 
 class RecruitmentScriptController extends Controller
 {
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
+    use RecruitmentScriptTrait, ApprovingListTrait, HireTypeTrait, ScriptTypeTrait;
 
     public function stateOfcs(Request $request)
     {
         $states = StateOfc::with('organizationUnit')
             //exclude EastAzerbaijan state from loading
-            ->whereIntegerNotInRaw('id',[3])
+            ->whereIntegerNotInRaw('id', [3])
             ->get();
 
         return response()->json($states);
@@ -82,7 +41,7 @@ class RecruitmentScriptController extends Controller
 
     public function cityOfcs(Request $request)
     {
-        $states = CityOfc::with('organizationUnit')->where('state_ofc_id',$request->stateOfcID)->get();
+        $states = CityOfc::with('organizationUnit')->where('state_ofc_id', $request->stateOfcID)->get();
 
         return response()->json($states);
 
@@ -90,7 +49,7 @@ class RecruitmentScriptController extends Controller
 
     public function districtOfcs(Request $request)
     {
-        $states = DistrictOfc::with('organizationUnit')->where('city_ofc_id',$request->cityOfcID)->get();
+        $states = DistrictOfc::with('organizationUnit')->where('city_ofc_id', $request->cityOfcID)->get();
 
         return response()->json($states);
 
@@ -98,7 +57,7 @@ class RecruitmentScriptController extends Controller
 
     public function townOfcs(Request $request)
     {
-        $states = TownOfc::with('organizationUnit')->where('district_ofc_id',$request->districtOfcID)->get();
+        $states = TownOfc::with('organizationUnit')->where('district_ofc_id', $request->districtOfcID)->get();
 
         return response()->json($states);
 
@@ -107,28 +66,68 @@ class RecruitmentScriptController extends Controller
 
     public function villageOfcs(Request $request)
     {
-        $districtOfc = DistrictOfc::with(['villageOfcs'=>function ($query) {
-            $query->where('hasLicense',true)->with('organizationUnit');
+        $districtOfc = DistrictOfc::with(['villageOfcs' => function ($query) {
+            $query->where('hasLicense', true)->with('organizationUnit');
         }])->find($request->districtOfcID);
 
         return response()->json($districtOfc->villageOfcs);
 
     }
 
-    public function addRecruitmentScriptBaseInfo(Request $request)
+    public function index(Request $request)
+    {
+        // Extract parameters from the request
+        $data = [
+            'statusID' => $request->input('statusID'),
+            'scriptTypeID' => $request->input('scriptTypeID'),
+            'perPage' => $request->input('perPage', 10), // Default to 10 if not provided
+            'page' => $request->input('page', 1), // Default to 1 if not provided
+            'name' => $request->input('name')
+        ];
+
+
+        $user = auth()->user();
+
+        $result = $this->approvingListIndex($data, $user);
+        $filterData = [
+            'scriptStatus' => ScriptApprovingList::GetAllStatuses(),
+            'scriptTypes' => $this->getListOfScriptTypes(),
+        ];
+
+        return response()->json(['data' => $result, 'filter' => $filterData]);
+    }
+
+    public function store(Request $request)
     {
         $data = $request->all();
+        $validator = Validator::make($data, [
+            'employeeID' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
 
-        $result['hireTypes']=HireType::all();
-        $result['jobs']=Job::all();
-        $ounit = OrganizationUnit::with('positions.levels')->find($data['ounitID']);
-        $result['OunitDetails']=$ounit->positions;
+        try {
+            DB::beginTransaction();
+            $employee = Employee::findOr($data['employeeID'], function () {
+                return response(['message' => 'موردی یافت نشد'], 404);
 
-        return response()->json($result);
+            });
+
+            $rsRes = $this->rsSingleStore($data, $employee->id);
+
+            $rsRes = collect($rsRes);
+            $rsRes->each(function ($rs) {
+                $this->approvingStore($rs);
+            });
+
+            DB::commit();
+            return response()->json($rsRes);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در افزودن حکم', 'error' => $e->getMessage()], 500);
+        }
     }
 
-    public function getScriptAgentCombos()
-    {
-        
-    }
+
 }

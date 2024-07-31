@@ -21,9 +21,7 @@ class HeadUnitService
         $ounit = OrganizationUnit::with('head')
             ->find($optionID);
 
-        $result[0]['assignedUserID'] = $ounit->head->id;
-        $result[0]['priority'] = '1';
-        $result[0]['statusID'] = self::pendingForCurrentUserStatus()->id;
+        $result[0]['assignedUserID'] = $ounit->head?->id;
         $result[0]['scriptID'] = $script->id;
 
         return $result;

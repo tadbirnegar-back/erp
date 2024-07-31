@@ -21,8 +21,8 @@ return new class extends Migration
 
             $table->unsignedBigInteger('assigned_to')->nullable();
             $table->unsignedBigInteger('status_id')->nullable();
-            $table->dateTime('create_date')->nullable();
-            $table->dateTime('update_date')->nullable();
+            $table->timestamp('create_date')->nullable();
+            $table->timestamp('update_date')->nullable();
 
             $table->foreign('approver_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
 

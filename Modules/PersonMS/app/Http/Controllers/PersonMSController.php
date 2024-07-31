@@ -10,31 +10,39 @@ use Illuminate\Support\Facades\Validator;
 use Modules\AddressMS\app\Http\Controllers\AddressMSController;
 use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\services\AddressService;
+use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\CustomerMS\app\Http\Services\CustomerService;
+use Modules\HRMS\app\Http\Traits\SkillTrait;
+use Modules\HRMS\app\Models\ExemptionType;
+use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\PersonMS\app\Http\Services\PersonService;
+use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
+use Modules\PersonMS\app\Models\Religion;
+use Modules\PersonMS\app\Models\ReligionType;
 
 class PersonMSController extends Controller
 {
+    use PersonTrait, AddressTrait, SkillTrait;
 
-    protected $customerService;
-    protected $addressService;
-    protected $personService;
-
-
-    public function __construct(CustomerService $customerService, PersonService $personService, AddressService $addressService)
-    {
-        $this->customerService = $customerService;
-        $this->addressService = $addressService;
-        $this->personService = $personService;
-    }
+//    protected $customerService;
+//    protected $addressService;
+//    protected $personService;
+//
+//
+//    public function __construct(CustomerService $customerService, PersonService $personService, AddressService $addressService)
+//    {
+//        $this->customerService = $customerService;
+//        $this->addressService = $addressService;
+//        $this->personService = $personService;
+//    }
 
 
     public function naturalExists(Request $request)
     {
-        $result = $this->personService->naturalExists($request->nationalCode);
+        $result = $this->naturalPersonExists($request->nationalCode);
 
         if ($result == null) {
             return response()->json(['message' => 'موردی یافت نشد']);
@@ -138,62 +146,55 @@ class PersonMSController extends Controller
         return response()->json($result);
     }
 
-    public function naturalUpdate(Request $request, $id)
+    public function personShow($id)
     {
-        $naturalPerson = Natural::findOrFail($id);
+        $person = Person::with(['avatar',
+            'personable',
+            'user.roles',
+            'workForce.skills',
+            'workForce.educationalRecords.levelOfEducation',
+            'workForce.resumes',
+            'workForce.militaryStatus',
+            'workForce.relatives',
+            'workForce.courseRecords',
+            'workForce.isars.isarStatus',
+            'workForce.isars.relativeType',
+            'employee.recruitmentScripts',
+            'workForce.militaryService.militaryServiceStatus',
+            'workForce.militaryService.exemptionType'])
+            ->findOr($id, function () {
 
-        if ($naturalPerson == null) {
+                return response()->json(['message' => 'موردی یافت نشد'], 404);
+            });
+
+        return response()->json($person);
+    }
+
+    public function naturalPersonUpdate(Request $request, $id)
+    {
+        $person = Person::with('personable')->findOrFail($id);
+
+        if ($person == null) {
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }
+        $data = $request->all();
 
         try {
             DB::beginTransaction();
+            $data['userID'] = \Auth::user()->id;
+
             if ($request->isNewAddress) {
-                $address = new Address();
-                $address->title = $request->title;
-                $address->detail = $request->address;
-                $address->postal_code = $request->postalCode ?? null;
-                $address->longitude = $request->longitude ?? null;
-                $address->latitude = $request->latitude ?? null;
-                $address->map_link = $request->mapLink ?? null;
-                $address->city_id = $request->cityID;
-                $address->status_id = Address::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-                $address->creator_id = \Auth::user()->id;
-                $address->save();
+                $address = $this->addressStore($data);
                 $addressID = $address->id;
             } else {
                 $addressID = $request->homeAddressID;
             }
+            $data['homeAddressID'] = $addressID;
 
-            $naturalPerson->first_name = $request->firstName;
-            $naturalPerson->last_name = $request->lastName;
-            $naturalPerson->mobile = $request->mobile;
-            $naturalPerson->phone_number = $request->phoneNumber ?? null;
-            $naturalPerson->father_name = $request->fatherName ?? null;
-            $naturalPerson->birth_date = $request->dateOfBirth ?? null;
-            $naturalPerson->job = $request->job ?? null;
-            $naturalPerson->isMarried = $request->isMarried ?? null;
-            $naturalPerson->level_of_spouse_education = $request->levelOfSpouseEducation ?? null;
-            $naturalPerson->spouse_first_name = $request->spouseFirstName ?? null;
-            $naturalPerson->spouse_last_name = $request->spouseLastName ?? null;
-            $naturalPerson->home_address_id = $addressID ?? null;
-            $naturalPerson->job_address_id = $request->jobAddressID ?? null;
-            $naturalPerson->gender_id = $request->gender;
-            $naturalPerson->military_service_status_id = $request->militaryServiceStatusID ?? null;
 
-            $naturalPerson->save();
-            $person = $naturalPerson->person;
-            $person->display_name = $naturalPerson->first_name . ' ' . $naturalPerson->last_name;
-            $person->national_code = $request->nationalCode;
-            $person->profile_picture_id = $request->avatar ?? null;
-
-            $naturalPerson->person()->save($person);
-            $statusID = $person->status;
-            if ($statusID[0]->id != $request->statusID) {
-                $naturalPerson->person->status()->attach($request->statusID);
-            }
+            $personUpdate = $this->personNaturalUpdate($data, $person);
             DB::commit();
-            return response()->json($naturalPerson);
+            return response()->json($person);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -361,4 +362,181 @@ class PersonMSController extends Controller
 
         return response()->json(['message' => 'با موفقیت حذف شد']);
     }
+
+    public function religionIndex()
+    {
+        $data['religion'] = Religion::all();
+        $data['religionType'] = ReligionType::all();
+
+        return response()->json($data);
+    }
+
+    public function militaryStatusesIndex()
+    {
+        $result['militaryStatus'] = MilitaryServiceStatus::all();
+        $result['exemptionTypes'] = ExemptionType::all();
+
+        return response()->json($result);
+    }
+
+    public function personProfileUpdate(Request $request, $id)
+    {
+        $person = Person::with('user')->findOrFail($id);
+
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        $user = $person->user;
+        try {
+            DB::beginTransaction();
+            if (isset($data['newPassword'])) {
+                if (\Hash::check($request->currentPassword, $user->password)) {
+                    $user->password = \Hash::make($request->newPassword);
+                    $user->save();
+                    $message = 'با موفقیت بروزرسانی شد';
+                    $statusCode = 200;
+                } else {
+                    $message = 'رمز فعلی نادرست است';
+                    $statusCode = 401;
+
+                }
+
+            }else{
+                $message = 'با موفقیت بروزرسانی شد';
+                $statusCode = 200;
+            }
+
+            $roles = json_decode($data['roles'], true);
+            $user->roles()->sync($roles);
+
+            DB::commit();
+            return response()->json(['message' => $message],$statusCode);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات کاربری'], 500);
+        }
+    }
+
+    public function personalUpdate($id, Request $request)
+    {
+        $person = Person::with('personable')->findOrFail($id);
+
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $this->personNaturalUpdate($data, $person);
+
+            DB::commit();
+            return response()->json(['message' => 'اطلاعات شخصی با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات شخصی'], 500);
+        }
+    }
+
+    public function contactInfoUpdate($id, Request $request)
+    {
+        $person = Person::with('personable', 'user')->findOrFail($id);
+
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+
+            $data['userID'] = \Auth::user()->id;
+
+            if ($request->isNewAddress) {
+                $address = $this->addressStore($data);
+                $addressID = $address->id;
+            } else {
+                $addressID = $request->homeAddressID;
+            }
+            $data['homeAddressID'] = $addressID;
+
+            $user = $person->user;
+            /**
+             * @var Natural $natural
+             */
+            $natural = $person->percentage;
+
+            $natural->mobile = $data['mobile'] ?? null;
+            $natural->home_address_id = $data['homeAddressID'] ?? null;
+            $natural->save();
+
+            $person->phone = $data['phone'] ?? null;
+            $person->email = $data['email'] ?? null;
+            $person->save();
+
+            $user->mobile = $data['mobile'] ?? null;
+            $user->email = $data['email'] ?? null;
+            $user->save();
+
+            DB::commit();
+            return response()->json(['message' => 'اطلاعات تماس با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات تماس'], 500);
+        }
+    }
+
+    public function updatePersonnelInfo($id, Request $request)
+    {
+        $person = Person::with('employee')->findOrFail($id);
+
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $employee = $person->employee;
+            $employee->personnel_code = $data['personnelCode'] ?? null;
+            $employee->save();
+
+            DB::commit();
+            return response()->json(['message' => 'اطلاعات پرسنلی با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات پرسنلی'], 500);
+        }
+    }
+
+    public function updateSkills($id, Request $request)
+    {
+        $person = Person::with('workForce.skills')->findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $skills = json_decode($data['skills'], true);
+            $person->workForce->skills()->sync($skills);
+
+            DB::commit();
+            return response()->json(['message' => 'مهارت ها با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش مهارت ها'], 500);
+        }
+
+    }
+
+
 }

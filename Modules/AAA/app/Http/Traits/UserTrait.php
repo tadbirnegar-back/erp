@@ -9,7 +9,7 @@ trait UserTrait
 {
 
 
-    public function isPersonUserCheck(Person $person): User
+    public function isPersonUserCheck(Person $person): ?User
     {
         $result = User::where('person_id', '=', $person->id)->first();
         return $result;

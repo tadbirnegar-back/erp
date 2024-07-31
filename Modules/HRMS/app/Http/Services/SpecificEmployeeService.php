@@ -20,11 +20,9 @@ class SpecificEmployeeService
 
     public static function generateApprovers(?int $optionID,RecruitmentScript $script)
     {
-        $employee = Employee::with('person.user');
+        $employee = Employee::with('person.user')->find($optionID);
 
         $result[0]['assignedUserID'] = $employee->person->user->id;
-        $result[0]['priority'] = '1';
-        $result[0]['statusID'] = self::pendingForCurrentUserStatus()->id;
         $result[0]['scriptID'] = $script->id;
 
         return $result;

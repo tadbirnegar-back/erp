@@ -5,34 +5,39 @@ namespace Modules\HRMS\app\Http\Services;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\TownOfc;
 
 class HierarchyService
 {
 
     use ApprovingListTrait;
-    public static function procedureIdentifier(int $optionID=null)
+
+    public static function procedureIdentifier(int $optionID = null)
     {
-      return null;
-}
+        return null;
+    }
 
-    public static function generateApprovers(?int $optionID,RecruitmentScript $script)
+    public static function generateApprovers(?int $optionID, RecruitmentScript $script)
     {
-        $oUnit = OrganizationUnit::with('ancestorsAndSelf.head')->find($optionID);
+        $oUnit = $script->load(['organizationUnit.ancestorsAndSelf' => function ($query) {
+            $query
+                ->where('unitable_type', '!=', TownOfc::class)
+                ->where('head_id', '!=', null)
+//                ->whereDepth('!=',1)
+                ->with('head');
 
-        $currentUserPendingStatus = self::pendingForCurrentUserStatus();
-        $pendingStatus = self::pendingStatus();
+        }])->organizationUnit;
 
-        $result = $oUnit->ancestorsAndSelf->map(function (OrganizationUnit $ou,$key) use ($script,$currentUserPendingStatus,$pendingStatus) {
-            $status = $key == 0 ? $currentUserPendingStatus : $pendingStatus;
+
+        $result = $oUnit->ancestorsAndSelf->map(function (OrganizationUnit $ou, $key) use ($script) {
+
             return [
-                'assignedUserID' => $ou->head->id,
-                'priority' => $key + 1,
+                'assignedUserID' => $ou->head?->id,
                 'scriptID' => $script->id,
-                'statusID' => $status->id,
 
             ];
         });
 
         return $result->toArray();
-}
+    }
 }

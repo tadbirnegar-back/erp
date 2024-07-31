@@ -8,7 +8,7 @@ use Modules\PersonMS\app\Models\Person;
 
 trait PersonTrait
 {
-    public function naturalExists(string $nationalCode): Person|null
+    public function naturalPersonExists(string $nationalCode): Person|null
     {
         $person = Person::where('personable_type', Natural::class)
             ->where('national_code', '=', $nationalCode)
@@ -152,6 +152,48 @@ trait PersonTrait
 
         return $naturalPerson;
 
+    }
+
+    public function personNaturalUpdate(array $data,Person $person)
+    {
+        $naturalPerson=$person->personable;
+
+        $naturalPerson->fill([
+            'first_name' => $data['firstName'],
+            'last_name' => $data['lastName'],
+            'mobile' => $data['mobile'] ?? null,
+            'phone_number' => $data['phoneNumber'] ?? null,
+            'father_name' => $data['fatherName'] ?? null,
+            'birth_date' => $data['dateOfBirth'] ?? null,
+            'bc_code' => $data['bcCode'] ?? null,
+            'job' => $data['job'] ?? null,
+            'isMarried' => $data['isMarried'] ?? null,
+            'level_of_spouse_education' => $data['levelOfSpouseEducation'] ?? null,
+            'spouse_first_name' => $data['spouseFirstName'] ?? null,
+            'spouse_last_name' => $data['spouseLastName'] ?? null,
+            'home_address_id' => $data['homeAddressID'] ?? null,
+            'job_address_id' => $data['jobAddressID'] ?? null,
+            'gender_id' => $data['gender'],
+            'bc_issue_date' => $data['bcIssueDate'] ?? null,
+            'bc_issue_location' => $data['bcIssueLocation'] ?? null,
+            'bc_serial' => $data['bcSerial'] ?? null,
+            'religion_id' => $data['religionID'] ?? null,
+            'religion_type_id' => $data['religionTypeID'] ?? null,
+        ]);
+
+        $naturalPerson->save();
+
+        $person->display_name = $naturalPerson->first_name . ' ' . $naturalPerson->last_name;
+        $person->national_code = $data['nationalCode'];
+        $person->profile_picture_id = $data['avatar'] ?? null;
+
+        $naturalPerson->person()->save($person);
+        $statusID = $person->status;
+        if (isset($data['statusID']) && $statusID[0]->id != $data['statusID']) {
+            $person->status()->attach($data['statusID']);
+        }
+
+        return $person;
     }
 
     public function legalUpdate(array $data, Legal $legal)

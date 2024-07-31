@@ -21,26 +21,38 @@ trait ApprovingListTrait
         $scriptTypeID = $data['scriptTypeID'] ?? null;
         $perPage = $data['perPage'] ?? 10;
         $page = $data['page'] ?? 1;
-        $searchTerm = $data['search'] ?? null;
+        $searchTerm = $data['name'] ?? null;
 
         $query = ScriptApprovingList::where('assigned_to', $user->id)
+            ->where(function ($query) {
+                $query->WhereHas('status', function ($query) {
+                    $query->where('name', self::$currentUserPendingStatus);
+                })
+                    ->orWhere('status_id', '!=', null);
+            })
+            ->when($statusID, function ($query) use ($statusID) {
+                $query->where('status_id', $statusID);
+            })
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereHas('employee.person', function ($query) use ($searchTerm) {
+
+                    $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
+                        ->orWhere('display_name', 'LIKE', '%' . $searchTerm . '%')
+                        ->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm])
+                        ->orderByDesc('relevance');
+                });
+            })
+            ->when($scriptTypeID, function ($query)use ($scriptTypeID){
+                $query->whereHas('script', function ($query)use ($scriptTypeID){
+                    $query->where('script_type_id',$scriptTypeID);
+                });
+            })
             ->with([
-
-                'script' => function ($query) use ($scriptTypeID) {
-                    $query->when($scriptTypeID, function ($query) use ($scriptTypeID) {
-                        $query->where('script_type_id', $scriptTypeID);
-                    });
-                }
-
-                , 'approver'
-
-                , 'status' => function ($query) use ($statusID) {
-                    $query->when($statusID, function ($query) use ($statusID) {
-//                        $query->whereHas('status', function ($query) use ($statusID) {
-                        $query->where('id', $statusID);
-//                        });
-                    });
-                }]);
+                'assignedTo',
+                'script.employee.person'
+                ,'status',
+                'script.scriptType'
+            ,'script.hireType'])->distinct();
 
         $result = $query->paginate($perPage, page: $page);
 
@@ -56,29 +68,41 @@ trait ApprovingListTrait
             $optionID = $confirmationType->pivot->option_id ?? null;
             $optionType = $confirmationType->pivot->option_type;
             $approveList = $optionType::generateApprovers($optionID, $rs);
-            array_push($approves, $approveList);
+            $approves[] = $approveList;
         });
 
-        $preparedData = $this->prepareApprovingData($approves);
-        $result = ScriptApprovingList::insert($preparedData);
+        $preparedData = $this->prepareApprovingData($approves, $rs);
+        $result = ScriptApprovingList::insert($preparedData->toArray());
         return $result;
     }
 
-    private function prepareApprovingData(array|Collection $data,)
+    private function prepareApprovingData(array|Collection $data, RecruitmentScript $script)
     {
         if (is_array($data)) {
             $data = collect($data);
         }
 
-        $data = $data->map(fn($item) => [
-            'id' => $item['appID'] ?? null,
-            'script_id' => $item['scriptID'],
-            'priority' => $item['priority'],
-            'assigned_to' => $item['assignedUserID'],
-            'approver_id' => $item['approverID'] ?? null,
-            'status_id' => $item['statusID'],
+        $data = $data->flatten(1);
 
-        ]);
+        $currentUserPendingStatus = self::pendingForCurrentUserStatus();
+        $pendingStatus = self::pendingStatus();
+
+        $data = $data->where('assignedUserID', '!=', null);
+
+        $data = $data->map(function ($item, $key) use ($script, $currentUserPendingStatus, $pendingStatus) {
+
+            $status = $key == 0 ? $currentUserPendingStatus : $pendingStatus;
+            return [
+                'id' => $item['appID'] ?? null,
+                'script_id' => $script->id,
+                'priority' => $key + 1,
+                'assigned_to' => $item['assignedUserID'] ?? null,
+                'approver_id' => $item['approverID'] ?? null,
+                'status_id' => $status->id,
+                'create_date' => Carbon::now(),
+
+            ];
+        });
 
         return $data;
     }

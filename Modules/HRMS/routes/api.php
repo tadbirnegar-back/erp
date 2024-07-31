@@ -41,7 +41,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 });
 
-Route::middleware(['auth:api','route'])->prefix('v1')->name('api.')->group(function () {
+Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/hrm/levels/add', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'store']);
     Route::post('/hrm/levels/list', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'index']);
     Route::post('/hrm/levels/{id}', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'show']);
@@ -82,6 +82,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 
     Route::post('/hrm/hire-types/add', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'store']);
+
     Route::put('/hrm/hire-types/update/{id}', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'update']);
 
     Route::delete('/hrm/hire-types/delete/{id}', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'destroy']);
@@ -101,5 +102,17 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/hrm/ounit/positions/list', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'getByOrganizationUnit']);
 
     Route::post('/hrm/employee/script-combos/', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'agentCombos']);
+
+    Route::post('/hrm/employee/script-types/', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'employeeScriptTypes']);
+
+    Route::post('/hrm/rc/list', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'index'])->middleware(['auth:api']);
+
+    Route::post('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'store']);
+
+    Route::post('/hrm/education-levels/list', [\Modules\HRMS\app\Http\Controllers\LevelsOfEducationController::class, 'index']);
+
+    Route::post('/hrm/isar-types/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'isarsStatusesIndex']);
+
+    Route::post('/hrm/relative-types/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'relativeTypesIndex']);
 });
 

@@ -34,6 +34,26 @@ trait RecruitmentScriptTrait
 
     }
 
+    public function rsSingleStore(array|Collection $data,int $employeeID)
+    {
+        $dataToInsert = $this->rsDataPreparation([$data], $employeeID);
+        $status = $this->pendingRsStatus();
+
+        $rs = RecruitmentScript::create($dataToInsert->toArray()[0]);
+        $rs->status()->attach($status->id);
+
+        if (isset($data['scriptAgents'])) {
+            $agents = json_decode($data['scriptAgents'], true);
+            $scriptAgentsScripts = $this->sasStore($agents, $rs);
+        }
+        $rs->load('scriptType.confirmationTypes');
+
+
+        $result[] = $rs;
+        return $result;
+
+    }
+
     public function rsBulkUpdate(array|collection $data, int $employeeID)
     {
         $dataToUpsert = $this->rsDataPreparation($data, $employeeID);
@@ -62,7 +82,10 @@ trait RecruitmentScriptTrait
         return true;
     }
 
-
+    public function rsShow(RecruitmentScript $script)
+    {
+        $script->load(['position', 'level', 'job','scriptAgents','approvers.status','approvers.assignedTo']);
+}
     private function rsDataPreparation(array|collection $data, int $employeeID)
     {
         if (is_array($data)) {
