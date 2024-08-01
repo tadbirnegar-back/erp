@@ -18,9 +18,26 @@ trait SkillWorkForceTrait
         return $result;
     }
 
-
-    public function swUpdate(array|Collection $data, WorkForce $workForce)
+    public function swSingleStore(array $data, WorkForce $workForce)
     {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+
+        $preparedData = $this->skillWorkforceDataPreparation($data, $workForce);
+
+        $result = SkillWorkForce::create($preparedData->toArray());
+
+        return $result;
+    }
+
+
+    public function swUpdate(array $data, WorkForce $workForce)
+    {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+
         $preparedData = $this->skillWorkforceDataPreparation($data, $workForce);
 
         $result = SkillWorkForce::upsert(

@@ -41,4 +41,6 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::put('/person/user-data/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'personProfileUpdate']);
 
     Route::put('/person/personal-data/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'personalUpdate']);
+
+    Route::put('/person/contact-data/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'contactInfoUpdate'])->middleware('auth:api');
 });

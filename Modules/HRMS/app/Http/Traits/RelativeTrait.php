@@ -7,7 +7,7 @@ use Modules\HRMS\app\Models\Relative;
 
 trait RelativeTrait
 {
-    public function relativeStore(string $json, int $workForceID)
+    public function relativeStore(array $json, int $workForceID)
     {
 
         $dataToInsert = $this->relativeDataPreparation($json, $workForceID);

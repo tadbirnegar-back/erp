@@ -12,9 +12,24 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\services\AddressService;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\CustomerMS\app\Http\Services\CustomerService;
+use Modules\HRMS\app\Http\Traits\CourseRecordTrait;
+use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
+use Modules\HRMS\app\Http\Traits\IsarTrait;
+use Modules\HRMS\app\Http\Traits\MilitaryServiceTrait;
+use Modules\HRMS\app\Http\Traits\RelativeTrait;
+use Modules\HRMS\app\Http\Traits\ResumeTrait;
 use Modules\HRMS\app\Http\Traits\SkillTrait;
+use Modules\HRMS\app\Http\Traits\SkillWorkForceTrait;
+use Modules\HRMS\app\Models\CourseRecord;
+use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\ExemptionType;
+use Modules\HRMS\app\Models\Isar;
+use Modules\HRMS\app\Models\MilitaryService;
 use Modules\HRMS\app\Models\MilitaryServiceStatus;
+use Modules\HRMS\app\Models\Relative;
+use Modules\HRMS\app\Models\Resume;
+use Modules\HRMS\app\Models\Skill;
+use Modules\HRMS\app\Models\SkillWorkForce;
 use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Legal;
@@ -25,20 +40,7 @@ use Modules\PersonMS\app\Models\ReligionType;
 
 class PersonMSController extends Controller
 {
-    use PersonTrait, AddressTrait, SkillTrait;
-
-//    protected $customerService;
-//    protected $addressService;
-//    protected $personService;
-//
-//
-//    public function __construct(CustomerService $customerService, PersonService $personService, AddressService $addressService)
-//    {
-//        $this->customerService = $customerService;
-//        $this->addressService = $addressService;
-//        $this->personService = $personService;
-//    }
-
+    use PersonTrait, AddressTrait, SkillTrait, RelativeTrait, SkillWorkForceTrait, EducationRecordTrait, CourseRecordTrait,ResumeTrait,MilitaryServiceTrait,IsarTrait;
 
     public function naturalExists(Request $request)
     {
@@ -155,7 +157,8 @@ class PersonMSController extends Controller
             'workForce.educationalRecords.levelOfEducation',
             'workForce.resumes',
             'workForce.militaryStatus',
-            'workForce.relatives',
+            'workForce.relatives.relativeType',
+            'workForce.relatives.levelOfEducation',
             'workForce.courseRecords',
             'workForce.isars.isarStatus',
             'workForce.isars.relativeType',
@@ -181,6 +184,7 @@ class PersonMSController extends Controller
 
         try {
             DB::beginTransaction();
+
             $data['userID'] = \Auth::user()->id;
 
             if ($request->isNewAddress) {
@@ -388,13 +392,37 @@ class PersonMSController extends Controller
         }
 
         $data = $request->all();
+        $validator = Validator::make($data, [
+            'username' => [
+                'sometimes',
+                'unique:users,username,' . $person->user->id,
+            ],
+            'currentPassword' => [
+                'sometimes',
+                'required',
+            ],
+            'newPassword' => [
+                'sometimes',
+                'required',
+            ],
+            'roles' => [
+                'required',
+                'regex:/^\[\d+(,\d+)*\]$/',
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        $person->profile_picture_id = $data['avatar'] ?? null;
+        $person->save();
+
         $user = $person->user;
         try {
             DB::beginTransaction();
-            if (isset($data['newPassword'])) {
+            if (isset($data['isNewPassword']) && $data['isNewPassword'] === true) {
                 if (\Hash::check($request->currentPassword, $user->password)) {
                     $user->password = \Hash::make($request->newPassword);
-                    $user->save();
                     $message = 'با موفقیت بروزرسانی شد';
                     $statusCode = 200;
                 } else {
@@ -403,16 +431,19 @@ class PersonMSController extends Controller
 
                 }
 
-            }else{
+            } else {
                 $message = 'با موفقیت بروزرسانی شد';
                 $statusCode = 200;
             }
+
+            $user->username = $data['username'] ?? null;
+            $user->save();
 
             $roles = json_decode($data['roles'], true);
             $user->roles()->sync($roles);
 
             DB::commit();
-            return response()->json(['message' => $message],$statusCode);
+            return response()->json(['message' => $message], $statusCode);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -429,6 +460,26 @@ class PersonMSController extends Controller
         }
 
         $data = $request->all();
+
+        $validator = Validator::make($data, [
+            'nationalCode' => [
+                'required',
+                'unique:persons,national_code,' . $person->id,
+            ],
+            'mobile' => [
+                'required',
+                'unique:users,mobile,' . $person->user->id,
+            ],
+            'email' => [
+                'sometimes',
+                'unique:users,email,' . $person->user->id,
+                'unique:persons,email,' . $person->id,
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
         try {
             DB::beginTransaction();
             $this->personNaturalUpdate($data, $person);
@@ -454,21 +505,37 @@ class PersonMSController extends Controller
         try {
             DB::beginTransaction();
 
+            $validator = Validator::make($data, [
+                'mobile' => [
+                    'required',
+                    'unique:users,mobile,' . $person->user->id,
+                ],
+                'email' => [
+                    'sometimes',
+                    'unique:users,email,' . $person->user->id,
+                    'unique:persons,email,' . $person->id,
+                ],
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
             $data['userID'] = \Auth::user()->id;
 
-            if ($request->isNewAddress) {
-                $address = $this->addressStore($data);
-                $addressID = $address->id;
-            } else {
-                $addressID = $request->homeAddressID;
-            }
+//            if ($request->isNewAddress) {
+//                $address = $this->addressStore($data);
+//                $addressID = $address->id;
+//            } else {
+                $addressID = $request->homeAddressID ?? null;
+//            }
             $data['homeAddressID'] = $addressID;
 
             $user = $person->user;
             /**
              * @var Natural $natural
              */
-            $natural = $person->percentage;
+            $natural = $person->personable;
 
             $natural->mobile = $data['mobile'] ?? null;
             $natural->home_address_id = $data['homeAddressID'] ?? null;
@@ -487,7 +554,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش اطلاعات تماس'], 500);
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات تماس','error'=>$e->getMessage()], 500);
         }
     }
 
@@ -515,9 +582,9 @@ class PersonMSController extends Controller
         }
     }
 
-    public function updateSkills($id, Request $request)
+    public function storeSkillPerson($id, Request $request)
     {
-        $person = Person::with('workForce.skills')->findOrFail($id);
+        $person = Person::with('workForce')->findOrFail($id);
         if ($person == null) {
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }
@@ -525,8 +592,7 @@ class PersonMSController extends Controller
         $data = $request->all();
         try {
             DB::beginTransaction();
-            $skills = json_decode($data['skills'], true);
-            $person->workForce->skills()->sync($skills);
+            $skills = $this->swSingleStore($data, $person->workForce);
 
             DB::commit();
             return response()->json(['message' => 'مهارت ها با موفقیت ویرایش شد']);
@@ -535,8 +601,389 @@ class PersonMSController extends Controller
             DB::rollBack();
             return response()->json(['message' => 'خطا در ویرایش مهارت ها'], 500);
         }
+    }
+
+    public function updateSkillPerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $skill = $this->swUpdate(data: $data, workForce: $person->workForce);
+
+            DB::commit();
+            return response()->json(['message' => 'مهارت ها با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش مهارت ها'], 500);
+        }
+    }
+
+    public function destroySkillPerson($id, Request $request)
+    {
+        $person = Person::with('workForce')->findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $skill = SkillWorkForce::find($data['swID'])->delete();
+
+            DB::commit();
+            return response()->json(['message' => 'مهارت با موفقیت حذف شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف مهارت'], 500);
+        }
+    }
+
+    public function storeRelativePerson($id, Request $request)
+    {
+        $person = Person::with('workForce')->findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $relative = $this->relativeStore($data, $person->workForce->id);
+
+
+            DB::commit();
+            return response()->json(['message' => 'بستگان با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش بستگان'], 500);
+        }
+    }
+
+    public function updateRelativePerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $relative = Relative::find($data['relativeID']);
+            $data['workForceID'] = $person->workForce->id;
+            $relative = $this->relativeUpdate($data, $relative);
+
+            DB::commit();
+            return response()->json(['message' => 'بستگان با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش بستگان'], 500);
+        }
+    }
+
+    public function destroyRelativePerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $relative = Relative::find($data['relativeID']);
+            $relative->delete();
+
+            DB::commit();
+            return response()->json(['message' => 'بستگان با موفقیت حذف شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف بستگان'], 500);
+        }
+    }
+
+    public function storeEducationalRecordPerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $educationalRecord = $this->educationalRecordStore($data, $person->workForce->id);
+
+            DB::commit();
+            return response()->json(['message' => 'سوابق تحصیلی با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش سوابق تحصیلی'], 500);
+        }
+    }
+
+    public function updateEducationalRecordPerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $educationalRecord = EducationalRecord::find($data['educationalRecordID']);
+            $data['workForceID'] = $person->workForce->id;
+            $educationalRecord = $this->educationalRecordUpdate($data, $educationalRecord);
+
+            DB::commit();
+            return response()->json(['message' => 'سوابق تحصیلی با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش سوابق تحصیلی'], 500);
+        }
+    }
+
+    public function destroyEducationalRecordPerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $educationalRecord = EducationalRecord::find($data['educationalRecordID'])->delete();
+
+            DB::commit();
+            return response()->json(['message' => 'سوابق تحصیلی با موفقیت حذف شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف سوابق تحصیلی'], 500);
+        }
+    }
+
+    public function storeCourseRecordPerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $courseRecord = $this->courseRecordStore($data, $person->workForce->id);
+
+            DB::commit();
+            return response()->json(['message' => 'سوابق دوره ها با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش سوابق دوره ها'], 500);
+        }
 
     }
 
+    public function updateCourseRecordPerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $courseRecord = CourseRecord::find($data['courseRecordID']);
+            $data['workForceID'] = $person->workForce->id;
+            $courseRecord = $this->courseRecordUpdate($courseRecord, $data);
+
+            DB::commit();
+            return response()->json(['message' => 'سوابق دوره ها با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش سوابق دوره ها'], 500);
+        }
+
+    }
+
+    public function destroyCourseRecordPerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $courseRecord = CourseRecord::find($data['courseRecordID'])->delete();
+
+            DB::commit();
+            return response()->json(['message' => 'سوابق دوره ها با موفقیت حذف شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف سوابق دوره ها'], 500);
+        }
+
+    }
+
+
+    public function storeResumePerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $resume = $this->resumeStore($data, $person->workForce->id);
+
+            DB::commit();
+            return response()->json(['message' => 'رزومه ها با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در افزودن رزومه'], 500);
+        }
+
+    }
+
+    public function updateResumePerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $resume=Resume::find($data['resumeID']);
+            $data['workForceID'] = $person->workForce->id;
+            $resume = $this->resumeUpdate($data, $resume);
+
+            DB::commit();
+            return response()->json(['message' => 'رزومه ها با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش رزومه'], 500);
+        }
+
+    }
+
+    public function destroyResumePerson($id, Request $request)
+    {
+        $person = Person::findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+            $resume = Resume::find($data['resumeID'])->delete();
+
+            DB::commit();
+            return response()->json(['message' => 'رزومه ها با موفقیت حذف شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف رزومه'], 500);
+        }
+
+    }
+
+    //write update of military_services table for person update or insert method
+    public function storeMilitaryServicePerson($id, Request $request)
+    {
+        $person = Person::with('workForce')->findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+
+            if (isset($data['militaryServiceID']) && $data['hasMilitaryService'] === false) {
+                $militaryService = MilitaryService::find($data['militaryServiceID']);
+                $militaryService->delete();
+                DB::commit();
+                return response()->json(['message' => 'وضعیت نظام وظیفه با موفقیت حذف شد']);
+
+            } elseif (isset($data['militaryServiceID'])) {
+                $militaryService=MilitaryService::find($data['militaryServiceID']);
+                $data['workForceID'] = $person->workForce->id;
+                $militaryService = $this->militaryServiceUpdate($militaryService,$data);
+            } elseif($data['hasMilitaryService'] === true) {
+                $militaryService = $this->militaryServiceStore($data, $person->workForce->id);
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'وضعیت نظام وظیفه با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در افزودن وضعیت نظام وظیفه'], 500);
+        }
+
+    }
+
+    public function storeIsarPerson($id,Request $request)
+    {
+        $person = Person::with('workForce')->findOrFail($id);
+        if ($person == null) {
+            return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
+        }
+
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+
+            if (isset($data['isarID']) && $data['hasIsar'] === false) {
+                $isar = Isar::find($data['isarID']);
+                $isar->delete();
+                DB::commit();
+                return response()->json(['message' => 'وضعیت نظام وظیفه با موفقیت حذف شد']);
+
+            } elseif (isset($data['isarID'])) {
+                $isar=Isar::find($data['isarID']);
+                $data['workForceID'] = $person->workForce->id;
+                $isar = $this->isarUpdate($isar,$data);
+            } elseif($data['hasIsar'] === true) {
+                $isar = $this->isarStore($data, $person->workForce->id);
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'وضعیت نظام وظیفه با موفقیت ویرایش شد']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در افزودن وضعیت نظام وظیفه'], 500);
+        }
+
+
+    }
 
 }

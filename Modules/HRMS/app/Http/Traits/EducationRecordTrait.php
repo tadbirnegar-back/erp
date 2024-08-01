@@ -9,31 +9,35 @@ trait EducationRecordTrait
 {
     public function EducationalRecordStore(array|Collection $dataToInsert, int $workForceID)
     {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $dataToInsert = [$dataToInsert];
+        }
 
-            $educationalRecord = EducationalRecord::insert($dataToInsert);
+        $preparedData = $this->EducationalRecordDataPreparation($dataToInsert, $workForceID);
+        $educationalRecord = EducationalRecord::insert($preparedData);
 
-            $records = EducationalRecord::orderBy('id', 'desc')->take(count($dataToInsert))->get();
+        $records = EducationalRecord::orderBy('id', 'desc')->take(count($dataToInsert))->get();
 
 
-            return $records;
+        return $records;
 
     }
 
     public function EducationalRecordUpdate(array $data, EducationalRecord $educationalRecord)
     {
 
-            $educationalRecord->university_name = $data['universityName'];
-            $educationalRecord->field_of_study = $data['fieldOfStudy'];
-            $educationalRecord->start_date = $data['startDate'];
-            $educationalRecord->end_date = $data['endDate'] ?? null;
-            $educationalRecord->average = $data['average'] ?? null;
-            $educationalRecord->work_force_id = $data['workForceID'];
-            $educationalRecord->level_of_educational_id = $data['levelOfEducationalID'] ?? null;
+        $educationalRecord->university_name = $data['universityName'];
+        $educationalRecord->field_of_study = $data['fieldOfStudy'];
+        $educationalRecord->start_date = $data['startDate'];
+        $educationalRecord->end_date = $data['endDate'] ?? null;
+        $educationalRecord->average = $data['average'] ?? null;
+        $educationalRecord->work_force_id = $data['workForceID'];
+        $educationalRecord->level_of_educational_id = $data['levelOfEducationalID'] ?? null;
 
-            $educationalRecord->save();
+        $educationalRecord->save();
 
 
-            return $educationalRecord;
+        return $educationalRecord;
 
     }
 
@@ -47,10 +51,10 @@ trait EducationRecordTrait
     private function EducationalRecordDataPreparation(array|Collection $educations, int $workForceID)
     {
         if (is_array($educations)) {
-            $educations=collect($educations);
+            $educations = collect($educations);
         }
 
-        $recordsToInsert =$educations->map(fn($data) => [
+        $recordsToInsert = $educations->map(fn($data) => [
             'id' => $data['erID'] ?? null,
             'university_name' => $data['universityName'] ?? null,
             'field_of_study' => $data['fieldOfStudy'] ?? null,
