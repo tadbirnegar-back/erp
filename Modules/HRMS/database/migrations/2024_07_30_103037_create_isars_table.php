@@ -17,11 +17,13 @@ return new class extends Migration
             $table->unsignedInteger('percentage')->nullable();
             $table->unsignedBigInteger('isar_status_id');
 
-            $table->unsignedBigInteger('relative_type_id');
+            $table->unsignedBigInteger('relative_type_id');            $table->unsignedBigInteger('work_force_id');
 
             $table->foreign('isar_status_id')->references('id')->on('isar_statuses')->onDelete('cascade');
 
             $table->foreign('relative_type_id')->references('id')->on('relative_types')->onDelete('cascade');
+
+            $table->foreign('work_force_id')->references('id')->on('work_forces')->onDelete('cascade');
         });
     }
 
