@@ -14,7 +14,10 @@ class SkillWorkForce extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'percentage',
+    'skill_id',
+    'work_force_id',];
 
     public $timestamps = false;
     protected $table = 'skill_work_force';

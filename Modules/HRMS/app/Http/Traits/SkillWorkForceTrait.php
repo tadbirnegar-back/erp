@@ -25,8 +25,7 @@ trait SkillWorkForceTrait
         }
 
         $preparedData = $this->skillWorkforceDataPreparation($data, $workForce);
-
-        $result = SkillWorkForce::create($preparedData->toArray());
+        $result = SkillWorkForce::create($preparedData->toArray()[0]);
 
         return $result;
     }
@@ -55,8 +54,8 @@ trait SkillWorkForceTrait
 
         return $data->map(function ($item) use ($workForce) {
             return [
-                'id' => $item['swID'],
-                'workforce_id' => $workForce->id,
+                'id' => $item['swID'] ?? null,
+                'work_force_id' => $workForce->id,
                 'skill_id' => $item['skillID'],
                 'percentage' => $item['percentage'],
             ];

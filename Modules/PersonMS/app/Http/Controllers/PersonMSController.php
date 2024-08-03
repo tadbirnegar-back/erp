@@ -466,10 +466,6 @@ class PersonMSController extends Controller
                 'required',
                 'unique:persons,national_code,' . $person->id,
             ],
-            'mobile' => [
-                'required',
-                'unique:users,mobile,' . $person->user->id,
-            ],
             'email' => [
                 'sometimes',
                 'unique:users,email,' . $person->user->id,
@@ -489,7 +485,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش اطلاعات شخصی'], 500);
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات شخصی','error'=>$e->getMessage()], 500);
         }
     }
 
