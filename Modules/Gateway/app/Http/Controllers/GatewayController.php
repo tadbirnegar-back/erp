@@ -3,6 +3,7 @@
 namespace Modules\Gateway\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -34,7 +35,7 @@ class GatewayController extends Controller
             ->whereHas('status', function ($query) {
                 $query->where('name', 'پرداخت شده');
             })
-            ->with(['status','organizationUnit.unitable','organizationUnit.ancestorsAndSelf']) // Eager load the 'status' relationship
+            ->with(['status', 'organizationUnit.unitable', 'organizationUnit.ancestorsAndSelf']) // Eager load the 'status' relationship
             ->get();
 //        ->paginate($perPage, page: $page);
         return response()->json(['person' => $user->person, 'payments' => $list]);
@@ -143,12 +144,12 @@ class GatewayController extends Controller
 
 //            $currentAmount = 0; // Initialize a variable for current increment
                 $currentAmount = match ($deg) {
-                    1 => 350000,
+                    1 => 400000,
                     2 => 450000,
                     3 => 500000,
                     4 => 600000,
-                    5 => 700000,
-                    6 => 750000,
+                    5 => 650000,
+                    6 => 700000,
                     default => 0,
                 };
 
@@ -171,8 +172,8 @@ class GatewayController extends Controller
             $factor = [
                 'transactionid' => $transactionid,
                 'purchase_date' => $receipt->getDate(),
-                'amount'=>$amount,
-                'status'=>$status,
+                'amount' => $amount,
+                'status' => $status,
                 'person' => $user->person,
 
             ];
@@ -185,15 +186,15 @@ class GatewayController extends Controller
                 $factor = [
                     'transactionid' => $payments[0]->transactionid,
                     'purchase_date' => $payments[0]->purchase_date,
-                    'amount'=>$amount,
-                    'status'=>$status,
+                    'amount' => $amount,
+                    'status' => $status,
                     'person' => $user->person,
 
                 ];
                 return response()->json(['message' => $exception->getMessage(), 'data' => $factor ?? null]);
             } elseif ($exception->getCode() == -51) {
                 $status = PG::GetAllStatuses()->where('name', 'پرداخت ناموفق')->first();
-                $payments->each(function ($payment) use ( $status) {
+                $payments->each(function ($payment) use ($status) {
                     $payment->status_id = $status->id;
                     $payment->save();
                 });
@@ -203,5 +204,20 @@ class GatewayController extends Controller
             return response()->json(['message' => 'درصورت بروز مشکل با پشتیبانی تماس بگیرید'], 400);
 
         }
+    }
+
+    public function paymentsPerDistrict(Request $request)
+    {
+        $user = auth()->user();
+
+
+        $villages = $user->organizationUnits[0]->descendants()->whereDepth(2)->with(['head.person',
+            'head.notifications',
+            'unitable',
+//            'ancestors',
+            'payments' => function ($query) {
+            $query->where('status_id', '=', '46');
+        }, 'evaluator'])->get();
+        return response()->json($villages);
     }
 }
