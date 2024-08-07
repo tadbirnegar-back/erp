@@ -2,16 +2,29 @@
 
 namespace Modules\HRMS\app\Http\Services;
 
+use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\RecruitmentScript;
 
 class SpecificEmployeeService
 {
-public static function procedureIdentifier(int $optionID=null)
-{
-    $employee = Employee::with('person')->find($optionID);
-    return [
-        'display_name' => $employee->person->display_name,
-        'employee_id' => $employee->id,
-    ];
-}
+    use ApprovingListTrait;
+    public static function procedureIdentifier(int $optionID = null)
+    {
+        $employee = Employee::with('person')->find($optionID);
+        return [
+            'display_name' => $employee->person->display_name,
+            'employee_id' => $employee->id,
+        ];
+    }
+
+    public static function generateApprovers(?int $optionID,RecruitmentScript $script)
+    {
+        $employee = Employee::with('person.user')->find($optionID);
+
+        $result[0]['assignedUserID'] = $employee->person->user->id;
+        $result[0]['scriptID'] = $script->id;
+
+        return $result;
+    }
 }

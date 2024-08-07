@@ -9,6 +9,8 @@ use Modules\HRMS\app\Models\ScriptAgentScript;
 
 trait RecruitmentScriptTrait
 {
+    use ScriptAgentScriptTrait;
+
     public function rsStore(array|collection $data, int $employeeID)
     {
         $dataToInsert = $this->rsDataPreparation($data, $employeeID);
@@ -16,30 +18,39 @@ trait RecruitmentScriptTrait
         $status = $this->pendingRsStatus();
         $result = [];
         foreach ($dataToInsert as $key => $item) {
+
             $rs = RecruitmentScript::create($item);
             $rs->status()->attach($status->id);
-            $agents = json_decode($data[$key], true);
-            foreach ($agents as $agent) {
-                $scriptAgentScript = ScriptAgentScript::create([
-                    'contract' => $agent['contract'],
-                    'script_id' => $rs->id,
-                    'script_agent_id' => $agent['agentID'],
-                ]);
 
-                $rs->setAttribute('scriptAgentScript', $scriptAgentScript);
-            }
+            $agents = json_decode($data[$key]['scriptAgents'], true);
+            $scriptAgentsScripts = $this->sasStore($agents, $rs);
             $rs->load('scriptType.confirmationTypes');
 
-            $conformationTypes = $rs->scriptType->confirmationTypes;
 
-            $conformationTypes->each(function (ConfirmationType $confirmationType) {
-                 $confirmationType->pivot->option_id;
-                 $confirmationType->pivot->option_type;
-            });
             $result[] = $rs;
         }
         return $result;
 
+
+    }
+
+    public function rsSingleStore(array|Collection $data,int $employeeID)
+    {
+        $dataToInsert = $this->rsDataPreparation([$data], $employeeID);
+        $status = $this->pendingRsStatus();
+
+        $rs = RecruitmentScript::create($dataToInsert->toArray()[0]);
+        $rs->status()->attach($status->id);
+
+        if (isset($data['scriptAgents'])) {
+            $agents = json_decode($data['scriptAgents'], true);
+            $scriptAgentsScripts = $this->sasStore($agents, $rs);
+        }
+        $rs->load('scriptType.confirmationTypes');
+
+
+        $result[] = $rs;
+        return $result;
 
     }
 
@@ -71,7 +82,10 @@ trait RecruitmentScriptTrait
         return true;
     }
 
-
+    public function rsShow(RecruitmentScript $script)
+    {
+        $script->load(['position', 'level', 'job','scriptAgents','approvers.status','approvers.assignedTo']);
+}
     private function rsDataPreparation(array|collection $data, int $employeeID)
     {
         if (is_array($data)) {
@@ -98,7 +112,7 @@ trait RecruitmentScriptTrait
 
     public function activeRsStatus()
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'فعال');
     }
 
     public function inActiveRsStatus()

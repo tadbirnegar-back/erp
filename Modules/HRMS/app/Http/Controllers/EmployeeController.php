@@ -8,19 +8,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
-use Modules\AddressMS\app\Models\Address;
-use Modules\AddressMS\app\Repositories\AddressRepository;
-use Modules\AddressMS\app\services\AddressService;
+use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AddressMS\app\Traits\AddressTrait;
-use Modules\HRMS\app\Http\Repositories\EducationalRecordRepository;
-use Modules\HRMS\app\Http\Repositories\EmployeeRepository;
-use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
-use Modules\HRMS\app\Http\Repositories\RelativeRepository;
-use Modules\HRMS\app\Http\Repositories\ResumeRepository;
-use Modules\HRMS\app\Http\Services\EducationalRecordService;
-use Modules\HRMS\app\Http\Services\EmployeeService;
-use Modules\HRMS\app\Http\Services\RelativeService;
-use Modules\HRMS\app\Http\Services\ResumeService;
+use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
@@ -33,29 +23,20 @@ use Modules\HRMS\app\Http\Traits\SkillTrait;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
-use Modules\HRMS\app\Models\Job;
-use Modules\HRMS\app\Models\Level;
-use Modules\HRMS\app\Models\LevelOfEducation;
-use Modules\HRMS\app\Models\MilitaryServiceStatus;
+use Modules\HRMS\app\Models\IsarStatus;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
-use Modules\HRMS\app\Models\ScriptAgent;
 use Modules\HRMS\app\Models\ScriptType;
-use Modules\HRMS\app\Models\Skill;
-use Modules\PersonMS\app\Http\Repositories\PersonRepository;
-use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Religion;
 use Modules\PersonMS\app\Models\ReligionType;
 use Modules\StatusMS\app\Models\Status;
-use function PHPUnit\Framework\isEmpty;
-use function Sodium\add;
 
 class EmployeeController extends Controller
 {
-    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait,JobTrait;
+    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait, JobTrait, ApprovingListTrait, UserTrait;
 
 //    public array $data = [];
 //    protected EmployeeRepository $employeeService;
@@ -115,6 +96,9 @@ class EmployeeController extends Controller
                 $this->naturalStore($data);
 
             $data['personID'] = $personResult->person->id;
+            $data['password'] = $data['nationalCode'];
+            $user = $this->isPersonUserCheck($personResult->person);
+            $user = $user ?? $this->storeUser($data);
             $personAsEmployee = $this->isEmployee($data['personID']);
             $employee = !is_null($personAsEmployee) ? $this->employeeUpdate($data, $personAsEmployee) : $this->employeeStore($data);
 
@@ -148,6 +132,10 @@ class EmployeeController extends Controller
                 $rs = json_decode($data['recruitmentRecords'], true);
 
                 $rsRes = $this->rsStore($rs, $employee->id);
+                $rsRes = collect($rsRes);
+                $rsRes->each(function ($rs) {
+                    $this->approvingStore($rs);
+                });
 
             }
             DB::commit();
@@ -266,7 +254,7 @@ class EmployeeController extends Controller
 
     public function isPersonEmployee(Request $request)
     {
-        $result = $this->naturalExists($request->nationalCode);
+        $result = $this->naturalPersonExists($request->nationalCode);
         if ($result == null) {
             $message = 'notFound';
             $data = null;
@@ -317,7 +305,8 @@ class EmployeeController extends Controller
 
 //        $person = $this->latestScriptByNationalCode($data['nationalCode']);
 
-        $person = $this->naturalExists($request->nationalCode);
+        $person = $this->naturalPersonExists($request->nationalCode);
+        $user =
         $employee = $person ? $this->isEmployee($person->id) : null;
 
         $message = $person ? ($employee ? 'employee' : 'found') : 'notFound';
@@ -332,6 +321,27 @@ class EmployeeController extends Controller
 
         return response()->json(['data' => $data, 'scriptTypes' => $scriptTypes, 'message' => $message]);
 
+
+    }
+
+    public function employeeScriptTypes(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'employeeID' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+        $employee = Employee::with('latestRecruitmentScript.issueTime')->findOr($data['employeeID'], function () {
+            return response(['message' => 'موردی یافت نشد'], 404);
+        });
+
+        $issueTitle = $employee?->latestRecruitmentScript?->issueTime?->title;
+
+        $scriptTypes = $this->getCompatibleIssueTimesByName($issueTitle ?? null);
+
+        return response()->json(['scriptTypes' => $scriptTypes]);
 
     }
 
@@ -355,5 +365,17 @@ class EmployeeController extends Controller
 
         return response()->json($response);
 
+    }
+
+    public function isarsStatusesIndex()
+    {
+        $result=IsarStatus::all();
+        return response()->json($result);
+    }
+
+    public function relativeTypesIndex()
+    {
+        $result=RelativeType::all();
+        return response()->json($result);
     }
 }

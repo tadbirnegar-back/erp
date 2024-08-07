@@ -34,6 +34,6 @@ class Relative extends Model
 
     public function levelOfEducation(): BelongsTo
     {
-        return $this->belongsTo(LevelOfEducation::class);
+        return $this->belongsTo(LevelOfEducation::class,'level_of_educational_id');
     }
 }

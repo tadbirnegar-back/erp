@@ -56,14 +56,14 @@ class OrganizationUnit extends Model
         return $this->belongsToMany(Evaluation::class);
     }
 
-    public function evaluator(): HasOne
-    {
-        return $this->hasOne(Evaluator::class, 'organization_unit_id');
-    }
-
     public function evaluators(): HasMany
     {
         return $this->hasMany(Evaluator::class, 'organization_unit_id');
+    }
+
+    public function evaluator(): HasOne
+    {
+        return $this->hasOne(Evaluator::class, 'organization_unit_id');
     }
 
     use BelongsToThrough;

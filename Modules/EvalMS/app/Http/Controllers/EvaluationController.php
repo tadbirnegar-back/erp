@@ -5,7 +5,7 @@ namespace Modules\EvalMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\EvalMS\App\Http\Traits\EvaluatorTrait;
+use Modules\EvalMS\app\Http\Traits\EvaluatorTrait; 
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 

@@ -46,6 +46,14 @@ trait SkillTrait
 
     }
 
+    public function skillDestroy(Skill $skill)
+    {
+        $status = $this->inactiveSkillStatus();
+        $skill->status_id = $status->id;
+        $skill->save();
+        return $skill;
+    }
+
     public function activeSkillStatus()
     {
         return Skill::GetAllStatuses()->firstWhere('name', '=', $this->skillActiveName);

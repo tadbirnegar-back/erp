@@ -187,7 +187,7 @@ class CustomerMSController extends Controller
 
     public function naturalIsCustomer(Request $request)
     {
-        $result = $this->naturalExists($request->nationalCode);
+        $result = $this->naturalPersonExists($request->nationalCode);
         if ($result == null) {
             $message = 'notFound';
             $data = null;

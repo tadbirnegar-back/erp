@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\HRMS\Database\factories\WorkForceFactory;
 use Modules\PersonMS\app\Models\Person;
@@ -27,9 +28,9 @@ class WorkForce extends Model
         //return WorkForceFactory::new();
     }
 
-    public function skills(): BelongsToMany
+    public function skills()
     {
-        return $this->belongsToMany(Skill::class,'skill_work_force')->withPivot(['percentage']);
+        return $this->hasMany(SkillWorkForce::class)->with('skill');
     }
 
     public function statuses(): BelongsToMany
@@ -70,6 +71,21 @@ class WorkForce extends Model
     public function workforceable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function courseRecords(): HasMany
+    {
+        return $this->hasMany(CourseRecord::class, 'workforce_id');
+    }
+
+    public function militaryService(): HasOne
+    {
+        return $this->hasOne(MilitaryService::class, 'work_force_id');
+    }
+
+    public function isars(): HasMany
+    {
+        return $this->hasMany(Isar::class,'work_force_id');
     }
 
 //    public function statusWorkForces()

@@ -18,7 +18,7 @@ trait EmployeeTrait
         null => ['شروع به همکاری'],
         'قطع همکاری' => ['شروع به همکاری'],
         'اتمام دوران همکاری' => ['شروع به همکاری'],
-        'شروع همکاری' => ['دوران همکاری', 'اتمام دوران همکاری', 'قطع همکاری'],
+        'شروع به همکاری' => ['دوران همکاری', 'اتمام دوران همکاری', 'قطع همکاری'],
         'دوران همکاری' => ['دوران همکاری', 'اتمام دوران همکاری', 'قطع همکاری'],
 
     ];
@@ -41,7 +41,7 @@ trait EmployeeTrait
             })
                 ->with(['person' => function ($query) use ($searchTerm) {
                     $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
-                }, 'person.user','person.avatar']);
+                }, 'person.user', 'person.avatar']);
         });
         $employeeQuery->when($position, function ($query, $position) {
             $query->whereHas('latestRecruitmentScript', function ($query) use ($position) {
@@ -88,7 +88,7 @@ trait EmployeeTrait
 
 
         $employee = new Employee();
-
+        $employee->personnel_code = $data['personnelCode'] ?? null;
         $employee->save();
 
         $workForce = new WorkForce();
@@ -126,6 +126,8 @@ trait EmployeeTrait
     public function employeeUpdate(array $data, Employee $employee)
     {
 
+
+        $employee->personnel_code = $data['personnelCode'] ?? null;
         $workForce = $employee->workForce;
         $workForce->person_id = $data['personID'];
         $workForce->isMarried = $data['isMarried'] ? 1 : 0;
@@ -180,7 +182,7 @@ trait EmployeeTrait
 
     public function activeWorkForceStatus()
     {
-        return WorkForce::GetAllStatuses()
+        return Employee::GetAllStatuses()
             ->firstWhere('name', '=', 'فعال');
     }
 
@@ -205,31 +207,28 @@ trait EmployeeTrait
     {
         $compatibleIssueTimes = $this->compatibleIssueTimes[$name];
         $issueTimes = IssueTime::whereIn('title', $compatibleIssueTimes)
-            ->with('scriptTypes')
+            ->with(['scriptTypes' => function ($query) {
+                $query->whereHas('status', function ($query) {
+                    $query->where('name', '=', 'فعال');
+                });
+            }])
             ->get();
 
         return $issueTimes->pluck('scriptTypes')->flatten();
     }
 
-    public function getScriptAgentCombos(HireType $hireType,ScriptType $scriptType)
+    public function getScriptAgentCombos(HireType $hireType, ScriptType $scriptType)
     {
         $hireTypeId = $hireType->id;
         $scriptTypeId = $scriptType->id;
 
-//        $scriptAgents = DB::table('script_agent_combos')
-//            ->join('script_types', 'script_agent_combos.script_type_id', '=', 'script_types.id')
-//            ->where('script_agent_combos.hire_type_id', $hireTypeId)
-//            ->where('script_agent_combos.script_type_id', $scriptTypeId)
-//            ->select('script_agents.*', 'script_agent_combos.default_value')
-//            ->get();
-
-        $hireType->load(['scriptAgents'=>function ($query) use ($scriptTypeId) {
+        $hireType->load(['scriptAgents' => function ($query) use ($scriptTypeId) {
             $query->where('script_type_id', $scriptTypeId);
 
         }]);
         $scriptAgents = $hireType->scriptAgents;
 
-        $scriptAgents->each(function ($scriptAgent){
+        $scriptAgents->each(function ($scriptAgent) {
             if (!is_null($scriptAgent->pivot->formula)) {
                 $scriptAgent->pivot->default_value = FormulaEnum::from($scriptAgent->pivot->formula)->getPrice();
             }

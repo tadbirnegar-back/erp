@@ -87,7 +87,7 @@ class LoginController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $result = $this->naturalExists($request->nationalCode);
+        $result = $this->naturalPersonExists($request->nationalCode);
 
         if ($result === null) {
             $message = 'notFound';
