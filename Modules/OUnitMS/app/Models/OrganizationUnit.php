@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
 use Modules\EvalMS\app\Models\Evaluation;
+use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Models\Payment;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -52,6 +54,16 @@ class OrganizationUnit extends Model
     public function evaluations(): BelongsToMany
     {
         return $this->belongsToMany(Evaluation::class);
+    }
+
+    public function evaluator(): HasOne
+    {
+        return $this->hasOne(Evaluator::class, 'organization_unit_id');
+    }
+
+    public function evaluators(): HasMany
+    {
+        return $this->hasMany(Evaluator::class, 'organization_unit_id');
     }
 
     use BelongsToThrough;
