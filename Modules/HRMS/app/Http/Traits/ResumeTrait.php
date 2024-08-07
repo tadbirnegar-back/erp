@@ -9,13 +9,17 @@ trait ResumeTrait
 {
     public function resumeStore(array|Collection $data, int $workForceID)
     {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+
         $dataToInsert = $this->resumeDataPreparation($data, $workForceID);
 
 
-        $resume = Resume::insert($dataToInsert);
+        $resume = Resume::insert($dataToInsert->toArray());
 
         $resumes = Resume::orderBy('id', 'desc')
-            ->take(count($dataToInsert))
+            ->take(count($dataToInsert->toArray()))
             ->get();
 
         return $resumes;
@@ -29,7 +33,7 @@ trait ResumeTrait
         $resume->end_date = $data['endDate'] ?? null;
         $resume->position = $data['position'];
         $resume->salary = $data['salary'] ?? null;
-        $resume->work_force_id = $data['workForceId'];
+        $resume->work_force_id = $data['workForceID'];
         $resume->city = $data['city'];
 
         $resume->save();
@@ -48,7 +52,7 @@ trait ResumeTrait
         }
 
         $resumes = $resumes->map(fn($data) => [
-            'id' => $data['id'],
+            'id' => $data['id'] ?? null,
             'company_name' => $data['companyName'],
             'start_date' => $data['startDate'],
             'end_date' => $data['endDate'] ?? null,

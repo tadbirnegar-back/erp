@@ -7,15 +7,17 @@ use Modules\HRMS\app\Models\Relative;
 
 trait RelativeTrait
 {
-    public function relativeStore(array $json, int $workForceID)
+    public function relativeStore(array $dataToInsert, int $workForceID)
     {
-
-        $dataToInsert = $this->relativeDataPreparation($json, $workForceID);
+        if (!isset($dataToInsert[0]) || !is_array($dataToInsert[0])) {
+            $dataToInsert = [$dataToInsert];
+        }
+        $dataToInsert = $this->relativeDataPreparation($dataToInsert, $workForceID);
 
 
         /** @var Relative $relative */
 
-        $relativesInsertion = Relative::insert($dataToInsert);
+        $relativesInsertion = Relative::insert($dataToInsert->toArray());
 
         $records = Relative::orderBy('id', 'desc')->take(count($dataToInsert))->get();
 
@@ -56,8 +58,8 @@ trait RelativeTrait
             'full_name' => $data['fullName'],
             'birthdate' => $data['birthdate'] ?? null,
             'mobile' => $data['mobile'] ?? null,
-            'level_of_educational_id' => $data['levelOfEducationalId'] ?? null,
-            'relative_type_id' => $data['relativeTypeId'] ?? null,
+            'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
+            'relative_type_id' => $data['relativeTypeID'] ?? null,
             'work_force_id' => $workForceID,
         ]);
 

@@ -14,7 +14,7 @@ trait EducationRecordTrait
         }
 
         $preparedData = $this->EducationalRecordDataPreparation($dataToInsert, $workForceID);
-        $educationalRecord = EducationalRecord::insert($preparedData);
+        $educationalRecord = EducationalRecord::insert($preparedData->toArray()[0]);
 
         $records = EducationalRecord::orderBy('id', 'desc')->take(count($dataToInsert))->get();
 

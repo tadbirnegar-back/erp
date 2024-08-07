@@ -40,7 +40,7 @@ use Modules\PersonMS\app\Models\ReligionType;
 
 class PersonMSController extends Controller
 {
-    use PersonTrait, AddressTrait, SkillTrait, RelativeTrait, SkillWorkForceTrait, EducationRecordTrait, CourseRecordTrait,ResumeTrait,MilitaryServiceTrait,IsarTrait;
+    use PersonTrait, AddressTrait, SkillTrait, RelativeTrait, SkillWorkForceTrait, EducationRecordTrait, CourseRecordTrait, ResumeTrait, MilitaryServiceTrait, IsarTrait;
 
     public function naturalExists(Request $request)
     {
@@ -485,7 +485,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش اطلاعات شخصی','error'=>$e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات شخصی', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -523,7 +523,7 @@ class PersonMSController extends Controller
 //                $address = $this->addressStore($data);
 //                $addressID = $address->id;
 //            } else {
-                $addressID = $request->homeAddressID ?? null;
+            $addressID = $request->homeAddressID ?? null;
 //            }
             $data['homeAddressID'] = $addressID;
 
@@ -550,7 +550,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش اطلاعات تماس','error'=>$e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات تماس'], 500);
         }
     }
 
@@ -588,10 +588,10 @@ class PersonMSController extends Controller
         $data = $request->all();
         try {
             DB::beginTransaction();
-            $skills = $this->swSingleStore($data, $person->workForce);
+            $skill = $this->swSingleStore($data, $person->workForce);
 
             DB::commit();
-            return response()->json(['message' => 'مهارت ها با موفقیت ویرایش شد']);
+            return response()->json(['message' => 'مهارت ها با موفقیت ویرایش شد', 'data' => $skill]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -612,7 +612,7 @@ class PersonMSController extends Controller
             $skill = $this->swUpdate(data: $data, workForce: $person->workForce);
 
             DB::commit();
-            return response()->json(['message' => 'مهارت ها با موفقیت ویرایش شد']);
+            return response()->json(['message' => 'مهارت ها با موفقیت ویرایش شد', 'data' => $skill]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -630,7 +630,7 @@ class PersonMSController extends Controller
         $data = $request->all();
         try {
             DB::beginTransaction();
-            $skill = SkillWorkForce::find($data['swID'])->delete();
+            $skill = SkillWorkForce::find($data['swID'])?->delete();
 
             DB::commit();
             return response()->json(['message' => 'مهارت با موفقیت حذف شد']);
@@ -659,7 +659,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش بستگان'], 500);
+            return response()->json(['message' => 'خطا در ویرایش بستگان', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -739,7 +739,7 @@ class PersonMSController extends Controller
         $data = $request->all();
         try {
             DB::beginTransaction();
-            $educationalRecord = EducationalRecord::find($data['educationalRecordID']);
+            $educationalRecord = EducationalRecord::find($data['erID']);
             $data['workForceID'] = $person->workForce->id;
             $educationalRecord = $this->educationalRecordUpdate($data, $educationalRecord);
 
@@ -762,7 +762,7 @@ class PersonMSController extends Controller
         $data = $request->all();
         try {
             DB::beginTransaction();
-            $educationalRecord = EducationalRecord::find($data['educationalRecordID'])->delete();
+            $educationalRecord = EducationalRecord::find($data['erID'])->delete();
 
             DB::commit();
             return response()->json(['message' => 'سوابق تحصیلی با موفقیت حذف شد']);
@@ -806,7 +806,7 @@ class PersonMSController extends Controller
         try {
             DB::beginTransaction();
             $courseRecord = CourseRecord::find($data['courseRecordID']);
-            $data['workForceID'] = $person->workForce->id;
+            $data['workforceID'] = $person->workForce->id;
             $courseRecord = $this->courseRecordUpdate($courseRecord, $data);
 
             DB::commit();
@@ -814,7 +814,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش سوابق دوره ها'], 500);
+            return response()->json(['message' => 'خطا در ویرایش سوابق دوره ها', 'error' => $e->getMessage()], 500);
         }
 
     }
@@ -874,7 +874,7 @@ class PersonMSController extends Controller
         $data = $request->all();
         try {
             DB::beginTransaction();
-            $resume=Resume::find($data['resumeID']);
+            $resume = Resume::find($data['resumeID']);
             $data['workForceID'] = $person->workForce->id;
             $resume = $this->resumeUpdate($data, $resume);
 
@@ -883,7 +883,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش رزومه'], 500);
+            return response()->json(['message' => 'خطا در ویرایش رزومه', 'error' => $e->getMessage()], 500);
         }
 
     }
@@ -922,17 +922,17 @@ class PersonMSController extends Controller
         try {
             DB::beginTransaction();
 
-            if (isset($data['militaryServiceID']) && $data['hasMilitaryService'] === false) {
-                $militaryService = MilitaryService::find($data['militaryServiceID']);
-                $militaryService->delete();
-                DB::commit();
-                return response()->json(['message' => 'وضعیت نظام وظیفه با موفقیت حذف شد']);
-
-            } elseif (isset($data['militaryServiceID'])) {
-                $militaryService=MilitaryService::find($data['militaryServiceID']);
-                $data['workForceID'] = $person->workForce->id;
-                $militaryService = $this->militaryServiceUpdate($militaryService,$data);
-            } elseif($data['hasMilitaryService'] === true) {
+            if (isset($data['militaryServiceID'])) {
+                if ($data['hasMilitaryService'] == 0) {
+                    $militaryService = MilitaryService::find($data['militaryServiceID']);
+                    $militaryService->delete();
+                    return response()->json(['message' => 'وضعیت نظام وظیفه با موفقیت حذف شد']);
+                } else {
+                    $militaryService = MilitaryService::find($data['militaryServiceID']);
+                    $data['workForceID'] = $person->workForce->id;
+                    $militaryService = $this->militaryServiceUpdate($militaryService, $data);
+                }
+            } elseif ($data['hasMilitaryService'] == 1) {
                 $militaryService = $this->militaryServiceStore($data, $person->workForce->id);
             }
 
@@ -946,7 +946,7 @@ class PersonMSController extends Controller
 
     }
 
-    public function storeIsarPerson($id,Request $request)
+    public function storeIsarPerson($id, Request $request)
     {
         $person = Person::with('workForce')->findOrFail($id);
         if ($person == null) {
@@ -957,17 +957,17 @@ class PersonMSController extends Controller
         try {
             DB::beginTransaction();
 
-            if (isset($data['isarID']) && $data['hasIsar'] === false) {
+            if (isset($data['isarID']) && $data['hasIsar'] == 0) {
                 $isar = Isar::find($data['isarID']);
                 $isar->delete();
                 DB::commit();
                 return response()->json(['message' => 'وضعیت نظام وظیفه با موفقیت حذف شد']);
 
             } elseif (isset($data['isarID'])) {
-                $isar=Isar::find($data['isarID']);
+                $isar = Isar::find($data['isarID']);
                 $data['workForceID'] = $person->workForce->id;
-                $isar = $this->isarUpdate($isar,$data);
-            } elseif($data['hasIsar'] === true) {
+                $isar = $this->isarUpdate($isar, $data);
+            } elseif ($data['hasIsar'] == 1) {
                 $isar = $this->isarStore($data, $person->workForce->id);
             }
 
@@ -976,7 +976,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن وضعیت نظام وظیفه'], 500);
+            return response()->json(['message' => 'خطا در ویرایش وضعیت نظام وظیفه', 'error' => $e->getMessage()], 500);
         }
 
 

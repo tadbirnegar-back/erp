@@ -22,4 +22,9 @@ class SkillWorkForce extends Model
     public $timestamps = false;
     protected $table = 'skill_work_force';
 
+
+    public function skill()
+    {
+        return $this->belongsTo(Skill::class,'skill_id');
+    }
 }

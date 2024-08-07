@@ -50,5 +50,33 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
     Route::delete('/person/skills/delete/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'destroySkillPerson']);
 
+    Route::put('/person/educations/add/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'storeEducationalRecordPerson']);
+
+    Route::put('/person/educations/edit/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'updateEducationalRecordPerson']);
+
+    Route::delete('/person/educations/delete/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'destroyEducationalRecordPerson']);
+
+    Route::put('/person/course-record/add/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'storeCourseRecordPerson']);
+
+    Route::put('/person/course-record/edit/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'updateCourseRecordPerson']);
+
+    Route::delete('/person/course-record/delete/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'destroyCourseRecordPerson']);
+
+    Route::put('/person/resume/add/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'storeResumePerson']);
+
+    Route::put('/person/resume/edit/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'updateResumePerson']);
+
+    Route::delete('/person/resume/delete/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'destroyResumePerson']);
+
+    Route::put('/person/relative/add/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'storeRelativePerson']);
+
+    Route::put('/person/relative/edit/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'updateRelativePerson']);
+
+    Route::delete('/person/relative/delete/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'destroyRelativePerson']);
+
+    Route::put('/person/military-service/add/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'storeMilitaryServicePerson']);
+
+    Route::put('/person/isar/add/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'storeIsarPerson']);
+
     Route::put('/person/contact-data/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'contactInfoUpdate'])->middleware('auth:api');
 });

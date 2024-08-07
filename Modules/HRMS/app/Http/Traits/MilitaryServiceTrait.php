@@ -11,10 +11,9 @@ trait MilitaryServiceTrait
     public function militaryServiceStore(array $data, int $workForceID)
     {
         $militaryService = new MilitaryService();
-        $militaryService->military_service_type_id = $data['militaryServiceTypeID']??null;
-        $militaryService->exemption_type_id = $data['exemptionTypeID']??null;
-        $militaryService->start_date = $data['startDate']??null;
-        $militaryService->end_date = $data['endDate']??null;
+        $militaryService->military_service_status_id = $data['militaryServiceStatusID'] ?? null;
+        $militaryService->exemption_type_id = $data['exemptionTypeID'] ?? null;
+        $militaryService->issue_date = $data['issueDate'] ?? null;
         $militaryService->work_force_id = $workForceID;
         $militaryService->save();
 
@@ -26,12 +25,11 @@ trait MilitaryServiceTrait
         return MilitaryService::find($id);
     }
 
-    public function militaryServiceUpdate(MilitaryService $militaryService, array $data): ?MilitaryService
+    public function militaryServiceUpdate(MilitaryService $militaryService, array $data): MilitaryService
     {
-        $militaryService->military_service_type_id = $data['militaryServiceTypeID']??null;
-        $militaryService->exemption_type_id = $data['exemptionTypeID']??null;
-        $militaryService->start_date = $data['startDate']??null;
-        $militaryService->end_date = $data['endDate']??null;
+        $militaryService->military_service_status_id = $data['militaryServiceStatusID'] ?? null;
+        $militaryService->exemption_type_id = $data['exemptionTypeID'] ?? null;
+        $militaryService->issue_date = $data['issueDate'] ?? null;
         $militaryService->work_force_id = $data['workForceID'];
         $militaryService->save();
 

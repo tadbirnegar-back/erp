@@ -28,9 +28,9 @@ class WorkForce extends Model
         //return WorkForceFactory::new();
     }
 
-    public function skills(): BelongsToMany
+    public function skills()
     {
-        return $this->belongsToMany(Skill::class,'skill_work_force')->withPivot(['percentage']);
+        return $this->hasMany(SkillWorkForce::class)->with('skill');
     }
 
     public function statuses(): BelongsToMany
@@ -83,9 +83,9 @@ class WorkForce extends Model
         return $this->hasOne(MilitaryService::class, 'work_force_id');
     }
 
-    public function isars(): BelongsTo
+    public function isars(): HasMany
     {
-        return $this->belongsTo(Isar::class,'isar_id');
+        return $this->hasMany(Isar::class,'work_force_id');
     }
 
 //    public function statusWorkForces()
