@@ -33,6 +33,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/employee/natural/search', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'findPersonToInsertAsEmployee'])->middleware('auth:api');
+    Route::post('/employee/national-code/search', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'findPersonToInsertAsEmployee']);
     Route::post('/recruitment/list/state_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'stateOfcs']);
     Route::post('/recruitment/list/city_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cityOfcs']);
     Route::post('/recruitment/list/district_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'districtOfcs']);
