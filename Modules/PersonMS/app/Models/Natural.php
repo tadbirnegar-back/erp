@@ -61,5 +61,15 @@ class Natural extends Model
         return $this->belongsTo(Address::class, 'job_address_id');
     }
 
+    public function religion()
+    {
+        return $this->belongsTo(Religion::class,'religion_id');
+    }
+
+    public function religionType()
+    {
+        return $this->belongsTo(ReligionType::class,'religion_type_id');
+    }
+
 
 }

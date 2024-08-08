@@ -151,7 +151,8 @@ class PersonMSController extends Controller
     public function personShow($id)
     {
         $person = Person::with(['avatar',
-            'personable',
+            'personable.religion',
+            'personable.religionType',
             'user.roles',
             'workForce.skills',
             'workForce.educationalRecords.levelOfEducation',
@@ -655,7 +656,7 @@ class PersonMSController extends Controller
 
 
             DB::commit();
-            return response()->json(['message' => 'بستگان با موفقیت ویرایش شد']);
+            return response()->json(['message' => 'بستگان با موفقیت ویرایش شد', 'data' => $relative]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -678,7 +679,7 @@ class PersonMSController extends Controller
             $relative = $this->relativeUpdate($data, $relative);
 
             DB::commit();
-            return response()->json(['message' => 'بستگان با موفقیت ویرایش شد']);
+            return response()->json(['message' => 'بستگان با موفقیت ویرایش شد', 'data' => $relative]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -721,7 +722,7 @@ class PersonMSController extends Controller
             $educationalRecord = $this->educationalRecordStore($data, $person->workForce->id);
 
             DB::commit();
-            return response()->json(['message' => 'سوابق تحصیلی با موفقیت ویرایش شد','data'=>$educationalRecord]);
+            return response()->json(['message' => 'سوابق تحصیلی با موفقیت ویرایش شد', 'data' => $educationalRecord]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -744,7 +745,7 @@ class PersonMSController extends Controller
             $educationalRecord = $this->educationalRecordUpdate($data, $educationalRecord);
 
             DB::commit();
-            return response()->json(['message' => 'سوابق تحصیلی با موفقیت ویرایش شد','data'=>$educationalRecord]);
+            return response()->json(['message' => 'سوابق تحصیلی با موفقیت ویرایش شد', 'data' => $educationalRecord]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -786,7 +787,7 @@ class PersonMSController extends Controller
             $courseRecord = $this->courseRecordStore($data, $person->workForce->id);
 
             DB::commit();
-            return response()->json(['message' => 'سوابق دوره ها با موفقیت ویرایش شد','data'=>$courseRecord]);
+            return response()->json(['message' => 'سوابق دوره ها با موفقیت ویرایش شد', 'data' => $courseRecord]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -810,7 +811,7 @@ class PersonMSController extends Controller
             $courseRecord = $this->courseRecordUpdate($courseRecord, $data);
 
             DB::commit();
-            return response()->json(['message' => 'سوابق دوره ها با موفقیت ویرایش شد','data'=>$courseRecord]);
+            return response()->json(['message' => 'سوابق دوره ها با موفقیت ویرایش شد', 'data' => $courseRecord]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -855,7 +856,7 @@ class PersonMSController extends Controller
             $resume = $this->resumeStore($data, $person->workForce->id);
 
             DB::commit();
-            return response()->json(['message' => 'رزومه ها با موفقیت ویرایش شد','data'=>$resume]);
+            return response()->json(['message' => 'رزومه ها با موفقیت ویرایش شد', 'data' => $resume]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -879,7 +880,7 @@ class PersonMSController extends Controller
             $resume = $this->resumeUpdate($data, $resume);
 
             DB::commit();
-            return response()->json(['message' => 'رزومه ها با موفقیت ویرایش شد','data'=>$resume]);
+            return response()->json(['message' => 'رزومه ها با موفقیت ویرایش شد', 'data' => $resume]);
 
         } catch (\Exception $e) {
             DB::rollBack();
