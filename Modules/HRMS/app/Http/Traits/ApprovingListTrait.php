@@ -6,74 +6,55 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\ConfirmationType;
+use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptApprovingList;
 
 trait ApprovingListTrait
 {
+    use RecruitmentScriptTrait, EmployeeTrait;
 
     private static string $currentUserPendingStatus = 'درانتظار تایید من';
     private static string $pendingStatus = 'درانتظار تایید';
+    private static string $approvedStatus = 'تایید شده';
 
-    public function approvingListIndex(array $data, User $user)
+    public function approvingListPendingIndex(User $user)
     {
-        $statusID = $data['statusID'] ?? null;
-        $scriptTypeID = $data['scriptTypeID'] ?? null;
-        $perPage = $data['perPage'] ?? 10;
-        $page = $data['page'] ?? 1;
-        $searchTerm = $data['name'] ?? null;
 
-        $query = ScriptApprovingList::where('assigned_to', $user->id)
-            ->where(function ($query) {
-                $query->WhereHas('status', function ($query) {
-                    $query->where('name', self::$currentUserPendingStatus);
-                })
-                    ->orWhere('status_id', '!=', null);
-            })
-            ->when($statusID, function ($query) use ($statusID) {
-                $query->where('status_id', $statusID);
-            })
-            ->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereHas('employee.person', function ($query) use ($searchTerm) {
-
-                    $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
-                        ->orWhere('display_name', 'LIKE', '%' . $searchTerm . '%')
-                        ->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm])
-                        ->orderByDesc('relevance');
-                });
-            })
-            ->when($scriptTypeID, function ($query)use ($scriptTypeID){
-                $query->whereHas('script', function ($query)use ($scriptTypeID){
-                    $query->where('script_type_id',$scriptTypeID);
-                });
+        $result = ScriptApprovingList::where('assigned_to', $user->id)
+            ->WhereHas('status', function ($query) {
+                $query->where('name', self::$currentUserPendingStatus);
             })
             ->with([
                 'assignedTo',
                 'script.employee.person'
-                ,'status',
+                , 'status',
                 'script.scriptType'
-            ,'script.hireType'])->distinct();
+                , 'script.hireType'])->distinct()->get();
 
-        $result = $query->paginate($perPage, page: $page);
 
         return $result;
     }
 
     public function approvingStore(RecruitmentScript $rs)
     {
-        $conformationTypes = $rs->scriptType->confirmationTypes;
+        $conformationTypes = $rs->scriptType?->confirmationTypes;
         $approves = [];
 
-        $conformationTypes->each(function (ConfirmationType $confirmationType) use (&$approves, $rs) {
-            $optionID = $confirmationType->pivot->option_id ?? null;
-            $optionType = $confirmationType->pivot->option_type;
-            $approveList = $optionType::generateApprovers($optionID, $rs);
-            $approves[] = $approveList;
-        });
+        if (!is_null($conformationTypes)&&$conformationTypes->isNotEmpty()) {
 
-        $preparedData = $this->prepareApprovingData($approves, $rs);
-        $result = ScriptApprovingList::insert($preparedData->toArray());
-        return $result;
+            $conformationTypes->each(function (ConfirmationType $confirmationType) use (&$approves, $rs) {
+                $optionID = $confirmationType->pivot->option_id ?? null;
+                $optionType = $confirmationType->pivot->option_type;
+                $approveList = $optionType::generateApprovers($optionID, $rs);
+                $approves[] = $approveList;
+            });
+
+            $preparedData = $this->prepareApprovingData($approves, $rs);
+            $result = ScriptApprovingList::insert($preparedData->toArray());
+            return $result;
+        }
+        return null;
     }
 
     private function prepareApprovingData(array|Collection $data, RecruitmentScript $script)
@@ -89,20 +70,22 @@ trait ApprovingListTrait
 
         $data = $data->where('assignedUserID', '!=', null);
 
-        $data = $data->map(function ($item, $key) use ($script, $currentUserPendingStatus, $pendingStatus) {
+            $counter = 1; // Manual counter
 
-            $status = $key == 0 ? $currentUserPendingStatus : $pendingStatus;
-            return [
-                'id' => $item['appID'] ?? null,
-                'script_id' => $script->id,
-                'priority' => $key + 1,
-                'assigned_to' => $item['assignedUserID'] ?? null,
-                'approver_id' => $item['approverID'] ?? null,
-                'status_id' => $status->id,
-                'create_date' => Carbon::now(),
-
-            ];
-        });
+            $data = $data->map(function ($item) use ($script, $currentUserPendingStatus, $pendingStatus, &$counter) {
+                $status = $counter == 1 ? $currentUserPendingStatus : $pendingStatus;
+                $result = [
+                    'id' => $item['appID'] ?? null,
+                    'script_id' => $script->id,
+                    'priority' => $counter,
+                    'assigned_to' => $item['assignedUserID'] ?? null,
+                    'approver_id' => $item['approverID'] ?? null,
+                    'status_id' => $status->id,
+                    'create_date' => Carbon::now(),
+                ];
+                $counter++; // Increment the counter
+                return $result;
+            });
 
         return $data;
     }
@@ -115,6 +98,51 @@ trait ApprovingListTrait
     public static function pendingStatus()
     {
         return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$pendingStatus);
+    }
+
+    public function approveScript(RecruitmentScript $script, User $user)
+    {
+        $approvingList = $script->pendingScriptApproving()->where('assigned_to', $user->id)->first();
+        if (!$approvingList) {
+            return null;
+        }
+        $approvingList->status_id = self::approvedStatus()->id;
+        $approvingList->update_date = Carbon::now();
+        $approvingList->approver_id = $user->id;
+        $approvingList->save();
+
+        $nextApprovingList = $script->approvers()->where('priority', $approvingList->priority + 1)->first();
+        if ($nextApprovingList) {
+            $nextApprovingList->status_id = self::pendingForCurrentUserStatus()->id;
+            $nextApprovingList->save();
+        } else {
+            $script->status()->attach($this->activeRsStatus()->id);
+
+            $script->load([
+                'organizationUnit',
+                'scriptType.confirmationTypes',
+                'employee.workForce',
+            ]);
+            if ($script->scriptType->isHeadable) {
+                $user=$script->employee->person->user;
+                $ounit=$script->organizationUnit->head_id=$user->id;
+                $ounit->save();
+            }
+            $status = Employee::GetAllStatuses()->firstWhere('id', $script->scriptType->employee_status_id);
+
+
+            $script->employee->workForce->status()->attach($status->id);
+
+        }
+
+        return $approvingList;
+
+
+    }
+
+    public static function approvedStatus()
+    {
+        return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$approvedStatus);
     }
 
 }

@@ -72,6 +72,11 @@ trait PersonTrait
 
     }
 
+    public function activePersonStatus()
+    {
+        return Person::GetAllStatuses()->firstWhere('name', '=', 'فعال');
+    }
+
     public function legalExists(string $name)
     {
 
@@ -234,10 +239,5 @@ trait PersonTrait
                 });
 
         })->with(['latestRecruitmentScript.issueTime'])->first();
-    }
-
-    public function activePersonStatus()
-    {
-        return Person::GetAllStatuses()->firstWhere('name', '=', 'فعال');
     }
 }

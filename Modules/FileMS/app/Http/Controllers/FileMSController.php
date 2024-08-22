@@ -20,6 +20,7 @@ use Number;
 class FileMSController extends Controller
 {
     use FileTrait;
+
     public array $data = [];
 
     /**
@@ -42,7 +43,8 @@ class FileMSController extends Controller
          */
         $user = \Auth::user();
 
-        $filesQuery = $user->files();
+        $filesQuery = $user->files()
+            ->where('isPrivate', '=', 0);
 
         // Filter based on mime type ID
         if (isset($request->mimeTypeID)) {
@@ -134,9 +136,11 @@ class FileMSController extends Controller
             if (!$extension) {
                 return response()->json(['message' => 'فایل مجاز نمی باشد'], 400);
             }
-            $filePath= $this->putFileIntoStorage($uploadedFile);
+            $isPrivate = isset($request->isPrivate) ? $request->isPrivate : false;
 
-            $file= $this->storeFile($data, $extension,$filePath);
+            $filePath = $this->putFileIntoStorage($uploadedFile, $isPrivate);
+
+            $file = $this->storeFile($data, $extension, $filePath, $isPrivate);
 
             $status = Status::where('name', '=', 'فعال')->where('model', '=', File::class)->first();
 
@@ -146,7 +150,7 @@ class FileMSController extends Controller
             return response()->json(['file' => $file]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در بارگزاری فایل'], 500);
+            return response()->json(['message' => 'خطا در بارگزاری فایل','error'=>$e->getMessage()], 500);
 
         }
 
@@ -172,7 +176,7 @@ class FileMSController extends Controller
             'title' => $file->name,
             'description' => $file->description,
             'date' => $file->create_date,
-            'size' => Number::fileSize($file->size),
+            'size' => $file->size,
             'type' => $file->mimeType->name ?? null,
         ];
 
@@ -197,7 +201,7 @@ class FileMSController extends Controller
         $file->description = $request->input('description') ?? null;
 
         $file->save();
-        return response()->json(['message'=>'ویرایش فایل با موفقیت انجام شد']);
+        return response()->json(['message' => 'ویرایش فایل با موفقیت انجام شد']);
     }
 
     /**
@@ -221,8 +225,4 @@ class FileMSController extends Controller
         return response()->json(['message' => 'با موفقیت حذف شد']);
     }
 
-    public function testUpload(Request $request)
-    {
-
-    }
 }

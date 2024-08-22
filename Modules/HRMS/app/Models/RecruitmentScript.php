@@ -2,10 +2,12 @@
 
 namespace Modules\HRMS\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\StatusMS\app\Models\Status;
@@ -14,27 +16,43 @@ class RecruitmentScript extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['employee_id',
+    protected $fillable = [
+        'employee_id',
         'organization_unit_id',
         'level_id',
         'position_id',
         'create_date',
-        'description',
         'hire_type_id',
         'job_id',
         'operator_id',
         'script_type_id',
         'start_date',
-        'expire_date',];
-    public $timestamps = false;
+        'expire_date',
+        'parent_id',
+    ];
+
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
+    }
 
     protected static function newFactory(): RecruitmentScriptFactory
     {
         //return RecruitmentScriptFactory::new();
     }
+
+//    public function latestStatus()
+//    {
+//
+//        return $this->belongsToMany(Status::class, 'recruitment_script_status')
+//            ->withPivot('create_date')
+//            ->orderBy('create_date', 'desc')
+//            ->latest('create_date')->take(1);
+//    }
 
     public function status()
     {
@@ -43,11 +61,15 @@ class RecruitmentScript extends Model
 
     public function latestStatus()
     {
-
-        return $this->belongsToMany(Status::class, 'recruitment_script_status')
-            ->withPivot('create_date')
-            ->orderBy('create_date', 'desc')
-            ->latest('create_date')->take(1);
+        return $this->hasOneThrough(
+            Status::class,
+            RecruitmentScriptStatus::class,
+            'recruitment_script_id', // Foreign key on RecruitmentScriptStatus table
+            'id', // Foreign key on Status table
+            'id', // Local key on RecruitmentScript table
+            'status_id' // Local key on RecruitmentScriptStatus table
+        )->orderBy('recruitment_script_status.create_date', 'desc');
+//            ->latest('recruitment_script_status.create_date');
     }
 
     public function level(): BelongsTo
@@ -63,11 +85,6 @@ class RecruitmentScript extends Model
     public function position(): BelongsTo
     {
         return $this->belongsTo(Position::class);
-    }
-
-    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
-    {
-        return Status::all()->where('model', '=', self::class);
     }
 
     use \Znck\Eloquent\Traits\BelongsToThrough;
@@ -106,6 +123,18 @@ class RecruitmentScript extends Model
     public function approvers()
     {
         return $this->hasMany(ScriptApprovingList::class, 'script_id');
+    }
+
+    public function pendingScriptApproving(): HasOne
+    {
+        return $this->hasOne(ScriptApprovingList::class, 'script_id')->whereHas('status', function ($query) {
+            $query->where('name', 'درانتظار تایید من');
+        });
+    }
+
+    public function files(): BelongsToMany
+    {
+        return $this->belongsToMany(File::class, 'file_script')->withPivot('title');
     }
 
 }

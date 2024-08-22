@@ -48,7 +48,7 @@ Route::prefix('v1')->group(function () {
 
     Route::put('/setting/widgets', [\Modules\WidgetsMS\app\Http\Controllers\WidgetsMSController::class, 'update'])->middleware('auth:api');
 
-    Route::post('/setting/profile', [\Modules\AAA\app\Http\Controllers\UserController::class, 'profile'])->middleware('auth:api');
+    Route::post('/setting/profile', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'currentPersonShow'])->middleware('auth:api');
 
     Route::put('/setting/profile', [\Modules\AAA\app\Http\Controllers\UserController::class, 'updateUserInfo'])->middleware('auth:api');
 

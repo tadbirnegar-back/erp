@@ -12,12 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('recruitment_scripts', function (Blueprint $table) {
-            $table->unsignedBigInteger('enactment_attachment_id')->nullable();
-            $table->unsignedBigInteger('script_attachment_id')->nullable();
+            $table->unsignedBigInteger('parent_id')->nullable();
 
-
-            $table->foreign('enactment_attachment_id')->references('id')->on('files')->onDelete('set null');
-            $table->foreign('script_attachment_id')->references('id')->on('files')->onDelete('set null');
+            $table->foreign('parent_id')->references('id')->on('recruitment_scripts')->onDelete('set null');
         });
     }
 

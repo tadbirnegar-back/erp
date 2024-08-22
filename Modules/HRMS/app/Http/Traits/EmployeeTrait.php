@@ -2,18 +2,21 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
-use DB;
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\IssueTime;
-use Modules\HRMS\app\Models\ScriptAgent;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\PersonMS\app\Models\Person;
 
 trait EmployeeTrait
 {
+    use RecruitmentScriptTrait,ScriptTypeTrait;
+    private static string $activeEmployeeStatus = 'فعال';
+    private static string $inActiveEmployeeStatus = 'غیرفعال';
+    private static string $pendingEmployeeStatus = 'در انتظار تایید';
     private array $compatibleIssueTimes = [
         null => ['شروع به همکاری'],
         'قطع همکاری' => ['شروع به همکاری'],
@@ -21,6 +24,18 @@ trait EmployeeTrait
         'شروع به همکاری' => ['دوران همکاری', 'اتمام دوران همکاری', 'قطع همکاری'],
         'دوران همکاری' => ['دوران همکاری', 'اتمام دوران همکاری', 'قطع همکاری'],
 
+    ];
+    private array $compatibleIssueTimesForNewScript = [
+        'قطع همکاری' => ['شروع به همکاری'],
+        'اتمام دوران همکاری' => ['شروع به همکاری'],
+        'شروع به همکاری' => ['دوران همکاری', 'اتمام دوران همکاری', 'قطع همکاری'],
+        'دوران همکاری' => ['شروع به همکاری'],
+    ];
+    private array $parentScriptStatusChangeByIssueTime = [
+        'شروع به همکاری' => null,
+        'دوران همکاری' => null,
+        'اتمام دوران همکاری' => 'غیرفعال',
+        'قطع همکاری' => 'غیرفعال',
     ];
 
     public function employeeIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
@@ -98,7 +113,7 @@ trait EmployeeTrait
 
         $employee->workForce()->save($workForce);
 
-        $workForceStatus = $this->activeWorkForceStatus();
+        $workForceStatus = $this->activeEmployeeStatus();
 
         $workForce->statuses()->attach($workForceStatus->id);
 
@@ -123,6 +138,12 @@ trait EmployeeTrait
 
     }
 
+    public function activeEmployeeStatus()
+    {
+        return Employee::GetAllStatuses()
+            ->firstWhere('name', '=', self::$activeEmployeeStatus);
+    }
+
     public function employeeUpdate(array $data, Employee $employee)
     {
 
@@ -130,12 +151,12 @@ trait EmployeeTrait
         $employee->personnel_code = $data['personnelCode'] ?? null;
         $workForce = $employee->workForce;
         $workForce->person_id = $data['personID'];
-        $workForce->isMarried = $data['isMarried'] ? 1 : 0;
+        $workForce->isMarried = isset($data['isMarried']) ? 1 : 0;
         $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
 
         $employee->workForce()->save($workForce);
 
-        $workForceStatus = $this->activeWorkForceStatus();
+        $workForceStatus = $this->activeEmployeeStatus();
 
         $workForce->statuses()->attach($workForceStatus->id);
 
@@ -165,7 +186,6 @@ trait EmployeeTrait
         return Employee::with('workForce')->findOrFail($id);
     }
 
-
     public function isEmployee(int $personID)
     {
 
@@ -180,12 +200,6 @@ trait EmployeeTrait
         return $person->employee;
     }
 
-    public function activeWorkForceStatus()
-    {
-        return Employee::GetAllStatuses()
-            ->firstWhere('name', '=', 'فعال');
-    }
-
     public function addEmployeeScriptTypes()
     {
         $result = IssueTime::firstWhere('title', 'شروع به همکاری')->with('scriptTypes');
@@ -198,7 +212,7 @@ trait EmployeeTrait
         return $employee->load(['latestRecruitmentScript' => function ($query) {
             $query->where('expire_date', '>', now())
                 ->whereDoesntHave('latestStatus', function ($query) {
-                    $query->where('name', '=', 'غیرفعال');
+                    $query->where('name', '=', self::$inActiveRsStatus);
                 })->with('issueTime');
         }]);
     }
@@ -209,12 +223,34 @@ trait EmployeeTrait
         $issueTimes = IssueTime::whereIn('title', $compatibleIssueTimes)
             ->with(['scriptTypes' => function ($query) {
                 $query->whereHas('status', function ($query) {
-                    $query->where('name', '=', 'فعال');
+                    $query->where('name', '=', $this->activeScriptTypeStatus);
                 });
             }])
             ->get();
 
         return $issueTimes->pluck('scriptTypes')->flatten();
+    }
+
+    public function getCompatibleIssueTimesForNewScript(string $name ,int $employeeID)
+    {
+        $compatibleIssueTimes = $this->compatibleIssueTimesForNewScript[$name];
+
+        $issueTimes = IssueTime::whereIn('title', $compatibleIssueTimes)
+            ->with(['recruitmentScripts' => function ($query)use($employeeID) {
+
+                $query->where('employee_id',$employeeID)->whereDoesntHave('status', function ($query) {
+
+                    $query->where(function ($query) {
+                        $query->where('name', '=', self::$pendingRsStatus)
+                            ->orWhere('name', '=', self::$inActiveRsStatus);
+                    });
+                })->with(['scriptType','hireType','organizationUnit']);
+            }])
+            ->get();
+
+        return $issueTimes
+            ->pluck('recruitmentScripts')
+            ->flatten();
     }
 
     public function getScriptAgentCombos(HireType $hireType, ScriptType $scriptType)
@@ -235,5 +271,18 @@ trait EmployeeTrait
         });
 
         return $scriptAgents;
+    }
+
+    public function changeParentRecruitmentScriptStatus(Employee $employee,int $parentID,IssueTime $issueTime)
+    {
+        $parentScript = $employee->recruitmentScripts()->where('id',$parentID)->with('issueTime')->first();
+
+        $statusName = $this->parentScriptStatusChangeByIssueTime[$issueTime->title];
+        if (is_null($statusName)) {
+            return;
+        }
+        $status = RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', $statusName);
+        $parentScript->status()->attach($status->id);
+
     }
 }

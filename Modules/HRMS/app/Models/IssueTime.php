@@ -24,4 +24,9 @@ class IssueTime extends Model
         return $this->hasMany(ScriptType::class, 'issue_time_id');
     }
 
+    public function recruitmentScripts()
+    {
+        return $this->hasManyThrough(RecruitmentScript::class, ScriptType::class, 'issue_time_id', 'script_type_id');
+    }
+
 }

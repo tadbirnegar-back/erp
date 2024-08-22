@@ -54,6 +54,7 @@ trait ResumeTrait
         $resumes = $resumes->map(fn($data) => [
             'id' => $data['id'] ?? null,
             'company_name' => $data['companyName'],
+            'city' => $data['city'],
             'start_date' => $data['startDate'],
             'end_date' => $data['endDate'] ?? null,
             'position' => $data['position'],

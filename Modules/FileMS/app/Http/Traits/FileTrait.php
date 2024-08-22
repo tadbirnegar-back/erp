@@ -33,16 +33,35 @@ trait FileTrait
 
     }
 
-    public function storeFile(array $data, Extension $extension, string $path)
+    public function uploadPrivateFileWithTempUrl(UploadedFile $file, array $data, Extension $extension)
+    {
+        $path = $this->putFileIntoStorage($file, true);
+        $storedFile = $this->storeFile($data, $extension, $path);
+        $tempUrl = $this->getTemporaryUrl($path);
+
+        return [
+            'file' => $storedFile,
+            'temporary_url' => $tempUrl,
+        ];
+    }
+
+    public function getTemporaryUrl(string $path, int $expirationMinutes = 60)
+    {
+        return Storage::disk('private')->temporaryUrl($path, now()->addMinutes($expirationMinutes));
+    }
+
+    public function storeFile(array $data, Extension $extension, string $path, bool $isPrivate = false)
     {
 
         $file = new File();
         $file->name = $data['fileName'];
         $file->size = $data['fileSize'];
         $file->description = $data['description'] ?? null;
-        $file->creator_id = $data['userID']??1905;
+        $file->creator_id = $data['userID'] ?? null;
+
         $file->extension_id = $extension->id;
-        $file->slug = 'uploads/' . $path;
+        $file->slug = $isPrivate ? $path : 'uploads/' . $path;
+        $file->isPrivate = $isPrivate;
         $file->save();
         return $file;
     }

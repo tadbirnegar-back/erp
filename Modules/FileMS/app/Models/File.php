@@ -2,13 +2,16 @@
 
 namespace Modules\FileMS\app\Models;
 
+use Http;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Modules\FileMS\Database\factories\FileFactory;
 use Modules\StatusMS\app\Models\Status;
+use URL;
 use Znck\Eloquent\Relations\BelongsToThrough;
 
 class File extends Model
@@ -23,6 +26,7 @@ class File extends Model
     public $timestamps = false;
     protected $casts = [
         'created_date' => 'datetime:Y-m-d',
+        'isPrivate' => 'boolean',
     ];
 
     protected static function newFactory(): FileFactory
@@ -59,6 +63,16 @@ class File extends Model
 
     public function getSlugAttribute($value)
     {
+        if ($this->isPrivate) {
+            $domain = URL::to('/');
+            $value=str_replace('/', '-', $value);
+            $response = Http::get($domain . '/api/v1/local/temp/' . $value);
+
+            $result= $response->body();
+            $decoded= json_decode($result, true);
+//            dd($decoded);
+            return $decoded;
+        }
         return url('/') . '/' . $value;
     }
 

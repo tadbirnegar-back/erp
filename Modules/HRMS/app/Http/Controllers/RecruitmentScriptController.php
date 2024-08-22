@@ -4,29 +4,25 @@ namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use DB;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
 use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Models\HireType;
-use Modules\HRMS\app\Models\Job;
-use Modules\HRMS\app\Models\ScriptApprovingList;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
-use Modules\OUnitMS\app\Models\VillageOfc;
 
 class RecruitmentScriptController extends Controller
 {
-    use RecruitmentScriptTrait, ApprovingListTrait, HireTypeTrait, ScriptTypeTrait;
+    use RecruitmentScriptTrait, ApprovingListTrait, HireTypeTrait, ScriptTypeTrait, EmployeeTrait;
 
     public function stateOfcs(Request $request)
     {
@@ -81,20 +77,27 @@ class RecruitmentScriptController extends Controller
             'statusID' => $request->input('statusID'),
             'scriptTypeID' => $request->input('scriptTypeID'),
             'perPage' => $request->input('perPage', 10), // Default to 10 if not provided
-            'page' => $request->input('page', 1), // Default to 1 if not provided
+            'pageNum' => $request->input('pageNum', 1), // Default to 1 if not provided
             'name' => $request->input('name')
         ];
 
 
-        $user = auth()->user();
 
-        $result = $this->approvingListIndex($data, $user);
-        $filterData = [
-            'scriptStatus' => ScriptApprovingList::GetAllStatuses(),
+        $result = $this->rsIndex($data);
+
+        $filterData = $data['pageNum'] == 1 ?[
+            'scriptStatus' => RecruitmentScript::GetAllStatuses(),
             'scriptTypes' => $this->getListOfScriptTypes(),
-        ];
+        ] : null;
 
         return response()->json(['data' => $result, 'filter' => $filterData]);
+    }
+
+    public function pendingApprovingIndex()
+    {
+        $user = auth()->user();
+        $result = $this->approvingListPendingIndex($user);
+        return response()->json($result);
     }
 
     public function store(Request $request)
@@ -114,18 +117,31 @@ class RecruitmentScriptController extends Controller
 
             });
 
-            $rsRes = $this->rsSingleStore($data, $employee->id);
+            $scriptType = ScriptType::with('issueTime','employeeStatus')->find($data['scriptTypeID']);
 
-            $rsRes = collect($rsRes);
-            $rsRes->each(function ($rs) {
-                $this->approvingStore($rs);
-            });
+            if (isset($data['parentID'])) {
+
+
+                $this->changeParentRecruitmentScriptStatus($employee, $data['parentID'],$scriptType->issueTime);
+
+            }
+
+            $pendingRsStatus = $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
+                ? $this->pendingRsStatus()
+                : null;
+
+            $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
+
+            if ($pendingRsStatus) {
+                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+            }
+
 
             DB::commit();
             return response()->json($rsRes);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن حکم', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در افزودن حکم'], 500);
         }
     }
 

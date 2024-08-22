@@ -3,7 +3,6 @@
 namespace Modules\AAA\app\Http\Middleware;
 
 use Closure;
-use http\Client\Response;
 use Illuminate\Http\Request;
 
 class Login
@@ -24,7 +23,8 @@ class Login
         // ALLOW OPTIONS METHOD
         $headers = [
             'Access-Control-Allow-Methods' => 'POST, GET, OPTIONS, PUT, DELETE',
-            'Access-Control-Allow-Headers' => 'Content-Type, X-Auth-Token, Origin, Authorization'
+            'Access-Control-Allow-Headers' => 'Content-Type, X-Auth-Token, Origin, Authorization',
+            'Accept' => 'application/json',
         ];
         if ($request->getMethod() == "OPTIONS") {
             // The client-side application can set only headers allowed in Access-Control-Allow-Headers

@@ -108,12 +108,24 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/hrm/rc/list', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'index'])->middleware(['auth:api']);
 
+    Route::post('/hrm/prc/list', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'pendingApprovingIndex'])->middleware(['auth:api']);
+
+    Route::post('/hrm/prc/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'showScriptWithApproves'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/grant/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'approveScriptByUser'])->middleware(['auth:api']);
+
     Route::post('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'store']);
+
+    Route::get('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'addEmployeeBaseInfo']);
 
     Route::post('/hrm/education-levels/list', [\Modules\HRMS\app\Http\Controllers\LevelsOfEducationController::class, 'index']);
 
     Route::post('/hrm/isar-types/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'isarsStatusesIndex']);
 
     Route::post('/hrm/relative-types/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'relativeTypesIndex']);
+
+    Route::post('/hrm/register/dehyar', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'registerDehyar']);
+
+    Route::post('/hrm/employee/verify', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'verifyEmployeeForScript']);
 });
 

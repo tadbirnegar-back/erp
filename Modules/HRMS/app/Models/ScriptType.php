@@ -4,7 +4,6 @@ namespace Modules\HRMS\app\Models;
 
 use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
@@ -22,6 +21,14 @@ class ScriptType extends Model
 
     public $timestamps = false;
     protected $appends = ['formula'];
+    protected $casts = [
+        'isHeadable' => 'boolean',
+    ];
+
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
+    }
 
     public function issueTime(): BelongsTo
     {
@@ -51,11 +58,5 @@ class ScriptType extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);
-    }
-
-
-    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
-    {
-        return Status::all()->where('model', '=', self::class);
     }
 }

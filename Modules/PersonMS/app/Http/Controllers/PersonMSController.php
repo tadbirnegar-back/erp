@@ -174,6 +174,30 @@ class PersonMSController extends Controller
         return response()->json($person);
     }
 
+    public function currentPersonShow()
+    {
+        $user= \Auth::user();
+        $user->load([
+            'person.avatar',
+            'person.personable.religion',
+            'person.personable.religionType',
+            'person.user.roles',
+            'person.workForce.skills',
+            'person.workForce.educationalRecords.levelOfEducation',
+            'person.workForce.resumes',
+            'person.workForce.militaryStatus',
+            'person.workForce.relatives.relativeType',
+            'person.workForce.relatives.levelOfEducation',
+            'person.workForce.courseRecords',
+            'person.workForce.isars.isarStatus',
+            'person.workForce.isars.relativeType',
+            'person.employee.recruitmentScripts',
+            'person.workForce.militaryService.militaryServiceStatus',
+            'person.workForce.militaryService.exemptionType']);
+
+        return response()->json($user->person);
+    }
+
     public function naturalPersonUpdate(Request $request, $id)
     {
         $person = Person::with('personable')->findOrFail($id);
@@ -421,7 +445,7 @@ class PersonMSController extends Controller
         $user = $person->user;
         try {
             DB::beginTransaction();
-            if (isset($data['isNewPassword']) && $data['isNewPassword'] === true) {
+            if (isset($data['isNewPassword']) && $data['isNewPassword'] === 'true') {
                 if (\Hash::check($request->currentPassword, $user->password)) {
                     $user->password = \Hash::make($request->newPassword);
                     $message = 'با موفقیت بروزرسانی شد';
@@ -860,7 +884,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن رزومه'], 500);
+            return response()->json(['message' => 'خطا در افزودن رزومه','error'=>$e->getMessage()], 500);
         }
 
     }

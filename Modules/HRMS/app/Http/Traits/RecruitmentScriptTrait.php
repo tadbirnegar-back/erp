@@ -3,27 +3,100 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
-use Modules\HRMS\app\Models\ConfirmationType;
+use Modules\HRMS\app\Models\FileScript;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\ScriptAgentScript;
+use Modules\StatusMS\app\Models\Status;
 
 trait RecruitmentScriptTrait
 {
     use ScriptAgentScriptTrait;
 
-    public function rsStore(array|collection $data, int $employeeID)
-    {
-        $dataToInsert = $this->rsDataPreparation($data, $employeeID);
+    private static string $activeRsStatus = 'فعال';
+    private static string $inActiveRsStatus = 'غیرفعال';
+    private static string $pendingRsStatus = 'در انتظار تایید';
 
-        $status = $this->pendingRsStatus();
+
+    public function rsIndex(array $data)
+    {
+        $statusID = $data['statusID'] ?? null;
+        $scriptTypeID = $data['scriptTypeID'] ?? null;
+        $perPage = $data['perPage'] ?? 10;
+        $page = $data['pageNum'] ?? 1;
+        $searchTerm = $data['name'] ?? null;
+
+        $query = RecruitmentScript::when($statusID, function ($q) use ($statusID) {
+            $q->whereHas('latestStatus', function ($query) use ($statusID) {
+                $query->join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
+                    ->join('statuses as s', 'rss.status_id', '=', 's.id')
+                    ->where('s.id', $statusID)
+                    ->where('rss.create_date', function($subQuery) {
+                        $subQuery->selectRaw('MAX(create_date)')
+                            ->from('recruitment_script_status as sub_rss')
+                            ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
+                    });
+            });
+        });
+
+        $query->when($searchTerm, function ($query) use ($searchTerm) {
+
+            $query->whereHas('employee.person', function ($query) use ($searchTerm) {
+
+                $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
+                    ->orWhere('display_name', 'LIKE', '%' . $searchTerm . '%')
+                    ->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm])
+                    ->orderByDesc('relevance');
+            });
+        });
+
+        $query->when($scriptTypeID, function ($query) use ($scriptTypeID) {
+                $query->where('script_type_id', $scriptTypeID);
+        })
+            ->with([
+                'pendingScriptApproving.assignedTo',
+                'latestStatus',
+                'hireType',
+                'scriptType',
+                'employee.person',
+                'organizationUnit',
+            ])->orderBy('create_date', 'desc')
+            ->distinct();
+
+        $result = $query->paginate($perPage, page: $page);
+
+        return $result;
+    }
+
+    public function rsStore(array|collection $data, int $employeeID, ?Status $status = null)
+    {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+        $dataToInsert = $this->rsDataPreparation($data, $employeeID);
+        if (is_null($status)) {
+            $status = $this->activeRsStatus();
+
+        }
+
         $result = [];
         foreach ($dataToInsert as $key => $item) {
 
             $rs = RecruitmentScript::create($item);
             $rs->status()->attach($status->id);
 
-            $agents = json_decode($data[$key]['scriptAgents'], true);
-            $scriptAgentsScripts = $this->sasStore($agents, $rs);
+            if (isset($item['files'])) {
+                $fileScriptsData=collect($item['files'])->map(fn($fs) => [
+                    'file_id' => $fs['fileID'],
+                    'script_id' => $rs->id,
+                    'title' => $fs['title'],
+                ]);
+
+                FileScript::insert($fileScriptsData->toArray());
+            }
+            if (isset($data[$key]['scriptAgents'])) {
+                $agents = json_decode($data[$key]['scriptAgents'], true);
+                $scriptAgentsScripts = $this->sasStore($agents, $rs);
+
+            }
             $rs->load('scriptType.confirmationTypes');
 
 
@@ -34,11 +107,49 @@ trait RecruitmentScriptTrait
 
     }
 
-    public function rsSingleStore(array|Collection $data,int $employeeID)
+    private function rsDataPreparation(array|collection $data, int $employeeID)
+    {
+        if (is_array($data)) {
+            $data = collect($data);
+        }
+
+        $data = $data->map(fn($RS) => [
+            'id' => $RS['rsID'] ?? null,
+            'employee_id' => $employeeID,
+            'organization_unit_id' => $RS['ounitID'],
+            'level_id' => $RS['levelID'] ?? null,
+            'position_id' => $RS['positionID'] ?? null,
+            'create_date' => $RS['rsDate'] ?? now(),
+            'description' => $RS['description'] ?? null,
+            'hire_type_id' => $RS['hireTypeID'] ?? null,
+            'job_id' => $RS['jobID'] ?? null,
+            'operator_id' => $RS['operatorID'] ?? null,
+            'script_type_id' => $RS['scriptTypeID'] ?? null,
+            'parent_id' => $RS['parentID'] ?? null,
+            'start_date' => $RS['startDate'] ?? null,
+            'expire_date' => $RS['expireDate'] ?? null,
+        ]);
+        return $data;
+    }
+
+    public function activeRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', self::$activeRsStatus);
+    }
+
+    public function pendingRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', self::$pendingRsStatus);
+    }
+
+    public function rsSingleStore(array|Collection $data, int $employeeID, ?Status $status = null)
     {
         $dataToInsert = $this->rsDataPreparation([$data], $employeeID);
-        $status = $this->pendingRsStatus();
 
+        if (is_null($status)) {
+            $status = $this->activeRsStatus();
+
+        }
         $rs = RecruitmentScript::create($dataToInsert->toArray()[0]);
         $rs->status()->attach($status->id);
 
@@ -65,7 +176,7 @@ trait RecruitmentScriptTrait
         if ($insertCount > 0) {
             $activeStatus = $this->activeRsStatus();
 
-            $rses = RecruitmentScript::orderBy('id', 'desc')->take($result)->get();
+            $rses = RecruitmentScript::orderBy('id', 'desc')->take($insertCount)->get();
             $rses->map(fn(RecruitmentScript $recruitmentScript) => $recruitmentScript->status()->attach($activeStatus->id));
         }
         return $result;
@@ -82,46 +193,13 @@ trait RecruitmentScriptTrait
         return true;
     }
 
-    public function rsShow(RecruitmentScript $script)
-    {
-        $script->load(['position', 'level', 'job','scriptAgents','approvers.status','approvers.assignedTo']);
-}
-    private function rsDataPreparation(array|collection $data, int $employeeID)
-    {
-        if (is_array($data)) {
-            $data = collect($data);
-        }
-
-        $data = $data->map(fn($RS) => [
-            'id' => $RS['rsID'] ?? null,
-            'employee_id' => $employeeID,
-            'organization_unit_id' => $RS['ounitID'],
-            'level_id' => $RS['levelID'],
-            'position_id' => $RS['positionID'],
-            'create_date' => $RS['rsDate'] ?? null,
-            'description' => $RS['description'] ?? null,
-            'hire_type_id' => $RS['hireTypeID'] ?? null,
-            'job_id' => $RS['jobID'] ?? null,
-            'operator_id' => $RS['operatorID'] ?? null,
-            'script_type_id' => $RS['scriptTypeID'] ?? null,
-            'start_date' => $RS['startDate'] ?? null,
-            'expire_date' => $RS['expireDate'] ?? null,
-        ]);
-        return $data;
-    }
-
-    public function activeRsStatus()
-    {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'فعال');
-    }
-
     public function inActiveRsStatus()
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', self::$inActiveRsStatus);
     }
 
-    public function pendingRsStatus()
+    public function rsShow(RecruitmentScript $script)
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', 'در انتظار');
+        $script->load(['position', 'level', 'job', 'scriptAgents', 'approvers.status', 'approvers.assignedTo']);
     }
 }

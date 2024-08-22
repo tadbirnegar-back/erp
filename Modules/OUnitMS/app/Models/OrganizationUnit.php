@@ -70,9 +70,9 @@ class OrganizationUnit extends Model
 
     public function person()
     {
-        return $this->belongsToThrough(Person::class, User::class,foreignKeyLookup: [
+        return $this->belongsToThrough(Person::class,User::class,foreignKeyLookup: [
             User::class => 'head_id',
-            Person::class => 'person_id'
+            Person::class => 'person_id',
         ]);
     }
 
