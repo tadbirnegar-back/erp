@@ -11,12 +11,12 @@ class OUnitMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-         $this->call([
+        $this->call([
 //             OrganizationUnitStatusSeeder::class,
 //             LocationsSeeder::class,
 //             OrganizationParentSeeder::class,
-             VillageOfcDegreeSeeder::class,
-
-         ]);
+//             VillageOfcDegreeSeeder::class,
+            OlderNamesOfVillageSeeder::class,
+        ]);
     }
 }
