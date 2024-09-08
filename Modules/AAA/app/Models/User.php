@@ -16,20 +16,18 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
+use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Modules\WidgetsMS\app\Models\Widget;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-
-    public function findForPassport($username)
-    {
-        return $this->where('mobile', $username)->first();
-    }
 
     /**
      * The attributes that are mass assignable.
@@ -41,7 +39,6 @@ class User extends Authenticatable
         'mobile',
         'password',
     ];
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -55,6 +52,11 @@ class User extends Authenticatable
 
     ];
 
+    public static function GetAllStatuses(): Collection
+    {
+        return Status::all()->where('model', '=', self::class);
+    }
+
     /**
      * The attributes that should be cast.
      *
@@ -64,15 +66,15 @@ class User extends Authenticatable
 ////        'email_verified_at' => 'datetime',
 ////        'password' => 'hashed',
 //    ];
+    public function findForPassport($username)
+    {
+        return $this->where('mobile', $username)->first();
+    }
+
 
     public function getAuthIdentifierName()
     {
         return 'mobile';
-    }
-
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, table: 'user_role');
     }
 
 //    public function permissions()
@@ -85,20 +87,19 @@ class User extends Authenticatable
 //    }
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
-    public function permissions()
+    public function roles(): BelongsToMany
     {
-        return $this->hasManyDeep(Permission::class, ['user_role', Role::class, 'role_permission'])
-            ->distinct();
+        return $this->belongsToMany(Role::class, table: 'user_role');
     }
 
     public function statuses()
     {
-        return $this->belongsToMany(Status::class,'user_status');
+        return $this->belongsToMany(Status::class, 'user_status');
     }
 
     public function status()
     {
-        return $this->belongsToMany(Status::class,'user_status')->latest('create_date')->take(1);
+        return $this->belongsToMany(Status::class, 'user_status')->latest('create_date')->take(1);
     }
 
 
@@ -110,17 +111,23 @@ class User extends Authenticatable
     public function hasPermissionForRoute($route)
     {
         // Assuming a relationship with a permissions table
-        return !($this->permissions()->where('slug','=', $route)->first() == null);
+        return !($this->permissions()->where('slug', '=', $route)->first() == null);
+    }
+
+    public function permissions()
+    {
+        return $this->hasManyDeep(Permission::class, ['user_role', Role::class, 'role_permission'])
+            ->distinct();
     }
 
     public function files(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(File::class,'creator_id');
+        return $this->hasMany(File::class, 'creator_id');
     }
 
     public function addresses(): HasMany
     {
-        return $this->hasMany(Address::class,'creator_id');
+        return $this->hasMany(Address::class, 'creator_id');
     }
 
     public function widgets()
@@ -166,18 +173,64 @@ class User extends Authenticatable
         return $this->hasOne(Payment::class, 'user_id');
     }
 
-    public function recruitmentScript()
+    public function employee()
     {
-        return $this->hasManyThrough(RecruitmentScript::class,OrganizationUnit::class,'head_id','organization_unit_id');
+        return $this->hasOneDeep(
+            Employee::class,
+            [Person::class, Workforce::class],
+            [
+                'id', // Foreign key on the persons table...
+                'person_id', // Foreign key on the workforces table...
+                'id', // Foreign key on the employees table...
+            ],
+            [
+                'person_id', // Local key on the users table...
+                'id', // Local key on the persons table...
+                'workforceable_id', // Local key on the workforces table...
+            ]
+        );
     }
+
+
+    use HasRelationships;
+
+    public function activeRecruitmentScripts()
+    {
+        return $this->recruitmentScripts()->whereHas('latestStatus', function ($query) {
+            $query->join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
+                ->join('statuses as s', 'rss.status_id', '=', 's.id')
+                ->where('s.name', 'فعال')
+                ->where('rss.create_date', function ($subQuery) {
+                    $subQuery->selectRaw('MAX(create_date)')
+                        ->from('recruitment_script_status as sub_rss')
+                        ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
+                });
+        });
+    }
+
+    public function recruitmentScripts()
+    {
+        return $this->hasManyDeep(
+            RecruitmentScript::class,
+            [Person::class, Workforce::class, Employee::class],
+            [
+                'id', // Foreign key on the persons table...
+                'person_id', // Foreign key on the workforces table...
+                'id', // Foreign key on the employees table...
+                'employee_id' // Foreign key on the recruitment_scripts table...
+            ],
+            [
+                'person_id', // Local key on the users table...
+                'id', // Local key on the persons table...
+                'workforceable_id', // Local key on the workforces table...
+                'id' // Local key on the employees table...
+            ]
+        );
+    }
+
     public function latestRecruitmentScript()
     {
 //        return $this->recruitmentScript()->orderBy('create_date')->take(1);
-        return $this->recruitmentScript()->latest('create_date')->take(1);
-    }
-
-    public static function GetAllStatuses(): Collection
-    {
-        return Status::all()->where('model', '=', self::class);
+        return $this->recruitmentScripts()->latest('create_date')->take(1);
     }
 }

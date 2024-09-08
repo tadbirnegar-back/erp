@@ -15,5 +15,6 @@
     "LMS": true,
     "EvalMS": true,
     "OUnitMS": true,
-    "Gateway": true
+    "Gateway": true,
+    "EMS": true
 }

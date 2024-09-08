@@ -1,0 +1,11 @@
+{
+    "name": "EMS",
+    "alias": "ems",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EMS\\app\\Providers\\EMSServiceProvider"
+    ],
+    "files": []
+}

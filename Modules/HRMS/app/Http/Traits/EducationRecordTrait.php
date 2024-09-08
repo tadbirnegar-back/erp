@@ -9,7 +9,7 @@ trait EducationRecordTrait
 {
     public function EducationalRecordStore(array|Collection $dataToInsert, int $workForceID)
     {
-        if (!isset($data[0]) || !is_array($data[0])) {
+        if (!isset($dataToInsert[0]) || !is_array($dataToInsert[0])) {
             $dataToInsert = [$dataToInsert];
         }
 

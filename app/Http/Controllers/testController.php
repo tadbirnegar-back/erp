@@ -3,13 +3,8 @@
 namespace App\Http\Controllers;
 
 
-
-
-
+use Modules\EMS\app\Models\Enactment;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
-use Modules\HRMS\app\Models\HireType;
-use Modules\HRMS\app\Models\Job;
-use Modules\HRMS\app\Models\ScriptType;
 
 class testController extends Controller
 {
@@ -17,63 +12,39 @@ class testController extends Controller
 
     public function run()
     {
-//        $a= [
-//            [
-//    "id" => null,
-//    "contract" => "9800000",
-//    "script_agent_id" => 8,
-//    "script_id" => 2209,
-//  ]
-//];
-//         $result = ScriptAgentScript::insert($a);
-//        dd($result);
+        $a = "[66,69]";
+        $b = json_decode($a, true);
 
+        $a = Enactment::first();
+        dd($a->upshot);
+        $b = $a->reviewStatuses;
 
-
-        $hireType = HireType::where('title', 'تمام وقت')->first();
-        $scriptType = ScriptType::where('title', 'انتصاب دهیار')->first();
-
-        $job = Job::where('title', 'دهیار')->first();
-
-        $result = $this->getScriptAgentCombos($hireType, $scriptType);
-        $x = '[{"ounitID":3869,"positionID":1,"startDate":"2024-08-21 07:40:57","files":[{"id":201,"title":"تصویر حکم"},{"id":202,"title":"تصویر مصوبات"}]}]';
-        $rs = json_decode($x, true);
-        foreach ($rs as &$script) {
-
-//                    $files = File::find([$script['enactmentAttachmentID'], $script['scriptAttachmentID']]);
-//                    $files->each(function ($file) use ($user) {
-//                        $file->creator_id = $user->id;
-//                        $file->save();
-//                    });
-
-            $sas = $result->map(function ($item) {
-
+        $c = $b->groupBy('id')
+            ->map(function ($statusGroup) {
                 return [
-                    'scriptAgentID' => $item->id,
-                    'defaultValue' => $item->pivot->default_value,
+                    'status' => $statusGroup->first(),
+                    'count' => $statusGroup->count()
                 ];
-            });
-            $encodedSas = json_encode($sas->toArray());
-            $script['hireTypeID'] = $hireType->id;
-            $script['scriptTypeID'] = $scriptType->id;
-            $script['jobID'] = $job->id;
-            $script['operatorID'] = 1905;
-            $script['scriptAgents'] = $encodedSas;
-
-        }
-        $pendingRsStatus = $scriptType?->employeeStatus?->name == self::$pendingEmployeeStatus
-            ? $this->pendingRsStatus()
-            : null;
-
-        $rsRes = $this->rsStore($rs, 1905, $pendingRsStatus);
-
-        if ($pendingRsStatus) {
-            collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-        }
-
+            })
+            ->sortByDesc('count')
+            ->values();
+        dd($c[0]['status']);
+//        $x = Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::APPROVED->value);
+//        dd($x);
+//        $dateString = \Morilog\Jalali\CalendarUtils::convertNumbers('۱۳۹۵/۰۲/۱۹', true); // 1395-02-19
+//        $a = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $dateString)
+//            ->toDateTimeString();//            ->format('Y/m/d H:i:s'); //2016-05-8
+//        ;
+//
+//        dd($a);
+//        $a = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d', strtotime($a)); // 1395-02-19
+////        dd($a);
+//        $a = \Morilog\Jalali\CalendarUtils::convertNumbers($a); // ۱۳۹۵-۰۲-۱۹
+//        dd($a);
+////        $jDate = Jalalian::fromFormat('Y-m-d', '1403-12-01')->toDateTimeString();
+//
+//        dd($jDate);
     }
-
-
 
 }
 

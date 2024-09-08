@@ -141,7 +141,7 @@ trait PersonTrait
             'bc_serial' => $data['bcSerial'] ?? null,
             'religion_id' => $data['religionID'] ?? null,
             'religion_type_id' => $data['religionTypeID'] ?? null,
-    ]);
+        ]);
 
         $naturalPerson->save();
 
@@ -160,9 +160,9 @@ trait PersonTrait
 
     }
 
-    public function personNaturalUpdate(array $data,Person $person)
+    public function personNaturalUpdate(array $data, Person $person)
     {
-        $naturalPerson=$person->personable;
+        $naturalPerson = $person->personable;
 
         $naturalPerson->fill([
             'first_name' => $data['firstName'],
@@ -231,11 +231,11 @@ trait PersonTrait
 
     public function latestScriptByNationalCode(string $nationalCode)
     {
-      return  Person::where('national_code',$nationalCode)->whereHas('latestRecruitmentScript', function ($query) {
+        return Person::where('national_code', $nationalCode)->whereHas('latestRecruitmentScript', function ($query) {
 
             $query->where('expire_date', '>', now())
-                ->whereDoesntHave('latestStatus',function ($query) {
-                    $query->where('name','=','غیرفعال');
+                ->whereDoesntHave('latestStatus', function ($query) {
+                    $query->where('name', '=', 'غیرفعال');
                 });
 
         })->with(['latestRecruitmentScript.issueTime'])->first();

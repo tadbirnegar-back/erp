@@ -1,0 +1,68 @@
+<?php
+
+namespace Modules\EMS\app\Http\Traits;
+
+use Illuminate\Support\Collection;
+use Modules\EMS\app\Http\Enums\MeetingStatusEnum;
+use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingStatus;
+
+trait MeetingTrait
+{
+
+    public function storeMeeting(array|Collection $data)
+    {
+
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+        $preparedData = $this->meetingDataPreparation($data);
+        $result = Meeting::create($preparedData->toArray()[0]);
+        $status = $this->meetingApprovedStatus();
+        $meetingStatus = new MeetingStatus();
+        $meetingStatus->meeting_id = $result->id;
+        $meetingStatus->status_id = $status->id;
+        $meetingStatus->operator_id = $data[0]['creatorID'];
+        $meetingStatus->save();
+        //        $result->statuses()->attach($status->id);
+
+        return $result;
+    }
+
+    private function meetingDataPreparation(array|Collection $data)
+    {
+        if (is_array($data)) {
+            $data = collect($data);
+        }
+
+        $data = $data->map(function ($item) {
+
+            return [
+                'title' => $item['title'] ?? null,
+                'meeting_detail' => $item['meetingDetail'] ?? null,
+                'meeting_number' => $item['meetingNumber'] ?? null,
+                'isTemplate' => $item['isTemplate'] ?? false,
+                'summary' => $item['summary'] ?? null,
+                'creator_id' => $item['creatorID'],
+                'meeting_type_id' => $item['meetingTypeID'],
+                'ounit_id' => $item['ounitID'],
+                'parent_id' => $item['parentID'] ?? null,
+                'create_date' => now(),
+                'start_time' => $item['startTime'] ?? null,
+                'end_time' => $item['endTime'] ?? null,
+                'invitation_date' => $item['invitationDate'] ?? null,
+                'meeting_date' => $item['meetingDate'] ?? null,
+                'reminder_date' => $item['reminderDate'] ?? null,
+            ];
+
+        });
+
+        return $data;
+    }
+
+    public function meetingApprovedStatus()
+    {
+        return Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::APPROVED->value);
+    }
+
+}

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -59,7 +60,7 @@ class RecruitmentScript extends Model
         return $this->belongsToMany(Status::class, 'recruitment_script_status');
     }
 
-    public function latestStatus()
+    public function latestStatus(): HasOneThrough
     {
         return $this->hasOneThrough(
             Status::class,
@@ -71,6 +72,7 @@ class RecruitmentScript extends Model
         )->orderBy('recruitment_script_status.create_date', 'desc');
 //            ->latest('recruitment_script_status.create_date');
     }
+
 
     public function level(): BelongsTo
     {
@@ -91,8 +93,8 @@ class RecruitmentScript extends Model
 
     public function issueTime()
     {
-        return $this->belongsToThrough(IssueTime::class,ScriptType::class);
-}
+        return $this->belongsToThrough(IssueTime::class, ScriptType::class);
+    }
 
     public function scriptType(): BelongsTo
     {
@@ -135,6 +137,11 @@ class RecruitmentScript extends Model
     public function files(): BelongsToMany
     {
         return $this->belongsToMany(File::class, 'file_script')->withPivot('title');
+    }
+
+    public function ounit(): BelongsTo
+    {
+        return $this->belongsTo(OrganizationUnit::class, 'organization_unit_id');
     }
 
 }
