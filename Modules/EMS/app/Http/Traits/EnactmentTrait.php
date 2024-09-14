@@ -4,6 +4,7 @@ namespace Modules\EMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Models\Attachmentable;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentStatus;
@@ -11,6 +12,22 @@ use Modules\EMS\app\Models\Meeting;
 
 trait EnactmentTrait
 {
+    private static string $enactmentSecretaryStatus = EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value;
+    private static string $enactmentHeyaatStatus = EnactmentStatusEnum::PENDING_BOARD_REVIEW->value;
+    private static string $enactmentCompleteStatus = EnactmentStatusEnum::COMPLETED->value;
+    private static string $enactmentCancelStatus = EnactmentStatusEnum::CANCELED->value;
+    private static string $enactmentDeclinedStatus = EnactmentStatusEnum::DECLINED->value;
+
+
+    //=========================== roles =============================
+
+    private static string $bakhshdar = RolesEnum::BAKHSHDAR->value;
+    private static string $karshenasOstandari = RolesEnum::KARSHENAS_OSTANDARI->value;
+    private static string $dabirHeyaat = RolesEnum::DABIR_HEYAAT->value;
+    private static string $karshenasMashvarati = RolesEnum::KARSHENAS_MASHVARATI->value;
+    private static string $ozvHeyaat = RolesEnum::OZV_HEYAAT->value;
+    private static string $ozvShouraRusta = RolesEnum::OZV_SHOURA_RUSTA->value;
+
 
     public function indexPendingForSecretaryStatusEnactment(array $data)
     {
@@ -116,6 +133,8 @@ trait EnactmentTrait
         $enactmentStatus->enactment_id = $result->id;
         $enactmentStatus->status_id = $status->id;
         $enactmentStatus->operator_id = $data[0]['creatorID'];
+        $enactmentStatus->description = $data[0]['description'] ?? null;
+        $enactmentStatus->attachment_id = $data[0]['attachmentID'] ?? null;
         $enactmentStatus->save();
 //        $result->statuses()->attach($status->id);
 
@@ -181,6 +200,208 @@ trait EnactmentTrait
         })->toArray();
 
         Attachmentable::insert($attachments);
+    }
+
+    private function getByRoleAndStatusCombination()
+    {
+        $combos = [
+            self::$enactmentSecretaryStatus => [
+                'priorities' => [
+                    self::$bakhshdar,
+                    self::$karshenasOstandari,
+                    self::$dabirHeyaat,
+                    self::$karshenasMashvarati,
+                    self::$ozvHeyaat,
+                    self::$ozvShouraRusta
+                ],
+
+                //roles with components
+                self::$bakhshdar => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'AcceptDenyBtns',
+                ],
+                self::$karshenasOstandari => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'AcceptDenyBtns',
+                ],
+                self::$dabirHeyaat => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'AcceptDenyBtns',
+                ],
+                self::$karshenasMashvarati => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                ],
+                self::$ozvHeyaat => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                ],
+                self::$ozvShouraRusta => [
+                    'MainEnactment',
+                ],
+            ],
+            self::$enactmentHeyaatStatus => [
+                'priorities' => [
+                    self::$karshenasMashvarati,
+                ],
+
+                //roles with components
+                self::$karshenasMashvarati => [
+                    'MainEnactment',
+                    'ReviewBtn',
+                    'ReviewCards',
+                ],
+            ],
+            self::$enactmentCompleteStatus => [
+                'priorities' => [
+                    self::$bakhshdar,
+                    self::$karshenasOstandari,
+                    self::$dabirHeyaat,
+                    self::$karshenasMashvarati,
+                    self::$ozvHeyaat,
+                    self::$ozvShouraRusta
+                ],
+
+                //roles with components
+                self::$bakhshdar => [
+                    'MainEnactment',
+                    'ReviewCards',
+                ],
+                self::$karshenasOstandari => [
+                    'MainEnactment',
+                    'ReviewCards',
+                ],
+                self::$dabirHeyaat => [
+                    'MainEnactment',
+                    'ReviewCards',
+                ],
+                self::$karshenasMashvarati => [
+                    'MainEnactment',
+                    'ReviewCards',
+                ],
+                self::$ozvHeyaat => [
+                    'MainEnactment',
+                    'ReviewCards',
+                ],
+                self::$ozvShouraRusta => [
+                    'MainEnactment',
+                    'ReviewCards',
+                ],
+            ],
+            self::$enactmentCancelStatus => [
+                'priorities' => [
+                    self::$bakhshdar,
+                    self::$karshenasOstandari,
+                    self::$dabirHeyaat,
+                    self::$karshenasMashvarati,
+                    self::$ozvHeyaat,
+                    self::$ozvShouraRusta
+                ],
+
+                //roles with components
+                self::$bakhshdar => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$karshenasOstandari => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$dabirHeyaat => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$karshenasMashvarati => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$ozvHeyaat => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$ozvShouraRusta => [
+                    'MainEnactment',
+                    'DenyCard',
+                ],
+            ],
+            self::$enactmentDeclinedStatus => [
+                'priorities' => [
+                    self::$bakhshdar,
+                    self::$karshenasOstandari,
+                    self::$dabirHeyaat,
+                    self::$karshenasMashvarati,
+                    self::$ozvHeyaat,
+                    self::$ozvShouraRusta
+                ],
+
+                //roles with components
+                self::$bakhshdar => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$karshenasOstandari => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$dabirHeyaat => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$karshenasMashvarati => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$ozvHeyaat => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$ozvShouraRusta => [
+                    'MainEnactment',
+                    'DenyCard',
+                ],
+            ],
+
+        ];
+
+        return $combos;
+    }
+
+    function getComponentsToRender(array $userRoles, string $enactmentStatus): Collection
+    {
+        $statusCollection = collect($this->getByRoleAndStatusCombination());
+        $userRolesCollection = collect($userRoles);
+
+        $statusRoles = collect($statusCollection->get($enactmentStatus, []));
+        $priorities = $statusRoles->get('priorities', []);
+
+        // Check for priority roles in order
+        foreach ($priorities as $priorityRole) {
+            if ($userRolesCollection->contains($priorityRole) && $statusRoles->has($priorityRole)) {
+                return collect($statusRoles->get($priorityRole, []));
+            }
+        }
+
+        // Return components for other roles
+        return $statusRoles
+            ->filter(function ($components, $role) use ($userRolesCollection) {
+                return $userRolesCollection->contains($role);
+            })
+            ->flatMap(function ($components) {
+                return $components;
+            });
     }
 
     public function enactmentPendingSecretaryStatus()

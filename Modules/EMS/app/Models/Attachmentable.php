@@ -2,11 +2,11 @@
 
 namespace Modules\EMS\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Modules\EMS\Database\factories\AttachmentableFactory;
 
-class Attachmentable extends Model
+class Attachmentable extends MorphPivot
 {
     use HasFactory;
 
@@ -15,6 +15,7 @@ class Attachmentable extends Model
      */
 
     //protected $fillable = [];
+    protected $table = 'attachmentables';
 
     public $timestamps = false;
 

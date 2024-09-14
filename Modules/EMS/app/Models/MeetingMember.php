@@ -2,13 +2,13 @@
 
 namespace Modules\EMS\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Modules\EMS\Database\factories\MeetingMemberFactory;
 
-class MeetingMember extends Model
+class MeetingMember extends Pivot
 {
-    use HasFactory;
+//    use EagerLoadPivotTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -17,5 +17,11 @@ class MeetingMember extends Model
     //protected $fillable = [];
 
     public $timestamps = false;
+    protected $table = 'meeting_members';
+
+    public function mr(): BelongsTo
+    {
+        return $this->belongsTo(MR::class);
+    }
 
 }

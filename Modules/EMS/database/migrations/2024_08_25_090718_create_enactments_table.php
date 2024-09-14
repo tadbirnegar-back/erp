@@ -15,14 +15,12 @@ return new class extends Migration {
             $table->id();
             $table->string('custom_title')->nullable()->fulltext();
             $table->text('description')->nullable();
-            $table->text('rejection_reason')->nullable();
             $table->string('auto_serial')->nullable()->index();
             $table->string('serial')->nullable()->index();
 
             $table->unsignedBigInteger('title_id')->nullable();
             $table->unsignedBigInteger('creator_id');
             $table->unsignedBigInteger('meeting_id')->nullable();
-            $table->unsignedBigInteger('rejection_file_id')->nullable();
             $table->dateTime('create_date')->useCurrent();
 
             $table->foreign('title_id')->references('id')->on('enactment_titles')->onDelete('set null');

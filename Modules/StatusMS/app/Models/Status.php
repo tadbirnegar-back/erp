@@ -2,8 +2,8 @@
 
 namespace Modules\StatusMS\app\Models;
 
+use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\BranchMS\app\Models\Branch;
 use Modules\FileMS\app\Models\File;
 use Modules\PersonMS\app\Models\Person;
@@ -11,7 +11,8 @@ use Modules\StatusMS\Database\factories\StatusFactory;
 
 class Status extends Model
 {
-    use HasFactory;
+    use eagerLoadPivotTrait;
+
     public $timestamps = false;
     /**
      * The attributes that are mass assignable.

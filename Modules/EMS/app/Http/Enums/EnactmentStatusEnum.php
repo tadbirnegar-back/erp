@@ -8,4 +8,5 @@ enum EnactmentStatusEnum: string
     case PENDING_BOARD_REVIEW = 'در انتظار بررسی هیئت';
     case PENDING_SECRETARY_REVIEW = 'در انتظار وصول';
     case CANCELED = 'لغو شده';
+    case DECLINED = 'رد شده';
 }

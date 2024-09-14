@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\EMS\Database\factories\MeetingFactory;
+use Modules\HRMS\app\Models\Employee;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Meeting extends Model
 {
@@ -66,6 +68,38 @@ class Meeting extends Model
                 return $dateTimeString;
             }
         );
+    }
+
+    use HasRelationships;
+
+//    public function persons()
+//    {
+//        return $this->hasManyDeep(
+//            Person::class,
+//            [MeetingMember::class, Employee::class, Workforce::class],
+//            [
+//                'meeting_id', // Foreign key on the meeting_members table...
+//                'id', // Foreign key on the employees table...
+//                'workforceable_id', // Foreign key on the workforces table...
+//                'id' // Foreign key on the workforces table...
+//            ],
+//            [
+//                'id', // Local key on the meetings table...
+//                'employee_id', // Local key on the meeting_members table...
+//                'id', // Local key on the employees table...
+//                'person_id' // Local key on the workforces table...
+//            ]
+//        )
+////            ->using(MeetingMember::class)
+//            ->withPivot('meeting_members', ['mr_id'], MeetingMember::class, 'pivot');
+//    }
+
+    public function persons()
+    {
+        return $this->belongsToMany(Employee::class, 'meeting_members', 'meeting_id', 'employee_id')
+            ->with('person')
+            ->using(MeetingMember::class)
+            ->withPivot('mr_id');
     }
 
 

@@ -2,15 +2,21 @@
 
 namespace Modules\EMS\app\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
 use Modules\EMS\Database\factories\EnactmentFactory;
+use Modules\FileMS\app\Models\File;
+use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
+use Morilog\Jalali\CalendarUtils;
+use Znck\Eloquent\Traits\BelongsToThrough;
 
 class Enactment extends Model
 {
@@ -40,12 +46,17 @@ class Enactment extends Model
 
     public function attachments(): MorphToMany
     {
-        return $this->morphToMany(Attachmentable::class, 'attachmentable')->withPivot('title');
+        return $this->morphToMany(File::class,
+            'attachmentable',
+            'attachmentables',
+            'attachmentable_id',
+            'attachment_id')
+            ->withPivot('title');
     }
 
     public function statuses(): BelongsToMany
     {
-        return $this->belongsToMany(Status::class, 'enactment_status', 'enactment_id', 'status_id');
+        return $this->belongsToMany(Status::class, 'enactment_status', 'enactment_id', 'status_id')->using(EnactmentStatus::class)->withPivot(['operator_id', 'id', 'status_id']);
     }
 
     public function status()
@@ -101,4 +112,28 @@ class Enactment extends Model
 
         return $result[0]['status'];
     }
+
+    use BelongsToThrough;
+
+    public function creator()
+    {
+        return $this->belongsToThrough(Person::class, User::class, foreignKeyLookup: [
+            User::class => 'creator_id',
+        ]);
+    }
+
+    public function createDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                $jalali = CalendarUtils::strftime('Y/m/d', strtotime($value)); // 1395-02-19
+                $jalaliPersianNumbers = CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
+
+                return $jalaliPersianNumbers;
+            },
+
+        );
+    }
+
+
 }

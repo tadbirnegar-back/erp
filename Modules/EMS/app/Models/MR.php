@@ -2,13 +2,12 @@
 
 namespace Modules\EMS\app\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\EMS\Database\factories\MRFactory;
 
 class MR extends Model
 {
-    use HasFactory;
+//    use EagerLoadPivotTrait;
 
     /**
      * The attributes that are mass assignable.

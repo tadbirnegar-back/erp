@@ -2,19 +2,18 @@
 
 namespace Modules\HRMS\app\Models;
 
+use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Modules\AAA\app\Models\User;
 use Modules\HRMS\Database\factories\EmployeeFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
 class Employee extends Model
 {
-    use HasFactory;
+    use eagerLoadPivotTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -29,17 +28,17 @@ class Employee extends Model
 
     public function workForce(): MorphOne
     {
-        return $this->morphOne(WorkForce::class,'workforceable');
+        return $this->morphOne(WorkForce::class, 'workforceable');
     }
 
     public function positions(): BelongsToMany
     {
-        return $this->belongsToMany(Position::class,'recruitment_scripts');
+        return $this->belongsToMany(Position::class, 'recruitment_scripts');
     }
 
     public function levels(): BelongsToMany
     {
-        return $this->belongsToMany(Level::class,'recruitment_scripts');
+        return $this->belongsToMany(Level::class, 'recruitment_scripts');
     }
 
     public function recruitmentScripts(): HasMany
