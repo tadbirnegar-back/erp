@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Models\Attachmentable;
@@ -151,13 +152,13 @@ trait EnactmentTrait
             return [
                 'custom_title' => $item['customTitle'] ?? null,
                 'description' => $item['description'] ?? null,
-                'rejection_reason' => $item['rejectionReason'] ?? null,
+//                'rejection_reason' => $item['rejectionReason'] ?? null,
                 'auto_serial' => $item['autoSerial'] ?? null,
-                'serial' => $item['serial'] ?? null,
+                'serial' => $item['enactmentSerial'] ?? null,
                 'title_id' => $item['titleID'] ?? null,
                 'creator_id' => $item['creatorID'],
                 'meeting_id' => $meeting->id ?? null,
-                'rejection_file_id' => $item['rejectionFileID'] ?? null,
+//                'rejection_file_id' => $item['rejectionFileID'] ?? null,
                 'create_date' => now(),
             ];
         });
@@ -245,15 +246,47 @@ trait EnactmentTrait
             ],
             self::$enactmentHeyaatStatus => [
                 'priorities' => [
+                    self::$ozvHeyaat,
                     self::$karshenasMashvarati,
+                    self::$karshenasOstandari,
+                    self::$bakhshdar,
+                    self::$dabirHeyaat,
+                    self::$ozvShouraRusta
+
                 ],
 
                 //roles with components
                 self::$karshenasMashvarati => [
                     'MainEnactment',
                     'ReviewBtn',
-                    'ReviewCards',
+                    'ConsultingReviewCards',
                 ],
+                self::$ozvHeyaat => [
+                    'MainEnactment',
+                    'ReviewBtn',
+                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
+                ],
+                self::$karshenasOstandari => [
+                    'MainEnactment',
+                    'ConsultingReviewCards',
+                    'BoardReviewCards',
+
+                ],
+                self::$bakhshdar => [
+                    'MainEnactment',
+                    'ConsultingReviewCards',
+                    'BoardReviewCards',
+                ],
+                self::$dabirHeyaat => [
+                    'MainEnactment',
+                    'ConsultingReviewCards',
+
+                ],
+                self::$ozvShouraRusta => [
+                    'MainEnactment',
+                ],
+
             ],
             self::$enactmentCompleteStatus => [
                 'priorities' => [
@@ -268,27 +301,27 @@ trait EnactmentTrait
                 //roles with components
                 self::$bakhshdar => [
                     'MainEnactment',
-                    'ReviewCards',
+                    'ConsultingReviewCards',
                 ],
                 self::$karshenasOstandari => [
                     'MainEnactment',
-                    'ReviewCards',
+                    'ConsultingReviewCards',
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
-                    'ReviewCards',
+                    'ConsultingReviewCards',
                 ],
                 self::$karshenasMashvarati => [
                     'MainEnactment',
-                    'ReviewCards',
+                    'ConsultingReviewCards',
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
-                    'ReviewCards',
+                    'ConsultingReviewCards',
                 ],
                 self::$ozvShouraRusta => [
                     'MainEnactment',
-                    'ReviewCards',
+                    'ConsultingReviewCards',
                 ],
             ],
             self::$enactmentCancelStatus => [
@@ -379,7 +412,7 @@ trait EnactmentTrait
         return $combos;
     }
 
-    function getComponentsToRender(array $userRoles, string $enactmentStatus): Collection
+    public function getComponentsToRender(array $userRoles, string $enactmentStatus): Collection
     {
         $statusCollection = collect($this->getByRoleAndStatusCombination());
         $userRolesCollection = collect($userRoles);
@@ -404,8 +437,84 @@ trait EnactmentTrait
             });
     }
 
+    public function enactmentShow(Enactment $enactment, User $user)
+    {
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        $myPermissions = $this->getComponentsToRender($userRoles, $enactment->status->name);
+
+        $componentsToRender = collect([
+            'MainEnactment' => ['reviewStatuses', 'meeting', 'attachments', 'creator', 'title'],
+            'MembersBeforeReview' => ['members.person.avatar'],
+            'AcceptDenyBtns' => ['relatedDates' => function ($query) {
+                $query->where('meetings.meeting_date', '>', now())->withCount('enactments');
+
+            }],
+            'ConsultingReviewCards' => ['consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+                $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+            },
+            ],
+            'BoardReviewCards' => ['boardMembers.enactmentReviews' => function ($query) use ($enactment) {
+                $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+            },],
+            'CurrentReviewCard' => ['boardMembers.enactmentReviews' => function ($query) use ($enactment, $user) {
+                $query->where('enactment_id', $enactment->id)->where('user_id', $user->id)->with(['status', 'attachment']);
+            },],
+
+            'DenyCard' => ['canceledStatus.meetingMember'],
+            'ReviewBtn' => ['userHasReviews' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            },]
+        ]);
+
+        $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())
+            ->flatMap(fn($relations) => collect($relations)->mapWithKeys(fn($relation, $key) => is_callable($relation) ? [$key => $relation] : [$relation => fn($query) => $query]))->all();
+
+
+        $enactment = $enactment->load($flattenedComponents);
+
+        $componentsWithData = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys()))->map(function ($relations, $component) use ($enactment) {
+            $relationData = collect($relations)->mapWithKeys(function ($relation, $key) use ($enactment) {
+                $relationName = is_callable($relation) ? explode('.', $key)[0] : explode('.', $relation)[0];
+
+                if ($enactment->relationLoaded($relationName)) {
+                    if (is_callable($relation)) {
+                        $component = $key;
+                    } else {
+                        $component = $relation;
+                    }
+                    $result = [$component => $enactment->$relationName];
+                    if ($relationName !== 'reviewStatuses') {
+                        $enactment->unsetRelation($relationName);
+                    }
+
+                    return $result;
+                }
+                return [];
+
+            });
+            return $relationData->isNotEmpty() ? [
+                'name' => $component,
+                'data' => $relationData
+            ] : null;
+        })->filter()->values();
+
+        return $componentsWithData;
+
+    }
+
     public function enactmentPendingSecretaryStatus()
     {
         return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value);
+    }
+
+    public function enactmentHeyaatStatus()
+    {
+        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value);
+    }
+
+    public function enactmentCancelStatus()
+    {
+        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::CANCELED->value);
     }
 }

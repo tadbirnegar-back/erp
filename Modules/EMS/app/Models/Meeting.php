@@ -3,16 +3,19 @@
 namespace Modules\EMS\app\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\EMS\Database\factories\MeetingFactory;
 use Modules\HRMS\app\Models\Employee;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+use Staudenmeir\EloquentHasManyDeep\HasTableAlias;
 
 class Meeting extends Model
 {
-    use HasFactory;
+    use HasTableAlias;
 
     /**
      * The attributes that are mass assignable.
@@ -100,6 +103,21 @@ class Meeting extends Model
             ->with('person')
             ->using(MeetingMember::class)
             ->withPivot('mr_id');
+    }
+
+    public function meetingMembers(): HasMany
+    {
+        return $this->hasMany(MeetingMember::class, 'meeting_id');
+    }
+
+    public function ounit(): BelongsTo
+    {
+        return $this->belongsTo(OrganizationUnit::class);
+    }
+
+    public function enactments(): HasMany
+    {
+        return $this->hasMany(Enactment::class, 'meeting_id');
     }
 
 

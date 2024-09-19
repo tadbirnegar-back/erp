@@ -12,15 +12,12 @@ use Illuminate\Support\Facades\Validator;
 use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\Token;
 use Modules\AAA\app\Http\Repositories\OtpRepository;
-use Modules\AAA\app\Http\Services\UserService;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\AAA\app\Notifications\OtpNotification;
-use Modules\AddressMS\app\services\AddressService;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
 use Modules\OUnitMS\app\Models\VillageOfc;
-use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Natural;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -65,9 +62,12 @@ class LoginController extends Controller
         }
 
         $user = $this->mobileExists($request->mobile);
+        if ($user === null) {
+            return response()->json(['message' => 'کاربری یافت نشد'], 404);
+        }
 
         return response()->json([
-            'avatar' => (!is_null($user->person->avatar)) ? $user->person->avatar->slug : null,
+            'avatar' => (!is_null($user?->person->avatar)) ? $user->person->avatar->slug : null,
             'fullName' => $user->person->display_name
         ]);
 
@@ -312,7 +312,7 @@ class LoginController extends Controller
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => !is_null($user->person->avatar) ?$user->person->avatar->slug : null,
+            'avatar' => !is_null($user->person->avatar) ? $user->person->avatar->slug : null,
 //            'avatar' => 'https://tgbot.zbbo.net/uploads/2024/1/10/mWWPCCV8uc0qaxqks0iTC6NCXni8eJPW39CenjrB.jpg',
             $result['roles'] = $user->roles,
 
@@ -686,7 +686,7 @@ class LoginController extends Controller
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
-            'avatar' => !is_null($user->person->avatar) ?  $user->person->avatar->slug : null,
+            'avatar' => !is_null($user->person->avatar) ? $user->person->avatar->slug : null,
             'roles' => $user->roles,
         ];
 

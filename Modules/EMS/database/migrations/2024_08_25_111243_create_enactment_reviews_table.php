@@ -14,7 +14,7 @@ return new class extends Migration {
 
         Schema::create('enactment_reviews', function (Blueprint $table) {
             $table->id();
-            $table->text('description');
+            $table->text('description')->nullable();
 
             $table->unsignedBigInteger('attachment_id')->nullable();
             $table->unsignedBigInteger('enactment_id');

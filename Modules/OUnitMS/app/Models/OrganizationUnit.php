@@ -3,14 +3,15 @@
 namespace Modules\OUnitMS\app\Models;
 
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Models\Meeting;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Models\Payment;
@@ -31,11 +32,12 @@ class OrganizationUnit extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = ['name',
-    'unitable_id',
-    'unitable_type',
-    'head_id',
-    'parent_id',];
+        'unitable_id',
+        'unitable_type',
+        'head_id',
+        'parent_id',];
     public $timestamps = false;
+
     protected static function newFactory(): OrganizationUnitFactory
     {
         //return OrganizationUnitFactory::new();
@@ -48,7 +50,7 @@ class OrganizationUnit extends Model
 
     public function head(): BelongsTo
     {
-        return $this->belongsTo(User::class,'head_id');
+        return $this->belongsTo(User::class, 'head_id');
     }
 
     public function evaluations(): BelongsToMany
@@ -70,7 +72,7 @@ class OrganizationUnit extends Model
 
     public function person()
     {
-        return $this->belongsToThrough(Person::class,User::class,foreignKeyLookup: [
+        return $this->belongsToThrough(Person::class, User::class, foreignKeyLookup: [
             User::class => 'head_id',
             Person::class => 'person_id',
         ]);
@@ -83,7 +85,7 @@ class OrganizationUnit extends Model
 
     public function statuses()
     {
-        return $this->belongsToMany(Status::class,'recruitment_script_status');
+        return $this->belongsToMany(Status::class, 'recruitment_script_status');
     }
 
     public function recruitmentScripts(): HasMany
@@ -94,13 +96,18 @@ class OrganizationUnit extends Model
 
     public function positions(): BelongsToMany
     {
-        return $this->belongsToMany(Position::class,'ounit_position','ounit_id','position_id')->whereHas('status', function ($query) {
+        return $this->belongsToMany(Position::class, 'ounit_position', 'ounit_id', 'position_id')->whereHas('status', function ($query) {
             $query->where('name', '=', 'فعال');
         });
     }
 
+    public function meetings(): HasMany
+    {
+        return $this->hasMany(Meeting::class, 'ounit_id');
+    }
+
     public static function GetAllStatuses(): Collection
     {
-        return Status::all()->where('model',  '=', self::class);
+        return Status::all()->where('model', '=', self::class);
     }
 }

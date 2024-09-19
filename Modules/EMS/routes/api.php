@@ -28,4 +28,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::post('mes/all-enactments/list', [EnactmentController::class, 'indexArchive']);
 
+    Route::post('mes/enactments/{id}', [EnactmentController::class, 'show']);
+
+    Route::post('mes/enactments/approve/{id}', [EnactmentController::class, 'enactmentApproval']);
+
+    Route::post('mes/enactments/decline/{id}', [EnactmentController::class, 'enactmentDenial']);
+
+    Route::post('mes/enactments/deny/{id}', [EnactmentController::class, 'enactmentInconsistency']);
+
+    Route::post('mes/enactments/accept/{id}', [EnactmentController::class, 'enactmentNoInconsistency']);
+
 });

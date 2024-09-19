@@ -3,7 +3,6 @@
 namespace Modules\EMS\app\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,16 +10,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
+use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\Database\factories\EnactmentFactory;
 use Modules\FileMS\app\Models\File;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Morilog\Jalali\CalendarUtils;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+use Staudenmeir\EloquentHasManyDeep\HasTableAlias;
 use Znck\Eloquent\Traits\BelongsToThrough;
 
 class Enactment extends Model
 {
-    use HasFactory;
+    use HasTableAlias;
 
     /**
      * The attributes that are mass assignable.
@@ -82,7 +86,26 @@ class Enactment extends Model
 
     public function reviewStatuses()
     {
-        return $this->hasManyThrough(Status::class, EnactmentReview::class, 'enactment_id', 'id', 'id', 'status_id');
+        return $this->hasManyThrough(
+            Status::class,
+            EnactmentReview::class,
+            'enactment_id',
+            'id',
+            'id',
+            'status_id'
+        );
+    }
+
+    public function userHasReviews()
+    {
+        return $this->hasManyThrough(
+            Status::class,
+            EnactmentReview::class,
+            'enactment_id',
+            'id',
+            'id',
+            'status_id'
+        );
     }
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
@@ -133,6 +156,103 @@ class Enactment extends Model
             },
 
         );
+    }
+
+    public function ounit()
+    {
+        return $this->belongsToThrough(OrganizationUnit::class, Meeting::class, foreignKeyLookup: [Meeting::class => 'meeting_id', OrganizationUnit::class => 'ounit_id']);
+    }
+
+    use HasRelationships;
+
+    public function relatedDates()
+    {
+        return $this->hasManyDeep(Meeting::class,
+            [
+                Meeting::class . ' as alias',
+                OrganizationUnit::class
+            ],
+            [
+                'id',
+                'id',
+                'ounit_id',
+            ],
+            [
+                'meeting_id',
+                'ounit_id',
+                'id',
+            ]);
+    }
+
+    public function meetingMembers()
+    {
+        return $this->hasManyDeep(MeetingMember::class,
+            [
+                EnactmentReview::class
+            ],
+            [
+                'enactment_id',
+                'employee_id',
+            ],
+            [
+                'id',
+                'user_id',
+            ]
+        );
+    }
+
+
+    public function members()
+    {
+        return $this->hasManyThrough(MeetingMember::class, Meeting::class, 'id', 'meeting_id', 'meeting_id', 'id')->with('mr');
+    }
+
+    public function consultingMembers()
+    {
+        return $this->members()->whereHas('roles', function ($query) {
+            $query->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
+        })->with('person.avatar');
+    }
+
+    public function boardMembers()
+    {
+        return $this->members()->whereHas('roles', function ($query) {
+            $query->where('name', RolesEnum::OZV_HEYAAT->value);
+        })->with('person.avatar');
+    }
+
+    public function enactmentReviewsByMeetingMembers()
+    {
+        return $this->hasManyDeep(EnactmentReview::class,
+            [
+                EnactmentReview::class . ' as er2',
+                MeetingMember::class,
+                Enactment::class . ' as e2',
+            ],
+            [
+                'enactment_id',
+                'employee_id',
+                'meeting_id',
+                'enactment_id',
+
+            ],
+            [
+                'id',
+                'user_id',
+                'meeting_id',
+                'id',
+            ]
+        );
+    }
+
+    public function canceledStatus()
+    {
+        return $this->hasOne(EnactmentStatus::class, 'enactment_id')->whereHas('status', function ($query) {
+            $query->where(function ($query) {
+                $query->where('name', '=', EnactmentStatusEnum::CANCELED->value)
+                    ->orWhere('name', '=', EnactmentStatusEnum::DECLINED->value);
+            })->orderBy('create_date', 'desc');
+        })->with('attachment');
     }
 
 
