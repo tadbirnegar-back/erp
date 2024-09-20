@@ -149,7 +149,7 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $user = Auth::user();
-            $enactment = Enactment::with('status')->find($id);
+            $enactment = Enactment::with('status', 'meeting')->find($id);
             if (is_null($enactment)) {
                 return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
             }
@@ -163,6 +163,8 @@ class EnactmentController extends Controller
                 $enactment->save();
             } elseif (isset($data['meetingDate'])) {
                 $data['creatorID'] = $user->id;
+                $data['meetingTypeID'] = $enactment->meeting->meeting_type_id;
+                $data['ounitID'] = $enactment->meeting->ounit_id;
                 $meeting = $this->storeMeeting($data);
                 $enactment->meeting_id = $meeting->id;
                 $enactment->save();

@@ -447,7 +447,7 @@ trait EnactmentTrait
             'MainEnactment' => ['reviewStatuses', 'meeting', 'attachments', 'creator', 'title'],
             'MembersBeforeReview' => ['members.person.avatar'],
             'AcceptDenyBtns' => ['relatedDates' => function ($query) {
-                $query->where('meetings.meeting_date', '>', now())->withCount('enactments');
+                $query->where('meetings.meeting_date', '>', now())->where('meetings.isTemplate', false)->withCount('enactments');
 
             }],
             'ConsultingReviewCards' => ['consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
@@ -457,8 +457,11 @@ trait EnactmentTrait
             'BoardReviewCards' => ['boardMembers.enactmentReviews' => function ($query) use ($enactment) {
                 $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
             },],
-            'CurrentReviewCard' => ['boardMembers.enactmentReviews' => function ($query) use ($enactment, $user) {
-                $query->where('enactment_id', $enactment->id)->where('user_id', $user->id)->with(['status', 'attachment']);
+            'CurrentReviewCard' => ['boardMembers' => function ($query) use ($enactment, $user) {
+                $query->where('employee_id', $user->id)->with(['enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+
+                }]);
             },],
 
             'DenyCard' => ['canceledStatus.meetingMember'],
