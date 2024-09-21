@@ -20,13 +20,13 @@ use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
-use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
+use Staudenmeir\EloquentEagerLimitXLaravelAdjacencyList\Eloquent\HasEagerLimitAndRecursiveRelationships;
 use Znck\Eloquent\Traits\BelongsToThrough;
 
 class OrganizationUnit extends Model
 {
     use HasFactory;
-    use HasRecursiveRelationships;
+    use HasEagerLimitAndRecursiveRelationships;
 
     /**
      * The attributes that are mass assignable.

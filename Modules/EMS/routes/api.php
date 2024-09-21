@@ -38,4 +38,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::post('mes/enactments/accept/{id}', [EnactmentController::class, 'enactmentNoInconsistency']);
 
+    Route::post('mes/setting/secretary', [EMSController::class, 'getHeyaatMembers']);
+
+    Route::put('mes/setting/secretary', [EMSController::class, 'updateHeyaatMembers']);
+
 });

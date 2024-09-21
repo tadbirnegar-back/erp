@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d8405fa853014a4f5eb5f5c5a049f321",
+    "content-hash": "5aed24b02ef087d212df3aa2d8372921",
     "packages": [
         {
             "name": "ajcastro/eager-load-pivot-relations",
@@ -4875,6 +4875,162 @@
             "time": "2023-12-19T11:58:06+00:00"
         },
         {
+            "name": "staudenmeir/eloquent-eager-limit",
+            "version": "v1.8.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/staudenmeir/eloquent-eager-limit.git",
+                "reference": "4d242d948955d155bc7fae8b1738818b16f7d333"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/staudenmeir/eloquent-eager-limit/zipball/4d242d948955d155bc7fae8b1738818b16f7d333",
+                "reference": "4d242d948955d155bc7fae8b1738818b16f7d333",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^10.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^10.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Staudenmeir\\EloquentEagerLimit\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jonas Staudenmeir",
+                    "email": "mail@jonas-staudenmeir.de"
+                }
+            ],
+            "description": "Laravel Eloquent eager loading with limit",
+            "support": {
+                "issues": "https://github.com/staudenmeir/eloquent-eager-limit/issues",
+                "source": "https://github.com/staudenmeir/eloquent-eager-limit/tree/v1.8.3"
+            },
+            "funding": [
+                {
+                    "url": "https://paypal.me/JonasStaudenmeir",
+                    "type": "custom"
+                }
+            ],
+            "time": "2023-07-12T21:15:26+00:00"
+        },
+        {
+            "name": "staudenmeir/eloquent-eager-limit-x-laravel-adjacency-list",
+            "version": "v1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/staudenmeir/eloquent-eager-limit-x-laravel-adjacency-list.git",
+                "reference": "329389e6eb304e9e03935b530e1f12a5d8ab8bee"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/staudenmeir/eloquent-eager-limit-x-laravel-adjacency-list/zipball/329389e6eb304e9e03935b530e1f12a5d8ab8bee",
+                "reference": "329389e6eb304e9e03935b530e1f12a5d8ab8bee",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^10.0",
+                "php": "^8.1",
+                "staudenmeir/eloquent-eager-limit-x-laravel-cte": "^1.1.1",
+                "staudenmeir/laravel-adjacency-list": "^1.13.5"
+            },
+            "require-dev": {
+                "doctrine/dbal": "^3.5.2",
+                "phpunit/phpunit": "^10.0",
+                "staudenmeir/eloquent-has-many-deep": "^1.18"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Staudenmeir\\EloquentEagerLimitXLaravelAdjacencyList\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jonas Staudenmeir",
+                    "email": "mail@jonas-staudenmeir.de"
+                }
+            ],
+            "description": "Merge of staudenmeir/eloquent-eager-limit and staudenmeir/laravel-adjacency-list",
+            "support": {
+                "issues": "https://github.com/staudenmeir/eloquent-eager-limit-x-laravel-adjacency-list/issues",
+                "source": "https://github.com/staudenmeir/eloquent-eager-limit-x-laravel-adjacency-list/tree/v1.2"
+            },
+            "funding": [
+                {
+                    "url": "https://paypal.me/JonasStaudenmeir",
+                    "type": "custom"
+                }
+            ],
+            "time": "2023-05-14T09:54:50+00:00"
+        },
+        {
+            "name": "staudenmeir/eloquent-eager-limit-x-laravel-cte",
+            "version": "v1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/staudenmeir/eloquent-eager-limit-x-laravel-cte.git",
+                "reference": "f2b2b711c34f74507a339457cd897c76d5754d1c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/staudenmeir/eloquent-eager-limit-x-laravel-cte/zipball/f2b2b711c34f74507a339457cd897c76d5754d1c",
+                "reference": "f2b2b711c34f74507a339457cd897c76d5754d1c",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^10.0",
+                "php": "^8.1",
+                "staudenmeir/eloquent-eager-limit": "^1.8.1",
+                "staudenmeir/laravel-cte": "^1.7"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^10.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Staudenmeir\\EloquentEagerLimitXLaravelCte\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jonas Staudenmeir",
+                    "email": "mail@jonas-staudenmeir.de"
+                }
+            ],
+            "description": "Merge of staudenmeir/eloquent-eager-limit and staudenmeir/laravel-cte",
+            "support": {
+                "issues": "https://github.com/staudenmeir/eloquent-eager-limit-x-laravel-cte/issues",
+                "source": "https://github.com/staudenmeir/eloquent-eager-limit-x-laravel-cte/tree/v1.1.1"
+            },
+            "funding": [
+                {
+                    "url": "https://paypal.me/JonasStaudenmeir",
+                    "type": "custom"
+                }
+            ],
+            "time": "2023-02-12T22:42:19+00:00"
+        },
+        {
             "name": "staudenmeir/eloquent-has-many-deep",
             "version": "v1.19.2",
             "source": {
@@ -5055,16 +5211,16 @@
         },
         {
             "name": "staudenmeir/laravel-cte",
-            "version": "v1.10",
+            "version": "v1.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/staudenmeir/laravel-cte.git",
-                "reference": "f308d38e3bd2ac3dd23b3ea73a5af5b8ace95f24"
+                "reference": "cc1d3cff4eabb94a07afecf13306eb3f2a1d68e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/staudenmeir/laravel-cte/zipball/f308d38e3bd2ac3dd23b3ea73a5af5b8ace95f24",
-                "reference": "f308d38e3bd2ac3dd23b3ea73a5af5b8ace95f24",
+                "url": "https://api.github.com/repos/staudenmeir/laravel-cte/zipball/cc1d3cff4eabb94a07afecf13306eb3f2a1d68e0",
+                "reference": "cc1d3cff4eabb94a07afecf13306eb3f2a1d68e0",
                 "shasum": ""
             },
             "require": {
@@ -5104,7 +5260,7 @@
             "description": "Laravel queries with common table expressions",
             "support": {
                 "issues": "https://github.com/staudenmeir/laravel-cte/issues",
-                "source": "https://github.com/staudenmeir/laravel-cte/tree/v1.10"
+                "source": "https://github.com/staudenmeir/laravel-cte/tree/v1.10.1"
             },
             "funding": [
                 {
@@ -5112,7 +5268,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-03-08T12:15:47+00:00"
+            "time": "2024-07-11T09:04:40+00:00"
         },
         {
             "name": "stella-maris/clock",
@@ -10789,7 +10945,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.1"
+        "php": "^8.2"
     },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"

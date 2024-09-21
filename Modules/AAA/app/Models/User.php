@@ -23,11 +23,12 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Modules\WidgetsMS\app\Models\Widget;
+use Staudenmeir\EloquentHasManyDeep\Eloquent\Relations\Traits\HasEagerLimit;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasEagerLimit;
 
     /**
      * The attributes that are mass assignable.
@@ -208,6 +209,13 @@ class User extends Authenticatable
         });
     }
 
+    public function activeRecruitmentScript()
+    {
+        return $this->activeRecruitmentScripts()->whereHas('issueTime', function ($query) {
+            $query->where('issue_times.title', 'شروع به همکاری');
+        });
+    }
+
     public function recruitmentScripts()
     {
         return $this->hasManyDeep(
@@ -230,7 +238,6 @@ class User extends Authenticatable
 
     public function latestRecruitmentScript()
     {
-//        return $this->recruitmentScript()->orderBy('create_date')->take(1);
         return $this->recruitmentScripts()->latest('create_date')->take(1);
     }
 }

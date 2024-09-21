@@ -16,8 +16,8 @@
         "nwidart/laravel-modules": "^10.0",
         "shetabit/payment": "^5.8",
         "staudenmeir/belongs-to-through": "^2.15",
+        "staudenmeir/eloquent-eager-limit-x-laravel-adjacency-list": "^1.2",
         "staudenmeir/eloquent-has-many-deep": "^1.19",
-        "staudenmeir/laravel-adjacency-list": "^1.13",
         "tzsk/sms": "^8.0"
     },
     "require-dev": {

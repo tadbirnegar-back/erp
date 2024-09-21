@@ -57,6 +57,11 @@ class MeetingMember extends Pivot
         );
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'employee_id');
+    }
+
     public function roles()
     {
         return $this->hasManyDeep(Role::class, [

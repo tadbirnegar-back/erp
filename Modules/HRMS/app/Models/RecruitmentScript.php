@@ -2,7 +2,6 @@
 
 namespace Modules\HRMS\app\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,10 +11,11 @@ use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
 class RecruitmentScript extends Model
 {
-    use HasFactory;
+    use HasEagerLimit;
 
     public $timestamps = false;
     /**
