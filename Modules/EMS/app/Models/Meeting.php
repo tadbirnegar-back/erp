@@ -56,6 +56,9 @@ class Meeting extends Model
     {
         return Attribute::make(
             get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
                 $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d', strtotime($value)); // 1395-02-19
                 $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
 
@@ -63,12 +66,16 @@ class Meeting extends Model
             },
 
             set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
                 $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($value, true);
 
                 $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString)
                     ->toDateTimeString();
 
                 return $dateTimeString;
+
             }
         );
     }
@@ -118,6 +125,11 @@ class Meeting extends Model
     public function enactments(): HasMany
     {
         return $this->hasMany(Enactment::class, 'meeting_id');
+    }
+
+    public function meetingType(): BelongsTo
+    {
+        return $this->belongsTo(MeetingType::class, 'meeting_type_id');
     }
 
 

@@ -26,7 +26,6 @@ return new class extends Migration {
             $table->foreign('title_id')->references('id')->on('enactment_titles')->onDelete('set null');
             $table->foreign('creator_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('meeting_id')->references('id')->on('meetings')->onDelete('set null');
-            $table->foreign('rejection_file_id')->references('id')->on('files')->onDelete('set null');
 
 
         });

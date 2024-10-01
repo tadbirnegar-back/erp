@@ -292,15 +292,16 @@ class LoginController extends Controller
         $roles = $user->roles->pluck('name');
 
         if (in_array('کاربر', $roles->toArray())) {
-            $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
-                ->whereNotNull('organization_units.head_id')
-                ->where('organization_units.unitable_type', VillageOfc::class)
+            $result['hasPayed'] = !($user->organizationUnits()
+//                ->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+//                ->whereNotNull('organization_units.head_id')
+                ->where('unitable_type', VillageOfc::class)
                 ->whereDoesntHave('payments', function ($query) {
                     $query->whereHas('status', function ($query) {
                         $query->where('name', 'پرداخت شده');
                     });
                 })
-                ->whereNotNull('village_ofcs.degree')
+//                ->whereNotNull('village_ofcs.degree')
                 ->exists());
             $result['confirmed'] = $this->userVerified($user);
         } else {
@@ -414,11 +415,20 @@ class LoginController extends Controller
         $result['operational'] = $operationalItems ?? null;
         $result['sidebar'] = $sidebarItems ?? null;
         $roles = $user->roles->pluck('name');
-
+//        $result['hasPayed'] = in_array('کاربر', $roles->toArray()) ? !($user->organizationUnits()
+//            ->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+//            ->whereNotNull('organization_units.head_id')
+//            ->where('organization_units.unitable_type', VillageOfc::class)
+//            ->whereDoesntHave('payments')
+//            ->whereNotNull('village_ofcs.degree')
+//            ->exists()) : true;
+//
+//        $result['confirmed'] = in_array('کاربر', $roles->toArray()) ? $this->userVerified($user) : true;
         if (in_array('کاربر', $roles->toArray())) {
-            $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
-                ->whereNotNull('organization_units.head_id')
-                ->where('organization_units.unitable_type', VillageOfc::class)
+            $result['hasPayed'] = !($user->organizationUnits()
+                ->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+//                ->whereNotNull('organization_units.head_id')
+                ->where('unitable_type', VillageOfc::class)
                 ->whereDoesntHave('payments', function ($query) {
                     $query->whereHas('status', function ($query) {
                         $query->where('name', 'پرداخت شده');
@@ -426,6 +436,7 @@ class LoginController extends Controller
                 })
                 ->whereNotNull('village_ofcs.degree')
                 ->exists());
+
             $result['confirmed'] = $this->userVerified($user);
         } else {
             $result['hasPayed'] = true;
@@ -553,15 +564,16 @@ class LoginController extends Controller
         $roles = $user->roles->pluck('name');
 
         if (in_array('کاربر', $roles->toArray())) {
-            $result['hasPayed'] = !($user->organizationUnits()->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
-                ->whereNotNull('organization_units.head_id')
-                ->where('organization_units.unitable_type', VillageOfc::class)
+            $result['hasPayed'] = !($user->organizationUnits()
+//                ->join('village_ofcs', 'organization_units.unitable_id', '=', 'village_ofcs.id')
+//                ->whereNotNull('organization_units.head_id')
+                ->where('unitable_type', VillageOfc::class)
                 ->whereDoesntHave('payments', function ($query) {
                     $query->whereHas('status', function ($query) {
                         $query->where('name', 'پرداخت شده');
                     });
                 })
-                ->whereNotNull('village_ofcs.degree')
+//                ->whereNotNull('village_ofcs.degree')
                 ->exists());
             $result['confirmed'] = $this->userVerified($user);
         } else {

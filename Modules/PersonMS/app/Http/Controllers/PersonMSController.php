@@ -7,11 +7,8 @@ use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Modules\AddressMS\app\Http\Controllers\AddressMSController;
 use Modules\AddressMS\app\Models\Address;
-use Modules\AddressMS\app\services\AddressService;
 use Modules\AddressMS\app\Traits\AddressTrait;
-use Modules\CustomerMS\app\Http\Services\CustomerService;
 use Modules\HRMS\app\Http\Traits\CourseRecordTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\HRMS\app\Http\Traits\IsarTrait;
@@ -28,9 +25,7 @@ use Modules\HRMS\app\Models\MilitaryService;
 use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\Resume;
-use Modules\HRMS\app\Models\Skill;
 use Modules\HRMS\app\Models\SkillWorkForce;
-use Modules\PersonMS\app\Http\Services\PersonService;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
@@ -176,7 +171,7 @@ class PersonMSController extends Controller
 
     public function currentPersonShow()
     {
-        $user= \Auth::user();
+        $user = \Auth::user();
         $user->load([
             'person.avatar',
             'person.personable.religion',
@@ -582,12 +577,22 @@ class PersonMSController extends Controller
     public function updatePersonnelInfo($id, Request $request)
     {
         $person = Person::with('employee')->findOrFail($id);
+        $data = $request->all();
+
+        $validate = Validator::make($data, [
+            'personnelCode' => [
+                'unique:employees,personnel_code,' . $person->employee->id
+            ]
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['errors' => $validate->errors()], 422);
+        }
 
         if ($person == null) {
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }
 
-        $data = $request->all();
         try {
             DB::beginTransaction();
             $employee = $person->employee;
@@ -884,7 +889,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن رزومه','error'=>$e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در افزودن رزومه', 'error' => $e->getMessage()], 500);
         }
 
     }

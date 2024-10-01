@@ -14,6 +14,7 @@ use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\Database\factories\EnactmentFactory;
 use Modules\FileMS\app\Models\File;
+use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -119,13 +120,16 @@ class Enactment extends Model
             return null;
         }
 
-        $reviewStatuses = $this->reviewStatuses;
+        $reviewStatuses = $this->enactmentReviews()
+            ->whereHas('user.roles', function ($query) {
+                $query->where('name', RolesEnum::OZV_HEYAAT->value);
+            })->with('status')->get();
 
         if ($reviewStatuses->count() < 3) {
             return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::UNKNOWN->value);
         }
 
-        $result = $reviewStatuses->groupBy('id')
+        $result = $reviewStatuses->groupBy('status.id')
             ->map(fn($statusGroup) => [
                 'status' => $statusGroup->first(),
                 'count' => $statusGroup->count()
@@ -133,7 +137,7 @@ class Enactment extends Model
             ->sortByDesc('count')
             ->values();
 
-        return $result[0]['status'];
+        return $result[0]['status']->status;
     }
 
     use BelongsToThrough;
@@ -167,21 +171,36 @@ class Enactment extends Model
 
     public function relatedDates()
     {
-        return $this->hasManyDeep(Meeting::class,
-            [
-                Meeting::class . ' as alias',
-                OrganizationUnit::class
-            ],
-            [
-                'id',
-                'id',
-                'ounit_id',
-            ],
-            [
-                'meeting_id',
-                'ounit_id',
-                'id',
-            ]);
+
+        return $this->ounit();
+//            ->with(['ancestorsAndSelf' => function ($query) {
+//            $query->where('unitable_type', DistrictOfc::class);
+//        }]);
+//        return $this->hasManyDeep(Meeting::class,
+//            [
+//                Meeting::class . ' as alias',
+//                OrganizationUnit::class
+//            ],
+//            [
+//                'id',
+//                'id',
+//                'ounit_id',
+//            ],
+//            [
+//                'meeting_id',
+//                'ounit_id',
+//                'id',
+//            ]);
+    }
+
+
+    public function districtOfc()
+    {
+        return $this->ounit()
+            ->with(['ancestorsAndSelf' => function ($query) {
+                $query->where('unitable_type', DistrictOfc::class)
+                    ->with('meetingMembers');
+            }]);
     }
 
     public function meetingMembers()

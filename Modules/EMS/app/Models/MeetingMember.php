@@ -101,4 +101,20 @@ class MeetingMember extends Pivot
 //        );
     }
 
+//    public function enactments()
+//    {
+//        return $this->hasManyDeep(Enactment::class, [
+//            EnactmentReview::class,
+//        ],
+//            [
+//                'employee_id',
+//                'user_id',
+//            ],
+//            [
+//                'employee_id',
+//                'employee_id',
+//            ]
+//        );
+//    }
+
 }

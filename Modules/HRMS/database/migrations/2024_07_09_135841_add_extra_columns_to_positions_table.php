@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::table('positions', function (Blueprint $table) {
             $table->unsignedBigInteger('ounit_cat')->nullable();
+            $table->dropConstrainedForeignId('section_id');
             $table->dropColumn('section_id');
 
         });

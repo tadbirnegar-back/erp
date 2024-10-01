@@ -16,6 +16,7 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
@@ -90,7 +91,8 @@ class User extends Authenticatable
 
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, table: 'user_role');
+        return $this->belongsToMany(Role::class, table: 'user_role')
+            ->distinct();
     }
 
     public function statuses()
@@ -213,6 +215,13 @@ class User extends Authenticatable
     {
         return $this->activeRecruitmentScripts()->whereHas('issueTime', function ($query) {
             $query->where('issue_times.title', 'شروع به همکاری');
+        });
+    }
+
+    public function activeDistrictRecruitmentScript()
+    {
+        return $this->activeRecruitmentScripts()->whereHas('position', function ($query) {
+            $query->where('positions.ounit_cat', OunitCategoryEnum::DistrictOfc->value);
         });
     }
 

@@ -7,6 +7,7 @@ use Auth;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
@@ -104,13 +105,14 @@ class EMSController extends Controller
         $user->load(['activeRecruitmentScript' => function ($q) {
             $q->orderByDesc('recruitment_scripts.create_date')
                 ->limit(1)
-                ->with('organizationUnit.descendantsAndSelf');
+                ->with('organizationUnit');
         }]);
         $ounit = $user?->activeRecruitmentScript[0]->organizationUnit;
 
         $users = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->whereIntegerInRaw('organization_unit_id', $ounit->descendantsAndSelf->pluck('id')->toArray());
-        })->with('person.avatar')->get(['id', 'person_id']);
+            $q->where('organization_unit_id', $ounit->id);
+        })->with('person.avatar')
+            ->get(['id', 'person_id']);
 
         $consultingMembers = Meeting::where('isTemplate', true)->where('ounit_id', $ounit->id)
             ->with(['meetingMembers' => function ($q) use ($ounit) {
@@ -160,12 +162,39 @@ class EMSController extends Controller
             if (is_null($meeting)) {
                 $data['creatorID'] = $user->id;
                 $data['meetingTypeID'] = MeetingType::where('title', 'الگو')->first()->id;
+                $data['isTemplate'] = true;
                 $data['ounitID'] = $ounit->id;
                 $meeting = $this->storeMeeting($data);
             }
 
             $decode1 = json_decode($data['boardMembers'], true);
             $decode2 = json_decode($data['consultingMembers'], true);
+
+            $ozvHeyaatRole = Role::where('name', RolesEnum::OZV_HEYAAT->value)->first();
+            $karshenasMashvaratiRole = Role::where('name', RolesEnum::KARSHENAS_MASHVARATI->value)->first();
+
+
+            $users1 = User::find(array_column($decode1, 'userID'));
+
+            $users1->each(function (User $user) use ($ozvHeyaatRole) {
+                $hasRole = $user->roles()->where('role_id', $ozvHeyaatRole->id)->exists();
+
+                // Attach the role to the user if they do not have it
+                if (!$hasRole) {
+                    $user->roles()->attach($ozvHeyaatRole->id);
+                }
+            });
+
+            $users2 = User::find(array_column($decode2, 'userID'));
+            $users2->each(function (User $user) use ($karshenasMashvaratiRole) {
+                $hasRole = $user->roles()->where('role_id', $karshenasMashvaratiRole->id)->exists();
+
+                // Attach the role to the user if they do not have it
+                if (!$hasRole) {
+                    $user->roles()->attach($karshenasMashvaratiRole->id);
+                }
+            });
+
             $mergedData = array_merge($decode1, $decode2);
 
             $result = $this->bulkUpdateMeetingMembers($mergedData, $meeting);
@@ -173,7 +202,11 @@ class EMSController extends Controller
             return response()->json(['message' => 'باموفقیت بروزرسانی شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'باموفقیت بروزرسانی شد', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => $e->getMessage(),
+                'file' => $e->getFile(),     // Get the file where the error occurred
+                'line' => $e->getLine(),
+                'trace' => $e->getTrace()   // Get the line number where the error occurred
+            ], 500);
 
         }
 

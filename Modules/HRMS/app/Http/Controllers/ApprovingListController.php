@@ -3,8 +3,7 @@
 namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use DB;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
 
@@ -29,14 +28,28 @@ class ApprovingListController extends Controller
 
     public function approveScriptByUser($id)
     {
-        $user = auth()->user();
-        $script = RecruitmentScript::find($id);
+        try {
+            DB::beginTransaction();
 
-        $result = $this->approveScript($script, $user);
-        if (is_null($result)) {
-            return response()->json(['message' => 'You are not allowed to approve this script'], 403);
+            $user = auth()->user();
+            $script = RecruitmentScript::find($id);
+
+            $canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
+
+            if (!$canApprove) {
+                return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
+            }
+
+            $result = $this->approveScript($script, $user);
+
+            DB::commit();
+            return response()->json(['message' => 'حکم با موفقیت تایید شد']);
+
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در تایید حکم'], 500);
         }
 
-        return response()->json(['message' => 'Script approved successfully']);
     }
 }

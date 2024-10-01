@@ -82,10 +82,9 @@ class RecruitmentScriptController extends Controller
         ];
 
 
-
         $result = $this->rsIndex($data);
 
-        $filterData = $data['pageNum'] == 1 ?[
+        $filterData = $data['pageNum'] == 1 ? [
             'scriptStatus' => RecruitmentScript::GetAllStatuses(),
             'scriptTypes' => $this->getListOfScriptTypes(),
         ] : null;
@@ -117,18 +116,20 @@ class RecruitmentScriptController extends Controller
 
             });
 
-            $scriptType = ScriptType::with('issueTime','employeeStatus')->find($data['scriptTypeID']);
+            $scriptType = ScriptType::with('issueTime', 'employeeStatus')->find($data['scriptTypeID']);
 
             if (isset($data['parentID'])) {
 
 
-                $this->changeParentRecruitmentScriptStatus($employee, $data['parentID'],$scriptType->issueTime);
+                $this->changeParentRecruitmentScriptStatus($employee, $data['parentID'], $scriptType->issueTime);
 
             }
 
-            $pendingRsStatus = $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
-                ? $this->pendingRsStatus()
-                : null;
+            $pendingRsStatus =
+//                $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
+//                ?
+                $this->pendingRsStatus();
+//                : null;
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
 

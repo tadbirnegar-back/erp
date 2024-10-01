@@ -15,12 +15,11 @@ use Modules\EMS\app\Http\Controllers\EnactmentController;
     |
 */
 
-Route::middleware(['auth:api'])->prefix('v1')->group(function () {
-    Route::get('mes/enactment/add-by-board', [EMSController::class, 'addBaseInfo']);
+Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('mes/enactment/add-by-board', [EnactmentController::class, 'store']);
-
-    Route::post('mes/ounit-villages/search', [EnactmentController::class, 'getMyVillagesToAddEnactment']);
+    
+    Route::post('mes/enactment/add-by-secretary', [EnactmentController::class, 'store']);
 
     Route::post('mes/pbs-enactments/list', [EnactmentController::class, 'indexSecretary']);
 
@@ -41,5 +40,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('mes/setting/secretary', [EMSController::class, 'getHeyaatMembers']);
 
     Route::put('mes/setting/secretary', [EMSController::class, 'updateHeyaatMembers']);
+
+});
+
+Route::middleware(['auth:api'])->prefix('v1')->group(function () {
+
+    Route::get('mes/enactment/add-by-board', [EMSController::class, 'addBaseInfo']);
+
+    Route::post('mes/ounit-villages/search', [EnactmentController::class, 'getMyVillagesToAddEnactment']);
+
 
 });

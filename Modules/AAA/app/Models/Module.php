@@ -2,8 +2,8 @@
 
 namespace Modules\AAA\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\AAA\Database\factories\ModuleFactory;
 
@@ -15,6 +15,7 @@ class Module extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
+    public $timestamps = false;
 
     protected static function newFactory(): ModuleFactory
     {

@@ -10,13 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentReview;
 use Modules\EMS\app\Models\EnactmentStatus;
+use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EnactmentController extends Controller
@@ -29,8 +33,13 @@ class EnactmentController extends Controller
     public function indexSecretary(Request $request): JsonResponse
     {
         $user = Auth::user();
+        $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
+            $q->orderByDesc('recruitment_scripts.create_date')
+                ->limit(1)
+                ->with('organizationUnit.descendantsAndSelf');
+        }])?->activeRecruitmentScript[0]?->organizationUnit->descendantsAndSelf->pluck('id')->toArray();
         $data = $request->all();
-        $enactments = $this->indexPendingForSecretaryStatusEnactment($data);
+        $enactments = $this->indexPendingForSecretaryStatusEnactment($data, $ounits);
         $statuses = Enactment::GetAllStatuses();
         return response()->json(['data' => $enactments, 'statusList' => $statuses]);
     }
@@ -38,8 +47,13 @@ class EnactmentController extends Controller
     public function indexHeyaat(Request $request): JsonResponse
     {
         $user = Auth::user();
+        $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
+            $q->orderByDesc('recruitment_scripts.create_date')
+                ->limit(1)
+                ->with('organizationUnit.descendantsAndSelf');
+        }])?->activeRecruitmentScript[0]?->organizationUnit->descendantsAndSelf->pluck('id')->toArray();
         $data = $request->all();
-        $enactments = $this->indexPendingForHeyaatStatusEnactment($data);
+        $enactments = $this->indexPendingForHeyaatStatusEnactment($data, $ounits);
         $statuses = Enactment::GetAllStatuses();
         return response()->json(['data' => $enactments, 'statusList' => $statuses]);
     }
@@ -47,10 +61,19 @@ class EnactmentController extends Controller
     public function indexArchive(Request $request): JsonResponse
     {
         $user = Auth::user();
-        $data = $request->all();
-        $enactments = $this->indexPendingForArchiveStatusEnactment($data);
-        $statuses = Enactment::GetAllStatuses();
-        return response()->json(['data' => $enactments, 'statusList' => $statuses]);
+        try {
+            $ounit = $user->load(['activeRecruitmentScript' => function ($q) {
+                $q->orderByDesc('recruitment_scripts.create_date')
+                    ->limit(1)
+                    ->with('organizationUnit.descendantsAndSelf');
+            }])?->activeRecruitmentScript[0]?->organizationUnit->descendantsAndSelf->pluck('id')->toArray();
+            $data = $request->all();
+            $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounit);
+            $statuses = Enactment::GetAllStatuses();
+            return response()->json(['data' => $enactments, 'statusList' => $statuses]);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
+        }
     }
 
     /**
@@ -62,11 +85,23 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $user = Auth::user();
+
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             $data['meetingTypeID'] = MeetingType::where('title', '=', 'جلسه شورا روستا')->first()->id;
 
             $meeting = $this->storeMeeting($data);
+//            $meetingTemplate = Meeting::where('isTemplate', true)
+//                ->where('ounit_id', $meeting->ounit_id)
+//                ->with('meetingMembers')->first();
+//
+//
+//            if (!is_null($meetingTemplate)) {
+//                foreach ($meetingTemplate->meetingMembers as $mm) {
+//                    $mm->replicate(['meeting_id' => $meeting->id])->save();
+//                }
+//            }
+
             $enactment = $this->storeEnactment($data, $meeting);
             $files = json_decode($data['attachments'], true);
             $this->attachFiles($enactment, $files);
@@ -154,22 +189,43 @@ class EnactmentController extends Controller
                 return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
             }
 
-            if (!$enactment->status->name == EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value) {
+            if ($enactment->status->name != EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value) {
                 return response()->json(['message' => 'امکان تغییر وضعیت مصوبه وجود ندارد'], 400);
             }
 
             if (isset($data['meetingID'])) {
-                $enactment->meeting_id = $data['meetingID'];
+                $meeting = Meeting::find($data['meetingID']);
+                $enactment->meeting_id = $meeting->id;
                 $enactment->save();
             } elseif (isset($data['meetingDate'])) {
+                $villageID = $enactment->meeting->ounit_id;
                 $data['creatorID'] = $user->id;
-                $data['meetingTypeID'] = $enactment->meeting->meeting_type_id;
-                $data['ounitID'] = $enactment->meeting->ounit_id;
+                $data['meetingTypeID'] = MeetingType::where('title', '=', 'جلسه هیئت تطبیق')->first()->id;
+
+                $villageWithDistrict = OrganizationUnit::with(['ancestors' => function ($q) {
+                    $q->where('unitable_type', DistrictOfc::class);
+
+                }])->find($villageID);
+
+                $data['ounitID'] = $villageWithDistrict->ancestors[0]->id;
                 $meeting = $this->storeMeeting($data);
                 $enactment->meeting_id = $meeting->id;
                 $enactment->save();
-            }
 
+                $meetingTemplate = Meeting::where('isTemplate', true)
+                    ->where('ounit_id', $data['ounitID'])
+                    ->with('meetingMembers')->first();
+
+
+                if (!is_null($meetingTemplate)) {
+                    foreach ($meetingTemplate->meetingMembers as $mm) {
+                        $newMM = $mm->replicate();
+                        $newMM->meeting_id = $meeting->id;
+                        $newMM->save();
+                    }
+                }
+
+            }
             $heyaatStatus = $this->enactmentHeyaatStatus();
 
             $enactmentStatus = new EnactmentStatus();
@@ -230,6 +286,8 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $user = Auth::user();
             $data = $request->all();
+            $enactment = Enactment::find($id);
+
             $reviewResult = EnactmentReview::where('enactment_id', $id)->where('user_id', $user->id)->exists();
             if ($reviewResult) {
                 return response()->json(['message' => 'شما قبلا نظر خود را ثبت کرده اید'], 400);
@@ -242,6 +300,24 @@ class EnactmentController extends Controller
             $enactmentReview->description = $data['description'] ?? null;
             $enactmentReview->attachment_id = $data['attachmentID'] ?? null;
             $enactmentReview->save();
+
+            $reviewStatuses = $enactment->enactmentReviews()
+                ->whereHas('user.roles', function ($query) {
+                    $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                })->with('status')->get();
+
+            if ($reviewStatuses->count() == 3) {
+                $heyaatStatus = $this->enactmentCompleteStatus();
+
+                $enactmentStatus = new EnactmentStatus();
+                $enactmentStatus->enactment_id = $id;
+                $enactmentStatus->status_id = $heyaatStatus->id;
+                $enactmentStatus->operator_id = $user->id;
+                $enactmentStatus->description = $data['description'] ?? null;
+                $enactmentStatus->attachment_id = $data['attachmentID'] ?? null;
+                $enactmentStatus->save();
+            }
+
             DB::commit();
             return response()->json(['message' => 'نظر شما با موفقیت ثبت شد']);
 
@@ -257,6 +333,7 @@ class EnactmentController extends Controller
         try {
             DB::beginTransaction();
             $user = Auth::user();
+            $enactment = Enactment::find($id);
             $reviewResult = EnactmentReview::where('enactment_id', $id)->where('user_id', $user->id)->exists();
             if ($reviewResult) {
                 return response()->json(['message' => 'شما قبلا نظر خود را ثبت کرده اید'], 400);
@@ -269,6 +346,23 @@ class EnactmentController extends Controller
             $enactmentReview->description = $data['description'] ?? null;
             $enactmentReview->attachment_id = $data['attachmentID'] ?? null;
             $enactmentReview->save();
+
+            $reviewStatuses = $enactment->enactmentReviews()
+                ->whereHas('user.roles', function ($query) {
+                    $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                })->with('status')->get();
+
+            if ($reviewStatuses->count() == 3) {
+                $heyaatStatus = $this->enactmentCompleteStatus();
+
+                $enactmentStatus = new EnactmentStatus();
+                $enactmentStatus->enactment_id = $id;
+                $enactmentStatus->status_id = $heyaatStatus->id;
+                $enactmentStatus->operator_id = $user->id;
+                $enactmentStatus->description = $data['description'] ?? null;
+                $enactmentStatus->attachment_id = $data['attachmentID'] ?? null;
+                $enactmentStatus->save();
+            }
             DB::commit();
             return response()->json(['message' => 'نظر شما با موفقیت ثبت شد']);
 

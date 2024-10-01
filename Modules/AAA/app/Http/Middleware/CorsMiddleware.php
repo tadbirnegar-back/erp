@@ -23,7 +23,7 @@ class CorsMiddleware
         if ($response->headers->has('Access-Control-Allow-Origin')) {
             $response->headers->remove('Access-Control-Allow-Origin');
             $response->headers->set('Access-Control-Allow-Origin', $origin);
-        }else{
+        } else {
             $response->headers->set('Access-Control-Allow-Origin', $origin);
         }
 
@@ -32,7 +32,7 @@ class CorsMiddleware
         if ($request->isMethod('OPTIONS')) {
             return response('', 200)
                 ->withHeaders([
-                    'Access-Control-Allow-Origin' => $origin,
+                    'Access-Control-Allow-Origin' => $origin ?? 'http://localhost:3000',
                     'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
                     'Access-Control-Allow-Headers' => $request->header('Access-Control-Request-Headers'),
                     'Access-Control-Allow-Credentials' => 'true',

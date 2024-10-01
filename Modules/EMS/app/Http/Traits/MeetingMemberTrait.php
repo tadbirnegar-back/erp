@@ -4,6 +4,7 @@ namespace Modules\EMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Models\MR;
 
 trait MeetingMemberTrait
@@ -13,7 +14,7 @@ trait MeetingMemberTrait
     {
         $dataToInsert = $this->meetingMemberDataPreparation($data, $meeting);
 
-        $result = MR::upsert($dataToInsert->toArray(), ['id']);
+        $result = MeetingMember::upsert($dataToInsert->toArray(), ['id']);
 
         return $result;
     }
@@ -25,12 +26,14 @@ trait MeetingMemberTrait
         }
 
         $data = $data->map(function ($meetingMember) use ($meeting) {
-            $mr = MR::where('title', $meetingMember['mrName'])->first();
+            if (isset($meetingMember['mrName'])) {
+                $mr = MR::where('title', $meetingMember['mrName'])->first();
+            }
             return [
                 'id' => $meetingMember['meetingMemberID'] ?? null,
                 'employee_id' => $meetingMember['userID'],
                 'meeting_id' => $meeting->id,
-                'mr_id' => $mr->id,
+                'mr_id' => $mr?->id,
 
             ];
         });

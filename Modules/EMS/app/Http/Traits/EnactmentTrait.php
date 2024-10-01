@@ -2,6 +2,7 @@
 
 namespace Modules\EMS\app\Http\Traits;
 
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
@@ -10,6 +11,9 @@ use Modules\EMS\app\Models\Attachmentable;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
+use Modules\OUnitMS\app\Models\CityOfc;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Morilog\Jalali\Jalalian;
 
 trait EnactmentTrait
 {
@@ -30,21 +34,24 @@ trait EnactmentTrait
     private static string $ozvShouraRusta = RolesEnum::OZV_SHOURA_RUSTA->value;
 
 
-    public function indexPendingForSecretaryStatusEnactment(array $data)
+    public function indexPendingForSecretaryStatusEnactment(array $data, array $ounits)
     {
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
-        $query = Enactment::whereHas('status', function ($query) {
-            $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
-                ->join('statuses as s', 'rss.status_id', '=', 's.id')
-                ->where('s.name', EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value)
-                ->where('rss.create_date', function ($subQuery) {
-                    $subQuery->selectRaw('MAX(create_date)')
-                        ->from('enactment_status as sub_rss')
-                        ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
-                });
-        });
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', $ounits);
+        })
+            ->whereHas('status', function ($query) {
+                $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
+                    ->join('statuses as s', 'rss.status_id', '=', 's.id')
+                    ->where('s.name', EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value)
+                    ->where('rss.create_date', function ($subQuery) {
+                        $subQuery->selectRaw('MAX(create_date)')
+                            ->from('enactment_status as sub_rss')
+                            ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
+                    });
+            });
 
         if (!empty($data['title'])) {
             $query->where(function ($query) use ($data) {
@@ -59,21 +66,24 @@ trait EnactmentTrait
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
 
-    public function indexPendingForHeyaatStatusEnactment(array $data)
+    public function indexPendingForHeyaatStatusEnactment(array $data, array $ounits)
     {
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
-        $query = Enactment::whereHas('status', function ($query) {
-            $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
-                ->join('statuses as s', 'rss.status_id', '=', 's.id')
-                ->where('s.name', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value)
-                ->where('rss.create_date', function ($subQuery) {
-                    $subQuery->selectRaw('MAX(create_date)')
-                        ->from('enactment_status as sub_rss')
-                        ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
-                });
-        });
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', $ounits);
+        })
+            ->whereHas('status', function ($query) {
+                $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
+                    ->join('statuses as s', 'rss.status_id', '=', 's.id')
+                    ->where('s.name', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value)
+                    ->where('rss.create_date', function ($subQuery) {
+                        $subQuery->selectRaw('MAX(create_date)')
+                            ->from('enactment_status as sub_rss')
+                            ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
+                    });
+            });
 
         if (!empty($data['title'])) {
             $query->where(function ($query) use ($data) {
@@ -88,25 +98,28 @@ trait EnactmentTrait
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
 
-    public function indexPendingForArchiveStatusEnactment(array $data)
+    public function indexPendingForArchiveStatusEnactment(array $data, array $ounits)
     {
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $statuses = $data['statusID'] ?? null;
         $searchTerm = $data['name'] ?? null;
 
-        $query = Enactment::whereHas('status', function ($query) use ($statuses) {
-            $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
-                ->join('statuses as s', 'rss.status_id', '=', 's.id')
-                ->when($statuses, function ($query) use ($statuses) {
-                    $query->where('rss.status_id', $statuses);
-                })
-                ->where('rss.create_date', function ($subQuery) {
-                    $subQuery->selectRaw('MAX(create_date)')
-                        ->from('enactment_status as sub_rss')
-                        ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
-                });
-        });
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', $ounits);
+        })
+            ->whereHas('status', function ($query) use ($statuses) {
+                $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
+                    ->join('statuses as s', 'rss.status_id', '=', 's.id')
+                    ->when($statuses, function ($query) use ($statuses) {
+                        $query->where('rss.status_id', $statuses);
+                    })
+                    ->where('rss.create_date', function ($subQuery) {
+                        $subQuery->selectRaw('MAX(create_date)')
+                            ->from('enactment_status as sub_rss')
+                            ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
+                    });
+            });
 
         $query->when($searchTerm, function ($query) use ($searchTerm) {
             $query->where(function ($query) use ($searchTerm) {
@@ -149,11 +162,19 @@ trait EnactmentTrait
         }
 
         $data = $data->map(function ($item) use ($meeting) {
+
+            $meeting->load(['ounit.ancestors' => function ($query) {
+                $query->where('unitable_type', CityOfc::class);
+
+            }]);
+            $jDate = Jalalian::fromCarbon(Carbon::now())->format('Y/m/d');
+            $autoSerial = rand(1, 99999) . '/' . rand(10000, 99999999) . '/' . $meeting->ounit?->ancestors[0]->id ?? rand(1, 99999) . '/' . $jDate;
+
             return [
                 'custom_title' => $item['customTitle'] ?? null,
                 'description' => $item['description'] ?? null,
 //                'rejection_reason' => $item['rejectionReason'] ?? null,
-                'auto_serial' => $item['autoSerial'] ?? null,
+                'auto_serial' => $autoSerial,
                 'serial' => $item['enactmentSerial'] ?? null,
                 'title_id' => $item['titleID'] ?? null,
                 'creator_id' => $item['creatorID'],
@@ -306,6 +327,7 @@ trait EnactmentTrait
                 self::$karshenasOstandari => [
                     'MainEnactment',
                     'ConsultingReviewCards',
+                    'BoardReviewCards',
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
@@ -318,6 +340,7 @@ trait EnactmentTrait
                 self::$ozvHeyaat => [
                     'MainEnactment',
                     'ConsultingReviewCards',
+                    'CurrentReviewCard',
                 ],
                 self::$ozvShouraRusta => [
                     'MainEnactment',
@@ -445,9 +468,16 @@ trait EnactmentTrait
 
         $componentsToRender = collect([
             'MainEnactment' => ['reviewStatuses', 'meeting', 'attachments', 'creator', 'title'],
-            'MembersBeforeReview' => ['members.person.avatar'],
-            'AcceptDenyBtns' => ['relatedDates' => function ($query) {
-                $query->where('meetings.meeting_date', '>', now())->where('meetings.isTemplate', false)->withCount('enactments');
+            'MembersBeforeReview' => ['districtOfc'],
+            'AcceptDenyBtns' => ['relatedDates.ancestorsAndSelf' => function ($query) {
+                $query
+                    ->where('unitable_type', DistrictOfc::class)
+                    ->with(['meetings' => function ($query) {
+                        $query->whereHas('meetingType', function ($query) {
+                            $query->where('title', '=', 'جلسه هیئت تطبیق');
+                        })->where('meetings.meeting_date', '>', now())->where('meetings.isTemplate', false)->withCount('enactments');
+
+                    }]);
 
             }],
             'ConsultingReviewCards' => ['consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
@@ -514,6 +544,11 @@ trait EnactmentTrait
     public function enactmentHeyaatStatus()
     {
         return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value);
+    }
+
+    public function enactmentCompleteStatus()
+    {
+        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::COMPLETED->value);
     }
 
     public function enactmentCancelStatus()

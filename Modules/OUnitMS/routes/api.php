@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\OUnitMS\app\Http\Controllers\OUnitMSController;
 
@@ -25,9 +24,9 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 });
 
 
-Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
+Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
 
-    Route::post ('/oms/cityofc/list', [OUnitMSController::class, 'citiesIndex']);
+    Route::post('/oms/cityofc/list', [OUnitMSController::class, 'citiesIndex']);
 
     Route::post('/oms/cityofc/add', [OUnitMSController::class, 'cityStore']);
 
@@ -48,6 +47,11 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::post('/oms/organization_unit/update/{id}', [OUnitMSController::class, 'show']);
 
     Route::put('/oms/organization_unit/update/{id}', [OUnitMSController::class, 'update']);
+
+
+});
+
+Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/oms/employee/search', [OUnitMSController::class, 'searchEmployees']);
 

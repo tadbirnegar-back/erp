@@ -22,5 +22,5 @@ trait VerifyInfoRepository
         }
 
         return $hasConfirmed;
-}
+    }
 }

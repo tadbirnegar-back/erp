@@ -13,7 +13,8 @@ use Modules\PersonMS\app\Models\Person;
 
 trait EmployeeTrait
 {
-    use RecruitmentScriptTrait,ScriptTypeTrait;
+    use RecruitmentScriptTrait, ScriptTypeTrait;
+
     private static string $activeEmployeeStatus = 'فعال';
     private static string $inActiveEmployeeStatus = 'غیرفعال';
     private static string $pendingEmployeeStatus = 'در انتظار تایید';
@@ -69,11 +70,11 @@ trait EmployeeTrait
                 $query->where('script_type_id', '=', $scriptType);
             });
         });
-//        $employeeQuery->when($status, function ($query, $status) {
-//            $query->whereHas('س', function ($query) use ($status) {
-//                $query->where('id', '=', $status);
-//            });
-//        });
+        $employeeQuery->when($status, function ($query, $status) {
+            $query->whereHas('status', function ($query) use ($status) {
+                $query->where('statuses.id', '=', $status);
+            });
+        });
         $employeeQuery->orderBy('id', 'desc');
         $result = $employeeQuery->paginate($perPage, page: $pageNumber);
 
@@ -227,24 +228,24 @@ trait EmployeeTrait
                 });
             }])
             ->get();
-
         return $issueTimes->pluck('scriptTypes')->flatten();
     }
 
-    public function getCompatibleIssueTimesForNewScript(string $name ,int $employeeID)
+    public function getCompatibleIssueTimesForNewScript(string $name, int $employeeID)
     {
         $compatibleIssueTimes = $this->compatibleIssueTimesForNewScript[$name];
 
         $issueTimes = IssueTime::whereIn('title', $compatibleIssueTimes)
-            ->with(['recruitmentScripts' => function ($query)use($employeeID) {
+            ->with(['recruitmentScripts' => function ($query) use ($employeeID) {
 
-                $query->where('employee_id',$employeeID)->whereDoesntHave('status', function ($query) {
+                $query->where('employee_id', $employeeID)
+                    ->whereHas('latestStatus', function ($query) {
 
-                    $query->where(function ($query) {
-                        $query->where('name', '=', self::$pendingRsStatus)
-                            ->orWhere('name', '=', self::$inActiveRsStatus);
-                    });
-                })->with(['scriptType','hireType','organizationUnit']);
+//                    $query->where(function ($query) {
+                        $query->where('name', '=', self::$activeEmployeeStatus);
+//                            ->orWhere('name', '=', self::$inActiveRsStatus);
+//                    });
+                    })->with(['scriptType', 'hireType', 'organizationUnit']);
             }])
             ->get();
 
@@ -273,9 +274,9 @@ trait EmployeeTrait
         return $scriptAgents;
     }
 
-    public function changeParentRecruitmentScriptStatus(Employee $employee,int $parentID,IssueTime $issueTime)
+    public function changeParentRecruitmentScriptStatus(Employee $employee, int $parentID, IssueTime $issueTime)
     {
-        $parentScript = $employee->recruitmentScripts()->where('id',$parentID)->with('issueTime')->first();
+        $parentScript = $employee->recruitmentScripts()->where('id', $parentID)->with('issueTime')->first();
 
         $statusName = $this->parentScriptStatusChangeByIssueTime[$issueTime->title];
         if (is_null($statusName)) {

@@ -2,8 +2,8 @@
 
 namespace Modules\AAA\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\AAA\Database\factories\PermissionFactory;
@@ -18,6 +18,7 @@ class Permission extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
+    public $timestamps = false;
 
     protected static function newFactory(): PermissionFactory
     {
@@ -31,7 +32,7 @@ class Permission extends Model
 
     public function permissionTypes()
     {
-        return $this->belongsTo(PermissionType::class,'permission_type_id');
+        return $this->belongsTo(PermissionType::class, 'permission_type_id');
     }
 
     use BelongsToThrough;

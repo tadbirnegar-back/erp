@@ -34,6 +34,8 @@ class RecruitmentScript extends Model
         'start_date',
         'expire_date',
         'parent_id',
+        'description',
+
     ];
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection

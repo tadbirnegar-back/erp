@@ -106,6 +106,8 @@ class EmployeeController extends Controller
             $data['password'] = $data['nationalCode'];
             $user = $this->isPersonUserCheck($personResult->person);
             $user = $user ?? $this->storeUser($data);
+
+
             $personAsEmployee = $this->isEmployee($data['personID']);
             $employee = !is_null($personAsEmployee) ? $this->employeeUpdate($data, $personAsEmployee) : $this->employeeStore($data);
 
@@ -138,9 +140,10 @@ class EmployeeController extends Controller
             if (isset($data['recruitmentRecords'])) {
                 $rs = json_decode($data['recruitmentRecords'], true);
 
-                $rsRes = $this->rsStore($rs, $employee->id);
+                $pendingStatus = $this->pendingRsStatus();
+                $rsRes = $this->rsStore($rs, $employee->id, $pendingStatus);
                 $rsRes = collect($rsRes);
-                $rsRes->each(function ($rs) {
+                $rsRes->each(function ($rs) use ($user) {
                     $this->approvingStore($rs);
                 });
 
@@ -175,7 +178,7 @@ class EmployeeController extends Controller
         }
         try {
             DB::beginTransaction();
-            $p=Person::with('personable')->find($request->personID);
+            $p = Person::with('personable')->find($request->personID);
             $personResult = !is_null($p) ?
                 $this->naturalUpdate($data, $p?->personable) :
                 $this->naturalStore($data);
@@ -243,7 +246,7 @@ class EmployeeController extends Controller
                     $sas = $result->map(function ($item) {
                         return [
                             'scriptAgentID' => $item->id,
-                            'defaultValue' => $item->pivot->default_value,
+                            'defaultValue' => $item->pivot->default_value ?? 1000,
                         ];
                     });
                     $encodedSas = json_encode($sas->toArray());
@@ -253,9 +256,11 @@ class EmployeeController extends Controller
                     $script['operatorID'] = $user->id;
                     $script['scriptAgents'] = $encodedSas;
                 }
-                $pendingRsStatus = $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
-                    ? $this->pendingRsStatus()
-                    : null;
+                $pendingRsStatus =
+//                    $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
+//                    ?
+                    $this->pendingRsStatus();
+//                    : null;
 
                 $rsRes = $this->rsStore($rs, $employee->id, $pendingRsStatus);
 

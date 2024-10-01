@@ -4,11 +4,13 @@ namespace Modules\HRMS\app\Http\Traits;
 
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Position;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 trait PositionTrait
 {
     private string $activePositionStatus = 'فعال';
     private string $inactivePositionStatus = 'غیرفعال';
+
     public function positionIndex()
     {
         $result = Position::whereHas('status', function ($query) {
@@ -21,13 +23,20 @@ trait PositionTrait
     public function positionStore(array $data)
     {
 
+        $ounitCatEnum = OunitCategoryEnum::from($data['ounitCatID']);
         $position = new Position();
         $position->name = $data['title'];
-        $position->ounit_cat = $data['ounitCatID'];
+        $position->ounit_cat = $ounitCatEnum->value;
         $status = $this->activePositionStatus();
         $position->status_id = $status->id;
 
         $position->save();
+
+        //add position to related organizationUnits
+
+        $ounitIDs = OrganizationUnit::where('unitable_type', $ounitCatEnum->getUnitableType())->get(['id']);
+
+        $position->organizationUnits()->attach($ounitIDs->pluck('id')->toArray());
 
         // Attach levels
         if (isset($data['levelIDs'])) {
@@ -42,9 +51,27 @@ trait PositionTrait
 
     public function positionUpdate(array $data, Position $position)
     {
+        $ounitCatEnum = OunitCategoryEnum::from($data['ounitCatID']);
+
+        $ounitCatToDelete = $position->OunitCatEnum;
+        info(json_encode($ounitCatToDelete));
+
+        if (!is_null($ounitCatToDelete)) {
+            $ounitToDeleteIDs = OrganizationUnit::where('unitable_type', $ounitCatToDelete->getUnitableType())->get(['id']);
+            $position->organizationUnits()->detach($ounitToDeleteIDs->pluck('id')->toArray());
+
+        }
+
+
+        $ounitIDs = OrganizationUnit::where('unitable_type', $ounitCatEnum->getUnitableType())->get(['id']);
+
+
         $position->name = $data['title'];
         $position->ounit_cat = $data['ounitCatID'];
         $position->save();
+
+        $position->organizationUnits()->attach($ounitIDs->pluck('id')->toArray());
+
 
         if (isset($data['levelIDs'])) {
             $levelIDs = json_decode($data['levelIDs'], true);

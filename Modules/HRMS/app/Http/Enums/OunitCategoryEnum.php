@@ -2,6 +2,8 @@
 
 namespace Modules\HRMS\app\Http\Enums;
 
+use Modules\OUnitMS\app\Models\{CityOfc, DistrictOfc, StateOfc, TownOfc, VillageOfc};
+
 enum OunitCategoryEnum: int
 {
     case StateOfc = 1;
@@ -22,13 +24,25 @@ enum OunitCategoryEnum: int
         };
     }
 
-public function getLabelAndValue()
-{
-    return [
-        'label' => $this->getLabel(),
-        'value' => $this->value
-    ];
-}
+    public function getUnitableType()
+    {
+        return match ($this) {
+            self::StateOfc => StateOfc::class,
+            self::CityOfc => CityOfc::class,
+            self::DistrictOfc => DistrictOfc::class,
+            self::TownOfc => TownOfc::class,
+            self::VillageOfc => VillageOfc::class,
+        };
+    }
+
+    public function getLabelAndValue()
+    {
+        return [
+            'label' => $this->getLabel(),
+            'value' => $this->value
+        ];
+    }
+
     public static function ounitCatList()
     {
         $cats = collect(self::cases());

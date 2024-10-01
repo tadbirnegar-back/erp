@@ -4,9 +4,11 @@ namespace Modules\HRMS\app\Http\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\ConfirmationType;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptApprovingList;
 
@@ -41,7 +43,7 @@ trait ApprovingListTrait
         $conformationTypes = $rs->scriptType?->confirmationTypes;
         $approves = [];
 
-        if (!is_null($conformationTypes)&&$conformationTypes->isNotEmpty()) {
+        if (!is_null($conformationTypes) && $conformationTypes->isNotEmpty()) {
 
             $conformationTypes->each(function (ConfirmationType $confirmationType) use (&$approves, $rs) {
                 $optionID = $confirmationType->pivot->option_id ?? null;
@@ -70,22 +72,22 @@ trait ApprovingListTrait
 
         $data = $data->where('assignedUserID', '!=', null);
 
-            $counter = 1; // Manual counter
+        $counter = 1; // Manual counter
 
-            $data = $data->map(function ($item) use ($script, $currentUserPendingStatus, $pendingStatus, &$counter) {
-                $status = $counter == 1 ? $currentUserPendingStatus : $pendingStatus;
-                $result = [
-                    'id' => $item['appID'] ?? null,
-                    'script_id' => $script->id,
-                    'priority' => $counter,
-                    'assigned_to' => $item['assignedUserID'] ?? null,
-                    'approver_id' => $item['approverID'] ?? null,
-                    'status_id' => $status->id,
-                    'create_date' => Carbon::now(),
-                ];
-                $counter++; // Increment the counter
-                return $result;
-            });
+        $data = $data->map(function ($item) use ($script, $currentUserPendingStatus, $pendingStatus, &$counter) {
+            $status = $counter == 1 ? $currentUserPendingStatus : $pendingStatus;
+            $result = [
+                'id' => $item['appID'] ?? null,
+                'script_id' => $script->id,
+                'priority' => $counter,
+                'assigned_to' => $item['assignedUserID'] ?? null,
+                'approver_id' => $item['approverID'] ?? null,
+                'status_id' => $status->id,
+                'create_date' => Carbon::now(),
+            ];
+            $counter++; // Increment the counter
+            return $result;
+        });
 
         return $data;
     }
@@ -124,14 +126,27 @@ trait ApprovingListTrait
                 'employee.workForce',
             ]);
             if ($script->scriptType->isHeadable) {
-                $user=$script->employee->person->user;
-                $ounit=$script->organizationUnit->head_id=$user->id;
+                $user = $script->employee->person->user;
+                $ounit = $script->organizationUnit;
+                $ounit->head_id = $user->id;
                 $ounit->save();
             }
+
+
             $status = Employee::GetAllStatuses()->firstWhere('id', $script->scriptType->employee_status_id);
 
 
-            $script->employee->workForce->status()->attach($status->id);
+            $script->employee->workForce->statuses()->attach($status->id);
+
+            $position = Position::find($script->position_id);
+            $role = Role::where('name', $position->name)->first() ?? Role::where('name', 'کاربر')->first();
+            $scriptUser = $script->employee->person->user;
+            $hasRole = $scriptUser->roles()->where('role_id', $role->id)->exists();
+
+            // Attach the role to the user if they do not have it
+            if (!$hasRole) {
+                $scriptUser->roles()->attach($role->id);
+            }
 
         }
 

@@ -45,6 +45,11 @@ class EnactmentReview extends Model
         return $this->belongsTo(File::class, 'attachment_id');
     }
 
+    public function enactment(): BelongsTo
+    {
+        return $this->belongsTo(Enactment::class, 'enactment_id');
+    }
+
     public function createDate(): Attribute
     {
         return Attribute::make(

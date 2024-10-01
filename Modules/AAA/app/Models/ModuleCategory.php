@@ -2,8 +2,8 @@
 
 namespace Modules\AAA\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\AAA\Database\factories\ModuleCategoryFactory;
 
@@ -16,6 +16,7 @@ class ModuleCategory extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
+    public $timestamps = false;
 
     protected $table = 'module_categories';
 
@@ -26,7 +27,7 @@ class ModuleCategory extends Model
 
     public function permissions(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
-        return $this->hasManyThrough(Permission::class,Module::class);
+        return $this->hasManyThrough(Permission::class, Module::class);
     }
 
     public function modules(): HasMany

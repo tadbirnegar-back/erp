@@ -19,7 +19,7 @@ trait ScriptTypeTrait
         $scriptType->issue_time_id = $data['issueTimeID'] ?? null;
         $scriptType->employee_status_id = $data['employeeStatusID'] ?? null;
         $scriptType->status_id = $this->activeScriptTypeStatus()->id;
-        $scriptType->isHeadable= $data['isHeadable'] ?? false;
+        $scriptType->isHeadable = $data['isHeadable'] ?? false;
         $scriptType->save();
 
         $confirmationTypeScriptType = json_decode($data['confirmationTypes'], true);
@@ -40,18 +40,23 @@ trait ScriptTypeTrait
         if (is_array($data)) {
             $data = collect($data);
         }
+        $counter = 1; // Manual counter
 
-        $data = $data->map(function ($item, $key) use ($scriptType) {
+        $data = $data->map(function ($item, $key) use ($scriptType, &$counter) {
             $procedure = ProceduresEnum::from($item['confirmationTypeID'])->getOptionType();
-            return [
+            $result = [
                 'id' => $item['pivotID'] ?? null,
                 'script_type_id' => $scriptType->id,
                 'confirmation_type_id' => $item['confirmationTypeID'],
                 'option_id' => $item['optionID'] ?? null,
                 'option_type' => $procedure,
-                'priority' => $key + 1,
+                'priority' => $counter,
 
             ];
+            $counter++; // Increment the counter
+
+            return $result;
+
         });
 
         return $data;
@@ -74,7 +79,7 @@ trait ScriptTypeTrait
         $scriptType->title = $data['title'] ?? $scriptType->title;
         $scriptType->issue_time_id = $data['issueTimeID'] ?? $scriptType->issue_time_id;
         $scriptType->employee_status_id = $data['employeeStatusID'] ?? $scriptType->employee_status_id;
-        $scriptType->isHeadable= $data['isHeadable'] ?? false;
+        $scriptType->isHeadable = $data['isHeadable'] ?? false;
 
         $scriptType->save();
 

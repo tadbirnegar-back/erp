@@ -3,17 +3,14 @@
 namespace Modules\Gateway\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Modules\AAA\app\Models\User;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
+use Modules\Gateway\app\Models\Payment as PG;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
-use Shetabit\Multipay\Invoice;
 use Shetabit\Payment\Facade\Payment;
-use \Modules\Gateway\app\Models\Payment as PG;
 
 class GatewayController extends Controller
 {
@@ -216,8 +213,8 @@ class GatewayController extends Controller
             'unitable',
 //            'ancestors',
             'payments' => function ($query) {
-            $query->where('status_id', '=', '46');
-        }, 'evaluator'])->get();
+                $query->where('status_id', '=', '46');
+            }, 'evaluator'])->get();
         return response()->json($villages);
     }
 }

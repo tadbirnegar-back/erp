@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingMember;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Models\Payment;
@@ -104,6 +105,19 @@ class OrganizationUnit extends Model
     public function meetings(): HasMany
     {
         return $this->hasMany(Meeting::class, 'ounit_id');
+    }
+
+    public function meetingTemplate(): HasMany
+    {
+        return $this->hasMany(Meeting::class, 'ounit_id')
+            ->where('isTemplate', '=', true);
+    }
+
+    public function meetingMembers()
+    {
+        return $this->hasManyThrough(MeetingMember::class, Meeting::class,
+            'ounit_id', 'meeting_id')
+            ->where('isTemplate', '=', true)->with('mr', 'person.avatar');
     }
 
     public static function GetAllStatuses(): Collection

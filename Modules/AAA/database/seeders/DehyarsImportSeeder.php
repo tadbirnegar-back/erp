@@ -6,8 +6,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Http\Repositories\UserRepository;
 use Modules\AAA\app\Models\Role;
-use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Repositories\EmployeeRepository;
+use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\LevelOfEducation;
@@ -26,11 +26,14 @@ use Morilog\Jalali\Jalalian;
 
 class DehyarsImportSeeder extends Seeder
 {
+    use EmployeeTrait;
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
+
         $villagers = json_decode(file_get_contents(realpath(__DIR__ . '/dehyars5.json')), true);
 
 //        try {
@@ -105,7 +108,7 @@ class DehyarsImportSeeder extends Seeder
 
 
                     if (is_null($employee)) {
-                        $employee = $employeeService->store($villager);
+                        $employee = $this->employeeStore($villager);
                     }
 
                     if (empty($employee->workForce->educationalRecords->toArray())) {
@@ -126,13 +129,12 @@ class DehyarsImportSeeder extends Seeder
                         if (isset($villager['fatherName'])) {
                             $relative = new Relative();
 
-                            $relative->full_name = isset($villager['fatherName']) ? $villager['fatherName'] . ' ' . $villager['lastName']:null;
+                            $relative->full_name = isset($villager['fatherName']) ? $villager['fatherName'] . ' ' . $villager['lastName'] : null;
                             $relative->work_force_id = $employee->workForce->id;
 
                             $relative->save();
                         }
                     }
-
 
 
                     $city = OrganizationUnit::with('unitable')->where('name', $villager['city'])->where('unitable_type', CityOfc::class)->first();
@@ -220,8 +222,6 @@ class DehyarsImportSeeder extends Seeder
 //
 //                        }
 //                    }
-
-
 
 
                     $studentService = new StudentRepository();

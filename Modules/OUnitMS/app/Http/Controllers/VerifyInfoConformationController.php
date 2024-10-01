@@ -16,6 +16,7 @@ use Modules\HRMS\app\Http\Repositories\EducationalRecordRepository;
 use Modules\HRMS\app\Http\Repositories\RecruitmentScriptRepository;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -198,6 +199,19 @@ class VerifyInfoConformationController extends Controller
 
             }
 
+            if (isset($data['deletedRecruitmentRecords'])) {
+                $deletedRs = json_decode($data['deletedRecruitmentRecords'], true);
+
+                $deleteRsResult = RecruitmentScript::with('ounit')->find($deletedRs);
+                RecruitmentScriptRepository::delete($deletedRs);
+                $ounits = $deleteRsResult->pluck('ounit');
+                $ounits->each(function ($ounit) {
+                    $ounit->head_id = null;
+                    $ounit->save();
+                });
+
+            }
+
             if (isset($data['recruitmentRecords'])) {
                 $personEmployee = $naturalResult->person->workForce;
                 $rs = json_decode($data['recruitmentRecords'], true);
@@ -219,12 +233,7 @@ class VerifyInfoConformationController extends Controller
                 // Save all changes
 //                OrganizationUnit::update($organizationUnits->toArray());
             }
-            if (isset($data['deletedRecruitmentRecords'])) {
-                $deletedRs = json_decode($data['deletedRecruitmentRecords'], true);
 
-                $deleteRsResult = RecruitmentScriptRepository::delete($deletedRs);
-
-            }
 
             if (isset($data['educationalRecords'])) {
 //                if (!isset($personEmployee)) {
@@ -258,7 +267,6 @@ class VerifyInfoConformationController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
 
             return response()->json(['hasConfirmed' => false, 'message' => 'خطا در تایید اطلاعات'], 500);
         }

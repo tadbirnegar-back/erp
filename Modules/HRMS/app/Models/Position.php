@@ -2,13 +2,14 @@
 
 namespace Modules\HRMS\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\BranchMS\app\Models\Section;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\Database\factories\PositionFactory;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\StatusMS\app\Models\Status;
 
 class Position extends Model
@@ -28,7 +29,7 @@ class Position extends Model
 
     public function employees(): BelongsToMany
     {
-        return $this->belongsToMany(Employee::class,'recruitment_scripts');
+        return $this->belongsToMany(Employee::class, 'recruitment_scripts');
     }
 
     public function status(): BelongsTo
@@ -43,7 +44,13 @@ class Position extends Model
 
     public function levels(): BelongsToMany
     {
-        return $this->belongsToMany(Level::class,'level_position');
+        return $this->belongsToMany(Level::class, 'level_position');
+    }
+
+
+    public function organizationUnits(): BelongsToMany
+    {
+        return $this->belongsToMany(OrganizationUnit::class, 'ounit_position', 'position_id', 'ounit_id');
     }
 
     public function getOunitCatAttribute($value)
@@ -54,6 +61,16 @@ class Position extends Model
         }
         $enumInstance = OunitCategoryEnum::tryFrom($value);
         return $enumInstance?->getLabelAndValue();
+    }
+
+    public function getOunitCatEnumAttribute($value)
+    {
+
+        if (is_null($value)) {
+            return null;
+        }
+        $enumInstance = OunitCategoryEnum::tryFrom($value);
+        return $enumInstance;
     }
 
 
