@@ -495,9 +495,13 @@ trait EnactmentTrait
             },],
 
             'DenyCard' => ['canceledStatus.meetingMember'],
-            'ReviewBtn' => ['userHasReviews' => function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            },]
+            'ReviewBtn' => [
+                'members' => function ($query) use ($user) {
+                    $query->where('employee_id', $user->id);
+                },
+                'userHasReviews' => function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                },]
         ]);
 
         $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())
