@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\HRMS\app\Models;
+namespace Modules\EMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Modules\HRMS\Database\factories\FileScriptFactory;
+use Modules\EMS\Database\factories\EnactmentMeetingFactory;
 
-class FileScript extends Pivot
+class EnactmentMeeting extends pivot
 {
     use HasFactory;
 
@@ -17,5 +17,7 @@ class FileScript extends Pivot
     //protected $fillable = [];
 
     public $timestamps = false;
+    protected $table = 'enactment_meeting';
+
 
 }

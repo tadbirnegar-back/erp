@@ -3,14 +3,11 @@
 namespace App\Http\Controllers;
 
 
-use DB;
 use Modules\AAA\app\Models\User;
-use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
-use Modules\EMS\app\Models\Enactment;
-use Modules\EMS\app\Models\EnactmentReview;
+use Modules\EMS\app\Http\Enums\RolesEnum;
+use Modules\EMS\app\Models\MeetingMember;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 
 class testController extends Controller
@@ -19,98 +16,180 @@ class testController extends Controller
 
     public function run()
     {
+        $mrs = [
+
+            'قاضی' => [
+                [
+                    'scriptType' => 'انتصاب پیشفرض',
+                    'hireType' => 9,
+                    'job' => 'عضو هیئت',
+                    'position' => RolesEnum::OZV_HEYAAT->value,
+                    'levelID' => 1,
+
+                ]
+            ],
+            'بخشدار' => [
+                [
+                    'scriptType' => 'انتصاب پیشفرض',
+                    'hireType' => 9,
+                    'job' => 'عضو هیئت',
+                    'position' => RolesEnum::OZV_HEYAAT->value,
+                    'levelID' => 1,
+
+                ]
+            ],
+            'عضو شورای شهرستان' => [
+                [
+                    'scriptType' => 'انتصاب پیشفرض',
+                    'hireType' => 9,
+                    'job' => 'عضو هیئت',
+                    'position' => RolesEnum::OZV_HEYAAT->value,
+                    'levelID' => 1,
+
+                ]
+            ],
+
+            'کارشناس مشورتی' => [
+                [
+                    'job' => 'کارشناس مشورتی',
+                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
+                    'levelID' => 1,
+                    'hireType' => 9,
+                    'scriptType' => 'انتصاب پیشفرض',
 
 
-//        $users = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-//            $q->whereIntegerInRaw('organization_unit_id', $ounit);
-//        })->with('person.avatar')->get();
-//        dd($users);
+                ]
+            ],
+            'نماینده استانداری' => [
+                [
+                    'job' => 'کارشناس مشورتی',
+                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
+                    'levelID' => 1,
+                    'hireType' => 9,
+                    'scriptType' => 'انتصاب پیشفرض',
+                ]
+            ],
+            'مسئول دبیرخانه' => [
+                [
+                    'job' => 'کارشناس مشورتی',
+                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
+                    'levelID' => 1,
+                    'hireType' => 9,
+                    'scriptType' => 'انتصاب پیشفرض',
+                ],
+                [
+                    'job' => 'مسئول دبیرخانه',
+                    'position' => RolesEnum::DABIR_HEYAAT->value,
+                    'levelID' => 1,
+                    'hireType' => 9,
+                    'scriptType' => 'انتصاب دبیر',
+                ]
+            ],
 
-//        $enactment = Enactment::with('consultingMembers')->find(3);
-//        dd($enactment);
-//        $user = User::find(1905);
-//        $componentsToRenderWithData = $this->enactmentShow($enactment, $user);
-//        dd($componentsToRenderWithData);
 
-
-//        $enactments = Enactment::whe
-
-        $startDate = '2020-01-01';
-        $endDate = '2024-12-30';
-        $meetingCount = Enactment::whereHas('members', function ($q) {
-            $q->where('employee_id', 1905);
-        })
-            ->select('meeting_id', DB::raw('count(*) as enactment_count'))
-            ->whereBetween('create_date', [$startDate, $endDate])
-            ->groupBy('meeting_id')
-            ->get();
-//        dd($meetingCount);
-
-
-        $myEnactmentCount = Enactment::whereHas('members', function ($q) {
-            $q->where('employee_id', 1905);
-        })
-            ->whereBetween('create_date', [$startDate, $endDate])
-            ->paginate();
-//        dd($myEnactmentCount);
-
-//        $enReviews = EnactmentReview::whereHas('enactment', function ($q) {
-//            $q->whereBetween('create_date', ['2020-01-01', '2024-12-30']);
+        ];
+        $user = User::with(['latestStatus'])->find(2110);
+        dd($user);
+        $mr = MeetingMember::with('person')->find(65);
+        dd($mr);
+        $mrInfo = $mrs[$mr->title];
+        dd($mrInfo, $mr);
+//        $ounits = OrganizationUnit::with(['person.workForce.educationalRecords'])->get();
+//
+////        $users = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+////            $q->whereIntegerInRaw('organization_unit_id', $ounit);
+////        })->with('person.avatar')->get();
+////        dd($users);
+//
+////        $enactment = Enactment::with('consultingMembers')->find(3);
+////        dd($enactment);
+////        $user = User::find(1905);
+////        $componentsToRenderWithData = $this->enactmentShow($enactment, $user);
+////        dd($componentsToRenderWithData);
+//
+//
+////        $enactments = Enactment::whe
+//
+//        $startDate = '2020-01-01';
+//        $endDate = '2024-12-30';
+//        $meetingCount = Enactment::whereHas('members', function ($q) {
+//            $q->where('employee_id', 1905);
 //        })
+//            ->select('meeting_id', DB::raw('count(*) as enactment_count'))
+//            ->whereBetween('create_date', [$startDate, $endDate])
+//            ->groupBy('meeting_id')
+//            ->get();
+////        dd($meetingCount);
+//
+//
+//        $myEnactmentCount = Enactment::whereHas('members', function ($q) {
+//            $q->where('employee_id', 1905);
+//        })
+//            ->whereBetween('create_date', [$startDate, $endDate])
+//            ->paginate();
+////        dd($myEnactmentCount);
+//
+////        $enReviews = EnactmentReview::whereHas('enactment', function ($q) {
+////            $q->whereBetween('create_date', ['2020-01-01', '2024-12-30']);
+////        })
+////            ->with('status')
+////            ->where('user_id', 1905)
+////            ->groupBy('status_id')
+////            ->count();
+//
+//        $enReviews = EnactmentReview::join('enactments', 'enactment_reviews.enactment_id', '=', 'enactments.id')
+//            ->whereBetween('enactments.create_date', [$startDate, $endDate])
+//            ->where('enactment_reviews.user_id', 1905)
+//            ->groupBy('enactment_reviews.status_id')
+//            ->select('enactment_reviews.status_id', DB::raw('count(*) as review_count'))
 //            ->with('status')
-//            ->where('user_id', 1905)
-//            ->groupBy('status_id')
+//            ->get();
+////        dd($enReviews);
+//
+//        $enactmentMyReviewsCount = Enactment::whereHas('members', function ($q) {
+//            $q->where('employee_id', 1905);
+//        })
+//            ->whereBetween('create_date', [$startDate, $endDate])
+//            ->whereHas('enactmentReviews', function ($q) {
+//                $q->where('user_id', 1905);
+//            })
 //            ->count();
-
-        $enReviews = EnactmentReview::join('enactments', 'enactment_reviews.enactment_id', '=', 'enactments.id')
-            ->whereBetween('enactments.create_date', [$startDate, $endDate])
-            ->where('enactment_reviews.user_id', 1905)
-            ->groupBy('enactment_reviews.status_id')
-            ->select('enactment_reviews.status_id', DB::raw('count(*) as review_count'))
-            ->with('status')
-            ->get();
-//        dd($enReviews);
-
-        $enactmentMyReviewsCount = Enactment::whereHas('members', function ($q) {
-            $q->where('employee_id', 1905);
-        })
-            ->whereBetween('create_date', [$startDate, $endDate])
-            ->whereHas('enactmentReviews', function ($q) {
-                $q->where('user_id', 1905);
-            })
-            ->count();
-
-        $enactmentExpiredCount = Enactment::whereHas('members', function ($q) {
-            $q->where('employee_id', 1905);
-        })
-            ->whereBetween('create_date', [$startDate, $endDate])
-            ->whereHas('enactmentReviews.status', function ($q) {
-                $q->where('name', EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
-            })
-            ->count();
-
-
-        $enactmentUnreviewedCount = Enactment::whereHas('members', function ($q) {
-            $q->where('employee_id', 1905);
-        })
-            ->whereBetween('create_date', [$startDate, $endDate])
-            ->whereDoesntHave('enactmentReviews', function ($q) {
-                $q->where('user_id', 1905);
-            })
-            ->count();
-//        dd($enactmentUnreviewedCount);
-
-        //==================================================================================
-
-        $a = OrganizationUnit::with(['meetingMembers'])->find(2662);
-        dd($a);
-        User::with(['activeDistrictRecruitmentScript' => function ($q) {
-            $q->orderByDesc('recruitment_scripts.create_date')
-                ->limit(1)
-                ->with('organizationUnit.descendantsAndSelf');
-        }])->find(1905)//            ->activeRecruitmentScript[0]?->organizationUnit->descendantsAndSelf->pluck('id')
-        ;
-
+//
+//        $enactmentExpiredCount = Enactment::whereHas('members', function ($q) {
+//            $q->where('employee_id', 1905);
+//        })
+//            ->whereBetween('create_date', [$startDate, $endDate])
+//            ->whereHas('enactmentReviews.status', function ($q) {
+//                $q->where('name', EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
+//            })
+//            ->count();
+//
+//
+//        $enactmentUnreviewedCount = Enactment::whereHas('members', function ($q) {
+//            $q->where('employee_id', 1905);
+//        })
+//            ->whereBetween('create_date', [$startDate, $endDate])
+//            ->whereDoesntHave('enactmentReviews', function ($q) {
+//                $q->where('user_id', 1905);
+//            })
+//            ->count();
+////        dd($enactmentUnreviewedCount);
+//
+//        //==================================================================================
+//
+//        $b = MeetingMember::with('enactments')->find(45);
+//        dd($b);
+////        $a = OrganizationUnit::with(['meetingMembers'])->find(2662);
+////        dd($a);
+//        $a = User::with(['activeDistrictRecruitmentScript' => function ($q) {
+//            $q->orderByDesc('recruitment_scripts.create_date')
+//                ->limit(1)
+//                ->with(['organizationUnit.meetingMembers' => function ($q) {
+//                    $q->with('enactmentReviewss');
+//                }]);
+//        }])->find(2060
+//        );
+//        dd($a);
 
 // $user=User::with(['organizationUnits'])->find(1955);
 

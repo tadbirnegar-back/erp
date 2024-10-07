@@ -38,7 +38,7 @@ trait PersonTrait
             'spouse_last_name' => $data['spouseLastName'] ?? null,
             'home_address_id' => $data['homeAddressID'] ?? null,
             'job_address_id' => $data['jobAddressID'] ?? null,
-            'gender_id' => $data['gender'],
+            'gender_id' => $data['gender'] ?? 1,
             'bc_issue_date' => $data['bcIssueDate'] ?? null,
             'bc_issue_location' => $data['bcIssueLocation'] ?? null,
             'bc_serial' => $data['bcSerial'] ?? null,

@@ -90,7 +90,7 @@ return [
         'farazsmspattern' => [
             'url' => 'http://ippanel.com/patterns/pattern',
             'username' => '09141492090',
-            'password' => '1680162675Behrad',
+            'password' => 'o4413465298',
             'from' => '+9890005476',
         ],
         'smsgatewayme' => [

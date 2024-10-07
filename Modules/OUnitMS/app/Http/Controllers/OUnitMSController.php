@@ -4,13 +4,10 @@ namespace Modules\OUnitMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use DB;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
-use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -18,7 +15,6 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
-use Modules\PersonMS\app\Models\Person;
 
 class OUnitMSController extends Controller
 {
@@ -89,6 +85,13 @@ class OUnitMSController extends Controller
         $perPage = $request->perPage ?? 10;
         $page = $request->pageNum ?? 1;
         $districts = $this->bakhshdariIndex($searchTerm, $ounitID, $perPage, $page);
+
+        return response()->json($districts);
+    }
+
+    public function districtsAllList()
+    {
+        $districts = OrganizationUnit::with('ancestors')->where('unitable_type', DistrictOfc::class)->get();
 
         return response()->json($districts);
     }

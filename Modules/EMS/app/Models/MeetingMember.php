@@ -8,10 +8,9 @@ use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\AAA\app\Models\UserRole;
 use Modules\EMS\Database\factories\MeetingMemberFactory;
-use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Models\WorkForce;
 use Modules\PersonMS\app\Models\Person;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+use Znck\Eloquent\Traits\BelongsToThrough;
 
 class MeetingMember extends Pivot
 {
@@ -31,30 +30,15 @@ class MeetingMember extends Pivot
         return $this->belongsTo(MR::class);
     }
 
-    use HasRelationships;
+    use HasRelationships, BelongsToThrough;
 
     public function person()
     {
-        return $this->hasOneDeep(
-            Person::class,
-            [
-//                MeetingMember::class,
-                Employee::class,
-                Workforce::class,
-            ],
-            [
-//                'meeting_id', // Foreign key on the meeting_members table...
-                'id', // Foreign key on the employees table...
-                'workforceable_id', // Foreign key on the workforces table...
-                'id' // Foreign key on the workforces table...
-            ],
-            [
-//                'id', // Local key on the meetings table...
-                'employee_id', // Local key on the meeting_members table...
-                'id', // Local key on the employees table...
-                'person_id' // Local key on the workforces table...
-            ]
-        );
+        return $this->belongsToThrough(Person::class, [User::class],
+            foreignKeyLookup: [
+                Person::class => 'person_id',
+                User::class => 'employee_id',
+            ]);
     }
 
     public function user(): BelongsTo
@@ -101,6 +85,12 @@ class MeetingMember extends Pivot
 //        );
     }
 
+    public function enactmentReviewss()
+    {
+        return $this->hasMany(EnactmentReview::class, 'user_id', 'employee_id');
+
+    }
+
 //    public function enactments()
 //    {
 //        return $this->hasManyDeep(Enactment::class, [
@@ -116,5 +106,19 @@ class MeetingMember extends Pivot
 //            ]
 //        );
 //    }
+
+    public function enactments()
+    {
+        return $this->hasManyDeep(Enactment::class, [
+            Meeting::class],
+            [
+                'id',
+                'meeting_id',
+            ],
+            [
+                'meeting_id',
+                'id',
+            ]);
+    }
 
 }

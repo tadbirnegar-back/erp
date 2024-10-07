@@ -18,7 +18,7 @@ use Modules\EMS\app\Http\Controllers\EnactmentController;
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('mes/enactment/add-by-board', [EnactmentController::class, 'store']);
-    
+
     Route::post('mes/enactment/add-by-secretary', [EnactmentController::class, 'store']);
 
     Route::post('mes/pbs-enactments/list', [EnactmentController::class, 'indexSecretary']);
@@ -48,6 +48,15 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('mes/enactment/add-by-board', [EMSController::class, 'addBaseInfo']);
 
     Route::post('mes/ounit-villages/search', [EnactmentController::class, 'getMyVillagesToAddEnactment']);
+
+
+});
+
+Route::middleware([])->prefix('v1')->group(function () {
+
+    Route::post('mes/mr/list', [EMSController::class, 'getMrList']);
+
+    Route::post('mes/board/register', [EMSController::class, 'registerHetaatMember']);
 
 
 });
