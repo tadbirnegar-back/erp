@@ -29,7 +29,7 @@ trait RecruitmentScriptTrait
                 $query->join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
                     ->join('statuses as s', 'rss.status_id', '=', 's.id')
                     ->where('s.id', $statusID)
-                    ->where('rss.create_date', function($subQuery) {
+                    ->where('rss.create_date', function ($subQuery) {
                         $subQuery->selectRaw('MAX(create_date)')
                             ->from('recruitment_script_status as sub_rss')
                             ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
@@ -49,7 +49,7 @@ trait RecruitmentScriptTrait
         });
 
         $query->when($scriptTypeID, function ($query) use ($scriptTypeID) {
-                $query->where('script_type_id', $scriptTypeID);
+            $query->where('script_type_id', $scriptTypeID);
         })
             ->with([
                 'pendingScriptApproving.assignedTo',
@@ -82,9 +82,9 @@ trait RecruitmentScriptTrait
 
             $rs = RecruitmentScript::create($item);
             $rs->status()->attach($status->id);
-
-            if (isset($item['files'])) {
-                $fileScriptsData=collect($item['files'])->map(fn($fs) => [
+            $fileScriptsData = !empty($data[$key]['files']) ? json_decode($data[$key]['files'], true) : [];
+            if (isset($data[$key]['files']) && is_array($fileScriptsData)) {
+                $fileScriptsData = collect($fileScriptsData)->map(fn($fs) => [
                     'file_id' => $fs['fileID'],
                     'script_id' => $rs->id,
                     'title' => $fs['title'],

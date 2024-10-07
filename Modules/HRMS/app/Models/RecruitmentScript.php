@@ -138,7 +138,7 @@ class RecruitmentScript extends Model
 
     public function files(): BelongsToMany
     {
-        return $this->belongsToMany(File::class, 'file_script')->withPivot('title');
+        return $this->belongsToMany(File::class, 'file_script', foreignPivotKey: 'script_id')->withPivot('title');
     }
 
     public function ounit(): BelongsTo

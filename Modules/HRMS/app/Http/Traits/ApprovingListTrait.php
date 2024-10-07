@@ -141,12 +141,15 @@ trait ApprovingListTrait
             $position = Position::find($script->position_id);
             $role = Role::where('name', $position->name)->first() ?? Role::where('name', 'کاربر')->first();
             $scriptUser = $script->employee->person->user;
+            $userActiveStatus = User::GetAllStatuses()->firstWhere('name', 'فعال');
             $hasRole = $scriptUser->roles()->where('role_id', $role->id)->exists();
 
             // Attach the role to the user if they do not have it
             if (!$hasRole) {
                 $scriptUser->roles()->attach($role->id);
             }
+
+            $scriptUser->statuses()->attach($userActiveStatus->id);
 
         }
 

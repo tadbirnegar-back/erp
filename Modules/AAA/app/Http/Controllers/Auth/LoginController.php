@@ -64,6 +64,8 @@ class LoginController extends Controller
         $user = $this->mobileExists($request->mobile);
         if ($user === null) {
             return response()->json(['message' => 'کاربری یافت نشد'], 404);
+        } elseif ($user->latestStatus->name === 'غیرفعال') {
+            return response()->json(['message' => 'کاربر غیرفعال است', 'data' => $user->person->display_name], 423);
         }
 
         return response()->json([

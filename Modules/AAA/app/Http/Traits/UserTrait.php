@@ -68,7 +68,7 @@ trait UserTrait
 
         $status = $user->status;
 
-        if (isset($data['statusID'])&&$data['statusID'] != $status[0]->id) {
+        if (isset($data['statusID']) && $data['statusID'] != $status[0]->id) {
             $user->statuses()->attach($data['statusID']);
         }
         return $user;
@@ -77,8 +77,8 @@ trait UserTrait
 
     public function mobileExists(string $mobile)
     {
-        $user = User::with('person.avatar')->where('mobile', '=', $mobile)
-        ->first();
+        $user = User::with('latestStatus', 'person.avatar')->where('mobile', '=', $mobile)
+            ->first();
 
         return $user;
     }

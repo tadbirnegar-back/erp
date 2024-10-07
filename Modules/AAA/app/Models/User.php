@@ -105,6 +105,12 @@ class User extends Authenticatable
         return $this->belongsToMany(Status::class, 'user_status')->latest('create_date')->take(1);
     }
 
+    public function latestStatus()
+    {
+        return $this->hasOneThrough(Status::class, UserStatus::class, 'user_id', 'id', 'id', 'status_id')
+            ->orderBy('user_status.id', 'desc');
+    }
+
 
     public function person(): BelongsTo
     {
