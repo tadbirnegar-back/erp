@@ -467,7 +467,7 @@ trait EnactmentTrait
         $myPermissions = $this->getComponentsToRender($userRoles, $enactment->status->name);
 
         $componentsToRender = collect([
-            'MainEnactment' => ['reviewStatuses', 'meeting', 'attachments', 'creator', 'title'],
+            'MainEnactment' => ['reviewStatuses', 'latestMeeting', 'attachments', 'creator', 'title'],
             'MembersBeforeReview' => ['districtOfc'],
             'AcceptDenyBtns' => ['relatedDates.ancestorsAndSelf' => function ($query) {
                 $query
