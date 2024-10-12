@@ -191,6 +191,8 @@ class EmployeeController extends Controller
 
             $roles = Role::where('name', 'کاربر')->first();
             $user->roles()->sync($roles->id);
+            $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+            $user->statuses()->attach($disabledStatusForUser->id);
 
             if (isset($data['avatar'])) {
                 $file = File::find($data['avatar']);

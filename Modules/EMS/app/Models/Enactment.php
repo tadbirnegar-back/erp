@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
@@ -272,6 +273,16 @@ class Enactment extends Model
                     ->orWhere('name', '=', EnactmentStatusEnum::DECLINED->value);
             })->orderBy('create_date', 'desc');
         })->with('attachment');
+    }
+
+    public function meetings(): BelongsToMany
+    {
+        return $this->belongsToMany(Meeting::class, 'enactment_meeting', 'enactment_id', 'meeting_id');
+    }
+
+    public function latestMeeting(): HasOneThrough
+    {
+        return $this->hasOneThrough(Meeting::class, EnactmentMeeting::class, 'enactment_id', 'id', 'id', 'meeting_id')->orderBy('enactment_meeting.create_date', 'desc');
     }
 
 

@@ -82,8 +82,13 @@ trait RecruitmentScriptTrait
 
             $rs = RecruitmentScript::create($item);
             $rs->status()->attach($status->id);
-            $fileScriptsData = !empty($data[$key]['files']) ? json_decode($data[$key]['files'], true) : [];
+            if (isset($data[$key]['files']) && !is_array($data[$key]['files'])) {
+                $fileScriptsData = !empty($data[$key]['files']) ? json_decode($data[$key]['files'], true) : [];
+            } else {
+                $fileScriptsData = $data[$key]['files'];
+            }
             if (isset($data[$key]['files']) && is_array($fileScriptsData)) {
+                info($data[$key]['files']);
                 $fileScriptsData = collect($fileScriptsData)->map(fn($fs) => [
                     'file_id' => $fs['fileID'],
                     'script_id' => $rs->id,

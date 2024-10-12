@@ -103,13 +103,15 @@ class EnactmentController extends Controller
 //            }
 
             $enactment = $this->storeEnactment($data, $meeting);
+            $enactment->meetings()->attach($meeting->id);
+
             $files = json_decode($data['attachments'], true);
             $this->attachFiles($enactment, $files);
             DB::commit();
             return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مصوبه جدید', 'error' => $exception->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ثبت مصوبه جدید'], 500);
         }
     }
 
@@ -195,8 +197,9 @@ class EnactmentController extends Controller
 
             if (isset($data['meetingID'])) {
                 $meeting = Meeting::find($data['meetingID']);
-                $enactment->meeting_id = $meeting->id;
-                $enactment->save();
+                $enactment->meetings()->attach($meeting->id);
+//                $enactment->meeting_id = $meeting->id;
+//                $enactment->save();
             } elseif (isset($data['meetingDate'])) {
                 $villageID = $enactment->meeting->ounit_id;
                 $data['creatorID'] = $user->id;
@@ -209,8 +212,10 @@ class EnactmentController extends Controller
 
                 $data['ounitID'] = $villageWithDistrict->ancestors[0]->id;
                 $meeting = $this->storeMeeting($data);
-                $enactment->meeting_id = $meeting->id;
-                $enactment->save();
+                $enactment->meetings()->attach($meeting->id);
+
+//                $enactment->meeting_id = $meeting->id;
+//                $enactment->save();
 
                 $meetingTemplate = Meeting::where('isTemplate', true)
                     ->where('ounit_id', $data['ounitID'])

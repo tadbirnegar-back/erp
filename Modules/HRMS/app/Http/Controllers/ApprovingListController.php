@@ -15,7 +15,7 @@ class ApprovingListController extends Controller
     public function showScriptWithApproves($id)
     {
         $user = auth()->user();
-        $script = RecruitmentScript::with('scriptType', 'hireType', 'position', 'level', 'scriptAgents', 'approvers.assignedTo', 'approvers.status', 'employee.person', 'latestStatus', 'organizationUnit', 'job', 'files')->find($id);
+        $script = RecruitmentScript::with('scriptType', 'hireType', 'position', 'level', 'scriptAgents', 'approvers.assignedTo', 'approvers.status', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files')->find($id);
 
         $canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
         $canIssueRevisedScript = false;
