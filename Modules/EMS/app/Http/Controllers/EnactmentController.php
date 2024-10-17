@@ -91,10 +91,16 @@ class EnactmentController extends Controller
             $data['meetingTypeID'] = MeetingType::where('title', '=', 'جلسه شورا روستا')->first()->id;
 
             $meeting = $this->storeMeeting($data);
-//            $meetingTemplate = Meeting::where('isTemplate', true)
-//                ->where('ounit_id', $meeting->ounit_id)
-//                ->with('meetingMembers')->first();
-//
+            $meeting->load(['ounit.ancestors' => function ($query) {
+                $query->where('unitable_type', DistrictOfc::class)
+                    ->with('meetingTemplate');
+            }]);
+
+            $meetingTemplate = $meeting->ounit?->ancestors[0]?->meetingTemplate ?? null;
+
+            if (is_null($meetingTemplate)) {
+                return response()->json(['message' => 'اعضا هیئت جلسه برای این روستا تعریف نشده است'], 400);
+            }
 //
 //            if (!is_null($meetingTemplate)) {
 //                foreach ($meetingTemplate->meetingMembers as $mm) {

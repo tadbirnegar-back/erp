@@ -145,7 +145,11 @@ class PersonMSController extends Controller
 
     public function personShow($id)
     {
-        $person = Person::with(['avatar',
+        $person = Person::with([
+            'recruitmentScripts.latestStatus',
+            'recruitmentScripts.hireType',
+            'recruitmentScripts.scriptType',
+            'avatar',
             'personable.religion',
             'personable.religionType',
             'user.roles',
@@ -173,6 +177,9 @@ class PersonMSController extends Controller
     {
         $user = \Auth::user();
         $user->load([
+            'person.recruitmentScripts.latestStatus',
+            'person.recruitmentScripts.hireType',
+            'person.recruitmentScripts.scriptType',
             'person.avatar',
             'person.personable.religion',
             'person.personable.religionType',
@@ -955,6 +962,8 @@ class PersonMSController extends Controller
                 if ($data['hasMilitaryService'] == 0) {
                     $militaryService = MilitaryService::find($data['militaryServiceID']);
                     $militaryService->delete();
+                    DB::commit();
+
                     return response()->json(['message' => 'وضعیت نظام وظیفه با موفقیت حذف شد']);
                 } else {
                     $militaryService = MilitaryService::find($data['militaryServiceID']);

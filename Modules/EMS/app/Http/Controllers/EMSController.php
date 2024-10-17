@@ -71,7 +71,7 @@ class EMSController extends Controller
     {
         $mrs = [
 
-            'قاضی' => [
+            'نماینده قوه قضائیه (عضو هیات تطبیق)' => [
                 [
                     'scriptType' => 'انتصاب پیشفرض',
                     'hireType' => 9,
@@ -81,7 +81,7 @@ class EMSController extends Controller
 
                 ]
             ],
-            'بخشدار' => [
+            'بخشدار (عضو هیات تطبیق)' => [
                 [
                     'scriptType' => 'انتصاب پیشفرض',
                     'hireType' => 9,
@@ -91,7 +91,7 @@ class EMSController extends Controller
 
                 ]
             ],
-            'عضو شورای شهرستان' => [
+            'عضو شورای شهرستان (عضو هیات تطبیق)' => [
                 [
                     'scriptType' => 'انتصاب پیشفرض',
                     'hireType' => 9,
@@ -102,7 +102,7 @@ class EMSController extends Controller
                 ]
             ],
 
-            'کارشناس مشورتی' => [
+            'کارشناس مشورتی (کارشناس هیات تطبیق)' => [
                 [
                     'job' => 'کارشناس مشورتی',
                     'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
@@ -113,7 +113,7 @@ class EMSController extends Controller
 
                 ]
             ],
-            'نماینده استانداری' => [
+            'نماینده استانداری (کارشناس هیات تطبیق)' => [
                 [
                     'job' => 'کارشناس مشورتی',
                     'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
@@ -122,7 +122,7 @@ class EMSController extends Controller
                     'scriptType' => 'انتصاب پیشفرض',
                 ]
             ],
-            'مسئول دبیرخانه' => [
+            'مسئول دبیرخانه و دبیر تطبیق (کارشناس هیات تطبیق)' => [
                 [
                     'job' => 'کارشناس مشورتی',
                     'position' => RolesEnum::KARSHENAS_MASHVARATI->value,

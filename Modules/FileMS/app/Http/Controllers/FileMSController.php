@@ -7,15 +7,12 @@ use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Http\Traits\FileTrait;
 use Modules\FileMS\app\Models\Extension;
 use Modules\FileMS\app\Models\File;
 use Modules\FileMS\app\Models\MimeType;
 use Modules\StatusMS\app\Models\Status;
-use Number;
 
 class FileMSController extends Controller
 {
@@ -116,7 +113,7 @@ class FileMSController extends Controller
 //        ]);
         $uploadedFile = $request->file('file');
         $fileExtension = $uploadedFile->getClientOriginalExtension();
-        $extension_id = Extension::where('name', '=', $fileExtension)->get(['id'])->first();
+        $extension_id = Extension::where('name', '=', strtolower($fileExtension))->get(['id'])->first();
 
         if (!$extension_id) {
             return response()->json(['message' => 'فایل مجاز نمی باشد'], 400);
@@ -150,7 +147,7 @@ class FileMSController extends Controller
             return response()->json(['file' => $file]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در بارگزاری فایل','error'=>$e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بارگزاری فایل', 'error' => $e->getMessage()], 500);
 
         }
 

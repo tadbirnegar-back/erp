@@ -3,193 +3,116 @@
 namespace App\Http\Controllers;
 
 
-use Modules\AAA\app\Models\User;
-use Modules\EMS\app\Http\Enums\RolesEnum;
-use Modules\EMS\app\Models\MeetingMember;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
-use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, EmployeeTrait;
+    use PaymentRepository;
 
     public function run()
     {
-        $mrs = [
 
-            'قاضی' => [
-                [
-                    'scriptType' => 'انتصاب پیشفرض',
-                    'hireType' => 9,
-                    'job' => 'عضو هیئت',
-                    'position' => RolesEnum::OZV_HEYAAT->value,
-                    'levelID' => 1,
-
-                ]
-            ],
-            'بخشدار' => [
-                [
-                    'scriptType' => 'انتصاب پیشفرض',
-                    'hireType' => 9,
-                    'job' => 'عضو هیئت',
-                    'position' => RolesEnum::OZV_HEYAAT->value,
-                    'levelID' => 1,
-
-                ]
-            ],
-            'عضو شورای شهرستان' => [
-                [
-                    'scriptType' => 'انتصاب پیشفرض',
-                    'hireType' => 9,
-                    'job' => 'عضو هیئت',
-                    'position' => RolesEnum::OZV_HEYAAT->value,
-                    'levelID' => 1,
-
-                ]
-            ],
-
-            'کارشناس مشورتی' => [
-                [
-                    'job' => 'کارشناس مشورتی',
-                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
-                    'levelID' => 1,
-                    'hireType' => 9,
-                    'scriptType' => 'انتصاب پیشفرض',
-
-
-                ]
-            ],
-            'نماینده استانداری' => [
-                [
-                    'job' => 'کارشناس مشورتی',
-                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
-                    'levelID' => 1,
-                    'hireType' => 9,
-                    'scriptType' => 'انتصاب پیشفرض',
-                ]
-            ],
-            'مسئول دبیرخانه' => [
-                [
-                    'job' => 'کارشناس مشورتی',
-                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
-                    'levelID' => 1,
-                    'hireType' => 9,
-                    'scriptType' => 'انتصاب پیشفرض',
-                ],
-                [
-                    'job' => 'مسئول دبیرخانه',
-                    'position' => RolesEnum::DABIR_HEYAAT->value,
-                    'levelID' => 1,
-                    'hireType' => 9,
-                    'scriptType' => 'انتصاب دبیر',
-                ]
-            ],
-
-
-        ];
-        $user = User::with(['latestStatus'])->find(2110);
-        dd($user);
-        $mr = MeetingMember::with('person')->find(65);
-        dd($mr);
-        $mrInfo = $mrs[$mr->title];
-        dd($mrInfo, $mr);
-//        $ounits = OrganizationUnit::with(['person.workForce.educationalRecords'])->get();
+//        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
+//            $q->where('unitable_type', DistrictOfc::class);
 //
-////        $users = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-////            $q->whereIntegerInRaw('organization_unit_id', $ounit);
-////        })->with('person.avatar')->get();
-////        dd($users);
+//        }, 'evaluators'])->get();
+//        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)
+//            ->with(['ancestorsAndSelf', 'ancestors' => function ($q) {
+//                $q->where('unitable_type', DistrictOfc::class);
 //
-////        $enactment = Enactment::with('consultingMembers')->find(3);
-////        dd($enactment);
-////        $user = User::find(1905);
-////        $componentsToRenderWithData = $this->enactmentShow($enactment, $user);
-////        dd($componentsToRenderWithData);
-//
-//
-////        $enactments = Enactment::whe
-//
-//        $startDate = '2020-01-01';
-//        $endDate = '2024-12-30';
-//        $meetingCount = Enactment::whereHas('members', function ($q) {
-//            $q->where('employee_id', 1905);
-//        })
-//            ->select('meeting_id', DB::raw('count(*) as enactment_count'))
-//            ->whereBetween('create_date', [$startDate, $endDate])
-//            ->groupBy('meeting_id')
+//            }, 'evaluators'])
 //            ->get();
-////        dd($meetingCount);
+//
+//        // Start the table
+//        $html = '<table>';
+//        $html .= '<tr>
+//<th>دهیاری</th>
+//<th>دهستان</th>
+//<th>بخشداری</th>
+//<th>شهرستان</th>
+//<th>نمره نهایی دهیار</th>
+//<th>نمره نهایی بخشدار</th>
+//</tr>';
+//
+//        // Loop through the data and add it to the table
+//        foreach ($organizationUnitIds as $organizationUnit) {
+//            $districteval = null;
+//            $villageeval = null;
+//            foreach ($organizationUnit->evaluators as $evaluator) {
+//                $districteval = $evaluator->user_id == $organizationUnit->ancestors[0]->head_id ? $evaluator->sum : null;
+//                $villageeval = $evaluator->user_id == $organizationUnit->head_id ? $evaluator->sum : null;
+//            }
+//
+//            $html .= '<tr>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[0]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[1]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[2]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[3]->name) . '</td>';
+//
+//            $html .= '<td>' . htmlspecialchars($villageeval) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($districteval) . '</td>';
 //
 //
-//        $myEnactmentCount = Enactment::whereHas('members', function ($q) {
-//            $q->where('employee_id', 1905);
-//        })
-//            ->whereBetween('create_date', [$startDate, $endDate])
-//            ->paginate();
-////        dd($myEnactmentCount);
+//            $html .= '</tr>';
+//        }
 //
-////        $enReviews = EnactmentReview::whereHas('enactment', function ($q) {
-////            $q->whereBetween('create_date', ['2020-01-01', '2024-12-30']);
-////        })
-////            ->with('status')
-////            ->where('user_id', 1905)
-////            ->groupBy('status_id')
-////            ->count();
+//        // End the table
+//        $html .= '</table>';
 //
-//        $enReviews = EnactmentReview::join('enactments', 'enactment_reviews.enactment_id', '=', 'enactments.id')
-//            ->whereBetween('enactments.create_date', [$startDate, $endDate])
-//            ->where('enactment_reviews.user_id', 1905)
-//            ->groupBy('enactment_reviews.status_id')
-//            ->select('enactment_reviews.status_id', DB::raw('count(*) as review_count'))
-//            ->with('status')
-//            ->get();
-////        dd($enReviews);
+//        // Print the table
+//        echo $html;
 //
-//        $enactmentMyReviewsCount = Enactment::whereHas('members', function ($q) {
-//            $q->where('employee_id', 1905);
-//        })
-//            ->whereBetween('create_date', [$startDate, $endDate])
-//            ->whereHas('enactmentReviews', function ($q) {
-//                $q->where('user_id', 1905);
-//            })
-//            ->count();
+//        // Start the table
+//        $html = '<table>';
+//        $html .= '<tr><th>دهیاری</th><th>نام دهیار</th><th>شهرستان</th><th>کد آبادی</th></tr>';
 //
-//        $enactmentExpiredCount = Enactment::whereHas('members', function ($q) {
-//            $q->where('employee_id', 1905);
-//        })
-//            ->whereBetween('create_date', [$startDate, $endDate])
-//            ->whereHas('enactmentReviews.status', function ($q) {
-//                $q->where('name', EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
-//            })
-//            ->count();
+//        // Loop through the data and add it to the table
+//        foreach ($organizationUnitIds as $organizationUnit) {
+//            foreach ($organizationUnit->evaluators as $evaluator) {
+//                $districteval = $evaluator->user_id == $organizationUnit->ancestors[0]->head_id ? $evaluator->sum : null;
+//                $villageeval = $evaluator->user_id == $organizationUnit->head_id ? $evaluator->sum : null;
+//            }
+//            if (isset($organizationUnit->head?->person->personable->birth_date)) {
+//
+//                $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d', strtotime($organizationUnit->head?->person->personable->birth_date));
+//            } else {
+//                $jalali = null;
+//            }
+//
+//            $html .= '<tr>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[0]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[1]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[2]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[3]->name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->abadi_code) . '</td>';
+//
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->personable->first_name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->personable->last_name) . '</td>';
+//
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->national_code) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->personable->bc_code) . '</td>';
+//
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->personable->father_name) . '</td>';
+//            $html .= '<td>' . htmlspecialchars(isset($organizationUnit->head) ? ($organizationUnit->head?->person->personable->gender_id == 1 ? 'مرد' : 'زن') : null) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->mobile) . '</td>';
 //
 //
-//        $enactmentUnreviewedCount = Enactment::whereHas('members', function ($q) {
-//            $q->where('employee_id', 1905);
-//        })
-//            ->whereBetween('create_date', [$startDate, $endDate])
-//            ->whereDoesntHave('enactmentReviews', function ($q) {
-//                $q->where('user_id', 1905);
-//            })
-//            ->count();
-////        dd($enactmentUnreviewedCount);
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->workForce->educationalRecords[0]?->field_of_study ?? null) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->workForce->educationalRecords[0]?->levelOfEducation->name ?? null) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($jalali) . '</td>';
 //
-//        //==================================================================================
+//            $html .= '<td>' . htmlspecialchars($villageeval) . '</td>';
+//            $html .= '<td>' . htmlspecialchars($districteval) . '</td>';
 //
-//        $b = MeetingMember::with('enactments')->find(45);
-//        dd($b);
-////        $a = OrganizationUnit::with(['meetingMembers'])->find(2662);
-////        dd($a);
-//        $a = User::with(['activeDistrictRecruitmentScript' => function ($q) {
-//            $q->orderByDesc('recruitment_scripts.create_date')
-//                ->limit(1)
-//                ->with(['organizationUnit.meetingMembers' => function ($q) {
-//                    $q->with('enactmentReviewss');
-//                }]);
-//        }])->find(2060
-//        );
-//        dd($a);
+//            $html .= '</tr>';
+//        }
+//
+//        // End the table
+//        $html .= '</table>';
+//
+//        // Print the table
+//        echo $html;
 
 // $user=User::with(['organizationUnits'])->find(1955);
 
@@ -246,7 +169,7 @@ class testController extends Controller
 //         foreach ($organizationUnitIds as $organizationUnit) {
 //             $html .= '<tr>';
 //             $html .= '<td>' . htmlspecialchars($organizationUnit->name) . '</td>';
-//             $html .= '<td>' . htmlspecialchars($organizationUnit->head->person->display_name) . '</td>';
+//             $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->display_name) . '</td>';
 //             $html .= '<td>' . htmlspecialchars($organizationUnit->ancestors[2]->name) . '</td>';
 //             $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->abadi_code) . '</td>';
 //             $html .= '</tr>';
@@ -261,7 +184,8 @@ class testController extends Controller
 
 //         try {
 
-//             $authority='A0000000000000000000000000005nxmv33n';
+
+//             $authority='A000000000000000000000000000l35lv3nl';
 //             $payment = PG::where('authority', $authority)->with('user')->first();
 
 //             $user =$payment->user ;
@@ -282,13 +206,13 @@ class testController extends Controller
 
 // //            $currentAmount = 0; // Initialize a variable for current increment
 //                 $currentAmount = match ($deg) {
-//                    1 => 400000,
-//                    2 => 450000,
-//                    3 => 500000,
-//                    4 => 600000,
-//                    5 => 650000,
-//                    6 => 700000,
-//                    default => 0,
+//                     1 => 400000,
+//                     2 => 450000,
+//                     3 => 500000,
+//                     4 => 600000,
+//                     5 => 650000,
+//                     6 => 700000,
+//                     default => 0,
 //                 };
 
 //                 $amount += $currentAmount;
@@ -340,7 +264,7 @@ class testController extends Controller
 
 //             }
 
-//             return response()->json(['message' => 'درصورت بروز مشکل با پشتیبانی تماس بگیرید'], 400);
+// return response()->json(['message' => 'درصورت بروز مشکل با پشتیبانی تماس بگیرید'], 400);
 
 //         }
 

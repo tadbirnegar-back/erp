@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Http\Traits;
 
 use Carbon\Carbon;
+use DB;
 use Illuminate\Support\Collection;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
@@ -63,6 +64,7 @@ trait EnactmentTrait
         }
 
         return $query->with(['status', 'meeting', 'reviewStatuses', 'title'])
+            ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
 
@@ -95,6 +97,7 @@ trait EnactmentTrait
         }
 
         return $query->with(['status', 'meeting', 'reviewStatuses', 'title'])
+            ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
 
@@ -132,6 +135,7 @@ trait EnactmentTrait
 
 
         return $query->with(['status', 'meeting', 'reviewStatuses', 'title'])
+            ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
 
@@ -160,17 +164,18 @@ trait EnactmentTrait
         if (is_array($data)) {
             $data = collect($data);
         }
+        $nextId = DB::table('enactments')->max('id') + 1;
 
-        $data = $data->map(function ($item) use ($meeting) {
+        $data = $data->map(function ($item) use ($meeting, &$nextId) {
 
             $meeting->load(['ounit.ancestors' => function ($query) {
-                $query->where('unitable_type', CityOfc::class);
+                $query->whereIn('unitable_type', [CityOfc::class, DistrictOfc::class]);
 
             }]);
             $jDate = Jalalian::fromCarbon(Carbon::now())->format('Y/m/d');
-            $autoSerial = rand(1, 99999) . '/' . rand(10000, 99999999) . '/' . $meeting->ounit?->ancestors[0]->id ?? rand(1, 99999) . '/' . $jDate;
+            $autoSerial = $nextId . '/' . $meeting->ounit?->ancestors[0]->unitable_id . '/' . $meeting->ounit?->ancestors[1]->unitable_id . '/' . $jDate;
 
-            return [
+            $result = [
                 'custom_title' => $item['customTitle'] ?? null,
                 'description' => $item['description'] ?? null,
 //                'rejection_reason' => $item['rejectionReason'] ?? null,
@@ -182,6 +187,9 @@ trait EnactmentTrait
 //                'rejection_file_id' => $item['rejectionFileID'] ?? null,
                 'create_date' => now(),
             ];
+            $nextId++;
+
+            return $result;
         });
 
         return $data;
@@ -241,7 +249,6 @@ trait EnactmentTrait
                 self::$bakhshdar => [
                     'MainEnactment',
                     'MembersBeforeReview',
-                    'AcceptDenyBtns',
                 ],
                 self::$karshenasOstandari => [
                     'MainEnactment',
@@ -469,13 +476,13 @@ trait EnactmentTrait
         $componentsToRender = collect([
             'MainEnactment' => ['reviewStatuses', 'latestMeeting', 'attachments', 'creator', 'title'],
             'MembersBeforeReview' => ['districtOfc'],
-            'AcceptDenyBtns' => ['relatedDates.ancestorsAndSelf' => function ($query) {
+            'AcceptDenyBtns' => ['relatedDates' => function ($query) {
                 $query
-                    ->where('unitable_type', DistrictOfc::class)
                     ->with(['meetings' => function ($query) {
                         $query->whereHas('meetingType', function ($query) {
                             $query->where('title', '=', 'جلسه هیئت تطبیق');
-                        })->where('meetings.meeting_date', '>', now())->where('meetings.isTemplate', false)->withCount('enactments');
+                        })->where('meetings.meeting_date', '>', now())->where('meetings.isTemplate', false)
+                            ->withCount('enactments');
 
                     }]);
 

@@ -117,5 +117,25 @@ class Person extends Model
             ->latest('create_date');
     }
 
+    public function recruitmentScripts()
+    {
+        return $this->hasManyDeep(
+            RecruitmentScript::class,
+            [WorkForce::class, Employee::class], // Intermediate models
+            [
+                'person_id',                // Foreign key on the WorkForce model
+                'id',         // Foreign key on the Employee model
+                'employee_id'               // Foreign key on the RecruitmentScript model
+            ],
+            [
+                'id',                       // Local key on the current model
+                'workforceable_id',                       // Local key on the WorkForce model
+                'id'                        // Local key on the Employee model
+            ]
+        )
+            ->where('workforceable_type', Employee::class)
+            ->latest('create_date');
+    }
+
 
 }

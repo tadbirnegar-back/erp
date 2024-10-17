@@ -122,9 +122,9 @@ class Meeting extends Model
         return $this->belongsTo(OrganizationUnit::class);
     }
 
-    public function enactments(): HasMany
+    public function enactments()
     {
-        return $this->hasMany(Enactment::class, 'meeting_id');
+        return $this->belongsToMany(Enactment::class, 'enactment_meeting', 'meeting_id', 'enactment_id');
     }
 
     public function meetingType(): BelongsTo

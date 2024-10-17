@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Auth;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -90,6 +91,29 @@ class RecruitmentScriptController extends Controller
         ] : null;
 
         return response()->json(['data' => $result, 'filter' => $filterData]);
+    }
+
+    public function recruitmentScriptShow(Request $request, $id)
+    {
+        $script = RecruitmentScript::with('employee.person',)->find($id);
+        if (is_null($script)) {
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
+        }
+        $user = Auth::user();
+        $requestedRoute = $request->route()->uri();
+        $requestedRoute = str_replace('api/v1', '', $requestedRoute);
+        $requestedRoute = str_replace('\\', '', $requestedRoute);
+
+        if ($user->hasPermissionForRoute($requestedRoute) || $script->employee->person->id == $user->person->id) {
+
+            $script->load('scriptType', 'hireType', 'position', 'level', 'scriptAgents', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files');
+        } else {
+            return response()->json(['message' => 'شما به این بخش دسترسی ندارید'], 403);
+        }
+
+
+        return response()->json(['script' => $script]);
+
     }
 
     public function pendingApprovingIndex()

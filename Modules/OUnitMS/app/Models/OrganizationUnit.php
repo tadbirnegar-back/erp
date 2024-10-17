@@ -22,12 +22,13 @@ use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentEagerLimitXLaravelAdjacencyList\Eloquent\HasEagerLimitAndRecursiveRelationships;
+use Staudenmeir\EloquentHasManyDeep\HasTableAlias;
 use Znck\Eloquent\Traits\BelongsToThrough;
 
 class OrganizationUnit extends Model
 {
     use HasFactory;
-    use HasEagerLimitAndRecursiveRelationships;
+    use HasEagerLimitAndRecursiveRelationships, HasTableAlias;
 
     /**
      * The attributes that are mass assignable.

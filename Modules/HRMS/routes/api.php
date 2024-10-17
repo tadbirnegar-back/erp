@@ -109,6 +109,8 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/hrm/prc/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'showScriptWithApproves'])->middleware(['auth:api']);
 
+    Route::post('/hrm/rc/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'recruitmentScriptShow'])->middleware(['auth:api']);
+
     Route::put('/hrm/rc/grant/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'approveScriptByUser'])->middleware(['auth:api']);
 
     Route::post('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'store']);

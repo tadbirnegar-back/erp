@@ -168,12 +168,34 @@ class Enactment extends Model
         return $this->belongsToThrough(OrganizationUnit::class, Meeting::class, foreignKeyLookup: [Meeting::class => 'meeting_id', OrganizationUnit::class => 'ounit_id']);
     }
 
+    public function ounitDistrictOfc()
+    {
+        return $this->hasOneDeep(OrganizationUnit::class,
+            [
+                Meeting::class,
+                OrganizationUnit::class . ' as village',
+                OrganizationUnit::class . ' as townOfc',
+
+            ], [
+                'id',
+                'id',
+                'id',
+                'id',
+
+            ], [
+                'meeting_id',
+                'ounit_id',
+                'parent_id',
+                'parent_id',
+            ]);
+    }
+
     use HasRelationships;
 
     public function relatedDates()
     {
 
-        return $this->ounit();
+        return $this->ounitDistrictOfc();
 //            ->with(['ancestorsAndSelf' => function ($query) {
 //            $query->where('unitable_type', DistrictOfc::class);
 //        }]);
@@ -224,7 +246,22 @@ class Enactment extends Model
 
     public function members()
     {
-        return $this->hasManyThrough(MeetingMember::class, Meeting::class, 'id', 'meeting_id', 'meeting_id', 'id')->with('mr');
+        return $this->hasManyDeep(MeetingMember::class, [
+            EnactmentMeeting::class,
+            Meeting::class,
+
+        ],
+            [
+                'enactment_id',
+                'id',
+                'meeting_id',
+            ],
+            [
+                'id',
+                'meeting_id',
+                'id',
+            ])->orderBy('enactment_meeting.create_date', 'desc')->with('mr');
+//        return $this->hasManyThrough(MeetingMember::class, Meeting::class, 'id', 'meeting_id', 'meeting_id', 'id')->with('mr');
     }
 
     public function consultingMembers()
@@ -232,6 +269,9 @@ class Enactment extends Model
         return $this->members()->whereHas('roles', function ($query) {
             $query->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
         })->with('person.avatar');
+//        return $this->members()->whereHas('roles', function ($query) {
+//            $query->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
+//        })->with('person.avatar');
     }
 
     public function boardMembers()
