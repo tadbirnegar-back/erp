@@ -35,6 +35,8 @@ use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
@@ -421,4 +423,103 @@ class EMSController extends Controller
     {
         return response()->json(MR::all());
     }
+
+    public function getHeyaatMembersByOunit(Request $request)
+    {
+        $validate = \Validator::make($request->all(), [
+            'ounitID' => 'required|exists:organization_units,id'
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['message' => $validate->errors()], 422);
+        }
+
+        $meeting = Meeting::where('isTemplate', true)
+            ->where('ounit_id', $request->ounitID)
+            ->with(['meetingMembers' => function ($q) {
+                $q->with(['roles', 'person.avatar', 'mr', 'user:id']);
+            }])
+            ->first();
+
+        $consultingMembers = collect();
+        $boardMembers = collect();
+
+        if ($meeting) {
+            $meeting->meetingMembers->each(function ($member) use (&$consultingMembers, &$boardMembers) {
+                $member->roles->each(function ($role) use ($member, &$consultingMembers, &$boardMembers) {
+                    if ($role->name === RolesEnum::KARSHENAS_MASHVARATI->value) {
+                        $consultingMembers->push($member);
+                    } elseif ($role->name === RolesEnum::OZV_HEYAAT->value) {
+                        $boardMembers->push($member);
+                    }
+                });
+            });
+        }
+
+        return response()->json([
+            'consultingMembers' => $consultingMembers,
+            'boardMembers' => $boardMembers
+        ]);
+    }
+
+    public function updateHeyaatMembersByOunit(Request $request)
+    {
+        $validate = \Validator::make($request->all(), [
+            'ounitID' => 'required|exists:organization_units,id',
+            'boardMembers' => 'required',
+            'consultingMembers' => 'required'
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['message' => $validate->errors()], 422);
+        }
+        $data = $request->all();
+        $user = Auth::user();
+
+        try {
+            DB::beginTransaction();
+            $meeting = Meeting::firstOrCreate(
+                ['isTemplate' => true, 'ounit_id' => $request->ounitID],
+                [
+                    'creatorID' => $user->id,
+                    'meetingTypeID' => MeetingType::where('title', 'الگو')->first()->id,
+                    'isTemplate' => true,
+                    'ounitID' => $request->ounitID
+                ]
+            );
+
+            $decode1 = json_decode($data['boardMembers'], true);
+            $decode2 = json_decode($data['consultingMembers'], true);
+
+            $ozvHeyaatRole = Role::where('name', RolesEnum::OZV_HEYAAT->value)->first();
+            $karshenasMashvaratiRole = Role::where('name', RolesEnum::KARSHENAS_MASHVARATI->value)->first();
+
+            $users1 = User::find(array_column($decode1, 'userID'));
+            $users2 = User::find(array_column($decode2, 'userID'));
+
+            $users1->each(fn(User $user) => $user->roles()->syncWithoutDetaching([$ozvHeyaatRole->id]));
+            $users2->each(fn(User $user) => $user->roles()->syncWithoutDetaching([$karshenasMashvaratiRole->id]));
+
+            $mergedData = array_merge($decode1, $decode2);
+
+            $result = $this->bulkUpdateMeetingMembers($mergedData, $meeting);
+            DB::commit();
+            return response()->json(['message' => 'باموفقیت بروزرسانی شد']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => $e->getMessage(),
+                'file' => $e->getFile(),     // Get the file where the error occurred
+                'line' => $e->getLine(),
+                'trace' => $e->getTrace()   // Get the line number where the error occurred
+            ], 500);
+        }
+    }
+
+    public function getDistrictOfcsWithMembersCount()
+    {
+        $districtOfcs = OrganizationUnit::where('unitable_type', DistrictOfc::class)->withCount('meetingMembers')->get();
+
+        return response()->json($districtOfcs);
+    }
+
+
 }
