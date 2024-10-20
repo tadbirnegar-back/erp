@@ -522,4 +522,43 @@ class EMSController extends Controller
     }
 
 
+    public function getAutoNoMoghayeratSettings()
+    {
+        $consultingAutoMoghayerat = $this->getConsultingAutoMoghayerat();
+        $boardAutoMoghayerat = $this->getBoardAutoMoghayerat();
+
+        return response()->json([
+            'consultingAutoMoghayerat' => $consultingAutoMoghayerat,
+            'boardAutoMoghayerat' => $boardAutoMoghayerat
+        ]);
+    }
+
+    public function updateAutoMoghayeratSettings(Request $request)
+    {
+        $validate = \Validator::make($request->all(), [
+            'consultingAutoMoghayerat' => 'required',
+            'boardAutoMoghayerat' => 'required'
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['message' => $validate->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $this->updateConsultingAutoMoghayerat($request->consultingAutoMoghayerat);
+            $this->updateBoardAutoMoghayerat($request->boardAutoMoghayerat);
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت بروزرسانی شد']);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => $e->getMessage(),
+                'file' => $e->getFile(),     // Get the file where the error occurred
+                'line' => $e->getLine(),
+                'trace' => $e->getTrace()   // Get the line number where the error occurred
+            ], 500);
+        }
+    }
+
 }
