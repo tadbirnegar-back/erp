@@ -1,0 +1,38 @@
+<?php
+
+namespace Modules\EMS\app\Http\Traits;
+
+use Modules\EMS\app\Http\Enums\SettingsEnum;
+use Modules\SettingsMS\app\Models\Setting;
+
+trait EMSSettingTrait
+{
+
+    public function updateConsultingAutoMoghayerat($value)
+    {
+        $setting = Setting::updateOrCreate(
+            ['key' => SettingsEnum::CONSULTING_AUTO_MOGHAYERAT->value],
+            ['value' => $value]
+        );
+        return $setting;
+    }
+
+    public function getConsultingAutoMoghayerat()
+    {
+        return Setting::where('key', SettingsEnum::CONSULTING_AUTO_MOGHAYERAT->value)->first();
+    }
+
+    public function updateBoardAutoMoghayerat($value)
+    {
+        $setting = Setting::updateOrCreate(
+            ['key' => SettingsEnum::BOARD_AUTO_MOGHAYERAT->value],
+            ['value' => $value]
+        );
+        return $setting;
+    }
+
+    public function getBoardAutoMoghayerat()
+    {
+        return Setting::where('key', SettingsEnum::BOARD_AUTO_MOGHAYERAT->value)->first();
+    }
+}
