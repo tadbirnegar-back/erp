@@ -41,6 +41,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::put('mes/setting/secretary', [EMSController::class, 'updateHeyaatMembers']);
 
+
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -49,6 +50,23 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::post('mes/ounit-villages/search', [EnactmentController::class, 'getMyVillagesToAddEnactment']);
 
+    Route::post('mes/settings/district-members/list', [EMSController::class, 'getDistrictOfcsWithMembersCount']);
+
+    Route::post('mes/settings/district-members', [EMSController::class, 'getHeyaatMembersByOunit']);
+
+    Route::put('mes/settings/district-members', [EMSController::class, 'updateHeyaatMembersByOunit']);
+
+    Route::post('mes/settings/auto-moghayerat', [EMSController::class, 'getAutoNoMoghayeratSettings']);
+
+    Route::put('mes/settings/auto-moghayerat', [EMSController::class, 'updateAutoMoghayeratSettings']);
+
+    Route::post('mes/settings/enactment-titles/list', [EMSController::class, 'getEnactmentTitlesIndex']);
+
+    Route::put('mes/settings/enactment-titles/{id}', [EMSController::class, 'updateEnactmentTitle']);
+
+    Route::post('mes/settings/enactment-titles/add', [EMSController::class, 'storeEnactmentTitle']);
+
+    Route::delete('mes/settings/enactment-titles/{id}', [EMSController::class, 'destroyEnactmentTitle']);
 
 });
 

@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\EMS\app\Http\Traits\EnactmentTitleTrait;
 use Modules\EMS\app\Scopes\ActiveStatusScope;
 use Modules\EMS\Database\factories\EnactmentTitleFactory;
@@ -34,5 +35,10 @@ class EnactmentTitle extends Model
     {
         $this->status_id = $this->enactmentTitleDeleteStatus()->id;
         $this->save();
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
     }
 }

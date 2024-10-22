@@ -13,6 +13,8 @@ use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\EMS\app\Http\Enums\RolesEnum;
+use Modules\EMS\app\Http\Traits\EMSSettingTrait;
+use Modules\EMS\app\Http\Traits\EnactmentTitleTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\EnactmentTitle;
@@ -43,7 +45,7 @@ use Modules\PersonMS\app\Models\Person;
 
 class EMSController extends Controller
 {
-    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait, JobTrait, ApprovingListTrait, UserTrait, ScriptTypeTrait;
+    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait, JobTrait, ApprovingListTrait, UserTrait, ScriptTypeTrait, EMSSettingTrait, EnactmentTitleTrait;
 
     use MeetingTrait, MeetingMemberTrait;
 
@@ -434,18 +436,19 @@ class EMSController extends Controller
             return response()->json(['message' => $validate->errors()], 422);
         }
 
-        $meeting = Meeting::where('isTemplate', true)
-            ->where('ounit_id', $request->ounitID)
-            ->with(['meetingMembers' => function ($q) {
-                $q->with(['roles', 'person.avatar', 'mr', 'user:id']);
-            }])
-            ->first();
+//        $meeting = Meeting::where('isTemplate', true)
+//            ->where('ounit_id', $request->ounitID)
+//            ->with(['meetingMembers' => function ($q) {
+//                $q->with(['roles', 'person.avatar', 'mr', 'user:id']);
+//            }])
+//            ->first();
+        $ounit = OrganizationUnit::with('meetingMembers.roles', 'meetingMembers.user')->find($request->ounitID);
 
         $consultingMembers = collect();
         $boardMembers = collect();
 
-        if ($meeting) {
-            $meeting->meetingMembers->each(function ($member) use (&$consultingMembers, &$boardMembers) {
+        if ($ounit->meetingMembers->isNotEmpty()) {
+            $ounit->meetingMembers->each(function ($member) use (&$consultingMembers, &$boardMembers) {
                 $member->roles->each(function ($role) use ($member, &$consultingMembers, &$boardMembers) {
                     if ($role->name === RolesEnum::KARSHENAS_MASHVARATI->value) {
                         $consultingMembers->push($member);
@@ -454,11 +457,20 @@ class EMSController extends Controller
                     }
                 });
             });
+
+            $consultingMembers = $consultingMembers->unique('id')->values();
+            $boardMembers = $boardMembers->unique('id')->values();
         }
+
+        $users = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+            $q->where('organization_unit_id', $ounit->id);
+        })->with('person.avatar')
+            ->get(['id', 'person_id']);
 
         return response()->json([
             'consultingMembers' => $consultingMembers,
-            'boardMembers' => $boardMembers
+            'boardMembers' => $boardMembers,
+            'candidates' => $users
         ]);
     }
 
@@ -481,10 +493,11 @@ class EMSController extends Controller
             $meeting = Meeting::firstOrCreate(
                 ['isTemplate' => true, 'ounit_id' => $request->ounitID],
                 [
-                    'creatorID' => $user->id,
-                    'meetingTypeID' => MeetingType::where('title', 'الگو')->first()->id,
+                    'creator_id' => $user->id,
+                    'meeting_type_id' => MeetingType::where('title', 'الگو')->first()->id,
                     'isTemplate' => true,
-                    'ounitID' => $request->ounitID
+                    'ounit_id' => $request->ounitID,
+                    'create_date' => now(),
                 ]
             );
 
@@ -509,14 +522,14 @@ class EMSController extends Controller
             return response()->json(['message' => 'خطا در بروزرسانی', 'error' => $e->getMessage(),
                 'file' => $e->getFile(),     // Get the file where the error occurred
                 'line' => $e->getLine(),
-                'trace' => $e->getTrace()   // Get the line number where the error occurred
+                'trace' => $e->getTrace(),   // Get the line number where the error occurred
             ], 500);
         }
     }
 
     public function getDistrictOfcsWithMembersCount()
     {
-        $districtOfcs = OrganizationUnit::where('unitable_type', DistrictOfc::class)->withCount('meetingMembers')->get();
+        $districtOfcs = OrganizationUnit::where('unitable_type', DistrictOfc::class)->withCount('meetingMembers')->with('ancestors')->get();
 
         return response()->json($districtOfcs);
     }
@@ -547,16 +560,84 @@ class EMSController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->updateConsultingAutoMoghayerat($request->consultingAutoMoghayerat);
-            $this->updateBoardAutoMoghayerat($request->boardAutoMoghayerat);
+            $a = $this->updateConsultingAutoMoghayerat($request->consultingAutoMoghayerat);
+            $b = $this->updateBoardAutoMoghayerat($request->boardAutoMoghayerat);
             DB::commit();
-            return response()->json(['message' => 'با موفقیت بروزرسانی شد']);
+            return response()->json(['message' => 'با موفقیت بروزرسانی شد', 'data' => [
+                'consultingAutoMoghayerat' => $a,
+                'boardAutoMoghayerat' => $b
+            ]]);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در بروزرسانی', 'error' => $e->getMessage(),
                 'file' => $e->getFile(),     // Get the file where the error occurred
                 'line' => $e->getLine(),
                 'trace' => $e->getTrace()   // Get the line number where the error occurred
+            ], 500);
+        }
+    }
+
+    public function getEnactmentTitlesIndex()
+    {
+        return response()->json($this->enactmentTitleIndex());
+    }
+
+    public function updateEnactmentTitle(Request $request, $id)
+    {
+        $enactmentTitle = EnactmentTitle::find($id);
+
+        if (is_null($enactmentTitle)) {
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+            $this->enactmentTitleUpdate($request->all(), $enactmentTitle);
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت ویرایش شد',
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش مصوبه',
+            ], 500);
+        }
+    }
+
+    public function storeEnactmentTitle(Request $request)
+    {
+
+
+        try {
+            DB::beginTransaction();
+            $enactmentTitle = $this->enactmentTitleStore($request->all());
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت اضافه شد',
+                'data' => $enactmentTitle
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش مصوبه',
+            ], 500);
+        }
+    }
+
+    public function destroyEnactmentTitle($id)
+    {
+        $enactmentTitle = EnactmentTitle::find($id);
+
+        if (is_null($enactmentTitle)) {
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+            $this->enactmentTitleDestroy($enactmentTitle);
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت حذف شد',
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف عنوان مصوبه',
             ], 500);
         }
     }

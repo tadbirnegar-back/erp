@@ -14,7 +14,9 @@ class EMSDatabaseSeeder extends Seeder
         $this->call([
 //            EnactmentStatusSeeder::class,
 //            MeetingStatusSeeder::class,
-            EnactmentReviewStatusSeeder::class,
+//            EnactmentReviewStatusSeeder::class,
+            EnactmentTitleStatusSeeder::class,
+
         ]);
     }
 }

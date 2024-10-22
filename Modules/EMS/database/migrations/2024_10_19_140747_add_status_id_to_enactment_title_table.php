@@ -10,8 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('enactment_title', function (Blueprint $table) {
+        Schema::disableForeignKeyConstraints();
+        Schema::table('enactment_titles', function (Blueprint $table) {
+            $table->unsignedBigInteger('status_id')->nullable();
 
+            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 
@@ -20,10 +23,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('enactment_title', function (Blueprint $table) {
-            $table->unsignedBigInteger('status_id');
+        Schema::table('enactment_titles', function (Blueprint $table) {
 
-            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 };
