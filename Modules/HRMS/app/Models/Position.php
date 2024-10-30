@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Modules\AAA\app\Models\Role;
 use Modules\BranchMS\app\Models\Section;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\Database\factories\PositionFactory;
@@ -51,6 +52,11 @@ class Position extends Model
     public function organizationUnits(): BelongsToMany
     {
         return $this->belongsToMany(OrganizationUnit::class, 'ounit_position', 'position_id', 'ounit_id');
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'position_role');
     }
 
     public function getOunitCatAttribute($value)

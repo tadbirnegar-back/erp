@@ -4,11 +4,9 @@ namespace Modules\HRMS\app\Http\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\ConfirmationType;
 use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptApprovingList;
 
@@ -42,7 +40,6 @@ trait ApprovingListTrait
     {
         $conformationTypes = $rs->scriptType?->confirmationTypes;
         $approves = [];
-
         if (!is_null($conformationTypes) && $conformationTypes->isNotEmpty()) {
 
             $conformationTypes->each(function (ConfirmationType $confirmationType) use (&$approves, $rs) {
@@ -51,7 +48,6 @@ trait ApprovingListTrait
                 $approveList = $optionType::generateApprovers($optionID, $rs);
                 $approves[] = $approveList;
             });
-
             $preparedData = $this->prepareApprovingData($approves, $rs);
             $result = ScriptApprovingList::insert($preparedData->toArray());
             return $result;
@@ -64,9 +60,7 @@ trait ApprovingListTrait
         if (is_array($data)) {
             $data = collect($data);
         }
-
         $data = $data->flatten(1);
-
         $currentUserPendingStatus = self::pendingForCurrentUserStatus();
         $pendingStatus = self::pendingStatus();
 
@@ -124,6 +118,7 @@ trait ApprovingListTrait
                 'organizationUnit',
                 'scriptType.confirmationTypes',
                 'employee.workForce',
+                'position.roles',
             ]);
             if ($script->scriptType->isHeadable) {
                 $user = $script->employee->person->user;
@@ -138,16 +133,16 @@ trait ApprovingListTrait
 
             $script->employee->workForce->statuses()->attach($status->id);
 
-            $position = Position::find($script->position_id);
-            $role = Role::where('name', $position->name)->first() ?? Role::where('name', 'کاربر')->first();
+            $position = $script->position;
+            $roles = $position->roles;
             $scriptUser = $script->employee->person->user;
             $userActiveStatus = User::GetAllStatuses()->firstWhere('name', 'فعال');
-            $hasRole = $scriptUser->roles()->where('role_id', $role->id)->exists();
+//            $hasRole = $scriptUser->roles()->where('role_id', $role->id)->exists();
 
             // Attach the role to the user if they do not have it
-            if (!$hasRole) {
-                $scriptUser->roles()->attach($role->id);
-            }
+//            if (!$hasRole) {
+            $scriptUser->roles()->sync($roles->pluck('id')->toArray());
+//            }
 
             $scriptUser->statuses()->attach($userActiveStatus->id);
 

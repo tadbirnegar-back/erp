@@ -117,9 +117,9 @@ class Enactment extends Model
 
     public function getUpshotAttribute()
     {
-        if (!$this->relationLoaded('reviewStatuses')) {
-            return null;
-        }
+//        if (!$this->relationLoaded('reviewStatuses')) {
+//            return null;
+//        }
 
         $reviewStatuses = $this->enactmentReviews()
             ->whereHas('user.roles', function ($query) {

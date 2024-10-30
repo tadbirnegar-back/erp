@@ -42,3 +42,13 @@ function convertToDbFriendly($string)
 
     return str_replace(array_keys($combinedReplacements), array_values($combinedReplacements), $string);
 }
+
+function convertJalaliPersianCharactersToGregorian(string $perisanCharDate)
+{
+    $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($perisanCharDate, true);
+
+    $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString)
+        ->toDateTimeString();
+
+    return $dateTimeString;
+}

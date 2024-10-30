@@ -13,6 +13,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Modules\AddressMS\app\Models\Address;
+use Modules\EMS\app\Models\MeetingMember;
+use Modules\EMS\app\Models\MR;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
@@ -254,5 +256,10 @@ class User extends Authenticatable
     public function latestRecruitmentScript()
     {
         return $this->recruitmentScripts()->latest('create_date')->take(1);
+    }
+
+    public function mr()
+    {
+        return $this->hasOneThrough(MR::class, MeetingMember::class, 'employee_id', 'id', 'id', 'mr_id')->orderBy('meeting_members.id', 'desc');
     }
 }

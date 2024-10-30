@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\AAA\app\Http\Traits\UserTrait;
-use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\FileMS\app\Models\File;
@@ -189,8 +188,7 @@ class EmployeeController extends Controller
             $user = $this->isPersonUserCheck($personResult->person);
             $user = $user ? $this->updateUser($data, $user) : $this->storeUser($data);
 
-            $roles = Role::where('name', 'کاربر')->first();
-            $user->roles()->sync($roles->id);
+//
             $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
             $user->statuses()->attach($disabledStatusForUser->id);
 

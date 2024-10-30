@@ -38,6 +38,11 @@ trait PositionTrait
 
         $position->organizationUnits()->attach($ounitIDs->pluck('id')->toArray());
 
+        if (isset($data['roleIDs'])) {
+            $roleIDs = json_decode($data['roleIDs'], true);
+            $position->roles()->sync($roleIDs);
+        }
+
         // Attach levels
         if (isset($data['levelIDs'])) {
             $levelIDs = json_decode($data['levelIDs'], true);
@@ -72,6 +77,10 @@ trait PositionTrait
 
         $position->organizationUnits()->attach($ounitIDs->pluck('id')->toArray());
 
+        if (isset($data['roleIDs'])) {
+            $roleIDs = json_decode($data['roleIDs'], true);
+            $position->roles()->sync($roleIDs);
+        }
 
         if (isset($data['levelIDs'])) {
             $levelIDs = json_decode($data['levelIDs'], true);

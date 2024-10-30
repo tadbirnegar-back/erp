@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Mockery\Exception;
 use Modules\AAA\app\Http\Traits\UserTrait;
-use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -181,10 +180,10 @@ class EMSController extends Controller
             $mr = MR::find($data['mrID']);
 
             $mrInfo = $mrs[$mr->title];
-            $roleNames = array_column($mrInfo, 'position');
-            $roles = Role::whereIn('name', $roleNames)->get();
-
-            $user->roles()->sync($roles->pluck('id')->toArray());
+//            $roleNames = array_column($mrInfo, 'position');
+//            $roles = Role::whereIn('name', $roleNames)->get();
+//
+//            $user->roles()->sync($roles->pluck('id')->toArray());
 
             $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
             $user->statuses()->attach($disabledStatusForUser->id);
@@ -378,30 +377,39 @@ class EMSController extends Controller
             $decode1 = json_decode($data['boardMembers'], true);
             $decode2 = json_decode($data['consultingMembers'], true);
 
-            $ozvHeyaatRole = Role::where('name', RolesEnum::OZV_HEYAAT->value)->first();
-            $karshenasMashvaratiRole = Role::where('name', RolesEnum::KARSHENAS_MASHVARATI->value)->first();
+//            $ozvHeyaatRole = Role::where('name', RolesEnum::OZV_HEYAAT->value)->first();
+//            $karshenasMashvaratiRole = Role::where('name', RolesEnum::KARSHENAS_MASHVARATI->value)->first();
 
 
-            $users1 = User::find(array_column($decode1, 'userID'));
+//            $users1 = User::find(array_column($decode1, 'userID'));
+//
+//            $users1->each(function (User $user) use ($ozvHeyaatRole) {
+//                $hasRole = $user->roles()->where('role_id', $ozvHeyaatRole->id)->exists();
+//
+//                // Attach the role to the user if they do not have it
+////                if (!$hasRole) {
+//                $user->roles()->sync($ozvHeyaatRole->id);
+////                }
+//            });
 
-            $users1->each(function (User $user) use ($ozvHeyaatRole) {
-                $hasRole = $user->roles()->where('role_id', $ozvHeyaatRole->id)->exists();
 
-                // Attach the role to the user if they do not have it
-                if (!$hasRole) {
-                    $user->roles()->attach($ozvHeyaatRole->id);
-                }
-            });
-
-            $users2 = User::find(array_column($decode2, 'userID'));
-            $users2->each(function (User $user) use ($karshenasMashvaratiRole) {
-                $hasRole = $user->roles()->where('role_id', $karshenasMashvaratiRole->id)->exists();
-
-                // Attach the role to the user if they do not have it
-                if (!$hasRole) {
-                    $user->roles()->attach($karshenasMashvaratiRole->id);
-                }
-            });
+//            $userToAttachDabirRole = collect($decode2)->first(function ($item) {
+//                return $item['mrName'] == 'مسئول دبیرخانه و دبیر تطبیق (کارشناس هیات تطبیق)';
+//            });
+//
+//            $users2 = User::find(array_column($decode2, 'userID'));
+//            $users2->each(function (User $user) use ($karshenasMashvaratiRole, $userToAttachDabirRole) {
+//                $hasRole = $user->roles()->where('role_id', $karshenasMashvaratiRole->id)->exists();
+//
+//                // Attach the role to the user if they do not have it
+////                if (!$hasRole) {
+//                $user->roles()->sync($karshenasMashvaratiRole->id);
+//                if ($user->id == $userToAttachDabirRole['userID']) {
+//                    $dabirRole = Role::where('name', RolesEnum::DABIR_HEYAAT->value)->first();
+//                    $user->roles()->attach($dabirRole->id);
+//                }
+////                }
+//            });
 
             $mergedData = array_merge($decode1, $decode2);
 
@@ -504,14 +512,14 @@ class EMSController extends Controller
             $decode1 = json_decode($data['boardMembers'], true);
             $decode2 = json_decode($data['consultingMembers'], true);
 
-            $ozvHeyaatRole = Role::where('name', RolesEnum::OZV_HEYAAT->value)->first();
-            $karshenasMashvaratiRole = Role::where('name', RolesEnum::KARSHENAS_MASHVARATI->value)->first();
-
-            $users1 = User::find(array_column($decode1, 'userID'));
-            $users2 = User::find(array_column($decode2, 'userID'));
-
-            $users1->each(fn(User $user) => $user->roles()->syncWithoutDetaching([$ozvHeyaatRole->id]));
-            $users2->each(fn(User $user) => $user->roles()->syncWithoutDetaching([$karshenasMashvaratiRole->id]));
+//            $ozvHeyaatRole = Role::where('name', RolesEnum::OZV_HEYAAT->value)->first();
+//            $karshenasMashvaratiRole = Role::where('name', RolesEnum::KARSHENAS_MASHVARATI->value)->first();
+//
+//            $users1 = User::find(array_column($decode1, 'userID'));
+//            $users2 = User::find(array_column($decode2, 'userID'));
+//
+//            $users1->each(fn(User $user) => $user->roles()->sync([$ozvHeyaatRole->id]));
+//            $users2->each(fn(User $user) => $user->roles()->sync([$karshenasMashvaratiRole->id]));
 
             $mergedData = array_merge($decode1, $decode2);
 
