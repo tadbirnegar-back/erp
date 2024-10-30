@@ -97,9 +97,8 @@ class EnactmentController extends Controller
             }]);
 
             $meetingTemplate = $meeting->ounit?->ancestors[0]?->meetingTemplate ?? null;
-
             if (is_null($meetingTemplate)) {
-                return response()->json(['message' => 'اعضا هیئت جلسه برای این روستا تعریف نشده است'], 400);
+                return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 //
 //            if (!is_null($meetingTemplate)) {
