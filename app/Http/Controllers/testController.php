@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Support\Facades\Auth;
+use Modules\EMS\app\Models\Enactment;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -14,8 +16,13 @@ class testController extends Controller
 
     public function run()
     {
-        $rs = RecruitmentScript::find(2695);
-        $this->approvingStore($rs);
+        $enactment = Enactment::with('status')->find(41);
+        $user = Auth::user();
+        if (is_null($enactment)) {
+            return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
+        }
+
+        $componentsToRenderWithData = $this->enactmentShow($enactment, $user);
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);

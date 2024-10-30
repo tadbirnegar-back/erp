@@ -14,6 +14,8 @@ use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\TownOfc;
 use Morilog\Jalali\Jalalian;
 
 trait EnactmentTrait
@@ -473,7 +475,10 @@ trait EnactmentTrait
         $myPermissions = $this->getComponentsToRender($userRoles, $enactment->status->name);
 
         $componentsToRender = collect([
-            'MainEnactment' => ['reviewStatuses', 'latestMeeting', 'attachments', 'creator', 'title'],
+            'MainEnactment' => ['reviewStatuses', 'latestMeeting', 'attachments', 'creator', 'title', 'meeting.ounit.unitable', 'meeting.ounit.ancestors' => function ($q) {
+                $q->where('unitable_type', '!=', TownOfc::class)
+                    ->where('unitable_type', '!=', StateOfc::class);
+            }],
             'MembersBeforeReview' => ['districtOfc'],
             'AcceptDenyBtns' => ['relatedDates' => function ($query) {
                 $query
