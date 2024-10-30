@@ -108,9 +108,9 @@ class OrganizationUnit extends Model
         return $this->hasMany(Meeting::class, 'ounit_id');
     }
 
-    public function meetingTemplate(): HasMany
+    public function meetingTemplate(): HasOne
     {
-        return $this->hasMany(Meeting::class, 'ounit_id')
+        return $this->hasOne(Meeting::class, 'ounit_id')
             ->where('isTemplate', '=', true);
     }
 
