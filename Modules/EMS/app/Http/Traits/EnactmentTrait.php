@@ -64,7 +64,7 @@ trait EnactmentTrait
             });
         }
 
-        return $query->with(['status', 'meeting', 'reviewStatuses', 'title'])
+        return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
@@ -97,7 +97,7 @@ trait EnactmentTrait
             });
         }
 
-        return $query->with(['status', 'meeting', 'reviewStatuses', 'title'])
+        return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
@@ -135,7 +135,7 @@ trait EnactmentTrait
         });
 
 
-        return $query->with(['status', 'meeting', 'reviewStatuses', 'title'])
+        return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }

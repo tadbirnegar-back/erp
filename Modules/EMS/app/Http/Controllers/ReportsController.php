@@ -47,7 +47,7 @@ class ReportsController extends Controller
                 $q->with(['enactmentReviews' => function ($qq) use ($employeeId) {
                     $qq->where('user_id', $employeeId)
                         ->with(['status']);
-                }, 'title', 'meeting', 'status']);
+                }, 'title', 'latestMeeting', 'status']);
             }])
             ->with(['meetingMembers' => function ($query) use ($employeeId) {
                 $query->where('employee_id', $employeeId)->with('mr');
