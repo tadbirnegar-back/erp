@@ -180,7 +180,7 @@ class EnactmentController extends Controller
                     $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
                         ->orWhere('name', 'like', '%' . $searchTerm . '%');
                 }
-            )->with('ancestors')->get();
+            )->with('ancestors', 'unitable')->get();
 
         return response()->json($villages);
     }
