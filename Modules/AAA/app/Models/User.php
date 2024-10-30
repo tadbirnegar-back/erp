@@ -18,10 +18,10 @@ use Modules\EMS\app\Models\MR;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
-use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -228,9 +228,16 @@ class User extends Authenticatable
 
     public function activeDistrictRecruitmentScript()
     {
-        return $this->activeRecruitmentScripts()->whereHas('position', function ($query) {
-            $query->where('positions.ounit_cat', OunitCategoryEnum::DistrictOfc->value);
-        });
+        return $this->activeRecruitmentScripts()
+            ->join('organization_units', 'recruitment_scripts.organization_unit_id', '=', 'organization_units.id')
+            ->where('organization_units.unitable_type', DistrictOfc::class)
+            ->orderBy('recruitment_scripts.start_date', 'desc')//            ->select('recruitment_scripts.*')
+            ; // Add the necessary columns here
+
+//        return $this->activeRecruitmentScripts()->whereHas('ounit', function ($query) {
+//            $query->where('organization_units.unitable_type', DistrictOfc::class);
+//        })
+//            ->orderBy('recruitment_scripts.start_date', 'desc');
     }
 
     public function recruitmentScripts()
