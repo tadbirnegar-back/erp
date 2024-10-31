@@ -97,8 +97,10 @@ class ReportsController extends Controller
         $startDate = convertJalaliPersianCharactersToGregorian($req->input('startDate'));
         $endDate = convertJalaliPersianCharactersToGregorian($req->input('endDate'));
 
+        $user = Auth::user();
+        $employeeId = $user->id;
         // Retrieve user's position and recruitment scripts
-        $rcs = User::with('activeDistrictRecruitmentScript')->find(2060);
+        $rcs = User::with('activeDistrictRecruitmentScript')->find($employeeId);
 
         // Check if active_district_recruitment_script is not null
         if (!$rcs || !$rcs->activeDistrictRecruitmentScript) {
