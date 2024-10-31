@@ -70,7 +70,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::post('mes/reports/my-reports', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'myEnactmentsReport']);
 
+
 });
+Route::post('mes/reports/bakhshdarReports', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'bakhshdarEnactmentsReport']);
 
 Route::middleware([])->prefix('v1')->group(function () {
 

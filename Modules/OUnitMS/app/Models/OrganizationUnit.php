@@ -30,6 +30,7 @@ class OrganizationUnit extends Model
     use HasFactory;
     use HasEagerLimitAndRecursiveRelationships, HasTableAlias;
 
+
     /**
      * The attributes that are mass assignable.
      */
@@ -103,10 +104,6 @@ class OrganizationUnit extends Model
         });
     }
 
-    public function meetings(): HasMany
-    {
-        return $this->hasMany(Meeting::class, 'ounit_id');
-    }
 
     public function meetingTemplate(): HasOne
     {

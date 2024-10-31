@@ -13,15 +13,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Modules\AddressMS\app\Models\Address;
-use Modules\EMS\app\Models\MeetingMember;
-use Modules\EMS\app\Models\MR;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
-use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -105,12 +103,6 @@ class User extends Authenticatable
     public function status()
     {
         return $this->belongsToMany(Status::class, 'user_status')->latest('create_date')->take(1);
-    }
-
-    public function latestStatus()
-    {
-        return $this->hasOneThrough(Status::class, UserStatus::class, 'user_id', 'id', 'id', 'status_id')
-            ->orderBy('user_status.id', 'desc');
     }
 
 
@@ -228,10 +220,13 @@ class User extends Authenticatable
 
     public function activeDistrictRecruitmentScript()
     {
-        return $this->activeRecruitmentScripts()->whereHas('position', function ($query) {
-            $query->where('positions.ounit_cat', OunitCategoryEnum::DistrictOfc->value);
-        });
+        return $this->activeRecruitmentScripts()
+            ->whereHas('ounit', function ($query) {
+                $query->where('unitable_type', DistrictOfc::class);
+            })
+            ->select('employee_id', 'organization_unit_id', 'position_id', 'script_type_id');
     }
+
 
     public function recruitmentScripts()
     {
@@ -256,10 +251,5 @@ class User extends Authenticatable
     public function latestRecruitmentScript()
     {
         return $this->recruitmentScripts()->latest('create_date')->take(1);
-    }
-
-    public function mr()
-    {
-        return $this->hasOneThrough(MR::class, MeetingMember::class, 'employee_id', 'id', 'id', 'mr_id')->orderBy('meeting_members.id', 'desc');
     }
 }
