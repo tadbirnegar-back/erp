@@ -3,8 +3,7 @@
 namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Modules\AAA\app\Models\Role;
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Enums\ProceduresEnum;
@@ -55,6 +54,7 @@ class HRMConfigController extends Controller
         $config['levels'] = $this->levelIndex();
         $config['jobs'] = $this->getListOfJobs();
         $config['positions'] = $this->positionIndex();
+        $config['rolesList'] = Role::all();
 
         return response()->json($config);
 

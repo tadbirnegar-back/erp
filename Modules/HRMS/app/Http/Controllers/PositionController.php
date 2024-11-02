@@ -5,7 +5,6 @@ namespace Modules\HRMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\HRMS\app\Http\Services\PositionService;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Models\Position;
 use Modules\OUnitMS\app\Models\OrganizationUnit;

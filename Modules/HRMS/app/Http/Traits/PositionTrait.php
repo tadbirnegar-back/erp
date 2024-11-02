@@ -15,7 +15,7 @@ trait PositionTrait
     {
         $result = Position::whereHas('status', function ($query) {
             $query->where('name', '=', $this->activePositionStatus);
-        })->with('levels')->get();
+        })->with('levels', 'roles')->get();
 
         return $result;
     }
@@ -48,7 +48,7 @@ trait PositionTrait
             $levelIDs = json_decode($data['levelIDs'], true);
             $position->levels()->sync($levelIDs);
         }
-        $position->load('levels');
+        $position->load('levels', 'roles');
         return $position;
 
 
@@ -86,7 +86,7 @@ trait PositionTrait
             $levelIDs = json_decode($data['levelIDs'], true);
             $position->levels()->sync($levelIDs);
         }
-        $position->load('levels');
+        $position->load('levels', 'roles');
         return $position;
 
     }
