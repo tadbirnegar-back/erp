@@ -59,7 +59,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::delete('mes/settings/enactment-titles/{id}', [EMSController::class, 'destroyEnactmentTitle']);
 
-    Route::post('mes/reports/my-reports', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'myEnactmentsReport']);
+    Route::post('mes/reports/my-report', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'myEnactmentsReport']);
 
 
 });

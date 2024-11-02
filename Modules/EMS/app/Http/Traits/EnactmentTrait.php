@@ -298,8 +298,8 @@ trait EnactmentTrait
                 ],
                 self::$karshenasOstandari => [
                     'MainEnactment',
+                    'BoardReviewCards',
                     'ConsultingReviewCards',
-
                 ],
                 self::$bakhshdar => [
                     'MainEnactment',
