@@ -207,22 +207,4 @@ trait RecruitmentScriptTrait
     {
         $script->load(['position', 'level', 'job', 'scriptAgents', 'approvers.status', 'approvers.assignedTo']);
     }
-
-
-    public function declineRs(RecruitmentScript $rs)
-    {
-        try {
-            $deleteStatus = $this->inActiveRsStatus();
-            $rs->status()->attach($deleteStatus->id);
-
-
-            return true;
-        } catch (\Exception $e) {
-            // Log the exception for debugging
-            \Log::error($e->getMessage());
-            return false;
-        }
-    }
-
-
 }

@@ -3,6 +3,7 @@
 namespace Modules\HRMS\database\seeders;
 
 use Illuminate\Database\Seeder;
+use Modules\HRMS\app\Models\ScriptType;
 
 class HRMSDatabaseSeeder extends Seeder
 {
@@ -28,8 +29,7 @@ class HRMSDatabaseSeeder extends Seeder
 //JobStatusSeeder::class,
 //            HireTypeStatusSeeder::class,
 //ScriptTypeStatusSeeder::class,
-//ScriptAgentStatusSeeder::class,
-            PermissionSeeder::class
+ScriptAgentStatusSeeder::class,
         ]);
         // $this->call([]);
     }

@@ -17,8 +17,6 @@ trait ApprovingListTrait
     private static string $currentUserPendingStatus = 'درانتظار تایید من';
     private static string $pendingStatus = 'درانتظار تایید';
     private static string $approvedStatus = 'تایید شده';
-    private static string $notApprovedStatus = 'لغو شده';
-
 
     public function approvingListPendingIndex(User $user)
     {
@@ -65,7 +63,6 @@ trait ApprovingListTrait
         $data = $data->flatten(1);
         $currentUserPendingStatus = self::pendingForCurrentUserStatus();
         $pendingStatus = self::pendingStatus();
-
 
         $data = $data->where('assignedUserID', '!=', null);
 
@@ -160,48 +157,5 @@ trait ApprovingListTrait
     {
         return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$approvedStatus);
     }
-
-    public static function notApprovedStatus()
-    {
-        return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$notApprovedStatus);
-    }
-
-    public function declineScript(RecruitmentScript $script, User $user)
-    {
-        $statusId = self::notApprovedStatus()->id;
-
-        // Current User's Approving List
-        $approvingList = $script->pendingScriptApproving()->where('assigned_to', $user->id)->first();
-
-        // Update the current user's approval status
-        $approvingList->approver_id = $user->id;
-        $approvingList->status_id = $statusId;
-        $approvingList->update_date = Carbon::now();
-        $approvingList->save();
-
-
-        // Update all related users with approver_id set to null
-        $relatedApprovingLists = $script->approvers()
-            ->where('approver_id', null)
-            ->where('status_id', '!=', $statusId);
-
-// Perform the bulk update
-        $relatedApprovingLists->update([
-            'status_id' => $statusId,
-            'update_date' => Carbon::now(),
-        ]);
-
-        // Call the declineRs method and return based on its result
-        $inactiveRs = $this->declineRs($script);
-
-        if ($inactiveRs) {
-            // Something to return if successful
-        } else {
-            // Something else to return if not successful
-        }
-
-        return $inactiveRs;
-    }
-
 
 }

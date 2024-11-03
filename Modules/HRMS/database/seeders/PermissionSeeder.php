@@ -12,30 +12,19 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::transaction(function () {
-            $permissions = json_decode(file_get_contents(realpath(__DIR__ . '/permissions.json')), true);
+        $permissions = json_decode(file_get_contents(realpath(__DIR__.'/permissions.json')), true);
 
-            foreach ($permissions as $permission) {
-                $module = DB::table('modules')
-                    ->where('name', '=', $permission['moduleName'])
-                    ->get('id')
-                    ->first();
-                $permissionType = DB::table('permission_types')
-                    ->where('name', '=', $permission['permissionTypeName'])
-                    ->get('id')
-                    ->first();
+        foreach ($permissions as $permission) {
+            $module=\DB::table('modules')->where('name','=',$permission['moduleName'])->get('id')->first();
+            $permissionType=\DB::table('permission_types')->where('name','=',$permission['permissionTypeName'])->get('id')->first();
 
-                if ($module && $permissionType) {
-                    DB::table('permissions')->updateOrInsert(
-                        ['slug' => $permission['slug'], 'module_id' => $module->id], // Condition for matching an existing record
-                        [
-                            'name' => $permission['name'], // Fields to update or insert
-                            'permission_type_id' => $permissionType->id,
-                        ]
-                    );
-                }
-            }
-        });
-
+            DB::table('permissions')->insertGetId([
+                'name' => $permission['name'],
+                'slug' => $permission['slug'],
+                'module_id' => $module->id,
+                'permission_type_id' => $permissionType->id,
+            ]);
+        }
+        // $this->call([]);
     }
 }

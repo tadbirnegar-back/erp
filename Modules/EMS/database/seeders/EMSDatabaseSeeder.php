@@ -15,10 +15,7 @@ class EMSDatabaseSeeder extends Seeder
 //            EnactmentStatusSeeder::class,
 //            MeetingStatusSeeder::class,
 //            EnactmentReviewStatusSeeder::class,
-//            EnactmentTitleStatusSeeder::class,
-//            ModuleCategorySeeder::class
-//            ModuleSeeder::class
-
+            EnactmentTitleStatusSeeder::class,
 
         ]);
     }

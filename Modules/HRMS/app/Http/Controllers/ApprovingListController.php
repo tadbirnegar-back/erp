@@ -3,7 +3,7 @@
 namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
+use DB;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
 
@@ -50,43 +50,6 @@ class ApprovingListController extends Controller
             DB::rollBack();
             return response()->json(['message' => 'خطا در تایید حکم'], 500);
         }
+
     }
-
-    public function declineScriptByUser($id)
-    {
-
-        $user = auth()->user();
-        /**
-         * @var RecruitmentScript $script
-         */
-        $script = RecruitmentScript::with('approvers')->find($id);
-
-
-        if ($script) {
-            DB::beginTransaction();
-
-
-            $approvers = $script->approvers;
-
-            $canApprove = $approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
-            if (!$canApprove) {
-                return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
-            }
-
-            $result = $this->declineScript($script, $user);
-            DB::commit();
-
-            return response()->json([
-                "result" => $result
-
-            ]);
-        } else {
-            DB::rollBack();
-
-            return response()->json(['message' => 'Script not found'], 404);
-        }
-    }
-
 }
-
-
