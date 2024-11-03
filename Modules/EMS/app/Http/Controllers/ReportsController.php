@@ -7,7 +7,9 @@ use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
 use Modules\EMS\app\Models\Meeting;
+use Modules\HRMS\app\Models\RecruitmentScript;
 
 class ReportsController extends Controller
 {
@@ -85,6 +87,108 @@ class ReportsController extends Controller
 
 
         return response()->json($result);
+    }
+
+    public function districtEnactmentReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'startDate' => 'required',
+            'endDate' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $startDate = convertJalaliPersianCharactersToGregorian($request->input('startDate'));
+
+        $endDate = convertJalaliPersianCharactersToGregorian
+        ($request->input('endDate'));
+
+        $user = Auth::user();
+        $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
+
+        /**
+         * @var RecruitmentScript $rs
+         */
+        $rs = $user->activeDistrictRecruitmentScript->first();
+
+        if (!$rs) {
+            return response()->json(['message' => 'شما حکم فعالی مرتبط به بخشداری ندارید'], 404);
+        }
+
+        $meetings = Meeting::where('ounit_id', '=', $rs->ounit->id)
+            ->where('isTemplate', false)
+            ->whereBetween('meeting_date', [$startDate, $endDate])
+            ->with(['enactments' => function ($q) {
+                $q->with(['enactmentReviews' => function ($qq) {
+                    $qq->with(['status']);
+                }, 'title', 'latestMeeting', 'status']);
+            }])
+            ->with(['meetingMembers' => function ($query) {
+                $query->with('mr', 'person.avatar');
+
+
+            },])
+            ->get();
+        $membersResult = [];
+
+        foreach ($meetings as $meeting) {
+            foreach ($meeting->meetingMembers as $member) {
+
+                $employeeId = $member->employee_id;
+
+                // Initialize the employee's status count array if not already set
+                if (!isset($membersResult[$employeeId])) {
+                    $membersResult[$employeeId] = [
+                        'person' => $member->person,
+                    ];
+                }
+
+                $membersResult[$employeeId]['meeting_count'] = ($membersResult[$employeeId]['meeting_count'] ?? 0) + 1;
+
+                foreach ($meeting->enactments as $enactment) {
+                    // Find the review for this employee in the current enactment
+                    $review = $enactment->enactmentReviews->firstWhere('user_id', $employeeId);
+
+                    $membersResult[$employeeId]['enactment_count'] = ($membersResult[$employeeId]['enactment_count'] ?? 0) + 1;
+
+                    if ($review) {
+                        // Increment the count for the review's status
+                        $status = $review->status->name;
+                        $membersResult[$employeeId][$status] = ($membersResult[$employeeId][$status] ?? 0) + 1;
+                    } else {
+                        // If no review is found, increment 'در انتظار بررسی'
+                        $membersResult[$employeeId][EnactmentReviewEnum::PENDING->value] = ($membersResult[$employeeId][EnactmentReviewEnum::PENDING->value] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+        $collection = collect($membersResult);
+
+// Calculate sums
+        $totalMeetingCount = $collection->sum('meeting_count');
+        $totalEnactmentCount = $collection->sum('enactment_count');
+        $totalMaghayert = $collection->sum(EnactmentReviewEnum::INCONSISTENCY->value);
+        $totalAdamMaghayert = $collection->sum(EnactmentReviewEnum::NO_INCONSISTENCY->value);
+        $totalAdamMaghayertAutomatic = $collection->sum(EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
+        $totalInReview = $collection->sum(EnactmentReviewEnum::PENDING->value);
+
+        $response = [
+            'totalMeetingCount' => $totalMeetingCount,
+            'totalEnactmentCount' => $totalEnactmentCount,
+            'totalMaghayert' => $totalMaghayert,
+            'totalAdamMaghayert' => $totalAdamMaghayert,
+            'totalAdamMaghayertAutomatic' => $totalAdamMaghayertAutomatic,
+            'totalInReview' => $totalInReview,
+            'members' => $collection->values(),
+            'organizationUnit' => $rs->ounit->ancestorsAndSelf,
+            'expired_count' => $totalAdamMaghayertAutomatic,
+            'approved_count' => $totalAdamMaghayert + $totalMaghayert,
+            'enactments' => $meetings->pluck('enactments'),
+        ];
+
+        return response()->json($response);
     }
 
 }

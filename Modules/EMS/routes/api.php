@@ -70,6 +70,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::post('mes/ounit-villages/search', [EnactmentController::class, 'getMyVillagesToAddEnactment']);
 
+    Route::post('mes/reports/district-report', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'districtEnactmentReport']);
 
 });
 
