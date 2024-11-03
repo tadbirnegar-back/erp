@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingType;
 use Modules\HRMS\app\Models\RecruitmentScript;
 
 class ReportsController extends Controller
@@ -117,7 +118,10 @@ class ReportsController extends Controller
             return response()->json(['message' => 'شما حکم فعالی مرتبط به بخشداری ندارید'], 404);
         }
 
+        $meetingType = MeetingType::where('title', 'جلسه هیئت تطبیق')->first();
+
         $meetings = Meeting::where('ounit_id', '=', $rs->ounit->id)
+            ->whereBelongsTo($meetingType, 'meetingType')
             ->where('isTemplate', false)
             ->whereBetween('meeting_date', [$startDate, $endDate])
             ->with(['enactments' => function ($q) {
@@ -142,18 +146,20 @@ class ReportsController extends Controller
                 if (!isset($membersResult[$employeeId])) {
                     $membersResult[$employeeId] = [
                         'person' => $member->person,
+                        'mr' => $member->mr,
                     ];
                 }
 
                 $membersResult[$employeeId]['meeting_count'] = ($membersResult[$employeeId]['meeting_count'] ?? 0) + 1;
 
-                foreach ($meeting->enactments as $enactment) {
+                foreach ($meeting->enactments as &$enactment) {
                     // Find the review for this employee in the current enactment
                     $review = $enactment->enactmentReviews->firstWhere('user_id', $employeeId);
 
                     $membersResult[$employeeId]['enactment_count'] = ($membersResult[$employeeId]['enactment_count'] ?? 0) + 1;
 
                     if ($review) {
+                        $review->setAttribute('person', $member->person);
                         // Increment the count for the review's status
                         $status = $review->status->name;
                         $membersResult[$employeeId][$status] = ($membersResult[$employeeId][$status] ?? 0) + 1;
@@ -161,30 +167,29 @@ class ReportsController extends Controller
                         // If no review is found, increment 'در انتظار بررسی'
                         $membersResult[$employeeId][EnactmentReviewEnum::PENDING->value] = ($membersResult[$employeeId][EnactmentReviewEnum::PENDING->value] ?? 0) + 1;
                     }
+                    $enactment->setAttribute('members', $meeting->meetingMembers);
                 }
             }
         }
         $collection = collect($membersResult);
 
 // Calculate sums
-        $totalMeetingCount = $collection->sum('meeting_count');
-        $totalEnactmentCount = $collection->sum('enactment_count');
-        $totalMaghayert = $collection->sum(EnactmentReviewEnum::INCONSISTENCY->value);
-        $totalAdamMaghayert = $collection->sum(EnactmentReviewEnum::NO_INCONSISTENCY->value);
-        $totalAdamMaghayertAutomatic = $collection->sum(EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
-        $totalInReview = $collection->sum(EnactmentReviewEnum::PENDING->value);
+        $totalMoghayert = $collection->sum(EnactmentReviewEnum::INCONSISTENCY->value);
+        $totalAdamMoghayert = $collection->sum(EnactmentReviewEnum::NO_INCONSISTENCY->value);
+        $totalAdamMoghayertAutomatic = $collection->sum(EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
+        $totalPending = $collection->sum(EnactmentReviewEnum::PENDING->value);
 
         $response = [
-            'totalMeetingCount' => $totalMeetingCount,
-            'totalEnactmentCount' => $totalEnactmentCount,
-            'totalMaghayert' => $totalMaghayert,
-            'totalAdamMaghayert' => $totalAdamMaghayert,
-            'totalAdamMaghayertAutomatic' => $totalAdamMaghayertAutomatic,
-            'totalInReview' => $totalInReview,
+            'totalMeetingCount' => $meetings->count(),
+            'totalEnactmentCount' => $meetings->pluck('enactments')->flatten()->count(),
+            'totalMoghayert' => $totalMoghayert,
+            'totalAdamMoghayert' => $totalAdamMoghayert,
+            'totalAdamMoghayertAutomatic' => $totalAdamMoghayertAutomatic,
+            'totalPending' => $totalPending,
             'members' => $collection->values(),
-            'organizationUnit' => $rs->ounit->ancestorsAndSelf,
-            'expired_count' => $totalAdamMaghayertAutomatic,
-            'approved_count' => $totalAdamMaghayert + $totalMaghayert,
+            'ounit' => $rs->ounit->ancestorsAndSelf,
+            'expired_count' => $totalAdamMoghayertAutomatic,
+            'approved_count' => $totalAdamMoghayert + $totalMoghayert,
             'enactments' => $meetings->pluck('enactments'),
         ];
 
