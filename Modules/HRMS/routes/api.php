@@ -113,9 +113,6 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::put('/hrm/rc/grant/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'approveScriptByUser'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/decline/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'declineScriptByUser'])->middleware(['auth:api']);
-
-
     Route::post('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'store']);
 
     Route::get('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'addEmployeeBaseInfo']);
@@ -126,6 +123,5 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
 
     Route::post('/hrm/employee/verify', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'verifyEmployeeForScript']);
-
-
 });
+

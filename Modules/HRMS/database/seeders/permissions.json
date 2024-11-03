@@ -118,11 +118,5 @@
         "slug": "/hrm/levels/delete/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
-    },
-    {
-        "name": "رد حکم توسط تایید کننده",
-        "slug": "/hrm/rc/decline/{id}",
-        "moduleName": "HRMS",
-        "permissionTypeName": "operational"
     }
 ]
