@@ -5,7 +5,10 @@ namespace Modules\AAA\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Modules\AAA\app\Http\Requests\UpdatePassUserReq;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Traits\AddressTrait;
@@ -157,7 +160,7 @@ class UserController extends Controller
             return response()->json(['message' => 'با موفقیت ویرایش شد', 'data' => $user]);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی کاربر','error'=>$e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی کاربر', 'error' => $e->getMessage()], 500);
 
         }
 
@@ -171,25 +174,36 @@ class UserController extends Controller
         return response()->json($user);
     }
 
-    public function updatePassword(Request $request)
+    public function updatePassword(UpdatePassUserReq $request)
     {
+        try {
+            DB::beginTransaction();
+
+            // Find the user by ID
+            $user = Auth::user();
 
 
-        $user = \Auth::user();
+            // Update the password
+            $result = $this->paswrodUpdater($user, $request->newPassword);
 
-        if (\Hash::check($request->currentPassword, $user->password)) {
-            $user->password = \Hash::make($request->newPassword);
-            $user->save();
-            $message = 'با موفقیت بروزرسانی شد';
-            $statusCode = 200;
-        } else {
-            $message = 'رمز فعلی نادرست است';
-            $statusCode = 401;
+            // For old Method Password (Using Current Password) use the method below
+            // $result = $this->_oldUpdatePassword($user, $request->currentPassword, $request->newPassword);
 
+            DB::commit();
+
+            if ($result) {
+                return response()->json(['message' => "رمز با موفقیت تغییر یافت"], 200);
+            } else {
+                return response()->json(['message' => "تغییر رمز انجام نشد"], 200);
+
+            }
+
+        } catch (\Exception $e) {
+            // Handle any exceptions that may occur
+            DB::rollBack();
+            return response()->json(['error' => 'خطا در بروزرسانی رمز عبور', 'details' => $e->getMessage()], 500); // "Error updating password"
         }
-
-
-        return response()->json(['message' => $message], $statusCode);
     }
+
 }
 

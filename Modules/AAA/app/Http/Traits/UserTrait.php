@@ -97,4 +97,27 @@ trait UserTrait
     {
         return User::GetAllStatuses();
     }
+
+
+    public function paswrodUpdater(User $user, $newPassword)
+    {
+        // Update the user's password
+        $user->password = \Hash::make($newPassword);
+        $user->save();
+
+        return true;
+    }
+
+
+    public function updatePasswordWithCurrentPassword(User $user, $currentPassword, $newPassword)
+    {
+        if (\Hash::check($currentPassword, $user->password)) {
+            $user->password = \Hash::make($newPassword);
+            $user->save();
+            return true;
+        } else {
+            return false;
+        }
+
+    }
 }
