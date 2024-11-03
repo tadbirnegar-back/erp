@@ -12,7 +12,8 @@ class UpdatePassUserReq extends FormRequest
     public function rules(): array
     {
         return [
-            'newPassword' => ['required']
+            'newPassword' => ['required'],
+            
         ];
     }
 

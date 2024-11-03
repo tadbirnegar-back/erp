@@ -3,10 +3,11 @@
 namespace Modules\PersonMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\HRMS\app\Http\Traits\CourseRecordTrait;
@@ -35,7 +36,7 @@ use Modules\PersonMS\app\Models\ReligionType;
 
 class PersonMSController extends Controller
 {
-    use PersonTrait, AddressTrait, SkillTrait, RelativeTrait, SkillWorkForceTrait, EducationRecordTrait, CourseRecordTrait, ResumeTrait, MilitaryServiceTrait, IsarTrait;
+    use PersonTrait, UserTrait, AddressTrait, SkillTrait, RelativeTrait, SkillWorkForceTrait, EducationRecordTrait, CourseRecordTrait, ResumeTrait, MilitaryServiceTrait, IsarTrait;
 
     public function naturalExists(Request $request)
     {
@@ -426,7 +427,6 @@ class PersonMSController extends Controller
             ],
             'currentPassword' => [
                 'sometimes',
-                'required',
             ],
             'newPassword' => [
                 'sometimes',
@@ -447,21 +447,15 @@ class PersonMSController extends Controller
         $user = $person->user;
         try {
             DB::beginTransaction();
-            if (isset($data['isNewPassword']) && $data['isNewPassword'] === 'true') {
-                if (\Hash::check($request->currentPassword, $user->password)) {
-                    $user->password = \Hash::make($request->newPassword);
-                    $message = 'با موفقیت بروزرسانی شد';
-                    $statusCode = 200;
-                } else {
-                    $message = 'رمز فعلی نادرست است';
-                    $statusCode = 401;
-
-                }
-
-            } else {
+            $result = $this->paswrodUpdater($user, $request->newPassword);
+            if ($result) {
                 $message = 'با موفقیت بروزرسانی شد';
                 $statusCode = 200;
+            } else {
+                $message = 'رمز فعلی نادرست است';
+                $statusCode = 401;
             }
+
 
             $user->username = $data['username'] ?? null;
             $user->save();
