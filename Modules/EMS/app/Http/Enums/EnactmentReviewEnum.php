@@ -8,4 +8,5 @@ enum EnactmentReviewEnum: string
     case NO_INCONSISTENCY = 'عدم مغایرت';
     case SYSTEM_NO_INCONSISTENCY = 'عدم مغایرت سیستمی';
     case UNKNOWN = 'نامشخص';
+    case PENDING = 'در انتظار بررسی';
 }

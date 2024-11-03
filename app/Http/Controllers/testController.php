@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Support\Facades\Auth;
-use Modules\EMS\app\Models\Enactment;
+use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
+use Modules\EMS\app\Models\Meeting;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -16,13 +17,233 @@ class testController extends Controller
 
     public function run()
     {
-        $enactment = Enactment::with('status')->find(41);
-        $user = Auth::user();
-        if (is_null($enactment)) {
-            return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
+        $user = User::with('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf')->find(2060);
+        /**
+         * @var RecruitmentScript $rs
+         */
+        $rs = $user->activeDistrictRecruitmentScript->first();
+
+        $meetings = Meeting::where('ounit_id', '=', $rs->organization_unit_id)
+            ->where('isTemplate', false)
+            ->whereBetween('meeting_date', ['2020-01-01', '2024-12-29'])
+            ->with(['enactments' => function ($q) {
+                $q->with(['enactmentReviews' => function ($qq) {
+                    $qq->with(['status']);
+                }, 'title', 'latestMeeting', 'status']);
+            }])
+            ->with(['meetingMembers' => function ($query) {
+                $query->with('mr', 'person.avatar');
+
+
+            },])
+            ->get();
+        $membersResult = [];
+
+        foreach ($meetings as $meeting) {
+            foreach ($meeting->meetingMembers as $member) {
+
+                $employeeId = $member->employee_id;
+
+                // Initialize the employee's status count array if not already set
+                if (!isset($membersResult[$employeeId])) {
+                    $membersResult[$employeeId] = [
+                        'person' => $member->person,
+                    ];
+                }
+
+                $membersResult[$employeeId]['meeting_count'] = ($membersResult[$employeeId]['meeting_count'] ?? 0) + 1;
+
+                foreach ($meeting->enactments as $enactment) {
+                    // Find the review for this employee in the current enactment
+                    $review = $enactment->enactmentReviews->firstWhere('user_id', $employeeId);
+
+                    $membersResult[$employeeId]['enactment_count'] = ($membersResult[$employeeId]['enactment_count'] ?? 0) + 1;
+
+                    if ($review) {
+                        // Increment the count for the review's status
+                        $status = $review->status->name;
+                        $membersResult[$employeeId][$status] = ($membersResult[$employeeId][$status] ?? 0) + 1;
+                    } else {
+                        // If no review is found, increment 'در انتظار بررسی'
+                        $membersResult[$employeeId]['در انتظار بررسی'] = ($membersResult[$employeeId]['در انتظار بررسی'] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+        $collection = collect($membersResult);
+
+// Calculate sums
+        $totalMeetingCount = $collection->sum('meeting_count');
+        $totalEnactmentCount = $collection->sum('enactment_count');
+        $totalMaghayert = $collection->sum(EnactmentReviewEnum::INCONSISTENCY->value);
+        $totalAdamMaghayert = $collection->sum(EnactmentReviewEnum::NO_INCONSISTENCY->value);
+        $totalAdamMaghayertAutomatic = $collection->sum(EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
+        $totalInReview = $collection->sum('در انتظار بررسی');
+
+        $response = [
+            'totalMeetingCount' => $totalMeetingCount,
+            'totalEnactmentCount' => $totalEnactmentCount,
+            'totalMaghayert' => $totalMaghayert,
+            'totalAdamMaghayert' => $totalAdamMaghayert,
+            'totalAdamMaghayertAutomatic' => $totalAdamMaghayertAutomatic,
+            'totalInReview' => $totalInReview,
+            'members' => $collection,
+            'organizationUnit' => $rs->ounit->ancestorsAndSelf,
+            'expired_count' => $totalAdamMaghayertAutomatic,
+            'approved_count' => $totalAdamMaghayert + $totalMaghayert,
+        ];
+
+// Output or process the final results
+        dd($membersResult);
+        $membersResult = collect();
+
+        foreach ($meetings as $meeting) {
+            foreach ($meeting->meetingMembers as $member) {
+                $employeeId = $member->employee_id;
+
+                // Collect all enactment reviews for this employee across all enactments in the meeting
+                $reviewsByMember = $meeting->enactments
+                    ->flatMap(fn($enactment) => $enactment->enactmentReviews)
+                    ->where('user_id', $employeeId);
+
+                // Group reviews by status and count each group
+                $statusCounts = $reviewsByMember->groupBy('status.name')->map->count();
+
+                // If no reviews, initialize or increment 'در انتظار بررسی' count by 1
+                if ($reviewsByMember->isEmpty()) {
+                    $statusCounts['در انتظار بررسی'] = $statusCounts->get('در انتظار بررسی', 0) + 1;
+                }
+
+                // Aggregate counts into totalStatusCounts for the employee
+                if (!isset($membersResult[$employeeId])) {
+                    $membersResult[$employeeId] = collect();
+                }
+
+                foreach ($statusCounts as $status => $count) {
+                    $membersResult[$employeeId][$status] = $membersResult[$employeeId]->get($status, 0) + $count;
+                }
+            }
         }
 
-        $componentsToRenderWithData = $this->enactmentShow($enactment, $user);
+// Convert the result to an array or keep as a collection, as needed
+        $membersResult = $membersResult->map->all();
+
+// Output or process the final results
+        dd($membersResult);
+        $results = $meetings->map(function ($meeting) {
+            $meetingResult = $meeting->meetingMembers->map(function ($member) use ($meeting) {
+                $employeeId = $member->employee_id;
+
+                // Collect all enactment reviews for this employee across all enactments in the meeting
+                $reviewsByMember = $meeting->enactments
+                    ->flatMap(fn($enactment) => $enactment->enactmentReviews)
+                    ->where('user_id', $employeeId);
+
+                // Group reviews by status and count each group
+                $statusCounts = $reviewsByMember->groupBy('status.name')->map->count();
+
+                // If no reviews, add 'در انتظار بررسی' with count 1 or increment it if already present
+                if ($reviewsByMember->isEmpty()) {
+                    $statusCounts['در انتظار بررسی'] = $statusCounts->get('در انتظار بررسی', 0) + 1;
+                }
+
+                // Return each member's data with total review counts by status
+                return [
+                    'member_id' => $member->id,
+                    'employee_id' => $employeeId,
+                    'review_counts_by_status' => $statusCounts,
+                ];
+            });
+
+            // Return each meeting's data with all members' results
+            return [
+                'meeting_id' => $meeting->id,
+                'members' => $meetingResult,
+            ];
+        });
+
+// Output or process $results as needed
+        dd($results);
+        $results = [];
+
+        foreach ($meetings as $meeting) {
+            $meetingResult = [];
+
+            foreach ($meeting->meetingMembers as $member) {
+                $employeeId = $member->employee_id;
+
+                // Filter enactment reviews where user_id matches employee_id
+                $reviewsByMember = $meeting->enactments->flatMap(function ($enactment) use ($employeeId) {
+                    return $enactment->enactmentReviews->where('user_id', $employeeId);
+                });
+
+                // Group reviews by status and count each group
+                $statusCounts = $reviewsByMember->groupBy('status.name')->map(function ($reviews) {
+                    return $reviews->count();
+                });
+
+                // If no reviews, increment 'در انتظار بررسی' count by 1
+                if ($statusCounts->isEmpty()) {
+                    $statusCounts['در انتظار بررسی'] = 1;
+                } else {
+                    // Check if 'در انتظار بررسی' status exists and increment if it does
+                    if ($statusCounts->has('در انتظار بررسی')) {
+                        $statusCounts['در انتظار بررسی'] += 1;
+                    }
+                }
+
+                // Store result for this member
+                $meetingResult[] = [
+                    'member_id' => $member->id,
+                    'employee_id' => $employeeId,
+                    'review_counts_by_status' => $statusCounts,
+                ];
+            }
+
+            $results[] = [
+                'meeting_id' => $meeting->id,
+                'members' => $meetingResult,
+            ];
+        }
+
+// Output or process $results as needed
+        dd($results);
+        $results = [];
+
+        foreach ($meetings as $meeting) {
+            $meetingResult = [];
+
+            foreach ($meeting->meetingMembers as $member) {
+                $employeeId = $member->employee_id;
+
+                // Filter enactment reviews where user_id matches employee_id
+                $reviewsByMember = $meeting->enactments->flatMap(function ($enactment) use ($employeeId) {
+                    return $enactment->enactmentReviews->where('user_id', $employeeId);
+                });
+
+                // Group reviews by status and count each group
+                $statusCounts = $reviewsByMember->groupBy('status.name')->map(function ($reviews) {
+                    return $reviews->count();
+                });
+
+                // Store result for this member
+                $meetingResult[] = [
+                    'member_id' => $member->id,
+                    'employee_id' => $employeeId,
+                    'review_counts_by_status' => $statusCounts,
+                ];
+            }
+
+            $results[] = [
+                'meeting_id' => $meeting->id,
+                'members' => $meetingResult,
+            ];
+        }
+
+// Output or process $results as needed
+        dd($results);
+        dd($meetings);
+
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
