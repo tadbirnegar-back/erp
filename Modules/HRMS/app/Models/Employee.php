@@ -4,9 +4,11 @@ namespace Modules\HRMS\app\Models;
 
 use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\EmployeeFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -93,6 +95,11 @@ class Employee extends Model
             ]
         )
             ->latest('create_date');
+    }
+
+    public function signatureFile(): BelongsTo
+    {
+        return $this->belongsTo(File::class, 'signature_file_id');
     }
 
     public function latestRecruitmentScript()
