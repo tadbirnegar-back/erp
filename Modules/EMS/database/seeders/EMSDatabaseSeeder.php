@@ -18,7 +18,7 @@ class EMSDatabaseSeeder extends Seeder
 //            EnactmentTitleStatusSeeder::class,
 //            ModuleCategorySeeder::class
 //            ModuleSeeder::class
-
+            PermissionSeeder::class,
 
         ]);
     }

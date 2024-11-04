@@ -66,9 +66,21 @@
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "تنظیمات دبیر",
-        "slug": "/mes/setting/secretary",
+        "name": "مشاهده گزارش مصوبات کاربر دیگر",
+        "slug": "/mes/reports/member",
         "moduleName": "EMS",
-        "permissionTypeName": "sidebar"
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده گزارش مصوبات بخشداری من",
+        "slug": "/mes/reports/district-report",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده گزارش مصوبات من",
+        "slug": "/mes/reports/my-report",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
     }
 ]
