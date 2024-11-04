@@ -164,6 +164,7 @@ class PersonMSController extends Controller
             'workForce.isars.isarStatus',
             'workForce.isars.relativeType',
             'employee.recruitmentScripts',
+            'employee.signatureFile',
             'workForce.militaryService.militaryServiceStatus',
             'workForce.militaryService.exemptionType'])
             ->findOr($id, function () {
@@ -195,6 +196,7 @@ class PersonMSController extends Controller
             'person.workForce.isars.isarStatus',
             'person.workForce.isars.relativeType',
             'person.employee.recruitmentScripts',
+            'person.employee.signatureFile',
             'person.workForce.militaryService.militaryServiceStatus',
             'person.workForce.militaryService.exemptionType']);
 
