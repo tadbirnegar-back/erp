@@ -449,7 +449,9 @@ class PersonMSController extends Controller
         $user = $person->user;
         try {
             DB::beginTransaction();
-            $result = $this->paswrodUpdater($user, $request->newPassword);
+            if ($request->isNewPassword) {
+                $result = $this->paswrodUpdater($user, $request->newPassword);
+            }
             if ($result) {
                 $message = 'با موفقیت بروزرسانی شد';
                 $statusCode = 200;
