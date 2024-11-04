@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
@@ -35,7 +36,11 @@ class ReportsController extends Controller
 
 //        return response()->json([$startDate, $endDate]);
 
-        $user = Auth::user();
+        if (isset($request->employeeID)) {
+            $user = User::find($request->employeeID);
+        } else {
+            $user = Auth::user();
+        }
         $employeeId = $user->id;
 
         $user->load('person.avatar', 'mr', 'activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
@@ -118,9 +123,11 @@ class ReportsController extends Controller
             return response()->json(['message' => 'شما حکم فعالی مرتبط به بخشداری ندارید'], 404);
         }
 
+        $ounit = $rs->ounit;
+
         $meetingType = MeetingType::where('title', 'جلسه هیئت تطبیق')->first();
 
-        $meetings = Meeting::where('ounit_id', '=', $rs->ounit->id)
+        $meetings = Meeting::where('ounit_id', '=', $ounit->id)
             ->whereBelongsTo($meetingType, 'meetingType')
             ->where('isTemplate', false)
             ->whereBetween('meeting_date', [$startDate, $endDate])
@@ -186,7 +193,7 @@ class ReportsController extends Controller
             'totalAdamMoghayert' => $totalAdamMoghayert,
             'totalAdamMoghayertAutomatic' => $totalAdamMoghayertAutomatic,
             'totalPending' => $totalPending,
-            'members' => $collection->values(),
+            'members' => $collection->isNotEmpty() ? $collection->values() : $ounit->meetingMembers,
             'ounit' => $rs->ounit->ancestorsAndSelf,
             'expired_count' => $totalAdamMoghayertAutomatic,
             'approved_count' => $totalAdamMoghayert + $totalMoghayert,
