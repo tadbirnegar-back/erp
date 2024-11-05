@@ -75,12 +75,12 @@
         "name": "مشاهده گزارش مصوبات بخشداری من",
         "slug": "/mes/reports/district-report",
         "moduleName": "EMS",
-        "permissionTypeName": "operational"
+        "permissionTypeName": "sidebar"
     },
     {
         "name": "مشاهده گزارش مصوبات من",
         "slug": "/mes/reports/my-report",
         "moduleName": "EMS",
-        "permissionTypeName": "operational"
+        "permissionTypeName": "sidebar"
     }
 ]

@@ -124,5 +124,11 @@
         "slug": "/hrm/rc/decline/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "حکم های منقضی شده",
+        "slug": "/hrm/expired/scripts",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
     }
 ]
