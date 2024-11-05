@@ -427,9 +427,6 @@ class PersonMSController extends Controller
                 'sometimes',
                 'unique:users,username,' . $person->user->id,
             ],
-            'currentPassword' => [
-                'sometimes',
-            ],
             'newPassword' => [
                 'sometimes',
                 'required',
@@ -443,21 +440,22 @@ class PersonMSController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        $person->profile_picture_id = $data['avatar'] ?? null;
-        $person->save();
 
         $user = $person->user;
         try {
             DB::beginTransaction();
             if ($request->isNewPassword) {
                 $result = $this->paswrodUpdater($user, $request->newPassword);
-            }
-            if ($result) {
+                if ($result) {
+                    $message = 'با موفقیت بروزرسانی شد';
+                    $statusCode = 200;
+                } else {
+                    $message = 'رمز فعلی نادرست است';
+                    $statusCode = 401;
+                }
+            } else {
                 $message = 'با موفقیت بروزرسانی شد';
                 $statusCode = 200;
-            } else {
-                $message = 'رمز فعلی نادرست است';
-                $statusCode = 401;
             }
 
 
