@@ -5,7 +5,8 @@
     "keywords": [],
     "priority": 0,
     "providers": [
-        "Modules\\EMS\\app\\Providers\\EMSServiceProvider"
+        "Modules\\EMS\\app\\Providers\\EMSServiceProvider",
+        "Modules\\EMS\\app\\Providers\\EventServiceProvider"
     ],
     "files": []
 }

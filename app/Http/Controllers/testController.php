@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Models\Enactment;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\HRMS\app\Models\RecruitmentScript;
 
 
 class testController extends Controller
@@ -16,13 +17,44 @@ class testController extends Controller
 
     public function run()
     {
-        $enactment = Enactment::with('status')->find(41);
-        $user = Auth::user();
-        if (is_null($enactment)) {
-            return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
-        }
+        $enactment = Enactment::with("latestMeeting")->find(29);
 
-        $componentsToRenderWithData = $this->enactmentShow($enactment, $user);
+        Log::info($enactment);
+
+        // Ensure meeting_date is in Carbon instance (convert if necessary)
+        $meetingDate = $enactment->latestMeeting->getRawOriginal('meeting_date');
+
+
+//            $meetingDate = DB::table('meetings')
+//                ->where('id', $meeting->id)
+//                ->value('meeting_date');
+
+        // Convert the fetched date to a Carbon instance
+        $meetingDate = Carbon::parse($meetingDate);
+        $meetingDate2 = Carbon::parse($meetingDate);
+//        dd($meetingDate->toDateTimeString());
+        // Add 16 days and 5 minutes to the meeting date
+        $delayHeyat = $meetingDate->addDays(16)->addMinutes(5);
+        $delayKarshenas = $meetingDate2->addDays(8)->addMinutes(5);
+        dd($meetingDate->toDateTimeString(), $delayKarshenas->toDateTimeString(), $delayHeyat->toDateTimeString());
+
+        $enactment = Enactment::with(['members' => function ($query) {
+            $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
+                $subQuery->where('enactment_id', 29);
+            })->whereHas('roles', function ($q) {
+                $q->where('name', RolesEnum::OZV_HEYAAT->value);
+            });
+
+        },])->find(29);
+//        $enactment->members->isNotEmpty()
+        $a = $enactment->members->map(function ($member) {
+            return [
+                'user_id' => $member->employee_id
+            ];
+        });
+//        EnactmentReview::insert($a->toArray());
+        dd($a);
+
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);

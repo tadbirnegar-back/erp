@@ -17,6 +17,14 @@ class EnactmentReview extends Model
 {
     use HasTableAlias;
 
+
+    protected $fillable = [
+        'description',
+        'enactment_id',
+        'status_id',
+        'user_id',
+        'attachment_id'
+    ];
     /**
      * The attributes that are mass assignable.
      */
