@@ -154,6 +154,7 @@ class ReportsController extends Controller
                     $membersResult[$employeeId] = [
                         'person' => $member->person,
                         'mr' => $member->mr,
+                        'employee_id' => $employeeId,
                     ];
                 }
 

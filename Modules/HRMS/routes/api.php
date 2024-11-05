@@ -19,11 +19,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/hrm/employee/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'index']);
     Route::get('/hrm/employee/list/filter', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'employeeListFilter']);
     Route::get('/hrm/setting', [\Modules\HRMS\app\Http\Controllers\HRMConfigController::class, 'configList']);
-//    Route::post('/products/merchandise/variants/list', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'index']);
-//    Route::put('/products/merchandise/variants/update/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'update']);
-//    Route::post('/products/merchandise/variants/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'show']);
-//    Route::post('/products/merchandise/variants/update/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'show']);
-//    Route::delete('/products/merchandise/variants/delete/{id}', [\Modules\ProductMS\app\Http\Controllers\VariantController::class, 'destroy']);
+
+    Route::post('/hrm/expired/scripts', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'indexExpiredScripts']);
+
 });
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {

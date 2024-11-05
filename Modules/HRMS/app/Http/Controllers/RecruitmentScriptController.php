@@ -93,6 +93,27 @@ class RecruitmentScriptController extends Controller
         return response()->json(['data' => $result, 'filter' => $filterData]);
     }
 
+    public function indexExpiredScripts(Request $request)
+    {
+        $data = [
+            'statusID' => $this->expiredRsStatus()->id,
+            'scriptTypeID' => $request->input('scriptTypeID'),
+            'perPage' => $request->input('perPage', 10),
+            'pageNum' => $request->input('pageNum', 1),
+            'name' => $request->input('name')
+        ];
+
+        $result = $this->rsIndex($data);
+
+        $filterData = $data['pageNum'] == 1 ? [
+            'scriptStatus' => RecruitmentScript::GetAllStatuses(),
+            'scriptTypes' => $this->getListOfScriptTypes(),
+        ] : null;
+
+        return response()->json(['data' => $result, 'filter' => $filterData]);
+    }
+
+
     public function recruitmentScriptShow(Request $request, $id)
     {
         $script = RecruitmentScript::with('employee.person',)->find($id);

@@ -466,7 +466,7 @@ class LoginController extends Controller
             return response()->json(['message' => 'کاربری یافت نشد'], 404);
         }
 
-        $otpCode = rand(1000, 99999);
+        $otpCode = mt_rand(10000, 99999);
 
 
         $data = [
