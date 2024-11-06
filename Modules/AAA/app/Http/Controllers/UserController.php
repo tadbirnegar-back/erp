@@ -168,7 +168,7 @@ class UserController extends Controller
 
     public function profile()
     {
-        $user = \Auth::user();
+        $user = Auth::user();
         $user->load('person.avatar', 'person.personable.homeAddress.village', 'person.personable.homeAddress.town.district.city.state.country');
 
         return response()->json($user);

@@ -22,13 +22,20 @@ class EnactmentStatus extends Pivot
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'enactment_id',
+        'operator_id',
+        'status_id',
+        'description',
+        'attachment_id',
+    ];
 
     public $timestamps = false;
     protected $table = 'enactment_status';
 
-
+    protected $primaryKey = 'id';
     use BelongsToThrough;
+
 
     public function person()
     {
@@ -39,6 +46,13 @@ class EnactmentStatus extends Pivot
         ]);
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Register the observer
+        static::observe(\Modules\EMS\app\Observers\EnactmentStatusObserver::class);
+    }
 
     public function operator(): BelongsTo
     {
