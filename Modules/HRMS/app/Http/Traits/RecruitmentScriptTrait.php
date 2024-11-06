@@ -86,10 +86,11 @@ trait RecruitmentScriptTrait
 
             $rs = RecruitmentScript::create($item);
             $rs->status()->attach($status->id);
-            if (isset($data[$key]['files']) && !is_array($data[$key]['files'])) {
-                $fileScriptsData = !empty($data[$key]['files']) ? json_decode($data[$key]['files'], true) : [];
+
+            if (isset($data[$key]['files'])) {
+                $fileScriptsData = json_decode($data[$key]['files'], true);
             } else {
-                $fileScriptsData = $data[$key]['files'] = [];
+                $fileScriptsData = null;
             }
             if (isset($data[$key]['files']) && is_array($fileScriptsData)) {
                 info($data[$key]['files']);
