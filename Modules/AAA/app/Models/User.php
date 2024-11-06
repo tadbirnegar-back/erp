@@ -97,6 +97,7 @@ class User extends Authenticatable
             ->distinct();
     }
 
+
     public function statuses()
     {
         return $this->belongsToMany(Status::class, 'user_status');

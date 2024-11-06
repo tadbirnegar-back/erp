@@ -7,6 +7,8 @@ use Modules\EMS\app\Models\EnactmentReview;
 
 trait EnactmentReviewTrait
 {
+
+
     public function reviewInconsistencyStatus()
     {
         return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::INCONSISTENCY->value);
@@ -15,5 +17,15 @@ trait EnactmentReviewTrait
     public function reviewNoInconsistencyStatus()
     {
         return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::NO_INCONSISTENCY->value);
+    }
+
+    public function reviewUnknownStatus()
+    {
+        return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::UNKNOWN->value);
+    }
+
+    public function reviewNoSystemInconsistencyStatus()
+    {
+        return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
     }
 }

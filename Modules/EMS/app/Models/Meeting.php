@@ -112,6 +112,7 @@ class Meeting extends Model
             ->withPivot('mr_id');
     }
 
+
     public function meetingMembers(): HasMany
     {
         return $this->hasMany(MeetingMember::class, 'meeting_id');
