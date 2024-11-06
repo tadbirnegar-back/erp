@@ -127,3 +127,6 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
 
 });
+
+
+Route::get('/MakeRecStatus', [\Modules\HRMS\app\Http\Controllers\ScriptStatusController::class, 'index']);
