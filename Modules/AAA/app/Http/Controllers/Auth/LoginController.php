@@ -221,7 +221,7 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
         } else {
-            return response()->json(['message' => 'نام کاربری یا رمز عبور نادرست است'], 401);
+            return response()->json(['message' => 'نام کاربری یا رمز عبور نادرست است'], 403);
 
         }
         $token = auth()->user()->token();
@@ -466,7 +466,7 @@ class LoginController extends Controller
             return response()->json(['message' => 'کاربری یافت نشد'], 404);
         }
 
-        $otpCode = rand(1000, 99999);
+        $otpCode = mt_rand(10000, 99999);
 
 
         $data = [

@@ -164,6 +164,7 @@ class PersonMSController extends Controller
             'workForce.isars.isarStatus',
             'workForce.isars.relativeType',
             'employee.recruitmentScripts',
+            'employee.signatureFile',
             'workForce.militaryService.militaryServiceStatus',
             'workForce.militaryService.exemptionType'])
             ->findOr($id, function () {
@@ -195,6 +196,7 @@ class PersonMSController extends Controller
             'person.workForce.isars.isarStatus',
             'person.workForce.isars.relativeType',
             'person.employee.recruitmentScripts',
+            'person.employee.signatureFile',
             'person.workForce.militaryService.militaryServiceStatus',
             'person.workForce.militaryService.exemptionType']);
 
@@ -425,9 +427,6 @@ class PersonMSController extends Controller
                 'sometimes',
                 'unique:users,username,' . $person->user->id,
             ],
-            'currentPassword' => [
-                'sometimes',
-            ],
             'newPassword' => [
                 'sometimes',
                 'required',
@@ -441,19 +440,22 @@ class PersonMSController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        $person->profile_picture_id = $data['avatar'] ?? null;
-        $person->save();
 
         $user = $person->user;
         try {
             DB::beginTransaction();
-            $result = $this->paswrodUpdater($user, $request->newPassword);
-            if ($result) {
+            if ($request->isNewPassword) {
+                $result = $this->paswrodUpdater($user, $request->newPassword);
+                if ($result) {
+                    $message = 'با موفقیت بروزرسانی شد';
+                    $statusCode = 200;
+                } else {
+                    $message = 'رمز فعلی نادرست است';
+                    $statusCode = 401;
+                }
+            } else {
                 $message = 'با موفقیت بروزرسانی شد';
                 $statusCode = 200;
-            } else {
-                $message = 'رمز فعلی نادرست است';
-                $statusCode = 401;
             }
 
 

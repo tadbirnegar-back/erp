@@ -14,6 +14,7 @@ trait RecruitmentScriptTrait
     private static string $activeRsStatus = 'فعال';
     private static string $inActiveRsStatus = 'غیرفعال';
     private static string $pendingRsStatus = 'در انتظار تایید';
+    private static string $expiredRsStatus = 'منقضی شده';
 
 
     public function rsIndex(array $data)
@@ -203,8 +204,31 @@ trait RecruitmentScriptTrait
         return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', self::$inActiveRsStatus);
     }
 
+    public function expiredRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', self::$expiredRsStatus);
+    }
+
     public function rsShow(RecruitmentScript $script)
     {
         $script->load(['position', 'level', 'job', 'scriptAgents', 'approvers.status', 'approvers.assignedTo']);
     }
+
+
+    public function declineRs(RecruitmentScript $rs)
+    {
+        try {
+            $deleteStatus = $this->inActiveRsStatus();
+            $rs->status()->attach($deleteStatus->id);
+
+
+            return true;
+        } catch (\Exception $e) {
+            // Log the exception for debugging
+            \Log::error($e->getMessage());
+            return false;
+        }
+    }
+
+
 }

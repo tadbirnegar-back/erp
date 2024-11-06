@@ -1,0 +1,33 @@
+<?php
+
+namespace Modules\EMS\database\seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class ModuleSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $modules = json_decode(file_get_contents(realpath(__DIR__ . '/modules.json')), true);
+
+        foreach ($modules as $module) {
+            $moduleCat = DB::table('module_categories')
+                ->where('name', '=', $module['category_name'])
+                ->get('id')
+                ->first();
+
+            if ($moduleCat) {
+                DB::table('modules')->updateOrInsert(
+                    ['name' => $module['name']], // Condition for matching an existing record
+                    [
+                        'module_category_id' => $moduleCat->id, // Fields to update or insert
+                    ]
+                );
+            }
+        }
+    }
+}

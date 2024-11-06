@@ -7,7 +7,11 @@ use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingType;
+use Modules\HRMS\app\Models\RecruitmentScript;
 
 class ReportsController extends Controller
 {
@@ -32,7 +36,11 @@ class ReportsController extends Controller
 
 //        return response()->json([$startDate, $endDate]);
 
-        $user = Auth::user();
+        if (isset($request->employeeID)) {
+            $user = User::find($request->employeeID);
+        } else {
+            $user = Auth::user();
+        }
         $employeeId = $user->id;
 
         $user->load('person.avatar', 'mr', 'activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
@@ -85,6 +93,115 @@ class ReportsController extends Controller
 
 
         return response()->json($result);
+    }
+
+    public function districtEnactmentReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'startDate' => 'required',
+            'endDate' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $startDate = convertJalaliPersianCharactersToGregorian($request->input('startDate'));
+
+        $endDate = convertJalaliPersianCharactersToGregorian
+        ($request->input('endDate'));
+
+        $user = Auth::user();
+        $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
+
+        /**
+         * @var RecruitmentScript $rs
+         */
+        $rs = $user->activeDistrictRecruitmentScript->first();
+
+        if (!$rs) {
+            return response()->json(['message' => 'شما حکم فعالی مرتبط به بخشداری ندارید'], 404);
+        }
+
+        $ounit = $rs->ounit;
+
+        $meetingType = MeetingType::where('title', 'جلسه هیئت تطبیق')->first();
+
+        $meetings = Meeting::where('ounit_id', '=', $ounit->id)
+            ->whereBelongsTo($meetingType, 'meetingType')
+            ->where('isTemplate', false)
+            ->whereBetween('meeting_date', [$startDate, $endDate])
+            ->with(['enactments' => function ($q) {
+                $q->with(['enactmentReviews' => function ($qq) {
+                    $qq->with(['status']);
+                }, 'title', 'latestMeeting', 'status']);
+            }])
+            ->with(['meetingMembers' => function ($query) {
+                $query->with('mr', 'person.avatar');
+
+
+            },])
+            ->get();
+        $membersResult = [];
+
+        foreach ($meetings as $meeting) {
+            foreach ($meeting->meetingMembers as $member) {
+
+                $employeeId = $member->employee_id;
+
+                // Initialize the employee's status count array if not already set
+                if (!isset($membersResult[$employeeId])) {
+                    $membersResult[$employeeId] = [
+                        'person' => $member->person,
+                        'mr' => $member->mr,
+                        'employee_id' => $employeeId,
+                    ];
+                }
+
+                $membersResult[$employeeId]['meeting_count'] = ($membersResult[$employeeId]['meeting_count'] ?? 0) + 1;
+
+                foreach ($meeting->enactments as &$enactment) {
+                    // Find the review for this employee in the current enactment
+                    $review = $enactment->enactmentReviews->firstWhere('user_id', $employeeId);
+
+                    $membersResult[$employeeId]['enactment_count'] = ($membersResult[$employeeId]['enactment_count'] ?? 0) + 1;
+
+                    if ($review) {
+                        $review->setAttribute('person', $member->person);
+                        // Increment the count for the review's status
+                        $status = $review->status->name;
+                        $membersResult[$employeeId][$status] = ($membersResult[$employeeId][$status] ?? 0) + 1;
+                    } else {
+                        // If no review is found, increment 'در انتظار بررسی'
+                        $membersResult[$employeeId][EnactmentReviewEnum::PENDING->value] = ($membersResult[$employeeId][EnactmentReviewEnum::PENDING->value] ?? 0) + 1;
+                    }
+                    $enactment->setAttribute('members', $meeting->meetingMembers);
+                }
+            }
+        }
+        $collection = collect($membersResult);
+
+// Calculate sums
+        $totalMoghayert = $collection->sum(EnactmentReviewEnum::INCONSISTENCY->value);
+        $totalAdamMoghayert = $collection->sum(EnactmentReviewEnum::NO_INCONSISTENCY->value);
+        $totalAdamMoghayertAutomatic = $collection->sum(EnactmentReviewEnum::SYSTEM_NO_INCONSISTENCY->value);
+        $totalPending = $collection->sum(EnactmentReviewEnum::PENDING->value);
+
+        $response = [
+            'totalMeetingCount' => $meetings->count(),
+            'totalEnactmentCount' => $meetings->pluck('enactments')->flatten()->count(),
+            'totalMoghayert' => $totalMoghayert,
+            'totalAdamMoghayert' => $totalAdamMoghayert,
+            'totalAdamMoghayertAutomatic' => $totalAdamMoghayertAutomatic,
+            'totalPending' => $totalPending,
+            'members' => $collection->isNotEmpty() ? $collection->values() : $ounit->meetingMembers,
+            'ounit' => $rs->ounit->ancestorsAndSelf,
+            'expired_count' => $totalAdamMoghayertAutomatic,
+            'approved_count' => $totalAdamMoghayert + $totalMoghayert,
+            'enactments' => $meetings->pluck('enactments'),
+        ];
+
+        return response()->json($response);
     }
 
 }

@@ -105,6 +105,7 @@ trait EmployeeTrait
 
         $employee = new Employee();
         $employee->personnel_code = $data['personnelCode'] ?? null;
+        $employee->signature_file_id = $data['signatureFileID'] ?? null;
         $employee->save();
 
         $workForce = new WorkForce();
@@ -150,6 +151,9 @@ trait EmployeeTrait
 
 
         $employee->personnel_code = $data['personnelCode'] ?? null;
+        $employee->signature_file_id = $data['signatureFileID'] ?? null;
+        $employee->save();
+
         $workForce = $employee->workForce;
         $workForce->person_id = $data['personID'];
         $workForce->isMarried = isset($data['isMarried']) ? 1 : 0;

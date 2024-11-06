@@ -547,10 +547,14 @@ class EMSController extends Controller
     {
         $consultingAutoMoghayerat = $this->getConsultingAutoMoghayerat();
         $boardAutoMoghayerat = $this->getBoardAutoMoghayerat();
+        $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+        $shouraMaxMeetingDateDaysAgo = $this->getShouraMaxMeetingDateDaysAgo();
 
         return response()->json([
             'consultingAutoMoghayerat' => $consultingAutoMoghayerat,
-            'boardAutoMoghayerat' => $boardAutoMoghayerat
+            'boardAutoMoghayerat' => $boardAutoMoghayerat,
+            'enactmentLimitPerMeeting' => $enactmentLimitPerMeeting,
+            'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo,
         ]);
     }
 
@@ -570,10 +574,15 @@ class EMSController extends Controller
 
             $a = $this->updateConsultingAutoMoghayerat($request->consultingAutoMoghayerat);
             $b = $this->updateBoardAutoMoghayerat($request->boardAutoMoghayerat);
+            $entLimit = $this->updateEnactmentLimitPerMeeting($request->enactmentLimitPerMeeting);
+            $shouraMaxMeetingDateDaysAgo = $this->updateShouraMaxMeetingDateDaysAgo($request->shouraMaxMeetingDateDaysAgo ?? 0);
+
             DB::commit();
             return response()->json(['message' => 'با موفقیت بروزرسانی شد', 'data' => [
                 'consultingAutoMoghayerat' => $a,
-                'boardAutoMoghayerat' => $b
+                'boardAutoMoghayerat' => $b,
+                'enactmentLimitPerMeeting' => $entLimit,
+                'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo
             ]]);
         } catch (Exception $e) {
             DB::rollBack();
