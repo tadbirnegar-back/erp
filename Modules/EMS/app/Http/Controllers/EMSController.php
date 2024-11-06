@@ -8,6 +8,7 @@ use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Mockery\Exception;
+use Modules\AAA\app\Http\Enums\UserRolesEnum;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Traits\AddressTrait;
@@ -469,17 +470,66 @@ class EMSController extends Controller
             $consultingMembers = $consultingMembers->unique('id')->values();
             $boardMembers = $boardMembers->unique('id')->values();
         }
-
-        $users = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+        $usersBakhshdarOzvHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
             $q->where('organization_unit_id', $ounit->id);
-        })->with('person.avatar')
+        })
+            ->whereHas('roles', function ($q) {
+                $q->where('name', UserRolesEnum::BAKHSHDAR); // Replace with your actual first condition
+            })
+            ->whereHas('roles', function ($q) {
+                $q->where('name', UserRolesEnum::OZV_HEYAAT); // Replace with your actual second condition
+            })
+            ->with('person.avatar')
             ->get(['id', 'person_id']);
 
+        $usersDabirKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+            $q->where('organization_unit_id', $ounit->id);
+        })
+            ->whereHas('roles', function ($q) {
+                $q->where('name', UserRolesEnum::DABIRKHANE->value); // Replace with your actual first condition
+            })
+            ->whereHas('roles', function ($q) {
+                $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual second condition
+            })
+            ->with('person.avatar')
+            ->get(['id', 'person_id']);
+
+
+        $usersKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+            $q->where('organization_unit_id', $ounit->id);
+        })
+            ->whereHas('roles', function ($q) {
+                $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual first condition
+            })
+            ->whereHas('roles', function ($q) {
+                $q->where('name', '!=', UserRolesEnum::DABIRKHANE->value); // Replace with your actual second condition
+            })
+            ->with('person.avatar')
+            ->get(['id', 'person_id']);
+
+        $usersHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+            $q->where('organization_unit_id', $ounit->id);
+        })
+            ->whereHas('roles', function ($q) {
+                $q->where('name', UserRolesEnum::OZV_HEYAAT->value)->where('name', '!=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual first condition
+            })
+            ->whereHas('roles', function ($q) {
+                $q->where('name', '!=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual second condition
+            })
+            ->with('person.avatar')
+            ->get(['id', 'person_id']);
         return response()->json([
             'consultingMembers' => $consultingMembers,
             'boardMembers' => $boardMembers,
-            'candidates' => $users
+            'candidates' => [
+                "ozv_heyaat" => $usersHeyaat,
+                "karshenas" => $usersKarshenas,
+                "dabir_karshenas" => $usersDabirKarshenas,
+                "bakhshdar_heyaat" => $usersBakhshdarOzvHeyaat,
+            ]
         ]);
+
+
     }
 
     public function updateHeyaatMembersByOunit(Request $request)
