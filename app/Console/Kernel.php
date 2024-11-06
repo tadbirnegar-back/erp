@@ -12,7 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('queue:work --sleep=3 --tries=3')->everyMinute();
+        $schedule->command('queue:work --sleep=3 --tries=3')->dailyAt('00:05');
     }
 
     /**
