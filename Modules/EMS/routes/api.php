@@ -84,4 +84,3 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 
 });
-Route::post('settings/district-members', [EMSController::class, 'getHeyaatMembersByOunit']);
