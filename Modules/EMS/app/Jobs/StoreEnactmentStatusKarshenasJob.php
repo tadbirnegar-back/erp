@@ -7,7 +7,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Models\Enactment;
@@ -44,15 +43,14 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
         },])->find($this->encId);
 
 
-        if ($enactment->members->isEmpty()) {
-            Log::info('No members found for this enactment.');
-        } else {
-            $data = $enactment->members->map(function ($member) {
-                Log::info($member);
+        if ($enactment->members->isNotEmpty()) {
+            $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
+
+            $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
                 return [
                     'user_id' => $member->employee_id,
                     'description' => "تایید توسط سیستم",
-                    'status_id' => $this->reviewNoSystemInconsistencyStatus()->id,
+                    'status_id' => $noMoghayeratAutoStatus->id,
                     'enactment_id' => $this->encId,
                 ];
             })->toArray();
@@ -60,7 +58,6 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
             // Insert the data into EnactmentReview only if the data array is not empty
             if (!empty($data)) {
                 EnactmentReview::insert($data);
-                Log::info('Bulk insert to EnactmentReview completed successfully.');
             }
         }
 

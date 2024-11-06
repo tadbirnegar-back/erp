@@ -3,7 +3,6 @@
 namespace Modules\EMS\app\Listeners;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Events\EnactmentStatusCreatedEvent;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
@@ -11,7 +10,6 @@ use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJobJob;
 use Modules\EMS\app\Models\Enactment;
-use Modules\EMS\app\Models\Meeting;
 
 class StoreEnactmentStatusInQueueListener
 {
@@ -37,18 +35,9 @@ class StoreEnactmentStatusInQueueListener
         if ($this->enactmentHeyaatStatus()->id == $enactmentStatus->status_id) {
             $enactment = Enactment::with("latestMeeting")->find($enactmentStatus->enactment_id);
 
-            Log::info($enactment);
 
             // Ensure meeting_date is in Carbon instance (convert if necessary)
             $meetingDate = $enactment->latestMeeting->getRawOriginal('meeting_date');
-            /**
-             * @var Meeting $meetingDate
-             */
-
-
-//            $meetingDate = DB::table('meetings')
-//                ->where('id', $meeting->id)
-//                ->value('meeting_date');
 
 
             // Convert the fetched date to a Carbon instance

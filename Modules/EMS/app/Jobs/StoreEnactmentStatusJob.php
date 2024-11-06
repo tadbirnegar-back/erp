@@ -44,15 +44,14 @@ class StoreEnactmentStatusJob implements ShouldQueue
         },])->find($this->encId);
 
 
-        if ($enactment->members->isEmpty()) {
-            Log::info('No members found for this enactment.');
-        } else {
-            $data = $enactment->members->map(function ($member) {
+        if ($enactment->members->isNotEmpty()) {
+            $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
+            $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
                 Log::info($member);
                 return [
                     'user_id' => $member->employee_id,
                     'description' => "تایید توسط سیستم",
-                    'status_id' => $this->reviewNoSystemInconsistencyStatus()->id,
+                    'status_id' => $noMoghayeratAutoStatus->id,
                     'enactment_id' => $this->encId,
                 ];
             })->toArray();
@@ -60,7 +59,6 @@ class StoreEnactmentStatusJob implements ShouldQueue
             // Insert the data into EnactmentReview only if the data array is not empty
             if (!empty($data)) {
                 EnactmentReview::insert($data);
-                Log::info('Bulk insert to EnactmentReview completed successfully.');
             }
         }
 
