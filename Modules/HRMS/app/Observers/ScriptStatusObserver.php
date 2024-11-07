@@ -5,7 +5,7 @@ namespace Modules\HRMS\app\Observers;
 use Modules\HRMS\app\Events\ScriptStatusCreatedEvent;
 use Modules\HRMS\app\Models\recruitmentScriptStatus;
 
-class ScriptStatusObserverObserver
+class ScriptStatusObserver
 {
     /**
      * Handle the ScriptStatusObserver "created" event.

@@ -12,8 +12,9 @@ class ScriptStatusController extends Controller
      */
     public function index()
     {
-        RecruitmentScriptStatus::create([
-            
+        $rec = RecruitmentScriptStatus::create([
+            'recruitment_script_id' => 2702,
+            'status_id' => 44,
         ]);
     }
 }
