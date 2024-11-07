@@ -7,19 +7,20 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class ExpireScriptJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $scriptid;
+    protected int $rs;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($scriptid)
+    public function __construct($rs)
     {
-        $this->scriptid = $scriptid;
+        $this->rs = $rs;
     }
 
     /**
@@ -27,6 +28,6 @@ class ExpireScriptJob implements ShouldQueue
      */
     public function handle(): void
     {
-        //
+        Log::info($this->rs);
     }
 }

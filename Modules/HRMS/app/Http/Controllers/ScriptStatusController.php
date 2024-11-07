@@ -14,7 +14,7 @@ class ScriptStatusController extends Controller
     {
         $rec = RecruitmentScriptStatus::create([
             'recruitment_script_id' => 2702,
-            'status_id' => 44,
+            'status_id' => 60,
         ]);
     }
 }
