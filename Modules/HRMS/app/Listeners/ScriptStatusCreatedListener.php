@@ -39,7 +39,7 @@ class ScriptStatusCreatedListener
 
             // Dispatch the job only if delay is positive
             if ($delayInSeconds > 0) {
-                ExpireScriptJob::dispatch($recstatus->recruitment_script_id)->delay($delayInSeconds);
+                ExpireScriptJob::dispatch($recstatus->recruitment_script_id);
             }
         }
     }

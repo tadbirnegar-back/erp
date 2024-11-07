@@ -88,8 +88,8 @@ class EmployeeController extends Controller
         try {
             DB::beginTransaction();
 
-            $data['userID'] = \Auth::user()->id;
-
+            // $data['userID'] = \Auth::user()->id;
+            $data['userID'] = User::find(2129)->id;
             if ($request->isNewAddress) {
                 $address = $this->addressStore($data);
 
@@ -103,9 +103,11 @@ class EmployeeController extends Controller
 
             $data['personID'] = $personResult->person->id;
             $data['password'] = $data['nationalCode'];
+
             $user = $this->isPersonUserCheck($personResult->person);
             $user = $user ?? $this->storeUser($data);
 
+            return response()->json($user);
 
             $personAsEmployee = $this->isEmployee($data['personID']);
             $employee = !is_null($personAsEmployee) ? $this->employeeUpdate($data, $personAsEmployee) : $this->employeeStore($data);
@@ -148,6 +150,10 @@ class EmployeeController extends Controller
 
             }
             DB::commit();
+
+            $user->notify(new ScriptExpireNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name));
+
+
             return response()->json($employee);
 
         } catch (Exception $e) {

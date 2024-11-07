@@ -127,6 +127,6 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
 
 });
-
-
+//Sms Tests
+Route::post('/AddEmployee', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'store']);
 Route::get('/MakeRecStatus', [\Modules\HRMS\app\Http\Controllers\ScriptStatusController::class, 'index']);
