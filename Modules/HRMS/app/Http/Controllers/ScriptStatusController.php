@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Modules\HRMS\app\Models\recruitmentScriptStatus;
 
 class ScriptStatusController extends Controller
 {
@@ -11,6 +12,8 @@ class ScriptStatusController extends Controller
      */
     public function index()
     {
-        return view('hrms::index');
+        RecruitmentScriptStatus::create([
+            
+        ]);
     }
 }
