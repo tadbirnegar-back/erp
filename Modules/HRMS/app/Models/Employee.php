@@ -44,7 +44,7 @@ class Employee extends Model
                 'person_id',            // Local key on the `workforces` table...
                 'id',                   // Local key on the `persons` table...
             ]
-        );
+        )->where('workforces.workforceable_type', Employee::class);
     }
 
 

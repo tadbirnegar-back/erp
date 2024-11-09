@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\recruitmentScriptStatus;
 
 class ApprovingListController extends Controller
 {
@@ -34,13 +35,16 @@ class ApprovingListController extends Controller
             $user = auth()->user();
             $script = RecruitmentScript::find($id);
 
-            $canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
+            return response() -> json
+            //$canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
 
             if (!$canApprove) {
                 return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
             }
 
             $result = $this->approveScript($script, $user);
+
+            $rcstatus = recruitmentScriptStatus::where('recruitment_script_id', $script->id)->latest()->first();
 
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت تایید شد']);
