@@ -8,6 +8,7 @@ use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Notifications\NewRsNotification;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
@@ -20,6 +21,7 @@ use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
+use Modules\PersonMS\app\Models\Person;
 
 class RecruitmentScriptController extends Controller
 {
@@ -184,15 +186,17 @@ class RecruitmentScriptController extends Controller
 
             $employee = Employee::find($rsRes[0]->employee_id);
             $user = $employee->user;
+            $person = Person::whereHas('user', function ($q) use ($user) {
+                $q->where('id', $user->id);
+            })->with('user')->first();
 
-            $user->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
+            $user->notify(new NewRsNotification($person->display_name));
 
-            return response()->json($user);
 
             DB::commit();
 
 
-            return response()->json($rsRes[0]);
+            return response()->json($rsRes);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در افزودن حکم'], 500);
