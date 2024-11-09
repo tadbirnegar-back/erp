@@ -24,10 +24,10 @@ class Employee extends Model
     protected $fillable = [];
     public $timestamps = false;
 
-    protected static function newFactory(): EmployeeFactory
-    {
-        //return EmployeeFactory::new();
-    }
+//    protected static function newFactory(): EmployeeFactory
+//    {
+//        return EmployeeFactory\::new();
+//    }
 
     public function user()
     {
@@ -44,7 +44,7 @@ class Employee extends Model
                 'person_id',            // Local key on the `workforces` table...
                 'id',                   // Local key on the `persons` table...
             ]
-        )->where('workforces.workforceable_type', Employee::class);
+        )->where('work_forces.workforceable_type', Employee::class);
     }
 
 

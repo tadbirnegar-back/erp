@@ -5,8 +5,10 @@ namespace Modules\HRMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\recruitmentScriptStatus;
+use Modules\HRMS\app\Notifications\ApproveRsNotification;
+use Modules\PersonMS\app\Models\Person;
 
 class ApprovingListController extends Controller
 {
@@ -35,8 +37,7 @@ class ApprovingListController extends Controller
             $user = auth()->user();
             $script = RecruitmentScript::find($id);
 
-            return response() -> json
-            //$canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
+            $canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
 
             if (!$canApprove) {
                 return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
@@ -44,15 +45,21 @@ class ApprovingListController extends Controller
 
             $result = $this->approveScript($script, $user);
 
-            $rcstatus = recruitmentScriptStatus::where('recruitment_script_id', $script->id)->latest()->first();
+            $rcstatus = $script->latestStatus;
 
+
+            $employee = Employee::find($script->employee_id);
+            $person = Person::find($employee->user->person_id);
+            if ($rcstatus == 'فعال') {
+                $employee->user->notify(new ApproveRsNotification($person->display_name));
+            }
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت تایید شد']);
 
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در تایید حکم'], 500);
+            return response()->json(['message' => 'خطا در تایید حکم', 'sth' => $e], 500);
         }
     }
 
