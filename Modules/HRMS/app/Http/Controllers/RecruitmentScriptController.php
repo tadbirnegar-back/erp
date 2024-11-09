@@ -116,7 +116,7 @@ class RecruitmentScriptController extends Controller
 
     public function recruitmentScriptShow(Request $request, $id)
     {
-        $script = RecruitmentScript::with('employee.person',)->find($id);
+        $script = RecruitmentScript::with('employee.person')->find($id);
         if (is_null($script)) {
             return response()->json(['message' => 'موردی یافت نشد'], 404);
         }
@@ -182,9 +182,15 @@ class RecruitmentScriptController extends Controller
                 collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
             }
 
+            $employee = Employee::find($rsRes[0]->employee_id);
+            $user = $employee->user;
+
+            return response()->json($user);
 
             DB::commit();
-            return response()->json($rsRes);
+
+
+            return response()->json($rsRes[0]);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در افزودن حکم'], 500);

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\EmployeeFactory;
 use Modules\PersonMS\app\Models\Person;
@@ -27,6 +28,25 @@ class Employee extends Model
     {
         //return EmployeeFactory::new();
     }
+
+    public function user()
+    {
+        return $this->hasOneDeep(
+            User::class,                // The target model you want to access
+            [Workforce::class, Person::class], // Intermediate models
+            [
+                'workforceable_id',     // Foreign key on the `workforces` table...
+                'id',                   // Foreign key on the `persons` table...
+                'person_id',            // Foreign key on the `users` table...
+            ],
+            [
+                'id',                   // Local key on the `employees` table...
+                'person_id',            // Local key on the `workforces` table...
+                'id',                   // Local key on the `persons` table...
+            ]
+        );
+    }
+
 
     public function workForce(): MorphOne
     {
@@ -111,4 +131,6 @@ class Employee extends Model
     {
         return Status::all()->where('model', '=', self::class);
     }
+
+
 }
