@@ -4,6 +4,7 @@ namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Modules\HRMS\app\Http\Enums\ScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -50,7 +51,7 @@ class ApprovingListController extends Controller
 
             $employee = Employee::find($script->employee_id);
             $person = Person::find($employee->user->person_id);
-            if ($rcstatus->name == 'فعال') {
+            if ($rcstatus->name == ScriptStatusEnum::FAAL->value) {
                 $employee->user->notify(new ApproveRsNotification($person->display_name));
             }
             DB::commit();
@@ -91,7 +92,7 @@ class ApprovingListController extends Controller
 
             $person = Person::find($employee->user->person_id);
 
-            if ($rcstatus->name == 'فعال') {
+            if ($rcstatus->name == ScriptStatusEnum::GHEYREFAAL) {
                 $employee->user->notify(new ApproveRsNotification($person->display_name));
             }
             DB::commit();
