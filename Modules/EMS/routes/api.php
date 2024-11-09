@@ -84,3 +84,5 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 
 });
+
+Route::get('/MakeStatussss', [EMSController::class, 'sdsdsdsd']);
