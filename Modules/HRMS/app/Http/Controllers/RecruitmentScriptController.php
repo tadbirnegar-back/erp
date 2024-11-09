@@ -185,6 +185,8 @@ class RecruitmentScriptController extends Controller
             $employee = Employee::find($rsRes[0]->employee_id);
             $user = $employee->user;
 
+            $user->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
+
             return response()->json($user);
 
             DB::commit();
