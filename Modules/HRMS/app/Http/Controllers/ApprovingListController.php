@@ -50,7 +50,7 @@ class ApprovingListController extends Controller
 
             $employee = Employee::find($script->employee_id);
             $person = Person::find($employee->user->person_id);
-            if ($rcstatus == 'فعال') {
+            if ($rcstatus->name == 'فعال') {
                 $employee->user->notify(new ApproveRsNotification($person->display_name));
             }
             DB::commit();
@@ -85,7 +85,17 @@ class ApprovingListController extends Controller
             }
 
             $result = $this->declineScript($script, $user);
+
+            $rcstatus = $script->latestStatus;
+            $employee = Employee::find($script->employee_id);
+
+            $person = Person::find($employee->user->person_id);
+
+            if ($rcstatus->name == 'فعال') {
+                $employee->user->notify(new ApproveRsNotification($person->display_name));
+            }
             DB::commit();
+
 
             return response()->json([
                 "result" => $result

@@ -130,3 +130,4 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 Route::post('/AddScript', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'store']);
 Route::post('/VerificationRs', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'store']);
 Route::post('/taied/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'approveScriptByUser']);
+Route::post('/radrc/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'declineScriptByUser']);
