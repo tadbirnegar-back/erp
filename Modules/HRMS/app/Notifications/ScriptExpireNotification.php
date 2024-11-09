@@ -59,6 +59,8 @@ class ScriptExpireNotification extends Notification
     public function toSms($notifiable)
     {
         try {
+            //Todo: Change Pattern
+
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=ovukyjs4dyfllf1 \n username={$this->username} \n exp_date={$this->exp_date} \n script_type={$this -> script_type} \n ounit_name={$this->ounit_name}")
                 ->to($notifiable->mobile);
