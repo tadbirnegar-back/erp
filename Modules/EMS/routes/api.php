@@ -84,5 +84,3 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 
 });
-
-Route::get('/MakeMeeting', [EMSController::class, 'makemakemake']);

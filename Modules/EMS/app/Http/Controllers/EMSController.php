@@ -4,7 +4,6 @@ namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
-use Carbon\Carbon;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -664,16 +663,5 @@ class EMSController extends Controller
         }
     }
 
-
-    public function makemakemake()
-    {
-        Meeting::create([
-            'isTemplate' => 0,
-            'creator_id' => 2086,
-            'meeting_type_id' => 3,
-            'ounit_id' => 3874,
-            'meeting_date' => Carbon::now()->format('Y-m-d H:i:s'),
-        ]);
-    }
 
 }
