@@ -12,7 +12,7 @@ use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Notifications\AlertMMLastDatNotification;
 use Modules\PersonMS\app\Models\Person;
 
-class AlertKarshenas implements ShouldQueue
+class AlertHeyaat implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -36,7 +36,7 @@ class AlertKarshenas implements ShouldQueue
                 $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
                     $subQuery->where('enactment_id', 29);
                 })->whereHas('roles', function ($q) {
-                    $q->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
+                    $q->where('name', RolesEnum::OZV_HEYAAT->value);
                 })->with(['user']);
             },
         ])->find($this->encId);
