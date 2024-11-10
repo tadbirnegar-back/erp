@@ -3,10 +3,10 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use \Illuminate\Support\Facades\Auth;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
@@ -383,5 +383,13 @@ class EnactmentController extends Controller
 
     }
 
+    public function MakeEncStatus()
+    {
+        EnactmentStatus::create([
+            'enactment_id' => 29,
+            'operator_id' => 2086,
+            'status_id' => 67,
+        ]);
+    }
 
 }

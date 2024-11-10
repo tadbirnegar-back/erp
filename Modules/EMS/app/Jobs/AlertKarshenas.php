@@ -1,0 +1,45 @@
+<?php
+
+namespace Modules\EMS\app\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Modules\EMS\app\Http\Enums\RolesEnum;
+use Modules\EMS\app\Models\Enactment;
+
+class AlertKarshenas implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public int $encId;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(int $encId)
+    {
+        $this->encId = $encId;
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        $enactment = Enactment::with(['meeting.meetingMembers' => function ($query) {
+            $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
+                $subQuery->where('enactment_id', 29);
+            })->whereHas('roles', function ($q) {
+                $q->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
+            });
+
+        },])->find($this->encId);
+
+        Log::info($enactment);
+
+    }
+}

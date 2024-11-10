@@ -6,8 +6,7 @@ use Carbon\Carbon;
 use Modules\EMS\app\Events\EnactmentStatusCreatedEvent;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
-use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
-use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
+use Modules\EMS\app\Jobs\AlertKarshenas;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJobJob;
 use Modules\EMS\app\Models\Enactment;
 
@@ -53,9 +52,10 @@ class StoreEnactmentStatusInQueueListener
             $delayKarshenas = $meetingDate2->addDays($consultingDelay + 1)->addMinutes(5);
 
 
+            AlertKarshenas::dispatch($enactmentStatus->enactment_id);
             // Dispatch the job with the calculated delay
-            StoreEnactmentStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayHeyat);
-            StoreEnactmentStatusKarshenasJob::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
+            //StoreEnactmentStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayHeyat);
+            //StoreEnactmentStatusKarshenasJob::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
         }
     }
 
