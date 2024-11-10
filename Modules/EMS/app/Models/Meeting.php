@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\EMS\app\Observers\MeetingDateObserver;
 use Modules\EMS\Database\factories\MeetingFactory;
 use Modules\HRMS\app\Models\Employee;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -46,6 +47,13 @@ class Meeting extends Model
         return $this->belongsToMany(Status::class, 'meeting_status', 'meeting_id', 'status_id');
     }
 
+
+    protected static function boot()
+    {
+        parent::boot();
+        // Register the observer
+        static::observe(MeetingDateObserver::class);
+    }
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
