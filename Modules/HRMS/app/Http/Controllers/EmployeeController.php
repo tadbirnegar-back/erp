@@ -35,6 +35,7 @@ use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\app\Notifications\RegisterDehyarNotification;
 use Modules\HRMS\app\Notifications\RegisterHeyaatNotification;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
@@ -284,6 +285,9 @@ class EmployeeController extends Controller
                 }
 
             }
+
+            $user->notify(new RegisterDehyarNotification());
+
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);
         } catch (Exception $e) {

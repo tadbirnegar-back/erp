@@ -9,7 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Notifications\ScriptExpireNotification;
+use Modules\HRMS\app\Notifications\RegisterDehyarNotification;
 
 class ExpireScriptJob implements ShouldQueue
 {
@@ -47,7 +47,7 @@ class ExpireScriptJob implements ShouldQueue
 
             Log::info($user->id);
 
-            $user->notify(new ScriptExpireNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name));
+            $user->notify(new RegisterDehyarNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name));
         } else {
             Log::warning('User not found for RecruitmentScript ID: ' . $this->rs);
         }
