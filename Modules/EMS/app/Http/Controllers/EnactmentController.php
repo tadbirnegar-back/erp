@@ -383,13 +383,5 @@ class EnactmentController extends Controller
 
     }
 
-    public function MakeEncStatus()
-    {
-        EnactmentStatus::create([
-            'enactment_id' => 29,
-            'operator_id' => 2086,
-            'status_id' => 67,
-        ]);
-    }
 
 }
