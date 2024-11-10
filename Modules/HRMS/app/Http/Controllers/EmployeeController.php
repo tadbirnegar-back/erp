@@ -35,7 +35,7 @@ use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\ScriptType;
-use Modules\HRMS\app\Notifications\AddEmployeeNotification;
+use Modules\HRMS\app\Notifications\RegisterHeyaatNotification;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Religion;
@@ -162,7 +162,7 @@ class EmployeeController extends Controller
             $orginazationName = $position->organizationUnit->name;
 
 
-            $userSMSsend->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
+            $userSMSsend->notify(new RegisterHeyaatNotification($username, $positionName, $orginazationName));
 
 
         } catch (Exception $e) {
