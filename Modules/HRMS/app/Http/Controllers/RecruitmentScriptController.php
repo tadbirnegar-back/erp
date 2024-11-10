@@ -161,14 +161,14 @@ class RecruitmentScriptController extends Controller
 
             });
 
-            $scriptType = ScriptType::with('issueTime', 'employeeStatus')->find($data['scriptTypeID']);
+            $scriptType = ScriptType::with('employeeStatus')->find($data['scriptTypeID']);
 
-            if (isset($data['parentID'])) {
-
-
-                $this->changeParentRecruitmentScriptStatus($employee, $data['parentID'], $scriptType->issueTime);
-
-            }
+//            if (isset($data['parentID'])) {
+//
+//
+//                $this->changeParentRecruitmentScriptStatus($employee, $data['parentID'], $scriptType->issueTime);
+//
+//            }
 
             $pendingRsStatus =
 //                $scriptType->employeeStatus->name == self::$pendingEmployeeStatus

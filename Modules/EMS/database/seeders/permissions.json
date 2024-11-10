@@ -78,9 +78,51 @@
         "permissionTypeName": "sidebar"
     },
     {
+        "name": "لیست اعضای هیئت بخشداری",
+        "slug": "/mes/settings/district-members/list",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
+    },
+    {
         "name": "مشاهده گزارش مصوبات من",
         "slug": "/mes/reports/my-report",
         "moduleName": "EMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده گزارش مصوبات دیگر اعضا هیئت",
+        "slug": "/mes/reports/member",
+        "moduleName": "EMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی عناوین مصوبه",
+        "slug": "/mes/settings/enactment-titles/{id}",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن عناوین مصوبه",
+        "slug": "/mes/settings/enactment-titles/add",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست عناوین مصوبه",
+        "slug": "/mes/settings/enactment-titles/list",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی تایید خودکار رای مصوبه",
+        "slug": "/mes/settings/auto-moghayerat",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی اعضای هیئت بخشداری",
+        "slug": "/mes/settings/district-members",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
     }
 ]

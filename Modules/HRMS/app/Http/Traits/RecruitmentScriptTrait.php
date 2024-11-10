@@ -88,7 +88,7 @@ trait RecruitmentScriptTrait
             $rs->status()->attach($status->id);
 
             if (isset($data[$key]['files'])) {
-                $fileScriptsData = json_decode($data[$key]['files'], true);
+                $fileScriptsData = !is_array($data[$key]['files']) ? json_decode($data[$key]['files'], true) : $data[$key]['files'];
             } else {
                 $fileScriptsData = null;
             }
