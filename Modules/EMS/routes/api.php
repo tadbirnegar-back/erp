@@ -84,3 +84,4 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 
 });
+Route::post('mes/enactments/decline/{id}', [EnactmentController::class, 'enactmentDenial']);

@@ -3,10 +3,10 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use \Illuminate\Support\Facades\Auth;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
@@ -262,8 +262,10 @@ class EnactmentController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = Auth::user();
+            //$user = Auth::user();
             $enactment = Enactment::with('status')->find($id);
+
+            return response()->json($enactment);
             if (is_null($enactment)) {
                 return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
             }
