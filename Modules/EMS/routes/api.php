@@ -84,4 +84,3 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 
 });
-Route::post('/regHeyat', [EMSController::class, 'registerHetaatMember']);
