@@ -3,14 +3,15 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use \Illuminate\Support\Facades\Auth;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
+use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -25,7 +26,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EnactmentController extends Controller
 {
-    use EnactmentTrait, MeetingTrait, EnactmentReviewTrait;
+    use EnactmentTrait, MeetingTrait, EnactmentReviewTrait, EMSSettingTrait;
 
     /**
      * Display a listing of the resource.
@@ -133,7 +134,8 @@ class EnactmentController extends Controller
 
         $componentsToRenderWithData = $this->enactmentShow($enactment, $user);
         $enactment->setAttribute('componentsToRender', $componentsToRenderWithData);
-
+        $enactment->setAttribute('enactmentLimitPerMeeting', $this->getEnactmentLimitPerMeeting());
+        $enactment->setAttribute('shouraMaxMeetingDateDaysAgo', $this->getShouraMaxMeetingDateDaysAgo());
         return response()->json($enactment);
     }
 

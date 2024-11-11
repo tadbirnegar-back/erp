@@ -5,6 +5,7 @@ namespace Modules\HRMS\app\Http\Traits;
 use Illuminate\Support\Collection;
 use Modules\HRMS\app\Models\FileScript;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\StatusMS\app\Models\Status;
 
 trait RecruitmentScriptTrait
@@ -58,7 +59,9 @@ trait RecruitmentScriptTrait
                 'hireType',
                 'scriptType',
                 'employee.person',
-                'organizationUnit',
+                'organizationUnit.ancestorsAndSelf' => function ($query) {
+                    $query->where('unitable_type', '!=', StateOfc::class);
+                },
             ])->orderBy('create_date', 'desc')
             ->distinct();
 
@@ -83,10 +86,11 @@ trait RecruitmentScriptTrait
 
             $rs = RecruitmentScript::create($item);
             $rs->status()->attach($status->id);
-            if (isset($data[$key]['files']) && !is_array($data[$key]['files'])) {
-                $fileScriptsData = !empty($data[$key]['files']) ? json_decode($data[$key]['files'], true) : [];
+
+            if (isset($data[$key]['files'])) {
+                $fileScriptsData = !is_array($data[$key]['files']) ? json_decode($data[$key]['files'], true) : $data[$key]['files'];
             } else {
-                $fileScriptsData = $data[$key]['files'];
+                $fileScriptsData = null;
             }
             if (isset($data[$key]['files']) && is_array($fileScriptsData)) {
                 info($data[$key]['files']);
