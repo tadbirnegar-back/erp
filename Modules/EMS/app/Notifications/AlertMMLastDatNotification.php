@@ -48,7 +48,7 @@ class AlertMMLastDatNotification extends Notification
 
         try {
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=l9i5x7nfvw7oofq \n username={$this->username}")
+            ->send("patterncode=5extzat5ivr970k \n username={$this->username}")
                 ->to($notifiable->mobile);
 
 
