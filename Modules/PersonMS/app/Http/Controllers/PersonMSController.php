@@ -521,6 +521,7 @@ class PersonMSController extends Controller
             return response()->json(['message' => 'فردی با این مشخصات یافت نشد'], 404);
         }
 
+        return response()->json($person);
         $data = $request->all();
         try {
             DB::beginTransaction();
