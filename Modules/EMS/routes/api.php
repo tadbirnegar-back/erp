@@ -84,3 +84,7 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 
 });
+Route::post('/HeyaatMembers', [EMSController::class, 'getHeyaatMembers']);
+
+
+
