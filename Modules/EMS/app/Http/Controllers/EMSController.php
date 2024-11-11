@@ -16,6 +16,7 @@ use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTitleTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\EnactmentTitle;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
@@ -44,7 +45,7 @@ use Modules\PersonMS\app\Models\Person;
 
 class EMSController extends Controller
 {
-    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait, JobTrait, ApprovingListTrait, UserTrait, ScriptTypeTrait, EMSSettingTrait, EnactmentTitleTrait;
+    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait, JobTrait, ApprovingListTrait, UserTrait, ScriptTypeTrait, EMSSettingTrait, EnactmentTitleTrait, EMSSettingTrait;
 
     use MeetingTrait, MeetingMemberTrait;
 
@@ -285,12 +286,9 @@ class EMSController extends Controller
     {
         $user = Auth::user();
         $titles = EnactmentTitle::all();
-        $ounits = $user->activeRecruitmentScripts()
+        $ounits = $user->activeRecruitmentScript()
             ->whereHas('ounit', function ($query) {
                 $query->where('unitable_type', VillageOfc::class)->with('ancestors');
-            })
-            ->whereHas('issueTime', function ($query) {
-                $query->where('issue_times.title', 'شروع به همکاری');
             })
             ->with('ounit')
             ->get();
@@ -298,6 +296,7 @@ class EMSController extends Controller
 
         $result = [
             'enactmentTitles' => $titles,
+            'shouraMaxMeetingDateDaysAgo' => $this->getShouraMaxMeetingDateDaysAgo(),
             'ounits' => $ounits->pluck('ounit'),
         ];
 
@@ -562,7 +561,9 @@ class EMSController extends Controller
     {
         $validate = \Validator::make($request->all(), [
             'consultingAutoMoghayerat' => 'required',
-            'boardAutoMoghayerat' => 'required'
+            'boardAutoMoghayerat' => 'required',
+            'enactmentLimitPerMeeting' => 'required',
+            'shouraMaxMeetingDateDaysAgo' => 'required',
         ]);
 
         if ($validate->fails()) {
@@ -657,6 +658,18 @@ class EMSController extends Controller
             return response()->json(['message' => 'خطا در حذف عنوان مصوبه',
             ], 500);
         }
+    }
+
+
+    public function sdsdsdsd()
+    {
+        EnactmentStatus::create([
+            'enactment_id' => 29,
+            'operator_id' => 2086,
+            'status_id' => 67
+        ]);
+
+        return response()->json("created");
     }
 
 }

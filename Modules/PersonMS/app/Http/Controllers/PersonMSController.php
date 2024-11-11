@@ -12,6 +12,7 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\HRMS\app\Http\Traits\CourseRecordTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
+use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\IsarTrait;
 use Modules\HRMS\app\Http\Traits\MilitaryServiceTrait;
 use Modules\HRMS\app\Http\Traits\RelativeTrait;
@@ -36,7 +37,7 @@ use Modules\PersonMS\app\Models\ReligionType;
 
 class PersonMSController extends Controller
 {
-    use PersonTrait, UserTrait, AddressTrait, SkillTrait, RelativeTrait, SkillWorkForceTrait, EducationRecordTrait, CourseRecordTrait, ResumeTrait, MilitaryServiceTrait, IsarTrait;
+    use PersonTrait, UserTrait, AddressTrait, SkillTrait, RelativeTrait, SkillWorkForceTrait, EducationRecordTrait, CourseRecordTrait, ResumeTrait, MilitaryServiceTrait, IsarTrait, EmployeeTrait;
 
     public function naturalExists(Request $request)
     {
@@ -599,8 +600,9 @@ class PersonMSController extends Controller
         try {
             DB::beginTransaction();
             $employee = $person->employee;
-            $employee->personnel_code = $data['personnelCode'] ?? null;
-            $employee->save();
+            $data['personID'] = $person->id;
+            $this->employeeUpdate($data, $employee);
+
 
             DB::commit();
             return response()->json(['message' => 'اطلاعات پرسنلی با موفقیت ویرایش شد']);

@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Models\Enactment;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Models\ScriptType;
 
 
 class testController extends Controller
@@ -17,12 +17,8 @@ class testController extends Controller
 
     public function run()
     {
-        $enactment = Enactment::with("latestMeeting")->find(29);
-
-        Log::info($enactment);
-
-        // Ensure meeting_date is in Carbon instance (convert if necessary)
-        $meetingDate = $enactment->latestMeeting->getRawOriginal('meeting_date');
+        $st = ScriptType::find(2);
+        return response()->json($st);
 
 
 //            $meetingDate = DB::table('meetings')
