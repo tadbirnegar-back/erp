@@ -318,7 +318,6 @@ class EMSController extends Controller
         }]);
         $ounit = OrganizationUnit::with('meetingMembers.roles', 'meetingMembers.user')->find($user?->activeRecruitmentScript[0]->organizationUnit->id);
 
-        
         $consultingMembers = collect();
         $boardMembers = collect();
 
@@ -385,8 +384,6 @@ class EMSController extends Controller
             ->with('person.avatar')
             ->get(['id', 'person_id']);
         return response()->json([
-            'consultingMembers' => $consultingMembers,
-            'boardMembers' => $boardMembers,
             'candidates' => [
                 "ozv_heyaat" => $usersHeyaat,
                 "karshenas" => $usersKarshenas,
@@ -394,6 +391,7 @@ class EMSController extends Controller
                 "bakhshdar_heyaat" => $usersBakhshdarOzvHeyaat,
             ]
         ]);
+
     }
 
     public function updateHeyaatMembers(Request $request)
