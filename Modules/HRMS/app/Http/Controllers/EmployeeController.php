@@ -287,6 +287,7 @@ class EmployeeController extends Controller
 
             $username = Person::find($user->person_id)->display_name;
 
+
             $user->notify(new RegisterNotification($username));
 
             DB::commit();
