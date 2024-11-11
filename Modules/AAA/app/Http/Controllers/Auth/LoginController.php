@@ -14,7 +14,7 @@ use Laravel\Passport\Token;
 use Modules\AAA\app\Http\Repositories\OtpRepository;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
-use Modules\AAA\app\Notifications\OtpNotification;
+use Modules\AAA\app\Notifications\NewRsNotification;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -482,7 +482,7 @@ class LoginController extends Controller
             return response()->json(['message' => 'خطا در ارسال رمز یکبار مصرف'], 500);
 
         }
-        $user->notify(new OtpNotification($otpCode));
+        $user->notify(new NewRsNotification($otpCode));
         return response()->json(['message' => 'رمز یکبارمصرف ارسال شد']);
 
     }

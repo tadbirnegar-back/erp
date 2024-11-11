@@ -20,6 +20,7 @@ class Kernel extends ConsoleKernel
 
         // Stop the queue worker at 00:10 (using pkill to terminate the process)
         $schedule->exec('pkill -f "php artisan queue:work"')
+
             ->dailyAt('00:20')
             ->withoutOverlapping();
     }

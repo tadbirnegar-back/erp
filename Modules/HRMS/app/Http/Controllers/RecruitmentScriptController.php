@@ -8,6 +8,7 @@ use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Notifications\NewRsNotification;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
@@ -20,6 +21,7 @@ use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
+use Modules\PersonMS\app\Models\Person;
 
 class RecruitmentScriptController extends Controller
 {
@@ -116,7 +118,7 @@ class RecruitmentScriptController extends Controller
 
     public function recruitmentScriptShow(Request $request, $id)
     {
-        $script = RecruitmentScript::with('employee.person',)->find($id);
+        $script = RecruitmentScript::with('employee.person')->find($id);
         if (is_null($script)) {
             return response()->json(['message' => 'موردی یافت نشد'], 404);
         }
@@ -182,8 +184,18 @@ class RecruitmentScriptController extends Controller
                 collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
             }
 
+            $employee = Employee::find($rsRes[0]->employee_id);
+            $user = $employee->user;
+            $person = Person::whereHas('user', function ($q) use ($user) {
+                $q->where('id', $user->id);
+            })->with('user')->first();
+
+            $user->notify(new NewRsNotification($person->display_name));
+
 
             DB::commit();
+
+
             return response()->json($rsRes);
         } catch (Exception $e) {
             DB::rollBack();

@@ -4,8 +4,12 @@ namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Modules\HRMS\app\Http\Enums\ScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Notifications\ApproveRsNotification;
+use Modules\PersonMS\app\Models\Person;
 
 class ApprovingListController extends Controller
 {
@@ -42,13 +46,21 @@ class ApprovingListController extends Controller
 
             $result = $this->approveScript($script, $user);
 
+            $rcstatus = $script->latestStatus;
+
+
+            $employee = Employee::find($script->employee_id);
+            $person = Person::find($employee->user->person_id);
+            if ($rcstatus->name == ScriptStatusEnum::FAAL->value) {
+                $employee->user->notify(new ApproveRsNotification($person->display_name));
+            }
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت تایید شد']);
 
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در تایید حکم'], 500);
+            return response()->json(['message' => 'خطا در تایید حکم', 'sth' => $e], 500);
         }
     }
 
@@ -74,7 +86,17 @@ class ApprovingListController extends Controller
             }
 
             $result = $this->declineScript($script, $user);
+
+            $rcstatus = $script->latestStatus;
+            $employee = Employee::find($script->employee_id);
+
+            $person = Person::find($employee->user->person_id);
+
+            if ($rcstatus->name == ScriptStatusEnum::GHEYREFAAL) {
+                $employee->user->notify(new ApproveRsNotification($person->display_name));
+            }
             DB::commit();
+
 
             return response()->json([
                 "result" => $result
