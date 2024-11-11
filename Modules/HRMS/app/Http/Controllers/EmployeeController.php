@@ -35,8 +35,7 @@ use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\ScriptType;
-use Modules\HRMS\app\Notifications\RegisterDehyarNotification;
-use Modules\HRMS\app\Notifications\RegisterHeyaatNotification;
+use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Religion;
@@ -163,7 +162,7 @@ class EmployeeController extends Controller
             $orginazationName = $position->organizationUnit->name;
 
 
-            $userSMSsend->notify(new RegisterHeyaatNotification($username, $positionName, $orginazationName));
+            $userSMSsend->notify(new RegisterNotification($username, $positionName, $orginazationName));
 
 
         } catch (Exception $e) {
@@ -286,7 +285,9 @@ class EmployeeController extends Controller
 
             }
 
-            $user->notify(new RegisterDehyarNotification());
+            $username = Person::find($user->person_id)->display_name;
+
+            $user->notify(new RegisterNotification($username));
 
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);

@@ -9,7 +9,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class RegisterDehyarNotification extends Notification
+class RegisterNotification extends Notification
 {
     use Queueable;
 
@@ -17,9 +17,11 @@ class RegisterDehyarNotification extends Notification
      * Create a new notification instance.
      */
 
+    private string $username;
 
-    public function __construct()
+    public function __construct(string $username)
     {
+        $this->username = $username;
     }
 
 
@@ -54,7 +56,7 @@ class RegisterDehyarNotification extends Notification
             //Todo: Change Pattern
 
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=ovukyjs4dyfllf1")
+            ->send("patterncode=l9i5x7nfvw7oofq \n username={$this->username}")
                 ->to($notifiable->mobile);
 
 

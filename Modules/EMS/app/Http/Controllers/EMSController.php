@@ -36,7 +36,7 @@ use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\ScriptType;
-use Modules\HRMS\app\Notifications\RegisterHeyaatNotification;
+use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -245,8 +245,9 @@ class EMSController extends Controller
                 collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
             }
 
-            $user->notify(new RegisterHeyaatNotification());
+            $username = Person::find($user->person_id)->display_name;
 
+            $user->notify(new RegisterNotification($username));
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);
         } catch (Exception $e) {
