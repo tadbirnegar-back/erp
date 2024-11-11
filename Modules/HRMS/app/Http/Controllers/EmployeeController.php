@@ -90,8 +90,7 @@ class EmployeeController extends Controller
         try {
             DB::beginTransaction();
 
-            // $data['userID'] = \Auth::user()->id;
-            $data['userID'] = User::find(2126)->id;
+            $data['userID'] = \Auth::user()->id;
             if ($request->isNewAddress) {
                 $address = $this->addressStore($data);
 
@@ -155,15 +154,22 @@ class EmployeeController extends Controller
             DB::commit();
 
 
-            $userSMSsend = User::find($data['userID']);
             $username = $personResult->person->display_name;
             $position = RecruitmentScript::with('position', 'organizationUnit')->where('employee_id', 2124)->first();
             $positionName = $position->position->name;
             $orginazationName = $position->organizationUnit->name;
 
 
-            $userSMSsend->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
+//            return response()->json([
+//                'username' => $username,
+//                "positionName" => $positionName,
+//                "organName" => $orginazationName,
+//                "user" => $user
+//            ]);
 
+            $user->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
+
+            return response()->json($employee);
 
         } catch (Exception $e) {
             DB::rollBack();
