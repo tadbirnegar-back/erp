@@ -5,7 +5,6 @@ namespace Modules\HRMS\app\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
 use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
@@ -19,12 +18,11 @@ class NewRsNotification extends Notification
      */
     private string $username;
 
-    /**
-     * @param string $username
-     */
+
     public function __construct(string $username)
     {
         $this->username = $username;
+
     }
 
 
@@ -60,8 +58,6 @@ class NewRsNotification extends Notification
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=6kqdiqpxgzoiujk \n username={$this->username}")
                 ->to($notifiable->mobile);
-
-            Log::info($notifiable);
 
 
             return $a;
