@@ -57,7 +57,7 @@ class ApproveRsNotification extends Notification
         try {
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=6kqdiqpxgzoiujk \n username={$this->username}")
+            ->send("patterncode=x12qfe9adfr94sw \n username={$this->username}")
                 ->to($notifiable->mobile);
 
 
