@@ -45,7 +45,6 @@ class ExpireScriptJob implements ShouldQueue
             $ExpDateEng = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d', strtotime($recruitmentScript->expire_date)); // 1395-02-19
             $ExpDateFarsi = \Morilog\Jalali\CalendarUtils::convertNumbers($ExpDateEng); // ۱۳۹۵-۰۲-۱۹
 
-            Log::info($user->id);
 
             $user->notify(new ScriptExpireNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name));
         } else {
