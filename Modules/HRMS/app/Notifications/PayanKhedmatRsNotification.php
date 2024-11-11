@@ -17,13 +17,17 @@ class PayanKhedmatRsNotification extends Notification
      * Create a new notification instance.
      */
     private string $username;
+    private string $ounit_name;
+    private string $position_name;
 
     /**
      * @param string $otpCode
      */
-    public function __construct(string $username)
+    public function __construct(string $username, string $ounit_name, string $position_name)
     {
         $this->username = $username;
+        $this->position_name = $position_name;
+        $this->ounit_name = $ounit_name;
     }
 
 
@@ -57,7 +61,7 @@ class PayanKhedmatRsNotification extends Notification
         try {
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=l9i5x7nfvw7oofq \n username={$this->username}")
+            ->send("patterncode=l9i5x7nfvw7oofq \n username={$this->username} \n  ounit_name={$this->ounit_name} \n  position_name={$this->position_name} ")
                 ->to($notifiable->mobile);
 
 
