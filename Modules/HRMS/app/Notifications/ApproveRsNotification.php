@@ -19,7 +19,7 @@ class ApproveRsNotification extends Notification
     private string $username;
 
     /**
-     * @param string $otpCode
+     * @param string $username
      */
     public function __construct(string $username)
     {
@@ -57,7 +57,7 @@ class ApproveRsNotification extends Notification
         try {
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=l9i5x7nfvw7oofq \n username={$this->username}")
+            ->send("patterncode=6kqdiqpxgzoiujk \n username={$this->username}")
                 ->to($notifiable->mobile);
 
 
