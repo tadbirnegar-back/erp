@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
+use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\StatusMS\app\Models\Status;
 
 class ScriptType extends Model
@@ -20,10 +21,17 @@ class ScriptType extends Model
     //protected $fillable = [];
 
     public $timestamps = false;
-    protected $appends = ['formula'];
+    protected $appends = ['formula',
+        'origin'];
     protected $casts = [
         'isHeadable' => 'boolean',
+        'origin_id' => ScriptTypeOriginEnum::class,
     ];
+
+    public function getOriginAttribute()
+    {
+        return $this->origin_id?->getLabelAndValue();
+    }
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {

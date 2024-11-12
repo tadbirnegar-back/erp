@@ -16,10 +16,12 @@ use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\app\Notifications\NewRsNotification;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
+use Modules\PersonMS\app\Models\Person;
 
 class RecruitmentScriptController extends Controller
 {
@@ -116,7 +118,7 @@ class RecruitmentScriptController extends Controller
 
     public function recruitmentScriptShow(Request $request, $id)
     {
-        $script = RecruitmentScript::with('employee.person',)->find($id);
+        $script = RecruitmentScript::with('employee.person')->find($id);
         if (is_null($script)) {
             return response()->json(['message' => 'موردی یافت نشد'], 404);
         }
@@ -161,14 +163,14 @@ class RecruitmentScriptController extends Controller
 
             });
 
-            $scriptType = ScriptType::with('issueTime', 'employeeStatus')->find($data['scriptTypeID']);
+            $scriptType = ScriptType::with('employeeStatus')->find($data['scriptTypeID']);
 
-            if (isset($data['parentID'])) {
-
-
-                $this->changeParentRecruitmentScriptStatus($employee, $data['parentID'], $scriptType->issueTime);
-
-            }
+//            if (isset($data['parentID'])) {
+//
+//
+//                $this->changeParentRecruitmentScriptStatus($employee, $data['parentID'], $scriptType->issueTime);
+//
+//            }
 
             $pendingRsStatus =
 //                $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
@@ -182,8 +184,18 @@ class RecruitmentScriptController extends Controller
                 collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
             }
 
+            $employee = Employee::find($rsRes[0]->employee_id);
+            $user = $employee->user;
+
+
+            $person = Person::find($user->person_id);
+            
+            $user->notify(new NewRsNotification($person->display_name));
+
 
             DB::commit();
+
+
             return response()->json($rsRes);
         } catch (Exception $e) {
             DB::rollBack();

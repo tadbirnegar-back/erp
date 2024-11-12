@@ -84,7 +84,3 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 
 });
-
-
-
-

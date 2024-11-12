@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->id();
 
             $table->unsignedBigInteger('enactment_id');
-            $table->unsignedBigInteger('operator_id');
+            $table->unsignedBigInteger('operator_id')->nullable();
             $table->unsignedBigInteger('status_id');
 
             $table->dateTime('create_date')->useCurrent();

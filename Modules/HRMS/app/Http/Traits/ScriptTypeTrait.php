@@ -17,6 +17,7 @@ trait ScriptTypeTrait
         $scriptType = new ScriptType();
         $scriptType->title = $data['title'];
         $scriptType->issue_time_id = $data['issueTimeID'] ?? null;
+        $scriptType->origin_id = $data['typeOriginID'] ?? null;
         $scriptType->employee_status_id = $data['employeeStatusID'] ?? null;
         $scriptType->status_id = $this->activeScriptTypeStatus()->id;
         $scriptType->isHeadable = $data['isHeadable'] ?? false;
@@ -26,7 +27,7 @@ trait ScriptTypeTrait
         $preparedData = $this->confirmationScriptDataPreparation($scriptType, $confirmationTypeScriptType);
 
         ConfirmationTypeScriptType::insert($preparedData->toArray());
-        $scriptType->load('issueTime', 'employeeStatus', 'confirmationTypes');
+        $scriptType->load('employeeStatus', 'confirmationTypes');
         return $scriptType;
     }
 
@@ -71,13 +72,14 @@ trait ScriptTypeTrait
     {
         return ScriptType::whereHas('status', function ($query) {
             $query->where('name', $this->activeScriptTypeStatus);
-        })->with('issueTime', 'employeeStatus', 'confirmationTypes')->get();
+        })->with('employeeStatus', 'confirmationTypes')->get();
     }
 
     public function updateScriptType(ScriptType $scriptType, array $data): ScriptType
     {
         $scriptType->title = $data['title'] ?? $scriptType->title;
         $scriptType->issue_time_id = $data['issueTimeID'] ?? $scriptType->issue_time_id;
+        $scriptType->origin_id = $data['typeOriginID'] ?? null;
         $scriptType->employee_status_id = $data['employeeStatusID'] ?? $scriptType->employee_status_id;
         $scriptType->isHeadable = $data['isHeadable'] ?? false;
 
@@ -87,7 +89,7 @@ trait ScriptTypeTrait
         $preparedData = $this->confirmationScriptDataPreparation($scriptType, $confirmationTypeScriptType);
 
         ConfirmationTypeScriptType::upsert($preparedData->toArray(), ['id']);
-        $scriptType->load('issueTime', 'employeeStatus', 'confirmationTypes');
+        $scriptType->load('employeeStatus', 'confirmationTypes');
         return $scriptType;
     }
 
