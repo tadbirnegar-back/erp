@@ -18,6 +18,7 @@ use Modules\EMS\app\Models\MR;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
+use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
@@ -39,6 +40,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'first_name',
 //        'person_id',
         'mobile',
         'password',
@@ -222,8 +224,8 @@ class User extends Authenticatable
 
     public function activeRecruitmentScript()
     {
-        return $this->activeRecruitmentScripts()->whereHas('issueTime', function ($query) {
-            $query->where('issue_times.title', 'شروع به همکاری');
+        return $this->activeRecruitmentScripts()->whereHas('scriptType', function ($query) {
+            $query->where('origin_id', ScriptTypeOriginEnum::Main->value);
         });
     }
 

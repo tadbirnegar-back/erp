@@ -16,6 +16,7 @@ use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTitleTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\EnactmentTitle;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
@@ -36,6 +37,7 @@ use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -44,7 +46,7 @@ use Modules\PersonMS\app\Models\Person;
 
 class EMSController extends Controller
 {
-    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait, JobTrait, ApprovingListTrait, UserTrait, ScriptTypeTrait, EMSSettingTrait, EnactmentTitleTrait;
+    use EmployeeTrait, PersonTrait, AddressTrait, RelativeTrait, ResumeTrait, EducationRecordTrait, RecruitmentScriptTrait, SkillTrait, PositionTrait, HireTypeTrait, JobTrait, ApprovingListTrait, UserTrait, ScriptTypeTrait, EMSSettingTrait, EnactmentTitleTrait, EMSSettingTrait;
 
     use MeetingTrait, MeetingMemberTrait;
 
@@ -148,6 +150,7 @@ class EMSController extends Controller
 
         $data = $request->all();
         $user = User::with('person')->where('mobile', $data['mobile'])->first();
+
         if ($user) {
             return response()->json(['message' => 'mobile'], 422);
 
@@ -215,6 +218,7 @@ class EMSController extends Controller
                 });
                 $encodedSas = json_encode($sas->toArray());
 
+
                 return [
                     'employeeID' => $employee->id,
                     'ounitID' => $data['ounitID'],
@@ -242,7 +246,9 @@ class EMSController extends Controller
                 collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
             }
 
+            $username = Person::find($user->person_id)->display_name;
 
+            $user->notify(new RegisterNotification($username));
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);
         } catch (Exception $e) {
@@ -285,12 +291,9 @@ class EMSController extends Controller
     {
         $user = Auth::user();
         $titles = EnactmentTitle::all();
-        $ounits = $user->activeRecruitmentScripts()
+        $ounits = $user->activeRecruitmentScript()
             ->whereHas('ounit', function ($query) {
                 $query->where('unitable_type', VillageOfc::class)->with('ancestors');
-            })
-            ->whereHas('issueTime', function ($query) {
-                $query->where('issue_times.title', 'شروع به همکاری');
             })
             ->with('ounit')
             ->get();
@@ -298,6 +301,7 @@ class EMSController extends Controller
 
         $result = [
             'enactmentTitles' => $titles,
+            'shouraMaxMeetingDateDaysAgo' => $this->getShouraMaxMeetingDateDaysAgo(),
             'ounits' => $ounits->pluck('ounit'),
         ];
 
@@ -562,7 +566,9 @@ class EMSController extends Controller
     {
         $validate = \Validator::make($request->all(), [
             'consultingAutoMoghayerat' => 'required',
-            'boardAutoMoghayerat' => 'required'
+            'boardAutoMoghayerat' => 'required',
+            'enactmentLimitPerMeeting' => 'required',
+            'shouraMaxMeetingDateDaysAgo' => 'required',
         ]);
 
         if ($validate->fails()) {

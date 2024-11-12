@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
+use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\IssueTime;
@@ -121,7 +122,7 @@ trait EmployeeTrait
 
         if (isset($data['positions'])) {
             $positionsAsArray = json_decode($data['positions'], true);
-            $employee->possitions()->sync($positionsAsArray);
+            $employee->positions()->sync($positionsAsArray);
         }
 
         if (isset($data['levels'])) {
@@ -132,7 +133,7 @@ trait EmployeeTrait
 
             $skills = json_decode($data['skills'], true);
 
-            $workForce->skills()->sync($skills);
+            $workForce->stdSkills()->sync($skills);
         }
 
         $employee->load('workForce');
@@ -168,7 +169,7 @@ trait EmployeeTrait
 
         if (isset($data['positions'])) {
             $positionsAsArray = json_decode($data['positions'], true);
-            $employee->possitions()->sync($positionsAsArray);
+            $employee->positions()->sync($positionsAsArray);
         }
 
         if (isset($data['levels'])) {
@@ -179,7 +180,7 @@ trait EmployeeTrait
 
             $skills = json_decode($data['skills'], true);
 
-            $workForce->skills()->sync($skills);
+            $workForce->stdSkills()->sync($skills);
         }
 
         return $employee;
@@ -218,7 +219,7 @@ trait EmployeeTrait
             $query->where('expire_date', '>', now())
                 ->whereDoesntHave('latestStatus', function ($query) {
                     $query->where('name', '=', self::$inActiveRsStatus);
-                })->with('issueTime');
+                });
         }]);
     }
 
@@ -256,6 +257,15 @@ trait EmployeeTrait
         return $issueTimes
             ->pluck('recruitmentScripts')
             ->flatten();
+    }
+
+    public function getCompatibleParentScriptsBySubOrigin(int $employeeID)
+    {
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->whereHas('scriptType', function ($q) {
+            $q->where('origin_id', ScriptTypeOriginEnum::Sub->value);
+        });
+
+        return $recruitmentScripts;
     }
 
     public function getScriptAgentCombos(HireType $hireType, ScriptType $scriptType)

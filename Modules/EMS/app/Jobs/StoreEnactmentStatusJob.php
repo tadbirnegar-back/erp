@@ -7,15 +7,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
+use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentReview;
 
 class StoreEnactmentStatusJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, EnactmentReviewTrait;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, EnactmentReviewTrait, EnactmentTrait;
 
     public int $encId;
 
@@ -36,7 +38,7 @@ class StoreEnactmentStatusJob implements ShouldQueue
 
         $enactment = Enactment::with(['members' => function ($query) {
             $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
-                $subQuery->where('enactment_id', 29);
+                $subQuery->where('enactment_id', $this->encId);
             })->whereHas('roles', function ($q) {
                 $q->where('name', RolesEnum::OZV_HEYAAT->value);
             });
@@ -44,10 +46,11 @@ class StoreEnactmentStatusJob implements ShouldQueue
         },])->find($this->encId);
 
 
+        Log::info("hi birun");
+
         if ($enactment->members->isNotEmpty()) {
             $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
             $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
-                Log::info($member);
                 return [
                     'user_id' => $member->employee_id,
                     'description' => "تایید توسط سیستم",
@@ -56,9 +59,16 @@ class StoreEnactmentStatusJob implements ShouldQueue
                 ];
             })->toArray();
 
+
             // Insert the data into EnactmentReview only if the data array is not empty
             if (!empty($data)) {
-                EnactmentReview::insert($data);
+                if (EnactmentReview::insert($data)) {
+                    $takmilshodeStatus = $this->enactmentCompleteStatus()->id;
+                    DB::table('enactment_status')->insert([
+                        'status_id' => $takmilshodeStatus,
+                        'enactment_id' => $this->encId,
+                    ]);
+                }
             }
         }
 
