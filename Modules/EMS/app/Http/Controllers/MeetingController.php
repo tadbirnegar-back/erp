@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Models\Meeting;
@@ -46,6 +47,12 @@ class MeetingController extends Controller
                 "details" => $e->getMessage()
             ], 400);
         }
+    }
+
+
+    public function store(Request $req)
+    {
+
     }
 
 }

@@ -85,4 +85,4 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 });
 
-Route::post('mes/meeting/ChangeMeetingDate/{id}', [\Modules\EMS\app\Http\Controllers\MeetingController::class, 'changeMeetingDate']);
+Route::put('mes/meeting/ChangeMeetingDate/{id}', [\Modules\EMS\app\Http\Controllers\MeetingController::class, 'changeMeetingDate']);
