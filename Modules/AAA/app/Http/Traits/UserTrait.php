@@ -3,6 +3,7 @@
 namespace Modules\AAA\app\Http\Traits;
 
 use Modules\AAA\app\Models\User;
+use Modules\HRMS\app\Models\Position;
 use Modules\PersonMS\app\Models\Person;
 
 trait UserTrait
@@ -119,6 +120,13 @@ trait UserTrait
             return false;
         }
 
+    }
+
+    public function detachRolesByPosition(User $user, int $positionID): true
+    {
+        $roles = Position::with('roles')->find($positionID)->roles->pluck('id');
+        $user->roles()->detach($roles->toArray());
+        return true;
     }
 
 }

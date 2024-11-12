@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentEagerLimit\HasEagerLimit;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class RecruitmentScript extends Model
 {
@@ -41,11 +44,6 @@ class RecruitmentScript extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
-    }
-
-    protected static function newFactory(): RecruitmentScriptFactory
-    {
-        //return RecruitmentScriptFactory::new();
     }
 
 //    public function latestStatus()
@@ -144,6 +142,27 @@ class RecruitmentScript extends Model
     public function ounit(): BelongsTo
     {
         return $this->belongsTo(OrganizationUnit::class, 'organization_unit_id');
+    }
+
+    use HasRelationships;
+
+    public function user()
+    {
+        return $this->hasOneDeep(User::class, [
+            WorkForce::class,
+            Person::class,
+        ],
+            [
+                'workforceable_id',
+                'id',
+                'person_id',
+
+            ],
+            [
+                'employee_id',
+                'person_id',
+                'id'
+            ]);
     }
 
 }
