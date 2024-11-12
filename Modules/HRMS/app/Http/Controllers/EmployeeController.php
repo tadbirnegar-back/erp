@@ -31,10 +31,12 @@ use Modules\HRMS\app\Models\IsarStatus;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\LevelOfEducation;
 use Modules\HRMS\app\Models\Position;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\app\Notifications\AddEmployeeNotification;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Religion;
@@ -90,7 +92,6 @@ class EmployeeController extends Controller
             DB::beginTransaction();
 
             $data['userID'] = \Auth::user()->id;
-
             if ($request->isNewAddress) {
                 $address = $this->addressStore($data);
 
@@ -102,14 +103,17 @@ class EmployeeController extends Controller
                 $this->naturalUpdate($data, $data['personID']) :
                 $this->naturalStore($data);
 
+
             $data['personID'] = $personResult->person->id;
             $data['password'] = $data['nationalCode'];
+
             $user = $this->isPersonUserCheck($personResult->person);
             $user = $user ?? $this->storeUser($data);
 
-
             $personAsEmployee = $this->isEmployee($data['personID']);
+
             $employee = !is_null($personAsEmployee) ? $this->employeeUpdate($data, $personAsEmployee) : $this->employeeStore($data);
+
 
             $workForce = $employee->workForce;
             //additional info insertion
@@ -149,6 +153,23 @@ class EmployeeController extends Controller
 
             }
             DB::commit();
+
+
+            $username = $personResult->person->display_name;
+            $position = RecruitmentScript::with('position', 'organizationUnit')->where('employee_id', 2124)->first();
+            $positionName = $position->position->name;
+            $orginazationName = $position->organizationUnit->name;
+
+
+//            return response()->json([
+//                'username' => $username,
+//                "positionName" => $positionName,
+//                "organName" => $orginazationName,
+//                "user" => $user
+//            ]);
+
+            $user->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
+
             return response()->json($employee);
 
         } catch (Exception $e) {
