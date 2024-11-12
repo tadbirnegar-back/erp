@@ -3,8 +3,11 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
+use Modules\AAA\app\Models\User;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Models\FileScript;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\recruitmentScriptStatus;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\StatusMS\app\Models\Status;
 
@@ -12,10 +15,10 @@ trait RecruitmentScriptTrait
 {
     use ScriptAgentScriptTrait;
 
-    private static string $activeRsStatus = 'فعال';
-    private static string $inActiveRsStatus = 'غیرفعال';
-    private static string $pendingRsStatus = 'در انتظار تایید';
-    private static string $expiredRsStatus = 'منقضی شده';
+    private static string $activeRsStatus = RecruitmentScriptStatusEnum::ACTIVE->value;
+    private static string $inActiveRsStatus = RecruitmentScriptStatusEnum::INACTIVE->value;
+    private static string $pendingRsStatus = RecruitmentScriptStatusEnum::PENDING_APPROVAL->value;
+    private static string $expiredRsStatus = RecruitmentScriptStatusEnum::EXPIRED->value;
 
 
     public function rsIndex(array $data)
@@ -219,20 +222,77 @@ trait RecruitmentScriptTrait
     }
 
 
-    public function declineRs(RecruitmentScript $rs)
+    public function attachStatusToRs(RecruitmentScript $script, Status $status, string $description = null)
     {
-        try {
-            $deleteStatus = $this->inActiveRsStatus();
-            $rs->status()->attach($deleteStatus->id);
-
-
-            return true;
-        } catch (\Exception $e) {
-            // Log the exception for debugging
-            \Log::error($e->getMessage());
-            return false;
-        }
+        $rsStatus = new RecruitmentScriptStatus();
+        $rsStatus->recruitment_script_id = $script->id;
+        $rsStatus->status_id = $status->id;
+        $rsStatus->description = $description;
+        $rsStatus->save();
+        return $rsStatus;
     }
 
+    public function declineRs(RecruitmentScript $rs)
+    {
+
+        $deleteStatus = $this->inActiveRsStatus();
+        $rs->status()->attach($deleteStatus->id);
+
+
+        return true;
+
+    }
+
+
+    public function rejectedRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::REJECTED->value);
+    }
+
+    public function terminatedRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::TERMINATED->value);
+    }
+
+    public function endOfServiceRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::SERVICE_ENDED->value);
+    }
+
+    public function cancelRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::CANCELED->value);
+    }
+
+    public function getComponentsToRenderSinglePage(RecruitmentScript $script, User $user)
+    {
+        $statusComponents = [
+            RecruitmentScriptStatusEnum::PENDING_APPROVAL->value => [
+                ['component' => 'DenyIssueBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/decline/{id}']
+                ],
+                ['component' => 'DenyApproveBtn', 'permissions' => ['/hrm/rc/renew/{id}', '/hrm/rc/decline/{id}']
+                ],
+            ],
+            RecruitmentScriptStatusEnum::ACTIVE->value => [
+                ['component' => 'RevokeSeparateBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/terminate/{id}']
+                ],
+            ],
+            RecruitmentScriptStatusEnum::EXPIRED->value => [
+                ['component' => 'EndRenewBtn', 'permissions' => ['/hrm/rc/service-end/{id}', '/hrm/rc/renew/{id}']
+                ],
+            ],
+        ];
+
+        $components = $statusComponents[$script->latestStatus->name] ?? [];
+
+
+        // Filter components based on preloaded permissions
+
+        $result = collect($components)->filter(function ($component) use ($user) {
+            return $user->hasAllPermissions($component['permissions']);
+        })->pluck('component');
+
+        return $result->isNotEmpty() ? $result : collect(['NoBtn']);
+    }
 
 }

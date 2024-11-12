@@ -7,6 +7,7 @@ use Modules\AAA\app\Models\Role;
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Enums\ProceduresEnum;
+use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Http\Traits\ConfirmationTypeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
 use Modules\HRMS\app\Http\Traits\JobTrait;
@@ -18,7 +19,6 @@ use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
 use Modules\HRMS\app\Http\Traits\SkillTrait;
 use Modules\HRMS\app\Models\ContractType;
 use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Models\IssueTime;
 
 class HRMConfigController extends Controller
 {
@@ -31,7 +31,7 @@ class HRMConfigController extends Controller
 
 //        $config['script_types_issue_time']
         $config['ounitCategories'] = OunitCategoryEnum::ounitCatList();
-        $config['issue_times'] = IssueTime::all();
+        $config['origins'] = ScriptTypeOriginEnum::getAllLabelsAndValues();
         $config['employee_status_list'] = Employee::GetAllStatuses();
 
         $config['confirmation_types'] = ProceduresEnum::proceduresList();
