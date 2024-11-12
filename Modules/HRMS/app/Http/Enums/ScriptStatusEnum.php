@@ -9,5 +9,7 @@ enum ScriptStatusEnum: string
 
     case FAAL = 'فعال';
 
-    case GHEYREFAAL = 'غیر فعال';
+    case GHEYREFAAL = 'لغو شده';
+
+    case TAIED = 'تایید شده';
 }

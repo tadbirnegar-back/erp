@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\EMS\app\Observers\MeetingDateObserver;
 use Modules\EMS\Database\factories\MeetingFactory;
 use Modules\HRMS\app\Models\Employee;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -54,6 +55,7 @@ class Meeting extends Model
         // Register the observer
         static::observe(\Modules\EMS\app\Observers\MeetingObserver::class);
     }
+
 
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection

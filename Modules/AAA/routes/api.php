@@ -17,7 +17,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/users/list', [\Modules\AAA\app\Http\Controllers\UserController::class, 'index'])->middleware('auth:api', 'route');
     Route::delete('/users/delete/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'destroy'])->middleware('auth:api', 'route');
     Route::post('/users/update/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'show'])->middleware('auth:api', 'route')->name('user.edit');
-    Route::put('/users/update/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'update'])->middleware('auth:api', 'route');
+    Route::put('/users/update/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'updaFte'])->middleware('auth:api', 'route');
     Route::post('/check', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'userMobileExists']);
     Route::post('users/logout', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'logout'])->middleware('auth:api');
     Route::post('/login', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'loginGrant'])->name('login.login-grant');
