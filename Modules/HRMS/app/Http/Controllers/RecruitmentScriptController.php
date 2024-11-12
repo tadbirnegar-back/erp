@@ -431,6 +431,157 @@ class RecruitmentScriptController extends Controller
         }
     }
 
+    public function cancelRscript(Request $request, $id)
+    {
+        $script = RecruitmentScript::with('latestStatus', 'user')->find($id);
+        $cancelStatus = $this->cancelRsStatus();
+
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+
+        if ($script->latestStatus->id == $cancelStatus->id) {
+            return response()->json(['message' => 'حکم از قبل لغو شده است'], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+            $this->attachStatusToRs($script, $cancelStatus, $request->description ?? null);
+            $this->detachRolesByPosition($script->user, $script->position_id);
+            DB::commit();
+            return response()->json(['message' => 'حکم با موفقیت لغو شد']);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در لغو حکم'], 500);
+
+        }
+
+
+    }
+
+    public function terminateRscript(Request $request, $id)
+    {
+        $script = RecruitmentScript::with('latestStatus', 'user')->find($id);
+        $terminateStatus = $this->terminatedRsStatus();
+
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+
+        if ($script->latestStatus->id == $terminateStatus->id) {
+            return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null);
+            $this->detachRolesByPosition($script->user, $script->position_id);
+            DB::commit();
+            return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در قطع همکاری حکم'], 500);
+
+        }
+
+
+    }
+
+    public function endOfServiceRscript(Request $request, $id)
+    {
+        $script = RecruitmentScript::with('latestStatus', 'user')->find($id);
+        $terminateStatus = $this->endOfServiceRsStatus();
+
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+
+        if ($script->latestStatus->id == $terminateStatus->id) {
+            return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null);
+            $this->detachRolesByPosition($script->user, $script->position_id);
+            DB::commit();
+            return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در قطع همکاری حکم'], 500);
+
+        }
+
+
+    }
+
+    public function expireRscript($id)
+    {
+        $script = RecruitmentScript::with('latestStatus', 'user')->find($id);
+        $terminateStatus = $this->expiredRsStatus();
+
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+
+        if ($script->latestStatus->id == $terminateStatus->id) {
+            return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+            $this->attachStatusToRs($script, $terminateStatus);
+            $this->detachRolesByPosition($script->user, $script->position_id);
+            DB::commit();
+            return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در قطع همکاری حکم'], 500);
+
+        }
+
+
+    }
+
+    public function renewScript(Request $request, $id)
+    {
+        $script = RecruitmentScript::find($id);
+
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+        try {
+            DB::beginTransaction();
+            $RS['ounitID'] = $script->organization_unit_id;
+            $RS['levelID'] = $script->level_id;
+            $RS['positionID'] = $script->position_id;
+            $RS['description'] = $script->description;
+            $RS['hireTypeID'] = $script->hire_type_id;
+            $RS['jobID'] = $script->job_id;
+            $RS['operatorID'] = $script->operator_id;
+            $RS['scriptTypeID'] = $script->script_type_id;
+//        $RS['parentID'] = $script;
+            $RS['startDate'] = $request->startDate;
+            $RS['expireDate'] = $request->expireDate;
+
+            $pendingRsStatus = $this->pendingRsStatus();
+
+            $rsRes = $this->rsSingleStore($RS, $script->employee_id, $pendingRsStatus);
+
+            if ($pendingRsStatus) {
+                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+            }
+
+            DB::commit();
+            return response()->json($rsRes);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در تمدید حکم'], 500);
+
+        }
+
+    }
+
 
     public function RejectRecruitmentScript(Request $request, $id)
     {

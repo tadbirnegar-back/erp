@@ -69,7 +69,8 @@ class RecruitmentScript extends Model
             'id', // Foreign key on Status table
             'id', // Local key on RecruitmentScript table
             'status_id' // Local key on RecruitmentScriptStatus table
-        )->orderBy('recruitment_script_status.create_date', 'desc'); // Add fields here
+        )->orderBy('recruitment_script_status.create_date', 'desc');
+//            ->latest('recruitment_script_status.create_date');
     }
 
 

@@ -7,7 +7,7 @@ use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Models\FileScript;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\RecruitmentScriptStatus;
+use Modules\HRMS\app\Models\recruitmentScriptStatus;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\StatusMS\app\Models\Status;
 
@@ -308,11 +308,6 @@ trait RecruitmentScriptTrait
         })->pluck('component');
 
         return $result->isNotEmpty() ? $result : collect(['NoBtn']);
-    }
-
-    public function pendingTerminateRsStatus()
-    {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value);
     }
 
 }
