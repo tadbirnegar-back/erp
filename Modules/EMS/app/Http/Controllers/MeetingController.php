@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Models\Meeting;
-use Modules\EMS\app\Models\MeetingMember;
 
 class MeetingController extends Controller
 {
@@ -46,35 +45,6 @@ class MeetingController extends Controller
                 "error" => "Invalid date format or conversion failed.",
                 "details" => $e->getMessage()
             ], 400);
-        }
-    }
-
-
-    public function store()
-    {
-        try {
-            $meeting = Meeting::create([
-                'isTemplate' => true,
-                'creator_id' => 2086,
-                'meeting_type_id' => 3,
-                'ounit_id' => 3864,
-            ]);
-
-            MeetingMember::create([
-                'meeting_id' => $meeting->id,
-                'employee_id' => 2126,
-                'mr_id' => 5
-            ]);
-
-
-            MeetingMember::create([
-                'meeting_id' => $meeting->id,
-                'employee_id' => 2126,
-                'mr_id' => 2
-            ]);
-        } catch (\Exception $e) {
-            // Handle conversion errors.
-            return response()->json(['error' => $e->getMessage()], 400);
         }
     }
 
