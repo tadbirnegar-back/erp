@@ -51,9 +51,12 @@ class Meeting extends Model
     protected static function boot()
     {
         parent::boot();
+
         // Register the observer
-        static::observe(MeetingDateObserver::class);
+        static::observe(\Modules\EMS\app\Observers\MeetingObserver::class);
     }
+
+
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {

@@ -124,5 +124,11 @@
         "slug": "/mes/settings/district-members",
         "moduleName": "EMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی تاریخ جلسه",
+        "slug": "/mes/meeting/ChangeMeetingDate/{id}",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
     }
 ]
