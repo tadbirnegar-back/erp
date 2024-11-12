@@ -87,3 +87,4 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 });
 
+Route::get('mes/createMeeting', [\Modules\EMS\app\Http\Controllers\MeetingController::class, 'store']);

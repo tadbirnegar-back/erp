@@ -13,7 +13,7 @@ class MeetingObserver
      */
     public function created(Meeting $meeting): void
     {
-        CreateMeetingEvent::dispatch($meeting);
+        event(new CreateMeetingEvent($meeting));
     }
 
     /**

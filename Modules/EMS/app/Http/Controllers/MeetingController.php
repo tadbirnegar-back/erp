@@ -3,16 +3,16 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Modules\AAA\app\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingMember;
 
 class MeetingController extends Controller
 {
     public function changeMeetingDate(UpdateMeetingDateReq $req, $id)
     {
-        $user = User::find(2086);
+        $user = Auth::user();
         $meeting = Meeting::find($id);
 
         if (!$meeting || $user->id != $meeting->creator_id) {
@@ -50,9 +50,33 @@ class MeetingController extends Controller
     }
 
 
-    public function store(Request $req)
+    public function store()
     {
+        try {
+            $meeting = Meeting::create([
+                'isTemplate' => true,
+                'creator_id' => 2086,
+                'meeting_type_id' => 3,
+                'ounit_id' => 3864,
+            ]);
 
+            MeetingMember::create([
+                'meeting_id' => $meeting->id,
+                'employee_id' => 2126,
+                'mr_id' => 5
+            ]);
+
+
+            MeetingMember::create([
+                'meeting_id' => $meeting->id,
+                'employee_id' => 2126,
+                'mr_id' => 2
+            ]);
+        } catch (\Exception $e) {
+            // Handle conversion errors.
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
+
 
 }

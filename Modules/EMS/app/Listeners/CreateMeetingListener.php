@@ -2,7 +2,7 @@
 
 namespace Modules\EMS\app\Listeners;
 
-use Illuminate\Support\Facades\Log;
+use Modules\EMS\app\Jobs\StoreMeetingJob;
 
 class CreateMeetingListener
 {
@@ -19,6 +19,6 @@ class CreateMeetingListener
      */
     public function handle($event): void
     {
-        Log::info($event);
+        StoreMeetingJob::dispatch($event->meeting);
     }
 }
