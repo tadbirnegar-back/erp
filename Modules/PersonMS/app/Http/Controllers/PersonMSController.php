@@ -28,6 +28,7 @@ use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\SkillWorkForce;
+use Modules\OUnitMS\App\Notifications\ChangeNumNotification;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
@@ -556,6 +557,9 @@ class PersonMSController extends Controller
              * @var Natural $natural
              */
             $natural = $person->personable;
+
+
+            $user->notify(new ChangeNumNotification($user->mobile, $data['mobile']));
 
             $natural->mobile = $data['mobile'] ?? null;
             $natural->home_address_id = $data['homeAddressID'] ?? null;
