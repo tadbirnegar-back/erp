@@ -64,7 +64,7 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::delete('/hrm/skills/delete/{id}', [\Modules\HRMS\app\Http\Controllers\SkillController::class, 'destroy']);
 });
 
-Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
+Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/hrm/script-agent-type/add', [\Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController::class, 'store']);
     Route::put('/hrm/script-agent-type/update/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController::class, 'update']);
@@ -112,6 +112,14 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::put('/hrm/rc/grant/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'approveScriptByUser'])->middleware(['auth:api']);
 
     Route::put('/hrm/rc/decline/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'declineScriptByUser'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/cancel/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cancelRscript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/renew/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/terminate/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/service-end/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
 
 
     Route::post('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'store']);
