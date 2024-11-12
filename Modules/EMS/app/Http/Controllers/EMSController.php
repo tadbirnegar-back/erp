@@ -37,6 +37,7 @@ use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -149,6 +150,7 @@ class EMSController extends Controller
 
         $data = $request->all();
         $user = User::with('person')->where('mobile', $data['mobile'])->first();
+
         if ($user) {
             return response()->json(['message' => 'mobile'], 422);
 
@@ -216,6 +218,7 @@ class EMSController extends Controller
                 });
                 $encodedSas = json_encode($sas->toArray());
 
+
                 return [
                     'employeeID' => $employee->id,
                     'ounitID' => $data['ounitID'],
@@ -243,7 +246,9 @@ class EMSController extends Controller
                 collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
             }
 
+            $username = Person::find($user->person_id)->display_name;
 
+            $user->notify(new RegisterNotification($username));
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);
         } catch (Exception $e) {
@@ -658,18 +663,6 @@ class EMSController extends Controller
             return response()->json(['message' => 'خطا در حذف عنوان مصوبه',
             ], 500);
         }
-    }
-
-
-    public function sdsdsdsd()
-    {
-        EnactmentStatus::create([
-            'enactment_id' => 29,
-            'operator_id' => 2086,
-            'status_id' => 67
-        ]);
-
-        return response()->json("created");
     }
 
 }

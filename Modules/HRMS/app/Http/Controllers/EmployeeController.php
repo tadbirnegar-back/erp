@@ -36,7 +36,7 @@ use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\ScriptType;
-use Modules\HRMS\app\Notifications\AddEmployeeNotification;
+use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Religion;
@@ -161,6 +161,7 @@ class EmployeeController extends Controller
             $orginazationName = $position->organizationUnit->name;
 
 
+
 //            return response()->json([
 //                'username' => $username,
 //                "positionName" => $positionName,
@@ -169,6 +170,7 @@ class EmployeeController extends Controller
 //            ]);
 
             $user->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
+
 
             return response()->json($employee);
 
@@ -291,6 +293,12 @@ class EmployeeController extends Controller
                 }
 
             }
+
+            $username = Person::find($user->person_id)->display_name;
+
+
+            $user->notify(new RegisterNotification($username));
+
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);
         } catch (Exception $e) {

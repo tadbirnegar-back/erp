@@ -264,8 +264,10 @@ class EnactmentController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = Auth::user();
+            //$user = Auth::user();
             $enactment = Enactment::with('status')->find($id);
+
+            return response()->json($enactment);
             if (is_null($enactment)) {
                 return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
             }
