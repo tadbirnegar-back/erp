@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\HRMS\app\Notifications;
+namespace Modules\OUnitMS\App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -9,7 +9,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class NewRsNotification extends Notification
+class VerifyPanelNotification extends Notification
 {
     use Queueable;
 
@@ -18,11 +18,12 @@ class NewRsNotification extends Notification
      */
     private string $username;
 
-
+    /**
+     * @param string $otpCode
+     */
     public function __construct(string $username)
     {
         $this->username = $username;
-
     }
 
 
@@ -54,9 +55,8 @@ class NewRsNotification extends Notification
     public function toSms($notifiable)
     {
         try {
-            //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=6kqdiqpxgzoiujk \n username={$this->username}")
+            ->send("patterncode=6vr7t21kh64tkhv \n username={$this->username}")
                 ->to($notifiable->mobile);
 
 

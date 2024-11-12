@@ -1,37 +1,33 @@
 <?php
 
-namespace Modules\HRMS\app\Notifications;
+namespace Modules\EMS\app\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Tzsk\Sms\Builder;
-use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class NewRsNotification extends Notification
+class AlertMMLastDatNotification extends Notification
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
     private string $username;
 
-
+    /**
+     * @param string $username
+     */
     public function __construct(string $username)
     {
         $this->username = $username;
-
     }
-
 
     /**
      * Get the notification's delivery channels.
      */
     public function via($notifiable): array
     {
-        return [SmsChannel::class];
+        return ['mail'];
     }
 
     /**
@@ -45,18 +41,14 @@ class NewRsNotification extends Notification
             ->line('Thank you for using our application!');
     }
 
-    /**
-     * Get the repicients and body of the notification.
-     *
-     * @param mixed $notifiable
-     * @return \Exception|Builder
-     */
+
     public function toSms($notifiable)
     {
+        //TODO: Change Pattern
+
         try {
-            //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=6kqdiqpxgzoiujk \n username={$this->username}")
+            ->send("patterncode=5extzat5ivr970k \n username={$this->username}")
                 ->to($notifiable->mobile);
 
 
