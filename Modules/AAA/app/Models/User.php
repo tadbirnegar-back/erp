@@ -57,6 +57,8 @@ class User extends Authenticatable
 
     ];
 
+    protected array $loadedPermissionSlugs;
+
     public static function GetAllStatuses(): Collection
     {
         return Status::all()->where('model', '=', self::class);
@@ -270,5 +272,30 @@ class User extends Authenticatable
     public function mr()
     {
         return $this->hasOneThrough(MR::class, MeetingMember::class, 'employee_id', 'id', 'id', 'mr_id')->orderBy('meeting_members.id', 'desc');
+    }
+
+    public function loadPermissions()
+    {
+        $this->loadedPermissions = $this->permissions()->pluck('slug')->toArray();
+    }
+
+
+    public function hasPermission($slug): bool
+    {
+        if (is_null($this->loadedPermissions)) {
+            $this->loadPermissions(); // Load permissions if not already loaded
+        }
+
+        return in_array($slug, $this->loadedPermissions);
+    }
+
+    public function hasAllPermissions(array $slugs): bool
+    {
+        if (is_null($this->loadedPermissions)) {
+            $this->loadPermissions();
+        }
+
+        // Check if all required permissions exist in the loaded permissions
+        return empty(array_diff($slugs, $this->loadedPermissions));
     }
 }

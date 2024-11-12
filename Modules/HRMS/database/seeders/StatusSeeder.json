@@ -1,26 +1,34 @@
 [
     {
-        "name": "فعال"
+        "name": "فعال",
+        "className": "success"
     },
     {
-        "name": "غیرفعال"
+        "name": "غیرفعال",
+        "className": "danger"
     },
     {
-        "name": "منقضی شده"
+        "name": "منقضی شده",
+        "className": "danger"
     },
     {
-        "name": "در انتظار تایید"
+        "name": "در انتظار تایید",
+        "className": "info"
     },
     {
-        "name": "رد شده"
+        "name": "رد شده",
+        "className": "danger"
     },
     {
-        "name": "قطع همکاری"
+        "name": "قطع همکاری",
+        "className": "danger"
     },
     {
-        "name": "پایان خدمت"
+        "name": "پایان خدمت",
+        "className": "danger"
     },
     {
-        "name": "باطل شده"
+        "name": "باطل شده",
+        "className": "danger"
     }
 ]

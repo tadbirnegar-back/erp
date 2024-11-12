@@ -130,5 +130,23 @@
         "slug": "/hrm/expired/scripts",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "باطل کردن حکم",
+        "slug": "/hrm/rc/cancel/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تمدید حکم",
+        "slug": "/hrm/rc/renew/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "قطع همکاری حکم",
+        "slug": "/hrm/rc/terminate/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
     }
 ]
