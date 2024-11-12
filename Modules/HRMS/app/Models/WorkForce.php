@@ -2,8 +2,8 @@
 
 namespace Modules\HRMS\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -33,14 +33,19 @@ class WorkForce extends Model
         return $this->hasMany(SkillWorkForce::class)->with('skill');
     }
 
+    public function stdSkills()
+    {
+        return $this->belongsToMany(Skill::class, 'skill_work_force');
+    }
+
     public function statuses(): BelongsToMany
     {
-        return $this->belongsToMany(Status::class,'status_work_force');
+        return $this->belongsToMany(Status::class, 'status_work_force');
     }
 
     public function person(): BelongsTo
     {
-        return $this->belongsTo(Person::class,'person_id');
+        return $this->belongsTo(Person::class, 'person_id');
     }
 
     public function relatives(): HasMany
@@ -85,7 +90,7 @@ class WorkForce extends Model
 
     public function isars(): HasMany
     {
-        return $this->hasMany(Isar::class,'work_force_id');
+        return $this->hasMany(Isar::class, 'work_force_id');
     }
 
 //    public function statusWorkForces()

@@ -9,7 +9,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class AddEmployeeNotification extends Notification
+class NewRsNotification extends Notification
 {
     use Queueable;
 
@@ -17,14 +17,12 @@ class AddEmployeeNotification extends Notification
      * Create a new notification instance.
      */
     private string $username;
-    private string $posname;
-    private string $ounit_name;
 
-    public function __construct(string $username, $posName, $ounit_name)
+
+    public function __construct(string $username)
     {
         $this->username = $username;
-        $this->posname = $posName;
-        $this->ounit_name = $ounit_name;
+
     }
 
 
@@ -58,7 +56,7 @@ class AddEmployeeNotification extends Notification
         try {
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=441aicwhrsunym6 \n username={$this->username} \n position_name={$this->posname} \n ounit_name={$this->ounit_name}")
+            ->send("patterncode=6kqdiqpxgzoiujk \n username={$this->username}")
                 ->to($notifiable->mobile);
 
 

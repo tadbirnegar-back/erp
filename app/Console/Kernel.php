@@ -10,9 +10,19 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      */
-    protected function schedule(Schedule $schedule): void
+    protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Start the queue worker at 00:05 (runs in the background)
+        $schedule->command('queue:work --sleep=3 --tries=3')
+            ->dailyAt('00:05')
+            ->runInBackground()
+            ->withoutOverlapping();
+
+        // Stop the queue worker at 00:10 (using pkill to terminate the process)
+        $schedule->exec('pkill -f "php artisan queue:work"')
+
+            ->dailyAt('00:20')
+            ->withoutOverlapping();
     }
 
     /**
@@ -20,7 +30,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

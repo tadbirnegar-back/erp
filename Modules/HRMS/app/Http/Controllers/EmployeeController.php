@@ -12,6 +12,7 @@ use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
@@ -90,8 +91,7 @@ class EmployeeController extends Controller
         try {
             DB::beginTransaction();
 
-            // $data['userID'] = \Auth::user()->id;
-            $data['userID'] = User::find(2126)->id;
+            $data['userID'] = \Auth::user()->id;
             if ($request->isNewAddress) {
                 $address = $this->addressStore($data);
 
@@ -155,15 +155,24 @@ class EmployeeController extends Controller
             DB::commit();
 
 
-            $userSMSsend = User::find($data['userID']);
             $username = $personResult->person->display_name;
             $position = RecruitmentScript::with('position', 'organizationUnit')->where('employee_id', 2124)->first();
             $positionName = $position->position->name;
             $orginazationName = $position->organizationUnit->name;
 
 
-            $userSMSsend->notify(new RegisterNotification($username, $positionName, $orginazationName));
 
+//            return response()->json([
+//                'username' => $username,
+//                "positionName" => $positionName,
+//                "organName" => $orginazationName,
+//                "user" => $user
+//            ]);
+
+            $user->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
+
+
+            return response()->json($employee);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -511,19 +520,23 @@ class EmployeeController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $scriptType = ScriptType::with('issueTime')->find($data['scriptTypeID']);
+        $scriptType = ScriptType::find($data['scriptTypeID']);
 
-        if (strcasecmp($scriptType?->issueTime?->title, 'شروع به همکاری') === 0) {
+        if ($scriptType?->origin_id->value == ScriptTypeOriginEnum::Main->value) {
             $message = 'valid';
             $result = null;
-        } else {
-            $compatibles = $this->getCompatibleIssueTimesForNewScript($scriptType->issueTime->title, $data['employeeID']);
+        } elseif ($scriptType?->origin_id->value == ScriptTypeOriginEnum::Sub->value) {
+            $compatibles = $this->getCompatibleParentScriptsBySubOrigin($data['employeeID']);
 
             $message = $compatibles->count() > 0 ? 'valid' : 'notValid';
             $result['recruitmentScripts'] = $compatibles->isEmpty() ? null : $compatibles;
+        } else {
+            $statusCode = 400;
+            $message = 'notValid';
+            $result = null;
         }
 
-        return response()->json(['message' => $message, 'data' => $result]);
+        return response()->json(['message' => $message, 'data' => $result], $statusCode ?? 200);
     }
 
     public function agentCombos(Request $request)

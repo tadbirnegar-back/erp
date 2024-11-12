@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\HRMS\app\Notifications;
+namespace Modules\HRMS\App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -9,7 +9,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class AddEmployeeNotification extends Notification
+class PayanKhedmatRsNotification extends Notification
 {
     use Queueable;
 
@@ -17,13 +17,16 @@ class AddEmployeeNotification extends Notification
      * Create a new notification instance.
      */
     private string $username;
-    private string $posname;
     private string $ounit_name;
+    private string $position_name;
 
-    public function __construct(string $username, $posName, $ounit_name)
+    /**
+     * @param string $otpCode
+     */
+    public function __construct(string $username, string $ounit_name, string $position_name)
     {
         $this->username = $username;
-        $this->posname = $posName;
+        $this->position_name = $position_name;
         $this->ounit_name = $ounit_name;
     }
 
@@ -58,7 +61,7 @@ class AddEmployeeNotification extends Notification
         try {
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=441aicwhrsunym6 \n username={$this->username} \n position_name={$this->posname} \n ounit_name={$this->ounit_name}")
+            ->send("patterncode=l9i5x7nfvw7oofq \n username={$this->username} \n  ounit_name={$this->ounit_name} \n  position_name={$this->position_name} ")
                 ->to($notifiable->mobile);
 
 
