@@ -16,7 +16,6 @@ use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTitleTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\EnactmentTitle;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
@@ -659,17 +658,4 @@ class EMSController extends Controller
             ], 500);
         }
     }
-
-
-    public function sdsdsdsd()
-    {
-        EnactmentStatus::create([
-            'enactment_id' => 29,
-            'operator_id' => 2086,
-            'status_id' => 67
-        ]);
-
-        return response()->json("created");
-    }
-
 }
