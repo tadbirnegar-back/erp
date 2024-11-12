@@ -8,8 +8,11 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Notifications\MeetingLastDayNotifications;
+use Modules\PersonMS\app\Models\Person;
 
 class StoreMeetingJob implements ShouldQueue
 {
@@ -50,20 +53,22 @@ class StoreMeetingJob implements ShouldQueue
         $daywithoutZero = $this->removeLeftZero($monthNumber);
 
         //message text for date
-        $messageTextDate = "$parts[0] $daywithoutZero $monthName  ";
+        $messageTextDate = "$daywithoutZero $monthName $parts[0]";
 
         Log::info($messageTextDate);
 
 
         // Process members
-//        $members = $this->meeting->load('meetingMembers'); // Load related 'meetingMembers'
-//
-//
-//        foreach ($members->meetingMembers as $member) {
-//            $user = User::find($member->employee_id);
-//            $username = Person::find($user->person_id)->display_name;
-//            Log::info("Username: $username");
-//        }
+        $members = $this->meeting->load('meetingMembers'); // Load related 'meetingMembers'
+
+
+        foreach ($members->meetingMembers as $member) {
+            $user = User::find($member->employee_id);
+            $username = Person::find($user->person_id)->display_name;
+
+            $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
+            Log::info("Username: $user");
+        }
     }
 
 }
