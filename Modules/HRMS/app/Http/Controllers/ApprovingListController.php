@@ -9,6 +9,7 @@ use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Notifications\ApproveRsNotification;
+use Modules\HRMS\App\Notifications\DeclineRsNotification;
 use Modules\PersonMS\app\Models\Person;
 
 class ApprovingListController extends Controller
@@ -40,6 +41,7 @@ class ApprovingListController extends Controller
 
             $canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
 
+
             if (!$canApprove) {
                 return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
             }
@@ -50,9 +52,11 @@ class ApprovingListController extends Controller
 
 
             $employee = Employee::find($script->employee_id);
-            $person = Person::find($employee->user->person_id);
-            if ($rcstatus->name == ScriptStatusEnum::FAAL->value) {
-                $employee->user->notify(new ApproveRsNotification($person->display_name));
+            $Notifibleuser = $employee->user;
+
+            $person = Person::find($Notifibleuser->person_id);
+            if ($rcstatus->name == ScriptStatusEnum::TAIED->value) {
+                $Notifibleuser->notify(new ApproveRsNotification($person->display_name));
             }
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت تایید شد']);
@@ -68,6 +72,8 @@ class ApprovingListController extends Controller
     {
 
         $user = auth()->user();
+
+
         /**
          * @var RecruitmentScript $script
          */
@@ -80,6 +86,7 @@ class ApprovingListController extends Controller
 
             $approvers = $script->approvers;
 
+
             $canApprove = $approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
             if (!$canApprove) {
                 return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
@@ -90,11 +97,13 @@ class ApprovingListController extends Controller
             $rcstatus = $script->latestStatus;
             $employee = Employee::find($script->employee_id);
 
-            $person = Person::find($employee->user->person_id);
 
-            if ($rcstatus->name == ScriptStatusEnum::GHEYREFAAL) {
-                $employee->user->notify(new ApproveRsNotification($person->display_name));
-            }
+            $notifibleUser = $employee->user;
+
+            $person = Person::find($notifibleUser->person_id);
+
+            $notifibleUser->notify(new DeclineRsNotification($person->display_name));
+
             DB::commit();
 
 

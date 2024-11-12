@@ -8,7 +8,6 @@ use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
-use Modules\AAA\app\Notifications\NewRsNotification;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
@@ -17,6 +16,7 @@ use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\app\Notifications\NewRsNotification;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
@@ -186,10 +186,10 @@ class RecruitmentScriptController extends Controller
 
             $employee = Employee::find($rsRes[0]->employee_id);
             $user = $employee->user;
-            $person = Person::whereHas('user', function ($q) use ($user) {
-                $q->where('id', $user->id);
-            })->with('user')->first();
 
+
+            $person = Person::find($user->person_id);
+            
             $user->notify(new NewRsNotification($person->display_name));
 
 
