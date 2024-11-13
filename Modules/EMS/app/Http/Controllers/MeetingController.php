@@ -3,8 +3,7 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Modules\AAA\app\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Models\Meeting;
 
@@ -12,7 +11,7 @@ class MeetingController extends Controller
 {
     public function changeMeetingDate(UpdateMeetingDateReq $req, $id)
     {
-        $user = User::find(2086);
+        $user = Auth::user();
         $meeting = Meeting::find($id);
 
         if (!$meeting || $user->id != $meeting->creator_id) {
@@ -49,10 +48,5 @@ class MeetingController extends Controller
         }
     }
 
-
-    public function store(Request $req)
-    {
-
-    }
 
 }
