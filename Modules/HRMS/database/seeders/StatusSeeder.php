@@ -22,6 +22,7 @@ class StatusSeeder extends Seeder
             ], [
                 'name' => $userStatus['name'],
                 'model' => RecruitmentScript::class,
+                'class_name' => $userStatus['className'] ?? null,
             ]);
         }
         // $this->call([]);
