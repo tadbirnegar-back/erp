@@ -68,6 +68,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'login' => \Modules\AAA\app\Http\Middleware\Login::class,
         'cors' => \Modules\AAA\app\Http\Middleware\CorsMiddleware::class,
-        'route'=>\Modules\AAA\app\Http\Middleware\CheckRoutePermission::class
+        'route' => \Modules\AAA\app\Http\Middleware\CheckRoutePermission::class
     ];
 }

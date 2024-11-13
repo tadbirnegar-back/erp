@@ -21,7 +21,7 @@ class MeetingObserver
      */
     public function updated(Meeting $meeting): void
     {
-        //
+        event(new CreateMeetingEvent($meeting));
     }
 
     /**

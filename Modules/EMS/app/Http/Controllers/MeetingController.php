@@ -3,15 +3,17 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingMember;
 
 class MeetingController extends Controller
 {
     public function changeMeetingDate(UpdateMeetingDateReq $req, $id)
     {
-        $user = Auth::user();
+        //$user = Auth::user();
+        $user = User::find(2086);
         $meeting = Meeting::find($id);
 
         if (!$meeting || $user->id != $meeting->creator_id) {
@@ -46,6 +48,30 @@ class MeetingController extends Controller
                 "details" => $e->getMessage()
             ], 400);
         }
+    }
+
+
+    public function store()
+    {
+        $meeting = Meeting::create([
+            'creator_id' => 2086,
+            'isTemplate' => true,
+            'meeting_type_id' => 3,
+            'ounit_id' => 3864
+        ]);
+
+        MeetingMember::create([
+            'meeting_id' => $meeting->id,
+            'mr_id' => 5,
+            'employee_id' => 2126
+        ]);
+
+
+        MeetingMember::create([
+            'meeting_id' => $meeting->id,
+            'mr_id' => 2,
+            'employee_id' => 2126
+        ]);
     }
 
 

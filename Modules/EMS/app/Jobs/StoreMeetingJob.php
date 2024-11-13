@@ -7,12 +7,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Models\Meeting;
-use Modules\EMS\app\Notifications\MeetingLastDayNotifications;
-use Modules\PersonMS\app\Models\Person;
 
 class StoreMeetingJob implements ShouldQueue
 {
@@ -27,7 +25,24 @@ class StoreMeetingJob implements ShouldQueue
     public function __construct(Meeting $meeting)
     {
         $this->meeting = $meeting;
+        $meetingId = $meeting->id;
+        Log::info($meetingId);
+        $jobIds = DB::table('queueable_jobs')
+            ->where('payload', 'like', '%StoreMeetingJob%')
+            ->where('payload', 'like', "%i:$meetingId%")
+            ->select('id')
+            ->get();
+
+        foreach ($jobIds as $jobId) {
+            DB::table('queueable_jobs')
+                ->where('id', $jobId->id)
+                ->delete();
+        }
+
+        Log::info($jobIds);
+
     }
+
 
     /**
      * Execute the job.
@@ -62,13 +77,13 @@ class StoreMeetingJob implements ShouldQueue
         $members = $this->meeting->load('meetingMembers'); // Load related 'meetingMembers'
 
 
-        foreach ($members->meetingMembers as $member) {
-            $user = User::find($member->employee_id);
-            $username = Person::find($user->person_id)->display_name;
-
-            $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
-            Log::info("Username: $user");
-        }
+//        foreach ($members->meetingMembers as $member) {
+//            $user = User::find($member->employee_id);
+//            $username = Person::find($user->person_id)->display_name;
+//
+//            $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
+//            Log::info("Username: $user");
+//        }
     }
 
 }

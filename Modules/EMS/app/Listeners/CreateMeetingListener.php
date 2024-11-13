@@ -19,6 +19,6 @@ class CreateMeetingListener
      */
     public function handle($event): void
     {
-        StoreMeetingJob::dispatch($event->meeting);
+        dispatch(new StoreMeetingJob($event->meeting))->delay(now()->addSeconds(600));
     }
 }
