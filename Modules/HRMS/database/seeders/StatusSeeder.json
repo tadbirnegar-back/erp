@@ -13,7 +13,7 @@
     },
     {
         "name": "در انتظار تایید",
-        "className": "info"
+        "className": "primary"
     },
     {
         "name": "رد شده",

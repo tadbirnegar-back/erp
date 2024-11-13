@@ -130,7 +130,7 @@ class RecruitmentScriptController extends Controller
 
         if ($user->hasPermissionForRoute($requestedRoute) || $script->employee->person->id == $user->person->id) {
 
-            $script->load('scriptType', 'hireType', 'position', 'level', 'scriptAgents', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files');
+            $script->load('scriptType', 'hireType', 'position', 'level', 'scriptAgents', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason');
         } else {
             return response()->json(['message' => 'شما به این بخش دسترسی ندارید'], 403);
         }
@@ -190,7 +190,7 @@ class RecruitmentScriptController extends Controller
 
 
             $person = Person::find($user->person_id);
-            
+
             $user->notify(new NewRsNotification($person->display_name));
 
 
@@ -216,10 +216,11 @@ class RecruitmentScriptController extends Controller
         if ($script->latestStatus->id == $cancelStatus->id) {
             return response()->json(['message' => 'حکم از قبل لغو شده است'], 400);
         }
+        $user = Auth::user();
 
         try {
             DB::beginTransaction();
-            $this->attachStatusToRs($script, $cancelStatus, $request->description ?? null);
+            $this->attachStatusToRs($script, $cancelStatus, $request->description ?? null, $user);
             $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت لغو شد']);
@@ -244,10 +245,11 @@ class RecruitmentScriptController extends Controller
         if ($script->latestStatus->id == $terminateStatus->id) {
             return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
         }
+        $user = Auth::user();
 
         try {
             DB::beginTransaction();
-            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null);
+            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
             $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
@@ -272,10 +274,11 @@ class RecruitmentScriptController extends Controller
         if ($script->latestStatus->id == $terminateStatus->id) {
             return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
         }
+        $user = Auth::user();
 
         try {
             DB::beginTransaction();
-            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null);
+            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
             $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
@@ -319,7 +322,7 @@ class RecruitmentScriptController extends Controller
     public function renewScript(Request $request, $id)
     {
         $script = RecruitmentScript::find($id);
-
+        $user = Auth::user();
         if (is_null($script)) {
             return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
         }
@@ -331,9 +334,9 @@ class RecruitmentScriptController extends Controller
             $RS['description'] = $script->description;
             $RS['hireTypeID'] = $script->hire_type_id;
             $RS['jobID'] = $script->job_id;
-            $RS['operatorID'] = $script->operator_id;
+            $RS['operatorID'] = $user->id;
             $RS['scriptTypeID'] = $script->script_type_id;
-//        $RS['parentID'] = $script;
+            $RS['parentID'] = $script->id;
             $RS['startDate'] = $request->startDate;
             $RS['expireDate'] = $request->expireDate;
 
@@ -344,7 +347,8 @@ class RecruitmentScriptController extends Controller
             if ($pendingRsStatus) {
                 collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
             }
-
+            $terminateStatus = $this->terminatedRsStatus();
+            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
             DB::commit();
             return response()->json($rsRes);
         } catch (Exception $e) {

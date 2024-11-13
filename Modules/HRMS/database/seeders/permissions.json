@@ -148,5 +148,11 @@
         "slug": "/hrm/rc/terminate/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "اتمام همکاری حکم",
+        "slug": "/hrm/rc/service-end/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
     }
 ]

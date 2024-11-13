@@ -222,11 +222,12 @@ trait RecruitmentScriptTrait
     }
 
 
-    public function attachStatusToRs(RecruitmentScript $script, Status $status, string $description = null)
+    public function attachStatusToRs(RecruitmentScript $script, Status $status, string $description = null, ?User $user = null)
     {
         $rsStatus = new RecruitmentScriptStatus();
         $rsStatus->recruitment_script_id = $script->id;
         $rsStatus->status_id = $status->id;
+        $rsStatus->operator_id = $user?->id;
         $rsStatus->description = $description;
         $rsStatus->save();
         return $rsStatus;
@@ -267,12 +268,12 @@ trait RecruitmentScriptTrait
     public function getComponentsToRenderSinglePage(RecruitmentScript $script, User $user)
     {
         $statusComponents = [
-            RecruitmentScriptStatusEnum::PENDING_APPROVAL->value => [
-                ['component' => 'DenyIssueBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/decline/{id}']
-                ],
-                ['component' => 'DenyApproveBtn', 'permissions' => ['/hrm/rc/renew/{id}', '/hrm/rc/decline/{id}']
-                ],
-            ],
+//            RecruitmentScriptStatusEnum::PENDING_APPROVAL->value => [
+//                ['component' => 'DenyIssueBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/decline/{id}']
+//                ],
+//                ['component' => 'DenyApproveBtn', 'permissions' => ['/hrm/rc/renew/{id}', '/hrm/rc/decline/{id}']
+//                ],
+//            ],
             RecruitmentScriptStatusEnum::ACTIVE->value => [
                 ['component' => 'RevokeSeparateBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/terminate/{id}']
                 ],
