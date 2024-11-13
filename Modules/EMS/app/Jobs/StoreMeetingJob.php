@@ -9,8 +9,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Notifications\MeetingLastDayNotifications;
+use Modules\PersonMS\app\Models\Person;
 
 class StoreMeetingJob implements ShouldQueue
 {
@@ -26,7 +29,6 @@ class StoreMeetingJob implements ShouldQueue
     {
         $this->meeting = $meeting;
         $meetingId = $meeting->id;
-        Log::info($meetingId);
         $jobIds = DB::table('queueable_jobs')
             ->where('payload', 'like', '%StoreMeetingJob%')
             ->where('payload', 'like', "%i:$meetingId%")
@@ -39,8 +41,6 @@ class StoreMeetingJob implements ShouldQueue
                 ->delete();
         }
 
-        Log::info($jobIds);
-
     }
 
 
@@ -50,8 +50,6 @@ class StoreMeetingJob implements ShouldQueue
     public function handle(): void
     {
         // Log the meeting date
-        Log::info($this->meeting->meeting_date);
-
         // Extract the month number from the Jalali date
         $jalaliDate = $this->meeting->meeting_date; // e.g., ۱۴۰۴/۰۸/۰۹
         $parts = explode('/', $jalaliDate); // Split the date string by '/'
@@ -77,13 +75,12 @@ class StoreMeetingJob implements ShouldQueue
         $members = $this->meeting->load('meetingMembers'); // Load related 'meetingMembers'
 
 
-//        foreach ($members->meetingMembers as $member) {
-//            $user = User::find($member->employee_id);
-//            $username = Person::find($user->person_id)->display_name;
-//
-//            $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
-//            Log::info("Username: $user");
-//        }
+        foreach ($members->meetingMembers as $member) {
+            $user = User::find($member->employee_id);
+            $username = Person::find($user->person_id)->display_name;
+
+            $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
+        }
     }
 
 }

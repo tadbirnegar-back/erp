@@ -5,11 +5,16 @@ namespace Modules\EMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
+use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingMember;
+use Modules\EMS\app\Notifications\ChangeMeetingDateNotification;
+use Modules\PersonMS\app\Models\Person;
 
 class MeetingController extends Controller
 {
+    use DateTrait;
+
     public function changeMeetingDate(UpdateMeetingDateReq $req, $id)
     {
         //$user = Auth::user();
@@ -33,6 +38,41 @@ class MeetingController extends Controller
             $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString)
                 ->toDateTimeString();
 
+            $meetingMembers = MeetingMember::where('meeting_id', $meeting->id)->get();
+
+
+            /*New Date Start*/
+            $parts = explode('/', $normalizedDate); // Split the date string by '/'
+            $monthNumber = $parts[1]; // Get the second part as the month number
+            $day = $parts[2];
+            //For Month
+            $eng = $this->persianNumbersToEng($monthNumber);
+            $monthName = $this->humanReadableDate($eng);
+            //For Day
+            $daywithoutZero = $this->removeLeftZero($monthNumber);
+            //message text for date
+            $messageTextDate = "$daywithoutZero $monthName $parts[0]";
+            /*New Date End*/
+
+            /*Start Last Date*/
+            $parts = explode('/', $meeting->meeting_date); // Split the date string by '/'
+            $monthNumber = $parts[1]; // Get the second part as the month number
+            $day = $parts[2];
+            //For Month
+            $eng = $this->persianNumbersToEng($monthNumber);
+            $monthName = $this->humanReadableDate($eng);
+            //For Day
+            $daywithoutZero = $this->removeLeftZero($monthNumber);
+            //message text for date
+            $messageTextLastDate = "$daywithoutZero $monthName $parts[0]";
+
+
+            foreach ($meetingMembers as $member) {
+                $user = User::find($member->employee_id);
+                $username = Person::find($user->person_id)->display_name;
+
+                $user->notify(new ChangeMeetingDateNotification($username, $messageTextLastDate, $messageTextDate));
+            }
             $meeting->meeting_date = $normalizedDate;
 
             $meeting->save();

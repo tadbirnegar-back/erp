@@ -59,7 +59,6 @@ class StoreEnactmentStatusInQueueListener
             $alertKarshenasDelay = $meetingDate2->addDays($consultingDelay - 1)->addMinutes(5);
 
 
-            AlertKarshenas::dispatch($enactmentStatus->enactment_id);
             // Dispatch the job with the calculated delay
             StoreEnactmentStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayHeyat);
             StoreEnactmentStatusKarshenasJob::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
