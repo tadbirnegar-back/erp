@@ -21,7 +21,8 @@ class MeetingObserver
      */
     public function updated(Meeting $meeting): void
     {
-        //
+        \Log::info($meeting->meeting_date);
+        event(new CreateMeetingEvent($meeting));
     }
 
     /**

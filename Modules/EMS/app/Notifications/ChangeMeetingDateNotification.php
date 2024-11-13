@@ -9,7 +9,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class AlertMMLastDatNotification extends Notification
+class ChangeMeetingDateNotification extends Notification
 {
     use Queueable;
 
@@ -17,13 +17,18 @@ class AlertMMLastDatNotification extends Notification
      * Create a new notification instance.
      */
     private string $username;
+    private string $lastDate;
+
+    private string $newDate;
 
     /**
      * @param string $otpCode
      */
-    public function __construct(string $username)
+    public function __construct(string $username, string $lastDate, string $newDate)
     {
         $this->username = $username;
+        $this->lastDate = $lastDate;
+        $this->newDate = $newDate;
     }
 
 
@@ -57,7 +62,7 @@ class AlertMMLastDatNotification extends Notification
         try {
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=5extzat5ivr970k \n username={$this->username}")
+            ->send("patterncode=suoqg4c6upppx8e \n username={$this->username} \n lastDate={$this->lastDate} \n newDate={$this->newDate}")
                 ->to($notifiable->mobile);
 
 

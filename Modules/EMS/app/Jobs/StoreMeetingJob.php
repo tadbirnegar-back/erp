@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\DateTrait;
@@ -27,7 +28,21 @@ class StoreMeetingJob implements ShouldQueue
     public function __construct(Meeting $meeting)
     {
         $this->meeting = $meeting;
+        $meetingId = $meeting->id;
+        $jobIds = DB::table('queueable_jobs')
+            ->where('payload', 'like', '%StoreMeetingJob%')
+            ->where('payload', 'like', "%i:$meetingId%")
+            ->select('id')
+            ->get();
+
+        foreach ($jobIds as $jobId) {
+            DB::table('queueable_jobs')
+                ->where('id', $jobId->id)
+                ->delete();
+        }
+
     }
+
 
     /**
      * Execute the job.
@@ -35,8 +50,6 @@ class StoreMeetingJob implements ShouldQueue
     public function handle(): void
     {
         // Log the meeting date
-        Log::info($this->meeting->meeting_date);
-
         // Extract the month number from the Jalali date
         $jalaliDate = $this->meeting->meeting_date; // e.g., ۱۴۰۴/۰۸/۰۹
         $parts = explode('/', $jalaliDate); // Split the date string by '/'
@@ -67,7 +80,6 @@ class StoreMeetingJob implements ShouldQueue
             $username = Person::find($user->person_id)->display_name;
 
             $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
-            Log::info("Username: $user");
         }
     }
 
