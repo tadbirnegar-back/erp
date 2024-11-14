@@ -9,7 +9,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class AlertMMLastDatNotification extends Notification
+class AlertMMLastDayNotification extends Notification
 {
     use Queueable;
 
