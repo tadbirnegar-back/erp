@@ -3,14 +3,14 @@
 namespace Modules\HRMS\app\Observers;
 
 use Modules\HRMS\app\Events\ScriptStatusCreatedEvent;
-use Modules\HRMS\app\Models\recruitmentScriptStatus;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 
 class ScriptStatusObserver
 {
     /**
      * Handle the ScriptStatusObserver "created" event.
      */
-    public function created(recruitmentScriptStatus $scriptStatus): void
+    public function created(RecruitmentScriptStatus $scriptStatus): void
     {
         event(new ScriptStatusCreatedEvent($scriptStatus));
     }
@@ -18,7 +18,7 @@ class ScriptStatusObserver
     /**
      * Handle the ScriptStatusObserver "updated" event.
      */
-    public function updated(recruitmentScriptStatus $scriptstatusobserver): void
+    public function updated(RecruitmentScriptStatus $scriptstatusobserver): void
     {
         //
     }
@@ -26,7 +26,7 @@ class ScriptStatusObserver
     /**
      * Handle the ScriptStatusObserver "deleted" event.
      */
-    public function deleted(recruitmentScriptStatus $scriptstatusobserver): void
+    public function deleted(RecruitmentScriptStatus $scriptstatusobserver): void
     {
         //
     }
@@ -34,7 +34,7 @@ class ScriptStatusObserver
     /**
      * Handle the ScriptStatusObserver "restored" event.
      */
-    public function restored(recruitmentScriptStatus $scriptstatusobserver): void
+    public function restored(RecruitmentScriptStatus $scriptstatusobserver): void
     {
         //
     }
@@ -42,7 +42,7 @@ class ScriptStatusObserver
     /**
      * Handle the ScriptStatusObserver "force deleted" event.
      */
-    public function forceDeleted(recruitmentScriptStatus $scriptstatusobserver): void
+    public function forceDeleted(RecruitmentScriptStatus $scriptstatusobserver): void
     {
         //
     }

@@ -312,88 +312,100 @@ class EMSController extends Controller
 
     public function getHeyaatMembers()
     {
-        //$user = Auth::user();
-        $user = User::find(2081);
-        $user->load(['activeRecruitmentScript' => function ($q) {
-            $q->orderByDesc('recruitment_scripts.create_date')
-                ->limit(1)
-                ->with('organizationUnit');
-        }]);
-        $ounit = OrganizationUnit::with('meetingMembers.roles', 'meetingMembers.user')->find($user?->activeRecruitmentScript[0]->organizationUnit->id);
+        try {
+            $user = Auth::user();
+            $user->load(['activeRecruitmentScript.organizationUnit.meetingMembers.roles', 'activeRecruitmentScript.organizationUnit.meetingMembers.user']);
 
-        $consultingMembers = collect();
-        $boardMembers = collect();
 
-        if ($ounit->meetingMembers->isNotEmpty()) {
-            $ounit->meetingMembers->each(function ($member) use (&$consultingMembers, &$boardMembers) {
-                $member->roles->each(function ($role) use ($member, &$consultingMembers, &$boardMembers) {
-                    if ($role->name === RolesEnum::KARSHENAS_MASHVARATI->value) {
-                        $consultingMembers->push($member);
-                    } elseif ($role->name === RolesEnum::OZV_HEYAAT->value) {
-                        $boardMembers->push($member);
-                    }
+            $ounit = $user->activeRecruitmentScript[0]->organizationUnit;
+
+            $consultingMembers = collect();
+            $boardMembers = collect();
+
+            if ($ounit->meetingMembers->isNotEmpty()) {
+                $ounit->meetingMembers->each(function ($member) use (&$consultingMembers, &$boardMembers) {
+                    $member->roles->each(function ($role) use ($member, &$consultingMembers, &$boardMembers) {
+                        if ($role->name === RolesEnum::KARSHENAS_MASHVARATI->value) {
+                            $consultingMembers->push($member);
+                        } elseif ($role->name === RolesEnum::OZV_HEYAAT->value) {
+                            $boardMembers->push($member);
+                        }
+                    });
                 });
-            });
 
-            $consultingMembers = $consultingMembers->unique('id')->values();
-            $boardMembers = $boardMembers->unique('id')->values();
+                $consultingMembers = $consultingMembers->unique('id')->values();
+                $boardMembers = $boardMembers->unique('id')->values();
+            }
+            $usersBakhshdarOzvHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+                $q->where('organization_unit_id', $ounit->id);
+            })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::BAKHSHDAR); // Replace with your actual first condition
+                })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::OZV_HEYAAT); // Replace with your actual second condition
+                })
+                ->with('person.avatar')
+                ->get(['id', 'person_id']);
+
+            $usersDabirKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+                $q->where('organization_unit_id', $ounit->id);
+            })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::DABIRKHANE->value); // Replace with your actual first condition
+                })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual second condition
+                })
+                ->with('person.avatar')
+                ->get(['id', 'person_id']);
+
+
+            $usersKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+                $q->where('organization_unit_id', $ounit->id);
+            })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual first condition
+                })
+                ->whereDoesntHave('roles', function ($q) {
+                    $q->where('name', '=', UserRolesEnum::DABIRKHANE->value); // Replace with your actual second condition
+                })
+                ->with('person.avatar')
+                ->get(['id', 'person_id']);
+
+            $usersHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+                $q->where('organization_unit_id', $ounit->id);
+            })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::OZV_HEYAAT->value)->where('name', '!=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual first condition
+                })
+                ->whereDoesntHave('roles', function ($q) {
+                    $q->where('name', '=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual second condition
+                })
+                ->with('person.avatar')
+                ->get(['id', 'person_id']);
+
+
+            return response()->json([
+                'candidates' => [
+                    "ozv_heyaat" => $usersHeyaat,
+                    "karshenas" => $usersKarshenas,
+                    "dabir_karshenas" => $usersDabirKarshenas,
+                    "bakhshdar_heyaat" => $usersBakhshdarOzvHeyaat,
+                ],
+                'members' => [
+                    'consultingMembers' => $consultingMembers,
+                    'boardMembers' => $boardMembers
+                ],
+
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'خطا در دریافت اعضای هیات', 'error' => $e->getMessage(),
+//                'file' => $e->getFile(),     // Get the file where the error occurred
+//                'line' => $e->getLine(),
+//                'trace' => $e->getTrace()   // Get the line number where the error occurred
+            ], 500);
         }
-        $usersBakhshdarOzvHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->where('organization_unit_id', $ounit->id);
-        })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::BAKHSHDAR); // Replace with your actual first condition
-            })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::OZV_HEYAAT); // Replace with your actual second condition
-            })
-            ->with('person.avatar')
-            ->get(['id', 'person_id']);
-
-        $usersDabirKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->where('organization_unit_id', $ounit->id);
-        })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::DABIRKHANE->value); // Replace with your actual first condition
-            })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual second condition
-            })
-            ->with('person.avatar')
-            ->get(['id', 'person_id']);
-
-
-        $usersKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->where('organization_unit_id', $ounit->id);
-        })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual first condition
-            })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', '!=', UserRolesEnum::DABIRKHANE->value); // Replace with your actual second condition
-            })
-            ->with('person.avatar')
-            ->get(['id', 'person_id']);
-
-        $usersHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->where('organization_unit_id', $ounit->id);
-        })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::OZV_HEYAAT->value)->where('name', '!=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual first condition
-            })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', '!=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual second condition
-            })
-            ->with('person.avatar')
-            ->get(['id', 'person_id']);
-        return response()->json([
-            'candidates' => [
-                "ozv_heyaat" => $usersHeyaat,
-                "karshenas" => $usersKarshenas,
-                "dabir_karshenas" => $usersDabirKarshenas,
-                "bakhshdar_heyaat" => $usersBakhshdarOzvHeyaat,
-            ]
-        ]);
 
     }
 
@@ -491,89 +503,90 @@ class EMSController extends Controller
             return response()->json(['message' => $validate->errors()], 422);
         }
 
-//        $meeting = Meeting::where('isTemplate', true)
-//            ->where('ounit_id', $request->ounitID)
-//            ->with(['meetingMembers' => function ($q) {
-//                $q->with(['roles', 'person.avatar', 'mr', 'user:id']);
-//            }])
-//            ->first();
-        $ounit = OrganizationUnit::with('meetingMembers.roles', 'meetingMembers.user')->find($request->ounitID);
+        try {
+            $ounit = OrganizationUnit::with('meetingMembers.roles', 'meetingMembers.user')->find($request->ounitID);
 
-        $consultingMembers = collect();
-        $boardMembers = collect();
+            $consultingMembers = collect();
+            $boardMembers = collect();
 
-        if ($ounit->meetingMembers->isNotEmpty()) {
-            $ounit->meetingMembers->each(function ($member) use (&$consultingMembers, &$boardMembers) {
-                $member->roles->each(function ($role) use ($member, &$consultingMembers, &$boardMembers) {
-                    if ($role->name === RolesEnum::KARSHENAS_MASHVARATI->value) {
-                        $consultingMembers->push($member);
-                    } elseif ($role->name === RolesEnum::OZV_HEYAAT->value) {
-                        $boardMembers->push($member);
-                    }
+            if ($ounit->meetingMembers->isNotEmpty()) {
+                $ounit->meetingMembers->each(function ($member) use (&$consultingMembers, &$boardMembers) {
+                    $member->roles->each(function ($role) use ($member, &$consultingMembers, &$boardMembers) {
+                        if ($role->name === RolesEnum::KARSHENAS_MASHVARATI->value) {
+                            $consultingMembers->push($member);
+                        } elseif ($role->name === RolesEnum::OZV_HEYAAT->value) {
+                            $boardMembers->push($member);
+                        }
+                    });
                 });
-            });
 
-            $consultingMembers = $consultingMembers->unique('id')->values();
-            $boardMembers = $boardMembers->unique('id')->values();
+                $consultingMembers = $consultingMembers->unique('id')->values();
+                $boardMembers = $boardMembers->unique('id')->values();
+            }
+            $usersBakhshdarOzvHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+                $q->where('organization_unit_id', $ounit->id);
+            })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::BAKHSHDAR); // Replace with your actual first condition
+                })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::OZV_HEYAAT); // Replace with your actual second condition
+                })
+                ->with('person.avatar')
+                ->get(['id', 'person_id']);
+
+            $usersDabirKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+                $q->where('organization_unit_id', $ounit->id);
+            })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::DABIRKHANE->value); // Replace with your actual first condition
+                })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual second condition
+                })
+                ->with('person.avatar')
+                ->get(['id', 'person_id']);
+
+
+            $usersKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+                $q->where('organization_unit_id', $ounit->id);
+            })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual first condition
+                })
+                ->whereDoesntHave('roles', function ($q) {
+                    $q->where('name', '=', UserRolesEnum::DABIRKHANE->value); // Replace with your actual second condition
+                })
+                ->with('person.avatar')
+                ->get(['id', 'person_id']);
+
+            $usersHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
+                $q->where('organization_unit_id', $ounit->id);
+            })
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', UserRolesEnum::OZV_HEYAAT->value)->where('name', '!=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual first condition
+                })
+                ->whereDoesntHave('roles', function ($q) {
+                    $q->where('name', '=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual second condition
+                })
+                ->with('person.avatar')
+                ->get(['id', 'person_id']);
+
+            return response()->json([
+                'candidates' => [
+                    "ozv_heyaat" => $usersHeyaat,
+                    "karshenas" => $usersKarshenas,
+                    "dabir_karshenas" => $usersDabirKarshenas,
+                    "bakhshdar_heyaat" => $usersBakhshdarOzvHeyaat,
+                ],
+                'members' => [
+                    'consultingMembers' => $consultingMembers,
+                    'boardMembers' => $boardMembers
+                ],
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'خطا در دریافت اعضای هیات'], 500);
         }
-        $usersBakhshdarOzvHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->where('organization_unit_id', $ounit->id);
-        })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::BAKHSHDAR); // Replace with your actual first condition
-            })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::OZV_HEYAAT); // Replace with your actual second condition
-            })
-            ->with('person.avatar')
-            ->get(['id', 'person_id']);
-
-        $usersDabirKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->where('organization_unit_id', $ounit->id);
-        })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::DABIRKHANE->value); // Replace with your actual first condition
-            })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual second condition
-            })
-            ->with('person.avatar')
-            ->get(['id', 'person_id']);
-
-
-        $usersKarshenas = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->where('organization_unit_id', $ounit->id);
-        })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::KARSHENAS->value); // Replace with your actual first condition
-            })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', '!=', UserRolesEnum::DABIRKHANE->value); // Replace with your actual second condition
-            })
-            ->with('person.avatar')
-            ->get(['id', 'person_id']);
-
-        $usersHeyaat = User::whereHas('recruitmentScripts', function ($q) use ($ounit) {
-            $q->where('organization_unit_id', $ounit->id);
-        })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', UserRolesEnum::OZV_HEYAAT->value)->where('name', '!=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual first condition
-            })
-            ->whereHas('roles', function ($q) {
-                $q->where('name', '!=', UserRolesEnum::BAKHSHDAR->value); // Replace with your actual second condition
-            })
-            ->with('person.avatar')
-            ->get(['id', 'person_id']);
-        return response()->json([
-            'consultingMembers' => $consultingMembers,
-            'boardMembers' => $boardMembers,
-            'candidates' => [
-                "ozv_heyaat" => $usersHeyaat,
-                "karshenas" => $usersKarshenas,
-                "dabir_karshenas" => $usersDabirKarshenas,
-                "bakhshdar_heyaat" => $usersBakhshdarOzvHeyaat,
-            ]
-        ]);
 
 
     }

@@ -165,7 +165,7 @@ class PersonMSController extends Controller
             'workForce.courseRecords',
             'workForce.isars.isarStatus',
             'workForce.isars.relativeType',
-            'employee.recruitmentScripts',
+            'recruitmentScripts.ounit.ancestorsAndSelf',
             'employee.signatureFile',
             'workForce.militaryService.militaryServiceStatus',
             'workForce.militaryService.exemptionType'])
@@ -197,7 +197,7 @@ class PersonMSController extends Controller
             'person.workForce.courseRecords',
             'person.workForce.isars.isarStatus',
             'person.workForce.isars.relativeType',
-            'person.employee.recruitmentScripts',
+            'person.recruitmentScripts.ounit.ancestorsAndSelf',
             'person.employee.signatureFile',
             'person.workForce.militaryService.militaryServiceStatus',
             'person.workForce.militaryService.exemptionType']);

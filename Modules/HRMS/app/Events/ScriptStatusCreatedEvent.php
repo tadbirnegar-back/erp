@@ -4,15 +4,15 @@ namespace Modules\HRMS\app\Events;
 
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Modules\HRMS\app\Models\recruitmentScriptStatus;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 
 class ScriptStatusCreatedEvent
 {
     use Dispatchable, SerializesModels;
 
-    public recruitmentScriptStatus $recStatus;
+    public RecruitmentScriptStatus $recStatus;
 
-    public function __construct(recruitmentScriptStatus $recStatus)
+    public function __construct(RecruitmentScriptStatus $recStatus)
     {
         $this->recStatus = $recStatus;
     }

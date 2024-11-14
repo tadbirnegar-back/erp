@@ -10,6 +10,7 @@ use Modules\AAA\app\Models\User as AAAUser;
 use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\PersonMS\Database\factories\PersonFactory;
@@ -111,6 +112,30 @@ class Person extends Model
                 'id',                       // Local key on the current model
                 'workforceable_id',                       // Local key on the WorkForce model
                 'id'                        // Local key on the Employee model
+            ]
+        )
+            ->where('workforceable_type', Employee::class)
+            ->latest('create_date');
+    }
+
+    public function position()
+    {
+        return $this->hasOneDeep(
+            Position::class,
+            [WorkForce::class, Employee::class, RecruitmentScript::class], // Intermediate models
+            [
+                'person_id',                // Foreign key on the WorkForce model
+                'id',         // Foreign key on the Employee model
+                'employee_id',               // Foreign key on the RecruitmentScript model
+                'id',
+            ],
+            [
+                'id',                       // Local key on the current model
+                'workforceable_id',                       // Local key on the WorkForce model
+                'id',
+                // Local key on the Employee model
+                'position_id',
+
             ]
         )
             ->where('workforceable_type', Employee::class)

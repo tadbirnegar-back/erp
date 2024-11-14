@@ -7,7 +7,7 @@ use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Models\FileScript;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\recruitmentScriptStatus;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\StatusMS\app\Models\Status;
 

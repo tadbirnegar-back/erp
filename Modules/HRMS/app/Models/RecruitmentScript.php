@@ -69,8 +69,7 @@ class RecruitmentScript extends Model
             'id', // Foreign key on Status table
             'id', // Local key on RecruitmentScript table
             'status_id' // Local key on RecruitmentScriptStatus table
-        )->select('statuses.*', 'recruitment_script_status.description'); // Add fields here
-        //            ->latest('recruitment_script_status.create_date');
+        )->orderBy('recruitment_script_status.create_date', 'desc'); // Add fields here
     }
 
 
@@ -167,7 +166,7 @@ class RecruitmentScript extends Model
 
     public function rejectReason()
     {
-        return $this->hasOne(RecruitmentScriptStatus::class, 'recruitment_script_id')->with(['person.avatar', 'status'])->orderBy('create_date', 'desc');
+        return $this->hasOne(RecruitmentScriptStatus::class, 'recruitment_script_id')->with(['person.avatar', 'person.position', 'status'])->orderBy('create_date', 'desc');
     }
 
 }

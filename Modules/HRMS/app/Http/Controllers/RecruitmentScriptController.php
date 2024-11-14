@@ -348,7 +348,7 @@ class RecruitmentScriptController extends Controller
                 collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
             }
             $terminateStatus = $this->terminatedRsStatus();
-            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
+//            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
             DB::commit();
             return response()->json($rsRes);
         } catch (Exception $e) {
