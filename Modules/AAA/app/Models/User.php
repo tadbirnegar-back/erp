@@ -212,16 +212,18 @@ class User extends Authenticatable
 
     public function activeRecruitmentScripts()
     {
-        return $this->recruitmentScripts()->whereHas('latestStatus', function ($query) {
-            $query->join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
-                ->join('statuses as s', 'rss.status_id', '=', 's.id')
-                ->where('s.name', 'فعال')
-                ->where('rss.create_date', function ($subQuery) {
-                    $subQuery->selectRaw('MAX(create_date)')
-                        ->from('recruitment_script_status as sub_rss')
-                        ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
-                });
-        });
+        return $this->recruitmentScripts()
+//            ->whereHas('latestStatus', function ($query) {
+//            $query
+            ->join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
+            ->join('statuses as s', 'rss.status_id', '=', 's.id')
+            ->where('s.name', 'فعال')
+            ->where('rss.create_date', function ($subQuery) {
+                $subQuery->selectRaw('MAX(create_date)')
+                    ->from('recruitment_script_status as sub_rss')
+                    ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
+            });
+//        });
     }
 
     public function activeRecruitmentScript()
