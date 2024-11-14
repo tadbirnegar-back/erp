@@ -9,7 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Models\Enactment;
-use Modules\EMS\app\Notifications\AlertMMLastDatNotification;
+use Modules\EMS\app\Notifications\AlertMMLastDayNotification;
 use Modules\PersonMS\app\Models\Person;
 
 class AlertKarshenas implements ShouldQueue
@@ -47,7 +47,7 @@ class AlertKarshenas implements ShouldQueue
 
             $username = Person::find($user->person_id)->display_name;
 
-            $user->notify(new AlertMMLastDatNotification($username));
+            $user->notify(new AlertMMLastDayNotification($username));
 
         }
 
