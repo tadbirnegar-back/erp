@@ -2,9 +2,8 @@
 
 namespace Modules\OUnitMS\app\Http\Traits;
 
-use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Models\CityOfc;
+use Modules\OUnitMS\app\Models\Department;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
@@ -42,6 +41,23 @@ trait OrganizationUnitTrait
         $organizationUnit->statuses()->attach($status->id);
 
         return $state;
+    }
+
+
+    public function departmentStore(array $data)
+    {
+        $department = new Department();
+        $department->save();
+
+        $organizationUnit = new OrganizationUnit();
+        $organizationUnit->head_id = $data['headID'] ?? null;
+        $organizationUnit->name = $data['name'] ?? null;
+
+        $department->organizationUnit()->save($organizationUnit);
+
+        $status = $this->activeOrganizationUnitStatus();
+
+        return $department;
     }
 
     public function farmandariIndex($searchTerm = null, int $perPage = 10, int $pageNum = 1)
@@ -127,6 +143,18 @@ trait OrganizationUnitTrait
 
 
         return $districts;
+    }
+
+    public function departmentIndex($searchTerm = null, $parentID = null, int $perPage = 10, int $pageNum = 1)
+    {
+
+        $departemans = OrganizationUnit::where('unitable_type', Department::class)
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+            })
+            ->with(['head', 'ancestorsAndSelf'])
+            ->paginate($perPage, page: $pageNum);
+        return $departemans;
     }
 
     public function dehestanStore(array $data)
@@ -294,7 +322,7 @@ trait OrganizationUnitTrait
         $result = OrganizationUnit::whereRaw(
             "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
             [$searchTerm]
-        )->with(['positions.levels','person','ancestors'])->get();
+        )->with(['positions.levels', 'person', 'ancestors'])->get();
 
         return $result;
     }

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\OUnitMS\app\Http\Controllers\DepartmentController;
 use Modules\OUnitMS\app\Http\Controllers\OUnitMSController;
 
 /*
@@ -21,6 +22,8 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/hrm/verify', [\Modules\OUnitMS\app\Http\Controllers\VerifyInfoConformationController::class, 'verify']);
     Route::put('/hrm/employee/confirm/edit', [\Modules\OUnitMS\app\Http\Controllers\VerifyInfoConformationController::class, 'update'])->middleware(['auth:api']);
+
+
 });
 
 
@@ -48,6 +51,10 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::put('/oms/organization_unit/update/{id}', [OUnitMSController::class, 'update']);
 
+    Route::post('/oms/make/department', [DepartmentController::class, 'store']);
+
+    Route::post('/oms/department/list', [DepartmentController::class, 'index']);
+
 
 });
 
@@ -60,3 +67,4 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/oms/districtofc/all/list', [OUnitMSController::class, 'districtsAllList']);
 
 });
+
