@@ -1,0 +1,86 @@
+[
+    {
+        "name": "لیست شهرستان ها",
+        "slug": "/oms/cityofc/list",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن شهرستان",
+        "slug": "/oms/cityofc/add",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست بخشداری",
+        "slug": "/oms/districtofc/list",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن بخشداری",
+        "slug": "/oms/districtofc/add",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست دهستان",
+        "slug": "/oms/townofc/list",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن دهستان",
+        "slug": "/oms/townofc/add",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست روستاها",
+        "slug": "/oms/villageofc/list",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن روستا",
+        "slug": "/oms/villageofc/add",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "جزئیات واحد سازمانی",
+        "slug": "/oms/organization_unit/{id}",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی واحد سازمانی",
+        "slug": "/oms/organization_unit/update/{id}",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "جستجوی کارمند",
+        "slug": "/oms/employee/search",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "جستجوی واحد سازمانی",
+        "slug": "/oms/organization-unit/search",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن دپارتمان",
+        "slug": "/oms/make/department",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست دپارتمان",
+        "slug": "/oms/department/list",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    }
+]
