@@ -220,21 +220,19 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
+            $token = auth()->user()->token();
+            if ($token) {
+                /* --------------------------- revoke access token -------------------------- */
+                $token->revoke();
+                $token->delete();
+
+                /* -------------------------- revoke refresh token -------------------------- */
+                $refreshTokenRepository = app(RefreshTokenRepository::class);
+                $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($token->id);
+            }
         } else {
             return response()->json(['message' => 'نام کاربری یا رمز عبور نادرست است'], 403);
-
         }
-        $token = auth()->user()->token();
-        if ($token) {
-            /* --------------------------- revoke access token -------------------------- */
-            $token->revoke();
-            $token->delete();
-
-            /* -------------------------- revoke refresh token -------------------------- */
-            $refreshTokenRepository = app(RefreshTokenRepository::class);
-            $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($token->id);
-        }
-
         $baseUrl = url('/');
 
         $response = Http::post("{$baseUrl}/oauth/token", [
