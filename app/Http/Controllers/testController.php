@@ -5,11 +5,8 @@ namespace App\Http\Controllers;
 
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-<<<<<<< Updated upstream
 use Modules\HRMS\app\Models\RecruitmentScript;
-=======
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
->>>>>>> Stashed changes
 
 
 class testController extends Controller
@@ -18,17 +15,6 @@ class testController extends Controller
 
     public function run()
     {
-<<<<<<< Updated upstream
-        $a = RecruitmentScript::with('user')->find(1200);
-
-        dd(
-            $a
-        );
-=======
-        RecruitmentScriptStatus::create([
-            'recruitment_script_id' => 2738,
-            'status_id' => 60
-        ]);
 //        $user = User::create([
 //            'mobile' => '09146360241',
 //            'password' => Hash::make('123456'),
@@ -41,8 +27,6 @@ class testController extends Controller
 //        dd(
 //            $a
 //        );
->>>>>>> Stashed changes
-
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //
