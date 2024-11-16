@@ -134,4 +134,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/hrm/employee/verify', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'verifyEmployeeForScript']);
 
 
+    Route::post('/hrm/rc/reissue/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'RenewRecruitmentScript']);
+    Route::post('/hrm/rc/reject/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'RejectRecruitmentScript']);
+
+
 });
+

@@ -236,7 +236,7 @@ trait RecruitmentScriptTrait
     public function declineRs(RecruitmentScript $rs)
     {
 
-        $deleteStatus = $this->inActiveRsStatus();
+        $deleteStatus = $this->rejectedRsStatus();
         $rs->status()->attach($deleteStatus->id);
 
 
@@ -268,12 +268,14 @@ trait RecruitmentScriptTrait
     public function getComponentsToRenderSinglePage(RecruitmentScript $script, User $user)
     {
         $statusComponents = [
-//            RecruitmentScriptStatusEnum::PENDING_APPROVAL->value => [
-//                ['component' => 'DenyIssueBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/decline/{id}']
-//                ],
+            RecruitmentScriptStatusEnum::PENDING_APPROVAL->value => [
+                ['component' => 'DenyIssueBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/reject/{id}']
+                ],
 //                ['component' => 'DenyApproveBtn', 'permissions' => ['/hrm/rc/renew/{id}', '/hrm/rc/decline/{id}']
 //                ],
-//            ],
+                ['component' => 'DenyApproveBtn', 'permissions' => ['/hrm/rc/renew/{id}', '/hrm/rc/reissue/{id}']
+                ],
+            ],
             RecruitmentScriptStatusEnum::ACTIVE->value => [
                 ['component' => 'RevokeSeparateBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/terminate/{id}']
                 ],

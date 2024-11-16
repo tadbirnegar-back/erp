@@ -166,18 +166,20 @@ trait ApprovingListTrait
         return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$notApprovedStatus);
     }
 
-    public function declineScript(RecruitmentScript $script, User $user)
+    public function declineScript(RecruitmentScript $script, User $user, bool $isAdmin = false)
     {
         $statusId = self::notApprovedStatus()->id;
 
         // Current User's Approving List
-        $approvingList = $script->pendingScriptApproving()->where('assigned_to', $user->id)->first();
+        if (!$isAdmin) {
+            $approvingList = $script->pendingScriptApproving()->where('assigned_to', $user->id)->first();
+            $approvingList->approver_id = $user->id;
+            $approvingList->status_id = $statusId;
+            $approvingList->update_date = Carbon::now();
+            $approvingList->save();
+        }
 
         // Update the current user's approval status
-        $approvingList->approver_id = $user->id;
-        $approvingList->status_id = $statusId;
-        $approvingList->update_date = Carbon::now();
-        $approvingList->save();
 
 
         // Update all related users with approver_id set to null
@@ -185,20 +187,16 @@ trait ApprovingListTrait
             ->where('approver_id', null)
             ->where('status_id', '!=', $statusId);
 
-// Perform the bulk update
+        // Perform the bulk update
         $relatedApprovingLists->update([
             'status_id' => $statusId,
             'update_date' => Carbon::now(),
+            "approver_id" => $user->id,
         ]);
 
         // Call the declineRs method and return based on its result
         $inactiveRs = $this->declineRs($script);
 
-        if ($inactiveRs) {
-            // Something to return if successful
-        } else {
-            // Something else to return if not successful
-        }
 
         return $inactiveRs;
     }
