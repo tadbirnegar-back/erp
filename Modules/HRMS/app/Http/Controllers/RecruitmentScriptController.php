@@ -16,7 +16,9 @@ use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\App\Notifications\DeclineRsNotification;
 use Modules\HRMS\app\Notifications\NewRsNotification;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -359,5 +361,125 @@ class RecruitmentScriptController extends Controller
 
     }
 
+
+    public function RenewRecruitmentScript(Request $request, $id)
+    {
+        $data = $request->all();
+
+        $data['parentID'] = $id;
+        $validator = Validator::make($data, [
+            'employeeID' => 'required',
+            'parentID' => ['required',
+                'exists:recruitment_scripts,id'
+            ],
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+        $rejectedRsStatus = $this->rejectedRsStatus();
+
+
+        RecruitmentScriptStatus::create([
+            'recruitment_script_id' => $id,
+            'status_id' => $rejectedRsStatus->id,
+        ]);
+
+
+        try {
+            DB::beginTransaction();
+            $employee = Employee::findOr($data['employeeID'], function () {
+                return response(['message' => 'موردی یافت نشد'], 404);
+
+            });
+
+            $scriptType = ScriptType::with('employeeStatus')->find($data['scriptTypeID']);
+
+//            if (isset($data['parentID'])) {
+//
+//
+//                $this->changeParentRecruitmentScriptStatus($employee, $data['parentID'], $scriptType->issueTime);
+//
+//            }
+
+            $pendingRsStatus =
+//                $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
+//                ?
+                $this->pendingRsStatus();
+//                : null;
+
+            $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
+
+            if ($pendingRsStatus) {
+                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+            }
+
+            $employee = Employee::find($rsRes[0]->employee_id);
+            $user = $employee->user;
+
+
+            $person = Person::find($user->person_id);
+
+            $user->notify(new NewRsNotification($person->display_name));
+
+
+            DB::commit();
+
+
+            return response()->json($rsRes);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در افزودن حکم'], 500);
+        }
+    }
+
+
+    public function RejectRecruitmentScript($id)
+    {
+
+        $user = auth()->user();
+
+
+        /**
+         * @var RecruitmentScript $script
+         */
+        $script = RecruitmentScript::with('approvers')->find($id);
+
+
+        if ($script) {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+
+            $approvers = $script->approvers;
+
+
+            $canApprove = $approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
+            if (!$canApprove) {
+                return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
+            }
+
+            $result = $this->declineScript($script, $user, true);
+
+            $rcstatus = $script->latestStatus;
+            $employee = Employee::find($script->employee_id);
+
+
+            $notifibleUser = $employee->user;
+
+            $person = Person::find($notifibleUser->person_id);
+
+            $notifibleUser->notify(new DeclineRsNotification($person->display_name));
+
+            DB::commit();
+
+
+            return response()->json([
+                "result" => $result
+            ]);
+        } else {
+            DB::rollBack();
+
+            return response()->json(['message' => 'Script not found'], 404);
+        }
+    }
 
 }
