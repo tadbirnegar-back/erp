@@ -4,9 +4,12 @@ namespace Modules\HRMS\app\Listeners;
 
 use Carbon\Carbon;
 use Modules\HRMS\app\Events\ScriptStatusCreatedEvent;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Jobs\ExpireScriptJob;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\RecruitmentScriptStatus\ActiveHandler;
+use Modules\HRMS\app\RecruitmentScriptStatus\PendingApproveHandler;
 
 class ScriptStatusCreatedListener
 {
@@ -42,6 +45,23 @@ class ScriptStatusCreatedListener
                 ExpireScriptJob::dispatch($recstatus->recruitment_script_id)->delay($delayInSeconds);
             }
         }
+    }
+
+    public function getRelatedClassByStatusName(string $statusName): ?string
+    {
+        $statuses = [
+            RecruitmentScriptStatusEnum::PENDING_APPROVAL->value => PendingApproveHandler::class,
+//            RecruitmentScriptStatusEnum::REJECTED->value => RejectedHandler::class,
+            RecruitmentScriptStatusEnum::ACTIVE->value => ActiveHandler::class,
+            RecruitmentScriptStatusEnum::TERMINATED->value => TerminatedHandler::class,
+            RecruitmentScriptStatusEnum::SERVICE_ENDED->value => ServiceEndedHandler::class,
+            RecruitmentScriptStatusEnum::CANCELED->value => CanceledHandler::class,
+            RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value => PendingForTerminateHandler::class,
+            RecruitmentScriptStatusEnum::EXPIRED->value => PendingForTerminateHandler::class,
+
+        ];
+
+        return $statuses[$statusName] ?? null;
     }
 
 }

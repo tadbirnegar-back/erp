@@ -4,7 +4,7 @@ namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
-use Modules\HRMS\app\Http\Enums\ScriptStatusEnum;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -39,7 +39,7 @@ class ApprovingListController extends Controller
             $user = auth()->user();
             $script = RecruitmentScript::find($id);
 
-            $canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
+            $canApprove = $script->approvers()->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->get()->isNotEmpty();
 
 
             if (!$canApprove) {
@@ -55,7 +55,7 @@ class ApprovingListController extends Controller
             $Notifibleuser = $employee->user;
 
             $person = Person::find($Notifibleuser->person_id);
-            if ($rcstatus->name == ScriptStatusEnum::TAIED->value) {
+            if ($rcstatus->name == RecruitmentScriptStatusEnum::ACTIVE->value) {
                 $Notifibleuser->notify(new ApproveRsNotification($person->display_name));
             }
             DB::commit();

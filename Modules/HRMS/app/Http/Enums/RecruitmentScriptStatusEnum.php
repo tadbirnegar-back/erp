@@ -12,4 +12,5 @@ enum RecruitmentScriptStatusEnum: string
     case TERMINATED = 'قطع همکاری';
     case SERVICE_ENDED = 'پایان خدمت';
     case CANCELED = 'باطل شده';
+    case PENDING_FOR_TERMINATE = 'در انتظار قطع همکاری';
 }

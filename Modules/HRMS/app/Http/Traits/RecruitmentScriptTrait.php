@@ -296,4 +296,9 @@ trait RecruitmentScriptTrait
         return $result->isNotEmpty() ? $result : collect(['NoBtn']);
     }
 
+    public function pendingTerminateRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value);
+    }
+
 }

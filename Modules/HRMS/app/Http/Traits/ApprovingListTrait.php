@@ -17,7 +17,7 @@ trait ApprovingListTrait
     private static string $currentUserPendingStatus = 'درانتظار تایید من';
     private static string $pendingStatus = 'درانتظار تایید';
     private static string $approvedStatus = 'تایید شده';
-    private static string $notApprovedStatus = 'لغو شده';
+    private static string $notApprovedStatus = 'رد شده';
 
 
     public function approvingListPendingIndex(User $user)
