@@ -109,7 +109,6 @@ class ApprovingListController extends Controller
 
             return response()->json([
                 "result" => $result
-
             ]);
         } else {
             DB::rollBack();

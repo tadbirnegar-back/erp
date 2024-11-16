@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 
 
 class testController extends Controller
@@ -25,7 +27,6 @@ class testController extends Controller
 //        dd(
 //            $a
 //        );
-
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //

@@ -154,5 +154,17 @@
         "slug": "/hrm/rc/service-end/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "صدور حکم اصلاحی",
+        "slug": "/hrm/rc/reissue/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "رد حکم توسط ادمین",
+        "slug": "/hrm/rc/reject/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
     }
 ]
