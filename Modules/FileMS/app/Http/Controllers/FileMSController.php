@@ -108,6 +108,25 @@ class FileMSController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Extract Bearer token from Authorization header
+        $accessToken = $request->bearerToken(); // Get token from Authorization header
+
+        if ($accessToken) {
+            $tokenParts = explode('.', $accessToken);
+            if (count($tokenParts) !== 3) {
+                return response()->json(['message' => 'Invalid token format'], 400);
+            }
+
+            $payload = json_decode(base64_decode($tokenParts[1]), true);
+
+            if (!$payload || !isset($payload['sub'])) {
+                return response()->json(['message' => 'Invalid token payload'], 400);
+            }
+            //From here
+            $data['userID'] = User::where('mobile', '=', $payload['sub'])->first()->id;
+        }
+
+
 //        $request->validate([
 //            'file' => 'required|file|max:2048' // Adjust the maximum file size as needed
 //        ]);

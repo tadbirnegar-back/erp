@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\HRMS\app\Models\RecruitmentScript;
 
 
 class testController extends Controller
@@ -14,11 +13,18 @@ class testController extends Controller
 
     public function run()
     {
-        $a = RecruitmentScript::with('user')->find(1200);
-
-        dd(
-            $a
-        );
+//        $user = User::create([
+//            'mobile' => '09146360241',
+//            'password' => Hash::make('123456'),
+//            'person_id' => 2132
+//        ]);
+//
+//        return response()->json($user);
+//        $a = RecruitmentScript::with('user')->find(1200);
+//
+//        dd(
+//            $a
+//        );
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
