@@ -288,7 +288,7 @@ trait EnactmentTrait
                 self::$karshenasMashvarati => [
                     'MainEnactment',
                     'ReviewBtn',
-                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
@@ -343,7 +343,7 @@ trait EnactmentTrait
                 ],
                 self::$karshenasMashvarati => [
                     'MainEnactment',
-                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
