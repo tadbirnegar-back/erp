@@ -24,6 +24,7 @@ trait EnactmentTrait
     private static string $enactmentCompleteStatus = EnactmentStatusEnum::COMPLETED->value;
     private static string $enactmentCancelStatus = EnactmentStatusEnum::CANCELED->value;
     private static string $enactmentDeclinedStatus = EnactmentStatusEnum::DECLINED->value;
+    private static string $enactmentPendingForHeyaatDateStatus = EnactmentStatusEnum::PENDING_FOR_BOARD_DATE->value;
 
 
     //=========================== roles =============================
@@ -273,6 +274,45 @@ trait EnactmentTrait
                     'MainEnactment',
                 ],
             ],
+            self::$enactmentPendingForHeyaatDateStatus => [
+                'priorities' => [
+                    self::$dabirHeyaat,
+                    self::$karshenasOstandari,
+                    self::$bakhshdar,
+                    self::$ozvHeyaat,
+                    self::$karshenasMashvarati,
+                    self::$ozvShouraRusta
+
+                ],
+
+                //roles with components
+                self::$karshenasMashvarati => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                ],
+                self::$ozvHeyaat => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                ],
+                self::$karshenasOstandari => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                ],
+                self::$bakhshdar => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                ],
+                self::$dabirHeyaat => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'RescheduleBtn',
+
+                ],
+                self::$ozvShouraRusta => [
+                    'MainEnactment',
+                ],
+
+            ],
             self::$enactmentHeyaatStatus => [
                 'priorities' => [
                     self::$ozvHeyaat,
@@ -512,7 +552,18 @@ trait EnactmentTrait
                 },
                 'userHasReviews' => function ($query) use ($user) {
                     $query->where('user_id', $user->id);
-                },]
+                },],
+            'RescheduleBtn' => ['relatedDates' => function ($query) {
+                $query
+                    ->with(['meetings' => function ($query) {
+                        $query->whereHas('meetingType', function ($query) {
+                            $query->where('title', '=', 'جلسه هیئت تطبیق');
+                        })->where('meetings.meeting_date', '>', now())->where('meetings.isTemplate', false)
+                            ->withCount('enactments');
+
+                    }]);
+
+            }],
         ]);
 
         $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())
