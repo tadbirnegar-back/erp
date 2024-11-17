@@ -238,11 +238,11 @@ class EnactmentController extends Controller
                 }
 
             }
-            $heyaatStatus = $this->enactmentHeyaatStatus();
+            $pendingForHeyaatDateStatus = $this->enactmentPendingForHeyaatDateStatus();
 
             $enactmentStatus = new EnactmentStatus();
             $enactmentStatus->enactment_id = $enactment->id;
-            $enactmentStatus->status_id = $heyaatStatus->id;
+            $enactmentStatus->status_id = $pendingForHeyaatDateStatus->id;
             $enactmentStatus->operator_id = $user->id;
             $enactmentStatus->description = $data['description'] ?? null;
             $enactmentStatus->attachment_id = $data['attachmentID'] ?? null;

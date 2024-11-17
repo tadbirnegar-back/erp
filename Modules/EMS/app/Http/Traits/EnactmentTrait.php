@@ -561,6 +561,11 @@ trait EnactmentTrait
         return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value);
     }
 
+    public function enactmentPendingForHeyaatDateStatus()
+    {
+        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::PENDING_FOR_BOARD_DATE->value);
+    }
+
     public function enactmentCompleteStatus()
     {
         return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::COMPLETED->value);
