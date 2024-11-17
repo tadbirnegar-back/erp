@@ -538,11 +538,12 @@ trait EnactmentTrait
             'BoardReviewCards' => ['boardMembers.enactmentReviews' => function ($query) use ($enactment) {
                 $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
             },],
-            'CurrentReviewCard' => ['boardMembers' => function ($query) use ($enactment, $user) {
+            'CurrentReviewCard' => ['membersNew' => function ($query) use ($enactment, $user) {
                 $query->where('employee_id', $user->id)->with(['enactmentReviews' => function ($query) use ($enactment) {
                     $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
 
-                }]);
+                }, 'person.avatar', 'mr'
+                ]);
             },],
 
             'DenyCard' => ['canceledStatus.meetingMember'],

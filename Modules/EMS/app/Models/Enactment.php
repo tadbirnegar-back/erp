@@ -264,6 +264,26 @@ class Enactment extends Model
 //        return $this->hasManyThrough(MeetingMember::class, Meeting::class, 'id', 'meeting_id', 'meeting_id', 'id')->with('mr');
     }
 
+    public function membersNew()
+    {
+        return $this->hasManyDeep(MeetingMember::class, [
+            EnactmentMeeting::class,
+            Meeting::class,
+
+        ],
+            [
+                'enactment_id',
+                'id',
+                'meeting_id',
+            ],
+            [
+                'id',
+                'meeting_id',
+                'id',
+            ])->orderBy('enactment_meeting.create_date', 'desc');
+//        return $this->hasManyThrough(MeetingMember::class, Meeting::class, 'id', 'meeting_id', 'meeting_id', 'id')->with('mr');
+    }
+
     public function consultingMembers()
     {
         return $this->members()->whereHas('roles', function ($query) {

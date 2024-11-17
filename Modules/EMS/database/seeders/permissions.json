@@ -72,7 +72,7 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "مشاهده گزارش مصوبات بخشداری من",
+        "name": "گزارش وضئیت هیئت",
         "slug": "/mes/reports/district-report",
         "moduleName": "EMS",
         "permissionTypeName": "sidebar"
@@ -84,16 +84,16 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "مشاهده گزارش مصوبات من",
+        "name": "گزارش وضعیت من",
         "slug": "/mes/reports/my-report",
         "moduleName": "EMS",
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "مشاهده گزارش مصوبات دیگر اعضا هیئت",
+        "name": "گزارش مصوبات دیگر اعضا هیئت",
         "slug": "/mes/reports/member",
         "moduleName": "EMS",
-        "permissionTypeName": "sidebar"
+        "permissionTypeName": "operational"
     },
     {
         "name": "بروزرسانی عناوین مصوبه",
