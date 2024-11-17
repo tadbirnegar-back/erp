@@ -10,6 +10,7 @@ class EnactmentMeeting extends pivot
 {
     use HasFactory;
 
+
     /**
      * The attributes that are mass assignable.
      */

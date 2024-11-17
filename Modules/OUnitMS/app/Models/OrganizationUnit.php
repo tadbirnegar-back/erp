@@ -125,4 +125,5 @@ class OrganizationUnit extends Model
     {
         return Status::all()->where('model', '=', self::class);
     }
+
 }

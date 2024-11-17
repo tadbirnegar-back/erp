@@ -55,6 +55,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/oms/department/list', [DepartmentController::class, 'index']);
 
+    Route::get('/oms/department/{id}', [DepartmentController::class, 'show']);
+
+    Route::put('/oms/department/{id}', [DepartmentController::class, 'update']);
 
 });
 
@@ -67,4 +70,5 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/oms/districtofc/all/list', [OUnitMSController::class, 'districtsAllList']);
 
 });
+
 

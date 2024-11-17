@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Modules\EMS\app\Http\Enums\MeetingStatusEnum;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingStatus;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 trait MeetingTrait
 {
@@ -13,9 +14,18 @@ trait MeetingTrait
     public function storeMeeting(array|Collection $data)
     {
 
+//        $normalizedDate = str_replace('-', '/', $data['newDate']);
+//        $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($normalizedDate, true);
+//        $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString)
+//            ->toDateTimeString();
+//        $data["meetingDate"] = $dateTimeString;
+
+
         if (!isset($data[0]) || !is_array($data[0])) {
             $data = [$data];
         }
+
+
         $preparedData = $this->meetingDataPreparation($data);
         $result = Meeting::create($preparedData->toArray()[0]);
         $status = $this->meetingApprovedStatus();
@@ -29,11 +39,13 @@ trait MeetingTrait
         return $result;
     }
 
+
     private function meetingDataPreparation(array|Collection $data)
     {
         if (is_array($data)) {
             $data = collect($data);
         }
+
 
         $data = $data->map(function ($item) {
 
@@ -58,6 +70,25 @@ trait MeetingTrait
         });
 
         return $data;
+    }
+
+
+    public function ReplicateDatas(Meeting $lastMeeting, Meeting $newMeeting, OrganizationUnit $organizationUnit)
+    {
+        $meetingTemplate = Meeting::where('isTemplate', true)
+            ->where('ounit_id', $organizationUnit->id)
+            ->where('id', $lastMeeting->id)
+            ->with('meetingMembers')->first();
+
+
+        if ($meetingTemplate) {
+            foreach ($meetingTemplate->meetingMembers as $member) {
+                $newMember = $member->replicate(); // Create a copy of the member
+                $newMember->meeting_id = $newMeeting->id; // Assign the new meeting's ID
+                $newMember->save(); // Save the replicated member
+            }
+        }
+        return $meetingTemplate->meetingMembers;
     }
 
     public function meetingApprovedStatus()
