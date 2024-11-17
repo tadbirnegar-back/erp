@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 
+use Modules\EMS\app\Http\Traits\EMSSettingTrait;
+use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, EMSSettingTrait;
 
     public function run()
     {
