@@ -8,6 +8,7 @@ use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Jobs\AlertHeyaat;
 use Modules\EMS\app\Jobs\AlertKarshenas;
+use Modules\EMS\app\Jobs\PendingForHeyaatStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJobJob;
@@ -66,6 +67,21 @@ class StoreEnactmentStatusInQueueListener
             AlertHeyaat::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
 
         }
+        if ($this->enactmentPendingForHeyaatDateStatus()->id == $enactmentStatus->status_id) {
+            $enactment = Enactment::with("latestMeeting")->find($enactmentStatus->enactment_id);
+
+
+            // Ensure meeting_date is in Carbon instance (convert if necessary)
+            $meetingDate = $enactment->latestMeeting->getRawOriginal('meeting_date');
+
+
+            // Convert the fetched date to a Carbon instance
+            $meetingDate = Carbon::parse($meetingDate);
+
+            PendingForHeyaatStatusJob::dispatch($enactmentStatus->enactment_id)->delay($meetingDate);
+            //PendingForHeyaatStatusJob::dispatch($enactmentStatus->enactment_id);
+        }
+
     }
 
 

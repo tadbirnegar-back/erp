@@ -3,11 +3,12 @@
 namespace Modules\OUnitMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mockery\Exception;
 use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
+use Modules\OUnitMS\app\Models\Department;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class DepartmentController extends Controller
 {
@@ -47,12 +48,37 @@ class DepartmentController extends Controller
 
     public function show($id)
     {
-        return view('ounitms::show');
+
+        $departemans = OrganizationUnit::where('unitable_type', Department::class)
+            ->findOrFail($id);
+
+        return $departemans;
     }
 
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
-        //
+        // Validate the input
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255', // Ensure 'name' is provided and valid
+        ]);
+
+        // Find the department
+        $department = Department::with('organizationUnit')->findOrFail($id);
+
+        // Check if the organization unit exists
+        if ($department->organizationUnit) {
+            // Update the name
+            $department->organizationUnit->update(['name' => $validatedData['name']]);
+
+            return response()->json([
+                'message' => 'Organization Unit name updated successfully.',
+                'organization_unit' => $department->organizationUnit,
+            ], 200);
+        }
+
+        return response()->json([
+            'message' => 'No associated organization unit found for this department.',
+        ], 404);
     }
 
     public function destroy($id)

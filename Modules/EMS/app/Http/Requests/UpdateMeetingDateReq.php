@@ -12,7 +12,11 @@ class UpdateMeetingDateReq extends FormRequest
     public function rules(): array
     {
         return [
-            'newDate' => 'required',
+            'meetingDate' => ['required'],
+            'isNewMeeting' => ['required', 'boolean'],
+            'meetingId' => ['sometimes', 'integer', 'exists:meetings,id'],
+            'meetingTypeID' => ['required', 'integer', 'exists:meeting_types,id'],
+            'isTemplate' => ['sometimes', 'boolean'],
         ];
     }
 

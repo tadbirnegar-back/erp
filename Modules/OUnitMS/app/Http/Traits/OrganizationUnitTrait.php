@@ -150,9 +150,8 @@ trait OrganizationUnitTrait
 
         $departemans = OrganizationUnit::where('unitable_type', Department::class)
             ->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+                $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
             })
-            ->with(['head', 'ancestorsAndSelf'])
             ->paginate($perPage, page: $pageNum);
         return $departemans;
     }

@@ -6,43 +6,50 @@ use App\Http\Controllers\Controller;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Http\Traits\DateTrait;
+use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\Enactment;
+use Modules\EMS\app\Models\EnactmentMeeting;
 use Modules\EMS\app\Models\Meeting;
-use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Notifications\ChangeMeetingDateNotification;
 use Modules\PersonMS\app\Models\Person;
 
 class MeetingController extends Controller
 {
-    use DateTrait;
+    use DateTrait, MeetingTrait;
 
     public function changeMeetingDate(UpdateMeetingDateReq $req, $id)
     {
-        //$user = Auth::user();
-        $user = User::find(2086);
-        $meeting = Meeting::find($id);
+        $data = $req->validated();
 
-        if (!$meeting || $user->id != $meeting->creator_id) {
-            return response()->json([
-                "situation" => false
-            ], 403);
-        }
 
         try {
-            // Normalize the separator from `-` to `/`
-            $normalizedDate = str_replace('-', '/', $req->newDate);
 
-            // Convert Persian numbers to English
-            $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($normalizedDate, true);
+            \DB::beginTransaction();
+            $userOrgan = User::with('activeRecruitmentScript.ounit')->find(\Auth::user()->id);
 
-            // Convert Jalali to Gregorian and create Carbon instance
-            $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString)
-                ->toDateTimeString();
+            $data['ounitID'] = $userOrgan->activeRecruitmentScript[0]->ounit->id;
+            $data["creatorID"] = $userOrgan->id;
+            if (!isset($data['meetingId'])) {
+                $meeting = $this->storeMeeting($data);
+            } else {
+                if (!isset($req->meetingId)) {
+                    return response()->json([
+                        'Error' => "didn't received 'meetingId'"
+                    ], 400);
+                }
+                $meeting = Meeting::find($data["meetingId"]);
+            }
 
-            $meetingMembers = MeetingMember::where('meeting_id', $meeting->id)->get();
+            $enactment = Enactment::with('latestMeeting')->find($id);
+            $meetingMembers = $this->ReplicateDatas($enactment->latestMeeting, $meeting, $userOrgan->activeRecruitmentScript[0]->ounit);
+            EnactmentMeeting::create([
+                'meeting_id' => $meeting->id,
+                'enactment_id' => $id,
+            ]);
 
 
             /*New Date Start*/
-            $parts = explode('/', $normalizedDate); // Split the date string by '/'
+            $parts = explode('/', $enactment->latestMeeting->meeting_date); // Split the date string by '/'
             $monthNumber = $parts[1]; // Get the second part as the month number
             $day = $parts[2];
             //For Month
@@ -73,46 +80,17 @@ class MeetingController extends Controller
 
                 $user->notify(new ChangeMeetingDateNotification($username, $messageTextLastDate, $messageTextDate));
             }
-            $meeting->meeting_date = $normalizedDate;
+            \DB::commit();
 
-            $meeting->save();
             return response()->json([
-                'situation' => true,
                 'dateTime' => $meeting->meeting_date,
             ], 200);
 
         } catch (\Exception $e) {
+            \DB::rollback();
             return response()->json([
-                "situation" => false,
                 "error" => "Invalid date format or conversion failed.",
-                "details" => $e->getMessage()
-            ], 400);
+            ], 500);
         }
     }
-
-
-    public function store()
-    {
-        $meeting = Meeting::create([
-            'creator_id' => 2086,
-            'isTemplate' => true,
-            'meeting_type_id' => 3,
-            'ounit_id' => 3864
-        ]);
-
-        MeetingMember::create([
-            'meeting_id' => $meeting->id,
-            'mr_id' => 5,
-            'employee_id' => 2126
-        ]);
-
-
-        MeetingMember::create([
-            'meeting_id' => $meeting->id,
-            'mr_id' => 2,
-            'employee_id' => 2126
-        ]);
-    }
-
-
 }

@@ -28,9 +28,9 @@ class CreateMeetingListener
         $targetDate = Carbon::parse($gregorianDate);
         $currentDate = Carbon::now();
         $delayInSeconds = $targetDate->diffInSeconds($currentDate, false); // false for negative values
-
+        $delayInSeconds -= 86400;
         if ($delayInSeconds > 0) {
-            dispatch(new StoreMeetingJob($event->meeting))->delay($meetingDate);
+            dispatch(new StoreMeetingJob($event->meeting))->delay($delayInSeconds);
         }
     }
 }

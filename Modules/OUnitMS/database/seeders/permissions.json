@@ -82,5 +82,17 @@
         "slug": "/oms/department/list",
         "moduleName": "OuinitMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "نمایش یک دپارتمان",
+        "slug": "/oms/department/{id}",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی دپارتمان",
+        "slug": "/oms/department/{id}",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "sidebar"
     }
 ]
