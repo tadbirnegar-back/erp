@@ -13,10 +13,10 @@ class EnactmentStatusSeeder extends Seeder
      */
     public function run(): void
     {
-        $userStatusesData = json_decode(file_get_contents(realpath(__DIR__.'/EnactmentStatus.json')), true);
+        $userStatusesData = json_decode(file_get_contents(realpath(__DIR__ . '/EnactmentStatus.json')), true);
 
         foreach ($userStatusesData as $userStatus) {
-            DB::table('statuses')->insertGetId([
+            DB::table('statuses')->updateOrInsert([
                 'name' => $userStatus['name'],
                 'model' => Enactment::class,
             ]);
