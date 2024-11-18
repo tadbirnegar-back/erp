@@ -2,14 +2,18 @@
 
 namespace Modules\HRMS\app\Listeners;
 
-use Carbon\Carbon;
+use Auth;
 use Modules\HRMS\app\Events\ScriptStatusCreatedEvent;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\HRMS\app\Jobs\ExpireScriptJob;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\RecruitmentScriptStatus\ActiveHandler;
+use Modules\HRMS\app\RecruitmentScriptStatus\CancelHandler;
+use Modules\HRMS\app\RecruitmentScriptStatus\ExpireHandler;
 use Modules\HRMS\app\RecruitmentScriptStatus\PendingApproveHandler;
+use Modules\HRMS\app\RecruitmentScriptStatus\ServiceEndedHandler;
+use Modules\HRMS\app\RecruitmentScriptStatus\TerminateHandler;
+use Modules\StatusMS\app\Models\Status;
 
 class ScriptStatusCreatedListener
 {
@@ -30,20 +34,14 @@ class ScriptStatusCreatedListener
     {
         $recstatus = $event->recStatus;
 
-        if ($recstatus->status_id == $this->pendingRsStatus()->id) {
-            $expireDate = RecruitmentScript::find($recstatus->recruitment_script_id)->expire_date;
+        $recruitmentScript = RecruitmentScript::with('user.person', 'position.roles')->find($recstatus->recruitment_script_id);
+        $status = Status::find($recstatus->status_id);
 
-            // Ensure consistent timezone
-            $expireDateCarbon = Carbon::parse($expireDate)->setTimezone(config('app.timezone'));
-            $now = Carbon::now();
-
-            // Calculate the delay
-            $delayInSeconds = $expireDateCarbon->timestamp - $now->timestamp;
-
-            // Dispatch the job only if delay is positive
-            if ($delayInSeconds > 0) {
-                ExpireScriptJob::dispatch($recstatus->recruitment_script_id)->delay($delayInSeconds);
-            }
+        $relatedClass = $this->getRelatedClassByStatusName($status->name);
+        $currentUser = Auth::user();
+        if ($relatedClass) {
+            $handler = new $relatedClass($recruitmentScript, $currentUser);
+            $handler->execute();
         }
     }
 
@@ -53,11 +51,10 @@ class ScriptStatusCreatedListener
             RecruitmentScriptStatusEnum::PENDING_APPROVAL->value => PendingApproveHandler::class,
 //            RecruitmentScriptStatusEnum::REJECTED->value => RejectedHandler::class,
             RecruitmentScriptStatusEnum::ACTIVE->value => ActiveHandler::class,
-            RecruitmentScriptStatusEnum::TERMINATED->value => TerminatedHandler::class,
+            RecruitmentScriptStatusEnum::TERMINATED->value => TerminateHandler::class,
             RecruitmentScriptStatusEnum::SERVICE_ENDED->value => ServiceEndedHandler::class,
-            RecruitmentScriptStatusEnum::CANCELED->value => CanceledHandler::class,
-            RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value => PendingForTerminateHandler::class,
-            RecruitmentScriptStatusEnum::EXPIRED->value => PendingForTerminateHandler::class,
+            RecruitmentScriptStatusEnum::CANCELED->value => CancelHandler::class,
+            RecruitmentScriptStatusEnum::EXPIRED->value => ExpireHandler::class,
 
         ];
 

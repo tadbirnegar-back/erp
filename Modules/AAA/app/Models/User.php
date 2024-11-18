@@ -101,6 +101,11 @@ class User extends Authenticatable
             ->distinct();
     }
 
+    public function allRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, table: 'user_role');
+    }
+
 
     public function statuses()
     {
