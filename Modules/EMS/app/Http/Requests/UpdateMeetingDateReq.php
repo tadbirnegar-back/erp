@@ -14,7 +14,7 @@ class UpdateMeetingDateReq extends FormRequest
         return [
             'meetingDate' => ['required'],
             'isNewMeeting' => ['required', 'boolean'],
-            'meetingId' => ['sometimes', 'integer', 'exists:meetings,id'],
+            'meetingID' => ['sometimes', 'integer', 'exists:meetings,id'],
             'meetingTypeID' => ['required', 'integer', 'exists:meeting_types,id'],
             'isTemplate' => ['sometimes', 'boolean'],
         ];

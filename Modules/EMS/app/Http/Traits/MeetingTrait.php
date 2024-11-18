@@ -75,25 +75,40 @@ trait MeetingTrait
 
     public function ReplicateDatas(Meeting $lastMeeting, Meeting $newMeeting, OrganizationUnit $organizationUnit)
     {
+        // Fetch the template meeting with its meeting members
         $meetingTemplate = Meeting::where('isTemplate', true)
             ->where('ounit_id', $organizationUnit->id)
             ->where('id', $lastMeeting->id)
-            ->with('meetingMembers')->first();
-
+            ->with('meetingMembers')
+            ->first();
 
         if ($meetingTemplate) {
             foreach ($meetingTemplate->meetingMembers as $member) {
-                $newMember = $member->replicate(); // Create a copy of the member
-                $newMember->meeting_id = $newMeeting->id; // Assign the new meeting's ID
-                $newMember->save(); // Save the replicated member
+                // Check if this member already exists in the new meeting's members
+                $existingMember = $newMeeting->meetingMembers->where('employee_id', $member->employee_id)->first();
+
+                // If the member doesn't exist, replicate and add them to the new meeting
+                if (!$existingMember) {
+                    $newMember = $member->replicate(); // Create a copy of the member
+                    $newMember->meeting_id = $newMeeting->id; // Assign the new meeting's ID
+                    $newMember->save(); // Save the replicated member
+                }
             }
         }
-        return $meetingTemplate->meetingMembers;
+
+        return $newMeeting->meetingMembers;
     }
+
 
     public function meetingApprovedStatus()
     {
         return Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::APPROVED->value);
+    }
+
+
+    public function deleteEssential(Meeting $lastMeeting, Meeting $newMeeting)
+    {
+        return 1;
     }
 
 }

@@ -10,8 +10,6 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentMeeting;
 use Modules\EMS\app\Models\Meeting;
-use Modules\EMS\app\Notifications\ChangeMeetingDateNotification;
-use Modules\PersonMS\app\Models\Person;
 
 class MeetingController extends Controller
 {
@@ -23,62 +21,64 @@ class MeetingController extends Controller
 
 
         try {
-
+            //$user = \Auth::user();
             \DB::beginTransaction();
-            $userOrgan = User::with('activeRecruitmentScript.ounit')->find(\Auth::user()->id);
 
-            $data['ounitID'] = $userOrgan->activeRecruitmentScript[0]->ounit->id;
-            $data["creatorID"] = $userOrgan->id;
-            if (!isset($data['meetingId'])) {
+            $user = User::find(2064);
+
+            $rc = $user->load('activeDistrictRecruitmentScript.ounit');
+
+
+            if (empty($rc->activeDistrictRecruitmentScript[0])) {
+                return response()->json([
+                    'message' => 'اطلاعاتی در این مورد وجود ندارد'
+                ], 404);
+            }
+
+            $data['ounitID'] = $rc->activeDistrictRecruitmentScript[0]->ounit->id;
+            $data["creatorID"] = $rc->id;
+            if (!isset($data['meetingID'])) {
                 $meeting = $this->storeMeeting($data);
             } else {
-                if (!isset($req->meetingId)) {
+                if (!isset($req->meetingID)) {
                     return response()->json([
-                        'Error' => "didn't received 'meetingId'"
+                        'Error' => "didn't received 'meetingID'"
                     ], 400);
                 }
-                $meeting = Meeting::find($data["meetingId"]);
+                $meeting = Meeting::find($data["meetingID"]);
             }
 
             $enactment = Enactment::with('latestMeeting')->find($id);
-            $meetingMembers = $this->ReplicateDatas($enactment->latestMeeting, $meeting, $userOrgan->activeRecruitmentScript[0]->ounit);
+
+            //return response()->json($enactment);
+            $meetingMembers = $this->ReplicateDatas($enactment->latestMeeting, $meeting, $rc->activeDistrictRecruitmentScript[0]->ounit);
+
+
+            EnactmentMeeting::where('meeting_id', $enactment->latestMeeting->id)
+                ->where('enactment_id', $id)
+                ->get()
+                ->each(function ($enactmentMeeting) {
+                    $enactmentMeeting->delete(); // Will trigger the observer's deleted method
+                });
+
             EnactmentMeeting::create([
                 'meeting_id' => $meeting->id,
                 'enactment_id' => $id,
             ]);
 
 
-            /*New Date Start*/
-            $parts = explode('/', $enactment->latestMeeting->meeting_date); // Split the date string by '/'
-            $monthNumber = $parts[1]; // Get the second part as the month number
-            $day = $parts[2];
-            //For Month
-            $eng = $this->persianNumbersToEng($monthNumber);
-            $monthName = $this->humanReadableDate($eng);
-            //For Day
-            $daywithoutZero = $this->removeLeftZero($monthNumber);
-            //message text for date
-            $messageTextDate = "$daywithoutZero $monthName $parts[0]";
-            /*New Date End*/
-
-            /*Start Last Date*/
-            $parts = explode('/', $meeting->meeting_date); // Split the date string by '/'
-            $monthNumber = $parts[1]; // Get the second part as the month number
-            $day = $parts[2];
-            //For Month
-            $eng = $this->persianNumbersToEng($monthNumber);
-            $monthName = $this->humanReadableDate($eng);
-            //For Day
-            $daywithoutZero = $this->removeLeftZero($monthNumber);
-            //message text for date
-            $messageTextLastDate = "$daywithoutZero $monthName $parts[0]";
+            $newDate = $this->DateformatToHumanReadbleJalali($enactment->latestMeeting->meeting_date);
+            $lastDate = $this->DateformatToHumanReadbleJalali($meeting->meeting_date);
 
 
-            foreach ($meetingMembers as $member) {
-                $user = User::find($member->employee_id);
-                $username = Person::find($user->person_id)->display_name;
+            $users = $meetingMembers->pluck('employee_id')->toArray();
 
-                $user->notify(new ChangeMeetingDateNotification($username, $messageTextLastDate, $messageTextDate));
+            // Fetch users with their related person data
+            $fetchedUsers = User::whereIn('id', $users)->with('person')->get();
+
+            foreach ($fetchedUsers as $user) {
+                $username = $user->person->display_name;
+                //$user->notify(new ChangeMeetingDateNotification($username, $lastDate, $newDate));
             }
             \DB::commit();
 
@@ -89,7 +89,7 @@ class MeetingController extends Controller
         } catch (\Exception $e) {
             \DB::rollback();
             return response()->json([
-                "error" => "Invalid date format or conversion failed.",
+                "error" => $e->getMessage(), $e->getTrace(),
             ], 500);
         }
     }
