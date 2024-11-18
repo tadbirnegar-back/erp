@@ -4,13 +4,11 @@ namespace Modules\HRMS\app\RecruitmentScriptStatus;
 
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Contracts\StatusHandlerInterface;
-use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\App\Notifications\DeclineRsNotification;
 
-class PendingApproveHandler implements StatusHandlerInterface
+class DeclineHandler implements StatusHandlerInterface
 {
-
-    use ApprovingListTrait;
 
     private RecruitmentScript $script;
     private ?User $user;
@@ -23,9 +21,20 @@ class PendingApproveHandler implements StatusHandlerInterface
 
     public function execute(): void
     {
-        $script = $this->script;
-        \DB::transaction(function () use ($script) {
-            $this->approvingStore($script);
+        \DB::transaction(function () {
+
+            $this->notifyScriptUser();
         });
+    }
+
+    public function notifyScriptUser()
+    {
+
+
+        $notifibleUser = $this->script->user;
+
+        $person = $notifibleUser->person;
+
+        $notifibleUser->notify(new DeclineRsNotification($person->display_name));
     }
 }
