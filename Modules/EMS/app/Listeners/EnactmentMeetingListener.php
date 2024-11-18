@@ -20,33 +20,22 @@ class EnactmentMeetingListener
      */
     public function handle($event): void
     {
-
         $encMeeting = $event->encMeeting;
         $encid = $encMeeting->enactment_id;
-        $jobIds = DB::table('queueable_jobs')
-            ->where('payload', 'like', '%StoreEnactmentStatusJob%')
-            ->where('payload', 'like', "%i:$encid%")
-            ->select('id')
-            ->get();
 
-        foreach ($jobIds as $jobId) {
-            DB::table('queueable_jobs')
-                ->where('id', $jobId->id)
-                ->delete();
-        }
+        $jobTypes = [
+            'StoreEnactmentStatusJob',
+            'StoreEnactmentStatusKarshenasJob'
+        ];
 
-
-        $jobIds = DB::table('queueable_jobs')
-            ->where('payload', 'like', '%StoreEnactmentStatusKarshenasJob%')
-            ->where('payload', 'like', "%i:$encid%")
-            ->select('id')
-            ->get();
-
-        foreach ($jobIds as $jobId) {
-            DB::table('queueable_jobs')
-                ->where('id', $jobId->id)
-                ->delete();
-        }
-
+        DB::table('queueable_jobs')
+            ->where(function ($query) use ($jobTypes, $encid) {
+                foreach ($jobTypes as $jobType) {
+                    $query->orWhere('payload', 'like', "%$jobType%")
+                        ->where('payload', 'like', "%i:$encid%");
+                }
+            })
+            ->delete();
     }
+
 }

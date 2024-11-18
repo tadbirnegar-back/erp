@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Http\Traits\DateTrait;
@@ -21,10 +22,9 @@ class MeetingController extends Controller
 
 
         try {
-            //$user = \Auth::user();
             \DB::beginTransaction();
 
-            $user = User::find(2064);
+            $user = Auth::user();
 
             $rc = $user->load('activeDistrictRecruitmentScript.ounit');
 
