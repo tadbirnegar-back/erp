@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
-use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 
@@ -16,11 +15,12 @@ class testController extends Controller
 
     public function run()
     {
-        EnactmentStatus::create([
-            'enactment_id' => 29,
-            'operator_id' => 2086,
-            'status_id' => 88
-        ]);
+
+//        EnactmentStatus::create([
+//            'enactment_id' => 29,
+//            'operator_id' => 2086,
+//            'status_id' => 88
+//        ]);
 //        $user = User::create([
 //            'mobile' => '09146360241',
 //            'password' => Hash::make('123456'),
