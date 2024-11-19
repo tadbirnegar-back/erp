@@ -8,7 +8,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
@@ -44,9 +43,6 @@ class StoreEnactmentStatusJob implements ShouldQueue
             });
 
         },])->find($this->encId);
-
-
-        Log::info("hi birun");
 
         if ($enactment->members->isNotEmpty()) {
             $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();

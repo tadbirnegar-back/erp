@@ -48,4 +48,18 @@ trait DateTrait
         $number = str_replace('۰', '0', $number);  // Convert Persian digits to Western digits
         return ltrim($number, '0');  // Remove leading zeros
     }
+
+    public function DateformatToHumanReadbleJalali($date)
+    {
+        $parts = explode('/', $date); // Split the date string by '/'
+        $monthNumber = $parts[1]; // Get the second part as the month number
+        $day = $parts[2];
+        //For Month
+        $eng = $this->persianNumbersToEng($monthNumber);
+        $monthName = $this->humanReadableDate($eng);
+        //For Day
+        $daywithoutZero = $this->removeLeftZero($monthNumber);
+        //message text for date
+        return "$daywithoutZero $monthName $parts[0]";
+    }
 }

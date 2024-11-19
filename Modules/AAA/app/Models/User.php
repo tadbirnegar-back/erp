@@ -227,7 +227,8 @@ class User extends Authenticatable
                 $subQuery->selectRaw('MAX(create_date)')
                     ->from('recruitment_script_status as sub_rss')
                     ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
-            });
+            }
+            );
 //        });
     }
 
