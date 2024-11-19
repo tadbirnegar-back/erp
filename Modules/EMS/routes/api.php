@@ -75,7 +75,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::post('mes/ounit-villages/search', [EnactmentController::class, 'getMyVillagesToAddEnactment']);
 
-
 });
 
 Route::middleware([])->prefix('v1')->group(function () {
@@ -84,5 +83,7 @@ Route::middleware([])->prefix('v1')->group(function () {
 
     Route::post('mes/board/register', [EMSController::class, 'registerHetaatMember']);
 
+    Route::post('mes/ounitNames/liveSearch', [EMSController::class, 'liveSearch']);
 
 });
+

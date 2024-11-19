@@ -42,6 +42,12 @@ trait EnactmentTrait
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
+
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
+
+
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
         })
@@ -65,6 +71,14 @@ trait EnactmentTrait
             });
         }
 
+        if (!empty($data['meeting_date'])) {
+            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
+            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
+                $q->whereDate('meeting_date', $meetingDate);
+            });
+        }
+
+
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
@@ -74,6 +88,10 @@ trait EnactmentTrait
     {
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
+
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
 
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
@@ -98,6 +116,12 @@ trait EnactmentTrait
             });
         }
 
+        if (!empty($data['meeting_date'])) {
+            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
+            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
+                $q->whereDate('meeting_date', $meetingDate);
+            });
+        }
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
@@ -108,8 +132,10 @@ trait EnactmentTrait
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $statuses = $data['statusID'] ?? null;
-        $searchTerm = $data['name'] ?? null;
-
+        $searchTerm = $data['title'] ?? null;
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
         })
@@ -136,6 +162,12 @@ trait EnactmentTrait
         });
 
 
+        if (!empty($data['meeting_date'])) {
+            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
+            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
+                $q->whereDate('meeting_date', $meetingDate);
+            });
+        }
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
@@ -376,10 +408,12 @@ trait EnactmentTrait
                     'MainEnactment',
                     'ConsultingReviewCards',
                     'BoardReviewCards',
+                    'FormNumThree'
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
                     'ConsultingReviewCards',
+                    'FormNumThree'
                 ],
                 self::$karshenasMashvarati => [
                     'MainEnactment',
@@ -565,6 +599,28 @@ trait EnactmentTrait
                     }]);
 
             }],
+            'FormNumThree' => [
+                // MainEnactment logic
+                'reviewStatuses',
+                'latestMeeting.meetingMembers.user.employee.signatureFile',
+                'attachments',
+                'creator',
+                'title',
+                'meeting.ounit.unitable',
+                'meeting.ounit.ancestorsAndSelf' => function ($q) {
+                    $q->where('unitable_type', '!=', StateOfc::class);
+                },
+
+                // ConsultingReviewCards logic
+                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+                },
+
+                // BoardReviewCards logic
+                'boardMembers.enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+                },
+            ],
         ]);
 
         $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())

@@ -770,4 +770,27 @@ class EMSController extends Controller
         }
     }
 
+
+    public function liveSearch(Request $request)
+    {
+        $user = Auth::user();
+        $user->load(['activeRecruitmentScript.ounit' => function ($q) use ($request) {
+            $q->where(function ($query) use ($request) {
+                $query->where('name', '=', $request->name)  // Exact match first
+                ->orWhere('name', 'LIKE', '%' . $request->name . '%'); // Then LIKE matches
+            })
+                ->where('likelihood', '>=', 80)  // Filter by likelihood of 80% or more
+                ->orderByRaw("CASE WHEN name = ? THEN 0 ELSE 1 END", [$request->name]) // Prioritize exact match
+                ->limit(5);
+        }]);
+
+
+        $ounits = $user->activeRecruitmentScript
+            ->map(fn($script) => $script->ounit)
+            ->filter();
+
+        return response()->json($ounits);
+    }
+
+
 }
