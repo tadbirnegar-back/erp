@@ -4,6 +4,7 @@ namespace Modules\EMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Modules\EMS\app\Observers\EnactmentMeetingObserver;
 use Modules\EMS\Database\factories\EnactmentMeetingFactory;
 
 class EnactmentMeeting extends pivot
@@ -15,7 +16,7 @@ class EnactmentMeeting extends pivot
         parent::boot();
 
         // Register the observer
-        static::observe(\Modules\EMS\app\Observers\EnactmentMeetingObserver::class);
+        static::observe(EnactmentMeetingObserver::class);
     }
     /**
      * The attributes that are mass assignable.

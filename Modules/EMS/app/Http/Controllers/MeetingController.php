@@ -89,7 +89,7 @@ class MeetingController extends Controller
         } catch (\Exception $e) {
             \DB::rollback();
             return response()->json([
-                "error" => $e->getMessage(), $e->getTrace(),
+                "error" => "تغییر تاریخ جلسه انجام نشد!",
             ], 500);
         }
     }

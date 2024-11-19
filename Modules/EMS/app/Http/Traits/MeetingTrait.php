@@ -104,11 +104,6 @@ trait MeetingTrait
     {
         return Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::APPROVED->value);
     }
-
-
-    public function deleteEssential(Meeting $lastMeeting, Meeting $newMeeting)
-    {
-        return 1;
-    }
+    
 
 }
