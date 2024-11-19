@@ -774,8 +774,6 @@ class EMSController extends Controller
     public function liveSearch(Request $request)
     {
         $user = Auth::user();
-        $user = User::find(2119);
-
         $user->load(['activeRecruitmentScript.ounit' => function ($q) use ($request) {
             $q->where(function ($query) use ($request) {
                 $query->where('name', '=', $request->name)  // Exact match first
