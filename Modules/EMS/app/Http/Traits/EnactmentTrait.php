@@ -71,10 +71,13 @@ trait EnactmentTrait
             });
         }
 
-        if (!empty($data['create_date'])) {
-            $createDate = convertJalaliPersianCharactersToGregorian($data['create_date']);
-            $query->whereDate('create_date', $createDate);
+        if (!empty($data['meeting_date'])) {
+            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
+            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
+                $q->whereDate('meeting_date', $meetingDate);
+            });
         }
+
 
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
@@ -113,9 +116,11 @@ trait EnactmentTrait
             });
         }
 
-        if (!empty($data['create_date'])) {
-            $createDate = convertJalaliPersianCharactersToGregorian($data['create_date']);
-            $query->whereDate('create_date', $createDate);
+        if (!empty($data['meeting_date'])) {
+            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
+            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
+                $q->whereDate('meeting_date', $meetingDate);
+            });
         }
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
@@ -157,9 +162,11 @@ trait EnactmentTrait
         });
 
 
-        if (!empty($data['create_date'])) {
-            $createDate = convertJalaliPersianCharactersToGregorian($data['create_date']);
-            $query->whereDate('create_date', $createDate);
+        if (!empty($data['meeting_date'])) {
+            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
+            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
+                $q->whereDate('meeting_date', $meetingDate);
+            });
         }
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
@@ -401,10 +408,12 @@ trait EnactmentTrait
                     'MainEnactment',
                     'ConsultingReviewCards',
                     'BoardReviewCards',
+                    'FormNumThree'
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
                     'ConsultingReviewCards',
+                    'FormNumThree'
                 ],
                 self::$karshenasMashvarati => [
                     'MainEnactment',
@@ -590,6 +599,28 @@ trait EnactmentTrait
                     }]);
 
             }],
+            'FormNumThree' => [
+                // MainEnactment logic
+                'reviewStatuses',
+                'latestMeeting.meetingMembers.user.employee.signatureFile',
+                'attachments',
+                'creator',
+                'title',
+                'meeting.ounit.unitable',
+                'meeting.ounit.ancestorsAndSelf' => function ($q) {
+                    $q->where('unitable_type', '!=', StateOfc::class);
+                },
+
+                // ConsultingReviewCards logic
+                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+                },
+
+                // BoardReviewCards logic
+                'boardMembers.enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+                },
+            ],
         ]);
 
         $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())

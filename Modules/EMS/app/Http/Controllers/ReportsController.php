@@ -203,5 +203,4 @@ class ReportsController extends Controller
 
         return response()->json($response);
     }
-
 }
