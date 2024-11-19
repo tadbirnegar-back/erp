@@ -387,14 +387,12 @@ class RecruitmentScriptController extends Controller
         $rejectedRsStatus = $this->rejectedRsStatus();
 
 
-        RecruitmentScriptStatus::create([
-            'recruitment_script_id' => $id,
-            'status_id' => $rejectedRsStatus->id,
-        ]);
-
-
         try {
             DB::beginTransaction();
+            RecruitmentScriptStatus::create([
+                'recruitment_script_id' => $id,
+                'status_id' => $rejectedRsStatus->id,
+            ]);
             $employee = Employee::findOr($data['employeeID'], function () {
                 return response(['message' => 'موردی یافت نشد'], 404);
 
