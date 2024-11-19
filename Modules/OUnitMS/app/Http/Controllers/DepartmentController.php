@@ -62,11 +62,29 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:255', // Ensure 'name' is provided and valid
         ]);
 
-        OrganizationUnit::find($id)->update($validatedData);
+        try {
+            DB::beginTransaction();
+            $dep = OrganizationUnit::find($id);
+            if (is_null($dep)) {
+                return response()->json([
+                    'message' => 'دپارتمان یافت نشد',
+                ], 404);
+            }
+            $dep->update($validatedData);
 
-        return response()->json([
-            'message' => 'No associated organization unit found for this department.',
-        ], 404);
+            DB::commit();
+            return response()->json([
+                'message' => 'دپارتمان با موفقیت ویرایش شد',
+            ], 200);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'خطا در بروزرسانی دپارتمان',
+            ], 500);
+
+        }
+
     }
 
     public function destroy($id)
