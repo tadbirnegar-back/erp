@@ -8,6 +8,7 @@ use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\ConfirmationType;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Models\ScriptApprovingList;
 
 trait ApprovingListTrait
@@ -99,59 +100,79 @@ trait ApprovingListTrait
         return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$pendingStatus);
     }
 
-    public function approveScript(RecruitmentScript $script, User $user)
+    public function approveScript(RecruitmentScript $script, User $user, bool $isAdmin = false)
     {
-        $approvingList = $script->pendingScriptApproving()->where('assigned_to', $user->id)->first();
-        if (!$approvingList) {
-            return null;
-        }
-        $approvingList->status_id = self::approvedStatus()->id;
-        $approvingList->update_date = Carbon::now();
-        $approvingList->approver_id = $user->id;
-        $approvingList->save();
-
-        $nextApprovingList = $script->approvers()->where('priority', $approvingList->priority + 1)->first();
-        if ($nextApprovingList) {
-            $nextApprovingList->status_id = self::pendingForCurrentUserStatus()->id;
-            $nextApprovingList->save();
-        } else {
-            $script->status()->attach($this->activeRsStatus()->id);
-
-            $script->load([
-                'organizationUnit',
-                'scriptType.confirmationTypes',
-                'employee.workForce',
-                'position.roles',
+        if ($isAdmin) {
+            $approvingList = $script->approvers;
+            $approvingList->update([
+                'status_id' => self::approvedStatus()->id,
+                'approver_id' => $user->id,
+                'update_date' => Carbon::now(),
             ]);
-            if ($script->scriptType->isHeadable) {
-                $user = $script->employee->person->user;
-                $ounit = $script->organizationUnit;
-                $ounit->head_id = $user->id;
-                $ounit->save();
+
+            RecruitmentScriptStatus::create([
+                'recruitment_script_id' => $script->id,
+                'status_id' => $this->activeRsStatus()->id,
+                'operator_id' => $user->id,
+                'create_date' => Carbon::now(),
+            ]);
+
+            return $approvingList;
+
+        } else {
+
+            $approvingList = $script->pendingScriptApproving()->where('assigned_to', $user->id)->first();
+            if (!$approvingList) {
+                return null;
             }
+            $approvingList->status_id = self::approvedStatus()->id;
+            $approvingList->update_date = Carbon::now();
+            $approvingList->approver_id = $user->id;
+            $approvingList->save();
+
+            $nextApprovingList = $script->approvers()->where('priority', $approvingList->priority + 1)->first();
+            if ($nextApprovingList) {
+                $nextApprovingList->status_id = self::pendingForCurrentUserStatus()->id;
+                $nextApprovingList->save();
+            } else {
+                $script->status()->attach($this->activeRsStatus()->id);
+
+                $script->load([
+                    'organizationUnit',
+                    'scriptType.confirmationTypes',
+                    'employee.workForce',
+                    'position.roles',
+                ]);
+                if ($script->scriptType->isHeadable) {
+                    $user = $script->employee->person->user;
+                    $ounit = $script->organizationUnit;
+                    $ounit->head_id = $user->id;
+                    $ounit->save();
+                }
 
 
-            $status = Employee::GetAllStatuses()->firstWhere('id', $script->scriptType->employee_status_id);
+                $status = Employee::GetAllStatuses()->firstWhere('id', $script->scriptType->employee_status_id);
 
 
-            $script->employee->workForce->statuses()->attach($status->id);
+                $script->employee->workForce->statuses()->attach($status->id);
 
-            $position = $script->position;
-            $roles = $position->roles;
-            $scriptUser = $script->employee->person->user;
-            $userActiveStatus = User::GetAllStatuses()->firstWhere('name', 'فعال');
+                $position = $script->position;
+                $roles = $position->roles;
+                $scriptUser = $script->employee->person->user;
+                $userActiveStatus = User::GetAllStatuses()->firstWhere('name', 'فعال');
 //            $hasRole = $scriptUser->roles()->where('role_id', $role->id)->exists();
 
-            // Attach the role to the user if they do not have it
+                // Attach the role to the user if they do not have it
 //            if (!$hasRole) {
-            $scriptUser->roles()->sync($roles->pluck('id')->toArray());
+                $scriptUser->roles()->sync($roles->pluck('id')->toArray());
 //            }
 
-            $scriptUser->statuses()->attach($userActiveStatus->id);
+                $scriptUser->statuses()->attach($userActiveStatus->id);
 
+            }
+
+            return $approvingList;
         }
-
-        return $approvingList;
 
 
     }
@@ -166,7 +187,7 @@ trait ApprovingListTrait
         return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$notApprovedStatus);
     }
 
-    public function declineScript(RecruitmentScript $script, User $user, bool $isAdmin = false)
+    public function declineScript(RecruitmentScript $script, User $user, bool $isAdmin = false, string $reason = null)
     {
         $statusId = self::notApprovedStatus()->id;
 
@@ -191,11 +212,11 @@ trait ApprovingListTrait
         $relatedApprovingLists->update([
             'status_id' => $statusId,
             'update_date' => Carbon::now(),
-            "approver_id" => $user->id,
+            'approver_id' => $user->id,
         ]);
 
         // Call the declineRs method and return based on its result
-        $inactiveRs = $this->declineRs($script);
+        $inactiveRs = $this->declineRs($script, $reason);
 
 
         return $inactiveRs;

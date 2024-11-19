@@ -1,6 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\HRMS\app\Http\Controllers\ApprovingListController;
+use Modules\HRMS\app\Http\Controllers\EmployeeController;
+use Modules\HRMS\app\Http\Controllers\HireTypeController;
+use Modules\HRMS\app\Http\Controllers\HRMConfigController;
+use Modules\HRMS\app\Http\Controllers\JobController;
+use Modules\HRMS\app\Http\Controllers\LevelController;
+use Modules\HRMS\app\Http\Controllers\PositionController;
+use Modules\HRMS\app\Http\Controllers\RecruitmentScriptController;
+use Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController;
+use Modules\HRMS\app\Http\Controllers\SkillController;
 
 /*
     |--------------------------------------------------------------------------
@@ -15,74 +25,74 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'store']);
-    Route::post('/hrm/employee/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'index']);
-    Route::get('/hrm/employee/list/filter', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'employeeListFilter']);
-    Route::get('/hrm/setting', [\Modules\HRMS\app\Http\Controllers\HRMConfigController::class, 'configList']);
+    Route::post('/hrm/employee/add', [EmployeeController::class, 'store']);
+    Route::post('/hrm/employee/list', [EmployeeController::class, 'index']);
+    Route::get('/hrm/employee/list/filter', [EmployeeController::class, 'employeeListFilter']);
+    Route::get('/hrm/setting', [HRMConfigController::class, 'configList']);
 
-    Route::post('/hrm/expired/scripts', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'indexExpiredScripts']);
+    Route::post('/hrm/expired/scripts', [RecruitmentScriptController::class, 'indexExpiredScripts']);
 
 });
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/employee/natural/search', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'findPersonToInsertAsEmployee'])->middleware('auth:api');
-    Route::post('/employee/national-code/search', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'findPersonToInsertAsEmployee']);
-    Route::post('/recruitment/list/state_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'stateOfcs']);
-    Route::post('/recruitment/list/city_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cityOfcs']);
-    Route::post('/recruitment/list/district_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'districtOfcs']);
-    Route::post('/recruitment/list/town_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'townOfcs']);
-    Route::post('/recruitment/list/village_ofc', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'villageOfcs']);
-    Route::post('/hrm/ounit/positions/list', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'getByOrganizationUnit']);
-    Route::get('/hrm/employee/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'addEmployeeBaseInfo'])->middleware('auth:api');
+    Route::post('/employee/natural/search', [EmployeeController::class, 'findPersonToInsertAsEmployee'])->middleware('auth:api');
+    Route::post('/employee/national-code/search', [EmployeeController::class, 'findPersonToInsertAsEmployee']);
+    Route::post('/recruitment/list/state_ofc', [RecruitmentScriptController::class, 'stateOfcs']);
+    Route::post('/recruitment/list/city_ofc', [RecruitmentScriptController::class, 'cityOfcs']);
+    Route::post('/recruitment/list/district_ofc', [RecruitmentScriptController::class, 'districtOfcs']);
+    Route::post('/recruitment/list/town_ofc', [RecruitmentScriptController::class, 'townOfcs']);
+    Route::post('/recruitment/list/village_ofc', [RecruitmentScriptController::class, 'villageOfcs']);
+    Route::post('/hrm/ounit/positions/list', [PositionController::class, 'getByOrganizationUnit']);
+    Route::get('/hrm/employee/add', [EmployeeController::class, 'addEmployeeBaseInfo'])->middleware('auth:api');
     Route::post('/hrm/education-levels/list', [\Modules\HRMS\app\Http\Controllers\LevelsOfEducationController::class, 'index']);
-    Route::post('/hrm/register/dehyar', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'registerDehyar']);
+    Route::post('/hrm/register/dehyar', [EmployeeController::class, 'registerDehyar']);
 
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/hrm/levels/add', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'store']);
-    Route::post('/hrm/levels/list', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'index']);
-    Route::post('/hrm/levels/{id}', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'show']);
-    Route::post('/hrm/levels/update/{id}', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'show']);
-    Route::put('/hrm/levels/update/{id}', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'update']);
-    Route::delete('/hrm/levels/delete/{id}', [\Modules\HRMS\app\Http\Controllers\LevelController::class, 'destroy']);
+    Route::post('/hrm/levels/add', [LevelController::class, 'store']);
+    Route::post('/hrm/levels/list', [LevelController::class, 'index']);
+    Route::post('/hrm/levels/{id}', [LevelController::class, 'show']);
+    Route::post('/hrm/levels/update/{id}', [LevelController::class, 'show']);
+    Route::put('/hrm/levels/update/{id}', [LevelController::class, 'update']);
+    Route::delete('/hrm/levels/delete/{id}', [LevelController::class, 'destroy']);
 
 
-    Route::post('/hrm/positions/add', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'store']);
-    Route::post('/hrm/positions/list', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'index']);
-    Route::post('/hrm/positions/{id}', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'show']);
-    Route::post('/hrm/positions/update/{id}', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'show']);
-    Route::put('/hrm/positions/update/{id}', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'update']);
-    Route::delete('/hrm/positions/delete/{id}', [\Modules\HRMS\app\Http\Controllers\PositionController::class, 'destroy']);
+    Route::post('/hrm/positions/add', [PositionController::class, 'store']);
+    Route::post('/hrm/positions/list', [PositionController::class, 'index']);
+    Route::post('/hrm/positions/{id}', [PositionController::class, 'show']);
+    Route::post('/hrm/positions/update/{id}', [PositionController::class, 'show']);
+    Route::put('/hrm/positions/update/{id}', [PositionController::class, 'update']);
+    Route::delete('/hrm/positions/delete/{id}', [PositionController::class, 'destroy']);
 
 
-    Route::post('/hrm/skills/add', [\Modules\HRMS\app\Http\Controllers\SkillController::class, 'store']);
-    Route::post('/hrm/skills/list', [\Modules\HRMS\app\Http\Controllers\SkillController::class, 'index']);
-    Route::post('/hrm/skills/{id}', [\Modules\HRMS\app\Http\Controllers\SkillController::class, 'show']);
-    Route::post('/hrm/skills/update/{id}', [\Modules\HRMS\app\Http\Controllers\SkillController::class, 'show']);
-    Route::put('/hrm/skills/update/{id}', [\Modules\HRMS\app\Http\Controllers\SkillController::class, 'update']);
-    Route::delete('/hrm/skills/delete/{id}', [\Modules\HRMS\app\Http\Controllers\SkillController::class, 'destroy']);
+    Route::post('/hrm/skills/add', [SkillController::class, 'store']);
+    Route::post('/hrm/skills/list', [SkillController::class, 'index']);
+    Route::post('/hrm/skills/{id}', [SkillController::class, 'show']);
+    Route::post('/hrm/skills/update/{id}', [SkillController::class, 'show']);
+    Route::put('/hrm/skills/update/{id}', [SkillController::class, 'update']);
+    Route::delete('/hrm/skills/delete/{id}', [SkillController::class, 'destroy']);
 });
 
 Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
 
-    Route::post('/hrm/script-agent-type/add', [\Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController::class, 'store']);
-    Route::put('/hrm/script-agent-type/update/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController::class, 'update']);
+    Route::post('/hrm/script-agent-type/add', [ScriptAgentTypeController::class, 'store']);
+    Route::put('/hrm/script-agent-type/update/{id}', [ScriptAgentTypeController::class, 'update']);
 
-    Route::delete('/hrm/script-agent-type/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController::class, 'destroy']);
-
-
-    Route::post('/hrm/jobs/add', [\Modules\HRMS\app\Http\Controllers\JobController::class, 'store']);
-    Route::put('/hrm/jobs/update/{id}', [\Modules\HRMS\app\Http\Controllers\JobController::class, 'update']);
-
-    Route::delete('/hrm/jobs/delete/{id}', [\Modules\HRMS\app\Http\Controllers\JobController::class, 'destroy']);
+    Route::delete('/hrm/script-agent-type/delete/{id}', [ScriptAgentTypeController::class, 'destroy']);
 
 
-    Route::post('/hrm/hire-types/add', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'store']);
+    Route::post('/hrm/jobs/add', [JobController::class, 'store']);
+    Route::put('/hrm/jobs/update/{id}', [JobController::class, 'update']);
 
-    Route::put('/hrm/hire-types/update/{id}', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'update']);
+    Route::delete('/hrm/jobs/delete/{id}', [JobController::class, 'destroy']);
 
-    Route::delete('/hrm/hire-types/delete/{id}', [\Modules\HRMS\app\Http\Controllers\HireTypeController::class, 'destroy']);
+
+    Route::post('/hrm/hire-types/add', [HireTypeController::class, 'store']);
+
+    Route::put('/hrm/hire-types/update/{id}', [HireTypeController::class, 'update']);
+
+    Route::delete('/hrm/hire-types/delete/{id}', [HireTypeController::class, 'destroy']);
 
 
     Route::post('/hrm/script-types/add', [\Modules\HRMS\app\Http\Controllers\ScriptTypeController::class, 'store']);
@@ -97,45 +107,48 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::delete('/hrm/script-agents/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'destroy']);
 
 
-    Route::post('/hrm/employee/script-combos/', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'agentCombos']);
+    Route::post('/hrm/employee/script-combos/', [EmployeeController::class, 'agentCombos']);
 
-    Route::post('/hrm/employee/script-types/', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'employeeScriptTypes']);
+    Route::post('/hrm/employee/script-types/', [EmployeeController::class, 'employeeScriptTypes']);
 
-    Route::post('/hrm/rc/list', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'index'])->middleware(['auth:api']);
+    Route::post('/hrm/rc/list', [RecruitmentScriptController::class, 'index'])->middleware(['auth:api']);
 
-    Route::post('/hrm/prc/list', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'pendingApprovingIndex'])->middleware(['auth:api']);
+    Route::post('/hrm/prc/list', [RecruitmentScriptController::class, 'pendingApprovingIndex'])->middleware(['auth:api']);
 
-    Route::post('/hrm/prc/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'showScriptWithApproves'])->middleware(['auth:api']);
+    Route::post('/hrm/prc/{id}', [ApprovingListController::class, 'showScriptWithApproves'])->middleware(['auth:api']);
 
-    Route::post('/hrm/rc/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'recruitmentScriptShow'])->middleware(['auth:api']);
+    Route::post('/hrm/rc/{id}', [RecruitmentScriptController::class, 'recruitmentScriptShow'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/grant/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'approveScriptByUser'])->middleware(['auth:api']);
+    Route::put('/hrm/rc/grant/{id}', [ApprovingListController::class, 'approveScriptByUser'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/decline/{id}', [\Modules\HRMS\app\Http\Controllers\ApprovingListController::class, 'declineScriptByUser'])->middleware(['auth:api']);
+    Route::put('/hrm/rc/decline/{id}', [ApprovingListController::class, 'declineScriptByUser'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/cancel/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cancelRscript'])->middleware(['auth:api']);
+    Route::put('/hrm/rc/cancel/{id}', [RecruitmentScriptController::class, 'cancelRscript'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/renew/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
+    Route::put('/hrm/rc/renew/{id}', [RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/terminate/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
+    Route::put('/hrm/rc/terminate/{id}', [RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/service-end/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
-
-
-    Route::post('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'store']);
-
-    Route::get('/hrm/rc/add', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'addEmployeeBaseInfo']);
-
-    Route::post('/hrm/isar-types/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'isarsStatusesIndex']);
-
-    Route::post('/hrm/relative-types/list', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'relativeTypesIndex']);
+    Route::put('/hrm/rc/service-end/{id}', [RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
 
 
-    Route::post('/hrm/employee/verify', [\Modules\HRMS\app\Http\Controllers\EmployeeController::class, 'verifyEmployeeForScript']);
+    Route::post('/hrm/rc/add', [RecruitmentScriptController::class, 'store']);
+
+    Route::get('/hrm/rc/add', [EmployeeController::class, 'addEmployeeBaseInfo']);
+
+    Route::post('/hrm/isar-types/list', [EmployeeController::class, 'isarsStatusesIndex']);
+
+    Route::post('/hrm/relative-types/list', [EmployeeController::class, 'relativeTypesIndex']);
 
 
-    Route::post('/hrm/rc/reissue/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'RenewRecruitmentScript']);
-    Route::post('/hrm/rc/reject/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'RejectRecruitmentScript']);
+    Route::post('/hrm/employee/verify', [EmployeeController::class, 'verifyEmployeeForScript']);
+
+
+    Route::post('/hrm/rc/reissue/{id}', [RecruitmentScriptController::class, 'RenewRecruitmentScript']);
+
+    Route::post('/hrm/rc/manager-reject/{id}', [RecruitmentScriptController::class, 'RejectRecruitmentScript']);
+
+    Route::post('/hrm/rc/manager-approve/{id}', [RecruitmentScriptController::class, 'approveRecruitmentScript']);
 
 
 });

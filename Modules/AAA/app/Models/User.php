@@ -101,6 +101,11 @@ class User extends Authenticatable
             ->distinct();
     }
 
+    public function allRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, table: 'user_role');
+    }
+
 
     public function statuses()
     {
@@ -222,7 +227,8 @@ class User extends Authenticatable
                 $subQuery->selectRaw('MAX(create_date)')
                     ->from('recruitment_script_status as sub_rss')
                     ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
-            });
+            }
+            );
 //        });
     }
 

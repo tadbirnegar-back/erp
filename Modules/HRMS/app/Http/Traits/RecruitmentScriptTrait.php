@@ -2,6 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use Auth;
 use Illuminate\Support\Collection;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
@@ -233,12 +234,17 @@ trait RecruitmentScriptTrait
         return $rsStatus;
     }
 
-    public function declineRs(RecruitmentScript $rs)
+    public function declineRs(RecruitmentScript $rs, string $description)
     {
 
         $deleteStatus = $this->rejectedRsStatus();
-        $rs->status()->attach($deleteStatus->id);
-
+        RecruitmentScriptStatus::create([
+            'recruitment_script_id' => $rs->id,
+            'status_id' => $deleteStatus->id,
+            'operator_id' => Auth::user()->id,
+            'description' => $description,
+            'create_date' => now(),
+        ]);
 
         return true;
 
@@ -269,11 +275,9 @@ trait RecruitmentScriptTrait
     {
         $statusComponents = [
             RecruitmentScriptStatusEnum::PENDING_APPROVAL->value => [
-                ['component' => 'DenyIssueBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/reject/{id}']
+                ['component' => 'DenyIssueBtn', 'permissions' => ['/hrm/rc/manager-reject/{id}', '/hrm/rc/manager-approve/{id}']
                 ],
-//                ['component' => 'DenyApproveBtn', 'permissions' => ['/hrm/rc/renew/{id}', '/hrm/rc/decline/{id}']
-//                ],
-                ['component' => 'DenyApproveBtn', 'permissions' => ['/hrm/rc/renew/{id}', '/hrm/rc/reissue/{id}']
+                ['component' => 'DenyApproveBtn', 'permissions' => ['/hrm/rc/grant/{id}', '/hrm/rc/decline/{id}']
                 ],
             ],
             RecruitmentScriptStatusEnum::ACTIVE->value => [

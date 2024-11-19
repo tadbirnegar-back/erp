@@ -365,6 +365,14 @@ class RecruitmentScriptController extends Controller
     public function RenewRecruitmentScript(Request $request, $id)
     {
         $data = $request->all();
+        $oldRS = RecruitmentScript::with('latestStatus')->find($id);
+        if (is_null($oldRS)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+
+        if ($oldRS->latestStatus->status_id != $this->pendingRsStatus()->id) {
+            return response()->json(['message' => 'حکم قابل اصلاح نمی باشد'], 400);
+        }
 
         $data['parentID'] = $id;
         $validator = Validator::make($data, [
@@ -433,7 +441,7 @@ class RecruitmentScriptController extends Controller
     }
 
 
-    public function RejectRecruitmentScript($id)
+    public function RejectRecruitmentScript(Request $request, $id)
     {
 
         $user = auth()->user();
@@ -444,20 +452,15 @@ class RecruitmentScriptController extends Controller
          */
         $script = RecruitmentScript::with('approvers')->find($id);
 
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
 
-        if ($script) {
-            \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
 
-            $approvers = $script->approvers;
-
-
-            $canApprove = $approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
-            if (!$canApprove) {
-                return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
-            }
-
-            $result = $this->declineScript($script, $user, true);
+            $result = $this->declineScript($script, $user, true, $request->description ?? null);
 
             $rcstatus = $script->latestStatus;
             $employee = Employee::find($script->employee_id);
@@ -475,10 +478,32 @@ class RecruitmentScriptController extends Controller
             return response()->json([
                 "result" => $result
             ]);
-        } else {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return response()->json(['message' => 'Script not found'], 404);
+            return response()->json(['message' => 'خطا در رد حکم'], 500);
+        }
+    }
+
+    public function approveRecruitmentScript($id)
+    {
+        $script = RecruitmentScript::with('approvers')->find($id);
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $result = $this->approveScript($script, Auth::user(), true);
+            DB::commit();
+
+            return response()->json([
+                "result" => $result
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در تایید حکم'], 500);
         }
     }
 

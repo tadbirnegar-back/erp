@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
@@ -39,7 +40,7 @@ class ApprovingListController extends Controller
             $user = auth()->user();
             $script = RecruitmentScript::find($id);
 
-            $canApprove = $script->approvers()->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->get()->isNotEmpty();
+            $canApprove = $script->approvers()->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->exists();
 
 
             if (!$canApprove) {
@@ -68,7 +69,7 @@ class ApprovingListController extends Controller
         }
     }
 
-    public function declineScriptByUser($id)
+    public function declineScriptByUser(Request $request, $id)
     {
 
         $user = auth()->user();
@@ -92,7 +93,7 @@ class ApprovingListController extends Controller
                 return response()->json(['message' => 'شما دسترسی لازم برای تایید حکم را ندارید'], 403);
             }
 
-            $result = $this->declineScript($script, $user);
+            $result = $this->declineScript($script, $user, false, $request->description ?? null);
 
             $rcstatus = $script->latestStatus;
             $employee = Employee::find($script->employee_id);

@@ -126,6 +126,12 @@
         "permissionTypeName": "operational"
     },
     {
+        "name": "تایید حکم توسط تایید کننده",
+        "slug": "/hrm/rc/grant/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
         "name": "حکم های منقضی شده",
         "slug": "/hrm/expired/scripts",
         "moduleName": "HRMS",
@@ -162,8 +168,14 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "رد حکم توسط ادمین",
-        "slug": "/hrm/rc/reject/{id}",
+        "name": "رد حکم توسط مدیرکل",
+        "slug": "/hrm/rc/manager-reject/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید حکم توسط مدیرکل",
+        "slug": "/hrm/rc/manager-approve/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
     }

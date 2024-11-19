@@ -62,19 +62,7 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:255', // Ensure 'name' is provided and valid
         ]);
 
-        // Find the department
-        $department = Department::with('organizationUnit')->findOrFail($id);
-
-        // Check if the organization unit exists
-        if ($department->organizationUnit) {
-            // Update the name
-            $department->organizationUnit->update(['name' => $validatedData['name']]);
-
-            return response()->json([
-                'message' => 'Organization Unit name updated successfully.',
-                'organization_unit' => $department->organizationUnit,
-            ], 200);
-        }
+        OrganizationUnit::find($id)->update($validatedData);
 
         return response()->json([
             'message' => 'No associated organization unit found for this department.',
