@@ -67,6 +67,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::put('mes/meeting/ChangeMeetingDate/{id}', [\Modules\EMS\app\Http\Controllers\MeetingController::class, 'changeMeetingDate']);
 
+    Route::post('mes/ounitNames/liveSearch', [\Modules\EMS\app\Http\Controllers\EMSController::class, 'liveSearch']);
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -84,4 +85,3 @@ Route::middleware([])->prefix('v1')->group(function () {
     Route::post('mes/board/register', [EMSController::class, 'registerHetaatMember']);
 
 });
-Route::post('mes/ounitNames/liveSearch', [\Modules\EMS\app\Http\Controllers\EMSController::class, 'liveSearch']);
