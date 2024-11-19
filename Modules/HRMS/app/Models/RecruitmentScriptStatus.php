@@ -26,7 +26,13 @@ class RecruitmentScriptStatus extends Model
     protected $table = 'recruitment_script_status';
 
 
-    protected $fillable = ['recruitment_script_id', 'status_id'];
+    protected $fillable = [
+        'recruitment_script_id',
+        'status_id',
+        'create_date',
+        'description',
+        'operator_id',
+    ];
 
     protected static function boot()
     {

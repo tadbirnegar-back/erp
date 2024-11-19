@@ -2,9 +2,8 @@
 
 namespace Modules\HRMS\app\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\Database\factories\ScriptApprovingListFactory;
@@ -19,7 +18,13 @@ class ScriptApprovingList extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'script_id',
+        'priority',
+        'approver_id',
+        'assigned_to',
+        'status_id',
+    ];
 
     public $timestamps = true;
     const CREATED_AT = 'create_date';

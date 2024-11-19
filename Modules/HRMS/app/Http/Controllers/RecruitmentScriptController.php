@@ -18,7 +18,7 @@ use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Models\ScriptType;
-use Modules\HRMS\App\Notifications\DeclineRsNotification;
+use Modules\HRMS\app\Notifications\DeclineRsNotification;
 use Modules\HRMS\app\Notifications\NewRsNotification;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -132,7 +132,7 @@ class RecruitmentScriptController extends Controller
 
         if ($user->hasPermissionForRoute($requestedRoute) || $script->employee->person->id == $user->person->id) {
 
-            $script->load('scriptType', 'hireType', 'position', 'level', 'scriptAgents', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason');
+            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position', 'level', 'scriptAgents', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason');
         } else {
             return response()->json(['message' => 'شما به این بخش دسترسی ندارید'], 403);
         }
@@ -370,7 +370,7 @@ class RecruitmentScriptController extends Controller
             return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
         }
 
-        if ($oldRS->latestStatus->status_id != $this->pendingRsStatus()->id) {
+        if ($oldRS->latestStatus->id != $this->pendingRsStatus()->id) {
             return response()->json(['message' => 'حکم قابل اصلاح نمی باشد'], 400);
         }
 
@@ -503,7 +503,7 @@ class RecruitmentScriptController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در تایید حکم'], 500);
+            return response()->json(['message' => 'خطا در تایید حکم', $e->getMessage(), $e->getTrace()], 500);
         }
     }
 

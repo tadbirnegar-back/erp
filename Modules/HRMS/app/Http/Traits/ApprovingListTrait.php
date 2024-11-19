@@ -104,11 +104,13 @@ trait ApprovingListTrait
     {
         if ($isAdmin) {
             $approvingList = $script->approvers;
-            $approvingList->update([
-                'status_id' => self::approvedStatus()->id,
-                'approver_id' => $user->id,
-                'update_date' => Carbon::now(),
-            ]);
+            foreach ($approvingList as $approver) {
+                $approver->update([
+                    'status_id' => self::approvedStatus()->id,
+                    'approver_id' => $user->id,
+                    'update_date' => Carbon::now(),
+                ]);
+            }
 
             RecruitmentScriptStatus::create([
                 'recruitment_script_id' => $script->id,
