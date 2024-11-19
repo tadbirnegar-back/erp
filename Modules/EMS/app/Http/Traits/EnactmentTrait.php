@@ -71,6 +71,11 @@ trait EnactmentTrait
             });
         }
 
+        if (!empty($data['create_date'])) {
+            $createDate = convertJalaliPersianCharactersToGregorian($data['create_date']);
+            $query->whereDate('create_date', $createDate);
+        }
+
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
@@ -80,6 +85,10 @@ trait EnactmentTrait
     {
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
+
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
 
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
@@ -104,6 +113,10 @@ trait EnactmentTrait
             });
         }
 
+        if (!empty($data['create_date'])) {
+            $createDate = convertJalaliPersianCharactersToGregorian($data['create_date']);
+            $query->whereDate('create_date', $createDate);
+        }
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
@@ -114,8 +127,10 @@ trait EnactmentTrait
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $statuses = $data['statusID'] ?? null;
-        $searchTerm = $data['name'] ?? null;
-
+        $searchTerm = $data['title'] ?? null;
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
         })
@@ -142,6 +157,10 @@ trait EnactmentTrait
         });
 
 
+        if (!empty($data['create_date'])) {
+            $createDate = convertJalaliPersianCharactersToGregorian($data['create_date']);
+            $query->whereDate('create_date', $createDate);
+        }
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);

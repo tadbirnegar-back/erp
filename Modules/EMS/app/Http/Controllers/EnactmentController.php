@@ -34,9 +34,7 @@ class EnactmentController extends Controller
      */
     public function indexSecretary(Request $request): JsonResponse
     {
-//        $user = Auth::user();
-
-        $user = User::find(2119);
+        $user = Auth::user();
         $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
             $q->orderByDesc('recruitment_scripts.create_date')
                 ->limit(1)
@@ -64,7 +62,8 @@ class EnactmentController extends Controller
 
     public function indexArchive(Request $request): JsonResponse
     {
-        $user = Auth::user();
+//        $user = Auth::user();
+        $user = User::find(2119);
         try {
             $ounit = $user->load(['activeRecruitmentScript' => function ($q) {
                 $q->orderByDesc('recruitment_scripts.create_date')
