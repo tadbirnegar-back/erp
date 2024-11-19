@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\HRMS\App\Notifications;
+namespace Modules\HRMS\app\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;

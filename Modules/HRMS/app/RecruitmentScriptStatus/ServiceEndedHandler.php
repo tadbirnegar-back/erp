@@ -6,7 +6,7 @@ use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Contracts\StatusHandlerInterface;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\App\Notifications\PayanKhedmatRsNotification;
+use Modules\HRMS\app\Notifications\PayanKhedmatRsNotification;
 
 class ServiceEndedHandler implements StatusHandlerInterface
 {

@@ -10,7 +10,7 @@ use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Notifications\ApproveRsNotification;
-use Modules\HRMS\App\Notifications\DeclineRsNotification;
+use Modules\HRMS\app\Notifications\DeclineRsNotification;
 use Modules\PersonMS\app\Models\Person;
 
 class ApprovingListController extends Controller

@@ -5,7 +5,7 @@ namespace Modules\HRMS\app\RecruitmentScriptStatus;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Contracts\StatusHandlerInterface;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\App\Notifications\DeclineRsNotification;
+use Modules\HRMS\app\Notifications\DeclineRsNotification;
 
 class DeclineHandler implements StatusHandlerInterface
 {
