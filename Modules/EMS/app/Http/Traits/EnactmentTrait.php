@@ -42,6 +42,12 @@ trait EnactmentTrait
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
+
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
+
+
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
         })

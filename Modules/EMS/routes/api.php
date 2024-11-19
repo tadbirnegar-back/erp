@@ -84,7 +84,10 @@ Route::middleware([])->prefix('v1')->group(function () {
 
     Route::post('mes/board/register', [EMSController::class, 'registerHetaatMember']);
 
-
 });
+<<<<<<< Updated upstream
 
 Route::put('mes/meeting/ChangeMeetingDate/{id}', [\Modules\EMS\app\Http\Controllers\MeetingController::class, 'changeMeetingDate']);
+=======
+Route::post('mes/pbs-enactments/list', [EnactmentController::class, 'indexSecretary']);
+>>>>>>> Stashed changes

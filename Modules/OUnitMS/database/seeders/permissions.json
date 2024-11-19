@@ -93,6 +93,6 @@
         "name": "بروزرسانی دپارتمان",
         "slug": "/oms/department/{id}",
         "moduleName": "OuinitMS",
-        "permissionTypeName": "sidebar"
+        "permissionTypeName": "operational"
     }
 ]
