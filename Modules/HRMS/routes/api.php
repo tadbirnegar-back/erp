@@ -46,6 +46,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::get('/hrm/employee/add', [EmployeeController::class, 'addEmployeeBaseInfo'])->middleware('auth:api');
     Route::post('/hrm/education-levels/list', [\Modules\HRMS\app\Http\Controllers\LevelsOfEducationController::class, 'index']);
     Route::post('/hrm/register/dehyar', [EmployeeController::class, 'registerDehyar']);
+    Route::post('/hrm/register/sarparast', [EmployeeController::class, 'registerSarparast']);
 
 });
 
@@ -151,5 +152,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/hrm/rc/manager-approve/{id}', [RecruitmentScriptController::class, 'approveRecruitmentScript']);
 
 
-});
+    Route::get('/hrm/rc/ptp/list', [RecruitmentScriptController::class, 'ptpIndex']);
 
+});

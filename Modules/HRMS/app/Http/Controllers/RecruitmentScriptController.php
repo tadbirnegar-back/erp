@@ -507,4 +507,24 @@ class RecruitmentScriptController extends Controller
         }
     }
 
+    public function ptpIndex(Request $request)
+    {
+        $data = [
+            'statusID' => $this->pendingTerminateRsStatus()->id,
+            'scriptTypeID' => $request->input('scriptTypeID'),
+            'perPage' => $request->input('perPage', 10),
+            'pageNum' => $request->input('pageNum', 1),
+            'name' => $request->input('name')
+        ];
+
+        $result = $this->rsIndex($data);
+
+        $filterData = $data['pageNum'] == 1 ? [
+            'scriptStatus' => RecruitmentScript::GetAllStatuses(),
+            'scriptTypes' => $this->getListOfScriptTypes(),
+        ] : null;
+
+        return response()->json(['data' => $result, 'filter' => $filterData]);
+    }
+
 }

@@ -178,5 +178,11 @@
         "slug": "/hrm/rc/manager-approve/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست در انتظار قطع همکاری",
+        "slug": "/hrm/rc/ptp/list",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
     }
 ]

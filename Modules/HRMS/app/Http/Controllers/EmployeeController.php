@@ -161,7 +161,6 @@ class EmployeeController extends Controller
             $orginazationName = $position->organizationUnit->name;
 
 
-
 //            return response()->json([
 //                'username' => $username,
 //                "positionName" => $positionName,
@@ -306,6 +305,135 @@ class EmployeeController extends Controller
             return response()->json(['message' => 'خطا در ثبت دهیار'], 500);
         }
     }
+
+
+    public function registerSarparast(Request $request)
+    {
+        $data = $request->all();
+        $user = User::with('person')->where('mobile', $data['mobile'])->first();
+
+        $validator = Validator::make($data, [
+            'nationalCode' => ['required',
+                'unique:persons,national_code,' . $request->personID,
+            ],
+            'mobile' => ['required',
+                'unique:users,mobile,' . $user?->id,
+                'unique:naturals,mobile,' . $user?->person->personable_id,
+            ],
+
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+        try {
+            DB::beginTransaction();
+            $p = Person::with('personable')->find($request->personID);
+            $personResult = !is_null($p) ?
+                $this->naturalUpdate($data, $p?->personable) :
+                $this->naturalStore($data);
+
+            $data['personID'] = $personResult->person->id;
+            $data['password'] = $data['nationalCode'];
+
+            $user = $this->isPersonUserCheck($personResult->person);
+            $user = $user ? $this->updateUser($data, $user) : $this->storeUser($data);
+
+//
+            $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+            $user->statuses()->attach($disabledStatusForUser->id);
+
+            if (isset($data['avatar'])) {
+                $file = File::find($data['avatar']);
+                $file->creator_id = $user->id;
+                $file->save();
+            }
+
+            $personAsEmployee = $this->isEmployee($data['personID']);
+            $employee = !is_null($personAsEmployee) ? $this->employeeUpdate($data, $personAsEmployee) : $this->employeeStore($data);
+
+            $workForce = $employee->workForce;
+            //additional info insertion
+
+
+            $educations = $this->EducationalRecordStore($data, $workForce->id);
+
+
+//
+//
+//            if (isset($data['relatives'])) {
+//                $rels = json_decode($data['relatives'], true);
+//
+//                $relatives = $this->RelativeStore($rels, $workForce->id);
+//
+//            }
+//
+//
+//            if (isset($data['resumes'])) {
+//                $resumes = json_decode($data['resumes'], true);
+//
+//                $resume = $this->resumeStore($resumes, $workForce->id);
+//
+//            }
+
+
+            if (isset($data['recruitmentScripts'])) {
+                $rs = json_decode($data['recruitmentScripts'], true);
+                $hireType = HireType::where('title', 'تمام وقت')->first();
+                $scriptType = ScriptType::where('title', 'انتصاب سرپرست دهیاری')->first();
+                $job = Job::where('title', 'سرپرست دهیاری')->first();
+
+                $result = $this->getScriptAgentCombos($hireType, $scriptType);
+
+
+                foreach ($rs as &$script) {
+
+//                    $files = File::find([$script['enactmentAttachmentID'], $script['scriptAttachmentID']]);
+//                    $files->each(function ($file) use ($user) {
+//                        $file->creator_id = $user->id;
+//                        $file->save();
+//                    });
+
+                    $sas = $result->map(function ($item) {
+                        return [
+                            'scriptAgentID' => $item->id,
+                            'defaultValue' => $item->pivot->default_value ?? 1000,
+                        ];
+                    });
+                    $encodedSas = json_encode($sas->toArray());
+                    $script['hireTypeID'] = $hireType->id;
+                    $script['scriptTypeID'] = $scriptType->id;
+                    $script['jobID'] = $job->id;
+                    $script['operatorID'] = $user->id;
+                    $script['scriptAgents'] = $encodedSas;
+                }
+                $pendingRsStatus =
+//                    $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
+//                    ?
+                    $this->pendingRsStatus();
+//                    : null;
+
+                $rsRes = $this->rsStore($rs, $employee->id, $pendingRsStatus);
+
+                if ($pendingRsStatus) {
+                    collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+                }
+
+            }
+
+            $username = Person::find($user->person_id)->display_name;
+
+
+            $user->notify(new RegisterNotification($username));
+
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ثبت دهیار'], 500);
+        }
+    }
+
 
     /**
      * Show the specified resource.
