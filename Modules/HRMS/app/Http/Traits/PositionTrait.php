@@ -60,7 +60,6 @@ trait PositionTrait
 
         $ounitCatToDelete = $position->ounit_cat;
 
-        info(json_encode($ounitCatToDelete));
 
         if (!is_null($ounitCatToDelete)) {
             $ounitToDeleteIDs = OrganizationUnit::where('unitable_type', $ounitCatEnum->getUnitableType())->get(['id']);
