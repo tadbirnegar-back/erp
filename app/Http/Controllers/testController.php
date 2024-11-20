@@ -3,14 +3,10 @@
 namespace App\Http\Controllers;
 
 
-use Modules\AAA\app\Models\User;
-use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
-use Modules\EMS\app\Models\Enactment;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\OUnitMS\app\Models\StateOfc;
 
 
 class testController extends Controller
@@ -19,78 +15,78 @@ class testController extends Controller
 
     public function run()
     {
-        $user = User::find(2172);
-        $userRoles = $user->roles->pluck('name')->toArray();
-
-        $enactment = Enactment::find(29);
-        $enactment->load('status');
-        if ($enactment->status->name !== EnactmentStatusEnum::COMPLETED->value) {
-            return response()->json([
-                'message' => 'مصوبه در وضعیت تکمیل شده قرار ندارد'
-            ], 422);
-        }
-        $myPermissions = $this->getComponentsToRender($userRoles, $enactment->status->name);
-
-
-        $componentsToRender = collect([
-            'FormNumThree' => [
-                // MainEnactment logic
-                'reviewStatuses',
-                'latestMeeting.meetingMembers.user.employee.signatureFile',
-                'attachments',
-                'creator',
-                'title',
-                'meeting.ounit.unitable',
-                'meeting.ounit.ancestorsAndSelf' => function ($q) {
-                    $q->where('unitable_type', '!=', StateOfc::class);
-                },
-
-                // ConsultingReviewCards logic
-                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
-                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
-                },
-
-                // BoardReviewCards logic
-                'boardMembers.enactmentReviews' => function ($query) use ($enactment) {
-                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
-                },
-            ],
-        ]);
-
-        $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())
-            ->flatMap(fn($relations) => collect($relations)->mapWithKeys(fn($relation, $key) => is_callable($relation) ? [$key => $relation] : [$relation => fn($query) => $query]))->all();
-
-
-        $enactment = $enactment->load($flattenedComponents);
-
-        $componentsWithData = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys()))->map(function ($relations, $component) use ($enactment) {
-            $relationData = collect($relations)->mapWithKeys(function ($relation, $key) use ($enactment) {
-                $relationName = is_callable($relation) ? explode('.', $key)[0] : explode('.', $relation)[0];
-
-                if ($enactment->relationLoaded($relationName)) {
-                    if (is_callable($relation)) {
-                        $component = $key;
-                    } else {
-                        $component = $relation;
-                    }
-                    $result = [$component => $enactment->$relationName];
-                    if ($relationName !== 'reviewStatuses') {
-                        $enactment->unsetRelation($relationName);
-                    }
-
-                    return $result;
-                }
-                return [];
-
-            });
-            return $relationData->isNotEmpty() ? [
-                'name' => $component,
-                'data' => $relationData
-            ] : null;
-        })->filter()->values();
-
-
-        return response()->json($componentsWithData);
+//        $user = User::find(2172);
+//        $userRoles = $user->roles->pluck('name')->toArray();
+//
+//        $enactment = Enactment::find(29);
+//        $enactment->load('status');
+//        if ($enactment->status->name !== EnactmentStatusEnum::COMPLETED->value) {
+//            return response()->json([
+//                'message' => 'مصوبه در وضعیت تکمیل شده قرار ندارد'
+//            ], 422);
+//        }
+//        $myPermissions = $this->getComponentsToRender($userRoles, $enactment->status->name);
+//
+//
+//        $componentsToRender = collect([
+//            'FormNumThree' => [
+//                // MainEnactment logic
+//                'reviewStatuses',
+//                'latestMeeting.meetingMembers.user.employee.signatureFile',
+//                'attachments',
+//                'creator',
+//                'title',
+//                'meeting.ounit.unitable',
+//                'meeting.ounit.ancestorsAndSelf' => function ($q) {
+//                    $q->where('unitable_type', '!=', StateOfc::class);
+//                },
+//
+//                // ConsultingReviewCards logic
+//                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+//                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+//                },
+//
+//                // BoardReviewCards logic
+//                'boardMembers.enactmentReviews' => function ($query) use ($enactment) {
+//                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+//                },
+//            ],
+//        ]);
+//
+//        $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())
+//            ->flatMap(fn($relations) => collect($relations)->mapWithKeys(fn($relation, $key) => is_callable($relation) ? [$key => $relation] : [$relation => fn($query) => $query]))->all();
+//
+//
+//        $enactment = $enactment->load($flattenedComponents);
+//
+//        $componentsWithData = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys()))->map(function ($relations, $component) use ($enactment) {
+//            $relationData = collect($relations)->mapWithKeys(function ($relation, $key) use ($enactment) {
+//                $relationName = is_callable($relation) ? explode('.', $key)[0] : explode('.', $relation)[0];
+//
+//                if ($enactment->relationLoaded($relationName)) {
+//                    if (is_callable($relation)) {
+//                        $component = $key;
+//                    } else {
+//                        $component = $relation;
+//                    }
+//                    $result = [$component => $enactment->$relationName];
+//                    if ($relationName !== 'reviewStatuses') {
+//                        $enactment->unsetRelation($relationName);
+//                    }
+//
+//                    return $result;
+//                }
+//                return [];
+//
+//            });
+//            return $relationData->isNotEmpty() ? [
+//                'name' => $component,
+//                'data' => $relationData
+//            ] : null;
+//        })->filter()->values();
+//
+//
+//        return response()->json($componentsWithData);
 
 //        EnactmentStatus::create([
 //            'enactment_id' => 29,

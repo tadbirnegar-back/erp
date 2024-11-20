@@ -242,9 +242,9 @@ class EMSController extends Controller
 
             $rsRes = $this->rsStore($rs, $employee->id, $pendingRsStatus);
 
-            if ($pendingRsStatus) {
-                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-            }
+//            if ($pendingRsStatus) {
+//                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+//            }
 
             $username = Person::find($user->person_id)->display_name;
 
