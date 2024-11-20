@@ -58,11 +58,13 @@ trait PositionTrait
     {
         $ounitCatEnum = OunitCategoryEnum::from($data['ounitCatID']);
 
-        $ounitCatToDelete = $position->OunitCatEnum;
+        $ounitCatToDelete = $position->ounit_cat;
+
         info(json_encode($ounitCatToDelete));
 
         if (!is_null($ounitCatToDelete)) {
-            $ounitToDeleteIDs = OrganizationUnit::where('unitable_type', $ounitCatToDelete->getUnitableType())->get(['id']);
+            $ounitToDeleteIDs = OrganizationUnit::where('unitable_type', $ounitCatEnum->getUnitableType())->get(['id']);
+
             $position->organizationUnits()->detach($ounitToDeleteIDs->pluck('id')->toArray());
 
         }

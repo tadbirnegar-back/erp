@@ -157,7 +157,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/hrm/request-new-village', [RecruitmentScriptController::class, 'addNewScriptForDehyar']);
 
-
     Route::get('/hrm/rc/ptp/list', [RecruitmentScriptController::class, 'ptpIndex']);
 
 });
