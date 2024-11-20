@@ -184,5 +184,22 @@
         "slug": "/hrm/rc/ptp/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
+
+        "name": "درخواست انتصاب جدید",
+        "slug": "/hrm/dehyar/request",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "جست و جو دهیاری با کد آبادی",
+        "slug": "/hrm/village/search-by-abadi-code",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ثبت درخواست انتصاب دهیاری جدید",
+        "slug": "/hrm/request-new-village",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
     }
 ]

@@ -269,7 +269,7 @@ class EmployeeController extends Controller
                     $sas = $result->map(function ($item) {
                         return [
                             'scriptAgentID' => $item->id,
-                            'defaultValue' => $item->pivot->default_value ?? 1000,
+                            'defaultValue' => $item->pivot->default_value ?? 0,
                         ];
                     });
                     $encodedSas = json_encode($sas->toArray());
