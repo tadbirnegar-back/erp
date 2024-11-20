@@ -15,8 +15,9 @@ use Modules\HRMS\app\Http\Traits\HireTypeTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\HireType;
+use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\DeclineRsNotification;
 use Modules\HRMS\app\Notifications\NewRsNotification;
@@ -24,6 +25,7 @@ use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Models\Person;
 
 class RecruitmentScriptController extends Controller
@@ -183,9 +185,9 @@ class RecruitmentScriptController extends Controller
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
 
-            if ($pendingRsStatus) {
-                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-            }
+//            if ($pendingRsStatus) {
+//                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+//            }
 
             $employee = Employee::find($rsRes[0]->employee_id);
             $user = $employee->user;
@@ -223,7 +225,6 @@ class RecruitmentScriptController extends Controller
         try {
             DB::beginTransaction();
             $this->attachStatusToRs($script, $cancelStatus, $request->description ?? null, $user);
-            $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت لغو شد']);
         } catch (Exception $e) {
@@ -252,7 +253,6 @@ class RecruitmentScriptController extends Controller
         try {
             DB::beginTransaction();
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
-            $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
         } catch (Exception $e) {
@@ -281,7 +281,6 @@ class RecruitmentScriptController extends Controller
         try {
             DB::beginTransaction();
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
-            $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
         } catch (Exception $e) {
@@ -346,11 +345,9 @@ class RecruitmentScriptController extends Controller
 
             $rsRes = $this->rsSingleStore($RS, $script->employee_id, $pendingRsStatus);
 
-            if ($pendingRsStatus) {
-                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-            }
+
             $terminateStatus = $this->terminatedRsStatus();
-//            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
+            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
             DB::commit();
             return response()->json($rsRes);
         } catch (Exception $e) {
@@ -387,14 +384,11 @@ class RecruitmentScriptController extends Controller
         $rejectedRsStatus = $this->rejectedRsStatus();
 
 
-        RecruitmentScriptStatus::create([
-            'recruitment_script_id' => $id,
-            'status_id' => $rejectedRsStatus->id,
-        ]);
-
-
         try {
             DB::beginTransaction();
+
+            $this->attachStatusToRs($oldRS, $rejectedRsStatus);
+
             $employee = Employee::findOr($data['employeeID'], function () {
                 return response(['message' => 'موردی یافت نشد'], 404);
 
@@ -417,11 +411,8 @@ class RecruitmentScriptController extends Controller
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
 
-            if ($pendingRsStatus) {
-                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-            }
 
-            $employee = Employee::find($rsRes[0]->employee_id);
+            $employee = Employee::find($rsRes->employee_id);
             $user = $employee->user;
 
 
@@ -462,11 +453,8 @@ class RecruitmentScriptController extends Controller
 
             $result = $this->declineScript($script, $user, true, $request->description ?? null);
 
-            $rcstatus = $script->latestStatus;
-            $employee = Employee::find($script->employee_id);
 
-
-            $notifibleUser = $employee->user;
+            $notifibleUser = $script->user;
 
             $person = Person::find($notifibleUser->person_id);
 
@@ -505,6 +493,105 @@ class RecruitmentScriptController extends Controller
             DB::rollBack();
             return response()->json(['message' => 'خطا در تایید حکم', $e->getMessage(), $e->getTrace()], 500);
         }
+    }
+
+
+    public function ptpIndex(Request $request)
+    {
+        $data = [
+            'statusID' => $this->pendingTerminateRsStatus()->id,
+            'scriptTypeID' => $request->input('scriptTypeID'),
+            'perPage' => $request->input('perPage', 10),
+            'pageNum' => $request->input('pageNum', 1),
+            'name' => $request->input('name')
+        ];
+
+        $result = $this->rsIndex($data);
+
+        $filterData = $data['pageNum'] == 1 ? [
+            'scriptStatus' => RecruitmentScript::GetAllStatuses(),
+            'scriptTypes' => $this->getListOfScriptTypes(),
+        ] : null;
+
+        return response()->json(['data' => $result, 'filter' => $filterData]);
+    }
+
+    public function getMyVillageScripts()
+    {
+        $user = Auth::user();
+
+        $user->load(['activeRecruitmentScripts' => function ($query) {
+            $query->whereHas('ounit', function ($query) {
+                $query->where('unitable_type', VillageOfc::class);
+            })
+                ->with(['ounit.unitable', 'ounit.ancestorsAndSelf' => function ($query) {
+                    $query->where('unitable_type', '!=', StateOfc::class);
+                }]);
+        }, 'person.avatar']);
+
+        return response()->json(['villages' => $user->activeRecruitmentScripts->pluck('ounit'), 'person' => $user->person]);
+    }
+
+    public function getVillageOfcByAbadiCode(Request $request)
+    {
+        $abadiCode = $request->input('abadiCode');
+        $village = VillageOfc::with('organizationUnit.person.avatar')->where('abadi_code', $abadiCode)->first();
+        return response()->json($village);
+    }
+
+    public function addNewScriptForDehyar(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $user = Auth::user();
+            $employee = $user->employee;
+//        $rs = json_decode($data['recruitmentScripts'], true);
+            $hireType = HireType::where('title', 'تمام وقت')->first();
+            $scriptType = ScriptType::where('title', 'انتصاب دهیار')->first();
+            $job = Job::where('title', 'دهیار')->first();
+
+            $result = $this->getScriptAgentCombos($hireType, $scriptType);
+
+
+//        foreach ($rs as &$script) {
+
+//                    $files = File::find([$script['enactmentAttachmentID'], $script['scriptAttachmentID']]);
+//                    $files->each(function ($file) use ($user) {
+//                        $file->creator_id = $user->id;
+//                        $file->save();
+//                    });
+
+            $sas = $result->map(function ($item) {
+                return [
+                    'scriptAgentID' => $item->id,
+                    'defaultValue' => $item->pivot->default_value ?? 0,
+                ];
+            });
+            $encodedSas = json_encode($sas->toArray());
+            $data['hireTypeID'] = $hireType->id;
+            $data['scriptTypeID'] = $scriptType->id;
+            $data['jobID'] = $job->id;
+            $data['operatorID'] = $user->id;
+            $data['scriptAgents'] = $encodedSas;
+//        }
+            $pendingRsStatus =
+//                    $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
+//                    ?
+                $this->pendingRsStatus();
+//                    : null;
+
+            $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
+
+//            if ($pendingRsStatus) {
+//                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+//            }
+            DB::commit();
+            return response()->json($rsRes);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'خطا در افزودن حکم'], 500);
+        }
+
     }
 
 }
