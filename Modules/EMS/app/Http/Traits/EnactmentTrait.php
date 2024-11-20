@@ -71,9 +71,9 @@ trait EnactmentTrait
             });
         }
 
-        if (!empty($data['date_start']) && !empty($data['date_end'])) {
-            $dateStart = convertJalaliPersianCharactersToGregorian($data['date_start']);
-            $dateEnd = convertJalaliPersianCharactersToGregorian($data['date_end']);
+        if (!empty($data['startDate']) && !empty($data['endDate'])) {
+            $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
 
             $query->whereHas('latestMeeting', function ($q) use ($dateStart, $dateEnd) {
                 $q->whereBetween('meeting_date', [$dateStart, $dateEnd]);
@@ -117,10 +117,9 @@ trait EnactmentTrait
                     });
             });
         }
-
-        if (!empty($data['date_start']) && !empty($data['date_end'])) {
-            $dateStart = convertJalaliPersianCharactersToGregorian($data['date_start']);
-            $dateEnd = convertJalaliPersianCharactersToGregorian($data['date_end']);
+        if (!empty($data['startDate']) && !empty($data['endDate'])) {
+            $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
 
             $query->whereHas('latestMeeting', function ($q) use ($dateStart, $dateEnd) {
                 $q->whereBetween('meeting_date', [$dateStart, $dateEnd]);
@@ -179,9 +178,9 @@ trait EnactmentTrait
         }
 
 
-        if (!empty($data['date_start']) && !empty($data['date_end'])) {
-            $dateStart = convertJalaliPersianCharactersToGregorian($data['date_start']);
-            $dateEnd = convertJalaliPersianCharactersToGregorian($data['date_end']);
+        if (!empty($data['startDate']) && !empty($data['endDate'])) {
+            $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
 
             $query->whereHas('latestMeeting', function ($q) use ($dateStart, $dateEnd) {
                 $q->whereBetween('meeting_date', [$dateStart, $dateEnd]);
