@@ -31,7 +31,6 @@ use Modules\HRMS\app\Models\IsarStatus;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\LevelOfEducation;
 use Modules\HRMS\app\Models\Position;
-use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
@@ -146,30 +145,13 @@ class EmployeeController extends Controller
 
                 $pendingStatus = $this->pendingRsStatus();
                 $rsRes = $this->rsStore($rs, $employee->id, $pendingStatus);
-                $rsRes = collect($rsRes);
-                $rsRes->each(function ($rs) use ($user) {
-                    $this->approvingStore($rs);
-                });
+//                $rsRes = collect($rsRes);
+//                $rsRes->each(function ($rs) use ($user) {
+//                    $this->approvingStore($rs);
+//                });
 
             }
             DB::commit();
-
-
-            $username = $personResult->person->display_name;
-            $position = RecruitmentScript::with('position', 'organizationUnit')->where('employee_id', 2124)->first();
-            $positionName = $position->position->name;
-            $orginazationName = $position->organizationUnit->name;
-
-
-//            return response()->json([
-//                'username' => $username,
-//                "positionName" => $positionName,
-//                "organName" => $orginazationName,
-//                "user" => $user
-//            ]);
-
-            $user->notify(new AddEmployeeNotification($username, $positionName, $orginazationName));
-
 
             return response()->json($employee);
 
@@ -287,9 +269,9 @@ class EmployeeController extends Controller
 
                 $rsRes = $this->rsStore($rs, $employee->id, $pendingRsStatus);
 
-                if ($pendingRsStatus) {
-                    collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-                }
+//                if ($pendingRsStatus) {
+//                    collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+//                }
 
             }
 
@@ -415,9 +397,9 @@ class EmployeeController extends Controller
 
                 $rsRes = $this->rsStore($rs, $employee->id, $pendingRsStatus);
 
-                if ($pendingRsStatus) {
-                    collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-                }
+//                if ($pendingRsStatus) {
+//                    collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+//                }
 
             }
 

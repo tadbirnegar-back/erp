@@ -2,7 +2,6 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
-use Auth;
 use Illuminate\Support\Collection;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
@@ -89,7 +88,7 @@ trait RecruitmentScriptTrait
         foreach ($dataToInsert as $key => $item) {
 
             $rs = RecruitmentScript::create($item);
-            $rs->status()->attach($status->id);
+            $this->attachStatusToRs($rs, $status, $item['description'] ?? null);
 
             if (isset($data[$key]['files'])) {
                 $fileScriptsData = !is_array($data[$key]['files']) ? json_decode($data[$key]['files'], true) : $data[$key]['files'];
@@ -165,7 +164,8 @@ trait RecruitmentScriptTrait
 
         }
         $rs = RecruitmentScript::create($dataToInsert->toArray()[0]);
-        $rs->status()->attach($status->id);
+        $this->attachStatusToRs($rs, $status, $item['description'] ?? null);
+
         if (isset($data['files'])) {
             $fileScriptsData = !is_array($data['files']) ? json_decode($data['files'], true) : $data['files'];
         } else {
@@ -204,7 +204,8 @@ trait RecruitmentScriptTrait
             $activeStatus = $this->activeRsStatus();
 
             $rses = RecruitmentScript::orderBy('id', 'desc')->take($insertCount)->get();
-            $rses->map(fn(RecruitmentScript $recruitmentScript) => $recruitmentScript->status()->attach($activeStatus->id));
+            $rses->map(fn(RecruitmentScript $recruitmentScript) => $this->attachStatusToRs($recruitmentScript, $activeStatus)
+            );
         }
         return $result;
     }
@@ -214,7 +215,7 @@ trait RecruitmentScriptTrait
         $rses = RecruitmentScript::find($data);
         $deleteStatus = $this->inActiveRsStatus();
         foreach ($rses as $item) {
-            $item->status()->attach($deleteStatus->id);
+            $this->attachStatusToRs($item, $deleteStatus);
         }
 
         return true;
@@ -242,7 +243,7 @@ trait RecruitmentScriptTrait
         $rsStatus->recruitment_script_id = $script->id;
         $rsStatus->status_id = $status->id;
         $rsStatus->operator_id = $user?->id;
-        $rsStatus->description = $description;
+        $rsStatus->description = $description ?? null;
         $rsStatus->save();
         return $rsStatus;
     }
@@ -251,13 +252,7 @@ trait RecruitmentScriptTrait
     {
 
         $deleteStatus = $this->rejectedRsStatus();
-        RecruitmentScriptStatus::create([
-            'recruitment_script_id' => $rs->id,
-            'status_id' => $deleteStatus->id,
-            'operator_id' => Auth::user()->id,
-            'description' => $description,
-            'create_date' => now(),
-        ]);
+        $this->attachStatusToRs($rs, $deleteStatus, $description);
 
         return true;
 

@@ -18,7 +18,6 @@ use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\DeclineRsNotification;
 use Modules\HRMS\app\Notifications\NewRsNotification;
@@ -186,9 +185,9 @@ class RecruitmentScriptController extends Controller
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
 
-            if ($pendingRsStatus) {
-                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-            }
+//            if ($pendingRsStatus) {
+//                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
+//            }
 
             $employee = Employee::find($rsRes[0]->employee_id);
             $user = $employee->user;
@@ -226,7 +225,6 @@ class RecruitmentScriptController extends Controller
         try {
             DB::beginTransaction();
             $this->attachStatusToRs($script, $cancelStatus, $request->description ?? null, $user);
-            $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت لغو شد']);
         } catch (Exception $e) {
@@ -255,7 +253,6 @@ class RecruitmentScriptController extends Controller
         try {
             DB::beginTransaction();
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
-            $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
         } catch (Exception $e) {
@@ -284,7 +281,6 @@ class RecruitmentScriptController extends Controller
         try {
             DB::beginTransaction();
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
-            $this->detachRolesByPosition($script->user, $script->position_id);
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
         } catch (Exception $e) {
@@ -349,9 +345,7 @@ class RecruitmentScriptController extends Controller
 
             $rsRes = $this->rsSingleStore($RS, $script->employee_id, $pendingRsStatus);
 
-            if ($pendingRsStatus) {
-                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-            }
+
             $terminateStatus = $this->terminatedRsStatus();
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
             DB::commit();
@@ -392,10 +386,9 @@ class RecruitmentScriptController extends Controller
 
         try {
             DB::beginTransaction();
-            RecruitmentScriptStatus::create([
-                'recruitment_script_id' => $id,
-                'status_id' => $rejectedRsStatus->id,
-            ]);
+
+            $this->attachStatusToRs($oldRS, $rejectedRsStatus);
+
             $employee = Employee::findOr($data['employeeID'], function () {
                 return response(['message' => 'موردی یافت نشد'], 404);
 
@@ -418,11 +411,8 @@ class RecruitmentScriptController extends Controller
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
 
-            if ($pendingRsStatus) {
-                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-            }
 
-            $employee = Employee::find($rsRes[0]->employee_id);
+            $employee = Employee::find($rsRes->employee_id);
             $user = $employee->user;
 
 
@@ -463,11 +453,8 @@ class RecruitmentScriptController extends Controller
 
             $result = $this->declineScript($script, $user, true, $request->description ?? null);
 
-            $rcstatus = $script->latestStatus;
-            $employee = Employee::find($script->employee_id);
 
-
-            $notifibleUser = $employee->user;
+            $notifibleUser = $script->user;
 
             $person = Person::find($notifibleUser->person_id);
 
@@ -527,6 +514,7 @@ class RecruitmentScriptController extends Controller
         ] : null;
 
         return response()->json(['data' => $result, 'filter' => $filterData]);
+    }
 
     public function getMyVillageScripts()
     {
