@@ -51,7 +51,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::put('/oms/organization_unit/update/{id}', [OUnitMSController::class, 'update']);
 
-    Route::post('/oms/make/department', [DepartmentController::class, 'store']);
+    Route::post('/oms/department/add', [DepartmentController::class, 'store']);
 
     Route::post('/oms/department/list', [DepartmentController::class, 'index']);
 
