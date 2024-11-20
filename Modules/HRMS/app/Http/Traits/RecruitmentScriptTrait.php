@@ -166,7 +166,21 @@ trait RecruitmentScriptTrait
         }
         $rs = RecruitmentScript::create($dataToInsert->toArray()[0]);
         $rs->status()->attach($status->id);
+        if (isset($data['files'])) {
+            $fileScriptsData = !is_array($data['files']) ? json_decode($data['files'], true) : $data['files'];
+        } else {
+            $fileScriptsData = null;
+        }
+        if (isset($data['files']) && is_array($fileScriptsData)) {
+            info($data['files']);
+            $fileScriptsData = collect($fileScriptsData)->map(fn($fs) => [
+                'file_id' => $fs['fileID'],
+                'script_id' => $rs->id,
+                'title' => $fs['title'],
+            ]);
 
+            FileScript::insert($fileScriptsData->toArray());
+        }
         if (isset($data['scriptAgents'])) {
             $agents = json_decode($data['scriptAgents'], true);
             $scriptAgentsScripts = $this->sasStore($agents, $rs);
@@ -174,8 +188,7 @@ trait RecruitmentScriptTrait
         $rs->load('scriptType.confirmationTypes');
 
 
-        $result[] = $rs;
-        return $result;
+        return $rs;
 
     }
 
