@@ -48,6 +48,7 @@ class EnactmentController extends Controller
     public function indexHeyaat(Request $request): JsonResponse
     {
         $user = Auth::user();
+
         $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
             $q->orderByDesc('recruitment_scripts.create_date')
                 ->limit(1)
@@ -71,7 +72,8 @@ class EnactmentController extends Controller
             $data = $request->all();
             $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounit);
             $statuses = Enactment::GetAllStatuses();
-            return response()->json(['data' => $enactments, 'statusList' => $statuses]);
+            $enactmentReviews = EnactmentReview::GetAllStatuses();
+            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews]);
         } catch (Exception $e) {
             return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
         }

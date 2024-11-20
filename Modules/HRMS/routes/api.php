@@ -152,4 +152,5 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
 
 });
+Route::put('/hrm/positions/update/{id}', [PositionController::class, 'update']);
 

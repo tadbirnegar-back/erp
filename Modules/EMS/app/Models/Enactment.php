@@ -98,6 +98,20 @@ class Enactment extends Model
         );
     }
 
+    public function reviewStatus()
+    {
+        return $this->hasManyThrough(
+            Status::class,
+            EnactmentReview::class,
+            'enactment_id',   // Foreign key on EnactmentReview for Enactment
+            'id',              // Foreign key on Status for EnactmentReview
+            'id',              // Local key on Enactment for EnactmentReview
+            'status_id'        // Local key on EnactmentReview for Status
+        )
+            ->orderBy('create_date', 'desc')  // Assuming 'create_date' is the timestamp column
+            ->limit(1);  // Limit to the latest one
+    }
+
     public function userHasReviews()
     {
         return $this->hasManyThrough(
