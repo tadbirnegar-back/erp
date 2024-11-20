@@ -534,8 +534,15 @@ class RecruitmentScriptController extends Controller
 
     public function getVillageOfcByAbadiCode(Request $request)
     {
+        $validate = Validator::make($request->all(), [
+            'abadiCode' => 'required'
+        ]);
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 422);
+        }
+
         $abadiCode = $request->input('abadiCode');
-        $village = VillageOfc::with('organizationUnit.person.avatar')->where('abadi_code', $abadiCode)->first();
+        $village = VillageOfc::with('organizationUnit.ancestors', 'organizationUnit.person.avatar')->where('abadi_code', $abadiCode)->first();
         return response()->json($village);
     }
 
