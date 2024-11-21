@@ -7,12 +7,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentReview;
+use Modules\EMS\app\Models\EnactmentStatus;
 
 class StoreEnactmentStatusJob implements ShouldQueue
 {
@@ -56,15 +56,12 @@ class StoreEnactmentStatusJob implements ShouldQueue
             })->toArray();
 
 
-            // Insert the data into EnactmentReview only if the data array is not empty
-            if (!empty($data)) {
-                if (EnactmentReview::insert($data)) {
-                    $takmilshodeStatus = $this->enactmentCompleteStatus()->id;
-                    DB::table('enactment_status')->insert([
-                        'status_id' => $takmilshodeStatus,
-                        'enactment_id' => $this->encId,
-                    ]);
-                }
+            if (EnactmentReview::insert($data)) {
+                $takmilshodeStatus = $this->enactmentCompleteStatus()->id;
+                EnactmentStatus::create([
+                    'status_id' => $takmilshodeStatus,
+                    'enactment_id' => $this->encId,
+                ]);
             }
         }
 

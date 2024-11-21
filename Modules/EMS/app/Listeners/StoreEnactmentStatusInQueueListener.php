@@ -61,6 +61,7 @@ class StoreEnactmentStatusInQueueListener
 
 
             // Dispatch the job with the calculated delay
+
             StoreEnactmentStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayHeyat);
             StoreEnactmentStatusKarshenasJob::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
             AlertKarshenas::dispatch($enactmentStatus->enactment_id)->delay($alertKarshenasDelay);
