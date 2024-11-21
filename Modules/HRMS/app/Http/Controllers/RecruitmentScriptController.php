@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\AAA\app\Http\Traits\UserTrait;
-use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
@@ -614,22 +613,23 @@ class RecruitmentScriptController extends Controller
     {
         $script = RecruitmentScript::whereHas('status', function ($query) {
             $query->where('status_id', $this->pendingTerminateRsStatus()->id);
-        })->with('latestStatus', 'user')->find(1000);
+        })->with('latestStatus', 'user')->find($id);
         $terminateStatus = $this->terminatedRsStatus();
 
         if (is_null($script)) {
             return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
         }
 
-//        if ($script->latestStatus->id == $terminateStatus->id) {
-//            return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
-//        }
-        //$user = Auth::user();
-        $user = User::find(2172);
-        dd($script);
-        $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user);
-        return response()->json(['message' => 'حکم با موفقیت قطع همکاری شد']);
+        if ($script->latestStatus->id == $terminateStatus->id) {
+            return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
+        }
+        $user = Auth::user();
 
+
+        $date = convertJalaliPersianCharactersToGregorian($request->date);
+
+
+        $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID, $date);
         try {
             DB::beginTransaction();
 
