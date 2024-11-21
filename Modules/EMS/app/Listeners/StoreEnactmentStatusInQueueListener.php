@@ -64,8 +64,8 @@ class StoreEnactmentStatusInQueueListener
 
             StoreEnactmentStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayHeyat);
             StoreEnactmentStatusKarshenasJob::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
-            AlertKarshenas::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
-            AlertHeyaat::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
+            AlertKarshenas::dispatch($enactmentStatus->enactment_id)->delay($alertKarshenasDelay);
+            AlertHeyaat::dispatch($enactmentStatus->enactment_id)->delay($alertHeayaatDelay);
 
         }
         if ($this->enactmentPendingForHeyaatDateStatus()->id == $enactmentStatus->status_id) {

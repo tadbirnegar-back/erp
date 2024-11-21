@@ -52,13 +52,13 @@ trait EnactmentTrait
             $query->whereIntegerInRaw('ounit_id', $ounits);
         })
             ->whereHas('status', function ($query) {
-                $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
-                    ->join('statuses as s', 'rss.status_id', '=', 's.id')
+                $query->join('enactment_status as es', 'enactments.id', '=', 'es.enactment_id')
+                    ->join('statuses as s', 'es.status_id', '=', 's.id')
                     ->where('s.name', EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value)
-                    ->where('rss.create_date', function ($subQuery) {
+                    ->where('es.create_date', function ($subQuery) {
                         $subQuery->selectRaw('MAX(create_date)')
                             ->from('enactment_status as sub_rss')
-                            ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
+                            ->whereColumn('sub_rss.enactment_id', 'es.enactment_id');
                     });
             });
 
@@ -71,10 +71,12 @@ trait EnactmentTrait
             });
         }
 
-        if (!empty($data['meeting_date'])) {
-            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
-            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
-                $q->whereDate('meeting_date', $meetingDate);
+        if (!empty($data['startDate']) && !empty($data['endDate'])) {
+            $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
+
+            $query->whereHas('latestMeeting', function ($q) use ($dateStart, $dateEnd) {
+                $q->whereBetween('meeting_date', [$dateStart, $dateEnd]);
             });
         }
 
@@ -97,13 +99,13 @@ trait EnactmentTrait
             $query->whereIntegerInRaw('ounit_id', $ounits);
         })
             ->whereHas('status', function ($query) {
-                $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
-                    ->join('statuses as s', 'rss.status_id', '=', 's.id')
+                $query->join('enactment_status as es', 'enactments.id', '=', 'es.enactment_id')
+                    ->join('statuses as s', 'es.status_id', '=', 's.id')
                     ->where('s.name', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value)
-                    ->where('rss.create_date', function ($subQuery) {
+                    ->where('es.create_date', function ($subQuery) {
                         $subQuery->selectRaw('MAX(create_date)')
                             ->from('enactment_status as sub_rss')
-                            ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
+                            ->whereColumn('sub_rss.enactment_id', 'es.enactment_id');
                     });
             });
 
@@ -115,11 +117,12 @@ trait EnactmentTrait
                     });
             });
         }
+        if (!empty($data['startDate']) && !empty($data['endDate'])) {
+            $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
 
-        if (!empty($data['meeting_date'])) {
-            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
-            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
-                $q->whereDate('meeting_date', $meetingDate);
+            $query->whereHas('latestMeeting', function ($q) use ($dateStart, $dateEnd) {
+                $q->whereBetween('meeting_date', [$dateStart, $dateEnd]);
             });
         }
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
@@ -139,18 +142,25 @@ trait EnactmentTrait
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
         })
-            ->whereHas('status', function ($query) use ($statuses) {
+            ->whereHas('status', function ($query) use ($data, $statuses) {
                 $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
                     ->join('statuses as s', 'rss.status_id', '=', 's.id')
-                    ->when($statuses, function ($query) use ($statuses) {
+                    // Apply condition based on the 'statusID' from $data if it's not empty
+                    ->when(!empty($data['statusID']), function ($query) use ($data) {
+                        $query->where('s.id', $data['statusID']);
+                    })
+                    // Apply condition based on the $statuses if it is not null or empty
+                    ->when(!empty($statuses), function ($query) use ($statuses) {
                         $query->where('rss.status_id', $statuses);
                     })
+                    // Ensure that the most recent 'create_date' is selected
                     ->where('rss.create_date', function ($subQuery) {
                         $subQuery->selectRaw('MAX(create_date)')
                             ->from('enactment_status as sub_rss')
                             ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
                     });
             });
+
 
         $query->when($searchTerm, function ($query) use ($searchTerm) {
             $query->where(function ($query) use ($searchTerm) {
@@ -161,13 +171,23 @@ trait EnactmentTrait
             });
         });
 
-
-        if (!empty($data['meeting_date'])) {
-            $meetingDate = convertJalaliPersianCharactersToGregorian($data['meeting_date']);
-            $query->whereHas('latestMeeting', function ($q) use ($meetingDate) {
-                $q->whereDate('meeting_date', $meetingDate);
+        if (!empty($data['reviewStatusID']) && !empty($data['reviewStatusID'])) {
+            $query->whereHas('reviewStatus', function ($query) use ($data) {
+                $query->where('statuses.id', $data['reviewStatusID']);
             });
         }
+
+
+        if (!empty($data['startDate']) && !empty($data['endDate'])) {
+            $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
+
+            $query->whereHas('latestMeeting', function ($q) use ($dateStart, $dateEnd) {
+                $q->whereBetween('meeting_date', [$dateStart, $dateEnd]);
+            });
+        }
+
+
         return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);

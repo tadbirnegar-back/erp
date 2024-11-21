@@ -73,7 +73,7 @@
     },
     {
         "name": "افزودن دپارتمان",
-        "slug": "/oms/make/department",
+        "slug": "/oms/department/add",
         "moduleName": "OuinitMS",
         "permissionTypeName": "sidebar"
     },

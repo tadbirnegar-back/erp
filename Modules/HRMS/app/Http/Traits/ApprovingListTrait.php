@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\ConfirmationType;
-use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Models\ScriptApprovingList;
@@ -137,39 +136,39 @@ trait ApprovingListTrait
                 $nextApprovingList->status_id = self::pendingForCurrentUserStatus()->id;
                 $nextApprovingList->save();
             } else {
-                $script->status()->attach($this->activeRsStatus()->id);
+                $this->attachStatusToRs($script, $this->activeRsStatus());
 
-                $script->load([
-                    'organizationUnit',
-                    'scriptType.confirmationTypes',
-                    'employee.workForce',
-                    'position.roles',
-                ]);
-                if ($script->scriptType->isHeadable) {
-                    $user = $script->employee->person->user;
-                    $ounit = $script->organizationUnit;
-                    $ounit->head_id = $user->id;
-                    $ounit->save();
-                }
-
-
-                $status = Employee::GetAllStatuses()->firstWhere('id', $script->scriptType->employee_status_id);
-
-
-                $script->employee->workForce->statuses()->attach($status->id);
-
-                $position = $script->position;
-                $roles = $position->roles;
-                $scriptUser = $script->employee->person->user;
-                $userActiveStatus = User::GetAllStatuses()->firstWhere('name', 'فعال');
-//            $hasRole = $scriptUser->roles()->where('role_id', $role->id)->exists();
-
-                // Attach the role to the user if they do not have it
-//            if (!$hasRole) {
-                $scriptUser->roles()->sync($roles->pluck('id')->toArray());
-//            }
-
-                $scriptUser->statuses()->attach($userActiveStatus->id);
+//                $script->load([
+//                    'organizationUnit',
+//                    'scriptType.confirmationTypes',
+//                    'employee.workForce',
+//                    'position.roles',
+//                ]);
+//                if ($script->scriptType->isHeadable) {
+//                    $user = $script->employee->person->user;
+//                    $ounit = $script->organizationUnit;
+//                    $ounit->head_id = $user->id;
+//                    $ounit->save();
+//                }
+//
+//
+//                $status = Employee::GetAllStatuses()->firstWhere('id', $script->scriptType->employee_status_id);
+//
+//
+//                $script->employee->workForce->statuses()->attach($status->id);
+//
+//                $position = $script->position;
+//                $roles = $position->roles;
+//                $scriptUser = $script->employee->person->user;
+//                $userActiveStatus = User::GetAllStatuses()->firstWhere('name', 'فعال');
+////            $hasRole = $scriptUser->roles()->where('role_id', $role->id)->exists();
+//
+//                // Attach the role to the user if they do not have it
+////            if (!$hasRole) {
+//                $scriptUser->roles()->sync($roles->pluck('id')->toArray());
+////            }
+//
+//                $scriptUser->statuses()->attach($userActiveStatus->id);
 
             }
 

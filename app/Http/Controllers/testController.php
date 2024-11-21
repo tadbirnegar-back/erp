@@ -16,10 +16,6 @@ class testController extends Controller
 
     public function run()
     {
-        EnactmentStatus::create([
-            'status_id' => 67,
-            'enactment_id' => 29
-        ]);
 //        $user = User::find(2172);
 //        $userRoles = $user->roles->pluck('name')->toArray();
 //

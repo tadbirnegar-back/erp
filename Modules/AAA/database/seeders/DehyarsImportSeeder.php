@@ -202,8 +202,7 @@ class DehyarsImportSeeder extends Seeder
                     }
                     $rs->create_date = $villager['rsDate'] ?? null;
                     $rs->save();
-                    $rs->status()->attach($status->id);
-
+                    $this->attachStatusToRs($rs, $status);
 //                    }else{
 //                        foreach ($empRses as $rs) {
 //                            $rs->organization_unit_id = $village->organizationUnit->id;

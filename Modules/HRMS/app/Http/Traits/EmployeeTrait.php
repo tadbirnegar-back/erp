@@ -297,7 +297,8 @@ trait EmployeeTrait
             return;
         }
         $status = RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', $statusName);
-        $parentScript->status()->attach($status->id);
+        $this->attachStatusToRs($parentScript, $status);
+
 
     }
 }
