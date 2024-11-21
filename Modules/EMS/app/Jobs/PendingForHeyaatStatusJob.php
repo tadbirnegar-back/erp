@@ -37,6 +37,5 @@ class PendingForHeyaatStatusJob implements ShouldQueue
             'status_id' => $takmilshodeStatus,
             'enactment_id' => $this->encId,
         ]);
-
     }
 }
