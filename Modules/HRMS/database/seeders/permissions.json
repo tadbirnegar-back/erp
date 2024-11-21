@@ -184,7 +184,8 @@
         "slug": "/hrm/rc/ptp/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
-
+    },
+    {
         "name": "درخواست انتصاب جدید",
         "slug": "/hrm/dehyar/request",
         "moduleName": "HRMS",

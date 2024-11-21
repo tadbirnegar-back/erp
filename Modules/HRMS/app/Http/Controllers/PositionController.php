@@ -126,8 +126,6 @@ class PositionController extends Controller
 
             $pos = $this->positionUpdate($data, $result);
 
-            return response()->json($pos);
-
             \DB::commit();
 
             return response()->json($pos);
