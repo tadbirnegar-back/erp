@@ -173,7 +173,7 @@ trait EnactmentTrait
 
         if (!empty($data['reviewStatusID']) && !empty($data['reviewStatusID'])) {
             $query->whereHas('reviewStatus', function ($query) use ($data) {
-                $query->where('statuses.id', $data['reviewStatusID']);
+                $query->where('status.id', $data['reviewStatusID']);
             });
         }
 
