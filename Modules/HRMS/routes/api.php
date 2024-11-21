@@ -160,3 +160,5 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::get('/hrm/rc/ptp/list', [RecruitmentScriptController::class, 'ptpIndex']);
 
 });
+Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
+Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
