@@ -62,8 +62,7 @@ class EnactmentController extends Controller
 
     public function indexArchive(Request $request): JsonResponse
     {
-//        $user = Auth::user();
-        $user = \Modules\AAA\app\Models\User::find(2119);
+        $user = Auth::user();
         try {
             $ounit = $user->load(['activeRecruitmentScript' => function ($q) {
                 $q->orderByDesc('recruitment_scripts.create_date')
