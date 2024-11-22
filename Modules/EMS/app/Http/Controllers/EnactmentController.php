@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
@@ -90,30 +91,19 @@ class EnactmentController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = Auth::user();
+//            $user = Auth::user();
+
+            //Todo: First Store Meeting
+            //Todo: secound Store Enactment
+            //Todo: Third Store Enactment_Meeting
+
+            $user = User::find(2119);
 
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
-            $data['meetingTypeID'] = MeetingType::where('title', '=', 'جلسه شورا روستا')->first()->id;
 
-            $meeting = $this->storeMeeting($data);
-            $meeting->load(['ounit.ancestors' => function ($query) {
-                $query->where('unitable_type', DistrictOfc::class)
-                    ->with('meetingTemplate');
-            }]);
-
-            $meetingTemplate = $meeting->ounit?->ancestors[0]?->meetingTemplate ?? null;
-            if (is_null($meetingTemplate)) {
-                return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
-            }
-//
-//            if (!is_null($meetingTemplate)) {
-//                foreach ($meetingTemplate->meetingMembers as $mm) {
-//                    $mm->replicate(['meeting_id' => $meeting->id])->save();
-//                }
-//            }
-
-            $enactment = $this->storeEnactment($data, $meeting);
+            $enactment = $this->storeEnactment($data);
+            return response()->json($enactment);
             $enactment->meetings()->attach($meeting->id);
 
             $files = json_decode($data['attachments'], true);
