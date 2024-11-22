@@ -133,7 +133,7 @@
     },
     {
         "name": "حکم های منقضی شده",
-        "slug": "/hrm/rc/list",
+        "slug": "/hrm/erc/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     },
@@ -180,8 +180,8 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "لیست در انتظار عزل",
-        "slug": "/hrm/rc/ptp/list",
+        "name": "لیست در انتظار قطع همکاری",
+        "slug": "/hrm/ptprc/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     },
