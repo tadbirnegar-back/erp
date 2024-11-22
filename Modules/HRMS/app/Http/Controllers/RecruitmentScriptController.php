@@ -17,6 +17,7 @@ use Modules\HRMS\app\Http\Traits\ScriptTypeTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\Job;
+use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\DeclineRsNotification;
@@ -134,7 +135,7 @@ class RecruitmentScriptController extends Controller
 
         if ($user->hasPermissionForRoute($requestedRoute) || $script->employee->person->id == $user->person->id) {
 
-            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position.levels', 'level', 'scriptAgents', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason');
+            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position.levels', 'level', 'scriptAgents', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason.person.avatar');
         } else {
             return response()->json(['message' => 'شما به این بخش دسترسی ندارید'], 403);
         }
@@ -431,7 +432,6 @@ class RecruitmentScriptController extends Controller
         }
     }
 
-
     public function RejectRecruitmentScript(Request $request, $id)
     {
 
@@ -543,6 +543,15 @@ class RecruitmentScriptController extends Controller
 
         $abadiCode = $request->input('abadiCode');
         $village = VillageOfc::with('organizationUnit.ancestors', 'organizationUnit.person.avatar')->where('abadi_code', $abadiCode)->first();
+
+        if (is_null($village)) {
+            return response()->json(['message' => 'روستایی با کد آبادی مورد نظر یافت نشد'], 404);
+        }
+
+        if ($village->organizationUnit->head_id == Auth::user()->id) {
+            return response()->json(['message' => 'این روستا قبلا برای شما ثبت شده است'], 400);
+        }
+
         return response()->json($village);
     }
 
@@ -581,6 +590,7 @@ class RecruitmentScriptController extends Controller
             $data['jobID'] = $job->id;
             $data['operatorID'] = $user->id;
             $data['scriptAgents'] = $encodedSas;
+            $data['positionID'] = Position::where('name', 'دهیار')->first()->id;
 //        }
             $pendingRsStatus =
 //                    $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
@@ -596,7 +606,7 @@ class RecruitmentScriptController extends Controller
             DB::commit();
             return response()->json($rsRes);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'خطا در افزودن حکم'], 500);
+            return response()->json(['message' => 'خطا در افزودن حکم', $e->getMessage(), $e->getTrace()], 500);
         }
 
     }

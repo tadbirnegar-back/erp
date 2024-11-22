@@ -260,6 +260,8 @@ class EmployeeController extends Controller
                     $script['jobID'] = $job->id;
                     $script['operatorID'] = $user->id;
                     $script['scriptAgents'] = $encodedSas;
+                    $script['positionID'] = Position::where('name', 'دهیار')->first()->id;
+
                 }
                 $pendingRsStatus =
 //                    $scriptType->employeeStatus->name == self::$pendingEmployeeStatus

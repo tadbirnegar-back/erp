@@ -12,7 +12,7 @@ use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, EMSSettingTrait;
+    use PaymentRepository, ApprovingListTrait;
 
     public function run()
     {
@@ -113,6 +113,7 @@ class testController extends Controller
 //        dd(
 //            $a
 //        );
+
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //

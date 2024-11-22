@@ -132,6 +132,14 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::put('/hrm/rc/service-end/{id}', [RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
 
+    Route::put('/hrm/rc/cancel/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cancelRscript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/renew/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/terminate/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/service-end/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
+
 
     Route::post('/hrm/rc/add', [RecruitmentScriptController::class, 'store']);
 

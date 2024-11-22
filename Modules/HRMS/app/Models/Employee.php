@@ -33,7 +33,7 @@ class Employee extends Model
     {
         return $this->hasOneDeep(
             User::class,                // The target model you want to access
-            [Workforce::class, Person::class], // Intermediate models
+            [WorkForce::class, Person::class], // Intermediate models
             [
                 'workforceable_id',     // Foreign key on the `workforces` table...
                 'id',                   // Foreign key on the `persons` table...

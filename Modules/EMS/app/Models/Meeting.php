@@ -57,7 +57,6 @@ class Meeting extends Model
     }
 
 
-
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
@@ -97,7 +96,7 @@ class Meeting extends Model
 //    {
 //        return $this->hasManyDeep(
 //            Person::class,
-//            [MeetingMember::class, Employee::class, Workforce::class],
+//            [MeetingMember::class, Employee::class, WorkForce::class],
 //            [
 //                'meeting_id', // Foreign key on the meeting_members table...
 //                'id', // Foreign key on the employees table...
