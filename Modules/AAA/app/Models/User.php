@@ -198,7 +198,7 @@ class User extends Authenticatable
     {
         return $this->hasOneDeep(
             Employee::class,
-            [Person::class, Workforce::class],
+            [Person::class, WorkForce::class],
             [
                 'id', // Foreign key on the persons table...
                 'person_id', // Foreign key on the workforces table...
@@ -257,7 +257,7 @@ class User extends Authenticatable
     {
         return $this->hasManyDeep(
             RecruitmentScript::class,
-            [Person::class, Workforce::class, Employee::class],
+            [Person::class, WorkForce::class, Employee::class],
             [
                 'id', // Foreign key on the persons table...
                 'person_id', // Foreign key on the workforces table...

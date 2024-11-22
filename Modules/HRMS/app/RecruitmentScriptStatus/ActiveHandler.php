@@ -41,7 +41,7 @@ class ActiveHandler implements StatusHandlerInterface
         $script = $this->script;
         $roles = $script->position->roles;
         $scriptUser = $script->user;
-        $scriptUser->roles()->sync($roles->pluck('id')->toArray());
+        $scriptUser->roles()->attach($roles->pluck('id')->toArray());
 
     }
 
@@ -61,13 +61,17 @@ class ActiveHandler implements StatusHandlerInterface
         if ($script->scriptType->isHeadable) {
             $script->load('organizationUnit.person.employee');
             if ($script->organizationUnit?->person) {
-                $oldScript = RecruitmentScript::where('organization_unit_id', $script->organizationUnit->id)->where('employee_id', $script->organizationUnit?->person?->employee->id);
+                $oldScript = RecruitmentScript::where('organization_unit_id', $script->organizationUnit->id)
+                    ->where('employee_id', $script->organizationUnit->head->employee->id)
+                    ->first();
 
-                RecruitmentScriptStatus::create([
-                    'recruitment_script_id' => $oldScript->id,
-                    'status_id' => $this->pendingTerminateRsStatus()->id,
-                    'operator_id' => $this->user?->id ?? null,
-                ]);
+                if ($oldScript) {
+                    RecruitmentScriptStatus::create([
+                        'recruitment_script_id' => $oldScript->id,
+                        'status_id' => $this->pendingTerminateRsStatus()->id,
+                        'operator_id' => $this->user?->id ?? null,
+                    ]);
+                }
             }
 
         }

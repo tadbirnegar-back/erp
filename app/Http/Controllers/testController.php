@@ -3,12 +3,8 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
-use Modules\EMS\app\Http\Enums\RolesEnum;
-use Modules\EMS\app\Models\Enactment;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\HRMS\app\Models\ScriptType;
 
 
 class testController extends Controller
@@ -17,11 +13,7 @@ class testController extends Controller
 
     public function run()
     {
-        $a = RecruitmentScript::with('user')->find(1200);
 
-        dd(
-            $a
-        );
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);

@@ -7,7 +7,7 @@ use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Models\FileScript;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\recruitmentScriptStatus;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\StatusMS\app\Models\Status;
 
@@ -248,11 +248,11 @@ trait RecruitmentScriptTrait
         return $rsStatus;
     }
 
-    public function declineRs(RecruitmentScript $rs, string $description)
+    public function declineRs(RecruitmentScript $rs, string $description, ?User $user = null)
     {
 
         $deleteStatus = $this->rejectedRsStatus();
-        $this->attachStatusToRs($rs, $deleteStatus, $description);
+        $this->attachStatusToRs($rs, $deleteStatus, $description, $user);
 
         return true;
 
@@ -277,6 +277,11 @@ trait RecruitmentScriptTrait
     public function cancelRsStatus()
     {
         return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::CANCELED->value);
+    }
+
+    public function pendingTerminateRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value);
     }
 
     public function getComponentsToRenderSinglePage(RecruitmentScript $script, User $user)

@@ -9,6 +9,7 @@ use Modules\HRMS\app\Models\ConfirmationType;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Models\ScriptApprovingList;
+use Modules\OUnitMS\app\Models\StateOfc;
 
 trait ApprovingListTrait
 {
@@ -32,7 +33,11 @@ trait ApprovingListTrait
                 'script.employee.person'
                 , 'status',
                 'script.scriptType'
-                , 'script.hireType'])->distinct()->get();
+                , 'script.hireType',
+                'script.organizationUnit.ancestors' => function ($query) {
+                    $query->where('unitable_type', '!=', StateOfc::class);
+                }
+            ])->distinct()->get();
 
 
         return $result;
@@ -217,7 +222,7 @@ trait ApprovingListTrait
         ]);
 
         // Call the declineRs method and return based on its result
-        $inactiveRs = $this->declineRs($script, $reason);
+        $inactiveRs = $this->declineRs($script, $reason, $user);
 
 
         return $inactiveRs;
