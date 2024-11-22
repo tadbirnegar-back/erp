@@ -133,7 +133,7 @@
     },
     {
         "name": "حکم های منقضی شده",
-        "slug": "/hrm/expired/scripts",
+        "slug": "/hrm/erc/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     },
