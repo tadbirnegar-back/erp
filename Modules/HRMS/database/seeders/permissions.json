@@ -181,7 +181,7 @@
     },
     {
         "name": "لیست در انتظار قطع همکاری",
-        "slug": "/hrm/erc/list",
+        "slug": "/hrm/ptprc/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     },
