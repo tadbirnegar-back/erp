@@ -202,5 +202,17 @@
         "slug": "/hrm/request-new-village",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "نمایش یک حکم عزل شده",
+        "slug": "/hrm/rc/ptp/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید عزل حکم",
+        "slug": "/hrm/rc/ptp/terminate/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
     }
 ]

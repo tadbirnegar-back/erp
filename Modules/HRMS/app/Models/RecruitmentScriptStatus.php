@@ -32,6 +32,7 @@ class RecruitmentScriptStatus extends Model
         'create_date',
         'description',
         'operator_id',
+        'attachment_id'
     ];
 
     protected static function boot()

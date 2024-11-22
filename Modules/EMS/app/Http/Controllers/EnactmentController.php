@@ -70,7 +70,10 @@ class EnactmentController extends Controller
                     ->with('organizationUnit.descendantsAndSelf');
             }])?->activeRecruitmentScript[0]?->organizationUnit->descendantsAndSelf->pluck('id')->toArray();
             $data = $request->all();
-            $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounit);
+            $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounit, $user->id);
+
+            return response()->json($enactments);
+
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
             return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews]);

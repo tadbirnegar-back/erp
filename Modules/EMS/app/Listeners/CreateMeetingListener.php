@@ -21,16 +21,19 @@ class CreateMeetingListener
      */
     public function handle($event): void
     {
-        $meetingDate = $event->meeting->meeting_date;
+        if ($event->meeting->meetingType->title == "جلسه هیئت تطبیق") {
+            $meetingDate = $event->meeting->meeting_date;
 
-        $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($meetingDate, true);
-        $gregorianDate = CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString);
-        $targetDate = Carbon::parse($gregorianDate);
-        $currentDate = Carbon::now();
-        $delayInSeconds = $targetDate->diffInSeconds($currentDate, false); // false for negative values
-        $delayInSeconds -= 86400;
-        if ($delayInSeconds > 0) {
-            dispatch(new StoreMeetingJob($event->meeting))->delay($delayInSeconds);
+            $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($meetingDate, true);
+            $gregorianDate = CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString);
+            $targetDate = Carbon::parse($gregorianDate);
+            $currentDate = Carbon::now();
+            $delayInSeconds = $targetDate->diffInSeconds($currentDate, false); // false for negative values
+            $delayInSeconds -= 86400;
+            if ($delayInSeconds > 0) {
+                dispatch(new StoreMeetingJob($event->meeting))->delay($delayInSeconds);
+            }
         }
+
     }
 }
