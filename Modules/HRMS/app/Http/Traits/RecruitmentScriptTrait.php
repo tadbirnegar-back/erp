@@ -250,11 +250,11 @@ trait RecruitmentScriptTrait
         return $rsStatus;
     }
 
-    public function declineRs(RecruitmentScript $rs, string $description)
+    public function declineRs(RecruitmentScript $rs, string $description, ?User $user = null)
     {
 
         $deleteStatus = $this->rejectedRsStatus();
-        $this->attachStatusToRs($rs, $deleteStatus, $description);
+        $this->attachStatusToRs($rs, $deleteStatus, $description, $user);
 
         return true;
 
@@ -279,6 +279,11 @@ trait RecruitmentScriptTrait
     public function cancelRsStatus()
     {
         return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::CANCELED->value);
+    }
+
+    public function pendingTerminateRsStatus()
+    {
+        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value);
     }
 
     public function getComponentsToRenderSinglePage(RecruitmentScript $script, User $user)
@@ -310,11 +315,6 @@ trait RecruitmentScriptTrait
         })->pluck('component');
 
         return $result->isNotEmpty() ? $result : collect(['NoBtn']);
-    }
-
-    public function pendingTerminateRsStatus()
-    {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value);
     }
 
 }

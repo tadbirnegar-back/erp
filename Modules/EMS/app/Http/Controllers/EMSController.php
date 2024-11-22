@@ -78,30 +78,30 @@ class EMSController extends Controller
 
             'نماینده قوه قضائیه (عضو هیات تطبیق)' => [
                 [
-                    'scriptType' => 'انتصاب پیشفرض',
+                    'scriptType' => 'انتصاب هیئت تطبیق',
                     'hireType' => 9,
                     'job' => 'عضو هیئت',
-                    'position' => RolesEnum::OZV_HEYAAT->value,
+                    'position' => 'نماینده قوه قضائیه',
                     'levelID' => 1,
 
                 ]
             ],
             'بخشدار (عضو هیات تطبیق)' => [
                 [
-                    'scriptType' => 'انتصاب پیشفرض',
+                    'scriptType' => 'انتصاب هیئت تطبیق',
                     'hireType' => 9,
                     'job' => 'عضو هیئت',
-                    'position' => RolesEnum::OZV_HEYAAT->value,
+                    'position' => 'بخشدار',
                     'levelID' => 1,
 
                 ]
             ],
             'عضو شورای شهرستان (عضو هیات تطبیق)' => [
                 [
-                    'scriptType' => 'انتصاب پیشفرض',
+                    'scriptType' => 'انتصاب هیئت تطبیق',
                     'hireType' => 9,
                     'job' => 'عضو هیئت',
-                    'position' => RolesEnum::OZV_HEYAAT->value,
+                    'position' => 'عضو شورای شهرستان',
                     'levelID' => 1,
 
                 ]
@@ -110,10 +110,10 @@ class EMSController extends Controller
             'کارشناس مشورتی (کارشناس هیات تطبیق)' => [
                 [
                     'job' => 'کارشناس مشورتی',
-                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
+                    'position' => 'کارشناس مشورتی',
                     'levelID' => 1,
                     'hireType' => 9,
-                    'scriptType' => 'انتصاب پیشفرض',
+                    'scriptType' => 'انتصاب هیئت تطبیق',
 
 
                 ]
@@ -121,23 +121,16 @@ class EMSController extends Controller
             'نماینده استانداری (کارشناس هیات تطبیق)' => [
                 [
                     'job' => 'کارشناس مشورتی',
-                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
+                    'position' => 'نماینده استانداری',
                     'levelID' => 1,
                     'hireType' => 9,
-                    'scriptType' => 'انتصاب پیشفرض',
+                    'scriptType' => 'انتصاب هیئت تطبیق',
                 ]
             ],
             'مسئول دبیرخانه و دبیر تطبیق (کارشناس هیات تطبیق)' => [
                 [
-                    'job' => 'کارشناس مشورتی',
-                    'position' => RolesEnum::KARSHENAS_MASHVARATI->value,
-                    'levelID' => 1,
-                    'hireType' => 9,
-                    'scriptType' => 'انتصاب پیشفرض',
-                ],
-                [
                     'job' => 'مسئول دبیرخانه',
-                    'position' => RolesEnum::DABIR_HEYAAT->value,
+                    'position' => 'مسئول دبیرخانه',
                     'levelID' => 1,
                     'hireType' => 9,
                     'scriptType' => 'انتصاب دبیر',
@@ -242,9 +235,6 @@ class EMSController extends Controller
 
             $rsRes = $this->rsStore($rs, $employee->id, $pendingRsStatus);
 
-//            if ($pendingRsStatus) {
-//                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
-//            }
 
             $username = Person::find($user->person_id)->display_name;
 

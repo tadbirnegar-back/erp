@@ -5,18 +5,24 @@ namespace App\Http\Controllers;
 
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
+use Modules\EMS\app\Models\Meeting;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, EMSSettingTrait;
+    use PaymentRepository, ApprovingListTrait;
 
     public function run()
     {
 
-
+        Meeting::create([
+            'isTemplate' => true,
+            'creator_id' => 2172,
+            'meeting_type_id' => 2,
+            'ounit_id' => 3889,
+        ]);
 //        $user = User::find(2172);
 //        $userRoles = $user->roles->pluck('name')->toArray();
 //
@@ -107,6 +113,7 @@ class testController extends Controller
 //        dd(
 //            $a
 //        );
+
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //
