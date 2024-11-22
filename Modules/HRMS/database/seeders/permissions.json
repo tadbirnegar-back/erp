@@ -133,7 +133,7 @@
     },
     {
         "name": "حکم های منقضی شده",
-        "slug": "/hrm/expired/scripts",
+        "slug": "/hrm/rc/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     },
@@ -180,7 +180,7 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "لیست در انتظار قطع همکاری",
+        "name": "لیست در انتظار عزل",
         "slug": "/hrm/rc/ptp/list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
@@ -200,6 +200,18 @@
     {
         "name": "ثبت درخواست انتصاب دهیاری جدید",
         "slug": "/hrm/request-new-village",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "نمایش یک حکم عزل شده",
+        "slug": "/hrm/rc/ptp/{id}",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید عزل حکم",
+        "slug": "/hrm/rc/ptp/terminate/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
     }

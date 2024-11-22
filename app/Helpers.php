@@ -53,8 +53,3 @@ function convertJalaliPersianCharactersToGregorian(string $perisanCharDate)
     return $dateTimeString;
 }
 
-
-function HumanReadableDate(string $date)
-{
-
-}

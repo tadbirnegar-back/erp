@@ -611,4 +611,44 @@ class RecruitmentScriptController extends Controller
 
     }
 
+    public function ptpShow($id)
+    {
+        $rs = RecruitmentScript::whereHas('status', function ($query) {
+            $query->where('status_id', $this->pendingTerminateRsStatus()->id);
+        })->find($id);
+        return response()->json($rs);
+    }
+
+    public function ptpTerminate(Request $request, $id)
+    {
+        $script = RecruitmentScript::whereHas('status', function ($query) {
+            $query->where('status_id', $this->pendingTerminateRsStatus()->id);
+        })->with('latestStatus', 'user')->find($id);
+        $terminateStatus = $this->terminatedRsStatus();
+
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+
+        if ($script->latestStatus->id == $terminateStatus->id) {
+            return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
+        }
+        $user = Auth::user();
+
+
+        $date = convertJalaliPersianCharactersToGregorian($request->date);
+
+
+        $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID, $date);
+        try {
+            DB::beginTransaction();
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در قطع همکاری حکم'], 500);
+
+        }
+    }
+
 }

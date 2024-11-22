@@ -30,7 +30,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::get('/hrm/employee/list/filter', [EmployeeController::class, 'employeeListFilter']);
     Route::get('/hrm/setting', [HRMConfigController::class, 'configList']);
 
-    Route::post('/hrm/expired/scripts', [RecruitmentScriptController::class, 'indexExpiredScripts']);
+    Route::post('/hrm/rc/list', [RecruitmentScriptController::class, 'indexExpiredScripts']);
 
 });
 
@@ -167,4 +167,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::get('/hrm/rc/ptp/list', [RecruitmentScriptController::class, 'ptpIndex']);
 
+    Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
+
+    Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
+
 });
+
