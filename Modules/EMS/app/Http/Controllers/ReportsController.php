@@ -9,9 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
+use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\OUnitMS\app\Models\StateOfc;
 
 class ReportsController extends Controller
 {
@@ -55,7 +57,9 @@ class ReportsController extends Controller
                 $q->with(['enactmentReviews' => function ($qq) use ($employeeId) {
                     $qq->where('user_id', $employeeId)
                         ->with(['status']);
-                }, 'title', 'latestMeeting', 'status']);
+                }, 'title', 'latestMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
+                    $q->where('unitable_type', '!=', StateOfc::class);
+                }]);
             }])
             ->with(['meetingMembers' => function ($query) use ($employeeId) {
                 $query->where('employee_id', $employeeId)->with('mr');
@@ -202,5 +206,108 @@ class ReportsController extends Controller
         ];
 
         return response()->json($response);
+    }
+
+    public function cityEnactmentReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'startDate' => 'required',
+            'endDate' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $startDate = convertJalaliPersianCharactersToGregorian($request->input('startDate'));
+
+        $endDate = convertJalaliPersianCharactersToGregorian
+        ($request->input('endDate'));
+
+        $user = Auth::user();
+
+        try {
+            $user->load('activeCityRecruitmentScript.ounit');
+
+            /**
+             * @var RecruitmentScript $rs
+             */
+            $rs = $user->activeCityRecruitmentScript->first();
+
+            if (!$rs) {
+                return response()->json(['message' => 'شما حکم فعالی مرتبط به فرمانداری ندارید'], 404);
+            }
+
+            $childOunits = $rs->ounit;
+
+            $meetingType = MeetingType::where('title', 'جلسه هیئت تطبیق')->first();
+
+            $ounit = $childOunits->load(['children.meetings' => function ($query) use ($meetingType, $startDate, $endDate) {
+                $query->whereBelongsTo($meetingType, 'meetingType')
+                    ->where('isTemplate', false)
+                    ->whereBetween('meeting_date', [$startDate, $endDate])
+                    ->with(['enactments' => function ($q) {
+                        $q->with(['enactmentReviews' => function ($qq) {
+                            $qq->with(['status']);
+                        }, 'title', 'latestMeeting', 'status']);
+                    }]);
+            }]);
+
+
+            $childData = $ounit->children->map(function ($child) {
+                $meetingsCount = $child->meetings->count();
+
+                $enactmentsGrouped = $child->meetings->flatMap(function ($meeting) {
+                    return $meeting->enactments;
+                })->groupBy('status.name')->map->count();
+
+                $enactmentsGroupedByUpShot = $child->meetings
+                    ->flatMap(fn($meeting) => $meeting->enactments) // Collect all enactments
+                    ->groupBy(fn(Enactment $enactment) => $enactment->upshot->name) // Group by upshot name
+                    ->map(fn($group) => $group->count()); // Count each group
+
+
+                $reviewsGrouped = $child->meetings->flatMap(function ($meeting) {
+                    return $meeting->enactments->flatMap(function ($enactment) {
+                        $reviews = $enactment->enactmentReviews;
+
+                        // Check if the enactment has less than 6 reviews
+                        $missingReviews = 6 - $reviews->count();
+
+                        // Add a 'noVote' entry if there are missing reviews
+                        if ($missingReviews > 0) {
+                            $noVote = collect([
+                                (object)[
+                                    'status' => (object)['name' => 'در انتظار راب'],
+                                    'count' => $missingReviews,
+                                ]
+                            ]);
+                            return $reviews->concat($noVote);
+                        }
+
+                        return $reviews;
+                    });
+                })->groupBy('status.name')->map(function ($group) {
+                    // Sum up the counts for 'noVote' or other entries
+                    return $group->sum(function ($item) {
+                        return $item->count ?? 1; // Default to 1 if 'count' is not defined
+                    });
+                });
+
+
+                return [
+                    'name' => $child->name,
+                    'meetings_count' => $meetingsCount,
+                    'enactments_grouped' => $enactmentsGrouped,
+                    'reviews_grouped' => $reviewsGrouped,
+                    'upshot_report' => $enactmentsGroupedByUpShot
+                ];
+            });
+
+            return response()->json($childData);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
     }
 }

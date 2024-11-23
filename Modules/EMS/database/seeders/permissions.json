@@ -72,10 +72,16 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "گزارش وضئیت هیئت",
+        "name": "گزارش وضعیت هیئت",
         "slug": "/mes/reports/district-report",
         "moduleName": "EMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "گزارش وضعیت فرمانداری",
+        "slug": "/mes/reports/city-report",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
     },
     {
         "name": "لیست اعضای هیئت بخشداری",
