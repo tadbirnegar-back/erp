@@ -10,15 +10,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Enactment;
+use Modules\EMS\app\Models\EnactmentMeeting;
 use Modules\EMS\app\Models\EnactmentReview;
 use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -89,38 +92,98 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $user = Auth::user();
-
+//            $user = User::find(2086);
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
-            $data['meetingTypeID'] = MeetingType::where('title', '=', 'جلسه شورا روستا')->first()->id;
+            if (isset($data['meetingID'])) {
+                $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
-            $meeting = $this->storeMeeting($data);
-            $meeting->load(['ounit.ancestors' => function ($query) {
-                $query->where('unitable_type', DistrictOfc::class)
-                    ->with('meetingTemplate');
-            }]);
+                $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $data['meetingID'])
+                    ->distinct('enactment_id')
+                    ->count('enactment_id');
 
-            $meetingTemplate = $meeting->ounit?->ancestors[0]?->meetingTemplate ?? null;
-            if (is_null($meetingTemplate)) {
-                return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
+                if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
+                    return response()->json([
+                        "message" => "جلسه انتخاب شده تکمیل ظرفیت شده است."
+                    ], 422);
+                }
+
+                $meeting = Meeting::find($data['meetingID']);
+
+                $enactment = $this->storeEnactment($data, $meeting);
+                $enactment->meetings()->attach($meeting->id);
+                //Shura Meeting
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
+                $data['ounitID'] = $meeting->ounit_id;
+                $data['title'] = $meeting->title;
+                $data['meeting_detail'] = $meeting->meeting_detail;
+                $data['meeting_number'] = $meeting->meeting_number;
+                $data['isTemplate'] = $meeting->isTemplate;
+                $data['summary'] = $meeting->summary;
+                $data['parent_id'] = $meeting->parent_id;
+                $data['meetingDate'] = $data['shuraDate'];
+                $meetingShura = $this->storeMeeting($data);
+
+
+                foreach ($meeting->meetingMembers as $mm) {
+                    $newMember = $mm->replicate();
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
+                }
+
+                $enactment->meetings()->attach($meetingShura->id);
+            } else if (isset($data['meetingDate'])) {
+                $meetingDate = $data['meetingDate'];
+                $data['meetingDate'] = $data['shuraDate'];
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
+                $meetingShura = $this->storeMeeting($data);
+
+                $data['meetingID'] = $meetingDate;
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING)->first()->id;
+                $meetingHeyaat = $this->storeMeeting($data);
+
+                //Make Enactments
+
+                $enactment = $this->storeEnactment($data, $meetingShura);
+                $enactment->meetings()->attach($meetingShura->id);
+                $enactment->meetings()->attach($meetingHeyaat->id);
+
+
+                $files = json_decode($data['attachments'], true);
+
+                $this->attachFiles($enactment, $files);
+
+                $meetingTemplate = $meetingShura->ounit?->ancestors[0]?->meetingTemplate ?? null;
+
+                if (is_null($meetingTemplate)) {
+                    return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
+                } else {
+                    // Check if members already exist
+                    $existingMembers = MeetingMember::where('meeting_id', $meetingHeyaat->id)->count();
+                    if ($existingMembers > 0) {
+                        return response()->json(['message' => 'Meeting members already exist for this meeting.'], 400);
+                    }
+
+                    foreach ($meetingTemplate->meetingMembers as $mm) {
+                        $newMember = $mm->replicate();
+                        $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
+                        $newMember->save();
+
+
+                        $newMember = $mm->replicate();
+                        $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                        $newMember->save();
+                    }
+
+                }
             }
-//
-//            if (!is_null($meetingTemplate)) {
-//                foreach ($meetingTemplate->meetingMembers as $mm) {
-//                    $mm->replicate(['meeting_id' => $meeting->id])->save();
-//                }
-//            }
 
-            $enactment = $this->storeEnactment($data, $meeting);
-            $enactment->meetings()->attach($meeting->id);
-
-            $files = json_decode($data['attachments'], true);
-            $this->attachFiles($enactment, $files);
             DB::commit();
             return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مصوبه جدید'], 500);
+            return response()->json(['message' => 'خطا در ثبت مصوبه جدید', 'error' => $exception->getMessage(),
+            ], 500);
         }
     }
 
