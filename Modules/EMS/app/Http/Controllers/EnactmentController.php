@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
@@ -89,61 +90,56 @@ class EnactmentController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            DB::beginTransaction();
+//            DB::beginTransaction();
             $data = $request->all();
 //            $user = Auth::user();
             $user = User::find(2086);
-            return response()->json($user);
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             if (isset($data['meetingID'])) {
                 $meeting = Meeting::find($data['meetingID']);
-                return response()->json($meeting);
                 $enactment = $this->storeEnactment($data, $meeting);
                 $enactment->meetings()->attach($meeting->id);
-//                $enactment->meeting_id = $meeting->id;
-//                $enactment->save();
-            } elseif (isset($data['meetingDate'])) {
-                $meeting = $this->storeMeeting($data);
-                $enactment = $this->storeEnactment($data, $meeting);
+            } else if (isset($data['meetingDate'])) {
+                $meetingDate = $data['meetingDate'];
+                $data['meetingDate'] = $data['shuraDate'];
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
+                $meetingShura = $this->storeMeeting($data);
+
+                $data['meetingID'] = $meetingDate;
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING)->first()->id;
+                $meetingHeyaat = $this->storeMeeting($data);
+
+                //Make Enactments
+
+                $enactment = $this->storeEnactment($data, $meetingShura);
+                $enactment->meetings()->attach($meetingShura->id);
+                $enactment->meetings()->attach($meetingHeyaat->id);
+
+
                 $files = json_decode($data['attachments'], true);
+
                 $this->attachFiles($enactment, $files);
 
-                $villageID = $enactment->meeting->ounit_id;
-                $data['creatorID'] = $user->id;
-                $data['meetingTypeID'] = MeetingType::where('title', '=', 'جلسه هیئت تطبیق')->first()->id;
 
-                $villageWithDistrict = OrganizationUnit::with(['ancestors' => function ($q) {
-                    $q->where('unitable_type', DistrictOfc::class);
+                return response()->json($files);
 
-                }])->find($villageID);
-
-                $data['ounitID'] = $villageWithDistrict->ancestors[0]->id;
-                $enactment->meetings()->attach($meeting->id);
-
-//                $enactment->meeting_id = $meeting->id;
-//                $enactment->save();
-
-                $meetingTemplate = Meeting::where('isTemplate', true)
-                    ->where('ounit_id', $data['ounitID'])
-                    ->with('meetingMembers')->first();
-
-
-                if (!is_null($meetingTemplate)) {
-                    foreach ($meetingTemplate->meetingMembers as $mm) {
-                        $newMM = $mm->replicate();
-                        $newMM->meeting_id = $meeting->id;
-                        $newMM->save();
-                    }
-                }
+//                if (!is_null($meetingTemplate)) {
+//                    foreach ($meetingTemplate->meetingMembers as $mm) {
+//                        $newMM = $mm->replicate();
+//                        $newMM->meeting_id = $meeting->id;
+//                        $newMM->save();
+//                    }
+//                }
 
             }
 
-            DB::commit();
+//            DB::commit();
             return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
         } catch (\Exception $exception) {
-            DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مصوبه جدید'], 500);
+//            DB::rollBack();
+            return response()->json(['message' => 'خطا در ثبت مصوبه جدید', 'error' => $exception->getMessage(),
+            ], 500);
         }
     }
 

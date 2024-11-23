@@ -624,15 +624,14 @@ trait EnactmentTrait
                 'creator',
                 'title',
                 'meeting.ounit.unitable',
-
-                // ConsultingReviewCards logic
-                'consultingMembers.enactmentReviews.user.employee.signatureFile' => function ($query) use ($enactment) {
-                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment'])
+                        ->with('user.employee.signatureFile');
                 },
-
                 // BoardReviewCards logic
-                'boardMembers.enactmentReviews.user.employee.signatureFile' => function ($query) use ($enactment) {
-                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+                'boardMembers.enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment'])
+                        ->with('user.employee.signatureFile');
                 },
             ],
         ]);
