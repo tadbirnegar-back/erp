@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Http\Traits\EnactmentTrait;
+use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
@@ -21,6 +25,7 @@ class testController extends Controller
 //            'meeting_type_id' => 2,
 //            'ounit_id' => 3889,
 //        ]);
+
 //        $user = User::find(2172);
 //        $userRoles = $user->roles->pluck('name')->toArray();
 //
@@ -52,45 +57,12 @@ class testController extends Controller
 //
 //                // BoardReviewCards logic
 //                'boardMembers.enactmentReviews' => function ($query) use ($enactment) {
+
 //                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
 //                },
-//            ],
-//        ]);
-//
-//        $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())
-//            ->flatMap(fn($relations) => collect($relations)->mapWithKeys(fn($relation, $key) => is_callable($relation) ? [$key => $relation] : [$relation => fn($query) => $query]))->all();
-//
-//
-//        $enactment = $enactment->load($flattenedComponents);
-//
-//        $componentsWithData = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys()))->map(function ($relations, $component) use ($enactment) {
-//            $relationData = collect($relations)->mapWithKeys(function ($relation, $key) use ($enactment) {
-//                $relationName = is_callable($relation) ? explode('.', $key)[0] : explode('.', $relation)[0];
-//
-//                if ($enactment->relationLoaded($relationName)) {
-//                    if (is_callable($relation)) {
-//                        $component = $key;
-//                    } else {
-//                        $component = $relation;
-//                    }
-//                    $result = [$component => $enactment->$relationName];
-//                    if ($relationName !== 'reviewStatuses') {
-//                        $enactment->unsetRelation($relationName);
-//                    }
-//
-//                    return $result;
-//                }
-//                return [];
-//
-//            });
-//            return $relationData->isNotEmpty() ? [
-//                'name' => $component,
-//                'data' => $relationData
-//            ] : null;
-//        })->filter()->values();
-//
-//
-//        return response()->json($componentsWithData);
+
+                // BoardReviewCards logic
+
 
 //        EnactmentStatus::create([
 //            'enactment_id' => 29,
