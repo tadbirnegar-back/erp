@@ -103,7 +103,7 @@ class EnactmentController extends Controller
                     ->distinct('enactment_id')
                     ->count('enactment_id');
 
-                if ($enactmentLimitPerMeeting <= $EncInMeetingcount) {
+                if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
                     return response()->json([
                         "message" => "جلسه انتخاب شده تکمیل ظرفیت شده است."
                     ], 422);

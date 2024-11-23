@@ -251,6 +251,7 @@ trait EnactmentTrait
                 'meeting_id' => $meeting->id ?? null,
 //                'rejection_file_id' => $item['rejectionFileID'] ?? null,
                 'create_date' => now(),
+                'receipt_date' => now()
             ];
             $nextId++;
 
