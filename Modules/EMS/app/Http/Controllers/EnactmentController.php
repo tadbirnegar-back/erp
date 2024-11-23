@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
-use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -91,16 +90,28 @@ class EnactmentController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-//            DB::beginTransaction();
+            DB::beginTransaction();
             $data = $request->all();
-//            $user = Auth::user();
-            $user = User::find(2086);
+            $user = Auth::user();
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             if (isset($data['meetingID'])) {
                 $meeting = Meeting::find($data['meetingID']);
                 $enactment = $this->storeEnactment($data, $meeting);
                 $enactment->meetings()->attach($meeting->id);
+                //Shura Meeting
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
+                $data['ounitID'] = $meeting->ounit_id;
+                $data['title'] = $meeting->title;
+                $data['meeting_detail'] = $meeting->meeting_detail;
+                $data['meeting_number'] = $meeting->meeting_number;
+                $data['isTemplate'] = $meeting->isTemplate;
+                $data['summary'] = $meeting->summary;
+                $data['parent_id'] = $meeting->parent_id;
+                $data['meetingDate'] = $data['shuraDate'];
+                $meetingShura = $this->storeMeeting($data);
+
+                $enactment->meetings()->attach($meetingShura->id);
             } else if (isset($data['meetingDate'])) {
                 $meetingDate = $data['meetingDate'];
                 $data['meetingDate'] = $data['shuraDate'];
@@ -123,7 +134,7 @@ class EnactmentController extends Controller
                 $this->attachFiles($enactment, $files);
 
                 $meetingTemplate = $meetingShura->ounit?->ancestors[0]?->meetingTemplate ?? null;
-                
+
                 if (is_null($meetingTemplate)) {
                     return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
                 } else {
@@ -141,11 +152,11 @@ class EnactmentController extends Controller
                 }
             }
 
-//            DB::commit();
+            DB::commit();
             return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
         } catch (\Exception $exception) {
-//            DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مصوبه جدید', 'error' => $exception->getMessage(),
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ثبت مصوبه جدید'
             ], 500);
         }
     }

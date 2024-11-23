@@ -2,6 +2,7 @@
 
 namespace Modules\EMS\app\Observers;
 
+use Modules\EMS\app\Events\EnactmentStatusCreatedEvent;
 use Modules\EMS\app\Models\EnactmentStatus;
 
 class EnactmentStatusObserver
@@ -11,7 +12,7 @@ class EnactmentStatusObserver
      */
     public function created(EnactmentStatus $encStatus): void
     {
-//        event(new EnactmentStatusCreatedEvent($encStatus));
+        event(new EnactmentStatusCreatedEvent($encStatus));
     }
 
     /**
