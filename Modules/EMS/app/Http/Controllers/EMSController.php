@@ -644,18 +644,32 @@ class EMSController extends Controller
 
     public function getAutoNoMoghayeratSettings()
     {
-        $consultingAutoMoghayerat = $this->getConsultingAutoMoghayerat();
-        $boardAutoMoghayerat = $this->getBoardAutoMoghayerat();
+
         $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
         $shouraMaxMeetingDateDaysAgo = $this->getShouraMaxMeetingDateDaysAgo();
+        $receiptionMaxDays = $this->getReceptionMaxDays();
 
         return response()->json([
-            'consultingAutoMoghayerat' => $consultingAutoMoghayerat,
-            'boardAutoMoghayerat' => $boardAutoMoghayerat,
             'enactmentLimitPerMeeting' => $enactmentLimitPerMeeting,
             'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo,
+            'receiptionMaxDays' => $receiptionMaxDays,
         ]);
     }
+
+//    public function getAutoNoMoghayeratSettings()
+//    {
+//        $consultingAutoMoghayerat = $this->getConsultingAutoMoghayerat();
+//        $boardAutoMoghayerat = $this->getBoardAutoMoghayerat();
+//        $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+//        $shouraMaxMeetingDateDaysAgo = $this->getShouraMaxMeetingDateDaysAgo();
+//
+//        return response()->json([
+//            'consultingAutoMoghayerat' => $consultingAutoMoghayerat,
+//            'boardAutoMoghayerat' => $boardAutoMoghayerat,
+//            'enactmentLimitPerMeeting' => $enactmentLimitPerMeeting,
+//            'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo,
+//        ]);
+//    }
 
     public function updateAutoMoghayeratSettings(Request $request)
     {

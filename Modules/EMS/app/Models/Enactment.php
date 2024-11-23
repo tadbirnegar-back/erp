@@ -68,7 +68,7 @@ class Enactment extends Model
 
     public function status()
     {
-        return $this->hasOneThrough(Status::class, EnactmentStatus::class, 'enactment_id', 'id', 'id', 'status_id')->orderBy('enactment_status.create_date', 'desc');
+        return $this->hasOneThrough(Status::class, EnactmentStatus::class, 'enactment_id', 'id', 'id', 'status_id')->orderBy('enactment_status.id', 'desc');
     }
 
 

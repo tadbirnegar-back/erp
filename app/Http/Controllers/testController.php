@@ -3,10 +3,7 @@
 namespace App\Http\Controllers;
 
 
-use Modules\AAA\app\Models\User;
-use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
-use Modules\EMS\app\Http\Traits\EnactmentTrait;
-use Modules\EMS\app\Models\Enactment;
+use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
@@ -14,10 +11,21 @@ use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, EMSSettingTrait;
 
     public function run()
     {
+
+        $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+        $shouraMaxMeetingDateDaysAgo = $this->getShouraMaxMeetingDateDaysAgo();
+        $receiptionMaxDays = $this->getReceptionMaxDays();
+
+        return response()->json([
+            'enactmentLimitPerMeeting' => $enactmentLimitPerMeeting,
+            'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo,
+            'receiptionMaxDays' => $receiptionMaxDays,
+        ]);
+
 
 //        Meeting::create([
 //            'isTemplate' => true,
@@ -61,7 +69,7 @@ class testController extends Controller
 //                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
 //                },
 
-                // BoardReviewCards logic
+        // BoardReviewCards logic
 
 
 //        EnactmentStatus::create([
