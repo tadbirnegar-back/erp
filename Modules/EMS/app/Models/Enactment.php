@@ -43,6 +43,7 @@ class Enactment extends Model
         'meeting_id',
         'rejection_file_id',
         'create_date',
+        'receipt_date'
     ];
 
     protected $appends = ['upshot'];
