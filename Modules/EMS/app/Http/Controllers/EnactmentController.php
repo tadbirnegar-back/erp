@@ -17,6 +17,7 @@ use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Enactment;
+use Modules\EMS\app\Models\EnactmentMeeting;
 use Modules\EMS\app\Models\EnactmentReview;
 use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
@@ -96,7 +97,20 @@ class EnactmentController extends Controller
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             if (isset($data['meetingID'])) {
+                $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+
+                $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $data['meetingID'])
+                    ->distinct('enactment_id')
+                    ->count('enactment_id');
+
+                if ($enactmentLimitPerMeeting <= $EncInMeetingcount) {
+                    return response()->json([
+                        "message" => "جلسه انتخاب شده تکمیل ظرفیت شده است."
+                    ], 422);
+                }
+
                 $meeting = Meeting::find($data['meetingID']);
+
                 $enactment = $this->storeEnactment($data, $meeting);
                 $enactment->meetings()->attach($meeting->id);
                 //Shura Meeting
@@ -156,7 +170,7 @@ class EnactmentController extends Controller
             return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مصوبه جدید'
+            return response()->json(['message' => 'خطا در ثبت مصوبه جدید', 'error' => $exception->getMessage(),
             ], 500);
         }
     }
