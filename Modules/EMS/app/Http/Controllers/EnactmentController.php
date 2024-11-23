@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -93,7 +94,8 @@ class EnactmentController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = User::find(2086);
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             if (isset($data['meetingID'])) {
@@ -124,6 +126,13 @@ class EnactmentController extends Controller
                 $data['parent_id'] = $meeting->parent_id;
                 $data['meetingDate'] = $data['shuraDate'];
                 $meetingShura = $this->storeMeeting($data);
+
+
+                foreach ($meeting->meetingMembers as $mm) {
+                    $newMember = $mm->replicate();
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
+                }
 
                 $enactment->meetings()->attach($meetingShura->id);
             } else if (isset($data['meetingDate'])) {
@@ -162,7 +171,13 @@ class EnactmentController extends Controller
                         $newMember = $mm->replicate();
                         $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
                         $newMember->save();
+
+
+                        $newMember = $mm->replicate();
+                        $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                        $newMember->save();
                     }
+
                 }
             }
 
