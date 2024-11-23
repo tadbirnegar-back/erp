@@ -199,15 +199,27 @@ trait EnactmentTrait
         }
         $preparedData = $this->prepareEnactmentData($data, $meeting);
         $result = Enactment::create($preparedData->toArray()[0]);
-        $status = $this->enactmentPendingForHeyaatDateStatus();
-        $enactmentStatus = new EnactmentStatus();
-        $enactmentStatus->enactment_id = $result->id;
-        $enactmentStatus->status_id = $status->id;
-        $enactmentStatus->operator_id = $data[0]['creatorID'];
-        $enactmentStatus->description = $data[0]['description'] ?? null;
-        $enactmentStatus->attachment_id = $data[0]['attachmentID'] ?? null;
-        $enactmentStatus->save();
-//        $result->statuses()->attach($status->id);
+        // Define the statuses and other common data
+        $statuses = [
+            $this->enactmentPendingSecretaryStatus()->id,
+            $this->enactmentPendingForHeyaatDateStatus()->id,
+        ];
+
+        $commonData = [
+            'enactment_id' => $result->id,
+            'operator_id' => $data[0]['creatorID'],
+            'description' => $data[0]['description'] ?? null,
+            'attachment_id' => $data[0]['attachmentID'] ?? null,
+        ];
+
+        // Build the data array for bulk insert
+        $enactmentStatuses = array_map(function ($statusId) use ($commonData) {
+            return array_merge($commonData, ['status_id' => $statusId]);
+        }, $statuses);
+
+        // Perform the bulk insert
+        EnactmentStatus::insert($enactmentStatuses);
+        //        $result->statuses()->attach($status->id);
 
         return $result;
     }

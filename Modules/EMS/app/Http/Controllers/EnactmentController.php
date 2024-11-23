@@ -21,6 +21,7 @@ use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentReview;
 use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -121,17 +122,23 @@ class EnactmentController extends Controller
 
                 $this->attachFiles($enactment, $files);
 
+                $meetingTemplate = $meetingShura->ounit?->ancestors[0]?->meetingTemplate ?? null;
+                
+                if (is_null($meetingTemplate)) {
+                    return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
+                } else {
+                    // Check if members already exist
+                    $existingMembers = MeetingMember::where('meeting_id', $meetingHeyaat->id)->count();
+                    if ($existingMembers > 0) {
+                        return response()->json(['message' => 'Meeting members already exist for this meeting.'], 400);
+                    }
 
-                return response()->json($files);
-
-//                if (!is_null($meetingTemplate)) {
-//                    foreach ($meetingTemplate->meetingMembers as $mm) {
-//                        $newMM = $mm->replicate();
-//                        $newMM->meeting_id = $meeting->id;
-//                        $newMM->save();
-//                    }
-//                }
-
+                    foreach ($meetingTemplate->meetingMembers as $mm) {
+                        $newMember = $mm->replicate();
+                        $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
+                        $newMember->save();
+                    }
+                }
             }
 
 //            DB::commit();
