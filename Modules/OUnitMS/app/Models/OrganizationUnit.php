@@ -105,7 +105,7 @@ class OrganizationUnit extends Model
 
     public function meetings(): HasMany
     {
-        return $this->hasMany(Meeting::class, 'ounit_id');
+        return $this->hasMany(Meeting::class, 'ounit_id')->where('isTemplate', '=', false);
     }
 
     public function meetingTemplate(): HasOne
