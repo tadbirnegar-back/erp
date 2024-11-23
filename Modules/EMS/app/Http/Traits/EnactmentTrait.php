@@ -199,7 +199,7 @@ trait EnactmentTrait
         }
         $preparedData = $this->prepareEnactmentData($data, $meeting);
         $result = Enactment::create($preparedData->toArray()[0]);
-        $status = $this->enactmentPendingSecretaryStatus();
+        $status = $this->enactmentPendingForHeyaatDateStatus();
         $enactmentStatus = new EnactmentStatus();
         $enactmentStatus->enactment_id = $result->id;
         $enactmentStatus->status_id = $status->id;
@@ -409,8 +409,8 @@ trait EnactmentTrait
             ],
             self::$enactmentCompleteStatus => [
                 'priorities' => [
-                    self::$bakhshdar,
                     self::$karshenasOstandari,
+                    self::$bakhshdar,
                     self::$dabirHeyaat,
                     self::$karshenasMashvarati,
                     self::$ozvHeyaat,
@@ -620,23 +620,18 @@ trait EnactmentTrait
             }],
             'FormNumThree' => [
                 // MainEnactment logic
-                'reviewStatuses',
-                'latestMeeting.meetingMembers.user.employee.signatureFile',
-                'attachments',
+                'latestMeeting',
                 'creator',
                 'title',
                 'meeting.ounit.unitable',
-                'meeting.ounit.ancestorsAndSelf' => function ($q) {
-                    $q->where('unitable_type', '!=', StateOfc::class);
-                },
 
                 // ConsultingReviewCards logic
-                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+                'consultingMembers.enactmentReviews.user.employee.signatureFile' => function ($query) use ($enactment) {
                     $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
                 },
 
                 // BoardReviewCards logic
-                'boardMembers.enactmentReviews' => function ($query) use ($enactment) {
+                'boardMembers.enactmentReviews.user.employee.signatureFile' => function ($query) use ($enactment) {
                     $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
                 },
             ],
@@ -647,7 +642,7 @@ trait EnactmentTrait
 
 
         $enactment = $enactment->load($flattenedComponents);
-
+//        return $enactment;
         $componentsWithData = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys()))->map(function ($relations, $component) use ($enactment) {
             $relationData = collect($relations)->mapWithKeys(function ($relation, $key) use ($enactment) {
                 $relationName = is_callable($relation) ? explode('.', $key)[0] : explode('.', $relation)[0];
@@ -659,9 +654,9 @@ trait EnactmentTrait
                         $component = $relation;
                     }
                     $result = [$component => $enactment->$relationName];
-                    if ($relationName !== 'reviewStatuses') {
-                        $enactment->unsetRelation($relationName);
-                    }
+//                    if ($relationName !== 'reviewStatuses') {
+//                        $enactment->unsetRelation($relationName);
+//                    }
 
                     return $result;
                 }

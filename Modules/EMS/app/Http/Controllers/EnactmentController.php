@@ -92,22 +92,53 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $data = $request->all();
 //            $user = Auth::user();
-
-            //Todo: First Store Meeting
-            //Todo: secound Store Enactment
-            //Todo: Third Store Enactment_Meeting
-
-            $user = User::find(2119);
-
+            $user = User::find(2086);
+            return response()->json($user);
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
+            if (isset($data['meetingID'])) {
+                $meeting = Meeting::find($data['meetingID']);
+                return response()->json($meeting);
+                $enactment = $this->storeEnactment($data, $meeting);
+                $enactment->meetings()->attach($meeting->id);
+//                $enactment->meeting_id = $meeting->id;
+//                $enactment->save();
+            } elseif (isset($data['meetingDate'])) {
+                $meeting = $this->storeMeeting($data);
+                $enactment = $this->storeEnactment($data, $meeting);
+                $files = json_decode($data['attachments'], true);
+                $this->attachFiles($enactment, $files);
 
-            $enactment = $this->storeEnactment($data);
-            return response()->json($enactment);
-            $enactment->meetings()->attach($meeting->id);
+                $villageID = $enactment->meeting->ounit_id;
+                $data['creatorID'] = $user->id;
+                $data['meetingTypeID'] = MeetingType::where('title', '=', 'جلسه هیئت تطبیق')->first()->id;
 
-            $files = json_decode($data['attachments'], true);
-            $this->attachFiles($enactment, $files);
+                $villageWithDistrict = OrganizationUnit::with(['ancestors' => function ($q) {
+                    $q->where('unitable_type', DistrictOfc::class);
+
+                }])->find($villageID);
+
+                $data['ounitID'] = $villageWithDistrict->ancestors[0]->id;
+                $enactment->meetings()->attach($meeting->id);
+
+//                $enactment->meeting_id = $meeting->id;
+//                $enactment->save();
+
+                $meetingTemplate = Meeting::where('isTemplate', true)
+                    ->where('ounit_id', $data['ounitID'])
+                    ->with('meetingMembers')->first();
+
+
+                if (!is_null($meetingTemplate)) {
+                    foreach ($meetingTemplate->meetingMembers as $mm) {
+                        $newMM = $mm->replicate();
+                        $newMM->meeting_id = $meeting->id;
+                        $newMM->save();
+                    }
+                }
+
+            }
+
             DB::commit();
             return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
         } catch (\Exception $exception) {
