@@ -626,17 +626,15 @@ trait EnactmentTrait
                 'creator',
                 'title',
                 'meeting.ounit.unitable',
-                'meeting.ounit.ancestorsAndSelf' => function ($q) {
-                    $q->where('unitable_type', '!=', StateOfc::class);
-                },
+                'meeting.ounit.ancestorsAndSelf',
 
                 // ConsultingReviewCards logic
-                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+                'consultingMembers.enactmentReviews.user.employee.signatureFile' => function ($query) use ($enactment) {
                     $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
                 },
 
                 // BoardReviewCards logic
-                'boardMembers.enactmentReviews' => function ($query) use ($enactment) {
+                'boardMembers.enactmentReviews.user.employee.signatureFile' => function ($query) use ($enactment) {
                     $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
                 },
             ],
@@ -659,9 +657,6 @@ trait EnactmentTrait
                         $component = $relation;
                     }
                     $result = [$component => $enactment->$relationName];
-                    if ($relationName !== 'reviewStatuses') {
-                        $enactment->unsetRelation($relationName);
-                    }
 
                     return $result;
                 }
