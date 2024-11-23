@@ -633,12 +633,15 @@ trait EnactmentTrait
                     }]);
 
             }],
-            'FormNumThree' => [
+          'FormNumThree' => [
                 // MainEnactment logic
+                'reviewStatuses',
                 'latestMeeting',
                 'creator',
                 'title',
                 'meeting.ounit.unitable',
+                'meeting.ounit.ancestorsAndSelf',
+
                 'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
                     $query->where('enactment_id', $enactment->id)->with(['status', 'attachment'])
                         ->with('user.employee.signatureFile');
@@ -668,9 +671,7 @@ trait EnactmentTrait
                         $component = $relation;
                     }
                     $result = [$component => $enactment->$relationName];
-//                    if ($relationName !== 'reviewStatuses') {
-//                        $enactment->unsetRelation($relationName);
-//                    }
+
 
                     return $result;
                 }
