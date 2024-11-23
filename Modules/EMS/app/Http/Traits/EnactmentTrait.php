@@ -353,6 +353,7 @@ trait EnactmentTrait
                 self::$karshenasMashvarati => [
                     'MainEnactment',
                     'MembersBeforeReview',
+                    'ReviewBtn',
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
@@ -369,8 +370,6 @@ trait EnactmentTrait
                 self::$dabirHeyaat => [
                     'MainEnactment',
                     'MembersBeforeReview',
-                    'RescheduleBtn',
-
                 ],
                 self::$ozvShouraRusta => [
                     'MainEnactment',
@@ -446,12 +445,12 @@ trait EnactmentTrait
                     'MainEnactment',
                     'ConsultingReviewCards',
                     'FormNumThree',
-                    'ReviewBtn'
+                    'ReviewBtn',
                 ],
                 self::$karshenasMashvarati => [
                     'MainEnactment',
                     'CurrentReviewCard',
-                    'ReviewBtn'
+                    'ReviewBtn',
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
