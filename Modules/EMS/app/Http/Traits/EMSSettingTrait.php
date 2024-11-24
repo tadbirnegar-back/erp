@@ -67,4 +67,20 @@ trait EMSSettingTrait
     }
 
 
+    public function updateReceptionMaxDays($value)
+    {
+        $setting = Setting::updateOrCreate(
+            ['key' => SettingsEnum::MAX_DAY_FOR_RECEPTION->value],
+            ['value' => $value]
+        );
+
+        return $setting;
+    }
+
+    public function getReceptionMaxDays()
+    {
+        return Setting::where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)->first();
+    }
+
+
 }

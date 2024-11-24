@@ -94,7 +94,6 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $user = Auth::user();
-//            $user = User::find(2086);
 
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;

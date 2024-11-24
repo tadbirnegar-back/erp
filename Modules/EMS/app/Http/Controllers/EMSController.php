@@ -644,24 +644,37 @@ class EMSController extends Controller
 
     public function getAutoNoMoghayeratSettings()
     {
-        $consultingAutoMoghayerat = $this->getConsultingAutoMoghayerat();
-        $boardAutoMoghayerat = $this->getBoardAutoMoghayerat();
+
         $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
         $shouraMaxMeetingDateDaysAgo = $this->getShouraMaxMeetingDateDaysAgo();
+        $receiptionMaxDays = $this->getReceptionMaxDays();
 
         return response()->json([
-            'consultingAutoMoghayerat' => $consultingAutoMoghayerat,
-            'boardAutoMoghayerat' => $boardAutoMoghayerat,
             'enactmentLimitPerMeeting' => $enactmentLimitPerMeeting,
             'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo,
+            'receiptionMaxDays' => $receiptionMaxDays,
         ]);
     }
+
+//    public function getAutoNoMoghayeratSettings()
+//    {
+//        $consultingAutoMoghayerat = $this->getConsultingAutoMoghayerat();
+//        $boardAutoMoghayerat = $this->getBoardAutoMoghayerat();
+//        $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+//        $shouraMaxMeetingDateDaysAgo = $this->getShouraMaxMeetingDateDaysAgo();
+//
+//        return response()->json([
+//            'consultingAutoMoghayerat' => $consultingAutoMoghayerat,
+//            'boardAutoMoghayerat' => $boardAutoMoghayerat,
+//            'enactmentLimitPerMeeting' => $enactmentLimitPerMeeting,
+//            'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo,
+//        ]);
+//    }
 
     public function updateAutoMoghayeratSettings(Request $request)
     {
         $validate = \Validator::make($request->all(), [
-            'consultingAutoMoghayerat' => 'required',
-            'boardAutoMoghayerat' => 'required',
+            'emsMaxDayForReception' => 'required',
             'enactmentLimitPerMeeting' => 'required',
             'shouraMaxMeetingDateDaysAgo' => 'required',
         ]);
@@ -672,16 +685,13 @@ class EMSController extends Controller
 
         try {
             DB::beginTransaction();
-
-            $a = $this->updateConsultingAutoMoghayerat($request->consultingAutoMoghayerat);
-            $b = $this->updateBoardAutoMoghayerat($request->boardAutoMoghayerat);
+            $emsReciept = $this->updateReceptionMaxDays($request->emsMaxDayForReception);
             $entLimit = $this->updateEnactmentLimitPerMeeting($request->enactmentLimitPerMeeting);
             $shouraMaxMeetingDateDaysAgo = $this->updateShouraMaxMeetingDateDaysAgo($request->shouraMaxMeetingDateDaysAgo ?? 0);
 
             DB::commit();
             return response()->json(['message' => 'با موفقیت بروزرسانی شد', 'data' => [
-                'consultingAutoMoghayerat' => $a,
-                'boardAutoMoghayerat' => $b,
+                'emsMaxDayForReception' => $emsReciept,
                 'enactmentLimitPerMeeting' => $entLimit,
                 'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo
             ]]);
