@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Mockery\Exception;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
+use Modules\EMS\app\Http\Enums\SettingsEnum;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
@@ -93,6 +95,7 @@ class EnactmentController extends Controller
             $data = $request->all();
             $user = Auth::user();
 //            $user = User::find(2086);
+
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             if (isset($data['meetingID'])) {
@@ -110,7 +113,10 @@ class EnactmentController extends Controller
 
                 $meeting = Meeting::find($data['meetingID']);
 
+
                 $enactment = $this->storeEnactment($data, $meeting);
+
+
                 $enactment->meetings()->attach($meeting->id);
                 //Shura Meeting
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
@@ -132,7 +138,41 @@ class EnactmentController extends Controller
                 }
 
                 $enactment->meetings()->attach($meetingShura->id);
+
+                if ($enactment) {
+                    return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
+                } else {
+                    return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 404);
+                }
             } else if (isset($data['meetingDate'])) {
+
+                //Validations
+
+                $user->load('activeDistrictRecruitmentScript.organizationUnit.firstFreeMeetingByNow');
+                $firstFreeMeeting = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->firstFreeMeetingByNow;
+
+                if (!empty($firstFreeMeeting)) {
+                    return response()->json(['message' => "شما نمیتوانید با داشتن جلسه خالی جلسه دیگری ایجاد نمایید"], 404);
+                }
+
+
+                $currentDate = Carbon::now();
+                $newMeetingDate = convertJalaliPersianCharactersToGregorian($data['meetingDate']);
+
+                // Make sure $newMeetingDate is a Carbon instance
+                $newMeetingDate = Carbon::parse($newMeetingDate);
+
+                $maxDays = \DB::table('settings')
+                    ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
+                    ->value('value');
+
+                if ($newMeetingDate->lt($currentDate) || $newMeetingDate->gt($currentDate->addDays($maxDays))) {
+                    return response()->json(["message" => "تاریخ انتخاب شده درست نیست"], 404);
+                }
+
+                //End Of Validations
+
+
                 $meetingDate = $data['meetingDate'];
                 $data['meetingDate'] = $data['shuraDate'];
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
@@ -176,10 +216,15 @@ class EnactmentController extends Controller
                     }
 
                 }
+                if ($enactment) {
+                    return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
+                } else {
+                    return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 404);
+                }
             }
 
+
             DB::commit();
-            return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
         } catch (\Exception $exception) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در ثبت مصوبه جدید', 'error' => $exception->getMessage(),

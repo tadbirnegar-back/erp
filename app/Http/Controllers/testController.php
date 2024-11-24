@@ -7,6 +7,8 @@ use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 
+//use Modules\EMS\app\Http\Traits\EnactmentTrait;
+
 
 class testController extends Controller
 {
