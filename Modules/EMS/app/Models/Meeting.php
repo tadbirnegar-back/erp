@@ -69,20 +69,17 @@ class Meeting extends Model
                 if (is_null($value)) {
                     return null;
                 }
-                $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d', strtotime($value)); // 1395-02-19
-                $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
+                $jalali = convertDateTimeGregorianToJalaliDateTime($value);
 
-                return $jalaliPersianNumbers;
+                return $jalali;
             },
 
             set: function ($value) {
                 if (is_null($value)) {
                     return null;
                 }
-                $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($value, true);
 
-                $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString)
-                    ->toDateTimeString();
+                $dateTimeString = convertDateTimeJalaliPersianCharactersToGregorian($value);
 
                 return $dateTimeString;
 

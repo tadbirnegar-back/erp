@@ -50,14 +50,12 @@ trait EnactmentTrait
         }
 
 
-        $mt = MeetingType::where('key', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
-        return $mt;
+        $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
-        $meetingTypeId = 1; // Replace with the actual meeting type ID.
 
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $meetingTypeId) {
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
             $query->whereIntegerInRaw('ounit_id', $ounits)
-                ->where('meeting_type_id', $meetingTypeId);
+                ->where('meeting_type_id', $mt->id);
         })
             ->whereHas('status', function ($query) {
                 $query->join('enactment_status as es', 'enactments.id', '=', 'es.enactment_id')
@@ -103,8 +101,12 @@ trait EnactmentTrait
             $ounits = [$data['ounitID']];
         }
 
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
-            $query->whereIntegerInRaw('ounit_id', $ounits);
+        $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
+
+
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
+            $query->whereIntegerInRaw('ounit_id', $ounits)
+                ->where('meeting_type_id', $mt->id);
         })
             ->whereHas('status', function ($query) {
                 $query->join('enactment_status as es', 'enactments.id', '=', 'es.enactment_id')
@@ -147,8 +149,12 @@ trait EnactmentTrait
         if (!empty($data['ounitID'])) {
             $ounits = [$data['ounitID']];
         }
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
-            $query->whereIntegerInRaw('ounit_id', $ounits);
+        $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
+
+
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
+            $query->whereIntegerInRaw('ounit_id', $ounits)
+                ->where('meeting_type_id', $mt->id);
         })
             ->whereHas('status', function ($query) use ($data, $statuses, $userId) {
                 $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
