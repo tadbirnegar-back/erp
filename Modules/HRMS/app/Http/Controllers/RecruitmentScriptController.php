@@ -621,33 +621,38 @@ class RecruitmentScriptController extends Controller
 
     public function ptpTerminate(Request $request, $id)
     {
-        $script = RecruitmentScript::whereHas('status', function ($query) {
-            $query->where('status_id', $this->pendingTerminateRsStatus()->id);
-        })->with('latestStatus', 'user')->find($id);
-        $terminateStatus = $this->terminatedRsStatus();
 
-        if (is_null($script)) {
-            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
-        }
-
-        if ($script->latestStatus->id == $terminateStatus->id) {
-            return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
-        }
-        $user = Auth::user();
-
-
-        $date = convertJalaliPersianCharactersToGregorian($request->date);
-
-
-        $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID, $date);
         try {
             DB::beginTransaction();
+            $script = RecruitmentScript::whereHas('status', function ($query) {
+                $query->where('status_id', $this->pendingTerminateRsStatus()->id);
+            })->with('latestStatus', 'user')->find($id);
+            $terminateStatus = $this->terminatedRsStatus();
+
+            if (is_null($script)) {
+                return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+            }
+
+            if ($script->latestStatus->id == $terminateStatus->id) {
+                return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
+            }
+            $user = Auth::user();
+
+            $finishDate = convertJalaliPersianCharactersToGregorian($request->date);
+
+            $script->finish_date = $finishDate;
+            $script->save();
+
+            $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID);
 
             DB::commit();
+            return response()->json([
+                'message' => "عزل با موفقیت انجام شد",
+                "script" => $script,
+            ], 200);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در قطع همکاری حکم'], 500);
-
         }
     }
 
