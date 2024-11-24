@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\Database\factories\EnactmentFactory;
 use Modules\FileMS\app\Models\File;
@@ -360,5 +361,22 @@ class Enactment extends Model
         return $this->hasOneThrough(Meeting::class, EnactmentMeeting::class, 'enactment_id', 'id', 'id', 'meeting_id')->orderBy('enactment_meeting.create_date', 'desc');
     }
 
+    public function latestHeyaatMeeting(): HasOneThrough
+    {
+        $meetingtypeId = \DB::table('meeting_types')
+            ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->value('id');
+
+        return $this->hasOneThrough(
+            Meeting::class,
+            EnactmentMeeting::class,
+            'enactment_id',
+            'id',
+            'id',
+            'meeting_id'
+        )
+            ->where('meeting_type_id', $meetingtypeId)
+            ->orderBy('enactment_meetings.create_date', 'desc');
+    }
 
 }
