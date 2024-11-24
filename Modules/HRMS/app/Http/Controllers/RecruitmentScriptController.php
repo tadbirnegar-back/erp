@@ -156,7 +156,7 @@ class RecruitmentScriptController extends Controller
     {
         $data = $request->all();
         $validator = Validator::make($data, [
-            'employeeID' => 'required',
+            'employeeID' => ['required', 'exists:employees,id'],
         ]);
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
@@ -164,8 +164,8 @@ class RecruitmentScriptController extends Controller
 
         try {
             DB::beginTransaction();
-            $employee = Employee::findOr($data['employeeID'], function () {
-                return response(['message' => 'موردی یافت نشد'], 404);
+            $employee = Employee::findOr($data['employeeID'], function () use ($data) {
+                return response(['message' => 'موردی یافت نشد', 'id' => $data['employeeID']], 404);
 
             });
 
@@ -190,7 +190,7 @@ class RecruitmentScriptController extends Controller
 //                collect($rsRes)->each(fn($rs) => $this->approvingStore($rs));
 //            }
 
-            $employee = Employee::find($rsRes[0]->employee_id);
+            $employee = Employee::find($rsRes->employee_id);
             $user = $employee->user;
 
 
@@ -205,7 +205,8 @@ class RecruitmentScriptController extends Controller
             return response()->json($rsRes);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن حکم'], 500);
+            return response()->json(['message' => 'خطا در افزودن حکم'
+                , $e->getTrace(), $e->getMessage()], 500);
         }
     }
 
@@ -639,7 +640,7 @@ class RecruitmentScriptController extends Controller
         $date = convertJalaliPersianCharactersToGregorian($request->date);
 
 
-        $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID, $date);
+        $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID);
         try {
             DB::beginTransaction();
 

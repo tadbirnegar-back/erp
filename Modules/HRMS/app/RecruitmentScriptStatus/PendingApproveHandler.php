@@ -26,6 +26,14 @@ class PendingApproveHandler implements StatusHandlerInterface
         $script = $this->script;
         \DB::transaction(function () use ($script) {
             $this->approvingStore($script);
+            $this->deactivateScriptUser();
         });
+    }
+
+    public function deactivateScriptUser()
+    {
+        $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+        $scriptUser = $this->script->user;
+        $scriptUser->statuses()->attach($disabledStatusForUser->id);
     }
 }

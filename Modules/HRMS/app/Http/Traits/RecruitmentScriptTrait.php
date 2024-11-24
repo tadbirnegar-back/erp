@@ -237,14 +237,14 @@ trait RecruitmentScriptTrait
     }
 
 
-    public function attachStatusToRs(RecruitmentScript $script, Status $status, string $description = null, ?User $user = null, $fileID = null, $date)
+    public function attachStatusToRs(RecruitmentScript $script, Status $status, string $description = null, ?User $user = null, $fileID = null)
     {
         $rsStatus = new RecruitmentScriptStatus();
         $rsStatus->recruitment_script_id = $script->id;
         $rsStatus->status_id = $status->id;
         $rsStatus->operator_id = $user?->id;
         $rsStatus->description = $description ?? null;
-        $rsStatus->create_date = $date;
+        $rsStatus->create_date = now();
         $rsStatus->attachment_id = $fileID;
         $rsStatus->save();
         return $rsStatus;

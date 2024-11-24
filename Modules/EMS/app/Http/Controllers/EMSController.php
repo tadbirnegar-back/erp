@@ -181,8 +181,8 @@ class EMSController extends Controller
 //
 //            $user->roles()->sync($roles->pluck('id')->toArray());
 
-            $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
-            $user->statuses()->attach($disabledStatusForUser->id);
+//            $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+//            $user->statuses()->attach($disabledStatusForUser->id);
 
             if (isset($data['avatar'])) {
                 $file = File::find($data['avatar']);

@@ -194,8 +194,8 @@ class EmployeeController extends Controller
             $user = $user ? $this->updateUser($data, $user) : $this->storeUser($data);
 
 //
-            $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
-            $user->statuses()->attach($disabledStatusForUser->id);
+//            $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+//            $user->statuses()->attach($disabledStatusForUser->id);
 
             if (isset($data['avatar'])) {
                 $file = File::find($data['avatar']);
@@ -324,8 +324,8 @@ class EmployeeController extends Controller
             $user = $user ? $this->updateUser($data, $user) : $this->storeUser($data);
 
 //
-            $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
-            $user->statuses()->attach($disabledStatusForUser->id);
+//            $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
+//            $user->statuses()->attach($disabledStatusForUser->id);
 
             if (isset($data['avatar'])) {
                 $file = File::find($data['avatar']);

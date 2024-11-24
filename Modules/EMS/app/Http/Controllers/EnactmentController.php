@@ -38,10 +38,12 @@ class EnactmentController extends Controller
     {
         $user = Auth::user();
         $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
-            $q->orderByDesc('recruitment_scripts.create_date')
-                ->limit(1)
+            $q
                 ->with('organizationUnit.descendantsAndSelf');
-        }])?->activeRecruitmentScript[0]?->organizationUnit->descendantsAndSelf->pluck('id')->toArray();
+        }])?->activeRecruitmentScript?->pluck('organizationUnit.descendantsAndSelf')
+            ->flatten()
+            ->pluck('id')
+            ->toArray();
         $data = $request->all();
         $enactments = $this->indexPendingForSecretaryStatusEnactment($data, $ounits);
         $statuses = Enactment::GetAllStatuses();
@@ -53,10 +55,12 @@ class EnactmentController extends Controller
         $user = Auth::user();
 
         $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
-            $q->orderByDesc('recruitment_scripts.create_date')
-                ->limit(1)
+            $q
                 ->with('organizationUnit.descendantsAndSelf');
-        }])?->activeRecruitmentScript[0]?->organizationUnit->descendantsAndSelf->pluck('id')->toArray();
+        }])?->activeRecruitmentScript?->pluck('organizationUnit.descendantsAndSelf')
+            ->flatten()
+            ->pluck('id')
+            ->toArray();
         $data = $request->all();
         $enactments = $this->indexPendingForHeyaatStatusEnactment($data, $ounits);
         $statuses = Enactment::GetAllStatuses();
@@ -67,13 +71,15 @@ class EnactmentController extends Controller
     {
         $user = Auth::user();
         try {
-            $ounit = $user->load(['activeRecruitmentScript' => function ($q) {
-                $q->orderByDesc('recruitment_scripts.create_date')
-                    ->limit(1)
+            $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
+                $q
                     ->with('organizationUnit.descendantsAndSelf');
-            }])?->activeRecruitmentScript[0]?->organizationUnit->descendantsAndSelf->pluck('id')->toArray();
+            }])?->activeRecruitmentScript?->pluck('organizationUnit.descendantsAndSelf')
+                ->flatten()
+                ->pluck('id')
+                ->toArray();
             $data = $request->all();
-            $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounit, $user->id);
+            $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounits, $user->id);
 
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
