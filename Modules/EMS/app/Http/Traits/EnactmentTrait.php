@@ -7,11 +7,13 @@ use DB;
 use Illuminate\Support\Collection;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Models\Attachmentable;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
@@ -48,8 +50,12 @@ trait EnactmentTrait
         }
 
 
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
-            $query->whereIntegerInRaw('ounit_id', $ounits);
+        $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
+
+
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
+            $query->whereIntegerInRaw('ounit_id', $ounits)
+                ->where('meeting_type_id', $mt->id);
         })
             ->whereHas('status', function ($query) {
                 $query->join('enactment_status as es', 'enactments.id', '=', 'es.enactment_id')
@@ -95,8 +101,12 @@ trait EnactmentTrait
             $ounits = [$data['ounitID']];
         }
 
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
-            $query->whereIntegerInRaw('ounit_id', $ounits);
+        $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
+
+
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
+            $query->whereIntegerInRaw('ounit_id', $ounits)
+                ->where('meeting_type_id', $mt->id);
         })
             ->whereHas('status', function ($query) {
                 $query->join('enactment_status as es', 'enactments.id', '=', 'es.enactment_id')
@@ -139,8 +149,12 @@ trait EnactmentTrait
         if (!empty($data['ounitID'])) {
             $ounits = [$data['ounitID']];
         }
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
-            $query->whereIntegerInRaw('ounit_id', $ounits);
+        $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
+
+
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
+            $query->whereIntegerInRaw('ounit_id', $ounits)
+                ->where('meeting_type_id', $mt->id);
         })
             ->whereHas('status', function ($query) use ($data, $statuses, $userId) {
                 $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')

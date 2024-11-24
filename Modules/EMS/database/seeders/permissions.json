@@ -136,5 +136,11 @@
         "slug": "/mes/meeting/ChangeMeetingDate/{id}",
         "moduleName": "EMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "بررسی جلسه های روز های آتی",
+        "slug": "/mes/meeting/selection",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
     }
 ]

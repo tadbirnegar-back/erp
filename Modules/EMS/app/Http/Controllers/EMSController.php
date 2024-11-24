@@ -292,6 +292,7 @@ class EMSController extends Controller
         $result = [
             'enactmentTitles' => $titles,
             'shouraMaxMeetingDateDaysAgo' => $this->getShouraMaxMeetingDateDaysAgo(),
+            'receiptionMaxDays' => $this->getReceptionMaxDays(),
             'ounits' => $ounits->pluck('ounit'),
         ];
 
@@ -691,7 +692,7 @@ class EMSController extends Controller
 
             DB::commit();
             return response()->json(['message' => 'با موفقیت بروزرسانی شد', 'data' => [
-                'emsMaxDayForReception' => $emsReciept,
+                'receiptionMaxDays' => $emsReciept,
                 'enactmentLimitPerMeeting' => $entLimit,
                 'shouraMaxMeetingDateDaysAgo' => $shouraMaxMeetingDateDaysAgo
             ]]);

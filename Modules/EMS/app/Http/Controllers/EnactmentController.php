@@ -48,6 +48,8 @@ class EnactmentController extends Controller
             ->toArray();
         $data = $request->all();
         $enactments = $this->indexPendingForSecretaryStatusEnactment($data, $ounits);
+
+        return response()->json($enactments);
         $statuses = Enactment::GetAllStatuses();
         return response()->json(['data' => $enactments, 'statusList' => $statuses]);
     }
@@ -183,7 +185,7 @@ class EnactmentController extends Controller
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
                 $meetingShura = $this->storeMeeting($data);
 
-                $data['meetingID'] = $meetingDate;
+                $data['meetingDate'] = $meetingDate;
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING)->first()->id;
                 $meetingHeyaat = $this->storeMeeting($data);
 
@@ -232,7 +234,7 @@ class EnactmentController extends Controller
             DB::commit();
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مصوبه جدید', 'error' => $exception->getMessage(),
+            return response()->json(['message' => 'خطا در ثبت مصوبه جدید'
             ], 500);
         }
     }
