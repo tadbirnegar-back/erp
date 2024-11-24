@@ -66,7 +66,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('mes/reports/district-report', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'districtEnactmentReport']);
 
-    Route::put('mes/meeting/ChangeMeetingDate/{id}', [MeetingController::class, 'changeMeetingDate']);
+    Route::put('mes/meeting/change-meeting-date/{id}', [MeetingController::class, 'changeMeetingDate']);
 
     Route::get('mes/meeting/selection', [MeetingController::class, 'getSelection']);
 

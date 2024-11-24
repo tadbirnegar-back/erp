@@ -127,8 +127,6 @@ class OrganizationUnit extends Model
             ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
             ->value('id');
 
-        \Log::info($meetingtypeId);
-        
         return $this->hasOne(Meeting::class, 'ounit_id')
             ->where('meeting_type_id', $meetingtypeId)
             ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)]) // Filter by meeting date range
@@ -159,8 +157,6 @@ class OrganizationUnit extends Model
         $meetingtypeId = \DB::table('meeting_types')
             ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
             ->value('id');
-
-        \Log::info($meetingtypeId);
         // Fetch all the meetings that have reached or exceeded the enactment limit
         return $this->hasMany(Meeting::class, 'ounit_id')
             ->where('meeting_type_id', $meetingtypeId)

@@ -13,6 +13,7 @@ use Mockery\Exception;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
+use Modules\EMS\app\Http\Enums\SettingsEnum;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
@@ -161,7 +162,11 @@ class EnactmentController extends Controller
                 // Make sure $newMeetingDate is a Carbon instance
                 $newMeetingDate = Carbon::parse($newMeetingDate);
 
-                if ($newMeetingDate->lt($currentDate) || $newMeetingDate->gt($currentDate->addDays(14))) {
+                $maxDays = \DB::table('settings')
+                    ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
+                    ->value('value');
+
+                if ($newMeetingDate->lt($currentDate) || $newMeetingDate->gt($currentDate->addDays($maxDays))) {
                     return response()->json(["message" => "تاریخ انتخاب شده درست نیست"], 404);
                 }
 
