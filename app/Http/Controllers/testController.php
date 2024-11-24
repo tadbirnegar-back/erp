@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 
-use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\HRMS\app\Models\Employee;
 
 
 class testController extends Controller
@@ -16,18 +14,7 @@ class testController extends Controller
 
     public function run()
     {
-        $e = Employee::find(2132);
-        dd($e);
-        $user = User::where('mobile', '9128243649')->first();
-        $ounits = $user->load(['activeDistrictRecruitmentScript' => function ($q) {
-            $q
-                ->with('organizationUnit.descendantsAndSelf');
-        }])?->activeDistrictRecruitmentScript?->pluck('organizationUnit.descendantsAndSelf')
-            ->flatten()
-            ->pluck('id')
-            ->toArray();
 
-        dd($ounits);
 //        Meeting::create([
 //            'isTemplate' => true,
 //            'creator_id' => 2172,
