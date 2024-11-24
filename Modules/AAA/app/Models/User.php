@@ -22,6 +22,7 @@ use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
@@ -251,6 +252,15 @@ class User extends Authenticatable
 //            $query->where('organization_units.unitable_type', DistrictOfc::class);
 //        })
 //            ->orderBy('recruitment_scripts.start_date', 'desc');
+    }
+
+    public function activeCityRecruitmentScript()
+    {
+        return $this->activeRecruitmentScripts()
+            ->join('organization_units', 'recruitment_scripts.organization_unit_id', '=', 'organization_units.id')
+            ->where('organization_units.unitable_type', CityOfc::class)
+            ->orderBy('recruitment_scripts.start_date', 'desc');
+
     }
 
     public function recruitmentScripts()

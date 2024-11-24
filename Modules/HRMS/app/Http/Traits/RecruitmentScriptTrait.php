@@ -237,15 +237,17 @@ trait RecruitmentScriptTrait
     }
 
 
-    public function attachStatusToRs(RecruitmentScript $script, Status $status, string $description = null, ?User $user = null, $fileID = null, $date = null)
+
+    public function attachStatusToRs(RecruitmentScript $script, Status $status, string $description = null, ?User $user = null, $fileID = null)
     {
         $rsStatus = new RecruitmentScriptStatus();
         $rsStatus->recruitment_script_id = $script->id;
         $rsStatus->status_id = $status->id;
         $rsStatus->operator_id = $user?->id;
         $rsStatus->description = $description ?? null;
-        $rsStatus->create_date = $date ?? now();
+        $rsStatus->create_date = now();
         $rsStatus->attachment_id = $fileID ?? null;
+
         $rsStatus->save();
         return $rsStatus;
     }
@@ -276,7 +278,7 @@ trait RecruitmentScriptTrait
         return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::SERVICE_ENDED->value);
     }
 
-    public function cancelRsStatus()
+    public function cancelRsSe_date = now();tatus()
     {
         return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::CANCELED->value);
     }

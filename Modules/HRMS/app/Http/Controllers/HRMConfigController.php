@@ -7,6 +7,7 @@ use Modules\AAA\app\Models\Role;
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Enums\ProceduresEnum;
+use Modules\HRMS\app\Http\Enums\ScriptTypeDurationEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Http\Traits\ConfirmationTypeTrait;
 use Modules\HRMS\app\Http\Traits\HireTypeTrait;
@@ -55,6 +56,7 @@ class HRMConfigController extends Controller
         $config['jobs'] = $this->getListOfJobs();
         $config['positions'] = $this->positionIndex();
         $config['rolesList'] = Role::all();
+        $config['durationList'] = ScriptTypeDurationEnum::getAllLabelsAndValues();
 
         return response()->json($config);
 

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Http\Traits\DateTrait;
+use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentMeeting;
@@ -14,7 +15,7 @@ use Modules\EMS\app\Models\Meeting;
 
 class MeetingController extends Controller
 {
-    use DateTrait, MeetingTrait;
+    use DateTrait, MeetingTrait, EMSSettingTrait;
 
     public function changeMeetingDate(UpdateMeetingDateReq $req, $id)
     {
@@ -92,5 +93,45 @@ class MeetingController extends Controller
                 "error" => "تغییر تاریخ جلسه انجام نشد!",
             ], 500);
         }
+    }
+
+
+    public function getSelection()
+    {
+//        $user = User::find(2086);
+        $user = Auth::user();
+
+        $user->load('activeDistrictRecruitmentScript.organizationUnit.firstFreeMeetingByNow');
+        $user->load('activeDistrictRecruitmentScript.organizationUnit.fullMeetingsByNow');
+
+        $firstFreeMeeting = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->firstFreeMeetingByNow;
+        $fullMeetings = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->fullMeetingsByNow;
+
+
+        $data = [];
+        if (!empty($fullMeetings)) {
+            $data['fullMeetings'] = $fullMeetings;
+        }
+
+        if (empty($firstFreeMeeting)) {
+            $data['message'] = "هیچ جلسه ای خالی نیست";
+        } else {
+
+            $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+
+            $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $firstFreeMeeting->id)
+                ->distinct('enactment_id')
+                ->count('enactment_id');
+
+            if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
+                $data['message'] = "جلسه انتخاب شده تکمیل ظرفیت شده";
+            }
+
+            $data['freeMeeting'] = $firstFreeMeeting;
+
+        }
+
+
+        return response()->json($data, 200);
     }
 }

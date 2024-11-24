@@ -171,4 +171,3 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
 
 });
-

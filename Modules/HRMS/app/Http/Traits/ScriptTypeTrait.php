@@ -18,6 +18,7 @@ trait ScriptTypeTrait
         $scriptType->title = $data['title'];
         $scriptType->issue_time_id = $data['issueTimeID'] ?? null;
         $scriptType->origin_id = $data['typeOriginID'] ?? null;
+        $scriptType->duration = $data['etebar'] ?? null;
         $scriptType->employee_status_id = $data['employeeStatusID'] ?? null;
         $scriptType->status_id = $this->activeScriptTypeStatus()->id;
         $scriptType->isHeadable = $data['isHeadable'] ?? false;
@@ -80,6 +81,7 @@ trait ScriptTypeTrait
         $scriptType->title = $data['title'] ?? $scriptType->title;
         $scriptType->issue_time_id = $data['issueTimeID'] ?? $scriptType->issue_time_id;
         $scriptType->origin_id = $data['typeOriginID'] ?? null;
+        $scriptType->duration = $data['etebar'] ?? null;
         $scriptType->employee_status_id = $data['employeeStatusID'] ?? $scriptType->employee_status_id;
         $scriptType->isHeadable = $data['isHeadable'] ?? false;
 
