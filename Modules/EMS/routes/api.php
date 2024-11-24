@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\EMS\app\Http\Controllers\EMSController;
 use Modules\EMS\app\Http\Controllers\EnactmentController;
+use Modules\EMS\app\Http\Controllers\MeetingController;
 
 /*
     |--------------------------------------------------------------------------
@@ -65,7 +66,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('mes/reports/district-report', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'districtEnactmentReport']);
 
-    Route::put('mes/meeting/ChangeMeetingDate/{id}', [\Modules\EMS\app\Http\Controllers\MeetingController::class, 'changeMeetingDate']);
+    Route::put('mes/meeting/ChangeMeetingDate/{id}', [MeetingController::class, 'changeMeetingDate']);
 
 });
 
@@ -86,3 +87,4 @@ Route::middleware([])->prefix('v1')->group(function () {
     Route::post('mes/ounitNames/liveSearch', [EMSController::class, 'liveSearch']);
 
 });
+Route::get('mes/meeting/selection', [MeetingController::class, 'getSelection']);

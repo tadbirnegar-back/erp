@@ -108,6 +108,14 @@ class OrganizationUnit extends Model
         return $this->hasMany(Meeting::class, 'ounit_id');
     }
 
+    public function firstMeetingByNow(): HasOne
+    {
+        return $this->hasOne(Meeting::class, 'ounit_id')
+            ->whereBetween('meeting_date', [now(), now()->addDays(14)]) // Ensure meeting is within the next 14 days
+            ->orderBy('meeting_date', 'asc');                          // Get the nearest meeting
+    }
+
+
     public function meetingTemplate(): HasOne
     {
         return $this->hasOne(Meeting::class, 'ounit_id')

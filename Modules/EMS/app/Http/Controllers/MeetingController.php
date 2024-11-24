@@ -93,4 +93,14 @@ class MeetingController extends Controller
             ], 500);
         }
     }
+
+
+    public function getSelection()
+    {
+        $user = User::find(2086);
+
+        $user->load('activeDistrictRecruitmentScript.organizationUnit.firstMeetingByNow');
+
+        return response()->json($user);
+    }
 }
