@@ -53,9 +53,8 @@ trait EnactmentTrait
         $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
 
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
-            $query->whereIntegerInRaw('ounit_id', $ounits)
-                ->where('meeting_type_id', $mt->id);
+        $query = Enactment::whereHas('latestMeeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', [3880, 3879]);
         })
             ->whereHas('status', function ($query) {
                 $query->join('enactment_status as es', 'enactments.id', '=', 'es.enactment_id')
@@ -104,9 +103,8 @@ trait EnactmentTrait
         $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
 
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
-            $query->whereIntegerInRaw('ounit_id', $ounits)
-                ->where('meeting_type_id', $mt->id);
+        $query = Enactment::whereHas('latestMeeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', [3880, 3879]);
         })
             ->whereHas('status', function ($query) {
                 $query->join('enactment_status as es', 'enactments.id', '=', 'es.enactment_id')
@@ -140,6 +138,29 @@ trait EnactmentTrait
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
 
+
+    public function indexArchiveEnactment(array $data, array $ounits, $userId)
+    {
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+        $statuses = $data['statusID'] ?? null;
+        $searchTerm = $data['title'] ?? null;
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
+
+        $query = Enactment::with(['latestMeeting' => function ($q) use ($ounits) {
+            $q->whereIn('ounit_id', $ounits);
+        }])
+            ->whereHas('latestMeeting', function ($q) use ($ounits) {
+                $q->whereIn('ounit_id', $ounits);
+            });
+
+
+        return $query->paginate($perPage, ['*'], 'page', $pageNum);
+    }
+
+
     public function indexPendingForArchiveStatusEnactment(array $data, array $ounits, $userId)
     {
         $perPage = $data['perPage'] ?? 10;
@@ -149,39 +170,33 @@ trait EnactmentTrait
         if (!empty($data['ounitID'])) {
             $ounits = [$data['ounitID']];
         }
-        $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
 
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
-            $query->whereIntegerInRaw('ounit_id', $ounits)
-                ->where('meeting_type_id', $mt->id);
+        $query = Enactment::whereHas('latestMeeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', [3880, 3879]);
         })
             ->whereHas('status', function ($query) use ($data, $statuses, $userId) {
                 $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
                     ->join('statuses as s', 'rss.status_id', '=', 's.id')
-                    ->when(!empty($data['statusID']), function ($query) use ($data) {
+                    ->when($statuses, function ($query) use ($data) {
                         $query->where('s.id', $data['statusID']);
                     })
-                    ->when(!empty($data['reviewStatusID']), function ($query) use ($data, $userId) {
+                    ->when($data['reviewStatusID'], function ($query) use ($data, $userId) {
                         $query->join('enactment_reviews as er', function ($join) use ($userId) {
                             $join->on('enactments.id', '=', 'er.enactment_id')
                                 ->where('er.user_id', '=', $userId);
                         })
                             ->where('er.status_id', $data['reviewStatusID']);
                     })
-
-                    // Apply condition based on the $statuses if it is not null or empty
                     ->when(!empty($statuses), function ($query) use ($statuses) {
                         $query->where('rss.status_id', $statuses);
                     })
-                    // Ensure that the most recent 'create_date' is selected
                     ->where('rss.create_date', function ($subQuery) {
                         $subQuery->selectRaw('MAX(create_date)')
                             ->from('enactment_status as sub_rss')
                             ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
                     });
             });
-
 
         $query->when($searchTerm, function ($query) use ($searchTerm) {
             $query->where(function ($query) use ($searchTerm) {
@@ -191,6 +206,7 @@ trait EnactmentTrait
                     });
             });
         });
+
         if (!empty($data['startDate']) && !empty($data['endDate'])) {
             $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
             $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
@@ -200,8 +216,11 @@ trait EnactmentTrait
             });
         }
 
+        $query->whereHas('latestHeyaatMeeting');
 
-        return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
+        return $query->with(['status', 'latestMeeting' => function ($q) use ($ounits) {
+            $q->whereIn('ounit_id', $ounits);
+        }, 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }

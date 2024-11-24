@@ -49,7 +49,6 @@ class EnactmentController extends Controller
         $data = $request->all();
         $enactments = $this->indexPendingForSecretaryStatusEnactment($data, $ounits);
 
-        return response()->json($enactments);
         $statuses = Enactment::GetAllStatuses();
         return response()->json(['data' => $enactments, 'statusList' => $statuses]);
     }
