@@ -68,6 +68,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::put('mes/meeting/ChangeMeetingDate/{id}', [MeetingController::class, 'changeMeetingDate']);
 
+    Route::get('mes/meeting/selection', [MeetingController::class, 'getSelection']);
+
+
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -87,4 +90,3 @@ Route::middleware([])->prefix('v1')->group(function () {
     Route::post('mes/ounitNames/liveSearch', [EMSController::class, 'liveSearch']);
 
 });
-Route::get('mes/meeting/selection', [MeetingController::class, 'getSelection']);

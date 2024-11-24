@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Http\Traits\DateTrait;
+use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentMeeting;
@@ -14,7 +15,7 @@ use Modules\EMS\app\Models\Meeting;
 
 class MeetingController extends Controller
 {
-    use DateTrait, MeetingTrait;
+    use DateTrait, MeetingTrait, EMSSettingTrait;
 
     public function changeMeetingDate(UpdateMeetingDateReq $req, $id)
     {
@@ -99,8 +100,37 @@ class MeetingController extends Controller
     {
         $user = User::find(2086);
 
-        $user->load('activeDistrictRecruitmentScript.organizationUnit.firstMeetingByNow');
+        $user->load('activeDistrictRecruitmentScript.organizationUnit.firstFreeMeetingByNow');
+        $user->load('activeDistrictRecruitmentScript.organizationUnit.fullMeetingsByNow');
 
-        return response()->json($user);
+        $firstFreeMeeting = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->firstFreeMeetingByNow;
+        $fullMeetings = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->fullMeetingsByNow;
+
+
+        $data = [];
+        if (!empty($fullMeetings)) {
+            $data['fullMeetings'] = $fullMeetings;
+        }
+
+        if (empty($firstFreeMeeting)) {
+            $data['message'] = "هیچ جلسه ای خالی نیست";
+        } else {
+
+            $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+
+            $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $firstFreeMeeting->id)
+                ->distinct('enactment_id')
+                ->count('enactment_id');
+
+            if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
+                $data['message'] = "جلسه انتخاب شده تکمیل ظرفیت شده";
+            }
+
+            $data['freeMeeting'] = $firstFreeMeeting;
+
+        }
+
+
+        return response()->json($data, 200);
     }
 }

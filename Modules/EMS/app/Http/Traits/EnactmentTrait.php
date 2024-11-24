@@ -238,7 +238,8 @@ trait EnactmentTrait
 
             }]);
             $jDate = Jalalian::fromCarbon(Carbon::now())->format('Y/m/d');
-            $autoSerial = $nextId . '/' . $meeting->ounit?->ancestors[0]->unitable_id . '/' . $meeting->ounit?->ancestors[1]->unitable_id . '/' . $jDate;
+
+            $autoSerial = $nextId . '/' . $meeting->ounit?->unitable_id . '/' . $meeting->ounit?->ancestors[0]->unitable_id . '/' . $jDate;
 
             $result = [
                 'custom_title' => $item['customTitle'] ?? null,
@@ -256,6 +257,7 @@ trait EnactmentTrait
             $nextId++;
 
             return $result;
+
         });
 
         return $data;
@@ -633,7 +635,7 @@ trait EnactmentTrait
                     }]);
 
             }],
-          'FormNumThree' => [
+            'FormNumThree' => [
                 // MainEnactment logic
                 'reviewStatuses',
                 'latestMeeting',

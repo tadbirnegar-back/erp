@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
+use Modules\EMS\app\Http\Enums\SettingsEnum;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingMember;
 use Modules\EvalMS\app\Models\Evaluation;
@@ -108,13 +110,70 @@ class OrganizationUnit extends Model
         return $this->hasMany(Meeting::class, 'ounit_id');
     }
 
-    public function firstMeetingByNow(): HasOne
+    public function firstFreeMeetingByNow(): HasOne
     {
+        // Fetch the max days for reception from settings
+        $maxDays = \DB::table('settings')
+            ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
+            ->value('value');
+
+        // Fetch the enactment limit per meeting from settings
+        $enactmentLimitPerMeeting = \DB::table('settings')
+            ->where('key', SettingsEnum::ENACTMENT_LIMIT_PER_MEETING->value)
+            ->value('value');
+
+
+        $meetingtypeId = \DB::table('meeting_types')
+            ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->value('id');
+
+        \Log::info($meetingtypeId);
+        
         return $this->hasOne(Meeting::class, 'ounit_id')
-            ->whereBetween('meeting_date', [now(), now()->addDays(14)]) // Ensure meeting is within the next 14 days
-            ->orderBy('meeting_date', 'asc');                          // Get the nearest meeting
+            ->where('meeting_type_id', $meetingtypeId)
+            ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)]) // Filter by meeting date range
+            ->whereNotExists(function ($query) use ($enactmentLimitPerMeeting) {
+                $query->selectRaw('1')
+                    ->from('enactment_meeting')
+                    ->whereColumn('enactment_meeting.meeting_id', 'meetings.id') // Match meeting IDs
+                    ->groupBy('enactment_meeting.meeting_id')                  // Group by meeting
+                    ->havingRaw('COUNT(DISTINCT enactment_id) >= ?', [$enactmentLimitPerMeeting]); // Check enactment count
+            })
+            ->orderBy('meeting_date', 'asc'); // Get the nearest meeting
     }
 
+
+    public function fullMeetingsByNow(): HasMany
+    {
+        // Fetch the max days for reception from settings
+        $maxDays = \DB::table('settings')
+            ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
+            ->value('value');
+
+        // Fetch the enactment limit per meeting from settings
+        $enactmentLimitPerMeeting = \DB::table('settings')
+            ->where('key', SettingsEnum::ENACTMENT_LIMIT_PER_MEETING->value)
+            ->value('value');
+
+
+        $meetingtypeId = \DB::table('meeting_types')
+            ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->value('id');
+
+        \Log::info($meetingtypeId);
+        // Fetch all the meetings that have reached or exceeded the enactment limit
+        return $this->hasMany(Meeting::class, 'ounit_id')
+            ->where('meeting_type_id', $meetingtypeId)
+            ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)]) // Filter by meeting date range
+            ->whereExists(function ($query) use ($enactmentLimitPerMeeting) {
+                $query->selectRaw('1')
+                    ->from('enactment_meeting')
+                    ->whereColumn('enactment_meeting.meeting_id', 'meetings.id') // Match meeting IDs
+                    ->groupBy('enactment_meeting.meeting_id')                  // Group by meeting
+                    ->havingRaw('COUNT(DISTINCT enactment_id) >= ?', [$enactmentLimitPerMeeting]); // Check enactment count
+            })
+            ->orderBy('meeting_date', 'asc'); // Order by meeting date
+    }
 
     public function meetingTemplate(): HasOne
     {
