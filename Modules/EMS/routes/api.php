@@ -72,7 +72,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::get('mes/meeting/selection', [MeetingController::class, 'getSelection']);
 
-
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
