@@ -99,7 +99,7 @@ class EnactmentController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-//            DB::beginTransaction();
+            DB::beginTransaction();
             $data = $request->all();
             $user = Auth::user();
 
@@ -233,9 +233,9 @@ class EnactmentController extends Controller
             }
 
 
-//            DB::commit();
+            DB::commit();
         } catch (\Exception $exception) {
-//            DB::rollBack();
+            DB::rollBack();
             return response()->json([
                 'message' => 'خطا در ثبت مصوبه جدید',
                 'error' => $exception->getMessage(),
