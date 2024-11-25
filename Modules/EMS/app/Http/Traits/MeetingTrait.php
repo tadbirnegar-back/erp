@@ -13,7 +13,7 @@ trait MeetingTrait
 
     public function storeMeeting(array|Collection $data)
     {
-
+        
 //        $normalizedDate = str_replace('-', '/', $data['newDate']);
 //        $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($normalizedDate, true);
 //        $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString)
@@ -104,6 +104,6 @@ trait MeetingTrait
     {
         return Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::APPROVED->value);
     }
-    
+
 
 }

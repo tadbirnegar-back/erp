@@ -15,6 +15,8 @@ class testController extends Controller
     public function run()
     {
 
+        $a = convertDateTimeHaveDashJalaliPersianCharactersToGregorian("۱۴۰۳/۰۹/۰۶ ۰۸:۰۰");
+        dd($a);
 //        Meeting::create([
 //            'isTemplate' => true,
 //            'creator_id' => 2172,

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -99,9 +100,10 @@ class EnactmentController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            DB::beginTransaction();
+//            DB::beginTransaction();
             $data = $request->all();
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = User::find(2064);
 
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
@@ -165,7 +167,7 @@ class EnactmentController extends Controller
 
 
                 $currentDate = Carbon::now();
-                $newMeetingDate = convertJalaliPersianCharactersToGregorian($data['meetingDate']);
+                $newMeetingDate = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($data['meetingDate']);
 
                 // Make sure $newMeetingDate is a Carbon instance
                 $newMeetingDate = Carbon::parse($newMeetingDate);
@@ -182,11 +184,12 @@ class EnactmentController extends Controller
 
 
                 $meetingDate = $data['meetingDate'];
-                $data['meetingDate'] = $data['shuraDate'];
+                $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
                 $meetingShura = $this->storeMeeting($data);
 
                 $data['meetingDate'] = $meetingDate;
+
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING)->first()->id;
                 $meetingHeyaat = $this->storeMeeting($data);
 
@@ -232,10 +235,13 @@ class EnactmentController extends Controller
             }
 
 
-            DB::commit();
+//            DB::commit();
         } catch (\Exception $exception) {
-            DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مصوبه جدید'
+//            DB::rollBack();
+            return response()->json([
+                'message' => 'خطا در ثبت مصوبه جدید',
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTrace()
             ], 500);
         }
     }

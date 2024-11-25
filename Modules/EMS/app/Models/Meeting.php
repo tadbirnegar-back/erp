@@ -79,10 +79,16 @@ class Meeting extends Model
                     return null;
                 }
 
-                $dateTimeString = convertDateTimeJalaliPersianCharactersToGregorian($value);
+                // Debug the incoming value
+                if (!is_string($value)) {
+                    throw new \Exception('Expected a string date, received: ' . gettype($value));
+                }
+                \Log::info('Input value for meetingDate set: ' . $value);
+
+                // Convert to Gregorian
+                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
 
                 return $dateTimeString;
-
             }
         );
     }
