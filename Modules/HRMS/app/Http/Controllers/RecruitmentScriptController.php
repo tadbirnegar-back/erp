@@ -226,6 +226,7 @@ class RecruitmentScriptController extends Controller
         try {
             DB::beginTransaction();
             $this->attachStatusToRs($script, $cancelStatus, $request->description ?? null, $user);
+            $this->updateRcFinishDate($script, now());
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت لغو شد']);
         } catch (Exception $e) {
@@ -453,8 +454,11 @@ class RecruitmentScriptController extends Controller
 
             $result = $this->declineScript($script, $user, true, $request->description ?? null);
 
+            $this->updateRcFinishDate($script, now());
 
             $notifibleUser = $script->user;
+
+            return response()->json($notifibleUser);
 
             $person = Person::find($notifibleUser->person_id);
 
@@ -638,7 +642,7 @@ class RecruitmentScriptController extends Controller
             }
             $user = Auth::user();
 
-            $this->terminateRc($script, $request->date);
+            $this->updateRcFinishDate($script, $request->date);
 
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID);
 

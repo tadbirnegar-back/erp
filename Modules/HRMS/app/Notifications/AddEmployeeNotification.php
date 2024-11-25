@@ -59,7 +59,7 @@ class AddEmployeeNotification extends Notification
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=441aicwhrsunym6 \n username={$this->username} \n position_name={$this->posname} \n ounit_name={$this->ounit_name}")
-                ->to($notifiable->mobile);
+                ->to("0" . $notifiable->mobile);
 
 
             return $a;

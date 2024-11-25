@@ -36,7 +36,7 @@ class ExpireScriptJob implements ShouldQueue
         $recruitmentScript = RecruitmentScript::with(['employee.person.user', 'scriptType', 'ounit'])->find($this->rs);
 
         //Todo :
-        $this->terminateRc($recruitmentScript, now());
+        $this->updateRcFinishDate($recruitmentScript, now());
         $rsStatus = $this->terminatedRsStatus();
         RecruitmentScriptStatus::create([
             'script_id' => $this->rs,

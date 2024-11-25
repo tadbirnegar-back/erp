@@ -58,7 +58,7 @@ class DeclineRsNotification extends Notification
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=yc17fsxi3xrdzeu \n username={$this->username}")
-                ->to($notifiable->mobile);
+                ->to("0" . $notifiable->mobile);
 
 
             return $a;

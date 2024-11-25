@@ -58,7 +58,7 @@ class EbtalRsNotification extends Notification
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=l9i5x7nfvw7oofq \n username={$this->username}")
-                ->to($notifiable->mobile);
+                ->to("0" . $notifiable->mobile);
 
 
             return $a;

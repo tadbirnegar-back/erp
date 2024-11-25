@@ -63,7 +63,7 @@ class ChangeMeetingDateNotification extends Notification
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=suoqg4c6upppx8e \n username={$this->username} \n lastDate={$this->lastDate} \n newDate={$this->newDate}")
-                ->to($notifiable->mobile);
+                ->to("0" . $notifiable->mobile);
 
 
             return $a;

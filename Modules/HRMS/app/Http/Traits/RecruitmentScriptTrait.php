@@ -255,6 +255,7 @@ trait RecruitmentScriptTrait
     {
 
         $deleteStatus = $this->rejectedRsStatus();
+        $this->updateRcFinishDate($rs, now());
         $this->attachStatusToRs($rs, $deleteStatus, $description, $user);
 
         return true;
@@ -318,7 +319,7 @@ trait RecruitmentScriptTrait
         return $result->isNotEmpty() ? $result : collect(['NoBtn']);
     }
 
-    public function terminateRc(RecruitmentScript $script, $date)
+    public function updateRcFinishDate(RecruitmentScript $script, $date)
     {
         $finishDate = convertJalaliPersianCharactersToGregorian($date);
 

@@ -57,7 +57,7 @@ class RegisterNotification extends Notification
 
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=f110niuzl76bece \n username={$this->username}")
-                ->to($notifiable->mobile);
+                ->to("0" . $notifiable->mobile);
 
 
             return $a;

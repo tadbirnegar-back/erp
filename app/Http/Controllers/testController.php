@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\HRMS\app\Models\RecruitmentScript;
 
 
 class testController extends Controller
@@ -16,12 +15,55 @@ class testController extends Controller
     public function run()
     {
 
-        RecruitmentScript::create([
-            'employee_id' => 2085,
-            'organization_unit_id' => 3888,
-            'expire_date' => "2024/11/25",
-            'position_id' => 2
-        ]);
+
+//        $user = auth()->user();
+//
+//        $user = User::find(2085);
+//
+//        $id = 2764;
+//        /**
+//         * @var RecruitmentScript $script
+//         */
+//        $script = RecruitmentScript::with('approvers')->find($id);
+//
+//        if (is_null($script)) {
+//            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+//        }
+//
+//        try {
+//            DB::beginTransaction();
+//
+//
+//            $result = $this->declineScript($script, $user, true, $request->description ?? null);
+//
+//            dd($result);
+//
+//            $this->updateRcFinishDate($script, now());
+//
+//            $notifibleUser = $script->user;
+//
+//            $person = Person::find($notifibleUser->person_id);
+//
+//            $notifibleUser->notify(new DeclineRsNotification($person->display_name));
+//
+//            DB::commit();
+//
+//
+//            return response()->json([
+//                "result" => $result
+//            ]);
+//        } catch (Exception $e) {
+//            DB::rollBack();
+//
+//            return response()->json(['message' => 'خطا در رد حکم'], 500);
+//        }
+
+//        RecruitmentScript::create([
+//            'employee_id' => 2085,
+//            'organization_unit_id' => 3888,
+//            'expire_date' => "2024/11/25",
+//            'position_id' => 2
+//        ]);
 
 //        Meeting::create([
 //            'isTemplate' => true,

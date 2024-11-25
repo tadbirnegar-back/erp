@@ -58,7 +58,7 @@ class ChangeNumNotification extends Notification
         try {
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=zd9ez1vcrggytr8 \n pre_num={$this->pre_num} \n current_num={$this -> current_num}")
-                ->to($notifiable->mobile);
+                ->to("0" . $notifiable->mobile);
 
 
             return $a;

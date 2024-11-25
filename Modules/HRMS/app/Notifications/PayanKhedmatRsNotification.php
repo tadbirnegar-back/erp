@@ -62,7 +62,7 @@ class PayanKhedmatRsNotification extends Notification
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
             ->send("patterncode=qppvyidrchg9827 \n username={$this->username} \n  ounit_name={$this->ounit_name} \n  position_name={$this->position_name} ")
-                ->to($notifiable->mobile);
+                ->to("0" . $notifiable->mobile);
 
 
             return $a;
