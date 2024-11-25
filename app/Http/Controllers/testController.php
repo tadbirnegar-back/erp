@@ -14,7 +14,6 @@ class testController extends Controller
 
     public function run()
     {
-
 //        Meeting::create([
 //            'isTemplate' => true,
 //            'creator_id' => 2172,

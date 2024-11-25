@@ -78,11 +78,10 @@ class Meeting extends Model
                 if (is_null($value)) {
                     return null;
                 }
-
-                $dateTimeString = convertDateTimeJalaliPersianCharactersToGregorian($value);
+                // Convert to Gregorian
+                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
 
                 return $dateTimeString;
-
             }
         );
     }

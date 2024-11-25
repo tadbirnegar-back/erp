@@ -25,7 +25,7 @@ class CreateMeetingListener
             $meetingDate = $event->meeting->meeting_date;
 
             $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($meetingDate, true);
-            $gregorianDate = CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString);
+            $gregorianDate = CalendarUtils::createCarbonFromFormat('Y/m/d H:i:s', $englishJalaliDateString);
             $targetDate = Carbon::parse($gregorianDate);
             $currentDate = Carbon::now();
             $delayInSeconds = $targetDate->diffInSeconds($currentDate, false); // false for negative values

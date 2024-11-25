@@ -8,12 +8,14 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Notifications\ScriptExpireNotification;
 
 class ExpireScriptJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, RecruitmentScriptTrait;
 
     protected int $rs;
 
@@ -34,6 +36,12 @@ class ExpireScriptJob implements ShouldQueue
         $recruitmentScript = RecruitmentScript::with(['employee.person.user', 'scriptType', 'ounit'])->find($this->rs);
 
         //Todo :
+        $this->terminateRc($recruitmentScript, now());
+        $rsStatus = $this->terminatedRsStatus();
+        RecruitmentScriptStatus::create([
+            'script_id' => $this->rs,
+            'status_id' => $rsStatus->id,
+        ]);
         //make Script's status to become GheyreFaal in here
 
         if ($recruitmentScript && $recruitmentScript->employee && $recruitmentScript->employee->person && $recruitmentScript->employee->person->user) {

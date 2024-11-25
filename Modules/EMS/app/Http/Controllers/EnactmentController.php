@@ -105,6 +105,7 @@ class EnactmentController extends Controller
 
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
+            $data['isTemplate'] = true;
             if (isset($data['meetingID'])) {
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
@@ -164,7 +165,7 @@ class EnactmentController extends Controller
 
 
                 $currentDate = Carbon::now();
-                $newMeetingDate = convertJalaliPersianCharactersToGregorian($data['meetingDate']);
+                $newMeetingDate = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($data['meetingDate']);
 
                 // Make sure $newMeetingDate is a Carbon instance
                 $newMeetingDate = Carbon::parse($newMeetingDate);
@@ -181,11 +182,12 @@ class EnactmentController extends Controller
 
 
                 $meetingDate = $data['meetingDate'];
-                $data['meetingDate'] = $data['shuraDate'];
+                $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
                 $meetingShura = $this->storeMeeting($data);
 
                 $data['meetingDate'] = $meetingDate;
+
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING)->first()->id;
                 $meetingHeyaat = $this->storeMeeting($data);
 
@@ -234,7 +236,8 @@ class EnactmentController extends Controller
             DB::commit();
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مصوبه جدید'
+            return response()->json([
+                'message' => 'خطا در ثبت مصوبه جدید',
             ], 500);
         }
     }

@@ -73,3 +73,16 @@ function convertDateTimeGregorianToJalaliDateTime(string $value)
     $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
     return $jalaliPersianNumbers;
 }
+
+function convertDateTimeHaveDashJalaliPersianCharactersToGregorian(string $persianCharDateTime)
+{
+    // Convert Persian numbers to English numbers
+    $englishJalaliDateTimeString = \Morilog\Jalali\CalendarUtils::convertNumbers($persianCharDateTime, true);
+
+//    dd($englishJalaliDateTimeString);
+    // Parse the date and time from the Jalali format and convert to Gregorian
+    $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d H:i:s', $englishJalaliDateTimeString)
+        ->toDateTimeString();
+
+    return $dateTimeString;
+}
