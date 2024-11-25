@@ -293,6 +293,7 @@ class EMSController extends Controller
             'enactmentTitles' => $titles,
             'shouraMaxMeetingDateDaysAgo' => $this->getShouraMaxMeetingDateDaysAgo(),
             'receiptionMaxDays' => $this->getReceptionMaxDays(),
+            'emsEnactmentLimitPerMeeting' => $this->getEnactmentLimitPerMeeting(),
             'ounits' => $ounits->pluck('ounit'),
         ];
 

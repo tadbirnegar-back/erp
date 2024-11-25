@@ -125,11 +125,14 @@ class MeetingController extends Controller
                 ->distinct('enactment_id')
                 ->count('enactment_id');
 
+
             if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
                 $data['message'] = "جلسه انتخاب شده تکمیل ظرفیت شده";
             }
 
             $data['freeMeeting'] = $firstFreeMeeting;
+
+            $data['freeMeeting']['countOfEnactments'] = $EncInMeetingcount;
 
         }
 
