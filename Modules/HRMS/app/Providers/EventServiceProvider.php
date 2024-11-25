@@ -3,7 +3,9 @@
 namespace Modules\HRMS\app\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\HRMS\app\Events\ScriptCreatedEvent;
 use Modules\HRMS\app\Events\ScriptStatusCreatedEvent;
+use Modules\HRMS\app\Listeners\ScriptCreatedListener;
 use Modules\HRMS\app\Listeners\ScriptStatusCreatedListener;
 
 class EventServiceProvider extends ServiceProvider
@@ -12,5 +14,9 @@ class EventServiceProvider extends ServiceProvider
         ScriptStatusCreatedEvent::class => [
             ScriptStatusCreatedListener::class,
         ],
+        ScriptCreatedEvent::class => [
+            ScriptCreatedListener::class,
+        ],
+
     ];
 }

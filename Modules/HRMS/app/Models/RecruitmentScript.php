@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Observers\ScriptObserver;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
@@ -54,6 +55,14 @@ class RecruitmentScript extends Model
 //            ->orderBy('create_date', 'desc')
 //            ->latest('create_date')->take(1);
 //    }
+
+
+    protected static function boot()
+    {
+        parent::boot();
+        // Register the observer
+        static::observe(ScriptObserver::class);
+    }
 
     public function status()
     {

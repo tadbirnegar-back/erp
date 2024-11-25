@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Models\RecruitmentScript;
 
 
 class testController extends Controller
@@ -14,6 +15,14 @@ class testController extends Controller
 
     public function run()
     {
+
+        RecruitmentScript::create([
+            'employee_id' => 2085,
+            'organization_unit_id' => 3888,
+            'expire_date' => "2024/11/25",
+            'position_id' => 2
+        ]);
+
 //        Meeting::create([
 //            'isTemplate' => true,
 //            'creator_id' => 2172,
