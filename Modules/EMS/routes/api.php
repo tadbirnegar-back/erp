@@ -91,4 +91,3 @@ Route::middleware([])->prefix('v1')->group(function () {
     Route::post('mes/ounitNames/liveSearch', [EMSController::class, 'liveSearch']);
 
 });
-Route::post('mes/enactment/add-by-secretary', [EnactmentController::class, 'store']);

@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
-use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -102,8 +101,7 @@ class EnactmentController extends Controller
         try {
 //            DB::beginTransaction();
             $data = $request->all();
-//            $user = Auth::user();
-            $user = User::find(2064);
+            $user = Auth::user();
 
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
