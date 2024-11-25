@@ -247,7 +247,8 @@ class EnactmentController extends Controller
 
         } catch (\Exception $exception) {
             DB::rollBack();
-            \Log::error('مصوبه جدید ثبت نشد');
+            return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 200);
+
         }
     }
 
