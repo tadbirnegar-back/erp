@@ -297,11 +297,14 @@ trait RecruitmentScriptTrait
                 ],
             ],
             RecruitmentScriptStatusEnum::ACTIVE->value => [
-                ['component' => 'RevokeSeparateBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/terminate/{id}']
+                ['component' => 'RevokeSeparateBtn', 'permissions' => ['/hrm/rc/cancel/{id}', '/hrm/rc/ptp/terminate/{id}']
                 ],
             ],
             RecruitmentScriptStatusEnum::EXPIRED->value => [
                 ['component' => 'EndRenewBtn', 'permissions' => ['/hrm/rc/service-end/{id}', '/hrm/rc/renew/{id}']
+                ],
+            ], RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value => [
+                ['component' => 'AzlBtn', 'permissions' => ['/hrm/rc/ptp/terminate/{id}']
                 ],
             ],
         ];

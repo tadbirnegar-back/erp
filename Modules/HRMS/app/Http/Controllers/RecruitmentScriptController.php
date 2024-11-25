@@ -627,12 +627,12 @@ class RecruitmentScriptController extends Controller
             $script = RecruitmentScript::whereHas('status', function ($query) {
                 $query->where('status_id', $this->pendingTerminateRsStatus()->id);
             })->with('latestStatus', 'user')->find($id);
-            $terminateStatus = $this->terminatedRsStatus();
 
             if (is_null($script)) {
                 return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
             }
 
+            $terminateStatus = $this->terminatedRsStatus();
             if ($script->latestStatus->id == $terminateStatus->id) {
                 return response()->json(['message' => 'حکم از قبل قطع همکاری شده است'], 400);
             }

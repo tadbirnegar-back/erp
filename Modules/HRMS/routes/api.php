@@ -127,15 +127,15 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::put('/hrm/rc/renew/{id}', [RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/terminate/{id}', [RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
+//    Route::put('/hrm/rc/terminate/{id}', [RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
 
     Route::put('/hrm/rc/service-end/{id}', [RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/cancel/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cancelRscript'])->middleware(['auth:api']);
+//    Route::put('/hrm/rc/cancel/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cancelRscript'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/renew/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
+//    Route::put('/hrm/rc/renew/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/terminate/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
+//    Route::put('/hrm/rc/terminate/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
 
     Route::put('/hrm/rc/service-end/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
 
@@ -166,7 +166,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::get('/hrm/ptprc/list', [RecruitmentScriptController::class, 'ptpIndex']);
 
-    Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
+//    Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
 
     Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
 
