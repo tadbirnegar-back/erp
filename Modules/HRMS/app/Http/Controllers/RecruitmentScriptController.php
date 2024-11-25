@@ -638,10 +638,7 @@ class RecruitmentScriptController extends Controller
             }
             $user = Auth::user();
 
-            $finishDate = convertJalaliPersianCharactersToGregorian($request->date);
-
-            $script->finish_date = $finishDate;
-            $script->save();
+            $this->terminateRc($script, $request->date);
 
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID);
 

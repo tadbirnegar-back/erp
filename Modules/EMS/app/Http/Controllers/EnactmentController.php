@@ -105,6 +105,7 @@ class EnactmentController extends Controller
 
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
+            $data['isTemplate'] = true;
             if (isset($data['meetingID'])) {
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 

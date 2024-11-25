@@ -47,17 +47,16 @@ class StoreEnactmentStatusInQueueListener
             $meetingDate = Carbon::parse($meetingDate);
             $meetingDate2 = Carbon::parse($meetingDate);
 
-            $consultingDelay = $this->getConsultingAutoMoghayerat()?->value ?? 7;
-            $HeyaatDelay = $this->getBoardAutoMoghayerat()?->value ?? 15;
+            $receiptMaxDay = $this->getReceptionMaxDays()?->value ?? 7;
 
 
             // Add 16 days and 5 minutes to the meeting date
-            $delayHeyat = $meetingDate->addDays($HeyaatDelay + 1)->addMinutes(5);
-            $delayKarshenas = $meetingDate2->addDays($consultingDelay + 1)->addMinutes(5);
+            $delayHeyat = $meetingDate->addDays($receiptMaxDay + 1)->addMinutes(5);
+            $delayKarshenas = $meetingDate2->addDays($receiptMaxDay + 1)->addMinutes(5);
 
 
-            $alertHeayaatDelay = $meetingDate->addDays($HeyaatDelay - 1)->addMinutes(5);
-            $alertKarshenasDelay = $meetingDate2->addDays($consultingDelay - 1)->addMinutes(5);
+            $alertHeayaatDelay = $meetingDate->addDays($receiptMaxDay - 1)->addMinutes(5);
+            $alertKarshenasDelay = $meetingDate2->addDays($receiptMaxDay - 1)->addMinutes(5);
 
 
             // Dispatch the job with the calculated delay

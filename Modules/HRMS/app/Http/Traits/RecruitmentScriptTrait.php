@@ -237,7 +237,6 @@ trait RecruitmentScriptTrait
     }
 
 
-
     public function attachStatusToRs(RecruitmentScript $script, Status $status, string $description = null, ?User $user = null, $fileID = null)
     {
         $rsStatus = new RecruitmentScriptStatus();
@@ -317,6 +316,14 @@ trait RecruitmentScriptTrait
         })->pluck('component');
 
         return $result->isNotEmpty() ? $result : collect(['NoBtn']);
+    }
+
+    public function terminateRc(RecruitmentScript $script, $date)
+    {
+        $finishDate = convertJalaliPersianCharactersToGregorian($date);
+
+        $script->finish_date = $finishDate;
+        $script->save();
     }
 
 }
