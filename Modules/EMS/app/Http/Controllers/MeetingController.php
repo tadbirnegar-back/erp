@@ -98,10 +98,12 @@ class MeetingController extends Controller
 
     public function getSelection()
     {
-//        $user = User::find(2086);
+//        $user = User::find(2064);
         $user = Auth::user();
 
         $user->load('activeDistrictRecruitmentScript.organizationUnit.firstFreeMeetingByNow');
+
+
         $user->load('activeDistrictRecruitmentScript.organizationUnit.fullMeetingsByNow');
 
         $firstFreeMeeting = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->firstFreeMeetingByNow;

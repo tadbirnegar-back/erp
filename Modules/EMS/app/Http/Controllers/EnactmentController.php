@@ -102,7 +102,7 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $user = Auth::user();
-
+//            $user = User::find(2064);
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             $data['isTemplate'] = true;
@@ -124,7 +124,6 @@ class EnactmentController extends Controller
 
                 $enactment = $this->storeEnactment($data, $meeting);
 
-
                 $enactment->meetings()->attach($meeting->id);
                 //Shura Meeting
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
@@ -135,7 +134,7 @@ class EnactmentController extends Controller
                 $data['isTemplate'] = $meeting->isTemplate;
                 $data['summary'] = $meeting->summary;
                 $data['parent_id'] = $meeting->parent_id;
-                $data['meetingDate'] = $data['shuraDate'];
+                $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
                 $meetingShura = $this->storeMeeting($data);
 
 
@@ -146,18 +145,26 @@ class EnactmentController extends Controller
                 }
 
                 $enactment->meetings()->attach($meetingShura->id);
-
-                if ($enactment) {
-                    return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
-                } else {
-                    return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 404);
-                }
             } else if (isset($data['meetingDate'])) {
 
                 //Validations
 
-                $user->load('activeDistrictRecruitmentScript.organizationUnit.firstFreeMeetingByNow');
-                $firstFreeMeeting = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->firstFreeMeetingByNow;
+                $heyatOunit = OrganizationUnit::with([
+                    'ancestors' => function ($query) {
+                        $query->where('unitable_type', DistrictOfc::class);
+                    }
+                ])->find($data['ounitID']);
+
+                $ancestor = "";
+// Ensure ancestors are loaded and not null before attempting to access the first ancestor
+                if ($heyatOunit && $heyatOunit->ancestors->isNotEmpty()) {
+                    $ancestor = $heyatOunit->ancestors->first();
+
+                    $ancestor->load('firstFreeMeetingByNow');
+
+                }
+
+                $firstFreeMeeting = $ancestor->firstFreeMeetingByNow;
 
                 if (!empty($firstFreeMeeting)) {
                     return response()->json(['message' => "شما نمیتوانید با داشتن جلسه خالی جلسه دیگری ایجاد نمایید"], 404);
@@ -189,6 +196,9 @@ class EnactmentController extends Controller
                 $data['meetingDate'] = $meetingDate;
 
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING)->first()->id;
+
+
+                $data['ounitID'] = $ancestor->id;
                 $meetingHeyaat = $this->storeMeeting($data);
 
                 //Make Enactments
@@ -225,20 +235,19 @@ class EnactmentController extends Controller
                     }
 
                 }
-                if ($enactment) {
-                    return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
-                } else {
+
+                if (empty($enactment)) {
                     return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 404);
                 }
             }
 
 
             DB::commit();
+            return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
+
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json([
-                'message' => 'خطا در ثبت مصوبه جدید',
-            ], 500);
+            \Log::error('مصوبه جدید ثبت نشد');
         }
     }
 
