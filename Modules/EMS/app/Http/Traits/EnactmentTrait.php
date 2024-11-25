@@ -145,6 +145,7 @@ trait EnactmentTrait
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $statuses = $data['statusID'] ?? null;
+        $reviewStatus = $data['reviewStatusID'] ?? null;
         $searchTerm = $data['title'] ?? null;
         if (!empty($data['ounitID'])) {
             $ounits = [$data['ounitID']];
@@ -156,18 +157,29 @@ trait EnactmentTrait
             $query->whereIntegerInRaw('ounit_id', $ounits)
                 ->where('meeting_type_id', $mt->id);
         })
-            ->whereHas('status', function ($query) use ($data, $statuses, $userId) {
+            ->whereHas('status', function ($query) use ($data, $statuses, $userId, $reviewStatus) {
                 $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
                     ->join('statuses as s', 'rss.status_id', '=', 's.id')
-                    ->when(!empty($data['statusID']), function ($query) use ($data) {
+                    ->when(!empty($data['statusID']), function ($query) use ($data, $reviewStatus) {
                         $query->where('s.id', $data['statusID']);
                     })
-                    ->when(!empty($data['reviewStatusID']), function ($query) use ($data, $userId) {
-                        $query->join('enactment_reviews as er', function ($join) use ($userId) {
-                            $join->on('enactments.id', '=', 'er.enactment_id')
-                                ->where('er.user_id', '=', $userId);
-                        })
-                            ->where('er.status_id', $data['reviewStatusID']);
+                    ->when($reviewStatus, function ($query) use ($data, $reviewStatus) {
+                        if ($reviewStatus == 0) {
+                            $query->whereHas('enactmentReviews', function ($query) use ($data) {
+                                $query
+                                    ->whereHas('user.roles', function ($query) {
+                                        $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                                    });
+                            }, '<', 2);
+                        } else {
+                            $query->whereHas('enactmentReviews', function ($query) use ($data) {
+                                $query
+                                    ->whereHas('user.roles', function ($query) {
+                                        $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                                    })
+                                    ->where('status_id', $data['reviewStatusID']);
+                            }, '>', 2);
+                        }
                     })
 
                     // Apply condition based on the $statuses if it is not null or empty
@@ -176,7 +188,7 @@ trait EnactmentTrait
                     })
                     // Ensure that the most recent 'create_date' is selected
                     ->where('rss.create_date', function ($subQuery) {
-                        $subQuery->selectRaw('MAX(create_date)')
+                        $subQuery->selectRaw('MAX(id)')
                             ->from('enactment_status as sub_rss')
                             ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
                     });

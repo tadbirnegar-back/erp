@@ -133,16 +133,16 @@ class Enactment extends Model
 
     public function getUpshotAttribute()
     {
-//        if (!$this->relationLoaded('reviewStatuses')) {
-//            return null;
-//        }
+        if (!$this->relationLoaded('reviewStatuses')) {
+            return null;
+        }
 
         $reviewStatuses = $this->enactmentReviews()
             ->whereHas('user.roles', function ($query) {
                 $query->where('name', RolesEnum::OZV_HEYAAT->value);
             })->with('status')->get();
 
-        if ($reviewStatuses->count() < 3) {
+        if ($reviewStatuses->count() < 2) {
             return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::UNKNOWN->value);
         }
 
