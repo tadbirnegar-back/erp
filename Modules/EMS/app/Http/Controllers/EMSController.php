@@ -72,7 +72,7 @@ class EMSController extends Controller
         return response()->json($this->data);
     }
 
-    public function registerHetaatMember(Request $request): JsonResponse
+    public function registerHeyaatMember(Request $request): JsonResponse
     {
         $mrs = [
 
@@ -142,26 +142,18 @@ class EMSController extends Controller
 
 
         $data = $request->all();
-        $user = User::with('person')->where('mobile', $data['mobile'])->first();
-
-        if ($user) {
-            return response()->json(['message' => 'mobile'], 422);
-
-        }
-
-        $person = Person::where('national_code', $data['nationalCode'])->first();
-
-        if ($person) {
-            return response()->json(['message' => 'nationalCode', 'data' => $person], 422);
-        }
+        $user = User::with(['person' => function ($query) use ($data) {
+            $query->where('national_code', $data['nationalCode']);
+        }])->where('mobile', $data['mobile'])->first();
 
 
         try {
             DB::beginTransaction();
-            $p = $user?->person;
-            $personResult = !is_null($p) ?
-                $this->naturalUpdate($data, $p?->personable) :
+            $person = $user?->person;
+            $personResult = !is_null($person) ?
+                $this->naturalUpdate($data, $person?->personable) :
                 $this->naturalStore($data);
+
 
             $data['personID'] = $personResult->person->id;
             $data['password'] = $data['nationalCode'];
@@ -175,7 +167,10 @@ class EMSController extends Controller
 //            }
             $mr = MR::find($data['mrID']);
 
+
             $mrInfo = $mrs[$mr->title];
+
+
 //            $roleNames = array_column($mrInfo, 'position');
 //            $roles = Role::whereIn('name', $roleNames)->get();
 //
@@ -190,32 +185,42 @@ class EMSController extends Controller
                 $file->save();
             }
 
+
             $personAsEmployee = $this->isEmployee($data['personID']);
             $employee = !is_null($personAsEmployee) ? $this->employeeUpdate($data, $personAsEmployee) : $this->employeeStore($data);
+
 
             $workForce = $employee->workForce;
             //additional info insertion
 
+            // Ensure 'ounitID' is an array
+            $ounitIDs = is_string($data['ounitID']) ? json_decode($data['ounitID'], true) : $data['ounitID'];
 
-            $rs = collect($mrInfo)->map(function ($item) use ($employee, $workForce, $user, &$combo, $data) {
-                $hireType = HireType::find($item['hireType']);
-                $scriptType = ScriptType::where('title', $item['scriptType'])->first();
-                $job = Job::where('title', $item['job'])->first();
-                $position = Position::where('name', $item['position'])->first();
-                $result = $this->getScriptAgentCombos($hireType, $scriptType);
-                $sas = $result->map(function ($item) {
-                    return [
-                        'scriptAgentID' => $item->id,
-                        'defaultValue' => $item->pivot->default_value ?? 0,
-                    ];
-                });
-                $encodedSas = json_encode($sas->toArray());
+            // Check if decoding was successful
+            if (!is_array($ounitIDs)) {
+                throw new \Exception("'ounitID' must be a valid array or JSON array string.");
+            }
 
+            $hireType = HireType::find($mrInfo[0]['hireType']);
+            $scriptType = ScriptType::where('title', $mrInfo[0]['scriptType'])->first();
+            $job = Job::where('title', $mrInfo[0]['job'])->first();
+            $position = Position::where('name', $mrInfo[0]['position'])->first();
 
+            $result = $this->getScriptAgentCombos($hireType, $scriptType);
+            $sas = $result->map(function ($item) {
                 return [
+                    'scriptAgentID' => $item->id,
+                    'defaultValue' => $item->pivot->default_value ?? 0,
+                ];
+            });
+            $encodedSas = json_encode($sas->toArray());
+
+            // Iterate over 'ounitIDs' and store each entry
+            foreach ($ounitIDs as $index => $ounitID) {
+                $entry = [
                     'employeeID' => $employee->id,
-                    'ounitID' => $data['ounitID'],
-                    'levelID' => $item['levelID'],
+                    'ounitID' => $ounitID,
+                    'levelID' => $mrInfo[0]['levelID'],
                     'positionID' => $position->id,
                     'hireTypeID' => $hireType->id,
                     'scriptTypeID' => $scriptType->id,
@@ -224,16 +229,14 @@ class EMSController extends Controller
                     'startDate' => now(),
                     'expireDate' => now()->addYear(),
                     'scriptAgents' => $encodedSas,
-                    'files' => $data['files']
-
+                    'files' => $data['files'][$index] ?? null, // Match file by index or set as null if not found
                 ];
 
-            })->toArray();
+                $pendingRsStatus = $this->pendingRsStatus();
 
-
-            $pendingRsStatus = $this->pendingRsStatus();
-
-            $rsRes = $this->rsStore($rs, $employee->id, $pendingRsStatus);
+                // Store each entry individually
+                $this->rsStore([$entry], $employee->id, $pendingRsStatus);
+            }
 
 
             $username = Person::find($user->person_id)->display_name;

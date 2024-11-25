@@ -86,8 +86,9 @@ Route::middleware([])->prefix('v1')->group(function () {
 
     Route::post('mes/mr/list', [EMSController::class, 'getMrList']);
 
-    Route::post('mes/board/register', [EMSController::class, 'registerHetaatMember']);
+    Route::post('mes/board/register', [EMSController::class, 'registerHeyaatMember']);
 
     Route::post('mes/ounitNames/liveSearch', [EMSController::class, 'liveSearch']);
 
 });
+Route::post('mes/board/register', [EMSController::class, 'registerHeyaatMember']);

@@ -6,8 +6,10 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use Modules\EMS\app\Events\CreateMeetingEvent;
 use Modules\EMS\app\Events\EnactmentMeetingEvent;
 use Modules\EMS\app\Events\EnactmentStatusCreatedEvent;
+use Modules\EMS\app\Events\RecruitmentStatusCreatedEvent;
 use Modules\EMS\app\Listeners\CreateMeetingListener;
 use Modules\EMS\app\Listeners\EnactmentMeetingListener;
+use Modules\EMS\app\Listeners\RecruitmentStatusCreatedListener;
 use Modules\EMS\app\Listeners\StoreEnactmentStatusInQueueListener;
 
 class EventServiceProvider extends ServiceProvider
@@ -23,6 +25,10 @@ class EventServiceProvider extends ServiceProvider
 
         EnactmentMeetingEvent::class => [
             EnactmentMeetingListener::class,
+        ],
+
+        RecruitmentStatusCreatedEvent::class => [
+            RecruitmentStatusCreatedListener::class,
         ]
     ];
 }

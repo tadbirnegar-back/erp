@@ -13,6 +13,7 @@ use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
+use Modules\HRMS\app\Http\Requests\StoreHeyaatTatbighReq;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
