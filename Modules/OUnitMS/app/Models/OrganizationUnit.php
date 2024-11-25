@@ -129,7 +129,7 @@ class OrganizationUnit extends Model
 
         return $this->hasOne(Meeting::class, 'ounit_id')
             ->where('meeting_type_id', $meetingtypeId)
-//            ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)]) // Filter by meeting date range
+            ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)]) // Filter by meeting date range
             ->whereNotExists(function ($query) use ($enactmentLimitPerMeeting) {
                 $query->selectRaw('1')
                     ->from('enactment_meeting')
