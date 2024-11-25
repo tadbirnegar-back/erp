@@ -238,8 +238,6 @@ class EnactmentController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'خطا در ثبت مصوبه جدید',
-                'error' => $exception->getMessage(),
-                'trace' => $exception->getTrace()
             ], 500);
         }
     }
