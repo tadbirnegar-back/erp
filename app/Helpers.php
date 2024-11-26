@@ -86,3 +86,11 @@ function convertDateTimeHaveDashJalaliPersianCharactersToGregorian(string $persi
 
     return $dateTimeString;
 }
+
+
+function convertDateTimeGregorianToJalaliDate(string $value)
+{
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d', strtotime($value)); // 1395-02-19
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
+    return $jalaliPersianNumbers;
+}

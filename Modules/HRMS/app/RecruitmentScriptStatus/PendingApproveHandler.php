@@ -34,6 +34,9 @@ class PendingApproveHandler implements StatusHandlerInterface
     {
         $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
         $scriptUser = $this->script->user;
-        $scriptUser->statuses()->attach($disabledStatusForUser->id);
+        $scriptUser->load('roles');
+        if (empty($scriptUser->roles)) {
+            $scriptUser->statuses()->attach($disabledStatusForUser->id);
+        }
     }
 }
