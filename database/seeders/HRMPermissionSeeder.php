@@ -139,7 +139,7 @@ class HRMPermissionSeeder extends Seeder
             ],
             [
                 'name' => 'افزودن درخواست منابع انسانی',
-                'slug' => '/hrm/rc/add'
+                'slug' => '/hrm/rc/insert/add'
             ],
             [
                 'name' => 'لیست سطح تحصیلات',

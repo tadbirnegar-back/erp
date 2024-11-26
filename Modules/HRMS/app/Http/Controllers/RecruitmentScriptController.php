@@ -164,10 +164,11 @@ class RecruitmentScriptController extends Controller
 
         try {
             DB::beginTransaction();
-            $employee = Employee::findOr($data['employeeID'], function () use ($data) {
-                return response(['message' => 'موردی یافت نشد', 'id' => $data['employeeID']], 404);
+            $employee = Employee::find($data['employeeID']);
 
-            });
+            if (is_null($employee)) {
+                return response()->json(['message' => 'کارمند مورد نظر یافت نشد'], 404);
+            }
 
             $scriptType = ScriptType::with('employeeStatus')->find($data['scriptTypeID']);
 

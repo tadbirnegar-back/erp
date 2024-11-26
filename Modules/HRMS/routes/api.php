@@ -137,12 +137,12 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
 //    Route::put('/hrm/rc/terminate/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
 
-    Route::put('/hrm/rc/service-end/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
+    Route::put('/hrm/rc/service-end/{id}', [RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
 
 
-    Route::post('/hrm/rc/add', [RecruitmentScriptController::class, 'store']);
+    Route::post('/hrm/rc/insert/add', [RecruitmentScriptController::class, 'store']);
 
-    Route::get('/hrm/rc/add', [EmployeeController::class, 'addEmployeeBaseInfo']);
+    Route::get('/hrm/rc/insert/add', [EmployeeController::class, 'addEmployeeBaseInfo']);
 
     Route::post('/hrm/isar-types/list', [EmployeeController::class, 'isarsStatusesIndex']);
 
