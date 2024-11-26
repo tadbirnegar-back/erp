@@ -240,7 +240,7 @@ class EMSController extends Controller
                     'scriptTypeID' => $scriptType->id,
                     'jobID' => $job->id,
                     'operatorID' => $user->id,
-                    'startDate' => now(),
+                    'startDate' => $data['startDate'][$index] ?? now(),
                     'expireDate' => now()->addYear(),
                     'scriptAgents' => $encodedSas,
                     'files' => $data['files'][$index] ?? null, // Match file by index or set as null if not found

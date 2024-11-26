@@ -2,6 +2,7 @@
 
 namespace Modules\HRMS\app\Observers;
 
+use Modules\HRMS\app\Events\ScriptStatusCreatedEvent;
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 
 class ScriptStatusObserver
@@ -11,7 +12,7 @@ class ScriptStatusObserver
      */
     public function created(RecruitmentScriptStatus $scriptStatus): void
     {
-//        event(new ScriptStatusCreatedEvent($scriptStatus));
+        event(new ScriptStatusCreatedEvent($scriptStatus));
     }
 
     /**
