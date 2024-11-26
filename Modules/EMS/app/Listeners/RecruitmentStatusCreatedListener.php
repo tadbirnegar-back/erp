@@ -28,7 +28,6 @@ class RecruitmentStatusCreatedListener
     {
         $recstatus = $event->recStatus;
         $ApprovalStatus = $this->activeRsStatus()->id;
-
         if ($recstatus->status_id == $ApprovalStatus) {
             $recruitmentScript = RecruitmentScript::find($recstatus->recruitment_script_id);
 
@@ -38,7 +37,5 @@ class RecruitmentStatusCreatedListener
                 RecruitmentStatusCreatedJob::dispatch($recruitmentScript);
             }
         }
-
-
     }
 }

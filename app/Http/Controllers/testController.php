@@ -16,7 +16,7 @@ class testController extends Controller
     public function run()
     {
         RecruitmentScriptStatus::create([
-            "recruitment_script_id" => 2773,
+            "recruitment_script_id" => 2789,
             'status_id' => 43
         ]);
 //        Meeting::create([
