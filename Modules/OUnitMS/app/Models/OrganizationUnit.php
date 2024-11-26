@@ -181,7 +181,8 @@ class OrganizationUnit extends Model
     {
         return $this->hasManyThrough(MeetingMember::class, Meeting::class,
             'ounit_id', 'meeting_id')
-            ->where('isTemplate', '=', true)->with('mr', 'person.avatar');
+            ->where('isTemplate', '=', true)
+            ->with('mr', 'person.avatar');
     }
 
     public static function GetAllStatuses(): Collection

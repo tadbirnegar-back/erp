@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Observers\RecruitmentStatusEMSObserver;
+use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Observers\ScriptStatusObserver;
 use Modules\HRMS\Database\factories\RecruitmentScriptStatusFactory;
 use Modules\PersonMS\app\Models\Person;
@@ -62,6 +63,11 @@ class RecruitmentScriptStatus extends Model
         return $this->belongsToThrough(Person::class, User::class, foreignKeyLookup: [
             User::class => 'operator_id',
         ]);
+    }
+
+    public function attachment(): BelongsTo
+    {
+        return $this->belongsTo(File::class);
     }
 
 }

@@ -194,7 +194,7 @@ trait EnactmentTrait
         }
 
 
-        return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf', 'finalStatus'])
+        return $query->with(['status', 'latestHeyaatMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf', 'finalStatus'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }
@@ -349,11 +349,11 @@ trait EnactmentTrait
             ],
             self::$enactmentPendingForHeyaatDateStatus => [
                 'priorities' => [
-                    self::$dabirHeyaat,
-                    self::$karshenasOstandari,
-                    self::$bakhshdar,
-                    self::$ozvHeyaat,
                     self::$karshenasMashvarati,
+                    self::$ozvHeyaat,
+                    self::$karshenasOstandari,
+                    self::$dabirHeyaat,
+                    self::$bakhshdar,
                     self::$ozvShouraRusta
 
                 ],
@@ -361,24 +361,25 @@ trait EnactmentTrait
                 //roles with components
                 self::$karshenasMashvarati => [
                     'MainEnactment',
-                    'MembersBeforeReview',
                     'ReviewBtn',
+                    'CurrentReviewCard',
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
-                    'MembersBeforeReview',
+                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
+
                 ],
                 self::$karshenasOstandari => [
                     'MainEnactment',
-                    'MembersBeforeReview',
+                    'ConsultingReviewCards',
+                    'BoardReviewCards',
                 ],
                 self::$bakhshdar => [
                     'MainEnactment',
-                    'MembersBeforeReview',
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
-                    'MembersBeforeReview',
                 ],
                 self::$ozvShouraRusta => [
                     'MainEnactment',
@@ -415,12 +416,9 @@ trait EnactmentTrait
                 ],
                 self::$bakhshdar => [
                     'MainEnactment',
-                    'ConsultingReviewCards',
-                    'BoardReviewCards',
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
-                    'ConsultingReviewCards',
 
                 ],
                 self::$ozvShouraRusta => [

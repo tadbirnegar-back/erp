@@ -51,15 +51,31 @@ trait DateTrait
 
     public function DateformatToHumanReadbleJalali($date)
     {
-        $parts = explode('/', $date); // Split the date string by '/'
+        // Check if the date string contains time
+        $dateTimeParts = explode(' ', $date);
+        $datePart = $dateTimeParts[0];
+        $timePart = isset($dateTimeParts[1]) ? $dateTimeParts[1] : null;
+
+        // Split the date part by '/'
+        $parts = explode('/', $datePart);
         $monthNumber = $parts[1]; // Get the second part as the month number
         $day = $parts[2];
-        //For Month
+
+        // For Month
         $eng = $this->persianNumbersToEng($monthNumber);
         $monthName = $this->humanReadableDate($eng);
-        //For Day
-        $daywithoutZero = $this->removeLeftZero($monthNumber);
-        //message text for date
-        return "$daywithoutZero $monthName $parts[0]";
+
+        // For Day
+        $daywithoutZero = $this->removeLeftZero($day);
+
+        // Message text for date
+        $humanReadableDate = "$daywithoutZero $monthName $parts[0]";
+
+        // Append time part if it exists
+        if ($timePart) {
+            $humanReadableDate .= " ساعت $timePart";
+        }
+
+        return $humanReadableDate;
     }
 }

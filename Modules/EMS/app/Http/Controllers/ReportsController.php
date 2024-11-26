@@ -57,7 +57,7 @@ class ReportsController extends Controller
                 $q->with(['enactmentReviews' => function ($qq) use ($employeeId) {
                     $qq->where('user_id', $employeeId)
                         ->with(['status']);
-                }, 'title', 'latestMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
+                }, 'title', 'latestHeyaatMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
                     $q->where('unitable_type', '!=', StateOfc::class);
                 }]);
             }])
@@ -138,7 +138,7 @@ class ReportsController extends Controller
             ->with(['enactments' => function ($q) {
                 $q->with(['enactmentReviews' => function ($qq) {
                     $qq->with(['status']);
-                }, 'title', 'latestMeeting', 'status']);
+                }, 'title', 'latestHeyaatMeeting', 'status']);
             }])
             ->with(['meetingMembers' => function ($query) {
                 $query->with('mr', 'person.avatar');
@@ -249,7 +249,7 @@ class ReportsController extends Controller
                     ->with(['enactments' => function ($q) {
                         $q->with(['enactmentReviews' => function ($qq) {
                             $qq->with(['status']);
-                        }, 'title', 'latestMeeting', 'status']);
+                        }, 'title', 'latestHeyaatMeeting', 'status']);
                     }]);
             }]);
 

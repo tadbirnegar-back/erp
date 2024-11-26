@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Observers\MeetingDateObserver;
 use Modules\EMS\Database\factories\MeetingFactory;
 use Modules\HRMS\app\Models\Employee;
@@ -16,7 +17,7 @@ use Staudenmeir\EloquentHasManyDeep\HasTableAlias;
 
 class Meeting extends Model
 {
-    use HasTableAlias;
+    use HasTableAlias, DateTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -40,6 +41,10 @@ class Meeting extends Model
         'reminder_date',
     ];
 
+    protected $appends = ['',
+        'humanReadableJalaliDate'
+    ];
+
     public $timestamps = false;
 
     public function statuses()
@@ -60,6 +65,12 @@ class Meeting extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+
+    public function getHumanReadableJalaliDateAttribute()
+    {
+        return $this->DateformatToHumanReadbleJalali($this->meeting_date);
     }
 
     public function meetingDate(): Attribute

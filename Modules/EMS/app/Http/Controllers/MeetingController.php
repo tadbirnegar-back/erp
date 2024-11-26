@@ -129,6 +129,9 @@ class MeetingController extends Controller
             if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
                 $data['message'] = "جلسه انتخاب شده تکمیل ظرفیت شده";
             }
+//            $humanReadableJalaliDate = $this->DateformatToHumanReadbleJalali($firstFreeMeeting->meeting_date);
+//
+//            $firstFreeMeeting->setAttribute('humanReadableJalaliDate', $humanReadableJalaliDate);
 
             $data['freeMeeting'] = $firstFreeMeeting;
 

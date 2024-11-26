@@ -103,10 +103,8 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $user = Auth::user();
-//            $user = User::find(2064);
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
-            $data['isTemplate'] = true;
             if (isset($data['meetingID'])) {
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
@@ -120,23 +118,18 @@ class EnactmentController extends Controller
                     ], 422);
                 }
 
-                $meeting = Meeting::find($data['meetingID']);
 
-
-                $enactment = $this->storeEnactment($data, $meeting);
-
-                $enactment->meetings()->attach($meeting->id);
                 //Shura Meeting
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
-                $data['ounitID'] = $meeting->ounit_id;
-                $data['title'] = $meeting->title;
-                $data['meeting_detail'] = $meeting->meeting_detail;
-                $data['meeting_number'] = $meeting->meeting_number;
-                $data['isTemplate'] = $meeting->isTemplate;
-                $data['summary'] = $meeting->summary;
-                $data['parent_id'] = $meeting->parent_id;
+
+
                 $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
                 $meetingShura = $this->storeMeeting($data);
+
+                $enactment = $this->storeEnactment($data, $meetingShura);
+
+                $enactment->meetings()->attach($meetingShura->id);
+                $meeting = Meeting::find($data['meetingID']);
 
 
                 foreach ($meeting->meetingMembers as $mm) {
@@ -145,7 +138,8 @@ class EnactmentController extends Controller
                     $newMember->save();
                 }
 
-                $enactment->meetings()->attach($meetingShura->id);
+                $meeting->enactments()->attach($enactment->id);
+
             } else if (isset($data['meetingDate'])) {
 
                 //Validations
@@ -191,12 +185,12 @@ class EnactmentController extends Controller
 
                 $meetingDate = $data['meetingDate'];
                 $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
-                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING->value)->first()->id;
                 $meetingShura = $this->storeMeeting($data);
 
                 $data['meetingDate'] = $meetingDate;
 
-                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING)->first()->id;
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING->value)->first()->id;
 
 
                 $data['ounitID'] = $ancestor->id;
@@ -396,10 +390,9 @@ class EnactmentController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            //$user = Auth::user();
+            $user = Auth::user();
             $enactment = Enactment::with('status')->find($id);
 
-            return response()->json($enactment);
             if (is_null($enactment)) {
                 return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
             }

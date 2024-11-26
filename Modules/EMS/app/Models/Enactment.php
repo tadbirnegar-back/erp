@@ -375,7 +375,7 @@ class Enactment extends Model
 
     public function latestMeeting(): HasOneThrough
     {
-        return $this->hasOneThrough(Meeting::class, EnactmentMeeting::class, 'enactment_id', 'id', 'id', 'meeting_id')->orderBy('enactment_meeting.create_date', 'desc');
+        return $this->hasOneThrough(Meeting::class, EnactmentMeeting::class, 'enactment_id', 'id', 'id', 'meeting_id')->orderBy('enactment_meeting.id', 'desc');
     }
 
     public function latestHeyaatMeeting(): HasOneThrough
@@ -384,16 +384,8 @@ class Enactment extends Model
             ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
             ->value('id');
 
-        return $this->hasOneThrough(
-            Meeting::class,
-            EnactmentMeeting::class,
-            'enactment_id',
-            'id',
-            'id',
-            'meeting_id'
-        )
-            ->where('meeting_type_id', $meetingtypeId)
-            ->orderBy('enactment_meetings.create_date', 'desc');
+        return $this->latestMeeting()
+            ->where('meeting_type_id', $meetingtypeId);
     }
 
     public function finalStatus(): BelongsTo
