@@ -624,9 +624,7 @@ class RecruitmentScriptController extends Controller
 
         try {
             DB::beginTransaction();
-            $script = RecruitmentScript::whereHas('status', function ($query) {
-                $query->where('status_id', $this->pendingTerminateRsStatus()->id);
-            })->with('latestStatus', 'user')->find($id);
+            $script = RecruitmentScript::with('latestStatus', 'user')->find($id);
 
             if (is_null($script)) {
                 return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);

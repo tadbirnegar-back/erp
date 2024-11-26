@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\Database\factories\EnactmentReviewFactory;
 use Modules\FileMS\app\Models\File;
@@ -36,6 +37,11 @@ class EnactmentReview extends Model
     public function meetingMembers(): HasMany
     {
         return $this->hasMany(MeetingMember::class, 'employee_id', 'user_id');
+    }
+
+    public function meetingMember(): HasOne
+    {
+        return $this->hasOne(MeetingMember::class, 'employee_id', 'user_id');
     }
 
     public function user(): BelongsTo

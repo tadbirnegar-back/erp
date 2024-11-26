@@ -150,50 +150,31 @@ trait EnactmentTrait
         if (!empty($data['ounitID'])) {
             $ounits = [$data['ounitID']];
         }
-        $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
 
-        $query = Enactment::whereHas('meeting', function ($query) use ($ounits, $mt) {
-            $query->whereIntegerInRaw('ounit_id', $ounits)
-                ->where('meeting_type_id', $mt->id);
-        })
-            ->whereHas('status', function ($query) use ($data, $statuses, $userId, $reviewStatus) {
-                $query->join('enactment_status as rss', 'enactments.id', '=', 'rss.enactment_id')
-                    ->join('statuses as s', 'rss.status_id', '=', 's.id')
-                    ->when(!empty($data['statusID']), function ($query) use ($data, $reviewStatus) {
-                        $query->where('s.id', $data['statusID']);
-                    })
-                    ->when($reviewStatus, function ($query) use ($data, $reviewStatus) {
-                        if ($reviewStatus == 0) {
-                            $query->whereHas('enactmentReviews', function ($query) use ($data) {
-                                $query
-                                    ->whereHas('user.roles', function ($query) {
-                                        $query->where('name', RolesEnum::OZV_HEYAAT->value);
-                                    });
-                            }, '<', 2);
-                        } else {
-                            $query->whereHas('enactmentReviews', function ($query) use ($data) {
-                                $query
-                                    ->whereHas('user.roles', function ($query) {
-                                        $query->where('name', RolesEnum::OZV_HEYAAT->value);
-                                    })
-                                    ->where('status_id', $data['reviewStatusID']);
-                            }, '>', 2);
-                        }
-                    })
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', $ounits);
+        });
 
-                    // Apply condition based on the $statuses if it is not null or empty
-                    ->when(!empty($statuses), function ($query) use ($statuses) {
-                        $query->where('rss.status_id', $statuses);
-                    })
-                    // Ensure that the most recent 'create_date' is selected
-                    ->where('rss.create_date', function ($subQuery) {
-                        $subQuery->selectRaw('MAX(id)')
-                            ->from('enactment_status as sub_rss')
-                            ->whereColumn('sub_rss.enactment_id', 'rss.enactment_id');
+        $query->when($statuses, function ($query) use ($statuses) {
+            $query->whereHas('status', function ($query) use ($statuses) {
+                $query->where('status_id', $statuses)
+                    ->where('enactment_status.id', function ($subQuery) {
+                        $subQuery->select(DB::raw('MAX(id)'))
+                            ->from('enactment_status')
+                            ->whereColumn('enactment_id', 'enactments.id');
                     });
             });
+        });
 
+
+        $query->when($reviewStatus, function ($query) use ($reviewStatus) {
+            if ($reviewStatus == -1) {
+                $query->where('final_status_id', null);
+            } else {
+                $query->where('final_status_id', $reviewStatus);
+            }
+        });
 
         $query->when($searchTerm, function ($query) use ($searchTerm) {
             $query->where(function ($query) use ($searchTerm) {
@@ -213,7 +194,7 @@ trait EnactmentTrait
         }
 
 
-        return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf'])
+        return $query->with(['status', 'latestMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf', 'finalStatus'])
             ->orderBy('create_date', 'desc')
             ->paginate($perPage, ['*'], 'page', $pageNum);
     }

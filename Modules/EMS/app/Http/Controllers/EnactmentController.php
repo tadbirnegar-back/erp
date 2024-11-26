@@ -49,7 +49,7 @@ class EnactmentController extends Controller
         $data = $request->all();
         $enactments = $this->indexPendingForSecretaryStatusEnactment($data, $ounits);
 
-        return response()->json($enactments);
+//        return response()->json($enactments);
         $statuses = Enactment::GetAllStatuses();
         return response()->json(['data' => $enactments, 'statusList' => $statuses]);
     }
@@ -82,6 +82,7 @@ class EnactmentController extends Controller
                 ->flatten()
                 ->pluck('id')
                 ->toArray();
+
             $data = $request->all();
             $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounits, $user->id);
 
@@ -451,6 +452,28 @@ class EnactmentController extends Controller
                     $query->where('name', RolesEnum::OZV_HEYAAT->value);
                 })->with('status')->get();
 
+            if ($reviewStatuses->count() > 1) {
+                $result = $reviewStatuses->groupBy('status.id')
+                    ->map(fn($statusGroup) => [
+                        'status' => $statusGroup->first(),
+                        'count' => $statusGroup->count()
+                    ])
+                    ->sortByDesc('count')
+                    ->values();
+
+                if ($reviewStatuses->count() == 2 && $result[0]['count'] == $result[1]['count']) {
+                    $finalStatus = null;
+                } else {
+                    $finalStatus = $result[0]['status']->status;
+                }
+
+                if (!is_null($finalStatus)) {
+                    $enactment->final_status_id = $finalStatus->id;
+                    $enactment->save();
+                }
+
+            }
+
             if ($reviewStatuses->count() == 3) {
                 $heyaatStatus = $this->enactmentCompleteStatus();
 
@@ -496,6 +519,28 @@ class EnactmentController extends Controller
                 ->whereHas('user.roles', function ($query) {
                     $query->where('name', RolesEnum::OZV_HEYAAT->value);
                 })->with('status')->get();
+
+            if ($reviewStatuses->count() > 1) {
+                $result = $reviewStatuses->groupBy('status.id')
+                    ->map(fn($statusGroup) => [
+                        'status' => $statusGroup->first(),
+                        'count' => $statusGroup->count()
+                    ])
+                    ->sortByDesc('count')
+                    ->values();
+
+                if ($reviewStatuses->count() == 2 && $result[0]['count'] == $result[1]['count']) {
+                    $finalStatus = null;
+                } else {
+                    $finalStatus = $result[0]['status']->status;
+                }
+
+                if (!is_null($finalStatus)) {
+                    $enactment->final_status_id = $finalStatus->id;
+                    $enactment->save();
+                }
+
+            }
 
             if ($reviewStatuses->count() == 3) {
                 $heyaatStatus = $this->enactmentCompleteStatus();

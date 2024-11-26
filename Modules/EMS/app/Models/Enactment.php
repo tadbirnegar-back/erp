@@ -44,7 +44,8 @@ class Enactment extends Model
         'meeting_id',
         'rejection_file_id',
         'create_date',
-        'receipt_date'
+        'receipt_date',
+        'final_status_id',
     ];
 
     protected $appends = ['upshot'];
@@ -133,28 +134,32 @@ class Enactment extends Model
 
     public function getUpshotAttribute()
     {
-        if (!$this->relationLoaded('reviewStatuses')) {
-            return null;
+        if ($this->final_status_id) {
+            return $this->finalStatus;
         }
+        return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::UNKNOWN->value);
+//        if (!$this->relationLoaded('reviewStatuses')) {
+//            return null;
+//        }
 
-        $reviewStatuses = $this->enactmentReviews()
-            ->whereHas('user.roles', function ($query) {
-                $query->where('name', RolesEnum::OZV_HEYAAT->value);
-            })->with('status')->get();
-
-        if ($reviewStatuses->count() < 2) {
-            return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::UNKNOWN->value);
-        }
-
-        $result = $reviewStatuses->groupBy('status.id')
-            ->map(fn($statusGroup) => [
-                'status' => $statusGroup->first(),
-                'count' => $statusGroup->count()
-            ])
-            ->sortByDesc('count')
-            ->values();
-
-        return $result[0]['status']->status;
+//        $reviewStatuses = $this->enactmentReviews()
+//            ->whereHas('user.roles', function ($query) {
+//                $query->where('name', RolesEnum::OZV_HEYAAT->value);
+//            })->with('status')->get();
+//
+//        if ($reviewStatuses->count() < 2) {
+//            return EnactmentReview::GetAllStatuses()->firstWhere('name', EnactmentReviewEnum::UNKNOWN->value);
+//        }
+//
+//        $result = $reviewStatuses->groupBy('status.id')
+//            ->map(fn($statusGroup) => [
+//                'status' => $statusGroup->first(),
+//                'count' => $statusGroup->count()
+//            ])
+//            ->sortByDesc('count')
+//            ->values();
+//
+//        return $result[0]['status']->status;
     }
 
     use BelongsToThrough;
@@ -377,6 +382,11 @@ class Enactment extends Model
         )
             ->where('meeting_type_id', $meetingtypeId)
             ->orderBy('enactment_meetings.create_date', 'desc');
+    }
+
+    public function finalStatus(): BelongsTo
+    {
+        return $this->belongsTo(Status::class, 'final_status_id');
     }
 
 }
