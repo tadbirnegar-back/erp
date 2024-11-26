@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 
 
 class testController extends Controller
@@ -14,6 +15,10 @@ class testController extends Controller
 
     public function run()
     {
+        RecruitmentScriptStatus::create([
+            "recruitment_script_id" => 2789,
+            'status_id' => 43
+        ]);
 //        Meeting::create([
 //            'isTemplate' => true,
 //            'creator_id' => 2172,

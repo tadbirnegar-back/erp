@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Observers\RecruitmentStatusEMSObserver;
 use Modules\HRMS\app\Observers\ScriptStatusObserver;
 use Modules\HRMS\Database\factories\RecruitmentScriptStatusFactory;
 use Modules\PersonMS\app\Models\Person;
@@ -35,11 +36,13 @@ class RecruitmentScriptStatus extends Model
         'attachment_id'
     ];
 
+
     protected static function boot()
     {
         parent::boot();
         // Register the observer
         static::observe(ScriptStatusObserver::class);
+        static::observe(RecruitmentStatusEMSObserver::class);
     }
 
     public function status(): BelongsTo
