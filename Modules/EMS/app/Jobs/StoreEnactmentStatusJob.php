@@ -57,13 +57,11 @@ class StoreEnactmentStatusJob implements ShouldQueue
                 })->toArray();
 
                 EnactmentReview::insert($data);
-//            if () {
                 $takmilshodeStatus = $this->enactmentCompleteStatus()->id;
                 EnactmentStatus::create([
                     'status_id' => $takmilshodeStatus,
                     'enactment_id' => $this->encId,
                 ]);
-//            }
             }
         } catch (\Exception $e) {
             $this->fail($e);

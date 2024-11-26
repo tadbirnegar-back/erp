@@ -267,10 +267,14 @@ class Enactment extends Model
 
     public function members()
     {
+        $meetingType = \DB::table('meeting_types')
+            ->select('id')
+            ->where('title', MeetingTypeEnum::HEYAAT_MEETING)
+            ->first();
+
         return $this->hasManyDeep(MeetingMember::class, [
             EnactmentMeeting::class,
             Meeting::class,
-
         ],
             [
                 'enactment_id',
@@ -281,12 +285,18 @@ class Enactment extends Model
                 'id',
                 'meeting_id',
                 'id',
-            ])->orderBy('enactment_meeting.create_date', 'desc')->with('mr');
-//        return $this->hasManyThrough(MeetingMember::class, Meeting::class, 'id', 'meeting_id', 'meeting_id', 'id')->with('mr');
+            ])
+            ->where('meetings.meeting_type_id', $meetingType->id) // Use the `id` property
+            ->orderBy('enactment_meeting.create_date', 'desc')
+            ->with('mr');
     }
 
     public function membersNew()
     {
+        $meetingType = \DB::table('meeting_types')
+            ->select('id')
+            ->where('title', MeetingTypeEnum::HEYAAT_MEETING)
+            ->first();
         return $this->hasManyDeep(MeetingMember::class, [
             EnactmentMeeting::class,
             Meeting::class,
@@ -301,7 +311,9 @@ class Enactment extends Model
                 'id',
                 'meeting_id',
                 'id',
-            ])->orderBy('enactment_meeting.create_date', 'desc');
+            ])
+            ->where('meetings.meeting_type_id', $meetingType->id) // Use the `id` property
+            ->orderBy('enactment_meeting.create_date', 'desc');
 //        return $this->hasManyThrough(MeetingMember::class, Meeting::class, 'id', 'meeting_id', 'meeting_id', 'id')->with('mr');
     }
 
