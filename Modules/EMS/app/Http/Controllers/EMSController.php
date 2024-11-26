@@ -74,6 +74,19 @@ class EMSController extends Controller
 
     public function registerHeyaatMember(Request $request): JsonResponse
     {
+
+        $userWithmobile = User::where('mobile', $request->mobile)->first();
+        if (!empty($userWithmobile)) {
+            return response()->json([
+                "message" => "شماره وارد شده تکراری است"
+            ], 400);
+        }
+        $personWithCodeMelli = Person::where('national_code', $request->nationalCode)->first();
+        if (!empty($personWithCodeMelli)) {
+            return response()->json([
+                "message" => "کد ملی وارد شده تکراری است"
+            ], 400);
+        }
         $mrs = [
 
             'نماینده قوه قضائیه (عضو هیات تطبیق)' => [
@@ -160,6 +173,7 @@ class EMSController extends Controller
 
             $user = $this->isPersonUserCheck($personResult->person);
             $user = $user ? $this->updateUser($data, $user) : $this->storeUser($data);
+
 
 //            $meetingMember = MeetingMember::where('employee_id', $user->id)->first();
 //            if ($meetingMember) {
@@ -797,5 +811,19 @@ class EMSController extends Controller
         return response()->json($ounits);
     }
 
+
+    public function registerHeyaatRequirement()
+    {
+        $mr = MR::all();
+        $genders = DB::table('genders')->get();
+
+        $orginizationUnit = OrganizationUnit::where('unitable_type', DistrictOfc::class)->with('ancestors')->get();
+
+        return response()->json([
+            "mr" => $mr,
+            "genders" => $genders,
+            "orginizationUnit" => $orginizationUnit
+        ]);
+    }
 
 }
