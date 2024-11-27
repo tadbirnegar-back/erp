@@ -229,6 +229,8 @@ class EMSController extends Controller
             });
             $encodedSas = json_encode($sas->toArray());
 
+            $data['startDate'] = json_decode($data['startDate']);
+
             // Iterate over 'ounitIDs' and store each entry
             foreach ($ounitIDs as $index => $ounitID) {
                 $entry = [

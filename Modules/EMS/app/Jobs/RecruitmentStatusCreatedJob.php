@@ -35,6 +35,7 @@ class RecruitmentStatusCreatedJob implements ShouldQueue
      */
     public function handle(): void
     {
+
         $organ = OrganizationUnit::find($this->rs->organization_unit_id);
 
         $positionTitle = $this->rs->position->name;
@@ -48,29 +49,50 @@ class RecruitmentStatusCreatedJob implements ShouldQueue
                 $query->where('mr_id', $mrId);
             }])->first();
 
-        $meetingMember = $meetingTemplate->meetingMembers[0];
 
-        $employee = Employee::find($meetingMember->employee_id);
-        $employee->load('user.activeRecruitmentScript');
-        $activeRs = $employee->user->activeRecruitmentScript;
-        if (!empty($activeRs)) {
-            $statusAzlId = $this->terminatedRsStatus()->id;
+        if ($meetingTemplate) {
 
-            \DB::table('recruitment_script_status')
-                ->insert([
-                    'status_id' => $statusAzlId,
-                    'recruitment_script_id' => $activeRs[0]->id,
+            if (!$meetingTemplate->meetingMembers) {
+                $meetingMember = $meetingTemplate->meetingMembers[0];
+
+                $employee = Employee::find($meetingMember->employee_id);
+                $employee->load('user.activeRecruitmentScript');
+                $activeRs = $employee->user->activeRecruitmentScript;
+                if (!empty($activeRs)) {
+
+
+                    $statusAzlId = $this->terminatedRsStatus()->id;
+
+
+                    \DB::table('recruitment_script_status')
+                        ->insert([
+                            'status_id' => $statusAzlId,
+                            'recruitment_script_id' => $activeRs[0]->id,
+                        ]);
+
+                    //NewUser Operation
+                    $employee = Employee::find($this->rs->employee_id);
+
+
+                    MeetingMember::find($meetingMember->id)->update([
+                        'employee_id' => $employee->id,
+                    ]);
+                    $meetingMember->employee_id = $employee->id;
+                    $meetingMember->save();
+                }
+            } else {
+                \Log::info("injam");
+                $employee = Employee::find($this->rs->employee_id);
+
+                $user = $employee->load('user');
+
+                MeetingMember::create([
+                    'employee_id' => $user->user->id,
+                    'meeting_id' => $meetingTemplate->id,
+                    'mr_id' => $mrId,
                 ]);
 
-            //NewUser Operation
-            $employee = Employee::find($this->rs->employee_id);
-
-
-            MeetingMember::find($meetingMember->id)->update([
-                'employee_id' => $employee->id,
-            ]);
-            $meetingMember->employee_id = $employee->id;
-            $meetingMember->save();
+            }
         }
     }
 }

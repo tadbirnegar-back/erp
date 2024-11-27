@@ -16,10 +16,10 @@ class testController extends Controller
     public function run()
     {
 
-        RecruitmentScriptStatus::create([
-            "recruitment_script_id" => 2795,
-            "status_id" => 60
-        ]);
+//        RecruitmentScriptStatus::create([
+//            "recruitment_script_id" => 2795,
+//            "status_id" => 60
+//        ]);
 
 //        EnactmentStatus::create([
 //            'enactment_id' => 29,
@@ -27,10 +27,10 @@ class testController extends Controller
 //            'operator_id' => 2176
 //        ]);
 
-//        RecruitmentScriptStatus::create([
-//            "recruitment_script_id" => 2789,
-//            'status_id' => 43
-//        ]);
+        RecruitmentScriptStatus::create([
+            "recruitment_script_id" => 2834,
+            'status_id' => 43
+        ]);
 //        Meeting::create([
 //            'isTemplate' => true,
 //            'creator_id' => 2172,
