@@ -219,13 +219,6 @@ trait EnactmentTrait
             'attachment_id' => $data[0]['attachmentID'] ?? null,
         ];
 
-        $commonData = [
-            'enactment_id' => $result->id,
-            'operator_id' => $data[0]['creatorID'],
-            'description' => $data[0]['description'] ?? null,
-            'attachment_id' => $data[0]['attachmentID'] ?? null,
-        ];
-
 // Build and save each status individually to trigger the observer
         foreach ($statuses as $statusId) {
             $statusData = array_merge($commonData, ['status_id' => $statusId]);
