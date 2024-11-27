@@ -75,13 +75,13 @@ trait RecruitmentScriptTrait
 
     public function rsStore(array|collection $data, int $employeeID, ?Status $status = null)
     {
+
         if (!isset($data[0]) || !is_array($data[0])) {
             $data = [$data];
         }
         $dataToInsert = $this->rsDataPreparation($data, $employeeID);
         if (is_null($status)) {
             $status = $this->activeRsStatus();
-
         }
 
         $result = [];
@@ -108,7 +108,6 @@ trait RecruitmentScriptTrait
             if (isset($data[$key]['scriptAgents'])) {
                 $agents = json_decode($data[$key]['scriptAgents'], true);
                 $scriptAgentsScripts = $this->sasStore($agents, $rs);
-
             }
             $rs->load('scriptType.confirmationTypes');
 
@@ -172,8 +171,9 @@ trait RecruitmentScriptTrait
             $fileScriptsData = null;
         }
         if (isset($data['files']) && is_array($fileScriptsData)) {
-            info($data['files']);
+
             $fileScriptsData = collect($fileScriptsData)->map(fn($fs) => [
+
                 'file_id' => $fs['fileID'],
                 'script_id' => $rs->id,
                 'title' => $fs['title'],
