@@ -66,6 +66,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('/mes/reports/district-report', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'districtEnactmentReport']);
 
+    Route::post('/mes/reports/other-district-report', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'districtEnactmentReport']);
+
     Route::post('/mes/reports/city-report', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'cityEnactmentReport']);
 
     Route::post('/mes/reports/comprehensive', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'stateEnactmentReport']);

@@ -15,6 +15,7 @@ use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 
 class ReportsController extends Controller
@@ -119,19 +120,23 @@ class ReportsController extends Controller
         $endDate = convertJalaliPersianCharactersToGregorian
         ($request->input('endDate'));
 
-        $user = Auth::user();
-        $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
+        if ($request->ounitID) {
+            $ounit = OrganizationUnit::with('ancestorsAndSelf')->find($request->ounitID);
+        } else {
+            $user = Auth::user();
+            $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
 
-        /**
-         * @var RecruitmentScript $rs
-         */
-        $rs = $user->activeDistrictRecruitmentScript->first();
+            /**
+             * @var RecruitmentScript $rs
+             */
+            $rs = $user->activeDistrictRecruitmentScript->first();
 
-        if (!$rs) {
-            return response()->json(['message' => 'شما حکم فعالی مرتبط به بخشداری ندارید'], 404);
+            if (!$rs) {
+                return response()->json(['message' => 'شما حکم فعالی مرتبط به بخشداری ندارید'], 404);
+            }
+
+            $ounit = $rs->ounit;
         }
-
-        $ounit = $rs->ounit;
 
         $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
@@ -203,7 +208,7 @@ class ReportsController extends Controller
             'totalAdamMoghayertAutomatic' => $totalAdamMoghayertAutomatic,
             'totalPending' => $totalPending,
             'members' => $collection->isNotEmpty() ? $collection->values() : $ounit->meetingMembers,
-            'ounit' => $rs->ounit->ancestorsAndSelf,
+            'ounit' => $ounit->ancestorsAndSelf,
             'expired_count' => $totalAdamMoghayertAutomatic,
             'approved_count' => $totalAdamMoghayert + $totalMoghayert,
             'enactments' => $meetings->pluck('enactments'),
@@ -215,6 +220,7 @@ class ReportsController extends Controller
     public function cityEnactmentReport(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'ounitID' => 'required',
             'startDate' => 'required',
             'endDate' => 'required',
         ]);
@@ -228,21 +234,24 @@ class ReportsController extends Controller
         $endDate = convertJalaliPersianCharactersToGregorian
         ($request->input('endDate'));
 
-        $user = Auth::user();
+//        $user = Auth::user();
 
         try {
-            $user->load('activeCityRecruitmentScript.ounit');
+//            $user->load('activeCityRecruitmentScript.ounit');
+//
+//            /**
+//             * @var RecruitmentScript $rs
+//             */
+//            $rs = $user->activeCityRecruitmentScript->first();
+//
+//            if (!$rs) {
+//                return response()->json(['message' => 'شما حکم فعالی مرتبط به فرمانداری ندارید'], 404);
+//            }
 
-            /**
-             * @var RecruitmentScript $rs
-             */
-            $rs = $user->activeCityRecruitmentScript->first();
+            $childOunits = OrganizationUnit::with(['children.ancestors' => function ($query) {
+                $query->where('unitable_type', '!=', StateOfc::class);
 
-            if (!$rs) {
-                return response()->json(['message' => 'شما حکم فعالی مرتبط به فرمانداری ندارید'], 404);
-            }
-
-            $childOunits = $rs->ounit;
+            }])->find($request->ounitID);
 
             $meetingType = MeetingType::where('title', 'جلسه هیئت تطبیق')->first();
 
@@ -301,6 +310,8 @@ class ReportsController extends Controller
 
                 return [
                     'name' => $child->name,
+                    'ounit_id' => $child->id,
+                    'ancestors' => $child->ancestors,
                     'meetings_count' => $meetingsCount,
                     'enactments_grouped' => $enactmentsGrouped,
                     'reviews_grouped' => $reviewsGrouped,
@@ -401,6 +412,7 @@ class ReportsController extends Controller
 
                 return [
                     'name' => $child->name,
+                    'ounit_id' => $child->id,
                     'meetings_count' => $meetingsCount,
                     'enactments_grouped' => $enactmentsGrouped,
                     'reviews_grouped' => $reviewsGrouped,
