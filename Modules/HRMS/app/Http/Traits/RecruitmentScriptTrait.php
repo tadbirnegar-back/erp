@@ -321,7 +321,7 @@ trait RecruitmentScriptTrait
         return $result->isNotEmpty() ? $result : collect(['NoBtn']);
     }
 
-    public function terminateRc(RecruitmentScript $script, $date)
+    public function UpdateFinishDate(RecruitmentScript $script, $date)
     {
         $finishDate = convertJalaliPersianCharactersToGregorian($date);
 

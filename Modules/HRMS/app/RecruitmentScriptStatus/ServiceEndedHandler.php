@@ -5,12 +5,13 @@ namespace Modules\HRMS\app\RecruitmentScriptStatus;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Contracts\StatusHandlerInterface;
+use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Notifications\PayanKhedmatRsNotification;
 
 class ServiceEndedHandler implements StatusHandlerInterface
 {
-    use UserTrait;
+    use UserTrait , RecruitmentScriptTrait;
 
     private RecruitmentScript $script;
     private ?User $user;
@@ -25,6 +26,8 @@ class ServiceEndedHandler implements StatusHandlerInterface
     {
         $this->detachRolesByPosition($this->script->user, $this->script->position_id);
         $this->notifyScriptUser();
+        $this->AddFinishDate($this -> script);
+
     }
 
     public function notifyScriptUser()
@@ -35,5 +38,11 @@ class ServiceEndedHandler implements StatusHandlerInterface
         $ounit = $this->script->ounit;
 
         $user->notify(new PayanKhedmatRsNotification($person->display_name, $ounit->name, $this->script->position->name));
+    }
+
+    public function AddFinishDate($script): void
+    {
+        $this->UpdateFinishDate($script, now());
+
     }
 }

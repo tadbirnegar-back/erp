@@ -637,7 +637,6 @@ class RecruitmentScriptController extends Controller
             }
             $user = Auth::user();
 
-            $this->terminateRc($script, $request->date);
 
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID);
 
