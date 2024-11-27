@@ -33,9 +33,6 @@ class PendingForHeyaatStatusJob implements ShouldQueue
     {
         $enactment = Enactment::find($this->encId);
         $takmilshodeStatus = $this->enactmentHeyaatStatus()->id;
-
-        \Log::info("takmilshode $takmilshodeStatus");
-
         EnactmentStatus::create([
             'status_id' => $takmilshodeStatus,
             'enactment_id' => $this->encId,
