@@ -15,6 +15,7 @@ use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\SettingsEnum;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingMember;
+use Modules\EMS\app\Models\MeetingType;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Models\Payment;
@@ -24,13 +25,14 @@ use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentEagerLimitXLaravelAdjacencyList\Eloquent\HasEagerLimitAndRecursiveRelationships;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 use Staudenmeir\EloquentHasManyDeep\HasTableAlias;
 use Znck\Eloquent\Traits\BelongsToThrough;
 
 class OrganizationUnit extends Model
 {
     use HasFactory;
-    use HasEagerLimitAndRecursiveRelationships, HasTableAlias;
+    use HasEagerLimitAndRecursiveRelationships, HasTableAlias, HasRelationships;
 
     /**
      * The attributes that are mass assignable.
@@ -175,6 +177,24 @@ class OrganizationUnit extends Model
     {
         return $this->hasOne(Meeting::class, 'ounit_id')
             ->where('isTemplate', '=', true);
+    }
+
+    public function cityMeetings()
+    {
+        $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
+
+        return $this->hasManyDeep(Meeting::class, [OrganizationUnit::class],
+            [
+                'parent_id',
+                'ounit_id',
+            ],
+            [
+                'id',
+                'id'
+
+            ])
+            ->where('isTemplate', '=', false)
+            ->where('meeting_type_id', $meetingType->id);
     }
 
     public function meetingMembers()

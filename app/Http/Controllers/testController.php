@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
+use Modules\EMS\app\Models\Enactment;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\HRMS\app\Models\RecruitmentScriptStatus;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 
 class testController extends Controller
@@ -15,8 +16,80 @@ class testController extends Controller
 
     public function run()
     {
+        $a = OrganizationUnit::find(1);
+        $cities = $a->children;
+        $startDate = '1403/01/01';
+        $endDate = '1403/12/29';
 
-//        RecruitmentScriptStatus::create([
+        $startDate = convertJalaliPersianCharactersToGregorian($startDate);
+
+        $endDate = convertJalaliPersianCharactersToGregorian
+        ($endDate);
+
+        $cities = $cities->load(['cityMeetings' => function ($query) use ($startDate, $endDate) {
+            $query
+                ->where('isTemplate', false)
+                ->whereBetween('meeting_date', [$startDate, $endDate])
+                ->with(['enactments' => function ($q) {
+                    $q->with(['enactmentReviews' => function ($qq) {
+                        $qq->with(['status']);
+                    }, 'title', 'latestHeyaatMeeting', 'status']);
+                }]);
+        }]);
+
+        $childData = $cities->map(function ($child) {
+            $meetingsCount = $child->cityMeetings->count();
+
+            $enactmentsGrouped = $child->cityMeetings->flatMap(function ($meeting) {
+                return $meeting->enactments;
+            })->groupBy('status.name')->map->count();
+
+            $enactmentsGroupedByUpShot = $child->cityMeetings
+                ->flatMap(fn($meeting) => $meeting->enactments) // Collect all enactments
+                ->groupBy(fn(Enactment $enactment) => $enactment->upshot->name) // Group by upshot name
+                ->map(fn($group) => $group->count()); // Count each group
+
+
+            $reviewsGrouped = $child->cityMeetings->flatMap(function ($meeting) {
+                return $meeting->enactments->flatMap(function ($enactment) {
+                    $reviews = $enactment->enactmentReviews;
+
+                    // Check if the enactment has less than 6 reviews
+                    $missingReviews = 6 - $reviews->count();
+
+                    // Add a 'noVote' entry if there are missing reviews
+                    if ($missingReviews > 0) {
+                        $noVote = collect([
+                            (object)[
+                                'status' => (object)['name' => 'در انتظار راب'],
+                                'count' => $missingReviews,
+                            ]
+                        ]);
+                        return $reviews->concat($noVote);
+                    }
+
+                    return $reviews;
+                });
+            })->groupBy('status.name')->map(function ($group) {
+                // Sum up the counts for 'noVote' or other entries
+                return $group->sum(function ($item) {
+                    return $item->count ?? 1; // Default to 1 if 'count' is not defined
+                });
+            });
+
+
+            return [
+                'name' => $child->name,
+                'meetings_count' => $meetingsCount,
+                'enactments_grouped' => $enactmentsGrouped,
+                'reviews_grouped' => $reviewsGrouped,
+                'upshot_report' => $enactmentsGroupedByUpShot
+            ];
+        });
+        dd($childData);
+
+
+        //        RecruitmentScriptStatus::create([
 //            "recruitment_script_id" => 2795,
 //            "status_id" => 60
 //        ]);
@@ -27,10 +100,10 @@ class testController extends Controller
 //            'operator_id' => 2176
 //        ]);
 
-        RecruitmentScriptStatus::create([
-            "recruitment_script_id" => 2834,
-            'status_id' => 43
-        ]);
+//        RecruitmentScriptStatus::create([
+//            "recruitment_script_id" => 2834,
+//            'status_id' => 43
+//        ]);
 //        Meeting::create([
 //            'isTemplate' => true,
 //            'creator_id' => 2172,

@@ -25,6 +25,7 @@ use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Modules\WidgetsMS\app\Models\Widget;
@@ -259,6 +260,15 @@ class User extends Authenticatable
         return $this->activeRecruitmentScripts()
             ->join('organization_units', 'recruitment_scripts.organization_unit_id', '=', 'organization_units.id')
             ->where('organization_units.unitable_type', CityOfc::class)
+            ->orderBy('recruitment_scripts.start_date', 'desc');
+
+    }
+
+    public function activeStateRecruitmentScript()
+    {
+        return $this->activeRecruitmentScripts()
+            ->join('organization_units', 'recruitment_scripts.organization_unit_id', '=', 'organization_units.id')
+            ->where('organization_units.unitable_type', StateOfc::class)
             ->orderBy('recruitment_scripts.start_date', 'desc');
 
     }
