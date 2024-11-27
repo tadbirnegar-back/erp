@@ -224,6 +224,24 @@ class EnactmentController extends Controller
                 $enactment->meetings()->attach($meetingShura->id);
                 $enactment->meetings()->attach($meetingHeyaat->id);
 
+                //Add statuses to enactment
+                $statuses = [
+                    $this->enactmentPendingSecretaryStatus()->id,
+                    $this->enactmentPendingForHeyaatDateStatus()->id,
+                ];
+
+                $commonData = [
+                    'enactment_id' => $enactment->id,
+                    'operator_id' => $data['creatorID'],
+                    'description' => $data['description'] ?? null,
+                    'attachment_id' => $data['attachmentID'] ?? null,
+                ];
+
+                // Build and save each status individually to trigger the observer
+                foreach ($statuses as $statusId) {
+                    $statusData = array_merge($commonData, ['status_id' => $statusId]);
+                    EnactmentStatus::create($statusData); // This triggers the `created` observer
+                }
 
                 $files = json_decode($data['attachments'], true);
 
