@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
+use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
@@ -47,11 +48,13 @@ class ReportsController extends Controller
 
         $user->load('person.avatar', 'mr', 'activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
 
+        $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
         $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
             $query->where('employee_id', $employeeId);
         })
             ->where('isTemplate', false)
+            ->whereBelongsTo($meetingType, 'meetingType')
             ->whereBetween('meeting_date', [$startDate, $endDate])
             ->with(['enactments' => function ($q) use ($employeeId) {
                 $q->with(['enactmentReviews' => function ($qq) use ($employeeId) {
@@ -129,7 +132,7 @@ class ReportsController extends Controller
 
         $ounit = $rs->ounit;
 
-        $meetingType = MeetingType::where('title', 'جلسه هیئت تطبیق')->first();
+        $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
         $meetings = Meeting::where('ounit_id', '=', $ounit->id)
             ->whereBelongsTo($meetingType, 'meetingType')
@@ -309,5 +312,24 @@ class ReportsController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
 
+    }
+
+    public function stateEnactmentReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'startDate' => 'required',
+            'endDate' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $startDate = convertJalaliPersianCharactersToGregorian($request->input('startDate'));
+
+        $endDate = convertJalaliPersianCharactersToGregorian
+        ($request->input('endDate'));
+
+        $user = Auth::user();
     }
 }
