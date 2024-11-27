@@ -48,13 +48,22 @@ class ReportsController extends Controller
         }
         $employeeId = $user->id;
 
-        $user->load('person.avatar', 'mr', 'activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
+        if ($request->ounitID) {
+            $ounit = OrganizationUnit::find($request->ounitID);
+        } else {
+            $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
+            $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten();
+            $ounit = $rsUnits[0];
+        }
+
+        $user->load('person.avatar', 'mr');
 
         $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
         $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
             $query->where('employee_id', $employeeId);
         })
+            ->where('ounit_id', $ounit->id)
             ->where('isTemplate', false)
             ->whereBelongsTo($meetingType, 'meetingType')
             ->whereBetween('meeting_date', [$startDate, $endDate])
@@ -96,12 +105,12 @@ class ReportsController extends Controller
             'person' => $user->person,
             'mr' => $user?->mr,
 //            'ounit' => $meetings->pluck('ounit')->flatten()->toArray()[0] ?? null,
-            'ounit' => $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten()->toArray()[0] ?? null,
+            'ounit' => $ounit ?? null,
 
         ];
 
 
-        return response()->json($result);
+        return response()->json(['data' => $result, 'ounits' => $rsUnits]);
     }
 
     public function districtEnactmentReport(Request $request)
