@@ -36,6 +36,7 @@ class StoreEnactmentStatusInQueueListener
         $enactmentStatus = $event->encStatus;
 
         if ($this->enactmentPendingForHeyaatDateStatus()->id == $enactmentStatus->status_id) {
+            \Log::info($enactmentStatus->id);
             $timeNow = Carbon::now();
 
             $receiptMaxDay = $this->getReceptionMaxDays()?->value ?? 7;
@@ -60,13 +61,11 @@ class StoreEnactmentStatusInQueueListener
 
             //Meeting Job
 
-
             $enactment = Enactment::with("latestMeeting")->find($enactmentStatus->enactment_id);
 
-
             // Ensure meeting_date is in Carbon instance (convert if necessary)
-            $meetingDate = $enactment->latestMeeting->getRawOriginal('meeting_date');
-
+            $meetingDate = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
+            \Log::info($meetingDate);
 
             // Convert the fetched date to a Carbon instance
             $meetingDate = Carbon::parse($meetingDate);

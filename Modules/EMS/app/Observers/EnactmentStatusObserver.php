@@ -12,6 +12,7 @@ class EnactmentStatusObserver
      */
     public function created(EnactmentStatus $encStatus): void
     {
+        \Log::info("EnactmentStatus $encStatus");
         event(new EnactmentStatusCreatedEvent($encStatus));
     }
 
