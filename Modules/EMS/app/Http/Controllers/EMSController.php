@@ -4,6 +4,7 @@ namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
+use Carbon\Carbon;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -233,6 +234,15 @@ class EMSController extends Controller
 
             // Iterate over 'ounitIDs' and store each entry
             foreach ($ounitIDs as $index => $ounitID) {
+
+                $duration = (int)$scriptType->duration->value;
+                if ($duration == 0) {
+                    $expireDate = null;
+                } else {
+                    $startDateRaw = $data['startDate'][$index];
+                    $expireDate = Carbon::parse($startDateRaw)->addMonths($duration);
+                }
+
                 $entry = [
                     'employeeID' => $employee->id,
                     'ounitID' => $ounitID,
@@ -243,7 +253,7 @@ class EMSController extends Controller
                     'jobID' => $job->id,
                     'operatorID' => $user->id,
                     'startDate' => $data['startDate'][$index] ?? now(),
-                    'expireDate' => now()->addYear(),
+                    'expireDate' => $expireDate,
                     'scriptAgents' => $encodedSas,
                     'files' => $data['files'][$index] ?? null, // Match file by index or set as null if not found
                 ];
