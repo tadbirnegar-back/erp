@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Mockery\Exception;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
@@ -281,7 +282,7 @@ class ReportsController extends Controller
                         if ($missingReviews > 0) {
                             $noVote = collect([
                                 (object)[
-                                    'status' => (object)['name' => 'در انتظار راب'],
+                                    'status' => (object)['name' => 'نامشخص'],
                                     'count' => $missingReviews,
                                 ]
                             ]);
@@ -331,5 +332,88 @@ class ReportsController extends Controller
         ($request->input('endDate'));
 
         $user = Auth::user();
+
+        try {
+            $user->load('activeStateRecruitmentScript.ounit.children');
+
+            /**
+             * @var RecruitmentScript $rs
+             */
+            $rs = $user->activeStateRecruitmentScript->first();
+
+            if (!$rs) {
+                return response()->json(['message' => 'شما حکم فعالی مرتبط به استانداری ندارید'], 404);
+            }
+            $cities = $rs->ounit->children;
+
+            $cities = $cities->load(['cityMeetings' => function ($query) use ($startDate, $endDate) {
+                $query
+                    ->where('isTemplate', false)
+                    ->whereBetween('meeting_date', [$startDate, $endDate])
+                    ->with(['enactments' => function ($q) {
+                        $q->with(['enactmentReviews' => function ($qq) {
+                            $qq->with(['status']);
+                        }, 'title', 'latestHeyaatMeeting', 'status']);
+                    }]);
+            }]);
+
+
+            $childData = $cities->map(function ($child) {
+                $meetingsCount = $child->cityMeetings->count();
+
+                $enactmentsGrouped = $child->cityMeetings->flatMap(function ($meeting) {
+                    return $meeting->enactments;
+                })->groupBy('status.name')->map->count();
+
+                $enactmentsGroupedByUpShot = $child->cityMeetings
+                    ->flatMap(fn($meeting) => $meeting->enactments) // Collect all enactments
+                    ->groupBy(fn(Enactment $enactment) => $enactment->upshot->name) // Group by upshot name
+                    ->map(fn($group) => $group->count()); // Count each group
+
+
+                $reviewsGrouped = $child->cityMeetings->flatMap(function ($meeting) {
+                    return $meeting->enactments->flatMap(function ($enactment) {
+                        $reviews = $enactment->enactmentReviews;
+
+                        // Check if the enactment has less than 6 reviews
+                        $missingReviews = 6 - $reviews->count();
+
+                        // Add a 'noVote' entry if there are missing reviews
+                        if ($missingReviews > 0) {
+                            $noVote = collect([
+                                (object)[
+                                    'status' => (object)['name' => 'نامشخص'],
+                                    'count' => $missingReviews,
+                                ]
+                            ]);
+                            return $reviews->concat($noVote);
+                        }
+
+                        return $reviews;
+                    });
+                })->groupBy('status.name')->map(function ($group) {
+                    // Sum up the counts for 'noVote' or other entries
+                    return $group->sum(function ($item) {
+                        return $item->count ?? 1; // Default to 1 if 'count' is not defined
+                    });
+                });
+
+
+                return [
+                    'name' => $child->name,
+                    'meetings_count' => $meetingsCount,
+                    'enactments_grouped' => $enactmentsGrouped,
+                    'reviews_grouped' => $reviewsGrouped,
+                    'upshot_report' => $enactmentsGroupedByUpShot
+                ];
+            });
+
+
+            return response()->json($childData);
+
+
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 }

@@ -102,6 +102,12 @@
         "permissionTypeName": "operational"
     },
     {
+        "name": "گزارش جامع",
+        "slug": "/mes/reports/comprehensive",
+        "moduleName": "EMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
         "name": "بروزرسانی عناوین مصوبه",
         "slug": "/mes/settings/enactment-titles/{id}",
         "moduleName": "EMS",
