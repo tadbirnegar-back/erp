@@ -208,13 +208,9 @@ class EMSController extends Controller
             $workForce = $employee->workForce;
             //additional info insertion
 
-            // Ensure 'ounitID' is an array
-            $ounitIDs = is_string($data['ounitID']) ? json_decode($data['ounitID'], true) : $data['ounitID'];
 
-            // Check if decoding was successful
-            if (!is_array($ounitIDs)) {
-                throw new \Exception("'ounitID' must be a valid array or JSON array string.");
-            }
+            $scripts = json_decode($data['script'], true);
+
 
             $hireType = HireType::find($mrInfo[0]['hireType']);
             $scriptType = ScriptType::where('title', $mrInfo[0]['scriptType'])->first();
@@ -230,35 +226,33 @@ class EMSController extends Controller
             });
             $encodedSas = json_encode($sas->toArray());
 
-            $data['startDate'] = json_decode($data['startDate']);
-
-            // Iterate over 'ounitIDs' and store each entry
-            foreach ($ounitIDs as $index => $ounitID) {
+            foreach ($scripts as $script) {
 
                 $duration = (int)$scriptType->duration->value;
                 if ($duration == 0) {
                     $expireDate = null;
                 } else {
-                    $startDateRaw = $data['startDate'][$index];
+                    $startDateRaw = $script->startDate;
                     $expireDate = Carbon::parse($startDateRaw)->addMonths($duration);
                 }
 
                 $entry = [
                     'employeeID' => $employee->id,
-                    'ounitID' => $ounitID,
+                    'ounitID' => $script["ounitID"],
                     'levelID' => $mrInfo[0]['levelID'],
                     'positionID' => $position->id,
                     'hireTypeID' => $hireType->id,
                     'scriptTypeID' => $scriptType->id,
                     'jobID' => $job->id,
                     'operatorID' => $user->id,
-                    'startDate' => $data['startDate'][$index] ?? now(),
+                    'startDate' => $script["startDate"] ?? now(),
                     'expireDate' => $expireDate,
                     'scriptAgents' => $encodedSas,
-                    'files' => $data['files'][$index] ?? null, // Match file by index or set as null if not found
+                    'files' => $script["files"] ?? null, // Match file by index or set as null if not found
                 ];
 
                 $pendingRsStatus = $this->pendingRsStatus();
+
 
                 // Store each entry individually
                 $this->rsStore([$entry], $employee->id, $pendingRsStatus);
