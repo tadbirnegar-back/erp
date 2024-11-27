@@ -5,12 +5,13 @@ namespace Modules\HRMS\app\RecruitmentScriptStatus;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Contracts\StatusHandlerInterface;
+use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Notifications\ScriptExpireNotification;
 
 class TerminateHandler implements StatusHandlerInterface
 {
-    use UserTrait;
+    use UserTrait , RecruitmentScriptTrait;
 
     private RecruitmentScript $script;
     private ?User $user;
@@ -25,6 +26,7 @@ class TerminateHandler implements StatusHandlerInterface
     {
         $this->detachRolesByPosition($this->script->user, $this->script->position_id);
 //        $this->notifyScriptUser();
+        $this -> AddFinishDate($this->script);
 
     }
 
@@ -40,5 +42,11 @@ class TerminateHandler implements StatusHandlerInterface
 
 
         $user->notify(new ScriptExpireNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name));
+    }
+
+    public function AddFinishDate($script): void
+    {
+        $this->UpdateFinishDate($script, now());
+
     }
 }
