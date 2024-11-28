@@ -34,7 +34,7 @@ class RecruitmentStatusCreatedListener
             $scriptTypeId = ScriptType::where('title', 'انتصاب هیئت تطبیق')->first()->id;
 
             if ($recruitmentScript->script_type_id == $scriptTypeId) {
-                RecruitmentStatusCreatedJob::dispatch($recruitmentScript);
+                RecruitmentStatusCreatedJob::dispatch($recruitmentScript->id);
             }
         }
     }

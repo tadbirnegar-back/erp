@@ -2,30 +2,33 @@
 
 namespace Modules\EMS\app\Jobs;
 
+use DB;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
+use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingMember;
+use Modules\EMS\app\Models\MeetingType;
+use Modules\EMS\app\Models\MR;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class RecruitmentStatusCreatedJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, MeetingMemberTrait, RecruitmentScriptTrait;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
-    public RecruitmentScript $rs;
+    public int $rs;
 
 
     /**
      * Create a new job instance.
      */
-    public function __construct(RecruitmentScript $rs)
+    public function __construct(int $rs)
     {
         $this->rs = $rs;
     }
@@ -35,64 +38,68 @@ class RecruitmentStatusCreatedJob implements ShouldQueue
      */
     public function handle(): void
     {
+        try {
+            DB::beginTransaction();
+            $script = RecruitmentScript::with('ounit', 'position', 'user')->find($this->rs);
 
-        $organ = OrganizationUnit::find($this->rs->organization_unit_id);
+            $organ = $script->ounit;
 
-        $positionTitle = $this->rs->position->name;
-        $mrInfo = $this->getMrIdUsingPositionTitle($positionTitle);
+            $positionTitle = $script->position->name;
+            $mrInfo = $this->getMrIdUsingPositionTitle($positionTitle);
 
-        $mrId = $mrInfo['id'];
-
-        $meetingTemplate = Meeting::where('isTemplate', true)
-            ->where('ounit_id', $organ->id)
-            ->with(['meetingMembers' => function ($query) use ($mrId) {
-                $query->where('mr_id', $mrId);
-            }])->first();
-
-
-        if ($meetingTemplate) {
-
-            if (!$meetingTemplate->meetingMembers) {
-                $meetingMember = $meetingTemplate->meetingMembers[0];
-
-                $employee = Employee::find($meetingMember->employee_id);
-                $employee->load('user.activeRecruitmentScript');
-                $activeRs = $employee->user->activeRecruitmentScript;
-                if (!empty($activeRs)) {
+            $mrId = $mrInfo['title'];
+            $mr = MR::where('title', $mrId)->first();
+            $meetingTemplate = Meeting::where('isTemplate', true)
+                ->where('ounit_id', $script->organization_unit_id)
+                ->with(['meetingMembers' => function ($query) use ($mr) {
+                    $query->where('mr_id', $mr->id);
+                }])->first();
 
 
-                    $statusAzlId = $this->terminatedRsStatus()->id;
+            if ($meetingTemplate) {
+
+                $meetingMember = $meetingTemplate->meetingMembers->first();
+
+                $oldUser = User::with(['activeRecruitmentScript' => function ($q) use ($organ, $script) {
+                    $q->where('organization_unit_id', '=', $organ->id)
+                        ->where('script_type_id', '=', $script->script_type_id)
+                        ->where('position_id', '=', $script->position_id);
+                }])->find($meetingMember->employee_id);
+
+                $activeRs = $oldUser->activeRecruitmentScript;
+                if ($activeRs->isNotEmpty()) {
 
 
-                    \DB::table('recruitment_script_status')
-                        ->insert([
-                            'status_id' => $statusAzlId,
-                            'recruitment_script_id' => $activeRs[0]->id,
-                        ]);
+                    $statusAzlId = $this->terminatedRsStatus();
 
-                    //NewUser Operation
-                    $employee = Employee::find($this->rs->employee_id);
+                    $this->attachStatusToRs($statusAzlId, $activeRs->first());
 
 
-                    MeetingMember::find($meetingMember->id)->update([
-                        'employee_id' => $employee->id,
-                    ]);
-                    $meetingMember->employee_id = $employee->id;
+                    $meetingMember->employee_id = $script->user->id;
                     $meetingMember->save();
                 }
             } else {
-                \Log::info("injam");
-                $employee = Employee::find($this->rs->employee_id);
 
-                $user = $employee->load('user');
+                $user = $script->user;
+
+                $data['creatorID'] = $user->id;
+                $data['meetingTypeID'] = MeetingType::where('title', 'الگو')->first()->id;
+                $data['isTemplate'] = true;
+                $data['ounitID'] = $organ->id;
+                $meeting = $this->storeMeeting($data);
 
                 MeetingMember::create([
                     'employee_id' => $user->user->id,
-                    'meeting_id' => $meetingTemplate->id,
-                    'mr_id' => $mrId,
+                    'meeting_id' => $meeting->id,
+                    'mr_id' => $mr->id,
                 ]);
 
             }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->fail($e);
         }
+
     }
 }
