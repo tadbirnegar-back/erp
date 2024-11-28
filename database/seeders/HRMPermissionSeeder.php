@@ -18,7 +18,7 @@ class HRMPermissionSeeder extends Seeder
                 'slug' => '/hrm/employee/list/filter'
             ],
             [
-                'name' => 'تنظیمات منابع انسانی',
+                'name' => 'پیکربندی منابع انسانی',
                 'slug' => '/hrm/setting'
             ],
             [
@@ -122,7 +122,7 @@ class HRMPermissionSeeder extends Seeder
                 'slug' => '/hrm/employee/script-types'
             ],
             [
-                'name' => 'لیست درخواست‌های منابع انسانی',
+                'name' => 'احکام صادر شده',
                 'slug' => '/hrm/rc/list'
             ],
             [

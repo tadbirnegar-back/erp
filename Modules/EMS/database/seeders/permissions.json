@@ -60,7 +60,7 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "تنظیمات دبیر",
+        "name": "پیکربندی دبیر",
         "slug": "/mes/setting/secretary",
         "moduleName": "EMS",
         "permissionTypeName": "sidebar"
