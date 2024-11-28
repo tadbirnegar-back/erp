@@ -506,7 +506,7 @@ class EnactmentController extends Controller
                     ->sortByDesc('count')
                     ->values();
 
-                if ($reviewStatuses->count() == 2 && $result[0]['count'] == $result[1]['count']) {
+                if ($result->count() == 2 && isset($result[0]) && isset($result[1]) && $result[0]['count'] == $result[1]['count']) {
                     $finalStatus = null;
                 } else {
                     $finalStatus = $result[0]['status']->status;
@@ -574,7 +574,7 @@ class EnactmentController extends Controller
                     ->sortByDesc('count')
                     ->values();
 
-                if ($reviewStatuses->count() == 2 && $result[0]['count'] == $result[1]['count']) {
+                if ($result->count() == 2 && isset($result[0]) && isset($result[1]) && $result[0]['count'] == $result[1]['count']) {
                     $finalStatus = null;
                 } else {
                     $finalStatus = $result[0]['status']->status;

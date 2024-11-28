@@ -75,6 +75,14 @@ class RecruitmentStatusCreatedJob implements ShouldQueue
                     $this->attachStatusToRs($statusAzlId, $activeRs->first());
 
 
+                }
+                if (is_null($meetingMember)) {
+                    $mm = new MeetingMember();
+                    $mm->employee_id = $script->user->id;
+                    $mm->meeting_id = $meetingTemplate->id;
+                    $mm->mr_id = $mr->id;
+                    $mm->save();
+                } else {
                     $meetingMember->employee_id = $script->user->id;
                     $meetingMember->save();
                 }
