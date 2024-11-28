@@ -62,9 +62,10 @@ class StoreEnactmentStatusJob implements ShouldQueue
                     'status_id' => $takmilshodeStatus,
                     'enactment_id' => $this->encId,
                 ]);
-
-                $enactment->final_status_id = $noMoghayeratAutoStatus->id;
-                $enactment->save();
+                if ($enactment->members->count() > 1) {
+                    $enactment->final_status_id = $noMoghayeratAutoStatus->id;
+                    $enactment->save();
+                }
             }
         } catch (\Exception $e) {
             $this->fail($e);
