@@ -102,8 +102,7 @@ class EnactmentController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-//            $user = Auth::user();
-            $user = \Modules\AAA\app\Models\User::find(2086);
+            $user = Auth::user();
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             if (isset($data['meetingID'])) {
