@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -38,7 +39,11 @@ class EnactmentController extends Controller
      */
     public function indexSecretary(Request $request): JsonResponse
     {
-        $user = Auth::user();
+//        $user = Auth::user();
+        $user = User::find(2086);
+
+        $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
+
         $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
             $q
                 ->with('organizationUnit.descendantsAndSelf');
@@ -51,12 +56,15 @@ class EnactmentController extends Controller
 
 //        return response()->json($enactments);
         $statuses = Enactment::GetAllStatuses();
-        return response()->json(['data' => $enactments, 'statusList' => $statuses]);
+
+
+        return response()->json(['data' => $enactments, 'statusList' => $statuses, 'ounits' => $user->activeDistrictRecruitmentScript]);
     }
 
     public function indexHeyaat(Request $request): JsonResponse
     {
         $user = Auth::user();
+        $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
 
         $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
             $q
@@ -68,12 +76,14 @@ class EnactmentController extends Controller
         $data = $request->all();
         $enactments = $this->indexPendingForHeyaatStatusEnactment($data, $ounits);
         $statuses = Enactment::GetAllStatuses();
-        return response()->json(['data' => $enactments, 'statusList' => $statuses]);
+        return response()->json(['data' => $enactments, 'statusList' => $statuses, 'ounits' => $user->activeDistrictRecruitmentScript]);
     }
 
     public function indexArchive(Request $request): JsonResponse
     {
         $user = Auth::user();
+        $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
+
         try {
             $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
                 $q
@@ -88,7 +98,7 @@ class EnactmentController extends Controller
 
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
-            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews]);
+            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript]);
         } catch (Exception $e) {
             return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
         }
