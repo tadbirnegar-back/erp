@@ -31,25 +31,33 @@ class AlertKarshenas implements ShouldQueue
      */
     public function handle(): void
     {
-        $enactment = Enactment::with([
-            'meeting.meetingMembers' => function ($query) {
-                $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
-                    $subQuery->where('enactment_id', $this->encId);
-                })->whereHas('roles', function ($q) {
-                    $q->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
-                })->with(['user']);
-            },
-        ])->find($this->encId);
+        try {
+            \DB::beginTransaction();
+            $enactment = Enactment::with([
+                'meeting.meetingMembers' => function ($query) {
+                    $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
+                        $subQuery->where('enactment_id', $this->encId);
+                    })->whereHas('roles', function ($q) {
+                        $q->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
+                    })->with(['user']);
+                },
+            ])->find($this->encId);
 
 
-        foreach ($enactment->meeting->meetingMembers as $meetingMember) {
-            $user = $meetingMember->user; // Access the User model associated with the meeting member
+            foreach ($enactment->meeting->meetingMembers as $meetingMember) {
+                $user = $meetingMember->user; // Access the User model associated with the meeting member
 
-            $username = Person::find($user->person_id)->display_name;
+                $username = Person::find($user->person_id)->display_name;
 
-            $user->notify(new AlertMMLastDayNotification($username));
+                $user->notify(new AlertMMLastDayNotification($username));
 
+            }
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            $this->fail($e);
         }
+
 
     }
 }

@@ -31,11 +31,19 @@ class PendingForHeyaatStatusJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $enactment = Enactment::find($this->encId);
-        $takmilshodeStatus = $this->enactmentHeyaatStatus()->id;
-        EnactmentStatus::create([
-            'status_id' => $takmilshodeStatus,
-            'enactment_id' => $this->encId,
-        ]);
+        try {
+            \DB::beginTransaction();
+            $enactment = Enactment::find($this->encId);
+            $takmilshodeStatus = $this->enactmentHeyaatStatus()->id;
+            EnactmentStatus::create([
+                'status_id' => $takmilshodeStatus,
+                'enactment_id' => $this->encId,
+            ]);
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            $this->fail($e);
+        }
+
     }
 }
