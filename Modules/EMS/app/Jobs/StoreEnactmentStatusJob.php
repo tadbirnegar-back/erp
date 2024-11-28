@@ -36,6 +36,7 @@ class StoreEnactmentStatusJob implements ShouldQueue
     {
 
         try {
+            \DB::beginTransaction();
             $enactment = Enactment::with(['members' => function ($query) {
                 $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
                     $subQuery->where('enactment_id', $this->encId);
@@ -62,11 +63,14 @@ class StoreEnactmentStatusJob implements ShouldQueue
                     'status_id' => $takmilshodeStatus,
                     'enactment_id' => $this->encId,
                 ]);
-
-                $enactment->final_status_id = $noMoghayeratAutoStatus->id;
-                $enactment->save();
+                if ($enactment->members->count() > 1) {
+                    $enactment->final_status_id = $noMoghayeratAutoStatus->id;
+                    $enactment->save();
+                }
+                \DB::commit();
             }
         } catch (\Exception $e) {
+            \DB::rollBack();
             $this->fail($e);
         }
 
