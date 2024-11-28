@@ -11,7 +11,6 @@ use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Models\Attachmentable;
 use Modules\EMS\app\Models\Enactment;
-use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\CityOfc;
@@ -206,25 +205,6 @@ trait EnactmentTrait
         }
         $preparedData = $this->prepareEnactmentData($data, $meeting);
         $result = Enactment::create($preparedData->toArray()[0]);
-        // Define the statuses and other common data
-        $statuses = [
-            $this->enactmentPendingSecretaryStatus()->id,
-            $this->enactmentPendingForHeyaatDateStatus()->id,
-        ];
-
-        $commonData = [
-            'enactment_id' => $result->id,
-            'operator_id' => $data[0]['creatorID'],
-            'description' => $data[0]['description'] ?? null,
-            'attachment_id' => $data[0]['attachmentID'] ?? null,
-        ];
-
-// Build and save each status individually to trigger the observer
-        foreach ($statuses as $statusId) {
-            $statusData = array_merge($commonData, ['status_id' => $statusId]);
-            EnactmentStatus::create($statusData); // This triggers the `created` observer
-        }
-
         return $result;
     }
 

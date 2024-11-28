@@ -130,6 +130,19 @@ class EnactmentController extends Controller
 
                 $enactment->meetings()->attach($meetingShura->id);
 
+
+                $meeting = Meeting::find($data['meetingID']);
+
+
+                foreach ($meeting->meetingMembers as $mm) {
+                    $newMember = $mm->replicate();
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
+                }
+
+                $meeting->enactments()->attach($enactment->id);
+
+
                 //Add statuses To Enactment
 
                 $statuses = [
@@ -150,17 +163,6 @@ class EnactmentController extends Controller
                     EnactmentStatus::create($statusData); // This triggers the `created` observer
                 }
 
-
-                $meeting = Meeting::find($data['meetingID']);
-
-
-                foreach ($meeting->meetingMembers as $mm) {
-                    $newMember = $mm->replicate();
-                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
-                    $newMember->save();
-                }
-
-                $meeting->enactments()->attach($enactment->id);
 
             } else if (isset($data['meetingDate'])) {
 
