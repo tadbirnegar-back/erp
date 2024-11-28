@@ -106,7 +106,6 @@ class EnactmentController extends Controller
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             if (isset($data['meetingID'])) {
-
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
                 $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $data['meetingID'])
@@ -129,8 +128,19 @@ class EnactmentController extends Controller
 
                 $enactment = $this->storeEnactment($data, $meetingShura);
 
-
                 $enactment->meetings()->attach($meetingShura->id);
+
+
+                $meeting = Meeting::find($data['meetingID']);
+
+
+                foreach ($meeting->meetingMembers as $mm) {
+                    $newMember = $mm->replicate();
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
+                }
+
+                $meeting->enactments()->attach($enactment->id);
 
 
                 //Add statuses To Enactment
@@ -153,18 +163,6 @@ class EnactmentController extends Controller
                     EnactmentStatus::create($statusData); // This triggers the `created` observer
                 }
 
-
-                $meeting = Meeting::find($data['meetingID']);
-
-                return response()->json($meeting);
-
-                foreach ($meeting->meetingMembers as $mm) {
-                    $newMember = $mm->replicate();
-                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
-                    $newMember->save();
-                }
-
-                $meeting->enactments()->attach($enactment->id);
 
             } else if (isset($data['meetingDate'])) {
 
