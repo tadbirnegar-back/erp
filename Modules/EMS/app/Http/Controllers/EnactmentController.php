@@ -102,10 +102,12 @@ class EnactmentController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = \Modules\AAA\app\Models\User::find(2086);
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
             if (isset($data['meetingID'])) {
+
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
                 $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $data['meetingID'])
@@ -128,7 +130,9 @@ class EnactmentController extends Controller
 
                 $enactment = $this->storeEnactment($data, $meetingShura);
 
+
                 $enactment->meetings()->attach($meetingShura->id);
+
 
                 //Add statuses To Enactment
 
@@ -153,6 +157,7 @@ class EnactmentController extends Controller
 
                 $meeting = Meeting::find($data['meetingID']);
 
+                return response()->json($meeting);
 
                 foreach ($meeting->meetingMembers as $mm) {
                     $newMember = $mm->replicate();
