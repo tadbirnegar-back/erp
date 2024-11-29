@@ -8,17 +8,23 @@ return new class extends Migration {
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::table('isars', function (Blueprint $table) {
-            $table->unsignedBigInteger('relative_type_id')->nullable()->change();
+        Schema::table('work_forces', function (Blueprint $table) {
+
+            $table->unsignedBigInteger('isar_id')->nullable();
+
+            $table->foreign('isar_id')->references('id')->on('isars')->onDelete('cascade');
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
-        Schema::table('isars', function (Blueprint $table) {
-            $table->unsignedBigInteger('relative_type_id')->nullable(false)->change();
+        Schema::table('work_forces', function (Blueprint $table) {
+
         });
     }
 };
