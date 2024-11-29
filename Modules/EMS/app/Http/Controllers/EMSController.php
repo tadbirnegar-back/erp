@@ -44,6 +44,7 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
+use Validator;
 
 class EMSController extends Controller
 {
@@ -76,17 +77,13 @@ class EMSController extends Controller
     public function registerHeyaatMember(Request $request): JsonResponse
     {
 
-        $userWithmobile = User::where('mobile', $request->mobile)->first();
-        if (!empty($userWithmobile)) {
-            return response()->json([
-                "message" => "شماره وارد شده تکراری است"
-            ], 400);
-        }
-        $personWithCodeMelli = Person::where('national_code', $request->nationalCode)->first();
-        if (!empty($personWithCodeMelli)) {
-            return response()->json([
-                "message" => "کد ملی وارد شده تکراری است"
-            ], 400);
+        $validator = Validator::make($request->all(), [
+            'mobile' => 'required|unique:users,mobile',
+            'nationalCode' => 'required|unique:persons,national_code',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 422);
         }
         $mrs = [
 
@@ -102,7 +99,7 @@ class EMSController extends Controller
             ],
             'بخشدار (عضو هیات تطبیق)' => [
                 [
-                    'scriptType' => 'انتصاب هیئت تطبیق',
+                    'scriptType' => 'انتصاب بخشدار',
                     'hireType' => 9,
                     'job' => 'عضو هیئت',
                     'position' => 'بخشدار',
@@ -510,7 +507,7 @@ class EMSController extends Controller
 
     public function getHeyaatMembersByOunit(Request $request)
     {
-        $validate = \Validator::make($request->all(), [
+        $validate = Validator::make($request->all(), [
             'ounitID' => 'required|exists:organization_units,id'
         ]);
 
@@ -608,7 +605,7 @@ class EMSController extends Controller
 
     public function updateHeyaatMembersByOunit(Request $request)
     {
-        $validate = \Validator::make($request->all(), [
+        $validate = Validator::make($request->all(), [
             'ounitID' => 'required|exists:organization_units,id',
             'boardMembers' => 'required',
             'consultingMembers' => 'required'
@@ -698,7 +695,7 @@ class EMSController extends Controller
 
     public function updateAutoMoghayeratSettings(Request $request)
     {
-        $validate = \Validator::make($request->all(), [
+        $validate = Validator::make($request->all(), [
             'emsMaxDayForReception' => 'required',
             'enactmentLimitPerMeeting' => 'required',
             'shouraMaxMeetingDateDaysAgo' => 'required',

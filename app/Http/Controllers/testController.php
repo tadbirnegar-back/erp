@@ -4,21 +4,29 @@ namespace App\Http\Controllers;
 
 
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
-use Modules\EMS\app\Models\Enactment;
+use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
+use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
+use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
     public function run()
     {
 
-        $enactment = Enactment::with("latestMeeting")->find(183);
+        $ous = OrganizationUnit::where('unitable_type', DistrictOfc::class)->with(['person', 'head.activeDistrictRecruitmentScript' => function ($query) {
+            $query->where('script_type_id', 16);
+        }])->get();
 
-        dd($enactment);
+        $ous->each(function ($ounit) {
+
+        });
 
 
 //        $recstatus = RecruitmentScriptStatus::create([

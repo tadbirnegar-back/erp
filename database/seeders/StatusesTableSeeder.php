@@ -16,7 +16,7 @@ class StatusesTableSeeder extends Seeder
     {
 
 
-        \DB::table('statuses')->delete();
+//        \DB::table('statuses')->delete();
 
         \DB::table('statuses')->upsert(array(
             0 =>
@@ -449,7 +449,7 @@ class StatusesTableSeeder extends Seeder
             61 =>
                 array(
                     'id' => '64',
-                    'name' => 'لغو شده',
+                    'name' => 'رد شده',
                     'model' => 'Modules\\HRMS\\app\\Models\\ScriptApprovingList',
                     'class_name' => 'danger',
                 ),
@@ -564,6 +564,83 @@ class StatusesTableSeeder extends Seeder
                     'name' => 'نامشخص',
                     'model' => 'Modules\\EMS\\app\\Models\\EnactmentReview',
                     'class_name' => 'warning',
+                ),
+            78 =>
+                array(
+                    'id' => '81',
+                    'name' => 'فعال',
+                    'model' => 'Modules\\EMS\\app\\Models\\EnactmentTitle',
+                    'class_name' => NULL,
+                ),
+            79 =>
+                array(
+                    'id' => '82',
+                    'name' => 'حذف شده',
+                    'model' => 'Modules\\EMS\\app\\Models\\EnactmentTitle',
+                    'class_name' => NULL,
+                ),
+            80 =>
+                array(
+                    'id' => '83',
+                    'name' => 'منقضی شده',
+                    'model' => 'Modules\\HRMS\\app\\Models\\RecruitmentScript',
+                    'class_name' => 'danger',
+                ),
+            81 =>
+                array(
+                    'id' => '84',
+                    'name' => 'رد شده',
+                    'model' => 'Modules\\HRMS\\app\\Models\\RecruitmentScript',
+                    'class_name' => 'danger',
+                ),
+            82 =>
+                array(
+                    'id' => '85',
+                    'name' => 'عزل شده',
+                    'model' => 'Modules\\HRMS\\app\\Models\\RecruitmentScript',
+                    'class_name' => 'danger',
+                ),
+            83 =>
+                array(
+                    'id' => '86',
+                    'name' => 'پایان خدمت',
+                    'model' => 'Modules\\HRMS\\app\\Models\\RecruitmentScript',
+                    'class_name' => 'danger',
+                ),
+            84 =>
+                array(
+                    'id' => '87',
+                    'name' => 'باطل شده',
+                    'model' => 'Modules\\HRMS\\app\\Models\\RecruitmentScript',
+                    'class_name' => 'danger',
+                ),
+            85 =>
+                array(
+                    'id' => '88',
+                    'name' => 'رد شده',
+                    'model' => 'Modules\\EMS\\app\\Models\\Enactment',
+                    'class_name' => NULL,
+                ),
+            86 =>
+                array(
+                    'id' => '89',
+                    'name' => 'در انتظار برگزاری جلسه هیئت',
+                    'model' => 'Modules\\EMS\\app\\Models\\Enactment',
+                    'class_name' => NULL,
+                ),
+            87 =>
+                array(
+                    'id' => '90',
+                    'name' => 'در انتظار عزل',
+                    'model' => 'Modules\\HRMS\\app\\Models\\RecruitmentScript',
+                    'class_name' => 'danger',
+                ),
+            88 =>
+                array(
+                    'id' => '91',
+                    'name' => 'قطع همکاری',
+                    'model' => 'Modules\\HRMS\\app\\Models\\RecruitmentScript',
+                    'class_name' => 'danger',
                 ),
         ), ['id']);
 

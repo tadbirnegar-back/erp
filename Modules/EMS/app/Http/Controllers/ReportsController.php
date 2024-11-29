@@ -48,11 +48,13 @@ class ReportsController extends Controller
         }
         $employeeId = $user->id;
 
+        $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
+
+        $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten();
+
         if ($request->ounitID) {
-            $ounit = OrganizationUnit::find($request->ounitID);
+            $ounit = OrganizationUnit::with('ancestorsAndSelf')->find($request->ounitID);
         } else {
-            $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
-            $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten();
             $ounit = $rsUnits[0];
         }
 
