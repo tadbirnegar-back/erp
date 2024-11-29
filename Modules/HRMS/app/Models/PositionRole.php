@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Modules\HRMS\Database\factories\PositionRoleFactory;
 
-class positionRole extends Pivot
+class PositionRole extends Pivot
 {
     use HasFactory;
 

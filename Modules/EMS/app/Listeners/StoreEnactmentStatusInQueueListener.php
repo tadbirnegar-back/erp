@@ -34,18 +34,18 @@ class StoreEnactmentStatusInQueueListener
         $enactmentStatus = $event->encStatus;
 
         if ($this->enactmentPendingForHeyaatDateStatus()->id == $enactmentStatus->status_id) {
-            $timeNow = Carbon::now();
+//            $timeNow = Carbon::now();
 
             $receiptMaxDay = $this->getReceptionMaxDays()?->value ?? 7;
 
 
             // Add 16 days and 5 minutes to the meeting date
-            $delayHeyat = $timeNow->addDays($receiptMaxDay + 1)->addMinutes(5);
-            $delayKarshenas = $timeNow->addDays($receiptMaxDay + 1)->addMinutes(5);
+            $delayHeyat = now()->addDays($receiptMaxDay + 1)->addMinutes(5);
+            $delayKarshenas = now()->addDays($receiptMaxDay + 1)->addMinutes(5);
 
 
-            $alertHeayaatDelay = $timeNow->addDays($receiptMaxDay - 1)->addMinutes(5);
-            $alertKarshenasDelay = $timeNow->addDays($receiptMaxDay - 1)->addMinutes(5);
+//            $alertHeayaatDelay = $timeNow->addDays($receiptMaxDay - 1)->addMinutes(5);
+//            $alertKarshenasDelay = $timeNow->addDays($receiptMaxDay - 1)->addMinutes(5);
 
 
             // Dispatch the job with the calculated delay

@@ -50,6 +50,11 @@ class DatabaseSeeder extends Seeder
 //        $this->call(RolesTableSeeder::class);
 //        $this->call(RolePermissionTableSeeder::class);
 //
+//        \DB::transaction(function () {
+
+//        $this->call(PermissionsTableSeeder::class);
+//        $this->call(StatusesTableSeeder::class);
+////        });
 //        \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
     }

@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class PermissionsTableSeeder extends Seeder
+class  PermissionsTableSeeder extends Seeder
 {
 
     /**
@@ -1963,7 +1963,7 @@ class PermissionsTableSeeder extends Seeder
                     'module_id' => '13',
                     'permission_type_id' => '2',
                 ),
-        ), ['id']);
+        ), ['slug']);
 
 
     }

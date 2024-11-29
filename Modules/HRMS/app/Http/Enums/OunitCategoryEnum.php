@@ -2,7 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Enums;
 
-use Modules\OUnitMS\app\Models\{CityOfc, DistrictOfc, StateOfc, TownOfc, VillageOfc};
+use Modules\OUnitMS\app\Models\{CityOfc, Department, DistrictOfc, StateOfc, TownOfc, VillageOfc};
 
 enum OunitCategoryEnum: int
 {
@@ -11,6 +11,7 @@ enum OunitCategoryEnum: int
     case DistrictOfc = 3;
     case TownOfc = 4;
     case VillageOfc = 5;
+    case Department = 6;
 
 
     public function getLabel()
@@ -21,6 +22,7 @@ enum OunitCategoryEnum: int
             self::DistrictOfc => 'بخشداری',
             self::TownOfc => 'دهستان',
             self::VillageOfc => 'دهیاری',
+            self::Department => 'دپارتمان',
         };
     }
 
@@ -32,6 +34,7 @@ enum OunitCategoryEnum: int
             self::DistrictOfc => DistrictOfc::class,
             self::TownOfc => TownOfc::class,
             self::VillageOfc => VillageOfc::class,
+            self::Department => Department::class,
         };
     }
 
