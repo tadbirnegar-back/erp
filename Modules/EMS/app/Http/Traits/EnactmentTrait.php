@@ -47,7 +47,10 @@ trait EnactmentTrait
         if (!empty($data['ounitID'])) {
             $ounits = [$data['ounitID']];
         }
-
+        if (isset($data['district'])) {
+            // Get the organization unit and its children
+            $ounits = [$data['district']];
+        }
 
         $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
@@ -100,6 +103,11 @@ trait EnactmentTrait
             $ounits = [$data['ounitID']];
         }
 
+        if (isset($data['district'])) {
+            // Get the organization unit and its children
+            $ounits = [$data['district']];
+        }
+
         $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
 
@@ -150,6 +158,11 @@ trait EnactmentTrait
             $ounits = [$data['ounitID']];
         }
 
+
+        if (isset($data['district'])) {
+            // Get the organization unit and its children
+            $ounits = [$data['district']];
+        }
 
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
