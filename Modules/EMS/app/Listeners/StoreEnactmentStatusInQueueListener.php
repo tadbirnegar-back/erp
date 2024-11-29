@@ -6,8 +6,6 @@ use Carbon\Carbon;
 use Modules\EMS\app\Events\EnactmentStatusCreatedEvent;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
-use Modules\EMS\app\Jobs\AlertHeyaat;
-use Modules\EMS\app\Jobs\AlertKarshenas;
 use Modules\EMS\app\Jobs\PendingForHeyaatStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
@@ -54,8 +52,8 @@ class StoreEnactmentStatusInQueueListener
 
             StoreEnactmentStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayHeyat);
             StoreEnactmentStatusKarshenasJob::dispatch($enactmentStatus->enactment_id)->delay($delayKarshenas);
-            AlertKarshenas::dispatch($enactmentStatus->enactment_id)->delay($alertKarshenasDelay);
-            AlertHeyaat::dispatch($enactmentStatus->enactment_id)->delay($alertHeayaatDelay);
+            //AlertKarshenas::dispatch($enactmentStatus->enactment_id)->delay($alertKarshenasDelay);
+            //AlertHeyaat::dispatch($enactmentStatus->enactment_id)->delay($alertHeayaatDelay);
 
 
             //Meeting Job
