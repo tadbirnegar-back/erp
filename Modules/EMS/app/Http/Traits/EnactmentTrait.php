@@ -15,7 +15,6 @@ use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Morilog\Jalali\Jalalian;
 
@@ -50,7 +49,7 @@ trait EnactmentTrait
         }
         if (isset($data['district'])) {
             // Get the organization unit and its children
-            $ounits = OrganizationUnit::find($data['district']);
+            $ounits = [$data['district']];
         }
 
         $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
@@ -106,7 +105,7 @@ trait EnactmentTrait
 
         if (isset($data['district'])) {
             // Get the organization unit and its children
-            $ounits = OrganizationUnit::find($data['district']);
+            $ounits = [$data['district']];
         }
 
         $mt = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
@@ -162,7 +161,7 @@ trait EnactmentTrait
 
         if (isset($data['district'])) {
             // Get the organization unit and its children
-            $ounits = OrganizationUnit::find($data['district']);
+            $ounits = [$data['district']];
         }
 
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {

@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
-use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -39,8 +38,8 @@ class EnactmentController extends Controller
      */
     public function indexSecretary(Request $request): JsonResponse
     {
-//        $user = Auth::user();
-        $user = User::find(2174);
+        $user = Auth::user();
+//        $user = User::find(2174);
 
 
         $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
