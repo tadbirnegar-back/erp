@@ -40,7 +40,8 @@ class EnactmentController extends Controller
     public function indexSecretary(Request $request): JsonResponse
     {
 //        $user = Auth::user();
-        $user = User::find(2086);
+        $user = User::find(2174);
+
 
         $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
 
@@ -58,7 +59,7 @@ class EnactmentController extends Controller
         $statuses = Enactment::GetAllStatuses();
 
 
-        return response()->json(['data' => $enactments, 'statusList' => $statuses, 'ounits' => $user->activeDistrictRecruitmentScript]);
+        return response()->json(['data' => $enactments, 'statusList' => $statuses, 'Districts' => $user->activeDistrictRecruitmentScript]);
     }
 
     public function indexHeyaat(Request $request): JsonResponse
