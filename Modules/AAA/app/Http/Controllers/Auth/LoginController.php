@@ -233,6 +233,8 @@ class LoginController extends Controller
         } else {
             return response()->json(['message' => 'نام کاربری یا رمز عبور نادرست است'], 403);
         }
+
+
         $baseUrl = url('/');
 
         $response = Http::post("{$baseUrl}/oauth/token", [
@@ -259,7 +261,9 @@ class LoginController extends Controller
         unset($result['token_type']);
         unset($result['expires_in']);
 
-        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->with('moduleCategory')->get();
+
+        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->orderBy('priority', 'desc') // Sort by 'priority' in ascending order
+        ->with('moduleCategory')->get();
         foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
                 'label' => $permission?->name,
@@ -267,6 +271,7 @@ class LoginController extends Controller
             ];
             $sidebarItems[$permission->moduleCategory->name]['icon'] = $permission->moduleCategory->icon;
         }
+
 
         $operationalPermissions = $user->permissions()->where('permission_type_id', '=', 2)->with('moduleCategory')->get();
         foreach ($operationalPermissions as $permission) {
@@ -290,6 +295,7 @@ class LoginController extends Controller
         $result['sidebar'] = $sidebarItems ?? null;
 
         $roles = $user->roles->pluck('name');
+
 
         if (in_array('کاربر', $roles->toArray())) {
             $result['hasPayed'] = !($user->organizationUnits()
