@@ -55,5 +55,3 @@ Route::prefix('v1')->group(function () {
 
 
 });
-
-Route::post('/login', [\Modules\AAA\app\Http\Controllers\Auth\LoginController::class, 'loginGrant'])->name('login.login-grant');
