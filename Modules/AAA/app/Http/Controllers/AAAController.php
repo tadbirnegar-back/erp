@@ -68,9 +68,6 @@ class AAAController extends Controller
 
 //        $user->load('activeWidgets');
 
-//        $user = User::find(2119);
-
-
         $activeWidgets = $user->activeWidgets;
 
         $allPermissions = $activeWidgets->map(function ($widget) {
