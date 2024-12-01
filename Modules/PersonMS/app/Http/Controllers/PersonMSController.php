@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Mockery\Exception;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AddressMS\app\Models\Address;
 use Modules\AddressMS\app\Traits\AddressTrait;
@@ -1020,6 +1021,27 @@ class PersonMSController extends Controller
         }
 
 
+    }
+
+    public function deleteUserAndPerson($id)
+    {
+        try {
+            DB::beginTransaction();
+            $person = Person::with(['employee', 'personable',
+            ])->find($id);
+            $emp = $person->employee;
+            $natural = $person->personable;
+
+            $natural->delete();
+            $emp->delete();
+            $person->delete();
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت حذف شد',
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['mwssage' => [$e->getMessage(), $e->getTrace()],], 500);
+        }
     }
 
 }

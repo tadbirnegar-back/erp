@@ -31,6 +31,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
+    Route::delete('/person/hard-delete/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'deleteUserAndPerson'])->middleware(['auth:api']);
+
     Route::post('/person/religions/list', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'religionIndex']);
 
     Route::post('/person/military-status/list', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'militaryStatusesIndex']);

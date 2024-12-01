@@ -98,7 +98,7 @@ class EnactmentController extends Controller
 
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
-            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript]);
+            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit')]);
         } catch (Exception $e) {
             return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
         }
@@ -140,6 +140,9 @@ class EnactmentController extends Controller
 
                 $enactment->meetings()->attach($meetingShura->id);
 
+                $files = json_decode($data['attachments'], true);
+
+                $this->attachFiles($enactment, $files);
 
                 $meeting = Meeting::find($data['meetingID']);
 
