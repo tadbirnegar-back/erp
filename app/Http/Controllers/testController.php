@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
-use Modules\EMS\app\Models\Enactment;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 
@@ -16,9 +15,100 @@ class testController extends Controller
     public function run()
     {
 
-        $enactment = Enactment::with("latestMeeting")->find(183);
 
-        dd($enactment);
+        $url = "https://ippanel.com/services.jspd";
+
+// Define parameters for the API request
+        $param = array(
+            'uname' => "09141492090",  // Your username
+            'pass' => "1680162675Behrad",   // Your password
+            'op' => 'delivery', // The operation type (delivery in this case)
+            'uinqid' => "1010556386"  // The unique message ID you want to check
+        );
+
+// Initialize the cURL handler
+        $handler = curl_init($url);
+
+// Set cURL options
+        curl_setopt($handler, CURLOPT_CUSTOMREQUEST, "POST"); // Custom POST request
+        curl_setopt($handler, CURLOPT_POSTFIELDS, http_build_query($param)); // Properly format POST data
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true); // Return response as a string
+
+// Execute the cURL request
+        $response2 = curl_exec($handler);
+
+// Check if the cURL request was successful
+        if ($response2 === false) {
+            echo "cURL Error: " . curl_error($handler);
+            exit;
+        }
+
+// Close the cURL handler
+        curl_close($handler);
+
+// Decode the JSON response
+        $response2 = json_decode($response2);
+
+// Handle the response based on whether it's an object or an array
+        if (isset($response2[0]) && isset($response2[1])) {
+            // Assuming the response is an array (index-based)
+            $res_code = $response2[0]; // First element in the response
+            $res_data = $response2[1]; // Second element in the response
+            echo $res_data;
+        } else {
+            // If the response is not in the expected format, print the full response for debugging
+            echo "Unexpected response format: ";
+            var_dump($response2);
+        }
+
+
+//        $url = "https://ippanel.com/services.jspd";
+//
+//// Define parameters
+//        $param = array(
+//            'uname' => "09141492090",   // Your username
+//            'pass' => "1680162675Behrad",    // Your password
+//            'op' => 'checkmessage',
+//            'messageid' => "1011733520"  // The message ID you want to check
+//        );
+//
+//// Initialize cURL
+//        $handler = curl_init($url);
+//        curl_setopt($handler, CURLOPT_CUSTOMREQUEST, "POST"); // Custom POST request
+//        curl_setopt($handler, CURLOPT_POSTFIELDS, http_build_query($param)); // Properly format POST data
+//        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+//
+//// Execute cURL request
+//        $response2 = curl_exec($handler);
+//        curl_close($handler); // Close cURL handler after request
+//
+//// Decode the JSON response
+//        $response2 = json_decode($response2);
+//
+//// Check if the response contains 'statusMessage'
+//        if (isset($response2->statusMessage)) {
+//            echo $response2->statusMessage . "<br>";
+//            echo $response2->validMessage . "<br>";
+//        } else {
+//            // Handle the case where the response doesn't contain 'statusMessage'
+//            $res_code = $response2[0];  // Assuming it's an array, fix if needed
+//            $res_data = $response2[1];  // Assuming it's an array, fix if needed
+//            echo $res_data . "<br>";
+//        }
+
+// Sample statusMessage meanings:
+// - Finish => پایان یافته
+// - NoContactWithTheOperator => عدم برقراری با اپراتور
+// - Interacting => در حال ارتباط
+// - NoAuthentication => عدم احراز هویت
+// - Active => فعال
+// - NoSendSMS => عدم ارسال پیامک
+// - Cancel => انصراف
+
+// Sample validMessage meanings:
+// - approve => تایید شده
+// - cancel => رد شده
+// - notconfirm => منتظر تایید
 
 
 //        $recstatus = RecruitmentScriptStatus::create([

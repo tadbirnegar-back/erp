@@ -3,19 +3,9 @@
 namespace Modules\AAA\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use DateTime;
-use GuzzleHttp\Client;
-use Laravel\Passport\Passport;
-use Laravel\Passport\RefreshTokenRepository;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
-use Modules\AAA\app\Models\User;
 use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
-use Modules\WidgetsMS\app\Models\Widget;
 use Str;
-use Symfony\Component\HttpFoundation\Cookie;
 
 
 class AAAController extends Controller
@@ -92,7 +82,7 @@ class AAAController extends Controller
             $widgetData[] = [
                 'name' => Str::replace('/', '', $key),
                 'data' => call_user_func([$item['controller'], $item['method']
-                 ]
+                    ]
                     , $user)];
         }
 
@@ -110,7 +100,6 @@ class AAAController extends Controller
 
 
     }
-
 
 
     // --------------------------------------------------------------------
