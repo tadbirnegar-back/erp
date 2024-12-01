@@ -318,7 +318,7 @@ trait OrganizationUnitTrait
 
     public function searchOunitByname(string $searchTerm)
     {
-        $result = OrganizationUnit::whereRaw(
+        $result = OrganizationUnit::where('unitable_type', VillageOfc::class)->whereRaw(
             "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
             [$searchTerm]
         )->with(['positions.levels', 'person', 'ancestors'])->get();
