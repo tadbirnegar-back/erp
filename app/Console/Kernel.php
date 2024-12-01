@@ -4,7 +4,6 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -20,7 +19,7 @@ class Kernel extends ConsoleKernel
 //        $schedule->command('queue:listen')
 //            ->withoutOverlapping()
 //            ->runInBackground();
-        Log::info('Schedule function executed at ' . now());
+//        Log::info('Schedule function executed at ' . now());
 
     }
 

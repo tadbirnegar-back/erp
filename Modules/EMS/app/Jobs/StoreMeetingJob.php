@@ -8,7 +8,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Models\Meeting;
@@ -68,7 +67,7 @@ class StoreMeetingJob implements ShouldQueue
         //message text for date
         $messageTextDate = "$daywithoutZero $monthName $parts[0]";
 
-        Log::info($messageTextDate);
+//        Log::info($messageTextDate);
 
 
         // Process members

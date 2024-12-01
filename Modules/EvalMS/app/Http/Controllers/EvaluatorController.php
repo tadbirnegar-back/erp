@@ -5,12 +5,12 @@ namespace Modules\EvalMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\EvalMS\app\Http\Repositories\EvaluatorRepository;
 use Modules\EvalMS\app\Http\Traits\EvaluatorTrait;
 
 class EvaluatorController extends Controller
 {
     use EvaluatorTrait;
+
     public array $data = [];
 
     /**
@@ -145,7 +145,7 @@ class EvaluatorController extends Controller
                     $recordExists = true;
                 }
             }
-        }else{
+        } else {
             $recordExists = true;
         }
         return response()->json([
