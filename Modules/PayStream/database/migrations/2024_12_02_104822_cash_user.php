@@ -10,21 +10,20 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        schema::create('course_position', function (Blueprint $table) {
+        Schema::create('cash_user', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('course_id');
-            $table->unsignedBigInteger('position_id');
+            $table->unsignedBigInteger('cash_id');
+            $table->unsignedBigInteger('user_id');
 
-
-            $table->foreign('course_id')->references('id')
-                ->on('courses')
+            $table->foreign('cash_id')->references('id')
+                ->on('cashes')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
 
-            $table->foreign('position_id')->references('id')
-                ->on('positions')
+            $table->foreign('user_id')->references('id')
+                ->on('users')
                 ->onDelete('cascade')
-                ->onUpdate('cascade');
+                ->onUpdate('cascade');;
         });
     }
 
@@ -33,6 +32,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('course_position');
+        Schema::dropIfExists('cash_user');
     }
 };

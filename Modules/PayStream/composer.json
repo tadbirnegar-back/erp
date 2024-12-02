@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/paystream",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\PayStream\\": "",
+            "Modules\\PayStream\\App\\": "app/",
+            "Modules\\PayStream\\Database\\Factories\\": "database/factories/",
+            "Modules\\PayStream\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\PayStream\\Tests\\": "tests/"
+        }
+    }
+}

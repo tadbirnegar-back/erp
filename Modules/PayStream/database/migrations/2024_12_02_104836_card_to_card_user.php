@@ -10,21 +10,20 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        schema::create('course_level', function (Blueprint $table) {
+        Schema::create('card_to_card_user', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('course_id');
-            $table->unsignedBigInteger('level_id');
+            $table->unsignedBigInteger('card_to_card_id');
+            $table->unsignedBigInteger('user_id');
 
-
-            $table->foreign('course_id')->references('id')
-                ->on('courses')
+            $table->foreign('card_to_card_id')->references('id')
+                ->on('card_to_cards')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
 
-            $table->foreign('level_id')->references('id')
-                ->on('levels')
+            $table->foreign('user_id')->references('id')
+                ->on('users')
                 ->onDelete('cascade')
-                ->onUpdate('cascade');
+                ->onUpdate('cascade');;
         });
     }
 
@@ -33,6 +32,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('course_level');
+        Schema::dropIfExists('cash_user');
     }
 };
