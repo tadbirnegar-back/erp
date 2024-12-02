@@ -16,5 +16,6 @@
     "EvalMS": true,
     "OUnitMS": true,
     "Gateway": true,
-    "EMS": true
+    "EMS": true,
+    "PayStream": true
 }
