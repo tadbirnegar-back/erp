@@ -9,6 +9,7 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\PayStream\app\Models\Order;
 
 
 class testController extends Controller
@@ -17,6 +18,9 @@ class testController extends Controller
 
     public function run()
     {
+
+        $orderStatus = Order::with('statuses')->find(1);
+        return response()->json($orderStatus);
 
 //        try {
 //            \DB::beginTransaction();
