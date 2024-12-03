@@ -19,7 +19,7 @@ class testController extends Controller
     public function run()
     {
 
-        $orderStatus = Order::with('statuses')->find(1);
+        $orderStatus = Order::with('status')->find(1);
         return response()->json($orderStatus);
 
 //        try {
