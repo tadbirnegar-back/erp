@@ -71,4 +71,4 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 });
 
-
+Route::post('/oms/OUnit/delete', [OUnitMSController::class, 'destroy']);

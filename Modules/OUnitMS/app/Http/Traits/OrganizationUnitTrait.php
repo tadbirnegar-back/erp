@@ -2,6 +2,7 @@
 
 namespace Modules\OUnitMS\app\Http\Traits;
 
+use Modules\OUnitMS\app\Http\Enums\statusEnum;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\Department;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -325,4 +326,15 @@ trait OrganizationUnitTrait
 
         return $result;
     }
+
+   public function GetActiveStatuses()
+{
+       $active = OrganizationUnit::with('statuses')->where('name', statusEnum::Active->value);
+       return $active;
+}
+public function GetInactiveStatuses()
+{
+    $inactive = OrganizationUnit::with('statuses')->where('name', statusEnum::Inactive->value);
+    return $inactive;
+}
 }

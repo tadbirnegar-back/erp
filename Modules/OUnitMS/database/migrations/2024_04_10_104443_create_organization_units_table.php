@@ -18,6 +18,8 @@ return new class extends Migration
             $table->unsignedBigInteger('head_id')->nullable();
 
             $table->foreign('head_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
+            $table->unsignedBigInteger('status_id')->default(1);
+            $table->foreign('status_id')->references('id')->on('statuses')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
