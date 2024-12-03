@@ -367,10 +367,12 @@ class LoginController extends Controller
             'client_secret' => config('passport.password_grant_client.secret'),
             'grant_type' => 'refresh_token'
         ]);
-
-        $result = json_decode($response->getBody(), true);
+        if (is_null($response)) {
+            return response()->json(['error' => 'error'], 401);
+        }
+        $result = json_decode($response?->getBody(), true);
         if (!$response->ok()) {
-            return response()->json(['error' => $result['error_description']], 500);
+            return response()->json(['error' => $result['error_description'] ?? null], 401);
         }
         // Retrieve the access token
         $token = $result['access_token'];
