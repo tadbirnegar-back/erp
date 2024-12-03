@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\Gateway\app\Models\Payment as PG;
-use Modules\OUnitMS\app\Models\VillageOfc;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Payment\Facade\Payment;
 
@@ -82,15 +81,12 @@ class GatewayController extends Controller
     {
         try {
             $user = \Auth::user();
-            $user->load(['organizationUnits' => function ($query) {
-                $query->where('unitable_type', VillageOfc::class)
-                    ->whereDoesntHave('payments', function ($query) {
-                        $query->whereHas('status', function ($query) {
-                            $query->where('name', 'پرداخت شده');
-                        });
-                    })
-                    ->with(['unitable']);
+            $user->load(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
+                $q->whereHas('status', function ($query) {
+                    $query->where('name', 'پرداخت شده');
+                });
             }]);
+
             if ($user->organizationUnits->isEmpty()) {
                 return response()->json(['message' => 'شما مجاز به پرداخت نمی باشید'], 403);
             }
