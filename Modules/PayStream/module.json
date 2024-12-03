@@ -1,0 +1,11 @@
+{
+    "name": "PayStream",
+    "alias": "paystream",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\PayStream\\app\\Providers\\PayStreamServiceProvider"
+    ],
+    "files": []
+}
