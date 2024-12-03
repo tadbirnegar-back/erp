@@ -59,8 +59,6 @@ class EMSController extends Controller
      */
     public function index(): JsonResponse
     {
-        //
-
         return response()->json($this->data);
     }
 

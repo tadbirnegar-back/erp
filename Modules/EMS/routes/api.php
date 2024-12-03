@@ -74,7 +74,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::put('mes/meeting/change-meeting-date/{id}', [MeetingController::class, 'changeMeetingDate']);
 
-    Route::get('mes/meeting/selection', [MeetingController::class, 'getSelection']);
+    Route::post('mes/meeting/selection', [MeetingController::class, 'getSelection']);
 
 });
 
