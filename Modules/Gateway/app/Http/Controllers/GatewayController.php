@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\Gateway\app\Models\Payment as PG;
-use Modules\OUnitMS\app\Models\VillageOfc;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Payment\Facade\Payment;
 
@@ -82,15 +81,12 @@ class GatewayController extends Controller
     {
         try {
             $user = \Auth::user();
-            $user->load(['organizationUnits' => function ($query) {
-                $query->where('unitable_type', VillageOfc::class)
-                    ->whereDoesntHave('payments', function ($query) {
-                        $query->whereHas('status', function ($query) {
-                            $query->where('name', 'پرداخت شده');
-                        });
-                    })
-                    ->with(['unitable']);
+            $user->load(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
+                $q->whereHas('status', function ($query) {
+                    $query->where('name', 'پرداخت شده');
+                });
             }]);
+
             if ($user->organizationUnits->isEmpty()) {
                 return response()->json(['message' => 'شما مجاز به پرداخت نمی باشید'], 403);
             }
@@ -123,37 +119,14 @@ class GatewayController extends Controller
         }
         try {
 
-//            $payment = PG::where('authority', $request->authority)->first();
             $payments = $user->payments()->where('authority', $request->authority)->with('organizationUnit.unitable')->get();
 
             $status = PG::GetAllStatuses()->where('name', 'پرداخت شده')->first();
-            $user->load(['organizationUnits' => function ($query) {
-                $query->where('unitable_type', VillageOfc::class)->with('unitable');
-            }]);
-            $degs = $payments->pluck('organizationUnit.unitable.degree');
-//                ->reject(function ($dg) {
-//                return $dg === null;
-//            });
 
             $amount = 0;
-            $degs->each(function ($deg) use (&$amount) {
-                $deg = (int)$deg;
+            $total = $payments->sum('amount');
 
-//            $currentAmount = 0; // Initialize a variable for current increment
-                $currentAmount = match ($deg) {
-                    1 => 400000,
-                    2 => 450000,
-                    3 => 500000,
-                    4 => 600000,
-                    5 => 650000,
-                    6 => 700000,
-                    default => 0,
-                };
-
-                $amount += $currentAmount;
-            });
-
-            $receipt = Payment::amount($amount)->transactionId($request->authority)->verify();
+            $receipt = Payment::amount($total)->transactionId($request->authority)->verify();
 
             // You can show payment referenceId to the user.
             $transactionid = $receipt->getReferenceId();
