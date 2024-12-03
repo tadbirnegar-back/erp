@@ -801,6 +801,7 @@ class EMSController extends Controller
                 $query->where('name', '=', $request->name)  // Exact match first
                 ->orWhere('name', 'LIKE', '%' . $request->name . '%'); // Then LIKE matches
             });
+            $q->with('ancestors');
         }]);
 
         $ounits = $user->activeRecruitmentScript
