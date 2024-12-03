@@ -353,8 +353,7 @@ class EnactmentController extends Controller
         $user = Auth::user();
         $searchTerm = $request->name;
 
-        $rc = $user->activeRecruitmentScripts()->whereHas('organizationUnit')->with(['organizationUnit.descendants'])
-            ->first();
+        $rc = $user->load('activeRecruitmentScripts');
 
         $villages = $rc?->organizationUnit->descendants()->where('unitable_type', VillageOfc::class)
             ->where(

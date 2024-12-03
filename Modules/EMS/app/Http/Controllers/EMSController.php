@@ -795,21 +795,35 @@ class EMSController extends Controller
 
     public function liveSearch(Request $request)
     {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 422);
+        }
+
         $user = Auth::user();
-        $user->load(['activeRecruitmentScript.ounit' => function ($q) use ($request) {
-            $q->where(function ($query) use ($request) {
-                $query->where('name', '=', $request->name)  // Exact match first
-                ->orWhere('name', 'LIKE', '%' . $request->name . '%'); // Then LIKE matches
-            });
-            $q->with('ancestors');
-        }]);
+//        $user = User::find(2178);
+        $searchTerm = $request->name;
 
-        $ounits = $user->activeRecruitmentScript
-            ->map(fn($script) => $script->ounit)
-            ->filter(); // Filter out null or empty items
+        $user->load(['activeDistrictRecruitmentScript.ounit']);
 
-        return response()->json($ounits, 200);
+        $ounits = $user->activeDistrictRecruitmentScript->pluck('ounit');
 
+// Ensure $ounits is a collection of Eloquent models
+        $DecendentsOunits = $ounits->map(function ($ounit) use ($searchTerm) {
+            return $ounit?->descendants()->where('unitable_type', VillageOfc::class)
+                ->where(
+                    function ($query) use ($searchTerm) {
+                        $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                            ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                    }
+                )->with('ancestors', 'unitable')->get();
+        })
+            ->flatten();
+
+        return response()->json($DecendentsOunits->flatten());
     }
 
 
