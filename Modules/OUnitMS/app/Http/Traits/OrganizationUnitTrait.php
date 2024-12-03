@@ -316,12 +316,15 @@ trait OrganizationUnitTrait
         return $organizationUnit;
     }
 
-    public function searchOunitByname(string $searchTerm)
+    public function searchOunitByname(string $searchTerm, string $unitable = null)
     {
-        $result = OrganizationUnit::where('unitable_type', VillageOfc::class)->whereRaw(
-            "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
-            [$searchTerm]
-        )->with(['positions.levels', 'person', 'ancestors'])->get();
+        $result = OrganizationUnit::when($unitable, function ($query) use ($unitable) {
+            $query->where('unitable_type', $unitable);
+        })
+            ->whereRaw(
+                "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
+                [$searchTerm]
+            )->with(['positions.levels', 'person', 'ancestors'])->get();
 
         return $result;
     }

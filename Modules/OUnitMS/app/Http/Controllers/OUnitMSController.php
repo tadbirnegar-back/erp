@@ -261,5 +261,21 @@ class OUnitMSController extends Controller
         return response()->json($result);
     }
 
+    public function villageSearchByName(Request $request)
+    {
+        $data = $request->all();
+
+        $validator = Validator::make($data, [
+            'name' => ['required']
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        $result = $this->searchOunitByname($data['name'], VillageOfc::class);
+
+
+        return response()->json($result);
+    }
+
 
 }
