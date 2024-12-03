@@ -6,6 +6,7 @@ use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Illuminate\Database\Eloquent\Model;
 use Modules\BranchMS\app\Models\Branch;
 use Modules\FileMS\app\Models\File;
+use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\Database\factories\StatusFactory;
 
@@ -37,5 +38,10 @@ class Status extends Model
     public function files()
     {
         return $this->belongsToMany(File::class);
+    }
+
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'status_order', 'status_id', 'order_id');
     }
 }

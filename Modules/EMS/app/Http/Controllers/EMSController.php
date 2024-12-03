@@ -795,23 +795,35 @@ class EMSController extends Controller
 
     public function liveSearch(Request $request)
     {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 422);
+        }
+
         $user = Auth::user();
-        $user->load(['activeRecruitmentScript.ounit' => function ($q) use ($request) {
-            $q->where(function ($query) use ($request) {
-                $query->where('name', '=', $request->name)  // Exact match first
-                ->orWhere('name', 'LIKE', '%' . $request->name . '%'); // Then LIKE matches
-            })
-                ->where('likelihood', '>=', 80)  // Filter by likelihood of 80% or more
-                ->orderByRaw("CASE WHEN name = ? THEN 0 ELSE 1 END", [$request->name]) // Prioritize exact match
-                ->limit(5);
-        }]);
+//        $user = User::find(2178);
+        $searchTerm = $request->name;
 
+        $user->load(['activeDistrictRecruitmentScript.ounit']);
 
-        $ounits = $user->activeRecruitmentScript
-            ->map(fn($script) => $script->ounit)
-            ->filter();
+        $ounits = $user->activeDistrictRecruitmentScript->pluck('ounit');
 
-        return response()->json($ounits);
+// Ensure $ounits is a collection of Eloquent models
+        $DecendentsOunits = $ounits->map(function ($ounit) use ($searchTerm) {
+            return $ounit?->descendants()->where('unitable_type', VillageOfc::class)
+                ->where(
+                    function ($query) use ($searchTerm) {
+                        $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                            ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                    }
+                )->with('ancestors', 'unitable')->get();
+        })
+            ->flatten();
+
+        return response()->json($DecendentsOunits->flatten());
     }
 
 
