@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -17,7 +18,11 @@ class testController extends Controller
 
     public function run()
     {
-
+        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
+            $q->where('status_id', 46);
+        }])->find(40);
+        $a = $this->calculatePrice($user);
+        dd($a);
 //        try {
 //            \DB::beginTransaction();
 //            //        $ous = RecruitmentScript::whereHas()

@@ -9,6 +9,15 @@ use Shetabit\Payment\Facade\Payment;
 
 trait PaymentRepository
 {
+    public static $prices = [
+        1 => 750000,
+        2 => 900000,
+        3 => 1000000,
+        4 => 1200000,
+        5 => 1300000,
+        6 => 1400000,
+    ];
+
     public function generatePayGate(User $user)
     {
 
@@ -70,6 +79,37 @@ trait PaymentRepository
 
 
         })->pay();
+    }
+
+    public function calculatePrice(User $user)
+    {
+
+        $ounitVillages = $user->organizationUnits;
+
+        $totalAmount = 0;
+        $amountPerUnit = [];
+
+        $ounitVillages->each(function ($ounitVill) use (&$totalAmount, &$amountPerUnit) {
+            $currentPayment = $ounitVill->payments;
+            $villDegree = $ounitVill->unitable->degree;
+            $priceForOunit = self::$prices[$villDegree] ?? 0;
+            if ($currentPayment->isNotEmpty()) {
+                $payedPrice = $currentPayment->sum('amount');
+            } else {
+                $payedPrice = 0;
+            }
+            $mustPay = $priceForOunit - $payedPrice;
+            $amountPerUnit[] = [
+                'ounitID' => $ounitVill->id,
+                'price' => $mustPay,
+            ];
+            $totalAmount += $mustPay;
+        });
+
+        return [
+            'total' => $totalAmount,
+            'ounits' => $amountPerUnit,
+        ];
     }
 
 
