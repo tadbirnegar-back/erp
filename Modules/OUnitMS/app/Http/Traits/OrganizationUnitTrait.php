@@ -342,25 +342,11 @@ trait OrganizationUnitTrait
         return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', statusEnum::Inactive->value);
 
     }
-    public function SoftDeletingOunits($id)
+    public function SoftDeletingOunits(OrganizationUnit $ounit)
     {
-        $ounit = OrganizationUnit::find($id);
 
-
-        if (!$ounit) {
-            return response()->json(['message' => 'موردی یافت نشد'], 404);
-        }
-
-        try {
-            DB::beginTransaction();
-            $status = $this->GetInactiveStatuses();
-            $ounit->status_id = $status->id;
-            $ounit->save();
-            DB::commit();
-            return response()->json(['message' => 'باموفقیت حذف شد']);
-        } catch (Exception $exception) {
-            DB::rollBack();
-            return response()->json(['message' => 'خطا در حذف'], 500);
-        }
+        $status = $this->GetInactiveStatuses();
+        $ounit->status_id = $status->id;
+        $ounit->save();
     }
 }

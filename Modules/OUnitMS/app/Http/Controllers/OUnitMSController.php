@@ -284,7 +284,17 @@ class OUnitMSController extends Controller
 
     public function destroy($id)
     {
-       $result= $this->SoftDeletingOunits($id);
+        try {
+            DB::beginTransaction();
+            $ounit = OrganizationUnit::find($id);
+            $this->SoftDeletingOunits($ounit);
+            DB::commit();
+            return response()->json(['message' => 'باموفقیت حذف شد']);
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف'], 500);
+        }
+//       $result= $this->SoftDeletingOunits($id);
     }
 
 
