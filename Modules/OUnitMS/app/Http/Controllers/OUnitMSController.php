@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
+use Modules\OUnitMS\app\Http\Enums\statusEnum;
 use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -261,15 +262,40 @@ class OUnitMSController extends Controller
         return response()->json($result);
     }
 
+//    public function destroy($id)
+//    {
+//        $ounit = OrganizationUnit::findOr($id, function () {
+//            return response()->json(['message' => 'موردی یافت نشد'], 404);
+//        });
+//
+//        try {
+//            DB::beginTransaction();
+//            $status = $this ->GetInactiveStatuses();
+//            $ounit->status_id= $status ->id;
+//            $ounit->save();
+//            DB::commit();
+//            return response()->json(['message' => 'باموفقیت حذف شد']);
+//        } catch (Exception $exception) {
+//            DB::rollBack();
+//            return response()->json(['message' => 'خطا در حذف'], 500);
+//        }
+//    }
+
+
     public function destroy($id)
     {
-        $ounit = OrganizationUnit::findOr($id, function () {
+        $ounit = OrganizationUnit::find($id);
+
+
+        if (!$ounit) {
             return response()->json(['message' => 'موردی یافت نشد'], 404);
-        });
+        }
 
         try {
             DB::beginTransaction();
-            $ounit->delete();
+            $status = $this->GetInactiveStatuses();
+            $ounit->status_id = $status->id;
+            $ounit->save();
             DB::commit();
             return response()->json(['message' => 'باموفقیت حذف شد']);
         } catch (Exception $exception) {
@@ -277,5 +303,6 @@ class OUnitMSController extends Controller
             return response()->json(['message' => 'خطا در حذف'], 500);
         }
     }
+
 
 }

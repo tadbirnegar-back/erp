@@ -9,14 +9,41 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\OUnitMS\app\Http\Controllers\OUnitMSController;
+use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use OrganizationUnitTrait, PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
     public function run()
     {
+        $ounit = OrganizationUnit::find(1);
+
+
+
+        if (!$ounit) {
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
+        }
+
+        if ($ounit instanceof \Illuminate\Http\JsonResponse) {
+            return $ounit;
+        }
+        try {
+            DB::beginTransaction();
+            $status = $this->GetInactiveStatuses();
+            $ounit->status_id = $status->id;
+            $ounit->save();
+            DB::commit();
+            return response()->json(['message' => 'باموفقیت حذف شد']);
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف'], 500);
+        }
+
+
 
 //        try {
 //            \DB::beginTransaction();

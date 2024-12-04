@@ -20,9 +20,7 @@ class Status extends Model
      */
     protected $fillable = [];
 
-    protected $casts=[
-        'status'=>statusEnum::class
-    ];
+
 
     protected static function newFactory(): StatusFactory
     {

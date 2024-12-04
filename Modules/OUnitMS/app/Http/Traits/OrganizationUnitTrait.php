@@ -2,6 +2,8 @@
 
 namespace Modules\OUnitMS\app\Http\Traits;
 
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Http\Enums\statusEnum;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\Department;
@@ -327,14 +329,15 @@ trait OrganizationUnitTrait
         return $result;
     }
 
-   public function GetActiveStatuses()
-{
-       $active = OrganizationUnit::with('statuses')->where('name', statusEnum::Active->value);
-       return $active;
-}
-public function GetInactiveStatuses()
-{
-    $inactive = OrganizationUnit::with('statuses')->where('name', statusEnum::Inactive->value);
-    return $inactive;
-}
+    public function GetActiveStatuses()
+    {
+        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', statusEnum::Active->value);
+
+    }
+
+    public function GetInactiveStatuses()
+    {
+        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', statusEnum::Inactive->value);
+
+    }
 }
