@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('organization_units', function (Blueprint $table) {
-            \Modules\OUnitMS\app\Http\Enums\statusEnum::Active;
             $table->unsignedBigInteger('status_id')->nullable();
             $table->foreign('status_id')->references('id')->on('statuses')->onUpdate('cascade')->onDelete('cascade');
         });
