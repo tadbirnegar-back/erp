@@ -17,7 +17,7 @@ class ActiveScope implements Scope
     public function apply(Builder $builder, Model $model)
     {
 //        $model = OrganizationUnit::where('status_id', 1)->get();
-        $status = $this -> GetActiveStatuses();
+        $status = $this -> getActiveStatuses();
         $builder->where('status_id', $status -> id);
         return $model;
     }

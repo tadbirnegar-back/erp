@@ -331,21 +331,21 @@ trait OrganizationUnitTrait
         return $result;
     }
 
-    public function GetActiveStatuses()
+    public function getActiveStatuses()
     {
         return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', statusEnum::Active->value);
 
     }
 
-    public function GetInactiveStatuses()
+    public function getInactiveStatuses()
     {
         return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', statusEnum::Inactive->value);
 
     }
-    public function SoftDeletingOunits(OrganizationUnit $ounit)
+    public function softDeletingOunits(OrganizationUnit $ounit)
     {
 
-        $status = $this->GetInactiveStatuses();
+        $status = $this->getInactiveStatuses();
         $ounit->status_id = $status->id;
         $ounit->save();
     }

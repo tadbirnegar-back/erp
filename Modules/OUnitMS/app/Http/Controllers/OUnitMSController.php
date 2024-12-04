@@ -287,7 +287,10 @@ class OUnitMSController extends Controller
         try {
             DB::beginTransaction();
             $ounit = OrganizationUnit::find($id);
-            $this->SoftDeletingOunits($ounit);
+            if (!$ounit) {
+                return response()->json(['message' => 'موردی یافت نشد'], 404);
+            }
+            $this->softDeletingOunits($ounit);
             DB::commit();
             return response()->json(['message' => 'باموفقیت حذف شد']);
         } catch (Exception $exception) {
@@ -299,3 +302,5 @@ class OUnitMSController extends Controller
 
 
 }
+
+
