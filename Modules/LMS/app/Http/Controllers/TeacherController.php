@@ -46,7 +46,6 @@ class TeacherController extends Controller
             $data['password'] = $data['nationalCode'];
             $personAsTeacher = $this->isTeacher($data['personID']);
 
-
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در افزودن مدرس', 'error' => $e->getMessage()], 500);

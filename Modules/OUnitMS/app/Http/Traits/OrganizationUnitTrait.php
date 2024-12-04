@@ -333,13 +333,13 @@ trait OrganizationUnitTrait
 
     public function getActiveStatuses()
     {
-        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', statusEnum::Active->value);
+        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', StatusEnum::Active->value);
 
     }
 
     public function getInactiveStatuses()
     {
-        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', statusEnum::Inactive->value);
+        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', StatusEnum::Inactive->value);
 
     }
     public function softDeletingOunits(OrganizationUnit $ounit)
