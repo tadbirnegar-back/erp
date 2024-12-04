@@ -18,7 +18,6 @@ class ActiveScope implements Scope
     {
 //        $model = OrganizationUnit::where('status_id', 1)->get();
         $status = $this -> GetActiveStatuses();
-        Log::info($status);
         $builder->where('status_id', $status -> id);
         return $model;
     }

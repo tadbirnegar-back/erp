@@ -212,13 +212,13 @@ class OrganizationUnit extends Model
         return Status::all()->where('model', '=', self::class);
     }
 
-    public function GetAllUsers(): Collection
-    {
-        {
-            return  User::all()->where('model', '=', self::class);
-        }
-
-    }
+//    public function GetAllUsers(): Collection
+//    {
+//        {
+//            return  User::all()->where('model', '=', self::class);
+//        }
+//
+//    }
 
 
 

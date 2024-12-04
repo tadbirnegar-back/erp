@@ -2,6 +2,8 @@
 
 namespace Modules\OUnitMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\DB;
+use Mockery\Exception;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Http\Enums\statusEnum;
@@ -339,5 +341,26 @@ trait OrganizationUnitTrait
     {
         return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', statusEnum::Inactive->value);
 
+    }
+    public function SoftDeletingOunits($id)
+    {
+        $ounit = OrganizationUnit::find($id);
+
+
+        if (!$ounit) {
+            return response()->json(['message' => 'موردی یافت نشد'], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+            $status = $this->GetInactiveStatuses();
+            $ounit->status_id = $status->id;
+            $ounit->save();
+            DB::commit();
+            return response()->json(['message' => 'باموفقیت حذف شد']);
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف'], 500);
+        }
     }
 }

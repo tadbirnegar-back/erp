@@ -7,13 +7,4 @@ enum statusEnum: string
     case Active = "فعال";
     case Inactive = "غیرفعال";
 
-
-    public function getLabel(): string
-    {
-        return match ($this) {
-            self::Active => 'فعال',
-            self::Inactive => 'غیرفعال',
-
-        };
-    }
 }

@@ -284,24 +284,7 @@ class OUnitMSController extends Controller
 
     public function destroy($id)
     {
-        $ounit = OrganizationUnit::find($id);
-
-
-        if (!$ounit) {
-            return response()->json(['message' => 'موردی یافت نشد'], 404);
-        }
-
-        try {
-            DB::beginTransaction();
-            $status = $this->GetInactiveStatuses();
-            $ounit->status_id = $status->id;
-            $ounit->save();
-            DB::commit();
-            return response()->json(['message' => 'باموفقیت حذف شد']);
-        } catch (Exception $exception) {
-            DB::rollBack();
-            return response()->json(['message' => 'خطا در حذف'], 500);
-        }
+       $result= $this->SoftDeletingOunits($id);
     }
 
 
