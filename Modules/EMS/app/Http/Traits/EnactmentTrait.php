@@ -159,15 +159,24 @@ trait EnactmentTrait
         }
 
 
-        if (isset($data['district'])) {
-            // Get the organization unit and its children
-            $ounits = [$data['district']];
-        }
+//        if (isset($data['districtID'])) {
+//
+//
+//            $ounits = OrganizationUnit::with('ancestors')->find($data['districtID']);
+//
+//            $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
+//                $q
+//                    ->with('organizationUnit.descendantsAndSelf');
+//            }])?->activeRecruitmentScript?->pluck('organizationUnit.descendantsAndSelf')
+//                ->flatten()
+//                ->pluck('id')
+//                ->toArray();
+//
+//        }
 
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
         });
-
         $query->when($statuses, function ($query) use ($statuses) {
             $query->whereHas('status', function ($query) use ($statuses) {
                 $query->where('status_id', $statuses)

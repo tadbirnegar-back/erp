@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -81,8 +82,10 @@ class EnactmentController extends Controller
 
     public function indexArchive(Request $request): JsonResponse
     {
-        $user = Auth::user();
+//        $user = Auth::user();
+        $user = User::find(2174);
         $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
+
 
         try {
             $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
@@ -96,6 +99,7 @@ class EnactmentController extends Controller
             $data = $request->all();
             $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounits, $user->id);
 
+            return response()->json($enactments);
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
             return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit')]);
