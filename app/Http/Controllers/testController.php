@@ -18,11 +18,12 @@ class testController extends Controller
 
     public function run()
     {
-        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
-            $q->where('status_id', 46);
-        }])->find(40);
-        $a = $this->calculatePrice($user);
-        dd($a);
+
+//        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
+//            $q->where('status_id', 46);
+//        }])->find(40);
+//        $a = $this->calculatePrice($user);
+//        dd($a);
 //        try {
 //            \DB::beginTransaction();
 //            //        $ous = RecruitmentScript::whereHas()

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Modules\CustomerMS\app\Models\Customer;
+use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\Database\factories\TeacherFactory;
 
 class Teacher extends Model
@@ -25,5 +26,9 @@ class Teacher extends Model
     public function customer(): MorphOne
     {
         return $this->morphOne(Customer::class,'customerable');
+    }
+    public function workForce(): MorphOne
+    {
+        return $this->morphOne(WorkForce::class, 'workforceable');
     }
 }
