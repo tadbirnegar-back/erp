@@ -53,7 +53,6 @@ trait DateTrait
     {
         // Check if the date string contains time
         $dateTimeParts = explode(' ', $date);
-        \Log::info($date);
         $datePart = $dateTimeParts[0];
         $timePart = isset($dateTimeParts[1]) ? $dateTimeParts[1] : null;
 
