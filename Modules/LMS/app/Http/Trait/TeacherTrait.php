@@ -27,10 +27,16 @@ trait TeacherTrait
 
     public function isTeacher($personID)
     {
-        $teacher = Teacher::whereHas('workforce', function ($query) use ($personID) {
-            $query->where('person_id', '=', $personID);
-        })->with('workforce')->first();
+        $teacher = Teacher::with(['workforce.person' => function ($query) use ($personID) {
+            $query->where('id', $personID);
+        }])->first();
         return $teacher;
+
+
+//        $teacher = Teacher::whereHas('workforce', function ($query) use ($personID) {
+//            $query->where('person_id', '=', $personID);
+//        })->with('workforce')->first();
+//        return $teacher;
     }
     public function teacherUpdate(array $data, Teacher $teacher)
     {
