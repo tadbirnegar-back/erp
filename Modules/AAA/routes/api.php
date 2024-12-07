@@ -53,5 +53,4 @@ Route::prefix('v1')->group(function () {
 
     Route::put('/setting/security', [\Modules\AAA\app\Http\Controllers\UserController::class, 'updatePassword'])->middleware('auth:api');
 
-
 });

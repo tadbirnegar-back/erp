@@ -15,7 +15,9 @@ use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Morilog\Jalali\Jalalian;
 
 trait EnactmentTrait
@@ -159,15 +161,18 @@ trait EnactmentTrait
         }
 
 
-        if (isset($data['district'])) {
-            // Get the organization unit and its children
-            $ounits = [$data['district']];
+        if (isset($data['districtID'])) {
+
+            $ounits = OrganizationUnit::with(['descendantsAndSelf' => function ($query) {
+                $query->where('unitable_type', VillageOfc::class);
+            }])->find($data['districtID'])->descendantsAndSelf->flatten()
+                ->pluck('id')
+                ->toArray();
         }
 
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
         });
-
         $query->when($statuses, function ($query) use ($statuses) {
             $query->whereHas('status', function ($query) use ($statuses) {
                 $query->where('status_id', $statuses)
