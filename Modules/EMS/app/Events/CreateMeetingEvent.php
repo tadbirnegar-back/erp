@@ -18,7 +18,6 @@ class CreateMeetingEvent
     public function __construct(Meeting $meeting)
     {
         $this->meeting = $meeting;
-        \Log::info($this->meeting);
     }
 
     /**
