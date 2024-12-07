@@ -20,7 +20,7 @@ use Modules\PersonMS\app\Models\Natural;
 
 class TeacherController extends Controller
 {
-    use TeacherTrait , EducationRecordTrait,RecruitmentScriptTrait,RelativeTrait,ResumeTrait,PersonTrait;
+    use TeacherTrait, EducationRecordTrait, RecruitmentScriptTrait, RelativeTrait, ResumeTrait, PersonTrait;
 
     /**
      * Display a listing of the resource.
@@ -47,21 +47,15 @@ class TeacherController extends Controller
         try {
             DB::beginTransaction();
             $personResult = isset($request->personID) ?
-                $this->naturalStore($data):
-            $this->naturalUpdate($data,Natural::find( $data['personID']));
-
-
-//
-//            $personResult = isset($request->personID) ?
-//                $this->naturalUpdate($data, Natural::find($data['personID'])) :
-//                $this->naturalStore($data);
-
+                $this->naturalStore($data) :
+                $this->naturalUpdate($data, Natural::find($data['personID']));
 
 
             $data['personID'] = $personResult->person->id;
             $data['password'] = $data['nationalCode'];
             $personAsTeacher = $this->isTeacher($data['personID']);
             $teacher = !is_null($personAsTeacher) ? $this->teacherUpdate($data, $personAsTeacher) : $this->storeteacher($data);
+
             $workForce = $teacher->workForce;
 
             if (isset($data['educations'])) {
@@ -70,12 +64,7 @@ class TeacherController extends Controller
                 $educations = $this->EducationalRecordStore($edus, $workForce->id);
             }
 
-            if (isset($data['relatives'])) {
-                $rels = json_decode($data['relatives'], true);
 
-                $relatives = $this->RelativeStore($rels, $workForce->id);
-
-            }
 
 
             if (isset($data['resumes'])) {
@@ -85,25 +74,12 @@ class TeacherController extends Controller
 
             }
 
-
-            if (isset($data['recruitmentRecords'])) {
-                $rs = json_decode($data['recruitmentRecords'], true);
-
-                $pendingStatus = $this->pendingRsStatus();
-                $rsRes = $this->rsStore($rs, $teacher->id, $pendingStatus);
-//                $rsRes = collect($rsRes);
-//                $rsRes->each(function ($rs) use ($user) {
-//                    $this->approvingStore($rs);
-//                });
-
-            }
             DB::commit();
 
             return response()->json($teacher);
 
 
-
-        } catch ( Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در افزودن مدرس', 'error' => $e->getMessage()], 500);
 

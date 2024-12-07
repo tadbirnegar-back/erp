@@ -11,7 +11,7 @@ trait TeacherTrait
 
         $workForce = new WorkForce();
         $workForce->person_id = $data['personID'];
-        $workForce->isMarried = isset($data['isMarried']) && $data['isMarried'] === true ? 1 : 0;
+        $workForce->isMarried = isset($data['isMarried']) && $data['isMarried'] == true ? 1 : 0;
         $workForce->military_service_status_id = $data['militaryStatusID'] ?? null;
 
         $teacher->workForce()->save($workForce);
@@ -37,7 +37,6 @@ trait TeacherTrait
 
 
         $teacher->personnel_code = $data['personnelCode'] ?? null;
-        $teacher->signature_file_id = $data['signatureFileID'] ?? null;
         $teacher->save();
 
         $workForce = $teacher->workForce;
@@ -52,21 +51,21 @@ trait TeacherTrait
 //        $workForce->statuses()->attach($workForceStatus->id);
 
 
-        if (isset($data['positions'])) {
-            $positionsAsArray = json_decode($data['positions'], true);
-            $teacher->positions()->sync($positionsAsArray);
-        }
-
-        if (isset($data['levels'])) {
-            $levelsAsArray = json_decode($data['levels'], true);
-            $teacher->levels()->sync($levelsAsArray);
-        }
-        if (isset($data['skills'])) {
-
-            $skills = json_decode($data['skills'], true);
-
-            $workForce->stdSkills()->sync($skills);
-        }
+//        if (isset($data['positions'])) {
+//            $positionsAsArray = json_decode($data['positions'], true);
+//            $teacher->positions()->sync($positionsAsArray);
+//        }
+//
+//        if (isset($data['levels'])) {
+//            $levelsAsArray = json_decode($data['levels'], true);
+//            $teacher->levels()->sync($levelsAsArray);
+//        }
+//        if (isset($data['skills'])) {
+//
+//            $skills = json_decode($data['skills'], true);
+//
+//            $workForce->stdSkills()->sync($skills);
+//        }
 
         return $teacher;
 

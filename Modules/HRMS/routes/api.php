@@ -25,7 +25,7 @@ use Modules\HRMS\app\Http\Controllers\SkillController;
 
 
 Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
-//    Route::post('/hrm/employee/add', [EmployeeController::class, 'store']);
+    Route::post('/hrm/employee/add', [EmployeeController::class, 'store']);
     Route::post('/hrm/employee/list', [EmployeeController::class, 'index']);
     Route::get('/hrm/employee/list/filter', [EmployeeController::class, 'employeeListFilter']);
     Route::get('/hrm/setting', [HRMConfigController::class, 'configList']);
@@ -166,9 +166,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::get('/hrm/ptprc/list', [RecruitmentScriptController::class, 'ptpIndex']);
 
-//    Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
+    Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
 
     Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
 
 });
-Route::post('/hrm/employee/add', [EmployeeController::class, 'store']);
