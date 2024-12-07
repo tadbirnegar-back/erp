@@ -53,4 +53,9 @@ class Invoice extends Model
         return $this->hasMany(InvoiceStatus::class);
     }
 
+    public function psPayStream()
+    {
+        return $this->hasMany(PsPayments::class, 'invoice_id', 'id');
+    }
+
 }
