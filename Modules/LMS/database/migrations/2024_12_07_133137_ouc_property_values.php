@@ -10,9 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('ounit_cat_properties', function (Blueprint $table) {
-            $table->dropColumn('predefined_cat_id');
-            
+        Schema::create('ouc_property_values', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('ouc_property_id');
+            $table->string('value');
+
+            $table->foreign('ouc_property_id')->references('id')->on('ouc_properties')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('', function (Blueprint $table) {
-
-        });
+        //
     }
 };

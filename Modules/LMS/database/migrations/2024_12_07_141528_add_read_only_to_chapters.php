@@ -10,9 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('repositories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+        Schema::table('chapters', function (Blueprint $table) {
+            $table->boolean('read_only')->default(false);
         });
     }
 
@@ -21,6 +20,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('repositories');
+        Schema::table('', function (Blueprint $table) {
+
+        });
     }
 };

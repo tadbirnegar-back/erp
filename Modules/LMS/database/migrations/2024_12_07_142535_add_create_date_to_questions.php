@@ -10,9 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('ounit_cat_predefined_values', function (Blueprint $table) {
-            $table->id();
-            $table->string('predefined_value');
+        Schema::table('questions', function (Blueprint $table) {
+            $table->dateTime('create_date')->nullable();
         });
     }
 
@@ -21,6 +20,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('ounit_cat_predefined_values');
+        Schema::table('', function (Blueprint $table) {
+
+        });
     }
 };

@@ -10,9 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('repositories', function (Blueprint $table) {
+        Schema::create('lesson_rates', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->dateTime('create_date');
+            $table->unsignedBigInteger('lesson_id');
+            $table->integer('rate');
+            $table->unsignedBigInteger('student_id');
         });
     }
 
@@ -21,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('repositories');
+        //
     }
 };

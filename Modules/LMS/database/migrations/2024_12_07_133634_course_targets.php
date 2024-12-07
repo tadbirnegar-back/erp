@@ -10,9 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('repositories', function (Blueprint $table) {
+        Schema::create('course_targets', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->unsignedBigInteger('parent_ounit_id');
+
+            $table->foreign('parent_ounit_id')->references('id')->on('course_targets')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 
@@ -21,6 +23,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('repositories');
+        //
     }
 };

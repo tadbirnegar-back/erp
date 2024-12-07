@@ -10,9 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('repositories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+        Schema::table('answers', function (Blueprint $table) {
+            $table->dropColumn('option_id');
         });
     }
 
@@ -21,6 +20,10 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('repositories');
+        Schema::create('', function (Blueprint $table) {
+            $table->id();
+
+            $table->timestamps();
+        });
     }
 };

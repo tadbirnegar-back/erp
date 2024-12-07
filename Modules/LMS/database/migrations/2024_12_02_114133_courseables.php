@@ -14,8 +14,6 @@ return new class extends Migration {
             $table->id();
             $table->morphs('courseable');
             $table->foreignId('course_id')->constrained('courses')->onDelete('cascade')->onUpdate('cascade');
-
-
         });
     }
 
