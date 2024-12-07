@@ -69,6 +69,7 @@ trait PaymentRepository
             $amountPerUnit[] = [
                 'ounitID' => $ounitVill->id,
                 'price' => $mustPay,
+                'alreadyPayed' => $payedPrice,
             ];
             $totalAmount += $mustPay;
         });
@@ -77,6 +78,25 @@ trait PaymentRepository
             'total' => $totalAmount,
             'ounits' => $amountPerUnit,
         ];
+    }
+
+    public function userHasDebt(User $user)
+    {
+        if (!$user->relationLoaded('organizationUnits')) {
+            $user->load(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
+                $q->whereHas('status', function ($query) {
+                    $query->where('name', 'پرداخت شده');
+                });
+            }]);
+        }
+
+        $calculatedPrice = $this->calculatePrice($user);
+
+        //if total = true user has no debts
+        $result['hasDebt'] = $calculatedPrice['total'] == 0;
+        $result['alreadyPayed'] = !(collect($calculatedPrice['ounits'])->sum('alreadyPayed') == 0);
+
+        return $result;
     }
 
 
