@@ -15,12 +15,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('queue:work')
             ->runInBackground()
             ->withoutOverlapping();
-
-//        $schedule->command('queue:listen')
-//            ->withoutOverlapping()
-//            ->runInBackground();
-//        Log::info('Schedule function executed at ' . now());
-
     }
 
     /**

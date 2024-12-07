@@ -26,6 +26,7 @@ use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\PayStream\app\Models\Cashes;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Modules\WidgetsMS\app\Models\Widget;
@@ -326,5 +327,10 @@ class User extends Authenticatable
 
         // Check if all required permissions exist in the loaded permissions
         return empty(array_diff($slugs, $this->loadedPermissions));
+    }
+
+    public function cashes()
+    {
+        return $this->belongsToMany(Cashes::class, 'cash_user', 'user_id', 'cash_id');
     }
 }
