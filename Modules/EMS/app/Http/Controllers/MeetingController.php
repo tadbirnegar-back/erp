@@ -101,9 +101,6 @@ class MeetingController extends Controller
 
     public function getSelection(Request $req)
     {
-//        $user = User::find(2064);
-        $user = Auth::user();
-
         $organ = OrganizationUnit::with(['ancestors' => function ($q) {
             $q->where('unitable_type', DistrictOfc::class);
             $q->with('firstFreeMeetingByNow');
@@ -113,10 +110,6 @@ class MeetingController extends Controller
         $firstFreeMeeting = $organ->ancestors->first()?->firstFreeMeetingByNow;
         $fullMeetings = $organ->ancestors->first()?->fullMeetingsByNow;
 
-        return response()->json([
-            $fullMeetings,
-            $firstFreeMeeting
-        ]);
 
         $data = [];
         if (!empty($fullMeetings)) {
