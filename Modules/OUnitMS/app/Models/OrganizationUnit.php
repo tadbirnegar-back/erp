@@ -104,7 +104,7 @@ class OrganizationUnit extends Model
     {
         return $this->belongsToMany(Position::class, 'ounit_position', 'ounit_id', 'position_id')->whereHas('status', function ($query) {
             $query->where('name', '=', 'فعال');
-        });
+        })->distinct();
     }
 
     public function meetings(): HasMany

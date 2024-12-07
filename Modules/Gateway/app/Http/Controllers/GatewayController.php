@@ -3,6 +3,7 @@
 namespace Modules\Gateway\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -80,6 +81,7 @@ class GatewayController extends Controller
     public function startPayment(Request $request)
     {
         try {
+            DB::beginTransaction();
             $user = \Auth::user();
             $user->load(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
                 $q->whereHas('status', function ($query) {
@@ -93,9 +95,11 @@ class GatewayController extends Controller
 
 //            $vills=$user->o
             $result = $this->generatePayGate($user);
+            DB::commit();
             return response()->json($result);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'خطا در اتصال یه درگاه بانکی'], 500);
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در اتصال یه درگاه بانکی', $e->getTrace(), $e->getMessage()], 500);
         }
 
 
@@ -142,7 +146,7 @@ class GatewayController extends Controller
             $factor = [
                 'transactionid' => $transactionid,
                 'purchase_date' => $receipt->getDate(),
-                'amount' => $amount,
+                'amount' => $total,
                 'status' => $status,
                 'person' => $user->person,
 
