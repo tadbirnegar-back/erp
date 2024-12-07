@@ -101,7 +101,6 @@ class MeetingController extends Controller
 
     public function getSelection(Request $req)
     {
-        $user = Auth::user();
 
         $organ = OrganizationUnit::with(['ancestors' => function ($q) {
             $q->where('unitable_type', DistrictOfc::class);
