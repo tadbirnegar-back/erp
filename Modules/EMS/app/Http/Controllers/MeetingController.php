@@ -101,6 +101,7 @@ class MeetingController extends Controller
 
     public function getSelection(Request $req)
     {
+
         $organ = OrganizationUnit::with(['ancestors' => function ($q) {
             $q->where('unitable_type', DistrictOfc::class);
             $q->with('firstFreeMeetingByNow');
@@ -109,7 +110,6 @@ class MeetingController extends Controller
 
         $firstFreeMeeting = $organ->ancestors->first()?->firstFreeMeetingByNow;
         $fullMeetings = $organ->ancestors->first()?->fullMeetingsByNow;
-
 
         $data = [];
         if (!empty($fullMeetings)) {
@@ -135,11 +135,10 @@ class MeetingController extends Controller
 //            $firstFreeMeeting->setAttribute('humanReadableJalaliDate', $humanReadableJalaliDate);
 
             $data['freeMeeting'] = $firstFreeMeeting;
-
             $data['freeMeeting']['countOfEnactments'] = $EncInMeetingcount;
+            $data['freeMeeting']['encLimit'] = $enactmentLimitPerMeeting->value;
 
         }
-
 
         return response()->json($data, 200);
     }
