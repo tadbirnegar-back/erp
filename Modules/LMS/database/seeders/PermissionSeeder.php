@@ -18,7 +18,7 @@ class PermissionSeeder extends Seeder
             $module=\DB::table('modules')->where('name','=',$permission['moduleName'])->get('id')->first();
             $permissionType=\DB::table('permission_types')->where('name','=',$permission['permissionTypeName'])->get('id')->first();
 
-            DB::table('permissions')->insertGetId([
+            DB::table('permissions')->updateOrInsert([
                 'name' => $permission['name'],
                 'slug' => $permission['slug'],
                 'module_id' => $module->id,

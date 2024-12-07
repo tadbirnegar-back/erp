@@ -36,9 +36,6 @@ trait TeacherTrait
     {
 
 
-        $teacher->personnel_code = $data['personnelCode'] ?? null;
-        $teacher->save();
-
         $workForce = $teacher->workForce;
         $workForce->person_id = $data['personID'];
         $workForce->isMarried = isset($data['isMarried']) ? 1 : 0;
