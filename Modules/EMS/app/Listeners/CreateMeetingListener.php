@@ -2,10 +2,6 @@
 
 namespace Modules\EMS\app\Listeners;
 
-use Carbon\Carbon;
-use Modules\EMS\app\Jobs\StoreMeetingJob;
-use Morilog\Jalali\CalendarUtils;
-
 class CreateMeetingListener
 {
     /**
@@ -22,17 +18,18 @@ class CreateMeetingListener
     public function handle($event): void
     {
         if ($event->meeting->meetingType->title == "جلسه هیئت تطبیق") {
-            $meetingDate = $event->meeting->meeting_date;
+            $meetingDate = $event;
 
-            $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($meetingDate, true);
-            $gregorianDate = CalendarUtils::createCarbonFromFormat('Y/m/d H:i:s', $englishJalaliDateString);
-            $targetDate = Carbon::parse($gregorianDate);
-            $currentDate = Carbon::now();
-            $delayInSeconds = $targetDate->diffInSeconds($currentDate, false); // false for negative values
-            $delayInSeconds -= 86400;
-            if ($delayInSeconds > 0) {
-                dispatch(new StoreMeetingJob($event->meeting))->delay($delayInSeconds);
-            }
+
+//            $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($meetingDate, true);
+//            $gregorianDate = CalendarUtils::createCarbonFromFormat('Y/m/d H:i:s', $englishJalaliDateString);
+//            $targetDate = Carbon::parse($gregorianDate);
+//            $currentDate = Carbon::now();
+//            $delayInSeconds = $targetDate->diffInSeconds($currentDate, false); // false for negative values
+//            $delayInSeconds -= 86400;
+//            if ($delayInSeconds > 0) {
+//                dispatch(new StoreMeetingJob($event->meeting))->delay($delayInSeconds);
+//            }
         }
 
     }
