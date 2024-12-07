@@ -23,7 +23,6 @@ use Modules\EMS\app\Models\EnactmentMeeting;
 use Modules\EMS\app\Models\EnactmentReview;
 use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
-use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -111,11 +110,39 @@ class EnactmentController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+
+
             DB::beginTransaction();
             $data = $request->all();
+            $validate = Validator::make($data, ['ounitID' => [
+                'required',
+                'exists:organization_units,id'
+            ],
+            ]);
+
+            if ($validate->fails()) {
+                return response()->json($validate->errors(), 422);
+            }
+
             $user = Auth::user();
             $data['creatorID'] = $user->id;
             $data['operatorID'] = $user->id;
+            //Validations
+
+            $heyatOunit = OrganizationUnit::with([
+                'ancestors' => function ($query) {
+                    $query->where('unitable_type', DistrictOfc::class)
+                        ->with('meetingMembers');
+                },
+            ])->find($data['ounitID']);
+
+            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->meetingMembers;
+
+            if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 6) {
+                return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
+            }
+
+
             if (isset($data['meetingID'])) {
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
@@ -181,12 +208,6 @@ class EnactmentController extends Controller
             } else if (isset($data['meetingDate'])) {
 
                 //Validations
-
-                $heyatOunit = OrganizationUnit::with([
-                    'ancestors' => function ($query) {
-                        $query->where('unitable_type', DistrictOfc::class);
-                    }
-                ])->find($data['ounitID']);
 
                 $ancestor = "";
 // Ensure ancestors are loaded and not null before attempting to access the first ancestor
@@ -263,42 +284,26 @@ class EnactmentController extends Controller
 
                 $this->attachFiles($enactment, $files);
 
-                $meetingTemplate = $meetingShura->ounit?->ancestors[0]?->meetingTemplate ?? null;
 
-                if (is_null($meetingTemplate)) {
-                    return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
-                } else {
-                    // Check if members already exist
-                    $existingMembers = MeetingMember::where('meeting_id', $meetingHeyaat->id)->count();
-                    if ($existingMembers > 0) {
-                        return response()->json(['message' => 'Meeting members already exist for this meeting.'], 400);
-                    }
-
-                    foreach ($meetingTemplate->meetingMembers as $mm) {
-                        $newMember = $mm->replicate();
-                        $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
-                        $newMember->save();
+                foreach ($heyatOunit->meetingMembers as $mm) {
+                    $newMember = $mm->replicate();
+                    $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
+                    $newMember->save();
 
 
-                        $newMember = $mm->replicate();
-                        $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
-                        $newMember->save();
-                    }
-
+                    $newMember = $mm->replicate();
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
                 }
 
-                if (empty($enactment)) {
-                    return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 404);
-                }
             }
-
 
             DB::commit();
             return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
 
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 200);
+            return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 500);
 
         }
     }

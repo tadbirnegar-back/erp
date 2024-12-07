@@ -4,7 +4,7 @@ namespace Modules\OUnitMS\app\Http\Traits;
 
 use Modules\AAA\app\Models\User;
 use Modules\OUnitMS\app\Notifications\VerifyInfoNotification;
-use Modules\OUnitMS\App\Notifications\VerifyPanelNotification;
+use Modules\OUnitMS\app\Notifications\VerifyPanelNotification;
 use Modules\PersonMS\app\Models\Person;
 
 trait VerifyInfoRepository

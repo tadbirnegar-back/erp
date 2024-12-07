@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Modules\Gateway\app\Models\Payment as PG;
+use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Payment\Facade\Payment;
 
 class VerifyPaymentJob implements ShouldQueue
@@ -57,9 +58,21 @@ class VerifyPaymentJob implements ShouldQueue
             }
 
             \DB::commit();
-        } catch (\Exception $e) {
+        } catch (InvalidPaymentException $e) {
             \DB::rollBack();
-            $this->fail($e);
+            if ($e->getCode() == -51) {
+                \DB::beginTransaction();
+
+                $status = PG::GetAllStatuses()->where('name', 'پرداخت ناموفق')->first();
+                $payments->each(function ($payment) use ($status) {
+                    $payment->status_id = $status->id;
+                    $payment->save();
+                });
+                \DB::commit();
+
+            } else {
+                $this->fail($e);
+            }
         }
     }
 }
