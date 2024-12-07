@@ -47,8 +47,8 @@ class TeacherController extends Controller
         try {
             DB::beginTransaction();
             $personResult = isset($request->personID) ?
-                $this->naturalUpdate($data,Natural::find( $data['personID'])) :
-                $this->naturalStore($data);
+                $this->naturalStore($data):
+            $this->naturalUpdate($data,Natural::find( $data['personID']));
 
 
 //
