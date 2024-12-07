@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
+use Modules\Gateway\app\Jobs\VerifyPaymentJob;
 use Modules\Gateway\app\Models\Payment as PG;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Payment\Facade\Payment;
@@ -93,8 +94,17 @@ class GatewayController extends Controller
                 return response()->json(['message' => 'شما مجاز به پرداخت نمی باشید'], 403);
             }
 
-//            $vills=$user->o
             $result = $this->generatePayGate($user);
+
+            $url = $result->getAction();
+            $url = rtrim($url, '/');
+
+            $urlArray = explode('/', $url);
+            $authority = end($urlArray);
+
+            VerifyPaymentJob::dispatch($authority)->delay(now()->addMinutes(12));
+
+
             DB::commit();
             return response()->json($result);
         } catch (\Exception $e) {
