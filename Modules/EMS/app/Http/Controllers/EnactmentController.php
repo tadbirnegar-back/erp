@@ -82,7 +82,6 @@ class EnactmentController extends Controller
     public function indexArchive(Request $request): JsonResponse
     {
         $user = Auth::user();
-//        $user = User::find(2174);
         $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
 
 

@@ -801,11 +801,7 @@ class EMSController extends Controller
             return response()->json(['message' => $validator->errors()], 422);
         }
 
-//        $user = Auth::user();
-
-        $user = User::find(2178);
-
-
+        $user = Auth::user();
         $searchTerm = $request->name;
 
         $user->load(['activeDistrictRecruitmentScript.ounit']);
