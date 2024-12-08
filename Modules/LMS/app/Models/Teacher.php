@@ -2,8 +2,8 @@
 
 namespace Modules\LMS\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\LMS\Database\factories\TeacherFactory;
@@ -17,6 +17,7 @@ class Teacher extends Model
      */
     protected $fillable = [];
     public $timestamps = false;
+
     protected static function newFactory(): TeacherFactory
     {
 //        return TeacherFactory::new();
@@ -24,6 +25,11 @@ class Teacher extends Model
 
     public function customer(): MorphOne
     {
-        return $this->morphOne(Customer::class,'customerable');
+        return $this->morphOne(Customer::class, 'customerable');
+    }
+
+    public function contents()
+    {
+        return $this->hasMany(Content::class, 'teacher_id', 'id');
     }
 }

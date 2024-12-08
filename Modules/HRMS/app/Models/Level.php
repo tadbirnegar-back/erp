@@ -2,11 +2,12 @@
 
 namespace Modules\HRMS\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\HRMS\Database\factories\LevelFactory;
+use Modules\LMS\app\Models\CourseEmployeeFeature;
 use Modules\StatusMS\app\Models\Status;
 
 class Level extends Model
@@ -26,7 +27,7 @@ class Level extends Model
 
     public function employees(): BelongsToMany
     {
-        return $this->belongsToMany(Employee::class,'employee_level');
+        return $this->belongsToMany(Employee::class, 'employee_level');
     }
 
     public function status(): BelongsTo
@@ -37,5 +38,10 @@ class Level extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function features()
+    {
+        return $this->morphMany(CourseEmployeeFeature::class, 'propertyble');
     }
 }

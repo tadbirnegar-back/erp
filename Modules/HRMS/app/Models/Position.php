@@ -10,6 +10,7 @@ use Modules\AAA\app\Models\Role;
 use Modules\BranchMS\app\Models\Section;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\Database\factories\PositionFactory;
+use Modules\LMS\app\Models\CourseEmployeeFeature;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\StatusMS\app\Models\Status;
 
@@ -83,5 +84,10 @@ class Position extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function features()
+    {
+        return $this->morphMany(CourseEmployeeFeature::class, 'propertyble');
     }
 }
