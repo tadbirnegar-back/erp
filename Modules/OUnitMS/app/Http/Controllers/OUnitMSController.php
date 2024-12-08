@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
-use Modules\OUnitMS\app\Http\Enums\statusEnum;
 use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -278,6 +277,8 @@ class OUnitMSController extends Controller
             DB::rollBack();
             return response()->json(['message' => 'خطا در حذف'], 500);
         }
+    }
+
 //       $result= $this->SoftDeletingOunits($id);
 
     public function villageSearchByName(Request $request)
