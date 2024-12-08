@@ -30,6 +30,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/add', [TeacherController::class, 'store']);
+
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
