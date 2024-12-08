@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
@@ -12,6 +13,8 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentMeeting;
 use Modules\EMS\app\Models\Meeting;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class MeetingController extends Controller
 {
@@ -96,19 +99,17 @@ class MeetingController extends Controller
     }
 
 
-    public function getSelection()
+    public function getSelection(Request $req)
     {
-//        $user = User::find(2064);
-        $user = Auth::user();
 
-        $user->load('activeDistrictRecruitmentScript.organizationUnit.firstFreeMeetingByNow');
+        $organ = OrganizationUnit::with(['ancestors' => function ($q) {
+            $q->where('unitable_type', DistrictOfc::class);
+            $q->with('firstFreeMeetingByNow');
+            $q->with('fullMeetingsByNow');
+        }])->find($req->ounitID);
 
-
-        $user->load('activeDistrictRecruitmentScript.organizationUnit.fullMeetingsByNow');
-
-        $firstFreeMeeting = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->firstFreeMeetingByNow;
-        $fullMeetings = $user->activeDistrictRecruitmentScript->first()?->organizationUnit->fullMeetingsByNow;
-
+        $firstFreeMeeting = $organ->ancestors->first()?->firstFreeMeetingByNow;
+        $fullMeetings = $organ->ancestors->first()?->fullMeetingsByNow;
 
         $data = [];
         if (!empty($fullMeetings)) {
@@ -134,11 +135,10 @@ class MeetingController extends Controller
 //            $firstFreeMeeting->setAttribute('humanReadableJalaliDate', $humanReadableJalaliDate);
 
             $data['freeMeeting'] = $firstFreeMeeting;
-
             $data['freeMeeting']['countOfEnactments'] = $EncInMeetingcount;
+            $data['freeMeeting']['encLimit'] = $enactmentLimitPerMeeting->value;
 
         }
-
 
         return response()->json($data, 200);
     }
