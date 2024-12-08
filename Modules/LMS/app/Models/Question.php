@@ -1,0 +1,66 @@
+<?php
+
+namespace Modules\LMS\app\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Modules\AAA\app\Models\User;
+use Modules\LMS\Database\factories\QuestionFactory;
+use Modules\StatusMS\app\Models\Status;
+
+class Question extends Model
+{
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     */
+
+
+    public $timestamps = false;
+
+    protected $table = 'questions';
+
+    protected $fillable = [
+        'id',
+        'title',
+        'creator_id',
+        'difficulty_id',
+        'lesson_id',
+        'question_type_id',
+        'repository_id',
+        'status_id',
+        'create_date'
+    ];
+
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class, 'lesson_id', 'id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'creator_id', 'id');
+    }
+
+    public function difficulty()
+    {
+        return $this->belongsTo(Dificulty::class, 'difficulty_id', 'id');
+    }
+
+    public function questionType()
+    {
+        return $this->belongsTo(Repository::class, 'repository_id', 'id');
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(Status::class, 'status_id', 'id');
+    }
+
+    public function exams()
+    {
+        return $this->belongsToMany(Exam::class, 'course_exams', 'question_id', 'exam_id');
+    }
+
+}
