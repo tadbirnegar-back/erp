@@ -2,6 +2,11 @@
 
 namespace Modules\OUnitMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\DB;
+use Mockery\Exception;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
+use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\OUnitMS\app\Http\Enums\statusEnum;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\Department;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -327,5 +332,24 @@ trait OrganizationUnitTrait
             )->with(['positions.levels', 'person', 'ancestors'])->get();
 
         return $result;
+    }
+
+    public function getActiveStatuses()
+    {
+        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', StatusEnum::Active->value);
+
+    }
+
+    public function getInactiveStatuses()
+    {
+        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', StatusEnum::Inactive->value);
+
+    }
+    public function softDeletingOunits(OrganizationUnit $ounit)
+    {
+
+        $status = $this->getInactiveStatuses();
+        $ounit->status_id = $status->id;
+        $ounit->save();
     }
 }

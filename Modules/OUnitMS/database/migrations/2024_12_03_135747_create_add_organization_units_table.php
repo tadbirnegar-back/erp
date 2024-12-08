@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('organization_units', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->index()->fulltext();
-            $table->morphs('unitable');
-            $table->unsignedBigInteger('head_id')->nullable();
-
-            $table->foreign('head_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
-
+        Schema::table('organization_units', function (Blueprint $table) {
+            $table->unsignedBigInteger('status_id')->nullable();
+            $table->foreign('status_id')->references('id')->on('statuses')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

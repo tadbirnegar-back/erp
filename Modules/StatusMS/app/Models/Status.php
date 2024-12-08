@@ -6,6 +6,7 @@ use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Illuminate\Database\Eloquent\Model;
 use Modules\BranchMS\app\Models\Branch;
 use Modules\FileMS\app\Models\File;
+use Modules\OUnitMS\app\Http\Enums\statusEnum;
 use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\Database\factories\StatusFactory;
@@ -19,6 +20,8 @@ class Status extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [];
+
+
 
     protected static function newFactory(): StatusFactory
     {

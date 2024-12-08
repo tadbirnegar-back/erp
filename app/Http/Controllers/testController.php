@@ -10,24 +10,18 @@ use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\OUnitMS\app\Http\Controllers\OUnitMSController;
+use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use OrganizationUnitTrait, PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
     public function run()
     {
 
-        EnactmentStatus::create([
-            'status_id' => 89,
-            'enactment_id' => 29
-        ]);
-//        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
-//            $q->where('status_id', 46);
-//        }])->find(40);
-//        $a = $this->calculatePrice($user);
-//        dd($a);
 //        try {
 //            \DB::beginTransaction();
 //            //        $ous = RecruitmentScript::whereHas()
