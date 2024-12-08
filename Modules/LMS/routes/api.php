@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\LMS\app\Http\Controllers\TeacherController;
 
 /*
     |--------------------------------------------------------------------------
@@ -27,4 +27,10 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::put('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'update']);
     Route::delete('/students/delete/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'destroy']);
 
+});
+Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
+    Route::post('/lms/teacher/add', [TeacherController::class, 'store']);
+});
+Route::middleware(['auth:api'])->prefix('v1')->group(function () {
+    Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
 });
