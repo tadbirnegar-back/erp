@@ -33,4 +33,12 @@ class Teacher extends Model
     {
         return $this->morphOne(WorkForce::class, 'workforceable');
     }
+
+    public function Person()
+    {
+        return $this-> hasManyDeep(Person::class, [WorkForce::class],
+            ['workforceable_id', 'id'],
+            ['id', 'person_id']
+        );
+    }
 }

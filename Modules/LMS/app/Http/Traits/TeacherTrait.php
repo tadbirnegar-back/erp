@@ -57,5 +57,86 @@ trait TeacherTrait
         ]);
         return $teacher->load('workForce');
     }
+    public function teacherIndex(int $perPage = 1, int $pageNumber =1, array $data = [])
+    {
+        $teacherQuery = Teacher::with('workForce.person.avatar',)->distinct();
+
+        $searchTerm = $data['name'] ?? null;
+//        $status = $data['statusID'] ?? null;
+
+        $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
+            $query->whereHas('workForce.person', function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
+                    ->orWhere('display_name', 'LIKE', '%' . $searchTerm . '%')
+                    ->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm])
+                    ->orderByDesc('relevance');
+            })
+                ->with(['workForce.person' => function ($query) use ($searchTerm) {
+                    $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
+                }, 'workForce.person.user', 'workForce.person.avatar']);
+        });
+//        $teacherQuery->when($status, function ($query, $status) {
+//            $query->whereHas('status', function ($query) use ($status) {
+//                $query->where('statuses.id', '=', $status);
+//            });
+//        });
+        $teacherQuery->orderBy('id', 'desc');
+        $result = $teacherQuery->paginate($perPage, page: $pageNumber);
+
+        return $result;
+
+//        $teacherQuery = Teacher::with('person.avatar', 'status',)->distinct();
+//
+//        $searchTerm = $data['name'] ?? null;
+//        $status = $data['statusID'] ?? null;
+//
+//        $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
+//            $query->whereHas('person', function ($query) use ($searchTerm) {
+//                $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
+//                    ->orWhere('display_name', 'LIKE', '%' . $searchTerm . '%')
+//                    ->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm])
+//                    ->orderByDesc('relevance');
+//            })
+//
+//
+//                ->with(['person' => function ($query) use ($searchTerm) {
+//                    $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
+//                }, 'person.user', 'person.avatar']);
+//        });
+//        $teacherQuery->when($status, function ($query, $status) {
+//            $query->whereHas('status', function ($query) use ($status) {
+//                $query->where('statuses.id', '=', $status);
+//            });
+//        });
+//        $teacherQuery->orderBy('id', 'desc');
+//        $result = $teacherQuery->paginate($perPage, page: $pageNumber);
+//
+//        return $result;
+    }
+
+    public function teacherLiveSearch($request)
+    {
+      $searchTerm = $request['name'];
+    $teacherQuery = Teacher::query(); // Initialize the query
+
+   $teacherQuery->whereHas('workForce.person', function ($query) use ($searchTerm) {
+       $query->whereRaw("MATCH (display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+           ->orWhere('display_name', 'like', '%' . $searchTerm . '%');
+    });
+
+   $teacherQuery -> with('workForce.person:id,display_name');
+    return $teacherQuery->get();
+    }
+
+
+//        $teacherQuery->where(
+//            function ($query) use ($searchTerm) {
+//                $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+//                    ->orWhere('name', 'like', '%' . $searchTerm . '%');
+//            }
+//        )->get();
+
+
+
 
 }
