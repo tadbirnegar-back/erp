@@ -6,22 +6,23 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\OUnitMS\app\Http\Controllers\OUnitMSController;
-use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 
 class testController extends Controller
 {
-    use OrganizationUnitTrait, PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
     public function run()
     {
 
+//        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
+//            $q->where('status_id', 46);
+//        }])->find(40);
+//        $a = $this->calculatePrice($user);
+//        dd($a);
 //        try {
 //            \DB::beginTransaction();
 //            //        $ous = RecruitmentScript::whereHas()
