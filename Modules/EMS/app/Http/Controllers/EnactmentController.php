@@ -285,7 +285,7 @@ class EnactmentController extends Controller
                 $this->attachFiles($enactment, $files);
 
 
-                foreach ($heyatOunit->meetingMembers as $mm) {
+                foreach ($heyaatTemplateMembers->meetingMembers as $mm) {
                     $newMember = $mm->replicate();
                     $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
                     $newMember->save();
