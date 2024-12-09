@@ -20,10 +20,13 @@ trait TeacherTrait
             $data = null;
         } elseif ($this->isTeacher($result->id)) {
             $message = 'teacher';
-            $data = [$result, $result->workForce->educationalRecords];
+            $data = $result;
         } else {
             $message = 'found';
-            $data = $result;
+            $data = [
+                'result' => $result,
+                'educationalRecords' => $result->workForce?->educationalRecords ?? null
+            ];
         }
 
         $religions = Religion::all();
