@@ -23,7 +23,7 @@ class TeacherController extends Controller
                 return response()->json(["message" => "شخصی با این کد ملی قبلا به عنوان مدرس افزوده شده است"], 409);
             } elseif ($situation['message'] == "found") {
                 $person = $this->personNaturalUpdate($data, $situation['data']);
-                $workForce = $this->storeTeacher($data, $situation['data']['id'])->workForce->id;
+                $workForce = $this->storeTeacher($data, $person->id)->workForce->id;
             } else {
                 $natural = $this->naturalStore($data);
                 $person = $natural->person;
@@ -43,7 +43,7 @@ class TeacherController extends Controller
 
     public function isTeacherExist(Request $request): JsonResponse
     {
-        $situation = $this->isPersonTeacher($request->naturalCode);
+        $situation = $this->isPersonTeacher($request->nationalCode);
         return response()->json($situation);
     }
 }
