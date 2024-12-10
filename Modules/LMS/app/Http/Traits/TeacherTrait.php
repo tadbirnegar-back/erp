@@ -66,8 +66,8 @@ trait TeacherTrait
 
         {
 //        $teacherQuery = Teacher::with(['workforce.person']);
-
-            $teacherQuery = WorkForce::with('person');
+            $teacherQuery = WorkForce::query();
+            $teacherQuery->joinRelationship('person');
             $teacherQuery->where('workforceable_type', Teacher::class);
             $searchTerm = $data['display_name'] ?? null;
             $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
