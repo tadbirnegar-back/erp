@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\Database\factories\TeacherFactory;
+use Modules\PersonMS\app\Models\Person;
 
 class Teacher extends Model
 {
