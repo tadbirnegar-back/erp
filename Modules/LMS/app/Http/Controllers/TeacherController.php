@@ -22,22 +22,16 @@ class TeacherController extends Controller
                 return response()->json(["message" => "شخصی با این کد ملی قبلا به عنوان مدرس افزوده شده است"], 409);
             } elseif ($situation['message'] == "found") {
                 $person = $this->personNaturalUpdate($data, $situation['data']['result']);
-                $this->storeTeacher($data, $person->id);
+                $workforce = $this->storeTeacher($data, $person->id)->workForce;
             } else {
                 $natural = $this->naturalStore($data);
                 $person = $natural->person;
-                $this->storeTeacher($data, $person->id);
+                $workforce = $this->storeTeacher($data, $person->id)->workForce;
             }
 
-//            $workforces = $person->workforces;
-//            foreach ($workforces as $workforce) {
-//                $this->educationUpdateAll($data, $workforce->id);
-//            }
-
             if (isset($data['educations'])) {
-                $workforceTeacher = $person->teacherWorkforce;
                 $edus = json_decode($data['educations'], true);
-                $this->educationUpsert($edus, $workforceTeacher->id);
+                $this->educationUpsert($edus, $workforce->id);
             }
 
             \DB::commit();
