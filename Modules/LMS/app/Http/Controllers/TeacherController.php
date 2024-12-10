@@ -18,8 +18,8 @@ class TeacherController extends Controller
             \DB::beginTransaction();
             $data = $request->all();
             $situation = $this->isPersonTeacher($data['nationalCode']);
-            $data['bcIssueDate'] = convertJalaliPersianCharactersToGregorian($data['bcIssueDate']);
-            $data['dateOfBirth'] = convertJalaliPersianCharactersToGregorian($data['dateOfBirth']);
+            $data['bcIssueDate'] = convertEnglishNumbersDate($data['bcIssueDate']);
+            $data['dateOfBirth'] = convertEnglishNumbersDate($data['dateOfBirth']);
             if ($situation['message'] == "teacher") {
                 return response()->json(["message" => "شخصی با این کد ملی قبلا به عنوان مدرس افزوده شده است"], 409);
             } elseif ($situation['message'] == "found") {

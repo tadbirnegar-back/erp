@@ -53,6 +53,12 @@ function convertJalaliPersianCharactersToGregorian(string $perisanCharDate)
     return $dateTimeString;
 }
 
+function convertEnglishNumbersDate(string $englishNumbersDate){
+    $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishNumbersDate)
+        ->toDateTimeString();
+
+    return $dateTimeString;
+}
 
 function convertDateTimeJalaliPersianCharactersToGregorian(string $persianCharDateTime)
 {
