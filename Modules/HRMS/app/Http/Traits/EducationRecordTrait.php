@@ -23,12 +23,25 @@ trait EducationRecordTrait
 
     }
 
+    public function educationUpdateAll(array $dataToUpdate, int $workForceID)
+    {
+        EducationalRecord::where('work_force_id', $workForceID)
+            ->update([
+                'university_name' => $dataToUpdate['universityName'] ?? null,
+                'field_of_study' => $dataToUpdate['fieldOfStudy'] ?? null,
+                'start_date' => $dataToUpdate['startDate'] ?? null,
+                'end_date' => $dataToUpdate['endDate'] ?? null,
+                'average' => $dataToUpdate['average'] ?? null,
+                'level_of_educational_id' => $dataToUpdate['levelOfEducationalID'] ?? null,
+            ]);
+    }
+
+
     private function EducationalRecordDataPreparation(array|Collection $educations, int $workForceID)
     {
         if (is_array($educations)) {
             $educations = collect($educations);
         }
-
         $recordsToInsert = $educations->map(fn($data) => [
             'id' => $data['erID'] ?? null,
             'university_name' => $data['universityName'] ?? null,

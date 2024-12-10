@@ -18,19 +18,24 @@ class TeacherController extends Controller
             \DB::beginTransaction();
             $data = $request->all();
             $situation = $this->isPersonTeacher($data['nationalCode']);
-
             if ($situation['message'] == "teacher") {
                 return response()->json(["message" => "شخصی با این کد ملی قبلا به عنوان مدرس افزوده شده است"], 409);
             } elseif ($situation['message'] == "found") {
-                $person = $this->personNaturalUpdate($data, $situation['data']);
-                $workForce = $this->storeTeacher($data, $person->id)->workForce->id;
+                $person = $this->personNaturalUpdate($data, $situation['data']['result']);
+                $this->storeTeacher($data, $person->id);
             } else {
                 $natural = $this->naturalStore($data);
                 $person = $natural->person;
-                $workForce = $this->storeTeacher($data, $person->id)->workForce->id;
+                $this->storeTeacher($data, $person->id);
             }
+            $workforceTeacher = $person->teacherWorkforce;
 
-            $edu = $this->EducationalRecordStore([$person], $workForce);
+            $this->EducationalRecordStore($data, $workforceTeacher->id);
+
+            $workforces = $person->workforces;
+            foreach ($workforces as $workforce) {
+                $this->educationUpdateAll($data, $workforce->id);
+            }
             \DB::commit();
             return response()->json(["message" => "مدرس با موفقیت افزوده شد"], 200);
 
