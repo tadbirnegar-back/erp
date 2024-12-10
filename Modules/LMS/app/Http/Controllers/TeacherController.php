@@ -28,14 +28,18 @@ class TeacherController extends Controller
                 $person = $natural->person;
                 $this->storeTeacher($data, $person->id);
             }
-            $workforceTeacher = $person->teacherWorkforce;
-
-            $this->EducationalRecordStore($data, $workforceTeacher->id);
 
             $workforces = $person->workforces;
             foreach ($workforces as $workforce) {
                 $this->educationUpdateAll($data, $workforce->id);
             }
+
+            if (isset($data['educations'])) {
+                $workforceTeacher = $person->teacherWorkforce;
+
+                $this->EducationalRecordStore($data, $workforceTeacher->id);
+            }
+
             \DB::commit();
             return response()->json(["message" => "مدرس با موفقیت افزوده شد"], 200);
 
