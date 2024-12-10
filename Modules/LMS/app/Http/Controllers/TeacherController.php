@@ -5,7 +5,6 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\LMS\app\Http\Traits\TeacherTrait;
 
@@ -37,8 +36,9 @@ class TeacherController extends Controller
                 $this->educationUpsert($edus, $workforce->id);
             }
 
-            if(isset($data['deletedEducations'])){
-                $this->EducationHardDelete($data['deletedEducations']);
+            if (isset($data['deletedEducations'])) {
+                $educations = json_decode($data['deletedEducations'], true);
+                $this->EducationHardDelete($educations);
             }
 
             \DB::commit();
@@ -46,7 +46,7 @@ class TeacherController extends Controller
 
         } catch (\Exception $exception) {
             \DB::rollBack();
-            return response()->json(['message' => $exception->getMessage() , 'trance' => $exception -> getTrace()], 500);
+            return response()->json(['message' => $exception->getMessage(), 'trance' => $exception->getTrace()], 500);
         }
 
     }

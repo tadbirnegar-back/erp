@@ -95,8 +95,10 @@ trait EducationRecordTrait
     }
 
 
-    public function EducationHardDelete(Array $EduIds){
+    public function EducationHardDelete(array $EduIds)
+    {
         EducationalRecord::whereIn('id', $EduIds)->Delete();
+        Log::info($EduIds);
     }
 
 }
