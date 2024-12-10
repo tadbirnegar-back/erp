@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Religion;
