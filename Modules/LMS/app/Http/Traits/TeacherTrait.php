@@ -26,6 +26,7 @@ trait TeacherTrait
             $data = [
                 'result' => $result,
                 'educationalRecords' => $result->workForce?->educationalRecords ?? null,
+                "levelOfEducation" => $result->workForce?->levelOfEducation ?? null,
                 'religion' => $religion,
                 'religionType' => $religion_typee,
             ];
