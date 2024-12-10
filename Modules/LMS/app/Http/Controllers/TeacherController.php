@@ -34,6 +34,10 @@ class TeacherController extends Controller
                 $this->educationUpsert($edus, $workforce->id);
             }
 
+            if(isset($data['deletedEducations'])){
+                $this->EducationHardDelete($data['deletedEducations']);
+            }
+
             \DB::commit();
             return response()->json(["message" => "مدرس با موفقیت افزوده شد"], 200);
 
