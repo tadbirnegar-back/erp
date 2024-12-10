@@ -29,15 +29,15 @@ class TeacherController extends Controller
                 $this->storeTeacher($data, $person->id);
             }
 
-            $workforces = $person->workforces;
-            foreach ($workforces as $workforce) {
-                $this->educationUpdateAll($data, $workforce->id);
-            }
+//            $workforces = $person->workforces;
+//            foreach ($workforces as $workforce) {
+//                $this->educationUpdateAll($data, $workforce->id);
+//            }
 
             if (isset($data['educations'])) {
                 $workforceTeacher = $person->teacherWorkforce;
-
-                $this->EducationalRecordStore($data, $workforceTeacher->id);
+                $edus = json_decode($data['educations'], true);
+                $this->educationUpsert($edus, $workforceTeacher->id);
             }
 
             \DB::commit();
