@@ -5,8 +5,6 @@ namespace Modules\LMS\app\Http\Traits;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
-use Modules\PersonMS\app\Models\Religion;
-use Modules\PersonMS\app\Models\ReligionType;
 
 trait TeacherTrait
 {
@@ -23,17 +21,16 @@ trait TeacherTrait
             $data = $result;
         } else {
             $message = 'found';
+            $religion = $result->personable->religion;
+            $religion_typee = $result->personable->religionType;
             $data = [
                 'result' => $result,
-                'educationalRecords' => $result->workForce?->educationalRecords ?? null
+                'educationalRecords' => $result->workForce?->educationalRecords ?? null,
+                'religion' => $religion,
+                'religionType' => $religion_typee,
             ];
         }
-
-        $religions = Religion::all();
-        $religionType = ReligionType::all();
-
-
-        return ['data' => $data, 'message' => $message, "religions" => $religions, "religion_type" => $religionType];
+        return ['data' => $data, 'message' => $message];
 
     }
 

@@ -23,12 +23,18 @@ trait EducationRecordTrait
 
     }
 
+    public function educationUpsert(array|Collection $dataToUpdate, int $workForceID)
+    {
+        $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToUpdate, $workForceID);
+        EducationalRecord::upsert($preparedData->toArray(), ['id']);
+    }
+
+
     private function EducationalRecordDataPreparation(array|Collection $educations, int $workForceID)
     {
         if (is_array($educations)) {
             $educations = collect($educations);
         }
-
         $recordsToInsert = $educations->map(fn($data) => [
             'id' => $data['erID'] ?? null,
             'university_name' => $data['universityName'] ?? null,
@@ -37,6 +43,25 @@ trait EducationRecordTrait
             'end_date' => $data['endDate'] ?? null,
             'average' => $data['average'] ?? null,
             'work_force_id' => $workForceID,
+            'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
+        ]);
+        return $recordsToInsert;
+    }
+
+
+    private function EducationalRecordDataPreparationForUpsert(array|Collection $educations, int $workForceID)
+    {
+        if (is_array($educations)) {
+            $educations = collect($educations);
+        }
+        $recordsToInsert = $educations->map(fn($data) => [
+            'id' => $data['erID'] ?? null,
+            'university_name' => $data['universityName'] ?? null,
+            'field_of_study' => $data['fieldOfStudy'] ?? null,
+            'start_date' => convertJalaliPersianCharactersToGregorian($data['startDate']) ?? null,
+            'end_date' => convertJalaliPersianCharactersToGregorian($data['endDate']) ?? null,
+            'average' => $data['average'] ?? null,
+            'work_force_id' => $data['workForceID'] ?? $workForceID,
             'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
         ]);
         return $recordsToInsert;
