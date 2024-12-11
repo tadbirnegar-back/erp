@@ -45,11 +45,6 @@ class Course extends Model
         return $this->belongsTo(File::class, 'cover_id', 'id');
     }
 
-    public function privacy()
-    {
-        return $this->belongsTo(Privacy::class, 'privacy_id', 'id');
-    }
-
     public function statuses()
     {
         return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id');

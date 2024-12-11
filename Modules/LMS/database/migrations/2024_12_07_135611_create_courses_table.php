@@ -27,7 +27,6 @@ return new class extends Migration {
             $table->foreign('preview_video_id')->references('id')->on('files')->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('creator_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('cover_id')->references('id')->on('files')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreign('privacy_id')->references('id')->on('privicies')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
