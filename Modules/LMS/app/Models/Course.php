@@ -58,7 +58,8 @@ class Course extends Model
     public function latestStatus()
     {
         return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id')
-            ->latest();
+            ->orderBy("id" , 'desc')
+            ->limit(1);
     }
 
     public function enrolls()

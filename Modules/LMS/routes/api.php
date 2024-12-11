@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\LMS\app\Http\Controllers\TeacherController;
+use Modules\LMS\app\Http\Controllers\CourseController;
 
 /*
     |--------------------------------------------------------------------------
@@ -37,3 +38,5 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
 });
+
+Route::get('/lms/courses/{id}' , [CourseController::class, 'show']);
