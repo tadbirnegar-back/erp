@@ -40,7 +40,6 @@ class StoreEnactmentStatusInQueueListener
 
 
             $enactment = Enactment::with("latestHeyaatMeeting")->find($enactmentStatus->enactment_id);
-            Log::info($enactment);
 
             // Ensure meeting_date is in Carbon instance (convert if necessary)
             $meetingDate1 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
@@ -73,7 +72,6 @@ class StoreEnactmentStatusInQueueListener
             // Convert the fetched date to a Carbon instance
             $delayPending = Carbon::parse($meetingDate3);
 
-            Log::info($delayPending);
             PendingForHeyaatStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayPending);
 
             $alertMembers = Carbon::parse($meetingDate3)->subDays(1);

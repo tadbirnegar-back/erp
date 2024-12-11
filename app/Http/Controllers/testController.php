@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\EnactmentMeeting;
 use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
@@ -20,7 +21,7 @@ class testController extends Controller
     public function run()
     {
         EnactmentStatus::create([
-            'enactment_id' => 29 ,
+            'enactment_id' => 29,
             'status_id' => 89
         ]);
 

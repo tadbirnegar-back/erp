@@ -76,13 +76,12 @@ class StoreMeetingJob implements ShouldQueue
         // Process members
         $members = $this->meeting->load('meetingMembers'); // Load related 'meetingMembers'
 
+        foreach ($members->meetingMembers as $member) {
+            $user = User::find($member->employee_id);
+            $username = Person::find($user->person_id)->display_name;
 
-//        foreach ($members->meetingMembers as $member) {
-//            $user = User::find($member->employee_id);
-//            $username = Person::find($user->person_id)->display_name;
-//
-//            $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
-//        }
+            $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
+        }
     }
 
 }
