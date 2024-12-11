@@ -132,13 +132,17 @@ class EnactmentController extends Controller
             $heyatOunit = OrganizationUnit::with([
                 'ancestors' => function ($query) {
                     $query->where('unitable_type', DistrictOfc::class)
-                        ->with('meetingMembers');
+                        ->with(['meetingMembers' => function ($query) {
+                            $query->whereHas('roles', function ($query) {
+                                $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                            });
+                        }]);
                 },
             ])->find($data['ounitID']);
 
             $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->meetingMembers;
 
-            if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 6) {
+            if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 
