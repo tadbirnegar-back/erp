@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
@@ -18,34 +19,10 @@ class testController extends Controller
 
     public function run()
     {
-
-        $person = Person::with([
-            'recruitmentScripts.latestStatus',
-            'recruitmentScripts.hireType',
-            'recruitmentScripts.scriptType',
-            'avatar',
-            'personable.religion',
-            'personable.religionType',
-            'user.roles',
-            'workForce.skills',
-            'workForce.educationalRecords.levelOfEducation',
-            'workForce.resumes',
-            'workForce.militaryStatus',
-            'workForce.relatives.relativeType',
-            'workForce.relatives.levelOfEducation',
-            'workForce.courseRecords',
-            'workForce.isars.isarStatus',
-            'workForce.isars.relativeType',
-            'recruitmentScripts.ounit.ancestorsAndSelf',
-            'employee.signatureFile',
-            'workForce.militaryService.militaryServiceStatus',
-            'workForce.militaryService.exemptionType'])
-            ->findOr(2096, function () {
-
-                return response()->json(['message' => 'موردی یافت نشد'], 404);
-            });
-
-        return response()->json($person);
+        EnactmentStatus::create([
+            'enactment_id' => 29 ,
+            'status_id' => 89
+        ]);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);

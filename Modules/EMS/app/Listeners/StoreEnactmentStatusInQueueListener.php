@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Listeners;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Events\EnactmentStatusCreatedEvent;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
@@ -38,12 +39,14 @@ class StoreEnactmentStatusInQueueListener
 //            $timeNow = Carbon::now();
 
 
-            $enactment = Enactment::with("latestMeeting")->find($enactmentStatus->enactment_id);
+            $enactment = Enactment::with("latestHeyaatMeeting")->find($enactmentStatus->enactment_id);
+            Log::info($enactment);
 
             // Ensure meeting_date is in Carbon instance (convert if necessary)
-            $meetingDate1 = $enactment->latestMeeting->getRawOriginal('meeting_date');
-            $meetingDate2 = $enactment->latestMeeting->getRawOriginal('meeting_date');
-            $meetingDate3 = $enactment->latestMeeting->getRawOriginal('meeting_date');
+            $meetingDate1 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
+            $meetingDate2 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
+            $meetingDate3 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
+
 
 //            $receiptMaxDay = $this->getReceptionMaxDays()?->value ?? 7;
 
@@ -70,11 +73,12 @@ class StoreEnactmentStatusInQueueListener
             // Convert the fetched date to a Carbon instance
             $delayPending = Carbon::parse($meetingDate3);
 
+            Log::info($delayPending);
             PendingForHeyaatStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayPending);
 
             $alertMembers = Carbon::parse($meetingDate3)->subDays(1);
 
-            StoreMeetingJob::dispatch($enactment->latestMeeting)->delay($alertMembers);
+            StoreMeetingJob::dispatch($enactment->latestHeyaatMeeting)->delay($alertMembers);
 
         }
     }
