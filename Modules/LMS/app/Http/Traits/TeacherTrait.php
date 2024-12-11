@@ -23,10 +23,10 @@ trait TeacherTrait
             $message = 'found';
             $religion = $result->personable->religion;
             $religion_typee = $result->personable->religionType;
+            $levelOfEducation = $result->workForce->load('educationalRecords.levelOfEducation');
             $data = [
                 'result' => $result,
-                'educationalRecords' => $result->workForce?->educationalRecords ?? null,
-                "levelOfEducation" => $result->workForce?->levelOfEducation ?? null,
+                'educationalRecords' => $levelOfEducation ?? null,
                 'religion' => $religion,
                 'religionType' => $religion_typee,
             ];
