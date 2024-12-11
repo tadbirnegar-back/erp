@@ -61,11 +61,11 @@ trait TeacherTrait
     public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
     {
 
+        $searchTerm = $data['display_name'] ?? null;
 
         $teacherQuery = WorkForce::query();
         $teacherQuery->joinRelationship('person');
         $teacherQuery->where('workforceable_type', Teacher::class);
-        $searchTerm = $data['display_name'] ?? null;
         $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
             $query->whereRaw("MATCH (display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
             $query->where('person', function ($query) use ($searchTerm) {
@@ -81,19 +81,21 @@ trait TeacherTrait
 
     }
 
-    public function teacherLiveSearch($request)
+    public function teacherLiveSearch($request = [])
     {
-        $teacherQuery = WorkForce::query();
-        $teacherQuery->joinRelationship('teacher')->where('teachers.id', '=', 'work_forces.workforceable_id');
-        $teacherQuery->joinRelationship('person')->where('persons.id', '=', 'work_forces.person_id');
         $searchTerm = $request['name'];
-        $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
-            $query->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
-                ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%');
-        });
+
+        $teacherQuery = WorkForce::query();
+//        $teacherQuery->where('workforceable_type', '=', Teacher::class);
+
+        $teacherQuery->joinRelationship('person')->where('persons.id', '=', 'work_forces.person_id');
+
+        $teacherQuery->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+            ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%')
+            ->where('workforceable_type', '=', Teacher::class);
         $teacherQuery->with(['person:id,display_name']);
         return $teacherQuery->get();
     }
-
-
 }
+//        $teacherQuery->joinRelationship('teacher')->where('teachers.id', '=', 'work_forces.workforceable_id');
+//        $teacherQuery->joinRelationship('person')->where('persons.id', '=', 'work_forces.person_id');
