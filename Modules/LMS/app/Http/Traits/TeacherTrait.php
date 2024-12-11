@@ -91,7 +91,7 @@ trait TeacherTrait
         $teacherQuery->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
             ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%')
             ->where('workforceable_type', '=', Teacher::class);
-        $teacherQuery->with(['person:id,display_name']);
+        $teacherQuery->with(['person']);
         return $teacherQuery->get();
     }
 }
