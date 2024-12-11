@@ -12,6 +12,31 @@ class TeacherController extends Controller
 {
     use TeacherTrait, EducationRecordTrait;
 
+    public function index(Request $request)
+    {
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+
+        $result = $this->teacherIndex($perPage, $pageNum, $data);
+
+        return response()->json($result);
+    }
+    public function LiveSearchTeacher(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 422);
+        }
+        $data = $request->all();
+        $result = $this->teacherLiveSearch($data);
+        return response()->json($result);
+    }
+
+
     public function store(Request $request): JsonResponse
     {
         try {

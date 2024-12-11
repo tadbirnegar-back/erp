@@ -56,4 +56,44 @@ trait TeacherTrait
         return $teacher->load('workForce');
     }
 
+    public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
+    {
+
+        $searchTerm = $data['display_name'] ?? null;
+
+        $teacherQuery = WorkForce::query();
+        $teacherQuery->joinRelationship('person');
+        $teacherQuery->where('workforceable_type', Teacher::class);
+        $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
+            $query->whereRaw("MATCH (display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+            $query->where('person', function ($query) use ($searchTerm) {
+                $query->where('person.display_name', 'like', '%' . $searchTerm . '%')
+                    ->where('MATCH(person.display_name) AGAINST(?)', [$searchTerm]);
+            });
+        });
+
+        $teacherQuery->with(['person:id,display_name']);
+        $result = $teacherQuery->paginate($perPage, page: $pageNumber);
+
+        return $result;
+
+    }
+
+    public function teacherLiveSearch($request = [])
+    {
+        $searchTerm = $request['name'];
+
+        $teacherQuery = WorkForce::query();
+//        $teacherQuery->where('workforceable_type', '=', Teacher::class);
+
+        $teacherQuery->joinRelationship('person');
+
+        $teacherQuery->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+            ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%')
+            ->where('workforceable_type', '=', Teacher::class);
+        $teacherQuery->with(['person']);
+        return $teacherQuery->get();
+    }
 }
+//        $teacherQuery->joinRelationship('teacher')->where('teachers.id', '=', 'work_forces.workforceable_id');
+//        $teacherQuery->joinRelationship('person')->where('persons.id', '=', 'work_forces.person_id');
