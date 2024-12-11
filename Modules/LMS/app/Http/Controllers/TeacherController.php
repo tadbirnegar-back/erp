@@ -18,6 +18,8 @@ class TeacherController extends Controller
             \DB::beginTransaction();
             $data = $request->all();
             $situation = $this->isPersonTeacher($data['nationalCode']);
+            $data['bcIssueDate'] = convertJalaliPersianCharactersToGregorian($data['bcIssueDate']);
+            $data['dateOfBirth'] = convertJalaliPersianCharactersToGregorian($data['dateOfBirth']);
             if ($situation['message'] == "teacher") {
                 return response()->json(["message" => "شخصی با این کد ملی قبلا به عنوان مدرس افزوده شده است"], 409);
             } elseif ($situation['message'] == "found") {
@@ -34,12 +36,17 @@ class TeacherController extends Controller
                 $this->educationUpsert($edus, $workforce->id);
             }
 
+            if (isset($data['deletedEducations'])) {
+                $educations = json_decode($data['deletedEducations'], true);
+                $this->EducationHardDelete($educations);
+            }
+
             \DB::commit();
             return response()->json(["message" => "مدرس با موفقیت افزوده شد"], 200);
 
         } catch (\Exception $exception) {
             \DB::rollBack();
-            return response()->json(['message' => $exception->getMessage()], 500);
+            return response()->json(['message' => $exception->getMessage(), 'trance' => $exception->getTrace()], 500);
         }
 
     }

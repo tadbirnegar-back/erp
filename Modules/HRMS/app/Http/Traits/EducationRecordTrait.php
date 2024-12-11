@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Modules\HRMS\app\Models\EducationalRecord;
 
 trait EducationRecordTrait
@@ -25,6 +26,7 @@ trait EducationRecordTrait
 
     public function educationUpsert(array|Collection $dataToUpdate, int $workForceID)
     {
+        Log::info($dataToUpdate);
         $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToUpdate, $workForceID);
         EducationalRecord::upsert($preparedData->toArray(), ['id']);
     }
@@ -90,6 +92,13 @@ trait EducationRecordTrait
         $dataToUpsert = $this->EducationalRecordDataPreparation($data, $workForceID);
         $result = EducationalRecord::upsert($dataToUpsert->toArray(), ['id']);
         return $result;
+    }
+
+
+    public function EducationHardDelete(array $EduIds)
+    {
+        EducationalRecord::whereIn('id', $EduIds)->Delete();
+        Log::info($EduIds);
     }
 
 }
