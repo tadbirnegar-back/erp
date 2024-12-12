@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('answer_sheets', function (Blueprint $table) {
-            $table->unsignedInteger('status_id')->nullable();
+            $table->unsignedBigInteger('status_id')->nullable();
 
-            $table->foreign('status_id')->references('id')->on('status')
+            $table->foreign('status_id')->references('id')->on('statuses')
             ->onUpdate('cascade')->onDelete('set null');
         });
     }

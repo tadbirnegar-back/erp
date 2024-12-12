@@ -9,4 +9,8 @@ enum CourseStatusEnum: string
     case CANCELED = "لغو شده";
 
 
+    public function coursePresentingStatus()
+    {
+        return AnswerSheetStatusEnum::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
+    }
 }

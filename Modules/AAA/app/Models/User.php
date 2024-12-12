@@ -23,7 +23,10 @@ use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\LMS\app\Models\Answers;
+use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Enroll;
+use Modules\LMS\app\Models\Student;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -343,5 +346,13 @@ class User extends Authenticatable
             ['id', 'person_id' , 'customer_id' , 'id'],
             ['person_id' , 'id' , 'id' , 'orderable_id']
         );
+    }
+
+
+    public function answerSheets(){
+        return $this -> hasManyDeep(AnswerSheet::class , [Person::class , Customer::class],
+            ['id' , 'person_id' , 'student_id'],
+            ['person_id' , 'id' , 'customerable_id']
+        )->where("customers.customerable_type" , Student::class);
     }
 }

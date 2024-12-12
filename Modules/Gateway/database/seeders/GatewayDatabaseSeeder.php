@@ -17,7 +17,7 @@ class GatewayDatabaseSeeder extends Seeder
              ModuleCategorySeeder::class,
              ModuleSeeder::class,
              PermissionSeeder::class,
-//             CourseStatusSeeder::class,
+//             AnswerSheetStatusSeeder::class,
 
          ]);
     }

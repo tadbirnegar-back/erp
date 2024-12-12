@@ -10,15 +10,28 @@ use Modules\LMS\app\Models\Enroll;
 
 trait CourseTrait
 {
+    use AnswerSheetTrait;
     public function courseShow($course, $user)
     {
 
-        $user->load(['enrolls' => function ($query) use ($course) {
-            $query->where('course_id', $course->id);
-        }]);
-
+        $user->load([
+            'enrolls' => function ($query) use ($course) {
+                $query->where('course_id', $course->id);
+            },
+            'answerSheets'
+        ]);
         $enrolls = $user->enrolls[0];
+        $answerSheet = $user->answerSheets[0];
 
+
+
+        $exampApprovedStatus =  $this -> answerSheetApprovedStatus() -> id;
+
+        if($answerSheet -> status_id == $exampApprovedStatus) {
+            $approveFromExam = true;
+        }else{
+            $approveFromExam = false;
+        }
 
         if (empty($enrolls)) {
             $joined = false;
@@ -27,13 +40,16 @@ trait CourseTrait
         }
 
         $status = $course->load('latestStatus');
-        $permissions = $this::getComponentToRenderLMS($joined, $status->latestStatus[0]->name);
+        $statusName = $status->latestStatus[0]->name;
+
+        $permissions = $this::getComponentToRenderLMS($joined, $statusName,$approveFromExam);
+        return $permissions;
     }
 
 
-    private static function getComponentToRenderLMS($joined, $status)
+    private static function getComponentToRenderLMS($joined, $status , $approveFromExam)
     {
-
+        return "hi";
     }
 
 
