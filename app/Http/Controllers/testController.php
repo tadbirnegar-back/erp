@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 
+use Carbon\Carbon;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\LMS\app\Models\Enroll;
+use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
 
 
@@ -19,33 +23,14 @@ class testController extends Controller
     public function run()
     {
 
-        $person = Person::with([
-            'recruitmentScripts.latestStatus',
-            'recruitmentScripts.hireType',
-            'recruitmentScripts.scriptType',
-            'avatar',
-            'personable.religion',
-            'personable.religionType',
-            'user.roles',
-            'workForce.skills',
-            'workForce.educationalRecords.levelOfEducation',
-            'workForce.resumes',
-            'workForce.militaryStatus',
-            'workForce.relatives.relativeType',
-            'workForce.relatives.levelOfEducation',
-            'workForce.courseRecords',
-            'workForce.isars.isarStatus',
-            'workForce.isars.relativeType',
-            'recruitmentScripts.ounit.ancestorsAndSelf',
-            'employee.signatureFile',
-            'workForce.militaryService.militaryServiceStatus',
-            'workForce.militaryService.exemptionType'])
-            ->findOr(2096, function () {
-
-                return response()->json(['message' => 'موردی یافت نشد'], 404);
-            });
-
-        return response()->json($person);
+        $userQuery = User::query();
+        $userQuery->joinRelationship('order'  , function ($join)  {
+            $join->on('orders.orderable_id', '=', 1);
+            $join->on('orders.orderable_type', '=', Enroll::class);
+        });
+        \DB::enableQueryLog();
+        $order = $userQuery->first();
+        dd(\DB::getQueryLog());
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);

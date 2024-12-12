@@ -35,7 +35,7 @@ class Order extends Model
 
     public function orderable()
     {
-        return $this->morphTo();
+        return $this->morphMany(Order::class, 'orderable');
     }
 
     public function statuses()
@@ -59,5 +59,7 @@ class Order extends Model
     {
         return $this->hasMany(Invoice::class, 'order_id', 'id');
     }
+
+
 
 }

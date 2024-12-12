@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use http\Client\Curl\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -17,8 +18,7 @@ class CourseController extends Controller
     {
         try {
             $course = Course::with('latestStatus')->findOrFail($id);
-            $user = Auth::user();
-
+            $user = \Modules\AAA\app\Models\User::find(2174);
             if (is_null($course)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
             }

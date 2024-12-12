@@ -27,6 +27,7 @@ use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\PayStream\app\Models\Cashes;
+use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Modules\WidgetsMS\app\Models\Widget;
@@ -332,5 +333,11 @@ class User extends Authenticatable
     public function cashes()
     {
         return $this->belongsToMany(Cashes::class, 'cash_user', 'user_id', 'cash_id');
+    }
+
+
+    public function order()
+    {
+        return $this->hasOne(Order::class , 'customer_id' , 'id');
     }
 }
