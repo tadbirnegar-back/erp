@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\HRMS\Database\factories\WorkForceFactory;
+use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
@@ -97,4 +98,9 @@ class WorkForce extends Model
 //    {
 //        return $this->hasMany(StatusWorkForce::class);
 //    }
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'workforceable_id');
+    }
+
 }

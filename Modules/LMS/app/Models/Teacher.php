@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\Database\factories\TeacherFactory;
+use Modules\PersonMS\app\Models\Person;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Teacher extends Model
 {
-    use HasFactory;
+    use HasFactory, HasRelationships;
 
     /**
      * The attributes that are mass assignable.
@@ -32,5 +34,14 @@ class Teacher extends Model
     public function workForce(): MorphOne
     {
         return $this->morphOne(WorkForce::class, 'workforceable');
+    }
+
+
+    public function Person()
+    {
+        return $this->hasManyDeep(Person::class, [WorkForce::class],
+            ['workforceable_id', 'id'],
+            ['id', 'person_id']
+        );
     }
 }
