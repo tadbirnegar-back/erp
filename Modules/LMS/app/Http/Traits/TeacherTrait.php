@@ -65,7 +65,9 @@ trait TeacherTrait
         $searchTerm = $data['title'] ?? null;
         $query = Course::query()->with([
             'chapters' => function ($query) {
-                $query->withCount('lessons');
+                $query->withCount('lessons')->with(['lessons' => function ($lessonQuery) {
+                    $lessonQuery->withCount('questions');
+                }]);
             },
             'statuses'
         ])
