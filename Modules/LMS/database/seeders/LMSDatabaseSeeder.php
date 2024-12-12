@@ -12,10 +12,12 @@ class LMSDatabaseSeeder extends Seeder
     public function run(): void
     {
 
-         $this->call([
-             ModuleCategorySeeder::class,
-             ModuleSeeder::class,
-             PermissionSeeder::class,
-         ]);
+        $this->call([
+//            ModuleCategorySeeder::class,
+//            ModuleSeeder::class,
+//            PermissionSeeder::class,
+            CourseStatusSeeder::class,
+
+        ]);
     }
 }

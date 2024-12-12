@@ -46,4 +46,16 @@ class TeacherController extends Controller
         $situation = $this->isPersonTeacher($request->nationalCode);
         return response()->json($situation);
     }
+
+    public function CourseList(Request $request): JsonResponse
+    {
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+
+        $result = $this->CourseIndex($perPage, $pageNum, $data);
+
+        return response()->json($result);
+
+    }
 }

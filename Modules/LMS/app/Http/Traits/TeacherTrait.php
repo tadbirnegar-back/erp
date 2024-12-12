@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Kirschbaum\PowerJoins\PowerJoins;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Teacher;
@@ -57,6 +58,23 @@ trait TeacherTrait
             'isar_id' => $data['isar_id'] ?? null,
         ]);
         return $teacher->load('workForce');
+    }
+
+    public function CourseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
+    {
+        $searchTerm = $data['title'] ?? null;
+        $query = Course::query()->with([
+            'chapters' => function ($query) {
+                $query->withCount('lessons');
+            },
+            'statuses'
+        ])
+            ->withCount('chapters')->when($searchTerm, function ($query, $searchTerm) {
+                $query->where('courses.title', 'like', '%' . $searchTerm . '%');
+            });
+
+
+        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 
 }

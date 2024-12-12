@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -55,11 +56,16 @@ class Course extends Model
         return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id');
     }
 
-    public function latestStatus()
+    public function latestStatus(): HasOneThrough
     {
-        return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id')
-            ->latest();
+        return $this->hasOneThrough(Status::class, Course::class, 'course_id', 'id', 'id', 'status_id')->orderBy('status_course.id', 'desc');
     }
+
+//    public function latestStatus()
+//    {
+//        return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id')
+//            ->latest();
+//    }
 
     public function enrolls()
     {
