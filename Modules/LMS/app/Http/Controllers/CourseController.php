@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class CourceCotrollerController extends Controller
+class CourseController extends Controller
 {
     public array $data = [];
 
