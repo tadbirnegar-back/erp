@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AAA\app\Models\User as AAAUser;
 use Modules\AddressMS\app\Models\Address;
+use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\Position;
@@ -172,6 +173,11 @@ class Person extends Model
         )
             ->where('workforceable_type', Employee::class)
             ->latest('create_date');
+    }
+
+    public function customers()
+    {
+        return $this -> hasMany(Customer::class, 'person_id');
     }
 
 

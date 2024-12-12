@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Modules\AddressMS\app\Models\Address;
+use Modules\CustomerMS\app\Models\Customer;
 use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Models\MR;
 use Modules\EvalMS\app\Models\Evaluator;
@@ -22,6 +23,7 @@ use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\LMS\app\Models\Enroll;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -336,8 +338,10 @@ class User extends Authenticatable
     }
 
 
-    public function order()
-    {
-        return $this->hasOne(Order::class , 'customer_id' , 'id');
+    public function enrolls(){
+        return $this -> hasManyDeep(Enroll::class, [Person::class,Customer::class,Order::class] ,
+            ['id', 'person_id' , 'customer_id' , 'id'],
+            ['person_id' , 'id' , 'id' , 'orderable_id']
+        );
     }
 }

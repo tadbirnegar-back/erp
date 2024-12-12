@@ -82,4 +82,8 @@ class Course extends Model
         return $this->belongsToMany(Exam::class, 'course_exams', 'course_id', 'exam_id');
     }
 
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
+    }
 }

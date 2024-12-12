@@ -8,6 +8,7 @@ use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
@@ -22,9 +23,8 @@ class testController extends Controller
 
     public function run()
     {
-
         $userQuery = User::query();
-        $userQuery->joinRelationship('order'  , function ($join)  {
+        $userQuery->joinRelationship('order', function ($join) {
             $join->on('orders.orderable_id', '=', 1);
             $join->on('orders.orderable_type', '=', Enroll::class);
         });
