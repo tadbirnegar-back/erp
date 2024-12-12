@@ -95,10 +95,10 @@ class EnactmentController extends Controller
             $data = $request->all();
             $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounits, $user->id);
 
-            $districtIDs = $user->load('activeDistrictRecruitmentScript');
+//            $districtIDs = $user->load('activeDistrictRecruitmentScript');
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
-            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'), 'districtIDs' => $districtIDs]);
+            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'), 'districtIDs' => $ounits]);
         } catch (Exception $e) {
             return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
         }
@@ -146,6 +146,9 @@ class EnactmentController extends Controller
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 
+            $heyatOunit->ancestors[0]->load('meetingMembers');
+            $heyaatTemplateMembers = $heyatOunit->ancestors[0]->meetingMembers;
+
 
             if (isset($data['meetingID'])) {
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
@@ -176,11 +179,11 @@ class EnactmentController extends Controller
 
                 $this->attachFiles($enactment, $files);
 
-                $meeting = Meeting::find($data['meetingID']);
+                $meeting = Meeting::with('meetingMembers')->find($data['meetingID']);
 
 
                 foreach ($meeting->meetingMembers as $mm) {
-                    $newMember = $mm->replicate();
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
                     $newMember->save();
                 }
@@ -289,13 +292,13 @@ class EnactmentController extends Controller
                 $this->attachFiles($enactment, $files);
 
 
-                foreach ($heyaatTemplateMembers->meetingMembers as $mm) {
-                    $newMember = $mm->replicate();
+                foreach ($heyaatTemplateMembers as $mm) {
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
                     $newMember->save();
 
 
-                    $newMember = $mm->replicate();
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
                     $newMember->save();
                 }
@@ -307,7 +310,7 @@ class EnactmentController extends Controller
 
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 500);
+            return response()->json(['message' => 'مصوبه جدید ثبت نشد', $exception->getMessage(), $exception->getTrace(), $heyaatTemplateMembers], 500);
 
         }
     }
@@ -421,7 +424,7 @@ class EnactmentController extends Controller
 
                 if (!is_null($meetingTemplate)) {
                     foreach ($meetingTemplate->meetingMembers as $mm) {
-                        $newMM = $mm->replicate();
+                        $newMM = $mm->replicate(['laravel_through_key']);
                         $newMM->meeting_id = $meeting->id;
                         $newMM->save();
                     }
@@ -444,7 +447,7 @@ class EnactmentController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
 
-            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در انجام عملیات'], 500);
         }
 
     }
