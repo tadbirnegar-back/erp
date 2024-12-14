@@ -47,7 +47,7 @@ class TeacherController extends Controller
         return response()->json($situation);
     }
 
-    public function CourseList(Request $request): JsonResponse
+    public function courseList(Request $request): JsonResponse
     {
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;

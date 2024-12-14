@@ -26,7 +26,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'show']);
     Route::put('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'update']);
     Route::delete('/students/delete/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'destroy']);
-    Route::post('courses/list', [TeacherController::class, 'CourseList']);
+    Route::post('courses/list', [TeacherController::class, 'courseList']);
 
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {

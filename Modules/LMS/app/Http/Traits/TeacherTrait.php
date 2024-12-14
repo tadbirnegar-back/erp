@@ -60,19 +60,21 @@ trait TeacherTrait
         return $teacher->load('workForce');
     }
 
-    public function CourseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
+    public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['title'] ?? null;
-        $query = Course::query()->withCount(
-            'chapters');
-        $query->withCount(['lessons', 'questions', 'chapters'])
-            ->with('statuses')
-            ->when($searchTerm, function ($query, $searchTerm) {
-                $query->$query->where('person.display_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('MATCH(course.title) AGAINST(?)', [$searchTerm]);
-            });
 
+        $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
+            ->with('statuses');
+//        $query->when($searchTerm, function ($query, $searchTerm) {
+//            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+//                ->orWhereRaw('MATCH(title) AGAINST(?)', [$searchTerm]);
+//        });
+        $query->when($searchTerm, function ($query, $searchTerm) {
+            $query->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        });
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
+
 
 }
