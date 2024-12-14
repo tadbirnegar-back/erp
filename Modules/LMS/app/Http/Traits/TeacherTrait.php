@@ -86,7 +86,7 @@ trait TeacherTrait
         $teacherQuery = WorkForce::query();
 //        $teacherQuery->where('workforceable_type', '=', Teacher::class);
 
-        $teacherQuery->joinRelationship('person')->where('persons.id', '=', 'work_forces.person_id');
+        $teacherQuery->joinRelationship('person');
 
         $teacherQuery->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
             ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%')

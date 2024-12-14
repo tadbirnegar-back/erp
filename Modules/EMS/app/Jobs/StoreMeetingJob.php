@@ -62,10 +62,10 @@ class StoreMeetingJob implements ShouldQueue
 
 
         //For Day
-        $daywithoutZero = $this->removeLeftZero($monthNumber);
+        $daywithoutZero = $this->removeLeftZero($day);
 
         //message text for date
-        $messageTextDate = "$daywithoutZero $monthName $parts[0]";
+        $messageTextDate = $daywithoutZero['day'] . ' ' . $monthName . ' ساعت ' . $daywithoutZero['time'];
 
 //        Log::info($messageTextDate);
 
