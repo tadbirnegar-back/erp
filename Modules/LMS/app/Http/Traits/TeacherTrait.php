@@ -65,10 +65,11 @@ trait TeacherTrait
         $searchTerm = $data['title'] ?? null;
         $query = Course::query()->withCount(
             'chapters');
-        $query->withCount(['lessons', 'questions'])
+        $query->withCount(['lessons', 'questions', 'chapters'])
             ->with('statuses')
-            ->withCount('chapters')->when($searchTerm, function ($query, $searchTerm) {
-                $query->where('courses.title', 'like', '%' . $searchTerm . '%');
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->$query->where('person.display_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('MATCH(course.title) AGAINST(?)', [$searchTerm]);
             });
 
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
