@@ -63,18 +63,13 @@ trait TeacherTrait
     public function CourseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['title'] ?? null;
-        $query = Course::query()->with([
-            'chapters' => function ($query) {
-                $query->withCount('lessons')->with(['lessons' => function ($lessonQuery) {
-                    $lessonQuery->withCount('questions');
-                }]);
-            },
-            'statuses'
-        ])
+        $query = Course::query()->withCount(
+            'chapters');
+        $query->withCount(['lessons', 'questions'])
+            ->with('statuses')
             ->withCount('chapters')->when($searchTerm, function ($query, $searchTerm) {
                 $query->where('courses.title', 'like', '%' . $searchTerm . '%');
             });
-
 
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }

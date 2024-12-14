@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Course extends Model
 {
     use HasFactory;
+
 
     /**
      * The attributes that are mass assignable.
@@ -85,6 +87,24 @@ class Course extends Model
     public function exams()
     {
         return $this->belongsToMany(Exam::class, 'course_exams', 'course_id', 'exam_id');
+    }
+
+    public function lessons()
+    {
+        return $this->hasManyDeep(Lesson::class, [Chapter::class],
+            ['course_id', 'chapter_id'],
+            ['id', 'id']
+        );
+    }
+
+    use HasRelationships;
+
+    public function questions()
+    {
+        return $this->hasManyDeep(Question::class, [Chapter::class, Lesson::class],
+            ['course_id', 'chapter_id', 'lesson_id'],
+            ['id', 'id', 'id']
+        );
     }
 
 }
