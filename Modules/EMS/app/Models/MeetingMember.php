@@ -20,7 +20,11 @@ class MeetingMember extends Pivot
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'employee_id',
+        'meeting_id',
+        'mr_id',
+    ];
 
     public $timestamps = false;
     protected $table = 'meeting_members';

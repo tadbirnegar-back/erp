@@ -19,6 +19,8 @@ use Modules\LMS\app\Http\Controllers\TeacherController;
 //});
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/teacher/list', [TeacherController::class, 'index']);
+    Route::post('/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
     Route::post('/students/search', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'isPersonStudent']);
     Route::post('/dehyari/add', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'store']);
     Route::post('/students/list', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'index']);
@@ -29,7 +31,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
-    Route::post('/lms/teacher/add', [TeacherController::class, 'store']);
+    Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
 
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {

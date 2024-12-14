@@ -6,8 +6,6 @@ use Kirschbaum\PowerJoins\PowerJoins;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
-use Modules\PersonMS\app\Models\Religion;
-use Modules\PersonMS\app\Models\ReligionType;
 
 trait TeacherTrait
 {
@@ -24,17 +22,17 @@ trait TeacherTrait
             $data = $result;
         } else {
             $message = 'found';
+            $religion = $result->personable->religion;
+            $religion_typee = $result->personable->religionType;
+            $levelOfEducation = $result->workForce->load('educationalRecords.levelOfEducation');
             $data = [
                 'result' => $result,
-                'educationalRecords' => $result->workForce?->educationalRecords ?? null
+                'educationalRecords' => $levelOfEducation ?? null,
+                'religion' => $religion,
+                'religionType' => $religion_typee,
             ];
         }
-
-        $religions = Religion::all();
-        $religionType = ReligionType::all();
-
-
-        return ['data' => $data, 'message' => $message, "religions" => $religions, "religion_type" => $religionType];
+        return ['data' => $data, 'message' => $message];
 
     }
 
@@ -60,4 +58,44 @@ trait TeacherTrait
     }
 
 
+    public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
+    {
+
+        $searchTerm = $data['display_name'] ?? null;
+
+        $teacherQuery = WorkForce::query();
+        $teacherQuery->joinRelationship('person');
+        $teacherQuery->where('workforceable_type', Teacher::class);
+        $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
+            $query->whereRaw("MATCH (display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+            $query->where('person', function ($query) use ($searchTerm) {
+                $query->where('person.display_name', 'like', '%' . $searchTerm . '%')
+                    ->where('MATCH(person.display_name) AGAINST(?)', [$searchTerm]);
+            });
+        });
+
+        $teacherQuery->with(['person:id,display_name']);
+        $result = $teacherQuery->paginate($perPage, page: $pageNumber);
+
+        return $result;
+
+    }
+
+    public function teacherLiveSearch($request = [])
+    {
+        $searchTerm = $request['name'];
+
+        $teacherQuery = WorkForce::query();
+//        $teacherQuery->where('workforceable_type', '=', Teacher::class);
+
+        $teacherQuery->joinRelationship('person');
+
+        $teacherQuery->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+            ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%')
+            ->where('workforceable_type', '=', Teacher::class);
+        $teacherQuery->with(['person']);
+        return $teacherQuery->get();
+    }
 }
+//        $teacherQuery->joinRelationship('teacher')->where('teachers.id', '=', 'work_forces.workforceable_id');
+//        $teacherQuery->joinRelationship('person')->where('persons.id', '=', 'work_forces.person_id');

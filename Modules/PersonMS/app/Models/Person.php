@@ -13,6 +13,7 @@ use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\Database\factories\PersonFactory;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\LaravelAdjacencyList\Tests\IdeHelper\Models\User;
@@ -66,6 +67,17 @@ class Person extends Model
     {
         return $this->hasOne(WorkForce::class, 'person_id');
     }
+
+    public function teacherWorkforce(): HasOne
+    {
+        return $this->hasOne(WorkForce::class, 'person_id')->where('workforceable_type', Teacher::class);
+    }
+
+    public function workForces(): HasMany
+    {
+        return $this->hasMany(WorkForce::class, 'person_id');
+    }
+
 
     public function addresses(): HasMany
     {

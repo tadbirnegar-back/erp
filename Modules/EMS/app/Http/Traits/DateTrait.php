@@ -44,10 +44,27 @@ trait DateTrait
 
     public function removeLeftZero($number)
     {
-        // Replace Persian ۰ with 0, then remove leading zeros
-        $number = str_replace('۰', '0', $number);  // Convert Persian digits to Western digits
-        return ltrim($number, '0');  // Remove leading zeros
+
+        $parts = explode(' ', $number);
+
+        $parts[0] = str_replace('۰', '0', $parts[0]);
+
+        // If there's a time portion (i.e., there are more than 1 parts after the explode)
+        if (count($parts) > 1) {
+            // The first part is the day, remove leading zeros and replace with Persian zero
+            $day = str_replace('0', '۰', ltrim($parts[0], '0'));
+
+            // The second part is the time, keep it as it is
+            $time = $parts[1];
+
+            // Combine day and time in the desired format: "day ساعت time"
+            return ['day' => $day, 'time' => $time];
+        } else {
+            // If there is no time portion, just remove leading zeros and replace with Persian zero
+            return str_replace('0', '۰', ltrim($parts[0], '0'));
+        }
     }
+
 
     public function DateformatToHumanReadbleJalali($date)
     {
@@ -67,7 +84,6 @@ trait DateTrait
 
         // For Day
         $daywithoutZero = $this->removeLeftZero($day);
-
         // Message text for date
         $humanReadableDate = "$daywithoutZero $monthName $parts[0]";
 

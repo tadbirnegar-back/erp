@@ -11,6 +11,7 @@
         "php": "^8.2",
         "ajcastro/eager-load-pivot-relations": "^0.3.0",
         "guzzlehttp/guzzle": "^7.2",
+        "kirschbaum-development/eloquent-power-joins": "^4.0",
         "laravel/framework": "10.42.*",
         "laravel/passport": "^11.8",
         "laravel/sanctum": "^3.3",
