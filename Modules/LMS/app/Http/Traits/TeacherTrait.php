@@ -65,13 +65,9 @@ trait TeacherTrait
         $teacherQuery->joinRelationship('person');
         $teacherQuery->where('workforceable_type', Teacher::class);
         $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
-            $query->whereRaw("MATCH (display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
-            $query->where('person', function ($query) use ($searchTerm) {
-                $query->where('person.display_name', 'like', '%' . $searchTerm . '%')
-                    ->where('MATCH(person.display_name) AGAINST(?)', [$searchTerm]);
-            });
+            $query->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%');
         });
-
         $teacherQuery->with(['person:id,display_name']);
         $result = $teacherQuery->paginate($perPage, page: $pageNumber);
 
