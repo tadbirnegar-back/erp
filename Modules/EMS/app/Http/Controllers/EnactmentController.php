@@ -95,10 +95,10 @@ class EnactmentController extends Controller
             $data = $request->all();
             $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounits, $user->id);
 
-//            $districtIDs = $user->load('activeDistrictRecruitmentScript');
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
-            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'), 'districtIDs' => $ounits]);
+            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'),
+            ]);
         } catch (Exception $e) {
             return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
         }
@@ -146,8 +146,9 @@ class EnactmentController extends Controller
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 
-            $heyatOunit->ancestors[0]->load('meetingMembers');
-            $heyaatTemplateMembers = $heyatOunit->ancestors[0]->meetingMembers;
+            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->load('meetingMembers');
+
+            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->meetingMembers;
 
 
             if (isset($data['meetingID'])) {
@@ -179,7 +180,7 @@ class EnactmentController extends Controller
 
                 $this->attachFiles($enactment, $files);
 
-                $meeting = Meeting::with('meetingMembers')->find($data['meetingID']);
+                $meeting = Meeting::find($data['meetingID']);
 
 
                 foreach ($meeting->meetingMembers as $mm) {
@@ -310,7 +311,7 @@ class EnactmentController extends Controller
 
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'مصوبه جدید ثبت نشد', $exception->getMessage(), $exception->getTrace(), $heyaatTemplateMembers], 500);
+            return response()->json(['message' => 'مصوبه جدید ثبت نشد', $exception->getMessage(), $exception->getTrace()], 500);
 
         }
     }
@@ -447,7 +448,7 @@ class EnactmentController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
 
-            return response()->json(['message' => 'خطا در انجام عملیات'], 500);
+            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => $e->getMessage()], 500);
         }
 
     }

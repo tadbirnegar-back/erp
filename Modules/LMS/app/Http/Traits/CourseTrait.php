@@ -7,17 +7,30 @@ use Modules\LMS\app\Models\Course;
 
 trait CourseTrait
 {
-
-
-    public function courseStore(array $data)
+    public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
+        $searchTerm = $data['title'] ?? null;
+
+        $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
+            ->with('latestStatus');
+        $query->whereHas('latestStatus', function ($query) {
+            $query->whereIn('name', ['پایان رسیده', 'در انتظار برگزاری', 'درحال برگزاری', 'پیش نویس ', ' حذف شده', ' قبول',]);
+        });
+
+        $query->when($searchTerm, function ($query, $searchTerm) {
+            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        });
+        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
+    }
+
+    public function courseStore(array $data){
+
         $prePreparedData = $this->courseDataPreparation($data);
         $course = Course::create($prePreparedData[0]);
-
         return $course;
 
     }
-
     public function courseDataPreparation(array $data)
     {
         if (!isset($data[0]) || !is_array($data[0])) {

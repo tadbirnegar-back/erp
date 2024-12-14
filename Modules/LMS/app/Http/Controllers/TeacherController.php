@@ -81,4 +81,6 @@ class TeacherController extends Controller
         $situation = $this->isPersonTeacher($request->nationalCode);
         return response()->json($situation);
     }
+
+
 }

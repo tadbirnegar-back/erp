@@ -4,11 +4,14 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Modules\LMS\app\Http\Traits\CourseTrait;
 
 class CourseController extends Controller
 {
     public array $data = [];
+    use CourseTrait;
 
     /**
      * Display a listing of the resource.
@@ -58,5 +61,17 @@ class CourseController extends Controller
         //
 
         return response()->json($this->data);
+    }
+
+    public function courseList(Request $request): JsonResponse
+    {
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+
+        $result = $this->courseIndex($perPage, $pageNum, $data);
+
+        return response()->json($result);
+
     }
 }
