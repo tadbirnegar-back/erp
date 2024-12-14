@@ -34,7 +34,6 @@ trait CourseTrait
         $answerSheet = $user->answerSheets[0] ?? null; // Handle potential null
         $student = $user->student;
 
-
         $AllowToDos = [
             "canRead" => false,
             "canTrainingExam" => false,
@@ -116,24 +115,44 @@ trait CourseTrait
             ] : null;
         })->filter()->values();
 
-        //Add Aditional Infos To Code
-        if ($statusName === CourseStatusEnum::ENDED->value && $isJoined) {
-            $AllowToDos['canRead'] = true;
-            $AllowToDos['canReportCard'] = true;
-            $AllowToDos['canDegree'] = true;
-        }
+        //Buttons To render if Joined
         if ($isJoined) {
-            $AdditionalData["percentage"] = $this -> calculateLessonCompletion($componentsWithData);
-            if($AdditionalData["percentage"]["completion_percentage"] == 100){
-                $AllowToDos["canFinalExam"] = true;
+            $AllowToDos['joined'] = true;
+            $AdditionalData["percentage"] = $this->calculateLessonCompletion($componentsWithData);
+            if ($course->latestStatus->name == $this::$presenting) {
+                $AllowToDos['canRead'] = true;
+                $AllowToDos['joined'] = true;
+                $AllowToDos['canTrainingExam'] = true;
+                $AllowToDos['canReportCard'] = true;
+
+                if ($AdditionalData["percentage"]["completion_percentage"] == 100) {
+                    $AllowToDos["canFinalExam"] = true;
+                }
+
+                if ($isApproveFromExam) {
+                    $AllowToDos["canFinalExam"] = false;
+                    $AllowToDos['canDegree'] = true;
+                }
+
+            }
+
+            if ($course->latestStatus->name == $this::$ended) {
+                $AllowToDos['canRead'] = true;
+                $AllowToDos['canReportCard'] = true;
+                $AllowToDos['canDegree'] = true;
+            }
+
+            if($course->latestStatus->name == $this::$canceled)
+            {
+                //
             }
         }
-
-        return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos , "AdditionalData" => $AdditionalData];
+        return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
 
 
-    private function calculateLessonCompletion($response)
+    private
+    function calculateLessonCompletion($response)
     {
         $totalLessons = 0;
         $completedLessons = 0;
@@ -180,7 +199,8 @@ trait CourseTrait
         ];
     }
 
-    private function getComponentToRenderLMS($isJoined, $status, $isApproveFromExam)
+    private
+    function getComponentToRenderLMS($isJoined, $status, $isApproveFromExam)
     {
         $statusCollection = collect($this->getByJoinAndStatusAndApproveCombination($isJoined, $status, $isApproveFromExam));
         $filtreStatus = collect($statusCollection->get($status));
@@ -196,7 +216,8 @@ trait CourseTrait
     }
 
 
-    private function getByJoinAndStatusAndApproveCombination()
+    private
+    function getByJoinAndStatusAndApproveCombination()
     {
         $combo = [
             $this::$canceled => [
@@ -264,17 +285,20 @@ trait CourseTrait
     }
 
 
-    public function coursePresentingStatus()
+    public
+    function coursePresentingStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
     }
 
-    public function courseCanceledStatus()
+    public
+    function courseCanceledStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
     }
 
-    public function courseEndedStatus()
+    public
+    function courseEndedStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
     }
