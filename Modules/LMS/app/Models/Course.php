@@ -4,9 +4,11 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Course extends Model
 {
@@ -57,9 +59,8 @@ class Course extends Model
 
     public function latestStatus()
     {
-        return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id')
-            ->orderBy("id" , 'desc')
-            ->limit(1);
+        return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->latest('status_course.id');
     }
 
     public function enrolls()
@@ -86,4 +87,46 @@ class Course extends Model
     {
         return Status::all()->where('model', '=', self::class);
     }
+
+    public function prerequisiteCourses()
+    {
+        return $this->belongsToMany(
+            self::class,
+            'course_course',
+            'main_course_id',
+            'prerequisite_course_id'
+        );
+    }
+
+    /**
+     * Get the courses that depend on this course as a prerequisite.
+     */
+    public function dependentCourses()
+    {
+        return $this->belongsToMany(
+            self::class,
+            'course_course',
+            'prerequisite_course_id',
+            'main_course_id'
+        );
+    }
+    use HasRelationships;
+    public function lessonStudyLog()
+    {
+        return $this->hasManyDeep(LessonStudyLog::class, [Chapter::class , Lesson::class] ,
+            ['course_id' , 'chapter_id' , 'lesson_id'] ,
+            ['id' , 'id' , 'id']
+        );
+    }
+
+    public function lessons()
+    {
+        return $this -> hasManyDeep(Lesson::class , [Chapter::class] ,
+            ['course_id' , 'chapter_id'],
+            ['id' , 'id']
+        );
+    }
+
+
+
 }

@@ -2,12 +2,12 @@
 
 namespace Modules\PayStream\app\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Modules\PayStream\Database\factories\StatusOrderFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\PayStream\Database\factories\ProcessStatusFactory;
 use Modules\StatusMS\app\Models\Status;
 
-class StatusOrder extends Model
+class ProcessStatus extends Model
 {
     use HasFactory;
 
@@ -15,16 +15,18 @@ class StatusOrder extends Model
      * The attributes that are mass assignable.
      */
 
+    public $timestamps = false;
 
     protected $fillable = [
         'status_id',
         'order_id',
-        'id'
+        'id',
+        'created_date',
+        'creator_id'
     ];
 
-    protected $table = 'status_order';
+    protected $table = 'process_status';
 
-    public $timestamps = false;
 
     public function status()
     {
@@ -35,5 +37,6 @@ class StatusOrder extends Model
     {
         return $this->belongsTo(Order::class);
     }
+
 
 }

@@ -1,0 +1,26 @@
+[
+    {
+        "name": "لغو شده",
+        "className": "primary"
+    },
+    {
+        "name": "به پایان رسیده",
+        "className": "primary"
+    },
+    {
+        "name": "در حال برگزاری",
+        "className": "primary"
+    },
+    {
+        "name": "پیش نویس",
+        "className": "primary"
+    },
+    {
+        "name": "حذف شده",
+        "className": "primary"
+    },
+    {
+        "name": "برگزار شونده",
+        "className": "primary"
+    }
+]

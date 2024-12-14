@@ -17,7 +17,9 @@ class LMSDatabaseSeeder extends Seeder
 //             ModuleCategorySeeder::class,
 //             ModuleSeeder::class,
 //             PermissionSeeder::class,
-            AnswerSheetStatusSeeder::class,
+//            AnswerSheetStatusSeeder::class,
+//            ProcessStatusSeeder::class,
+            CourseStatusSeeder::class,
         ]);
     }
 }

@@ -12,6 +12,9 @@ use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Models\Chapter;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
 use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
@@ -23,14 +26,37 @@ class testController extends Controller
 
     public function run()
     {
-        $userQuery = User::query();
-        $userQuery->joinRelationship('order', function ($join) {
-            $join->on('orders.orderable_id', '=', 1);
-            $join->on('orders.orderable_type', '=', Enroll::class);
-        });
-        \DB::enableQueryLog();
-        $order = $userQuery->first();
-        dd(\DB::getQueryLog());
+        $user = User::with('student')->find(2174);
+
+        $course = Course::find(1);
+
+        $course->load(['lessonStudyLog' => function ($query) use ($user) {
+            $query->where('student_id' , $user->student->id)
+                ->where('is_completed' , true);
+        }])->find(1);
+//        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
+//            $query->where('student_id' , $user -> student -> id);
+//        }] , 'lessons')
+//            ->find(1);
+
+        return response()->json($course);
+
+//        $CoursecomponentsToRender =  collect([
+//            'MainCourse' => ['latestStatus']
+//        ]);
+
+//        $mainCourses = Course::with([
+//                'latestStatus',
+//                'cover',
+//                'video',
+//                'privacy',
+//                'prerequisiteCourses',
+//                'chapters.activeLessons'
+//            ])
+//            ->get();
+
+//        $course = Chapter::with('activeLessons')->find(1);
+//        return response() -> json($course);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
