@@ -12,7 +12,10 @@ trait CourseTrait
         $searchTerm = $data['title'] ?? null;
 
         $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
-            ->with('latestStatus')->whereIn('name', ['پایان رسیده', 'در انتظار برگزاری', 'درحال برگزاری', 'پیش نویس', 'حذف شده', 'قبول', 'دوره به پایان رسیده']);
+            ->with('latestStatus');
+        $query->whereHas('latestStatus', function ($query) {
+            $query->whereIn('name', ['پایان رسیده', 'در انتظار برگزاری', 'درحال برگزاری', 'پیش نویس ', ' حذف شده', ' قبول',]);
+        });
 
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where('courses.title', 'like', '%' . $searchTerm . '%')
