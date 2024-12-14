@@ -146,6 +146,10 @@ class EnactmentController extends Controller
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 
+            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->load('meetingMembers');
+
+            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->meetingMembers;
+
 
             if (isset($data['meetingID'])) {
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
@@ -180,7 +184,7 @@ class EnactmentController extends Controller
 
 
                 foreach ($meeting->meetingMembers as $mm) {
-                    $newMember = $mm->replicate();
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
                     $newMember->save();
                 }
@@ -289,13 +293,13 @@ class EnactmentController extends Controller
                 $this->attachFiles($enactment, $files);
 
 
-                foreach ($heyaatTemplateMembers->meetingMembers as $mm) {
-                    $newMember = $mm->replicate();
+                foreach ($heyaatTemplateMembers as $mm) {
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
                     $newMember->save();
 
 
-                    $newMember = $mm->replicate();
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
                     $newMember->save();
                 }
@@ -421,7 +425,7 @@ class EnactmentController extends Controller
 
                 if (!is_null($meetingTemplate)) {
                     foreach ($meetingTemplate->meetingMembers as $mm) {
-                        $newMM = $mm->replicate();
+                        $newMM = $mm->replicate(['laravel_through_key']);
                         $newMM->meeting_id = $meeting->id;
                         $newMM->save();
                     }
