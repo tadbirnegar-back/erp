@@ -68,7 +68,7 @@ trait TeacherTrait
             $query->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
                 ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%');
         });
-        $teacherQuery->with(['person:id,display_name']);
+        $teacherQuery->with(['person:id,display_name', 'person.avatar']);
         $result = $teacherQuery->paginate($perPage, page: $pageNumber);
 
         return $result;
