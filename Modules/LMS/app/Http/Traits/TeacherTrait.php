@@ -4,7 +4,6 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Kirschbaum\PowerJoins\PowerJoins;
 use Modules\HRMS\app\Models\WorkForce;
-use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Religion;
@@ -58,22 +57,6 @@ trait TeacherTrait
             'isar_id' => $data['isar_id'] ?? null,
         ]);
         return $teacher->load('workForce');
-    }
-
-    public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
-    {
-        $searchTerm = $data['title'] ?? null;
-
-        $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
-            ->with('statuses');
-//        $query->when($searchTerm, function ($query, $searchTerm) {
-//            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-//                ->orWhereRaw('MATCH(title) AGAINST(?)', [$searchTerm]);
-//        });
-        $query->when($searchTerm, function ($query, $searchTerm) {
-            $query->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
-        });
-        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 
 

@@ -47,15 +47,5 @@ class TeacherController extends Controller
         return response()->json($situation);
     }
 
-    public function courseList(Request $request): JsonResponse
-    {
-        $data = $request->all();
-        $perPage = $data['perPage'] ?? 10;
-        $pageNum = $data['pageNum'] ?? 1;
 
-        $result = $this->CourseIndex($perPage, $pageNum, $data);
-
-        return response()->json($result);
-
-    }
 }
