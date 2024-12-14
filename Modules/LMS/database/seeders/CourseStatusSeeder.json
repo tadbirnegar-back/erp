@@ -1,0 +1,38 @@
+[
+    {
+        "name": "در حال برگزاری",
+        "className": "success"
+    },
+    {
+        "name": "لغو شده",
+        "className": "danger"
+    },
+    {
+        "name": "پایان رسیده",
+        "className": "danger"
+    },
+    {
+        "name": "در انتظار برگزاری ",
+        "className": "danger"
+    },
+    {
+        "name": "درحال برگزاری",
+        "className": "danger"
+    },
+    {
+        "name": "پیش نویس ",
+        "className": "danger"
+    },
+    {
+        "name": " حذف شده",
+        "className": "danger"
+    },
+    {
+        "name": " قبول",
+        "className": "danger"
+    },
+    {
+        "name": "دوره به پایان رسیده ",
+        "className": "danger"
+    }
+]

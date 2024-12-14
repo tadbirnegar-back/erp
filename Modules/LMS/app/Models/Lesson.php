@@ -53,4 +53,10 @@ class Lesson extends Model
     {
         return $this->hasMany(Content::class, 'lesson_id', 'id');
     }
+
+    public function questions()
+    {
+        return $this->hasMany(Question::class, 'lesson_id', 'id');
+    }
+
 }

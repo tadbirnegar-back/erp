@@ -17,5 +17,7 @@
     "OUnitMS": true,
     "Gateway": true,
     "EMS": true,
-    "PayStream": true
+    "PayStream": true,
+    "Controller": true,
+    "CourseController": true
 }
