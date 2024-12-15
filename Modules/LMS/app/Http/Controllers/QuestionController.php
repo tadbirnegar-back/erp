@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use training\Http\Traits\QuestionTrait;
 
 class QuestionController extends Controller
 {
+    use QuestionTrait;
+
     /**
      * Display a listing of the resource.
      */
@@ -33,7 +36,9 @@ class QuestionController extends Controller
         try {
             DB::beginTransaction();
 
-
+            $question = $this->storeQuestion;
+            DB::commit();
+            return back()->with('success', 'سوال با موفقیت ثبت شد.');
         } catch (\Exception $e) {
             return back()->with('error', 'خطایی در ثبت سوال رخ داده است.');
         }
