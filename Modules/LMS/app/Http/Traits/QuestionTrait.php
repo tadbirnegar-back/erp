@@ -2,6 +2,7 @@
 
 namespace training\Http\Traits;
 
+use Modules\LMS\app\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Question;
 
 trait QuestionTrait
@@ -19,12 +20,17 @@ trait QuestionTrait
         $question->status_id = $status->id;
         $question->create_date = $data['create_date'] ?? null;
         $question->save();
-        return $question->load();
+        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository');
 
     }
 
-    public function questionStatus()
+    public function questionActiveStatus()
     {
-        return Question::status()->firstWhere('name', '=', 'فعال');
+        return Question::status()->firstWhere('name', QuestionsEnum::ACTIVE->value);
+    }
+
+    public function questionInActiveStatus()
+    {
+        return Question::status()->firstWhere('name', QuestionsEnum::IN_ACTIVE->value);
     }
 }
