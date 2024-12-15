@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
@@ -19,6 +20,7 @@ class CourseController extends Controller
     public function show($id)
     {
         try {
+            DB::beginTransaction();
             $course = Course::with('latestStatus')->findOrFail($id);
             $user = Auth::user();
             if (is_null($course)) {
@@ -26,8 +28,10 @@ class CourseController extends Controller
             }
 
             $componentsToRenderWithData = $this -> courseShow($course , $user);
+            DB::commit();
             return response()->json($componentsToRenderWithData);
         }catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['error' => $e->getMessage()]);
         }
     }
