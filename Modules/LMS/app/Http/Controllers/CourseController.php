@@ -4,19 +4,17 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use http\Client\Curl\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 
 class CourseController extends Controller
 {
     use CourseTrait;
+
     public function show($id)
     {
         try {
@@ -27,10 +25,10 @@ class CourseController extends Controller
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
             }
 
-            $componentsToRenderWithData = $this -> courseShow($course , $user);
+            $componentsToRenderWithData = $this->courseShow($course, $user);
             DB::commit();
             return response()->json($componentsToRenderWithData);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()]);
         }
@@ -60,13 +58,6 @@ class CourseController extends Controller
         //
     }
 
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        return view('lms::show');
-    }
 
     /**
      * Show the form for editing the specified resource.
