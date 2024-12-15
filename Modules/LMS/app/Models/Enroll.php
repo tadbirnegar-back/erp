@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\EnrollFactory;
+use Modules\PayStream\app\Models\Order;
 
 class Enroll extends Model
 {
@@ -37,6 +38,11 @@ class Enroll extends Model
     public function certificateFile()
     {
         return $this->belongsTo(File::class, 'certificate_file_id', 'id');
+    }
+
+    public function order()
+    {
+        return $this->morphOne(Order::class, 'orderable');
     }
 
 }

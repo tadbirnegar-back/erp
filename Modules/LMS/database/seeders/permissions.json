@@ -40,5 +40,11 @@
         "slug": "/lms/teachers/add",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست دوره های آموزشی",
+        "slug": "/lms/courses/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
     }
 ]
