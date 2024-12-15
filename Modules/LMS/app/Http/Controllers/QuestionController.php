@@ -5,7 +5,7 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class QuestionController extends Controller
 {
@@ -30,7 +30,13 @@ class QuestionController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        //
+        try {
+            DB::beginTransaction();
+
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'خطایی در ثبت سوال رخ داده است.');
+        }
     }
 
     /**

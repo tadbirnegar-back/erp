@@ -9,7 +9,8 @@ trait QuestionTrait
 {
     public function storeQuestion($data)
     {
-        $status->activeQuestionStatus();
+
+        $status = $this->questionActiveStatus();
         $question = new Question();
         $question->title = $data['title'];
         $question->creator_id = $data['creator_id'];
