@@ -23,18 +23,69 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
+        $query = Course::query()->
+        withCount(['chapters', 'lessons', 'questions'])
             ->with('latestStatus', 'cover');
-        $query->whereHas('latestStatus', function ($query) {
+        
+        $query->WhereHas('latestStatus', function ($query) {
             $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
-        });
+        })
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+                    ->whereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
 
-        $query->when($searchTerm, function ($query, $searchTerm) {
-            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
-        });
+            });
+
+//            ->leftJoin('chapters', 'courses.id', '=', 'chapters.course_id')
+//            ->leftJoin('lessons', 'chapters.id', '=', 'lessons.chapter_id')
+//            ->leftJoin('questions', 'lessons.id', '=', 'questions.lesson_id');
+//        $query->addSelect([
+//            'courses.id',
+//            'courses.title',
+//            'cover_id',
+//            'chapters.id as chapter_id',
+//            'chapters.title',
+//            'chapters.course_id',
+//            'chapters.status_id',
+//            'lessons.id as lesson_id',
+//            'lessons.chapter_id',
+//            'lessons.title',
+//            'questions.id as question_id',
+//            'questions.lesson_id',
+//            'questions.title',
+//            'questions.status_id',
+//        ]);
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
+
+//        public function teacherLiveSearch($request = [])
+//    {
+//        $searchTerm = $request['name'];
+//
+//        $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
+//            ->joinRelationship('person.avatar', function ($q) use ($searchTerm) {
+//
+//                $q
+//                    ->whereRaw('MATCH(persons.display_name) AGAINST(?)', [$searchTerm])
+//                    ->orWhere('persons.display_name', 'LIKE', '%' . $searchTerm . '%');
+//
+//            })
+//            ->addSelect([
+//                // Workforce table columns
+//                'work_forces.id',
+//                'work_forces.workforceable_type',
+//                'work_forces.workforceable_id',
+//                'work_forces.isMarried',
+//                // Person table columns
+//                'persons.id as person_id',
+//                'persons.display_name',
+//                // File table columns
+//                'files.slug',
+//                'files.size',
+//            ]);
+//        return $teacherQuery->get();
+//    }
+
 
     public function courseShow($course, $user)
     {
