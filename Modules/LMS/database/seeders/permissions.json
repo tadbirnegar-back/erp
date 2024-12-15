@@ -34,11 +34,5 @@
         "slug": "/students/delete/{id}",
         "moduleName": "LMS",
         "permissionTypeName": "operational"
-    },
-    {
-        "name": "افزودن مدرس",
-        "slug": "/lms/teachers/add",
-        "moduleName": "LMS",
-        "permissionTypeName": "sidebar"
     }
 ]
