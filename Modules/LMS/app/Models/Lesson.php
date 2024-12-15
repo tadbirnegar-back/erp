@@ -59,4 +59,11 @@ class Lesson extends Model
         return $this->hasMany(Question::class, 'lesson_id', 'id');
     }
 
+
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
+    }
+
+
 }

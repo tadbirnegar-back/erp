@@ -14,7 +14,6 @@ class Course extends Model
 {
     use HasFactory;
 
-
     /**
      * The attributes that are mass assignable.
      */
@@ -58,16 +57,11 @@ class Course extends Model
         return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id');
     }
 
-    public function latestStatus(): HasOneThrough
+    public function latestStatus()
     {
-        return $this->hasOneThrough(Status::class, Course::class, 'course_id', 'id', 'id', 'status_id')->orderBy('status_course.id', 'desc');
+        return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->latest('status_course.id');
     }
-
-//    public function latestStatus()
-//    {
-//        return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id')
-//            ->latest();
-//    }
 
     public function enrolls()
     {
@@ -89,15 +83,49 @@ class Course extends Model
         return $this->belongsToMany(Exam::class, 'course_exams', 'course_id', 'exam_id');
     }
 
-    public function lessons()
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->hasManyDeep(Lesson::class, [Chapter::class],
-            ['course_id', 'chapter_id'],
-            ['id', 'id']
+        return Status::all()->where('model', '=', self::class);
+    }
+
+    public function prerequisiteCourses()
+    {
+        return $this->belongsToMany(
+            self::class,
+            'course_course',
+            'main_course_id',
+            'prerequisite_course_id'
         );
     }
 
+    /**
+     * Get the courses that depend on this course as a prerequisite.
+     */
+    public function dependentCourses()
+    {
+        return $this->belongsToMany(
+            self::class,
+            'course_course',
+            'prerequisite_course_id',
+            'main_course_id'
+        );
+    }
     use HasRelationships;
+    public function lessonStudyLog()
+    {
+        return $this->hasManyDeep(LessonStudyLog::class, [Chapter::class , Lesson::class] ,
+            ['course_id' , 'chapter_id' , 'lesson_id'] ,
+            ['id' , 'id' , 'id']
+        );
+    }
+
+    public function lessons()
+    {
+        return $this -> hasManyDeep(Lesson::class , [Chapter::class] ,
+            ['course_id' , 'chapter_id'],
+            ['id' , 'id']
+        );
+    }
 
     public function questions()
     {
@@ -106,5 +134,6 @@ class Course extends Model
             ['id', 'id', 'id']
         );
     }
+
 
 }

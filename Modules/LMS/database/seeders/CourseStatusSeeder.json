@@ -1,38 +1,26 @@
 [
     {
-        "name": "در حال برگزاری",
-        "className": "success"
-    },
-    {
         "name": "لغو شده",
-        "className": "danger"
+        "className": "primary"
     },
     {
-        "name": "پایان رسیده",
-        "className": "danger"
+        "name": "به پایان رسیده",
+        "className": "primary"
     },
     {
-        "name": "در انتظار برگزاری ",
-        "className": "danger"
+        "name": "در حال برگزاری",
+        "className": "primary"
     },
     {
-        "name": "درحال برگزاری",
-        "className": "danger"
+        "name": "پیش نویس",
+        "className": "primary"
     },
     {
-        "name": "پیش نویس ",
-        "className": "danger"
+        "name": "حذف شده",
+        "className": "primary"
     },
     {
-        "name": " حذف شده",
-        "className": "danger"
-    },
-    {
-        "name": " قبول",
-        "className": "danger"
-    },
-    {
-        "name": "دوره به پایان رسیده ",
-        "className": "danger"
+        "name": "برگزار شونده",
+        "className": "primary"
     }
 ]
