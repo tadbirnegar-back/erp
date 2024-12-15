@@ -42,3 +42,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/courses/{id}', [CourseController::class, 'show']);
 });
 
+Route::post('/lms/courses/lesson/list', [CourseController::class, 'lesson_index']);
