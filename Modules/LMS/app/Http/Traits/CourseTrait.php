@@ -23,7 +23,7 @@ trait CourseTrait
         $searchTerm = $data['name'] ?? null;
 
         $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
-            ->with('latestStatus');
+            ->with(['latestStatus,cover']);
         $query->whereHas('latestStatus', function ($query) {
             $query->whereIn('name', [CourseStatusEnum::PRESENTING->value, CourseStatusEnum::PISHNEVIS->value, CourseStatusEnum::WAITING_TO_PRESENT->value]);
         });
