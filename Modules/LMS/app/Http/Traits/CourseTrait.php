@@ -23,41 +23,37 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        // ساخت کوئری اصلی
         $query = Course::query()
-            ->withCount(['chapters', 'lessons', 'questions']) // شمارش تعداد روابط
-            ->with(['latestStatus', 'cover', 'chapters.lessons.questions']); // بارگذاری روابط
-
-        // فیلتر کردن وضعیت‌ها
-        $query->whereHas('latestStatus', function ($query) {
-            $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
-        });
-
-        // جستجو در عنوان دوره‌ها
-        $query->when($searchTerm, function ($query, $searchTerm) {
-            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                ->whereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
-        });
-
-        // اضافه کردن ستون‌های مورد نظر
-        $query->join('chapters', 'courses.id', '=', 'chapters.course_id')
-            ->join('lessons', 'chapters.id', '=', 'lessons.chapter_id')
-            ->leftJoin('questions', 'lessons.id', '=', 'questions.lesson_id')
+            ->withCount(['chapters', 'lessons', 'questions']) // شمارش روابط
+            ->with([
+                'latestStatus',
+                'cover',
+                'chapters' => function ($query) {
+                    $query->addSelect(['id', 'course_id', 'title', 'status_id']); // ستون‌های خاص برای chapters
+                },
+                'chapters.lessons' => function ($query) {
+                    $query->addSelect(['id', 'chapter_id', 'title']); // ستون‌های خاص برای lessons
+                },
+                'chapters.lessons.questions' => function ($query) {
+                    $query->addSelect(['id', 'lesson_id', 'title', 'status_id']); // ستون‌های خاص برای questions
+                }
+            ])
+            ->whereHas('latestStatus', function ($query) {
+                $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
+            })
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+                    ->whereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+            })
             ->addSelect([
                 'courses.id',
                 'courses.title',
-                'courses.cover_id',
-                'chapters.id as chapter_id',
-                'chapters.title as chapter_title',
-                'lessons.id as lesson_id',
-                'lessons.title as lesson_title',
-                'questions.id as question_id',
-                'questions.title as question_title',
             ]);
 
-        // بازگشت داده‌ها با صفحه‌بندی
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
+
+
 
 //    public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
 //    {
