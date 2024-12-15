@@ -161,8 +161,7 @@ trait CourseTrait
                 $AllowToDos['canDegree'] = true;
             }
 
-            if($course->latestStatus->name == $this::$canceled)
-            {
+            if ($course->latestStatus->name == $this::$canceled) {
                 //
             }
         }
@@ -170,8 +169,7 @@ trait CourseTrait
     }
 
 
-    private
-    function calculateLessonCompletion($response)
+    private function calculateLessonCompletion($response)
     {
         $totalLessons = 0;
         $completedLessons = 0;
@@ -218,8 +216,7 @@ trait CourseTrait
         ];
     }
 
-    private
-    function getComponentToRenderLMS($isJoined, $status, $isApproveFromExam)
+    private function getComponentToRenderLMS($isJoined, $status, $isApproveFromExam)
     {
         $statusCollection = collect($this->getByJoinAndStatusAndApproveCombination($isJoined, $status, $isApproveFromExam));
         $filtreStatus = collect($statusCollection->get($status));
@@ -235,8 +232,7 @@ trait CourseTrait
     }
 
 
-    private
-    function getByJoinAndStatusAndApproveCombination()
+    private function getByJoinAndStatusAndApproveCombination()
     {
         $combo = [
             $this::$canceled => [
@@ -304,24 +300,19 @@ trait CourseTrait
     }
 
 
-    public
-    function coursePresentingStatus()
+    public function coursePresentingStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
     }
 
-    public
-    function courseCanceledStatus()
+    public function courseCanceledStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
     }
 
-    public
-    function courseEndedStatus()
+    public function courseEndedStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
     }
-
-
 }
 
