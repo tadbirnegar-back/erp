@@ -23,67 +23,78 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = Course::query()->
-        withCount(['chapters', 'lessons', 'questions'])
-            ->with('latestStatus', 'cover');
-        
-        $query->WhereHas('latestStatus', function ($query) {
+        // ساخت کوئری اصلی
+        $query = Course::query()
+            ->withCount(['chapters', 'lessons', 'questions']) // شمارش تعداد روابط
+            ->with(['latestStatus', 'cover', 'chapters.lessons.questions']); // بارگذاری روابط
+
+        // فیلتر کردن وضعیت‌ها
+        $query->whereHas('latestStatus', function ($query) {
             $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
-        })
-            ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                    ->whereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        });
 
-            });
+        // جستجو در عنوان دوره‌ها
+        $query->when($searchTerm, function ($query, $searchTerm) {
+            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+                ->whereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        });
 
-//            ->leftJoin('chapters', 'courses.id', '=', 'chapters.course_id')
-//            ->leftJoin('lessons', 'chapters.id', '=', 'lessons.chapter_id')
-//            ->leftJoin('questions', 'lessons.id', '=', 'questions.lesson_id');
-//        $query->addSelect([
-//            'courses.id',
-//            'courses.title',
-//            'cover_id',
-//            'chapters.id as chapter_id',
-//            'chapters.title',
-//            'chapters.course_id',
-//            'chapters.status_id',
-//            'lessons.id as lesson_id',
-//            'lessons.chapter_id',
-//            'lessons.title',
-//            'questions.id as question_id',
-//            'questions.lesson_id',
-//            'questions.title',
-//            'questions.status_id',
-//        ]);
+        // اضافه کردن ستون‌های مورد نظر
+        $query->join('chapters', 'courses.id', '=', 'chapters.course_id')
+            ->join('lessons', 'chapters.id', '=', 'lessons.chapter_id')
+            ->leftJoin('questions', 'lessons.id', '=', 'questions.lesson_id')
+            ->addSelect([
+                'courses.id',
+                'courses.title',
+                'courses.cover_id',
+                'chapters.id as chapter_id',
+                'chapters.title as chapter_title',
+                'lessons.id as lesson_id',
+                'lessons.title as lesson_title',
+                'questions.id as question_id',
+                'questions.title as question_title',
+            ]);
+
+        // بازگشت داده‌ها با صفحه‌بندی
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 
-//        public function teacherLiveSearch($request = [])
+//    public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
 //    {
-//        $searchTerm = $request['name'];
+//        $searchTerm = $data['name'] ?? null;
 //
-//        $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
-//            ->joinRelationship('person.avatar', function ($q) use ($searchTerm) {
-//
-//                $q
-//                    ->whereRaw('MATCH(persons.display_name) AGAINST(?)', [$searchTerm])
-//                    ->orWhere('persons.display_name', 'LIKE', '%' . $searchTerm . '%');
+//        $query = Course::query()->
+//        withCount(['chapters', 'lessons', 'questions'])
+//            ->with([
+//                'latestStatus',
+//                'cover',
+//                'chapters.lessons.questions',
+//            ]);
+//        $query->WhereHas('latestStatus', function ($query) {
+//            $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
+//        })
+//            ->when($searchTerm, function ($query, $searchTerm) {
+//                $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+//                    ->whereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
 //
 //            })
 //            ->addSelect([
-//                // Workforce table columns
-//                'work_forces.id',
-//                'work_forces.workforceable_type',
-//                'work_forces.workforceable_id',
-//                'work_forces.isMarried',
-//                // Person table columns
-//                'persons.id as person_id',
-//                'persons.display_name',
-//                // File table columns
-//                'files.slug',
-//                'files.size',
+//                'courses.id',
+//                'courses.title',
+//                'cover_id',
+//                'chapters.id as chapter_id',
+//                'chapters.title',
+//                'chapters.course_id',
+//                'chapters.status_id',
+//                'lessons.id as lesson_id',
+//                'lessons.chapter_id',
+//                'lessons.title',
+//                'questions.id as question_id',
+//                'questions.lesson_id',
+//                'questions.title',
+//                'questions.status_id',
 //            ]);
-//        return $teacherQuery->get();
+//        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
 //    }
 
 
