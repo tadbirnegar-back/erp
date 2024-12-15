@@ -40,5 +40,11 @@
         "slug": "/lms/teachers/add",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست مدرس",
+        "slug": "/teacher/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
     }
 ]
