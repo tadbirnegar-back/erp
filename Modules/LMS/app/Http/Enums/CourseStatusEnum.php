@@ -10,4 +10,6 @@ enum CourseStatusEnum: string
     case PISHNEVIS = "پیش نویس";
     case DELETED = "حذف شده";
     case ORGANIZER = "برگزار شونده";
+    case WAITING_TO_PRESENT = "در انتظار برگزاری";
+
 }
