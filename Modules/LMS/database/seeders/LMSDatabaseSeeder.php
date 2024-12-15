@@ -20,6 +20,7 @@ class LMSDatabaseSeeder extends Seeder
 //            AnswerSheetStatusSeeder::class,
 //            ProcessStatusSeeder::class,
             CourseStatusSeeder::class,
+            LessonStatusSeeder::class,
         ]);
     }
 }
