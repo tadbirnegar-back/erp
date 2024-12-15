@@ -17,5 +17,9 @@
     "OUnitMS": true,
     "Gateway": true,
     "EMS": true,
-    "PayStream": true
+    "PayStream": true,
+    "Migration": true,
+    "CreateAddFulltextDisplayNameTo": true,
+    "Persons": true,
+    "CreateAddFulltextDisplayNameToPersons": false
 }
