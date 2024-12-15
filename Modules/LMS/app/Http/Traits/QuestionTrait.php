@@ -2,9 +2,29 @@
 
 namespace training\Http\Traits;
 
+use Modules\LMS\app\Models\Question;
+
 trait QuestionTrait
 {
-    public function storeQuestion()
+    public function storeQuestion($data)
     {
+        $status->activeQuestionStatus();
+        $question = new Question();
+        $question->title = $data['title'];
+        $question->creator_id = $data['creator_id'];
+        $question->difficulty_id = $data['difficulty_id'] ?? null;
+        $question->lesson_id = $data['lesson_id'] ?? null;
+        $question->question_type_id = $data['question_type_id'] ?? null;
+        $question->repository_id = $data['repository_id'] ?? null;
+        $question->status_id = $status->id;
+        $question->create_date = $data['create_date'] ?? null;
+        $question->save();
+        return $question->load();
+
+    }
+
+    public function questionStatus()
+    {
+        return Question::status()->firstWhere('name', '=', 'فعال');
     }
 }
