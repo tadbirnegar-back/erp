@@ -47,4 +47,12 @@ class CourseController extends Controller
         return response()->json($result);
 
     }
+
+
+    public function registerCourse($id): JsonResponse
+    {
+        $course = Course::find($id);
+
+        return response()->json($course);
+    }
 }

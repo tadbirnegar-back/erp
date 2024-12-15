@@ -41,4 +41,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
     Route::get('/lms/courses/{id}', [CourseController::class, 'show']);
 });
-
+Route::post('/lms/register/course/{id}' , [CourseController::class, 'registerCourse']);
