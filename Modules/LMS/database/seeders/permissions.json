@@ -43,7 +43,13 @@
     },
     {
         "name": "لیست دوره های آموزشی",
-        "slug": "/lms/courses/list",
+        "slug": "/lms/courses/lesson/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مدیریت سوالات",
+        "slug": "/lms/courses/question/list",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"
     }
