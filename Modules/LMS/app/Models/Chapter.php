@@ -4,7 +4,6 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\Database\factories\ChapterFactory;
 use Modules\StatusMS\app\Models\Status;
 
