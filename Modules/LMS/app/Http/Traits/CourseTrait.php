@@ -23,35 +23,37 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = Course::query()
-            ->withCount(['chapters', 'lessons', 'questions']) // شمارش روابط
-            ->with([
-                'latestStatus',
-                'cover',
-                'chapters' => function ($query) {
-                    $query->addSelect(['id', 'course_id', 'title', 'status_id']); // ستون‌های خاص برای chapters
-                },
-                'chapters.lessons' => function ($query) {
-                    $query->addSelect(['id', 'chapter_id', 'title']); // ستون‌های خاص برای lessons
-                },
-                'chapters.lessons.questions' => function ($query) {
-                    $query->addSelect(['id', 'lesson_id', 'title', 'status_id']); // ستون‌های خاص برای questions
-                }
-            ])
-            ->whereHas('latestStatus', function ($query) {
-                $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
-            })
-            ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                    ->whereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        $courseQuery = Course::query()
+            ->joinRelationship('chapters.lessons.questions', function ($q) use ($searchTerm) {
+                $q->when($searchTerm, function ($query) use ($searchTerm) {
+                    $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                        ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
+                });
             })
             ->addSelect([
+                // Course table columns
                 'courses.id',
                 'courses.title',
-            ]);
+                // Chapters table columns
+                'chapters.id as chapter_id',
+                'chapters.title as chapter_title',
+                // Lessons table columns
+                'lessons.id as lesson_id',
+                'lessons.title as lesson_title',
+                // Questions table columns
+                'questions.id as question_id',
+                'questions.title as question_title',
+            ])
+            ->withCount([
+                'chapters',
+                'lessons',
+                'questions'
+            ])
+            ->paginate($perPage, ['*'], 'page', $pageNumber);
 
-        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
+        return $courseQuery;
     }
+
 
 
 
