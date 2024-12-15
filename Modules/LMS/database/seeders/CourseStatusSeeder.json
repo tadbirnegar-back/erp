@@ -22,5 +22,9 @@
     {
         "name": "برگزار شونده",
         "className": "primary"
+    },
+    {
+        "name": "در انتظار برگزاری",
+        "className": "primary"
     }
 ]

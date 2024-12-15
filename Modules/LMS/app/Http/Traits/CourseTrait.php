@@ -2,13 +2,9 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Illuminate\Support\Facades\Auth;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Enroll;
-use Psy\Util\Str;
 
 trait CourseTrait
 {
@@ -29,7 +25,7 @@ trait CourseTrait
         $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
             ->with('latestStatus');
         $query->whereHas('latestStatus', function ($query) {
-            $query->whereIn('name', ['پایان رسیده', 'در انتظار برگزاری', 'درحال برگزاری', 'پیش نویس ', ' حذف شده', ' قبول',]);
+            $query->whereIn('name', [CourseStatusEnum::PRESENTING->value, CourseStatusEnum::PISHNEVIS, CourseStatusEnum::WAITING_TO_PRESENT->value]);
         });
 
         $query->when($searchTerm, function ($query, $searchTerm) {
