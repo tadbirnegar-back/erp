@@ -21,7 +21,14 @@ class WorkForce extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['person_id', 'isMarried'];
+    protected $fillable = [
+        'workforceable_id',
+        'workforceable_type',
+        'isMarried',
+        'person_id',
+        'military_service_status_id',
+        'isar_id',
+    ];
     public $timestamps = false;
 
     protected static function newFactory(): WorkForceFactory

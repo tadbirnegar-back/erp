@@ -3,12 +3,20 @@
 namespace App\Http\Controllers;
 
 
+use Carbon\Carbon;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Models\Chapter;
+use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Enroll;
+use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
 
 
@@ -18,34 +26,37 @@ class testController extends Controller
 
     public function run()
     {
+        $user = User::with('student')->find(2174);
 
-        $person = Person::with([
-            'recruitmentScripts.latestStatus',
-            'recruitmentScripts.hireType',
-            'recruitmentScripts.scriptType',
-            'avatar',
-            'personable.religion',
-            'personable.religionType',
-            'user.roles',
-            'workForce.skills',
-            'workForce.educationalRecords.levelOfEducation',
-            'workForce.resumes',
-            'workForce.militaryStatus',
-            'workForce.relatives.relativeType',
-            'workForce.relatives.levelOfEducation',
-            'workForce.courseRecords',
-            'workForce.isars.isarStatus',
-            'workForce.isars.relativeType',
-            'recruitmentScripts.ounit.ancestorsAndSelf',
-            'employee.signatureFile',
-            'workForce.militaryService.militaryServiceStatus',
-            'workForce.militaryService.exemptionType'])
-            ->findOr(2096, function () {
+        $course = Course::find(1);
 
-                return response()->json(['message' => 'موردی یافت نشد'], 404);
-            });
+        $course->load(['lessonStudyLog' => function ($query) use ($user) {
+            $query->where('student_id' , $user->student->id)
+                ->where('is_completed' , true);
+        }])->find(1);
+//        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
+//            $query->where('student_id' , $user -> student -> id);
+//        }] , 'lessons')
+//            ->find(1);
 
-        return response()->json($person);
+        return response()->json($course);
+
+//        $CoursecomponentsToRender =  collect([
+//            'MainCourse' => ['latestStatus']
+//        ]);
+
+//        $mainCourses = Course::with([
+//                'latestStatus',
+//                'cover',
+//                'video',
+//                'privacy',
+//                'prerequisiteCourses',
+//                'chapters.activeLessons'
+//            ])
+//            ->get();
+
+//        $course = Chapter::with('activeLessons')->find(1);
+//        return response() -> json($course);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
