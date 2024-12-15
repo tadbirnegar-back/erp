@@ -20,7 +20,7 @@ trait CourseTrait
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $searchTerm = $data['title'] ?? null;
+        $searchTerm = $data['name'] ?? null;
 
         $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
             ->with('latestStatus');
