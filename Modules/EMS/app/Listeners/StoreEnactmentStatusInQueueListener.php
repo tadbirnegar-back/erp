@@ -38,12 +38,12 @@ class StoreEnactmentStatusInQueueListener
 //            $timeNow = Carbon::now();
 
 
-            $enactment = Enactment::with("latestMeeting")->find($enactmentStatus->enactment_id);
+            $enactment = Enactment::with("latestHeyaatMeeting")->find($enactmentStatus->enactment_id);
 
             // Ensure meeting_date is in Carbon instance (convert if necessary)
-            $meetingDate1 = $enactment->latestMeeting->getRawOriginal('meeting_date');
-            $meetingDate2 = $enactment->latestMeeting->getRawOriginal('meeting_date');
-            $meetingDate3 = $enactment->latestMeeting->getRawOriginal('meeting_date');
+            $meetingDate1 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
+            $meetingDate2 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
+            $meetingDate3 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
 
 //            $receiptMaxDay = $this->getReceptionMaxDays()?->value ?? 7;
 
@@ -74,7 +74,7 @@ class StoreEnactmentStatusInQueueListener
 
             $alertMembers = Carbon::parse($meetingDate3)->subDays(1);
 
-            StoreMeetingJob::dispatch($enactment->latestMeeting)->delay($alertMembers);
+            StoreMeetingJob::dispatch($enactment->latestHeyaatMeeting)->delay($alertMembers);
 
         }
     }

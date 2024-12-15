@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Kirschbaum\PowerJoins\PowerJoins;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
@@ -55,6 +56,7 @@ trait TeacherTrait
         ]);
         return $teacher->load('workForce');
     }
+
 
     public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
     {

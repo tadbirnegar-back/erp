@@ -95,10 +95,10 @@ class EnactmentController extends Controller
             $data = $request->all();
             $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounits, $user->id);
 
-            $districtIDs = $user->load('activeDistrictRecruitmentScript');
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
-            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'), 'districtIDs' => $districtIDs]);
+            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'),
+            ]);
         } catch (Exception $e) {
             return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
         }
@@ -132,15 +132,23 @@ class EnactmentController extends Controller
             $heyatOunit = OrganizationUnit::with([
                 'ancestors' => function ($query) {
                     $query->where('unitable_type', DistrictOfc::class)
-                        ->with('meetingMembers');
+                        ->with(['meetingMembers' => function ($query) {
+                            $query->whereHas('roles', function ($query) {
+                                $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                            });
+                        }]);
                 },
             ])->find($data['ounitID']);
 
             $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->meetingMembers;
 
-            if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 6) {
+            if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
+
+            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->load('meetingMembers');
+
+            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->meetingMembers;
 
 
             if (isset($data['meetingID'])) {
@@ -176,7 +184,7 @@ class EnactmentController extends Controller
 
 
                 foreach ($meeting->meetingMembers as $mm) {
-                    $newMember = $mm->replicate();
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
                     $newMember->save();
                 }
@@ -285,13 +293,13 @@ class EnactmentController extends Controller
                 $this->attachFiles($enactment, $files);
 
 
-                foreach ($heyaatTemplateMembers->meetingMembers as $mm) {
-                    $newMember = $mm->replicate();
+                foreach ($heyaatTemplateMembers as $mm) {
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
                     $newMember->save();
 
 
-                    $newMember = $mm->replicate();
+                    $newMember = $mm->replicate(['laravel_through_key']);
                     $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
                     $newMember->save();
                 }
@@ -303,7 +311,7 @@ class EnactmentController extends Controller
 
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => 'مصوبه جدید ثبت نشد'], 500);
+            return response()->json(['message' => 'مصوبه جدید ثبت نشد', $exception->getMessage(), $exception->getTrace()], 500);
 
         }
     }
@@ -417,7 +425,7 @@ class EnactmentController extends Controller
 
                 if (!is_null($meetingTemplate)) {
                     foreach ($meetingTemplate->meetingMembers as $mm) {
-                        $newMM = $mm->replicate();
+                        $newMM = $mm->replicate(['laravel_through_key']);
                         $newMM->meeting_id = $meeting->id;
                         $newMM->save();
                     }

@@ -45,14 +45,20 @@ class Lesson extends Model
 
     public function latestStatus()
     {
-        return $this->hasOneThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')
-            ->latest('status_lesson.id');
+        return $this->belongsToMany(Status::class, 'status_lesson', 'lesson_id', 'status_id')
+            ->latest();
     }
 
     public function contents()
     {
         return $this->hasMany(Content::class, 'lesson_id', 'id');
     }
+
+    public function questions()
+    {
+        return $this->hasMany(Question::class, 'lesson_id', 'id');
+    }
+
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {

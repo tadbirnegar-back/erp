@@ -4,7 +4,7 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Modules\AAA\app\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -127,6 +127,13 @@ class Course extends Model
         );
     }
 
+    public function questions()
+    {
+        return $this->hasManyDeep(Question::class, [Chapter::class, Lesson::class],
+            ['course_id', 'chapter_id', 'lesson_id'],
+            ['id', 'id', 'id']
+        );
+    }
 
 
 }

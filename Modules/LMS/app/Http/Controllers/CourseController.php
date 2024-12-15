@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use http\Client\Curl\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class CourseController extends Controller
     {
         try {
             $course = Course::with('latestStatus')->findOrFail($id);
-            $user = \Modules\AAA\app\Models\User::find(2174);
+            $user = Auth::user();
             if (is_null($course)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
             }
@@ -31,4 +32,15 @@ class CourseController extends Controller
         }
     }
 
+    public function courseList(Request $request): JsonResponse
+    {
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+
+        $result = $this->courseIndex($perPage, $pageNum, $data);
+
+        return response()->json($result);
+
+    }
 }

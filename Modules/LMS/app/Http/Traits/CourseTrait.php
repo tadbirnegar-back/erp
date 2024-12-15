@@ -21,6 +21,25 @@ trait CourseTrait
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
 
+
+    public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
+    {
+        $searchTerm = $data['title'] ?? null;
+
+        $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
+            ->with('latestStatus');
+        $query->whereHas('latestStatus', function ($query) {
+            $query->whereIn('name', ['پایان رسیده', 'در انتظار برگزاری', 'درحال برگزاری', 'پیش نویس ', ' حذف شده', ' قبول',]);
+        });
+
+        $query->when($searchTerm, function ($query, $searchTerm) {
+            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        });
+        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
+    }
+
+
     public function courseShow($course, $user)
     {
         //Take User Initial Info
@@ -305,3 +324,4 @@ trait CourseTrait
 
 
 }
+

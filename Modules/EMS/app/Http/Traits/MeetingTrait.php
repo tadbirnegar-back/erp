@@ -13,7 +13,7 @@ trait MeetingTrait
 
     public function storeMeeting(array|Collection $data)
     {
-        
+
 //        $normalizedDate = str_replace('-', '/', $data['newDate']);
 //        $englishJalaliDateString = \Morilog\Jalali\CalendarUtils::convertNumbers($normalizedDate, true);
 //        $dateTimeString = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat('Y/m/d', $englishJalaliDateString)
@@ -89,7 +89,7 @@ trait MeetingTrait
 
                 // If the member doesn't exist, replicate and add them to the new meeting
                 if (!$existingMember) {
-                    $newMember = $member->replicate(); // Create a copy of the member
+                    $newMember = $member->replicate(['laravel_through_key']); // Create a copy of the member
                     $newMember->meeting_id = $newMeeting->id; // Assign the new meeting's ID
                     $newMember->save(); // Save the replicated member
                 }

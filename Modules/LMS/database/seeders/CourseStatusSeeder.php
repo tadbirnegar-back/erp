@@ -4,11 +4,7 @@ namespace Modules\LMS\database\seeders;
 
 use DB;
 use Illuminate\Database\Seeder;
-use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Lesson;
-
 class CourseStatusSeeder extends Seeder
 {
     /**
