@@ -16,6 +16,7 @@ trait CourseTrait
     private static string $deleted = CourseStatusEnum::DELETED->value;
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
+    private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
@@ -25,7 +26,7 @@ trait CourseTrait
         $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
             ->with('latestStatus');
         $query->whereHas('latestStatus', function ($query) {
-            $query->whereIn('name', [CourseStatusEnum::PRESENTING->value, CourseStatusEnum::PISHNEVIS->value, CourseStatusEnum::WAITING_TO_PRESENT->value]);
+            $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
         });
 
         $query->when($searchTerm, function ($query, $searchTerm) {
