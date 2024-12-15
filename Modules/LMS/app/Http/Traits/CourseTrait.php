@@ -2,13 +2,9 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Illuminate\Support\Facades\Auth;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Enroll;
-use Psy\Util\Str;
 
 trait CourseTrait
 {
@@ -20,16 +16,17 @@ trait CourseTrait
     private static string $deleted = CourseStatusEnum::DELETED->value;
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
+    private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $searchTerm = $data['title'] ?? null;
+        $searchTerm = $data['name'] ?? null;
 
         $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
             ->with('latestStatus');
         $query->whereHas('latestStatus', function ($query) {
-            $query->whereIn('name', ['پایان رسیده', 'در انتظار برگزاری', 'درحال برگزاری', 'پیش نویس ', ' حذف شده', ' قبول',]);
+            $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
         });
 
         $query->when($searchTerm, function ($query, $searchTerm) {
