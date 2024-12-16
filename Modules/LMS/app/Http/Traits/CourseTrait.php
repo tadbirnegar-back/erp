@@ -23,11 +23,19 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
-            ->with('latestStatus');
-        $query->whereHas('latestStatus', function ($query) {
-            $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
-        });
+        $query = Course::query()->joinRelationship('cover');
+        $query->select([
+            'courses.id',
+            'courses.title',
+            'courses.cover_id',
+            'files.slug as cover_slug',
+        ]);
+        $query
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
+            });
+        $query->withCount(['chapters', 'lessons', 'questions']);
 
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where('courses.title', 'like', '%' . $searchTerm . '%')
