@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
+
 class CourseResource extends ResourceCollection
 {
     protected string $baseUrl;
@@ -25,26 +26,8 @@ class CourseResource extends ResourceCollection
                     'slug' => $this->baseUrl . $request->slug,
 
                 ],
-                'chapter' => [
-                    'id' => $request->chapter_id,
-                    'title' => $request->title,
-                    'course_id' => $request->course_id,],
-                ' lessons' => [
-                    'id' => $request->id,
-                    'title' => $request->title,
-                    'description' => $request->description,
-                ],
-                'status' => [
-                    'id' => $request->id,
-                    'title' => $request->title,
-                    'description' => $request->description,
-                ],
-                'question' => [
-                    'id' => $request->id,
-                    'title' => $request->title,
-                    'description' => $request->description,
-                ]
 
-            ]];
+            ]
+        ];
     }
 }

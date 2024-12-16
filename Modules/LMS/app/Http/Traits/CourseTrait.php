@@ -4,7 +4,6 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
-use Modules\LMS\app\Models\Chapter;
 use Modules\LMS\app\Models\Course;
 
 trait CourseTrait
@@ -22,96 +21,26 @@ trait CourseTrait
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
+
+
         $searchTerm = $data['name'] ?? null;
 
-        $chapterQuery = Chapter::joinRelationship('lessons', function ($q) use ($searchTerm) {
-            $q->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(lessons.title) AGAINST(?)', [$searchTerm])
-                    ->orWhere('lessons.title', 'LIKE', '%' . $searchTerm . '%');
+        $query = Course::query()->joinRelationship('cover');
+        $query->select([
+            'courses.id',
+            'courses.title',
+            'courses.cover_id',
+            'files.slug as cover_slug',
+        ]);
+        $query
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
             });
-        })
-            ->addSelect([
-                'chapters.*',
-                'lessons.*',
+        $query->withCount(['chapters', 'lessons', 'questions']);
 
-            ])
-            ->withCount(['lessons', 'questions']) // حذف 'chapters'
-            ->paginate($perPage, ['*'], 'page', $pageNumber);
-
-        return $chapterQuery;
-
+        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
-
-//    public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
-//    {
-//        $searchTerm = $data['name'] ?? null;
-//        $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
-//            ->joinRelationship('person.avatar', function ($q) use ($searchTerm) {
-//                $q->when($searchTerm, function ($query) use ($searchTerm) {
-//
-//                    $query
-//                        ->whereRaw('MATCH(persons.display_name) AGAINST(?)', [$searchTerm])
-//                        ->orWhere('persons.display_name', 'LIKE', '%' . $searchTerm . '%');
-//                });
-//
-//            })
-//            ->addSelect([
-//                // Workforce table columns
-//                'work_forces.id',
-//                'work_forces.workforceable_type',
-//                'work_forces.workforceable_id',
-//                'work_forces.isMarried',
-//                // Person table columns
-//                'persons.id as person_id',
-//                'persons.display_name',
-//                // File table columns
-//                'files.slug',
-//                'files.size',
-//            ]);
-//        $result = $teacherQuery->paginate($perPage, page: $pageNumber);
-//
-//        return $result;
-//
-//    }
-
-
-//    public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
-//    {
-//        $searchTerm = $data['name'] ?? null;
-//
-//        $query = Course::query()->
-//        withCount(['chapters', 'lessons', 'questions'])
-//            ->with([
-//                'latestStatus',
-//                'cover',
-//                'chapters.lessons.questions',
-//            ]);
-//        $query->WhereHas('latestStatus', function ($query) {
-//            $query->whereIn('name', [$this::$presenting, $this::$pishnevis, $this::$waitToPresent]);
-//        })
-//            ->when($searchTerm, function ($query, $searchTerm) {
-//                $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-//                    ->whereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
-//
-//            })
-//            ->addSelect([
-//                'courses.id',
-//                'courses.title',
-//                'cover_id',
-//                'chapters.id as chapter_id',
-//                'chapters.title',
-//                'chapters.course_id',
-//                'chapters.status_id',
-//                'lessons.id as lesson_id',
-//                'lessons.chapter_id',
-//                'lessons.title',
-//                'questions.id as question_id',
-//                'questions.lesson_id',
-//                'questions.title',
-//                'questions.status_id',
-//            ]);
-//        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
-//    }
 
 
     public function courseShow($course, $user)
