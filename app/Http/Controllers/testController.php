@@ -16,30 +16,21 @@ use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Chapter;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
+use Modules\PayStream\app\Http\Traits\OrderTrait;
+use Modules\PayStream\app\Http\Traits\PsPaymentTrait;
 use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait , PsPaymentTrait;
 
     public function run()
     {
-        $user = User::with('student')->find(2174);
 
-        $course = Course::find(1);
-
-        $course->load(['lessonStudyLog' => function ($query) use ($user) {
-            $query->where('student_id' , $user->student->id)
-                ->where('is_completed' , true);
-        }])->find(1);
-//        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
-//            $query->where('student_id' , $user -> student -> id);
-//        }] , 'lessons')
-//            ->find(1);
-
-        return response()->json($course);
+        $data = $this->waitToPayStatus();
+        return response()->json($data);
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']

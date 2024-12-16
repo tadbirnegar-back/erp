@@ -35,7 +35,7 @@ class Order extends Model
 
     public function orderable()
     {
-        return $this->morphMany(Order::class, 'orderable');
+        return $this->morphTo();
     }
 
     public function financialStatuses()
@@ -84,20 +84,13 @@ class Order extends Model
         );
     }
 
-
     public function invoices()
     {
         return $this->hasMany(Invoice::class, 'order_id', 'id');
     }
 
-
-    public static function GetAllFinancialStatuses(): \Illuminate\Database\Eloquent\Collection
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
-        return Status::all()->where('model', '=', FinancialStatus::class);
-    }
-
-    public static function GetAllProcessStatuses(): \Illuminate\Database\Eloquent\Collection
-    {
-        return Status::all()->where('model', '=', ProcessStatus::class);
+        return Status::all()->where('model', '=', self::class);
     }
 }

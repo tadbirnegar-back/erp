@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
@@ -36,6 +37,54 @@ class Course extends Model
         'access_date',
         'privacy_id'
     ];
+
+    public function accessDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                $jalali = convertDateTimeGregorianToJalaliDateTime($value);
+
+                return $jalali;
+            },
+
+            set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Gregorian
+                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
+
+                return $dateTimeString;
+            }
+        );
+    }
+
+    public function expirationDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                $jalali = convertDateTimeGregorianToJalaliDateTime($value);
+
+                return $jalali;
+            },
+
+            set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Gregorian
+                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
+
+                return $dateTimeString;
+            }
+        );
+    }
 
     public function video()
     {

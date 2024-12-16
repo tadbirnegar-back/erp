@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Course;
@@ -40,10 +41,13 @@ trait CourseTrait
     {
         //Take User Initial Info
         $user->load([
-            'isEnrolled',
             'answerSheets',
-            'student'
+            'student',
+            'person.avatar'
         ]);
+
+        $isEnrolled = $this -> isEnrolledToDefinedCourse($course->id , $user);
+
 
         $enrolls = $user->isEnrolled;
         $answerSheet = $user->answerSheets[0] ?? null; // Handle potential null
@@ -65,7 +69,7 @@ trait CourseTrait
 
 // Check enrollment status
 
-        if ($enrolls->isEmpty()) {
+        if (empty($enrolls[0]->orderable)) {
             $isJoined = false;
         } else {
             $isJoined = true;
@@ -84,11 +88,17 @@ trait CourseTrait
                 'cover',
                 'video',
                 'privacy',
-                'prerequisiteCourses',
-                'chapters.lessons' => function ($query) {
-                    $query->whereHas('latestStatus', function ($query) {
-                        $query->where('name', LessonStatusEnum::ACTIVE->value);
-                    });
+                'prerequisiteCourses'=> function ($query) {
+                    $query->with('cover');
+                },
+                'chapters' => function ($query) {
+                    $query->with([
+                        'lessons' => function ($query) {
+                            $query->whereHas('latestStatus', function ($q) {
+                                $q->where('name', LessonStatusEnum::ACTIVE->value);
+                            });
+                        },
+                    ]);
                 },
             ],
             'StudyLog' => ['lessonStudyLog' => function ($query) use ($user) {
@@ -134,6 +144,7 @@ trait CourseTrait
         if ($isJoined) {
             $AllowToDos['joined'] = true;
             $AdditionalData["percentage"] = $this->calculateLessonCompletion($componentsWithData);
+
             if ($course->latestStatus->name == $this::$presenting) {
                 $AllowToDos['canRead'] = true;
                 $AllowToDos['joined'] = true;
@@ -160,7 +171,10 @@ trait CourseTrait
             if ($course->latestStatus->name == $this::$canceled) {
                 //
             }
+
+            $AdditionalData["enrolled"] = $isEnrolled;
         }
+
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
 
@@ -174,7 +188,7 @@ trait CourseTrait
         // Extract lessons from MainCourse
         foreach ($response as $component) {
             if ($component['name'] === 'MainCourse') {
-                $chapters = $component['data']['chapters.lessons'] ?? [];
+                $chapters = $component['data']['chapters'] ?? [];
                 foreach ($chapters as $chapter) {
                     if (isset($chapter['lessons']) && !empty($chapter['lessons'])) {
                         foreach ($chapter['lessons'] as $lesson) {
@@ -309,6 +323,14 @@ trait CourseTrait
     public function courseEndedStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
+    }
+
+    public function isEnrolledToDefinedCourse($courseId , $user)
+    {
+        $user->load(['isEnrolled.orderable' => function ($q) use($courseId) {
+            $q -> where('course_id' , $courseId);
+        }]);
+        return $user;
     }
 }
 

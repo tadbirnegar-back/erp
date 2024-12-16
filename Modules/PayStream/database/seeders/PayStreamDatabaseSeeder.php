@@ -14,8 +14,10 @@ class PayStreamDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            FinancialStatusSeeder::class,
-            ProcessStatusSeeder::class,
+//            FinancialStatusSeeder::class,
+//            ProcessStatusSeeder::class,
+//            InvoiceStatusSeeder::class,
+            PsPaymentStatusSeeder::class,
         ]);
     }
 }

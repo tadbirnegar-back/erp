@@ -11,6 +11,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\App\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 
@@ -22,7 +23,8 @@ class CourseController extends Controller
         try {
             DB::beginTransaction();
             $course = Course::with('latestStatus')->findOrFail($id);
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = \Modules\AAA\app\Models\User::find(2174);
             if (is_null($course)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
             }
@@ -49,10 +51,19 @@ class CourseController extends Controller
     }
 
 
-    public function registerCourse($id): JsonResponse
+    public function registerCourse($id)
     {
-        $course = Course::find($id);
+        DB::beginTransaction();
+        $course = Course::with('prerequisiteCourses')->find(1);
+        //check kardane karbar ke pishniyaz hasho sabte nam karde ya na be mobtadi tarin halate momken anjam shode va dar ayande momkene update she
 
+
+
+
+        $user = \Modules\AAA\app\Models\User::find(2295);
+        $purchase = new PurchaseCourse($course, $user);
+        $response = $purchase -> handle();
+        DB::commit();
         return response()->json($course);
     }
 }

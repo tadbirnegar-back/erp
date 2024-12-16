@@ -9,6 +9,7 @@ use Modules\StatusMS\app\Models\Status;
 
 class PsPayments extends Model
 {
+
     use HasFactory;
 
     /**
@@ -26,7 +27,7 @@ class PsPayments extends Model
         'total_price'
     ];
 
-    protected $table = 'ps_payments';
+    protected $table = 'ps_payment';
 
 
     public $timestamps = false;
@@ -58,6 +59,11 @@ class PsPayments extends Model
     public function statusPsPayments()
     {
         return $this->hasMany(PsPaymentStatus::class);
+    }
+
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
     }
 
 
