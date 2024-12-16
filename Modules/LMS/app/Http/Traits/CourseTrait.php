@@ -37,37 +37,47 @@ trait CourseTrait
 
     public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
+
         $searchTerm = $data['name'] ?? null;
 
-        $query = Course::query()->withCount(['chapters', 'lessons'])
-            ->joinRelationship('chapters.lessons')
-            ->joinRelationship('latestStatus',)
-            ->joinRelationship('chapters.lessons', function ($q) use ($searchTerm) {
-                $q->when($searchTerm, function ($query) use ($searchTerm) {
-                    $query
-                        ->whereRaw('MATCH(lessons.title) AGAINST(?)', [$searchTerm])
-                        ->orWhere('lessons.title', 'LIKE', '%' . $searchTerm . '%');
-                });
+        $courseQuery = Course::joinRelationship('chapters.lessons', function ($q) use ($searchTerm) {
+            $q->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
             });
-        $query->when($searchTerm, function ($query) use ($searchTerm) {
-            $query->
-            whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
-        })->addSelect([
-            'courses.id',
-            'courses.title',
-            'courses.chapters.title as chapter_title',
-            'courses.lessons.id as lesson_id',
-            'courses.lessons.title as lesson_title',
-            'courses.lessons.status_id as lesson_status_id',
-            'courses.lessons.chapters_id as lesson_chapters_id',
-            'courses.lessons.questions_id as lesson_questions_id',
+        })
+            ->addSelect([
+//                'courses.*',
+//                'chapters.*',
+//                'lessons.*',
+                'courses.id as course_id',
 
+                'chapters.id as chapter_id',
+                'chapters.title as chapter_title',
+                'lessons.id as lesson_id',
+                'lessons.title as lesson_title',
+                // Course table columns
+//                'courses.id',
+//                'courses.title',
+//                // Chapters table columns
+//                'chapters.id as chapter_id',
+//                'chapters.title as chapter_title',
+//                // Lessons table columns
+//                'lessons.id as lesson_id',
+//                'lessons.title as lesson_title',
+//                // Questions table columns
+//                'questions.id as question_id',
+//                'questions.title as question_title',
+            ])
+            ->withCount([
+                'chapters',
+                'lessons',
+                'questions'
+            ])
+            ->paginate($perPage, ['*'], 'page', $pageNumber);
 
-        ]);
+        return $courseQuery;
 
-
-        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 //    public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
 //    {

@@ -3,43 +3,76 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
-use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
-use Modules\LMS\app\Models\Chapter;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Enroll;
-use Modules\PayStream\app\Models\Order;
-use Modules\PersonMS\app\Models\Person;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
-    public function run()
+
+    public function run(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $user = User::with('student')->find(2174);
 
-        $course = Course::find(1);
+        $searchTerm = $data['name'] ?? null;
 
-        $course->load(['lessonStudyLog' => function ($query) use ($user) {
-            $query->where('student_id' , $user->student->id)
-                ->where('is_completed' , true);
-        }])->find(1);
-//        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
-//            $query->where('student_id' , $user -> student -> id);
-//        }] , 'lessons')
-//            ->find(1);
+        $courseQuery = Course::joinRelationship('chapters.lessons', function ($q) use ($searchTerm) {
+            $q->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
+            });
+        })
+            ->addSelect([
+////                'courses.*',
+////                'chapters.*',
+////                'lessons.*',
+//                'courses.id as course_id',
+//
+//                'chapters.id as chapter_id',
+//                'chapters.title as chapter_title',
+//                'lessons.id as lesson_id',
+//                'lessons.title as lesson_title',
+                // Course table columns
+                'courses.id',
+                'courses.title',
+                // Chapters table columns
+                'chapters.id as chapter_id',
+                'chapters.title as chapter_title',
+                // Lessons table columns
+                'lessons.id as lesson_id',
+                'lessons.title as lesson_title',
+//
+            ])
+            ->withCount([
+                'chapters',
+                'lessons',
+                'questions'
+            ])
+            ->paginate($perPage, ['*'], 'page', $pageNumber);
 
-        return response()->json($course);
+        return $courseQuery;
+
+
+//        $user = User::with('student')->find(2174);
+//
+//        $course = Course::find(1);
+//
+//        $course->load(['lessonStudyLog' => function ($query) use ($user) {
+//            $query->where('student_id' , $user->student->id)
+//                ->where('is_completed' , true);
+//        }])->find(1);
+////        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
+////            $query->where('student_id' , $user -> student -> id);
+////        }] , 'lessons')
+////            ->find(1);
+//
+//        return response()->json($course);
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']
