@@ -40,6 +40,7 @@ trait CourseTrait
         $searchTerm = $data['name'] ?? null;
 
         $query = Course::query()->withCount(['chapters', 'lessons'])
+            ->joinRelationship('chapters.lessons')
             ->joinRelationship('latestStatus',)
             ->joinRelationship('chapters.lessons', function ($q) use ($searchTerm) {
                 $q->when($searchTerm, function ($query) use ($searchTerm) {
@@ -55,11 +56,6 @@ trait CourseTrait
         })->addSelect([
             'courses.id',
             'courses.title',
-            'courses.slug',
-            'courses.cover',
-            'courses.video',
-            'courses.privacy',
-            'courses.prerequisite_courses',
             'courses.chapters.title as chapter_title',
             'courses.lessons.id as lesson_id',
             'courses.lessons.title as lesson_title',
