@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Models\Chapter;
 use Modules\LMS\app\Models\Course;
 
 trait CourseTrait
@@ -23,43 +24,22 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $courseQuery = Course::joinRelationship('chapters.lessons.lessonStatuses', function ($q) use ($searchTerm) {
+        $chapterQuery = Chapter::joinRelationship('lessons', function ($q) use ($searchTerm) {
             $q->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
+                $query->whereRaw('MATCH(lessons.title) AGAINST(?)', [$searchTerm])
+                    ->orWhere('lessons.title', 'LIKE', '%' . $searchTerm . '%');
             });
         })
             ->addSelect([
-//                'courses.*',
-//                'chapters.*',
-//                'lessons.*',
-                'courses.id as course_id',
+                'chapters.*',
+                'lessons.*',
 
-                'chapters.id as chapter_id',
-                'chapters.title as chapter_title',
-                'lessons.id as lesson_id',
-                'lessons.title as lesson_title',
-                // Course table columns
-//                'courses.id',
-//                'courses.title',
-//                // Chapters table columns
-//                'chapters.id as chapter_id',
-//                'chapters.title as chapter_title',
-//                // Lessons table columns
-//                'lessons.id as lesson_id',
-//                'lessons.title as lesson_title',
-//                // Questions table columns
-//                'questions.id as question_id',
-//                'questions.title as question_title',
             ])
-            ->withCount([
-                'chapters',
-                'lessons',
-                'questions'
-            ])
+            ->withCount(['lessons', 'questions']) // حذف 'chapters'
             ->paginate($perPage, ['*'], 'page', $pageNumber);
 
-        return $courseQuery;
+        return $chapterQuery;
+
     }
 
 //    public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
