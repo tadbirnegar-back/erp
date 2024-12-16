@@ -23,26 +23,34 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $courseQuery = Course::query()
-            ->joinRelationship('chapters.lessons.questions', function ($q) use ($searchTerm) {
-                $q->when($searchTerm, function ($query) use ($searchTerm) {
-                    $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                        ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
-                });
-            })
+        $courseQuery = Course::joinRelationship('chapters.lessons.lessonStatuses', function ($q) use ($searchTerm) {
+            $q->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
+            });
+        })
             ->addSelect([
-                // Course table columns
-                'courses.id',
-                'courses.title',
-                // Chapters table columns
+//                'courses.*',
+//                'chapters.*',
+//                'lessons.*',
+                'courses.id as course_id',
+
                 'chapters.id as chapter_id',
                 'chapters.title as chapter_title',
-                // Lessons table columns
                 'lessons.id as lesson_id',
                 'lessons.title as lesson_title',
-                // Questions table columns
-                'questions.id as question_id',
-                'questions.title as question_title',
+                // Course table columns
+//                'courses.id',
+//                'courses.title',
+//                // Chapters table columns
+//                'chapters.id as chapter_id',
+//                'chapters.title as chapter_title',
+//                // Lessons table columns
+//                'lessons.id as lesson_id',
+//                'lessons.title as lesson_title',
+//                // Questions table columns
+//                'questions.id as question_id',
+//                'questions.title as question_title',
             ])
             ->withCount([
                 'chapters',
@@ -54,7 +62,37 @@ trait CourseTrait
         return $courseQuery;
     }
 
-
+//    public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
+//    {
+//        $searchTerm = $data['name'] ?? null;
+//        $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
+//            ->joinRelationship('person.avatar', function ($q) use ($searchTerm) {
+//                $q->when($searchTerm, function ($query) use ($searchTerm) {
+//
+//                    $query
+//                        ->whereRaw('MATCH(persons.display_name) AGAINST(?)', [$searchTerm])
+//                        ->orWhere('persons.display_name', 'LIKE', '%' . $searchTerm . '%');
+//                });
+//
+//            })
+//            ->addSelect([
+//                // Workforce table columns
+//                'work_forces.id',
+//                'work_forces.workforceable_type',
+//                'work_forces.workforceable_id',
+//                'work_forces.isMarried',
+//                // Person table columns
+//                'persons.id as person_id',
+//                'persons.display_name',
+//                // File table columns
+//                'files.slug',
+//                'files.size',
+//            ]);
+//        $result = $teacherQuery->paginate($perPage, page: $pageNumber);
+//
+//        return $result;
+//
+//    }
 
 
 //    public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])

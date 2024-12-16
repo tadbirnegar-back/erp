@@ -65,5 +65,10 @@ class Lesson extends Model
         return Status::all()->where('model', '=', self::class);
     }
 
+    public function lessonStatuses()
+    {
+        return $this->hasManyThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id');
+    }
+
 
 }

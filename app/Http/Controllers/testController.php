@@ -24,7 +24,7 @@ class testController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
-
+        dd($result);
         return response()->json($result);
 
 //        $user = User::with('student')->find(2174);
