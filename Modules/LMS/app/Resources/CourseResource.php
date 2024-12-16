@@ -19,6 +19,15 @@ class CourseResource extends ResourceCollection
      */
     public function toArray($request): array
     {
+        //null check
+        if ($this->collection->isEmpty()) {
+            return [
+                'data' => [],
+
+            ];
+        }
+
+        // در صورت پر بودن مجموعه
         return [
             'data' => $this->collection->transform(function ($item) {
                 return [
@@ -27,17 +36,10 @@ class CourseResource extends ResourceCollection
                         'title' => $item->title,
                         'cover' => [
                             'slug' => $this->baseUrl . $item->slug,
-
                         ],
-
-                    ]
+                    ],
                 ];
-            })
+            }),
         ];
     }
 }
-
-
-
-
-
