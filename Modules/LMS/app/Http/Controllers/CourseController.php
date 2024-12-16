@@ -7,9 +7,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Modules\LMS\app\Http\Resources\CourseResource;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Resources\CourseResource;
 
 class CourseController extends Controller
 {
@@ -44,7 +44,6 @@ class CourseController extends Controller
 
         return response()->json(new CourseResource($result));
 
-//        return response()->json($result);
 
     }
 }

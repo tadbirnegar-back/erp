@@ -1,9 +1,10 @@
 <?php
 
-use Illuminate\Http\Resources\Json\ResourceCollection;
+namespace Modules\LMS\app\Resources;
 
+use Illuminate\Http\Resources\Json\JsonResource;
 
-class CourseResource extends ResourceCollection
+class CourseResource extends JsonResource
 {
     protected string $baseUrl;
 
@@ -35,5 +36,8 @@ class CourseResource extends ResourceCollection
         ];
     }
 }
+
+
+
 
 
