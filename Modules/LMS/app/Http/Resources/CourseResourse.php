@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class CourseResourse extends ResourceCollection
+class CourseResource extends ResourceCollection
 {
     protected string $baseUrl;
 
