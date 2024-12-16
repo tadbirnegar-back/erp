@@ -2,7 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Modules\LMS\App\Http\Enums\AnswerSheetStatusEnum;
+use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 
 trait AnswerSheetTrait

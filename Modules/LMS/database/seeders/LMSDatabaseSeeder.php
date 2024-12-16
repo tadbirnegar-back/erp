@@ -3,7 +3,6 @@
 namespace Modules\LMS\database\seeders;
 
 use Illuminate\Database\Seeder;
-use Modules\LMS\database\seeders\AnswerSheetStatusSeeder;
 
 class LMSDatabaseSeeder extends Seeder
 {
@@ -16,10 +15,11 @@ class LMSDatabaseSeeder extends Seeder
         $this->call([
 //             ModuleCategorySeeder::class,
 //             ModuleSeeder::class,
-//             PermissionSeeder::class,
+            PermissionSeeder::class,
 //            AnswerSheetStatusSeeder::class,
 //            ProcessStatusSeeder::class,
             CourseStatusSeeder::class,
+            LessonStatusSeeder::class,
         ]);
     }
 }

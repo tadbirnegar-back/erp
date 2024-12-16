@@ -21,8 +21,6 @@ trait CourseTrait
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-
-
         $searchTerm = $data['name'] ?? null;
 
         $query = Course::query()->joinRelationship('cover');
@@ -39,6 +37,10 @@ trait CourseTrait
             });
         $query->withCount(['chapters', 'lessons', 'questions']);
 
+        $query->when($searchTerm, function ($query, $searchTerm) {
+            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        });
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 

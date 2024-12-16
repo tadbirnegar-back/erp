@@ -42,8 +42,14 @@
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "لیست مدرس",
+        "name": "لیست مدرسان",
         "slug": "/teacher/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست دوره های آموزشی",
+        "slug": "/lms/courses/list",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"
     }

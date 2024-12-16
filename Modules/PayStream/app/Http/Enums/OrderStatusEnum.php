@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\PayStream\App\Http\Enums;
+namespace Modules\PayStream\app\Http\Enums;
 
 enum OrderStatusEnum: string
 {
