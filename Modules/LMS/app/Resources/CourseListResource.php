@@ -4,7 +4,7 @@ namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class CourseResource extends ResourceCollection
+class CourseListResource extends ResourceCollection
 {
     protected string $baseUrl;
 
@@ -20,24 +20,17 @@ class CourseResource extends ResourceCollection
     public function toArray($request): array
     {
         //null check
-        if ($this->collection->isEmpty()) {
-            return [
-                'data' => [],
 
-            ];
-        }
-
-        // در صورت پر بودن مجموعه
         return [
             'data' => $this->collection->transform(function ($item) {
                 return [
-                    'course' => [
-                        'id' => $item->id,
-                        'title' => $item->title,
-                        'cover' => [
-                            'slug' => $this->baseUrl . $item->slug,
-                        ],
+                    'id' => $item->id,
+                    'title' => $item->title,
+
+                    'cover' => [
+                        'slug' => $this->baseUrl . $item->slug,
                     ],
+
                 ];
             }),
         ];

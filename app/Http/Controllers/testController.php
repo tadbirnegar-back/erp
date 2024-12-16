@@ -11,6 +11,7 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
+use Modules\LMS\app\Resources\CourseListResource;
 
 
 class testController extends Controller
@@ -25,9 +26,9 @@ class testController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
-        dd($result);
-        return response()->json($result);
+        $response = new CourseListResource($result);
 
+        return $response;
 //        $test = Chapter::query()->joinRelationship('lessons.statuses')
 //            ->addSelect([
 //                'chapters.id as chapter_id',

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Resources\CourseResource;
+use Modules\LMS\app\Resources\CourseListResource;
 
 class CourseController extends Controller
 {
@@ -39,8 +39,8 @@ class CourseController extends Controller
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
-        $result = $this->courseIndex($perPage, $pageNum, $data); // فرض بر این که paginate بازمی‌گرداند
-        $response = new CourseResource($result);
+        $result = $this->courseIndex($perPage, $pageNum, $data);
+        $response = new CourseListResource($result);
 
         return $response;
     }
