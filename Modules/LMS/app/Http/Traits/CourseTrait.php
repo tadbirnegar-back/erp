@@ -40,13 +40,70 @@ trait CourseTrait
         $searchTerm = $data['name'] ?? null;
 
         $query = Course::query()->withCount(['chapters', 'lessons'])
-            ->with('latestStatus', 'cover');
-        $query->when($searchTerm, function ($query, $searchTerm) {
-            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
-        });
+            ->joinRelationship('latestStatus',)
+            ->joinRelationship('chapters.lessons', function ($q) use ($searchTerm) {
+                $q->when($searchTerm, function ($query) use ($searchTerm) {
+                    $query
+                        ->whereRaw('MATCH(lessons.title) AGAINST(?)', [$searchTerm])
+                        ->orWhere('lessons.title', 'LIKE', '%' . $searchTerm . '%');
+                });
+            });
+        $query->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->
+            whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
+        })->addSelect([
+            'courses.id',
+            'courses.title',
+            'courses.slug',
+            'courses.cover',
+            'courses.video',
+            'courses.privacy',
+            'courses.prerequisite_courses',
+            'courses.chapters.title as chapter_title',
+            'courses.lessons.id as lesson_id',
+            'courses.lessons.title as lesson_title',
+            'courses.lessons.status_id as lesson_status_id',
+            'courses.lessons.chapters_id as lesson_chapters_id',
+            'courses.lessons.questions_id as lesson_questions_id',
+
+
+        ]);
+
+
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
+//    public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
+//    {
+//        $searchTerm = $data['name'] ?? null;
+//        $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
+//            ->joinRelationship('person.avatar', function ($q) use ($searchTerm) {
+//                $q->when($searchTerm, function ($query) use ($searchTerm) {
+//
+//                    $query
+//                        ->whereRaw('MATCH(persons.display_name) AGAINST(?)', [$searchTerm])
+//                        ->orWhere('persons.display_name', 'LIKE', '%' . $searchTerm . '%');
+//                });
+//
+//            })
+//            ->addSelect([
+//                // Workforce table columns
+//                'work_forces.id',
+//                'work_forces.workforceable_type',
+//                'work_forces.workforceable_id',
+//                'work_forces.isMarried',
+//                // Person table columns
+//                'persons.id as person_id',
+//                'persons.display_name',
+//                // File table columns
+//                'files.slug',
+//                'files.size',
+//            ]);
+//        $result = $teacherQuery->paginate($perPage, page: $pageNumber);
+//
+//        return $result;
+//
+//    }
 
 
     public function courseShow($course, $user)
