@@ -19,15 +19,21 @@ class CourseResource extends ResourceCollection
     public function toArray($request): array
     {
         return [
-            'course' => [
-                'id' => $request->person_id,
-                'title' => $request->display_name,
-                'cover' => [
-                    'slug' => $this->baseUrl . $request->slug,
+            'data' => $this->collection->transform(function ($item) {
+                return [
+                    'course' => [
+                        'id' => $item->person_id,
+                        'title' => $item->display_name,
+                        'cover' => [
+                            'slug' => $this->baseUrl . $item->slug,
 
-                ],
+                        ],
 
-            ]
+                    ]
+                ];
+            })
         ];
     }
 }
+
+
