@@ -26,11 +26,14 @@ class CourseListResource extends ResourceCollection
                 return [
                     'id' => $item->id,
                     'title' => $item->title,
-
-                    'cover' => $item->slug ? [
-                        'slug' => $this->baseUrl . $item->slug,
+                    'cover' => $item->cover_slug ? [
+                        'slug' => $this->baseUrl . $item->cover_slug,
                     ] : null,
-
+                    'counts' => [
+                        'chapters' => $item->chapters_count ?? 0,
+                        'lessons' => $item->lessons_count ?? 0,
+                        'questions' => $item->questions_count ?? 0,
+                    ],
                 ];
             }),
         ];

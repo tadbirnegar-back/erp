@@ -28,7 +28,7 @@ class testController extends Controller
         $result = $this->courseIndex($perPage, $pageNum, $data);
         $response = new CourseListResource($result);
 
-        return $response;
+        return $result;
 //        $test = Chapter::query()->joinRelationship('lessons.statuses')
 //            ->addSelect([
 //                'chapters.id as chapter_id',
