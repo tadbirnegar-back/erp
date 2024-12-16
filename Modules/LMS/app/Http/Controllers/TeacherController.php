@@ -21,12 +21,13 @@ class TeacherController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->teacherIndex($perPage, $pageNum, $data);
-        $response = TeacherListResource::collection($result)
-            ->additional(['currentPage' => $result->currentPage(),
-                'lastPage' => $result->lastPage(),
-                'total' => $result->total()]);
+        $response = new TeacherListResource($result);
+//        $response = TeacherListResource::collection($result)
+//            ->additional(['currentPage' => $result->currentPage(),
+//                'lastPage' => $result->lastPage(),
+//                'total' => $result->total()]);
 
-        return response()->json($response);
+        return $response;
     }
 
     public function LiveSearchTeacher(Request $request)
@@ -50,7 +51,7 @@ class TeacherController extends Controller
             \DB::beginTransaction();
             $data = $request->all();
             $situation = $this->isPersonTeacher($data['nationalCode']);
-            if(isset($data['bcIssueDate'])){
+            if (isset($data['bcIssueDate'])) {
                 $data['bcIssueDate'] = convertJalaliPersianCharactersToGregorian($data['bcIssueDate']);
             }
             $data['dateOfBirth'] = convertJalaliPersianCharactersToGregorian($data['dateOfBirth']);
