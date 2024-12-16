@@ -2,9 +2,9 @@
 
 namespace Modules\LMS\app\Resources;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class CourseResource extends JsonResource
+class CourseResource extends ResourceCollection
 {
     protected string $baseUrl;
 
@@ -23,8 +23,8 @@ class CourseResource extends JsonResource
             'data' => $this->collection->transform(function ($item) {
                 return [
                     'course' => [
-                        'id' => $item->person_id,
-                        'title' => $item->display_name,
+                        'id' => $item->id,
+                        'title' => $item->title,
                         'cover' => [
                             'slug' => $this->baseUrl . $item->slug,
 

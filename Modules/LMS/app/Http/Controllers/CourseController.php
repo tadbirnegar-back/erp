@@ -3,7 +3,6 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -34,16 +33,16 @@ class CourseController extends Controller
         }
     }
 
-    public function courseList(Request $request): JsonResponse
+    public function courseList(Request $request)
     {
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
-        $result = $this->courseIndex($perPage, $pageNum, $data);
+        $result = $this->courseIndex($perPage, $pageNum, $data); // فرض بر این که paginate بازمی‌گرداند
+        $response = new CourseResource($result);
 
-        return response()->json(new CourseResource($result));
-
-
+        return $response;
     }
+
 }
