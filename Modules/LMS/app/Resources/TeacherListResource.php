@@ -11,7 +11,7 @@ class TeacherListResource extends ResourceCollection
     public function __construct($resource)
     {
         parent::__construct($resource);
-        $this->baseUrl = url('/'); // Initialize base URL
+        $this->baseUrl = url('/') . '/'; // Initialize base URL
     }
 
     /**
@@ -49,10 +49,10 @@ class TeacherListResource extends ResourceCollection
                     'person' => [
                         'id' => $item->person_id,
                         'display_name' => $item->display_name,
-                        'avatar' => [
+                        'avatar' => $item->slug ? [
                             'slug' => $this->baseUrl . $item->slug,
                             'size' => $item->size,
-                        ],
+                        ] : null,
                     ],
                 ];
             }),

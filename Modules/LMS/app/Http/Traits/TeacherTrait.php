@@ -61,14 +61,13 @@ trait TeacherTrait
     {
         $searchTerm = $data['name'] ?? null;
         $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
-            ->joinRelationship('person.avatar', function ($q) use ($searchTerm) {
-                $q->when($searchTerm, function ($query) use ($searchTerm) {
-
-                    $query
+            ->joinRelationship('person.avatar')
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery
                         ->whereRaw('MATCH(persons.display_name) AGAINST(?)', [$searchTerm])
                         ->orWhere('persons.display_name', 'LIKE', '%' . $searchTerm . '%');
                 });
-
             })
             ->addSelect([
                 // Workforce table columns

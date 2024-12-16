@@ -22,10 +22,6 @@ class TeacherController extends Controller
 
         $result = $this->teacherIndex($perPage, $pageNum, $data);
         $response = new TeacherListResource($result);
-//        $response = TeacherListResource::collection($result)
-//            ->additional(['currentPage' => $result->currentPage(),
-//                'lastPage' => $result->lastPage(),
-//                'total' => $result->total()]);
 
         return $response;
     }
