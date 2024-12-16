@@ -2,7 +2,6 @@
 
 namespace training\Http\Traits;
 
-use Illuminate\Support\Collection;
 use Modules\LMS\app\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Question;
 
@@ -18,9 +17,9 @@ trait QuestionTrait
     }
 
 
-//    public function storeQuestion($data)
+//    public function questionDataPreparation($data)
 //    {
-
+//
 //        $status = $this->questionActiveStatus();
 //        $question = new Question();
 //        $question->title = $data['title'] ?? null;
@@ -33,28 +32,51 @@ trait QuestionTrait
 //        $question->create_date = $data['createDate'] ?? null;
 //        $question->save();
 //        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository');
+
     public function questionDataPreparation(array|Collection $question)
     {
-        if (is_array($question)) {
-            $question = collect($question);
-        }
-        $status = $this->questionActiveStatus();
 
+        $status = $this->questionActiveStatus();
         $question = $question->map(fn($data) => [
             'id' => $data['id'] ?? null,
             'title' => $data['title'],
-            'creator_id' => $data['creatorID'],
-            'difficulty_id' => $data['difficultyID'],
-            'lesson_id' => $data['lessonID'] ?? null,
-            'question_type_id' => $data['questionTypeID'],
-            'repository_id' => $data['repoID'] ?? null,
-            'status_id' => $status->id,
-            'create_date' => $data['salary'] ?? null,
 
         ],
         );
         return $question;
     }
+
+    public function repoDataPreparation(array|Collection $repo)
+    {
+        $repo = $repo->map(fn($data) => [
+            'id' => $data['id'] ?? null,
+            'title' => $data['title'],
+
+        ],
+        );
+
+    }
+
+    public function difficultyDataPreparation()
+    {
+
+    }
+
+    public function lessonDataPreparation()
+    {
+
+    }
+
+    public function qTypeDataPreparation()
+    {
+
+    }
+
+    public function creatorDataPreparation()
+    {
+
+    }
+
 
     public function editQuestion($data)
     {
