@@ -3,49 +3,32 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\PersonMS\app\Models\Person;
-
+use Modules\LMS\app\Http\Traits\QuestionTrait;
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use QuestionTrait;
 
-    public function run()
+    public function run(Request $request)
     {
+        try {
+            DB::beginTransaction();
 
-        $person = Person::with([
-            'recruitmentScripts.latestStatus',
-            'recruitmentScripts.hireType',
-            'recruitmentScripts.scriptType',
-            'avatar',
-            'personable.religion',
-            'personable.religionType',
-            'user.roles',
-            'workForce.skills',
-            'workForce.educationalRecords.levelOfEducation',
-            'workForce.resumes',
-            'workForce.militaryStatus',
-            'workForce.relatives.relativeType',
-            'workForce.relatives.levelOfEducation',
-            'workForce.courseRecords',
-            'workForce.isars.isarStatus',
-            'workForce.isars.relativeType',
-            'recruitmentScripts.ounit.ancestorsAndSelf',
-            'employee.signatureFile',
-            'workForce.militaryService.militaryServiceStatus',
-            'workForce.militaryService.exemptionType'])
-            ->findOr(2096, function () {
-
-                return response()->json(['message' => 'موردی یافت نشد'], 404);
-            });
-
-        return response()->json($person);
+            $question = $this->storeQuestion($request->all());
+            DB::commit();
+            return back()->with($question, 'success', 'سوال با موفقیت ثبت شد.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'خطایی در ثبت سوال رخ داده است.');
+        }
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);

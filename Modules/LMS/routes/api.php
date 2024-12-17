@@ -37,3 +37,4 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
 });
+Route::post('/lms/store/question', [Modules\LMS\app\Http\Controllers\QuestionController::class, 'store']);

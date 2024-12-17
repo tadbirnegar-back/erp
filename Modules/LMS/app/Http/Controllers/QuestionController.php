@@ -36,7 +36,7 @@ class QuestionController extends Controller
         try {
             DB::beginTransaction();
 
-            $question = $this->storeQuestion;
+            $question = $this->storeQuestion($request->all());
             DB::commit();
             return back()->with('success', 'سوال با موفقیت ثبت شد.');
         } catch (\Exception $e) {
