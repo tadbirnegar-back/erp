@@ -16,21 +16,24 @@ use Modules\LMS\app\Resources\LessonListResource;
 
 class testController extends Controller
 {
-    use PaymentRepository, CourseTrait, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
-    public function run(Request $request)
+    public function run()
     {
+        $user = User::with('student')->find(2174);
 
+        $course = Course::find(1);
 
-        $data = $request->all();
-        $perPage = $data['perPage'] ?? 10;
-        $pageNum = $data['pageNum'] ?? 1;
+        $course->load(['lessonStudyLog' => function ($query) use ($user) {
+            $query->where('student_id' , $user->student->id)
+                ->where('is_completed' , true);
+        }])->find(1);
+//        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
+//            $query->where('student_id' , $user -> student -> id);
+//        }] , 'lessons')
+//            ->find(1);
 
-        $result = $this->lessonIndex($perPage, $pageNum, $data);
-        $response = new LessonListResource($result);
-
-        return $response;
-
+        return response()->json($course);
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']

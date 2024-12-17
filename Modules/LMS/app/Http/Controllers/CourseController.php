@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Resources\LessonListResource;
+use Modules\LMS\app\Resources\CourseListResource;
 
 class CourseController extends Controller
 {
@@ -34,7 +35,7 @@ class CourseController extends Controller
         }
     }
 
-    public function courseList(Request $request): JsonResponse
+    public function courseList(Request $request)
     {
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;
@@ -42,8 +43,9 @@ class CourseController extends Controller
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
 
-        return response()->json($result);
+        $response = new CourseListResource($result);
 
+        return $response;
     }
 
     public function lesson_index(Request $request)
@@ -61,4 +63,5 @@ class CourseController extends Controller
 
 
     }
+
 }
