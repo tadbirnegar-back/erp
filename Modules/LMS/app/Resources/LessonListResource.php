@@ -33,7 +33,6 @@ class LessonListResource extends ResourceCollection
                     'counts' => [
                         'chapters' => $item->chapters_count ?? 0,
                         'lessons' => $item->lessons_count ?? 0,
-                        'questions' => $item->questions_count ?? 0,
                     ],
                 ];
             }),

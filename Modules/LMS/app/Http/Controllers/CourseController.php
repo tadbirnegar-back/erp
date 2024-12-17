@@ -12,7 +12,7 @@ use Modules\LMS\app\Models\Course;
 
 class CourseController extends Controller
 {
-    use CourseTrait;
+    use CourseTrait, LessonListResource;
 
     public function show($id)
     {
@@ -55,7 +55,7 @@ class CourseController extends Controller
 
         $result = $this->lessonIndex($perPage, $pageNum, $data);
 
-        return response()->json($result);
+        return response();
 
 
     }
