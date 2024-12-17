@@ -3,43 +3,34 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
-use Modules\AAA\app\Models\User;
+use Illuminate\Http\Request;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
-use Modules\LMS\app\Models\Chapter;
-use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Enroll;
-use Modules\PayStream\app\Models\Order;
-use Modules\PersonMS\app\Models\Person;
+use Modules\LMS\app\Http\Traits\CourseTrait;
+use Modules\LMS\app\Resources\LessonListResource;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use PaymentRepository, CourseTrait, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
-    public function run()
+    public function run(Request $request)
     {
-        $user = User::with('student')->find(2174);
 
-        $course = Course::find(1);
 
-        $course->load(['lessonStudyLog' => function ($query) use ($user) {
-            $query->where('student_id' , $user->student->id)
-                ->where('is_completed' , true);
-        }])->find(1);
-//        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
-//            $query->where('student_id' , $user -> student -> id);
-//        }] , 'lessons')
-//            ->find(1);
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
 
-        return response()->json($course);
+        $result = $this->lessonIndex($perPage, $pageNum, $data);
+        $response = new LessonListResource($result);
+
+        return $response;
+
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']

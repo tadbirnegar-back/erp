@@ -36,6 +36,32 @@ trait CourseTrait
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 
+    public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
+    {
+        $searchTerm = $data['name'] ?? null;
+
+        $courseQuery = Course::joinRelationship('chapters.lessons')
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery->where('courses.title', 'like', '%' . $searchTerm . '%')
+                        ->orWhereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+                });
+            })
+            ->addSelect([
+                'courses.id as course_id',
+                'courses.title as course_title',
+            ])
+            ->distinct()
+            ->withCount([
+                'chapters',
+                'lessons',
+                'questions',
+            ])
+            ->paginate($perPage, ['*'], 'page', $pageNumber);
+
+        return $courseQuery;
+    }
+
 
     public function courseShow($course, $user)
     {
