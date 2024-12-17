@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Http\Request;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -17,23 +16,18 @@ use Modules\LMS\app\Resources\LessonListResource;
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use CourseTrait;
 
-    public function run()
+    public function run($request)
     {
-        $user = User::with('student')->find(2174);
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
 
-        $course = Course::find(1);
+        $result = $this->lessonIndex($perPage, $pageNum, $data);
+        $response = new LessonListResource($result);
 
-        $course->load(['lessonStudyLog' => function ($query) use ($user) {
-            $query->where('student_id' , $user->student->id)
-                ->where('is_completed' , true);
-        }])->find(1);
-//        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
-//            $query->where('student_id' , $user -> student -> id);
-//        }] , 'lessons')
-//            ->find(1);
-
-        return response()->json($course);
+        return $response;
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']
