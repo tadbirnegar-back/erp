@@ -47,27 +47,13 @@ trait CourseTrait
             });
         })
             ->addSelect([
-//                'courses.*',
-//                'chapters.*',
-//                'lessons.*',
-                'courses.id as course_id',
 
+                'courses.id as course_id',
                 'chapters.id as chapter_id',
                 'chapters.title as chapter_title',
                 'lessons.id as lesson_id',
                 'lessons.title as lesson_title',
-                // Course table columns
-//                'courses.id',
-//                'courses.title',
-//                // Chapters table columns
-//                'chapters.id as chapter_id',
-//                'chapters.title as chapter_title',
-//                // Lessons table columns
-//                'lessons.id as lesson_id',
-//                'lessons.title as lesson_title',
-//                // Questions table columns
-//                'questions.id as question_id',
-//                'questions.title as question_title',
+
             ])
             ->withCount([
                 'chapters',
