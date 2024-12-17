@@ -360,8 +360,22 @@ class LoginController extends Controller
             'client_secret' => config('passport.password_grant_client.secret'),
             'grant_type' => 'refresh_token'
         ]);
+
         if (is_null($response)) {
             return response()->json(['error' => 'error'], 401);
+        }
+
+        if ($response->failed()) {
+            $result = $response->json();
+            $errorDescription = $result['error_description'] ?? 'An error occurred.';
+            $statusCode = $response->status();
+
+            // Check for specific error messages
+            if (str_contains($errorDescription, 'The refresh token is invalid')) {
+                return response()->json(['error' => 'The refresh token is invalid or has expired. Please log in again.'], 401);
+            }
+
+            return response()->json(['error' => $errorDescription], $statusCode);
         }
         $result = json_decode($response?->getBody(), true);
         if (!$response->ok()) {
