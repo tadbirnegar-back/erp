@@ -41,18 +41,14 @@ trait CourseTrait
         $searchTerm = $data['name'] ?? null;
 
         $courseQuery = Course::joinRelationship('chapters.lessons', function ($q) use ($searchTerm) {
-            $q->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
+            $q->when($searchTerm, function ($query, $searchTerm) {
+                $query->where('courses.title', 'like', '%' . $searchTerm . '%')
+                    ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
             });
         })
             ->addSelect([
-
                 'courses.id as course_id',
-                'chapters.id as chapter_id',
-                'chapters.title as chapter_title',
-                'lessons.id as lesson_id',
-                'lessons.title as lesson_title',
+                'courses.title as course_title',
 
             ])
             ->withCount([
