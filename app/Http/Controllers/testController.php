@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Http\Request;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -11,58 +10,24 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
-use Modules\LMS\app\Resources\CourseListResource;
+use Modules\LMS\app\Resources\LessonListResource;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, CourseTrait, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use CourseTrait;
 
-    public function run(Request $request)
+    public function run($request)
     {
-
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
-        $result = $this->courseIndex($perPage, $pageNum, $data);
-        $response = new CourseListResource($result);
+        $result = $this->lessonIndex($perPage, $pageNum, $data);
+        $response = new LessonListResource($result);
 
         return $response;
-//        $test = Chapter::query()->joinRelationship('lessons.statuses')
-//            ->addSelect([
-//                'chapters.id as chapter_id',
-//                'chapters.title as chapter_title',
-//                'lessons.id as lesson_id',
-//                'lessons.title as lesson_title',
-//
-//
-//            ]);
-//        dd($test);
-
-//
-//        $data = $request->all();
-//        $perPage = $data['perPage'] ?? 10;
-//        $pageNum = $data['pageNum'] ?? 1;
-//
-//        $result = $this->courseIndex($perPage, $pageNum, $data);
-//        dd($result);
-//        return response()->json($result);
-
-//        $user = User::with('student')->find(2174);
-//
-//        $course = Course::find(1);
-//
-//        $course->load(['lessonStudyLog' => function ($query) use ($user) {
-//            $query->where('student_id' , $user->student->id)
-//                ->where('is_completed' , true);
-//        }])->find(1);
-////        $course = Course::with(['lessonStudyLog' => function ($query) use ($user) {
-////            $query->where('student_id' , $user -> student -> id);
-////        }] , 'lessons')
-////            ->find(1);
-//
-//        return response()->json($course);
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']

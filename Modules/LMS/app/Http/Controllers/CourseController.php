@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Resources\CourseListResource;
+use Modules\LMS\app\Resources\LessonListResource;
 
 class CourseController extends Controller
 {
@@ -40,9 +41,26 @@ class CourseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
+
         $response = new CourseListResource($result);
 
         return $response;
+    }
+
+    public function lessonList(Request $request)
+    {
+
+
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+
+        $result = $this->lessonIndex($perPage, $pageNum, $data);
+        $response = new LessonListResource($result);
+
+        return $response;
+
+
     }
 
 }
