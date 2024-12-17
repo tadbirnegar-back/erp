@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Resources\LessonListResource;
 
 class CourseController extends Controller
 {
-    use CourseTrait, LessonListResource;
+    use CourseTrait;
 
     public function show($id)
     {
@@ -54,8 +55,9 @@ class CourseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->lessonIndex($perPage, $pageNum, $data);
+        $response = new LessonListResource($result);
 
-        return response();
+        return $response;
 
 
     }

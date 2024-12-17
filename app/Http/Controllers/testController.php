@@ -3,60 +3,34 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Http\Request;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Http\Traits\CourseTrait;
+use Modules\LMS\app\Resources\LessonListResource;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use CourseTrait;
 
-
-    public function run(int $perPage = 10, int $pageNumber = 1, array $data = [])
+    public function run(Request $request)
     {
 
-        $searchTerm = $data['name'] ?? null;
 
-        $courseQuery = Course::joinRelationship('chapters.lessons', function ($q) use ($searchTerm) {
-            $q->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
-            });
-        })
-            ->addSelect([
-////                'courses.*',
-////                'chapters.*',
-////                'lessons.*',
-//                'courses.id as course_id',
-//
-//                'chapters.id as chapter_id',
-//                'chapters.title as chapter_title',
-//                'lessons.id as lesson_id',
-//                'lessons.title as lesson_title',
-                // Course table columns
-                'courses.id',
-                'courses.title',
-                // Chapters table columns
-                'chapters.id as chapter_id',
-                'chapters.title as chapter_title',
-                // Lessons table columns
-                'lessons.id as lesson_id',
-                'lessons.title as lesson_title',
-//
-            ])
-            ->withCount([
-                'chapters',
-                'lessons',
-                'questions'
-            ])
-            ->paginate($perPage, ['*'], 'page', $pageNumber);
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
 
-        return $courseQuery;
+        $result = $this->lessonIndex($perPage, $pageNum, $data);
+        $response = new LessonListResource($result);
+
+        return $response;
 
 
 //        $user = User::with('student')->find(2174);
