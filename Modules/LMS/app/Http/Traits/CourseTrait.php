@@ -24,13 +24,13 @@ trait CourseTrait
         $searchTerm = $data['name'] ?? null;
 
         $query = Course::query()->joinRelationship('cover');
-        $query->joinRelationship('chapters');
+        $query->joinRelationship('chapters.');
         $query->select([
             'courses.id',
             'courses.title',
             'courses.cover_id',
             'files.slug as cover_slug',
-            'chapters.status_id',
+            'chapters.status_chapter',
         ]);
         $query
             ->when($searchTerm, function ($query) use ($searchTerm) {
