@@ -3,14 +3,13 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Resources\LessonListResource;
 use Modules\LMS\app\Resources\CourseListResource;
+use Modules\LMS\app\Resources\LessonListResource;
 
 class CourseController extends Controller
 {
@@ -48,7 +47,7 @@ class CourseController extends Controller
         return $response;
     }
 
-    public function lesson_index(Request $request)
+    public function lessonList(Request $request)
     {
 
 
