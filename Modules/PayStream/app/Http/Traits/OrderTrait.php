@@ -3,8 +3,11 @@
 namespace Modules\PayStream\app\Http\Traits;
 
 use Modules\PayStream\App\Http\Enums\OrderStatusEnum;
+use Modules\PayStream\app\Models\FinancialStatus;
+use Modules\PayStream\app\Models\Order;
+use Modules\PayStream\app\Models\ProcessStatus;
 
-class OrderTrait {
+trait OrderTrait {
     private static string $proc_canceled = OrderStatusEnum::PROC_CANCELED->value;
     private static string $proc_registered = OrderStatusEnum::PROC_REGISTERED->value;
     private static string $proc_wait_mali = OrderStatusEnum::PROC_WAITE_MALI->value;
@@ -17,33 +20,33 @@ class OrderTrait {
 
     public function orderProcCanceled()
     {
-        return Course::GetAllStatuses()->firstWhere('name', OrderStatusEnum::PROC_CANCELED->value);
+        return ProcessStatus::GetAllStatuses()->firstWhere('name', OrderStatusEnum::PROC_CANCELED->value);
     }
 
     public function orderProcRegistered()
     {
-        return Course::GetAllStatuses()->firstWhere('name', OrderStatusEnum::PROC_REGISTERED->value);
+        return ProcessStatus::GetAllStatuses()->firstWhere('name', OrderStatusEnum::PROC_REGISTERED->value);
     }
 
     public function orderProcWaitMali()
     {
-        return Course::GetAllStatuses()->firstWhere('name', OrderStatusEnum::PROC_WAITE_MALI->value);
+        return ProcessStatus::GetAllStatuses()->firstWhere('name', OrderStatusEnum::PROC_WAITE_MALI->value);
     }
 
 
 
     public function orderFinWaitPardakht()
     {
-        return Course::GetAllStatuses()->firstWhere('name', OrderStatusEnum::FIN_WAIT_PARDAKHT->value);
+        return FinancialStatus::GetAllStatuses()->firstWhere('name', OrderStatusEnum::FIN_WAIT_PARDAKHT->value);
     }
 
     public function orderFinCanceled()
     {
-        return Course::GetAllStatuses()->firstWhere('name', OrderStatusEnum::FIN_CANCELED->value);
+        return FinancialStatus::GetAllStatuses()->firstWhere('name', OrderStatusEnum::FIN_CANCELED->value);
     }
 
     public function orderFinPardakhtShode()
     {
-        return Course::GetAllStatuses()->firstWhere('name', OrderStatusEnum::FIN_PARDAKHT_SHODE->value);
+        return FinancialStatus::GetAllStatuses()->firstWhere('name', OrderStatusEnum::FIN_PARDAKHT_SHODE->value);
     }
 }

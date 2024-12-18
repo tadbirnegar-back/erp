@@ -52,5 +52,11 @@
         "slug": "/lms/courses/list",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ثبت نام در دوره",
+        "slug": "/lms/register/course/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
     }
 ]

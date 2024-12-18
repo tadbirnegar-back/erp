@@ -20,12 +20,9 @@ class testController extends Controller
 
     public function run($request)
     {
-        $data = $request->all();
-        $perPage = $data['perPage'] ?? 10;
-        $pageNum = $data['pageNum'] ?? 1;
+        $user = User::with('student')->find(2174);
 
-        $result = $this->lessonIndex($perPage, $pageNum, $data);
-        $response = new LessonListResource($result);
+        $course = Course::find(1);
 
         return $response;
 
