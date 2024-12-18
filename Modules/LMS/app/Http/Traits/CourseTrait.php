@@ -70,7 +70,6 @@ trait CourseTrait
                 'questions',
             ])
             ->paginate($perPage, ['*'], 'page', $pageNumber);
-//        dd($courseQuery);
         return $courseQuery;
     }
 
@@ -84,7 +83,9 @@ trait CourseTrait
             'person.avatar'
         ]);
 
+
         $isEnrolled = $this -> isEnrolledToDefinedCourse($course->id , $user);
+        return $isEnrolled;
 
 
         $enrolls = $user->isEnrolled;

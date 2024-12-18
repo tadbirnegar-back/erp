@@ -1,5 +1,5 @@
 <?php
-namespace Modules\LMS\App\Http\Services;
+namespace Modules\LMS\app\Http\Services;
 
 use Modules\PayStream\app\Models\Online;
 use Modules\PayStream\app\Models\PsPayments;
