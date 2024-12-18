@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\FileMS\app\Models\File;
@@ -35,6 +36,70 @@ class Course extends Model
         'access_date',
         'privacy_id'
     ];
+
+    public function isRequired(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                if($value == 1){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        );
+    }
+
+    public function accessDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                $jalali = convertDateTimeGregorianToJalaliDateTime($value);
+
+                return $jalali;
+            },
+
+            set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Gregorian
+                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
+
+                return $dateTimeString;
+            }
+        );
+    }
+
+    public function expirationDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                $jalali = convertDateTimeGregorianToJalaliDateTime($value);
+
+                return $jalali;
+            },
+
+            set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Gregorian
+                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
+
+                return $dateTimeString;
+            }
+        );
+    }
 
     public function video()
     {

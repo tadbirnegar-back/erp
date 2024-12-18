@@ -4,16 +4,26 @@ namespace Modules\PayStream\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\LMS\app\Observers\PaymentObserver;
 use Modules\PayStream\Database\factories\PsPaymentsFactory;
 use Modules\StatusMS\app\Models\Status;
 
 class PsPayments extends Model
 {
+
     use HasFactory;
 
     /**
      * The attributes that are mass assignable.
      */
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Register the observer
+        static::observe(PaymentObserver::class);
+    }
 
     protected $fillable = [
         'id',
@@ -26,7 +36,7 @@ class PsPayments extends Model
         'total_price'
     ];
 
-    protected $table = 'ps_payments';
+    protected $table = 'ps_payment';
 
 
     public $timestamps = false;
@@ -58,6 +68,11 @@ class PsPayments extends Model
     public function statusPsPayments()
     {
         return $this->hasMany(PsPaymentStatus::class);
+    }
+
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
     }
 
 

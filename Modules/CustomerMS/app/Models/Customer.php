@@ -21,7 +21,15 @@ class Customer extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = [
+        "creator_id",
+        "person_id",
+        "status_id",
+        "create_date",
+        "customerable_id",
+        "customerable_type",
+        "customer_type_id",
+    ];
     public $timestamps = false;
 
 //    protected static function newFactory(): CustomerFactory
