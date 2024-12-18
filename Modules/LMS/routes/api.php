@@ -34,13 +34,12 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
     Route::post('/lms/courses/questions/list', [\Modules\LMS\app\Http\Controllers\CourseController::class, 'courseList']);
-//    Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
+    Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
     Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
-    Route::post('/lms/register/course/{id}' , [CourseController::class, 'registerCourse']);
-    Route::post('/lms/course/check-payment' , [CourseController::class, 'checkPayment']);
+    Route::post('/lms/register/course/{id}', [CourseController::class, 'registerCourse']);
+    Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
 });
 
-Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
