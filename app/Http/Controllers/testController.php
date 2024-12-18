@@ -10,7 +10,6 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
-use Modules\LMS\app\Resources\LessonListResource;
 
 
 class testController extends Controller
@@ -20,11 +19,7 @@ class testController extends Controller
 
     public function run($request)
     {
-        $user = User::with('student')->find(2174);
 
-        $course = Course::find(1);
-
-        return $response;
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']

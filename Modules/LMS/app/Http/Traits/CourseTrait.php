@@ -50,9 +50,7 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $courseQuery = Course::query()
-//            ->joinRelationship('chapters.lessons')
-            ->joinRelationship('statuses')
+        $courseQuery = Course::joinRelationship('cover')
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($subQuery) use ($searchTerm) {
                     $subQuery->where('courses.title', 'like', '%' . $searchTerm . '%')
@@ -62,11 +60,10 @@ trait CourseTrait
             ->addSelect([
                 'courses.id as course_id',
                 'courses.title as course_title',
-                'statuses.model',
-                'statuses.name as aaa',
-                'status_course.id as pivot_id',
+                'files.slug',
 
             ])
+            ->with(['latestStatus'])
             ->withCount([
                 'chapters',
                 'lessons',
