@@ -59,7 +59,7 @@ class Course extends Model
     public function latestStatus()
     {
         return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
-            ->latest('status_course.id');
+            ->orderByDesc('status_course.id');
     }
 
     public function enrolls()

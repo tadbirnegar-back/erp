@@ -10,7 +10,6 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
-use Modules\LMS\app\Resources\LessonListResource;
 
 
 class testController extends Controller
@@ -20,14 +19,7 @@ class testController extends Controller
 
     public function run($request)
     {
-        $data = $request->all();
-        $perPage = $data['perPage'] ?? 10;
-        $pageNum = $data['pageNum'] ?? 1;
 
-        $result = $this->lessonIndex($perPage, $pageNum, $data);
-        $response = new LessonListResource($result);
-
-        return $response;
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']
