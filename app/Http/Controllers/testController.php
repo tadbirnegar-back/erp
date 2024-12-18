@@ -11,24 +11,38 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Http\Traits\QuestionTrait;
+use Modules\LMS\app\Http\Traits\QuestionsTrait;
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
-    use QuestionTrait;
+    use PaymentRepository, QuestionsTrait, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+
 
     public function run(Request $request)
     {
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'creatorId' => 'required|integer|exists:users,id',
+            'difficultyId' => 'required|integer|exists:difficulties,id',
+            'lessonId' => 'required|integer|exists:lessons,id',
+            'questionTypeId' => 'required|integer|exists:question_types,id',
+            'repositoryId' => 'nullable|integer|exists:repositories,id',
+            'createDate' => 'nullable|date',
+        ]);
+
         try {
             DB::beginTransaction();
 
-            $question = $this->storeQuestion($request->all());
+            $question = $this->storeQuestion($validatedData);
+
             DB::commit();
-            return back()->with($question, 'success', 'سوال با موفقیت ثبت شد.');
+
+            return response()->json('success', 'سوال با موفقیت ثبت شد.');
         } catch (\Exception $e) {
-            return back()->with('error', 'خطایی در ثبت سوال رخ داده است.');
+            DB::rollBack();
+            return response()->json('error', 'خطایی در ثبت سوال رخ داده است.');
         }
+
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);

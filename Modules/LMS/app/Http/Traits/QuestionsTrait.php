@@ -7,14 +7,14 @@ use Modules\LMS\app\Models\Question;
 use Modules\StatusMS\app\Models\Status;
 use Nwidart\Modules\Collection;
 
-trait QuestionTrait
+trait QuestionsTrait
 {
 
     public function storeQuestion($data)
     {
         $dataToInsert = $this->questionDataPreparation($data);
 
-        $question = Question::create([$dataToInsert]);
+        $question = Question::create($dataToInsert);
 
         return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository');
     }
@@ -27,15 +27,15 @@ trait QuestionTrait
             $question = collect($question);
         }
 
-        $status = $this->questionActiveStatus();
+        $status = ([$this->questionActiveStatus(), $this->questionInActiveStatus()]);
         $question = $question->map(fn($data) => [
             'title' => $data['title'] ?? null,
-            'creator_id' => $data['creatorId'] ?? null,
-            'difficulty_id' => $data['difficultyId'] ?? null,
-            'lesson_id' => $data['lessonId'] ?? null,
-            'question_type_id' => $data['questionTypeId'] ?? null,
-            'repository_id' => $data['repositoryId'] ?? null,
-            'status_id' => $status->id,
+            'creator_id' => $data['creatorID'] ?? null,
+            'difficulty_id' => $data['difficultyID'] ?? null,
+            'lesson_id' => $data['lessonID'] ?? null,
+            'question_type_id' => $data['questionTypeID'] ?? null,
+            'repository_id' => $data['repositoryID'] ?? null,
+            'status_id' => $status->firstWhere('name', QuestionsEnum::ACTIVE->value)->id,
             'create_date' => $data['createDate'] ?? now(),
         ]);
         return $question;
@@ -56,3 +56,4 @@ trait QuestionTrait
 
 
 }
+

@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use training\Http\Traits\QuestionTrait;
+use Modules\LMS\app\Http\Traits\QuestionsTrait;
 
 class QuestionController extends Controller
 {
-    use QuestionTrait;
+    use QuestionsTrait;
 
     /**
      * Display a listing of the resource.
@@ -31,18 +31,32 @@ class QuestionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'creatorID' => 'required|integer|exists:users,id',
+            'difficultyID' => 'required|integer|exists:difficulties,id',
+            'lessonID' => 'required|integer|exists:lessons,id',
+            'questionTypeID' => 'required|integer|exists:question_types,id',
+            'repositoryID' => 'nullable|integer|exists:repositories,id',
+            'createDate' => 'nullable|date',
+        ]);
+
         try {
             DB::beginTransaction();
 
-            $question = $this->storeQuestion($request->all());
+            $question = $this->storeQuestion($validatedData);
+
             DB::commit();
-            return back()->with('success', 'سوال با موفقیت ثبت شد.');
+
+            return response()->json('success', 'سوال با موفقیت ثبت شد.');
         } catch (\Exception $e) {
-            return back()->with('error', 'خطایی در ثبت سوال رخ داده است.');
+            DB::rollBack();
+            return response()->json('error', 'خطایی در ثبت سوال رخ داده است.');
         }
     }
+
 
     /**
      * Show the specified resource.
