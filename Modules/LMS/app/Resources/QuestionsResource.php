@@ -9,40 +9,38 @@ class QuestionsResource extends ResourceCollection
     /**
      * Transform the resource collection into an array.
      */
-    public function toArray($request): array
+    public function toArray($request,): array
     {
         return [
-            'data' => $this->collection->transform(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'title' => $item->title,
-                    'creator' => $item->creator ? [
-                        'id' => $item->creator->id,
-                        'name' => $item->creator->name,
-                    ] : null,
-                    'difficulty' => $item->difficulty ? [
-                        'id' => $item->difficulty->id,
-                        'name' => $item->difficulty->name,
-                    ] : null,
-                    'lesson' => $item->lesson ? [
-                        'id' => $item->lesson->id,
-                        'title' => $item->lesson->title,
-                    ] : null,
-                    'questionType' => $item->questionType ? [
-                        'id' => $item->questionType->id,
-                        'name' => $item->questionType->name,
-                    ] : null,
-                    'status' => $item->status ? [
-                        'name' => $item->status->name,
-                        'className' => $item->status->class_name,
-                    ] : null,
-                    'repository' => $item->repository ? [
-                        'id' => $item->repository->id,
-                        'name' => $item->repository->name,
-                    ] : null,
+            'id' => $request->id,
+            'title' => $request->title,
+            'creator' => $request->creator ? [
+                'id' => $request->creator->id,
+                'name' => $request->creator->name,
+            ] : null,
+            'difficulty' => $request->difficulty ? [
+                'id' => $request->difficulty->id,
+                'name' => $request->difficulty->name,
+            ] : null,
+            'lesson' => $request->lesson ? [
+                'id' => $request->lesson->id,
+                'title' => $request->lesson->title,
+            ] : null,
+            'questionType' => $request->questionType ? [
+                'id' => $request->questionType->id,
+                'name' => $request->questionType->name,
+            ] : null,
+            'status' => $request->status ? [
+                'name' => $request->status->name,
+                'className' => $request->status->class_name,
+            ] : null,
+            'repository' => $request->repository ? [
+                'id' => $request->repository->id,
+                'name' => $request->repository->name,
+            ] : null,
 
-                ];
-            }),
         ];
+
+
     }
 }

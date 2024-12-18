@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\OptionTrait;
 use Modules\LMS\app\Models\Option;
+use Modules\LMS\app\Resources\OptionsResource;
 
 class OptionController extends Controller
 {
@@ -43,22 +44,23 @@ class OptionController extends Controller
             $question = $this->insertOptions([$data]);
 
             DB::commit();
+            $response = new OptionsResource($question);
 
-            return response()->json(['message' => 'Success', 'data' => $question], 200);
+            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در افزودن گزینه', 'error' => $e->getMessage()], 500);
         }
     }
 
-    public function destroy(Request $request, $id): JsonResponse
+    public function destroyQuestion($id)
     {
         $success = $this->deleteOption($id);
 
         if ($success) {
-            return response()->json(['message' => 'Option has been deactivated successfully.'], 200);
+            return response()->json(['message' => 'Question has been deactivated successfully.'], 200);
         } else {
-            return response()->json(['message' => 'Option not found.'], 404);
+            return response()->json(['message' => 'Question not found.'], 404);
         }
     }
 
@@ -66,22 +68,43 @@ class OptionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function update(array $data, Option $option): JsonResponse
+    public function editQuestion(Request $request, $id)
     {
-        $option = Option::findOrFail($data['id']);
-        if ($option == null) {
+        $question = Option::findOrFail($id);
+        if ($question == null) {
             return response()->json(['message' => 'Not Found'], 404);
         }
-
         try {
             DB::beginTransaction();
-            $option = $this->UpdateQuestion($data, $option);
+            $question = $this->editOption($request->all(), $question);
+            $response = new OptionsResource($question);
+
             DB::commit();
-            return response()->json(['message' => 'Success', 'data' => $option], 200);
+            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش گزینه', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش سوال', 'error' => $e->getMessage()], 500);
         }
     }
+//    public function update(array $data, Option $option): JsonResponse
+//    {
+//        $option = Option::findOrFail($data['id']);
+//        if ($option == null) {
+//            return response()->json(['message' => 'Not Found'], 404);
+//        }
+//
+//        try {
+//            DB::beginTransaction();
+//            $option = $this->UpdateQuestion($data, $option);
+//            $response = new OptionsResource($option);
+//
+//            DB::commit();
+//            return response()->json(['message' => 'Success', 'data' => $option, $response], 200);
+//
+//        } catch (\Exception $e) {
+//            DB::rollBack();
+//            return response()->json(['message' => 'خطا در ویرایش گزینه', 'error' => $e->getMessage()], 500);
+//        }
+//    }
 }

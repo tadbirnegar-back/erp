@@ -3,7 +3,6 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Enums\QuestionsEnum;
-use Modules\LMS\app\Models\Option;
 use Modules\LMS\app\Models\Question;
 use Modules\StatusMS\app\Models\Status;
 use Nwidart\Modules\Collection;
@@ -17,7 +16,7 @@ trait QuestionsTrait
 
         $question = Question::create($dataToInsert->first());
 
-        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository', 'options');
+        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository',);
     }
 
 
@@ -66,45 +65,6 @@ trait QuestionsTrait
             $status = $this->questionInActiveStatus();
             $QuestionRecord->status_id = $status->id;
             $QuestionRecord->save();
-            return true;
-        }
-
-        return false;
-    }
-
-    public function insertOptions($data)
-    {
-        $option = Option::insert([
-            'question_id' => $data['questionID'],
-            'option' => $data['option'],
-            'is_correct' => $data['isCorrect'],
-            'create_date' => $data['createDate'],
-        ]);
-        return $option;
-    }
-
-    public function editOption(Option $option, $data)
-    {
-        $option->question_id = $data['questionID'];
-        $option->option = $data['option'];
-        $option->is_correct = $data['isCorrect'];
-        $option->create_date = $data['createDate'];
-        $option->save();
-        return $option;
-
-    }
-
-    public function deleteOption(int $id): bool
-
-    {
-
-        $QuestionRecord = Question::find($id);
-
-        if ($QuestionRecord) {
-            $status = $this->questionInActiveStatus();
-            $QuestionRecord->status_id = $status->id;
-            $QuestionRecord->save();
-
             return true;
         }
 

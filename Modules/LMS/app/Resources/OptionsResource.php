@@ -12,16 +12,14 @@ class OptionsResource extends ResourceCollection
     public function toArray($request): array
     {
         return [
-            'data' => $this->collection->transform(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'isCorrect' => $item->isCorrect,
-                    'questionID' => $item->questionID,
-                    'lable' => $item->lable,
+            'id' => $request->id,
+            'isCorrect' => $request->isCorrect,
+            'questionID' => $request->questionID,
+            'lable' => $request->lable,
 
-                ];
-            }),
         ];
+
+
     }
 
 

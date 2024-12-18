@@ -30,10 +30,10 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'show']);
     Route::put('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'update']);
     Route::delete('/students/delete/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'destroy']);
-    Route::post('/lms/edit/questions', [QuestionController::class, 'editQuestion']);
-    Route::post('/lms/delete/questions', [QuestionController::class, 'destroyQuestion']);
-    Route::post('/lms/edit/options', [OptionController::class, 'editOption']);
-    Route::post('/lms/delete/options', [OptionController::class, 'destroyOption']);
+    Route::post('/lms/edit/questions/{id}', [QuestionController::class, 'editQuestion']);
+    Route::post('/lms/delete/questions/{id}', [QuestionController::class, 'destroyQuestion']);
+    Route::post('/lms/edit/options/{id}', [OptionController::class, 'editOption']);
+    Route::post('/lms/delete/options/{id}', [OptionController::class, 'destroyOption']);
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);

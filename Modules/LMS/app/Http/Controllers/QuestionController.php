@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\QuestionsTrait;
 use Modules\LMS\app\Models\Question;
+use Modules\LMS\app\Resources\QuestionsResource;
 
 class QuestionController extends Controller
 {
@@ -16,7 +17,7 @@ class QuestionController extends Controller
     public function store(Request $request)
     {
         //   $user=auth()->user();
-        $user = User::find(40);
+        $user = User::find(39);
 
         $data = $request->all();
         $validatedData = $request->validate([
@@ -32,19 +33,19 @@ class QuestionController extends Controller
         try {
             DB::beginTransaction();
 
-            $question = $this->insertOptions([$data], $user);
-//            return response()->json($question);
+            $question = $this->storeQuestion([$data], $user);
+            $response = new QuestionsResource($question);
 
             DB::commit();
 
-            return response()->json(['message' => 'Success', 'data' => $question], 200);
+            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در افزودن سوال', 'error' => $e->getMessage()], 500);
         }
     }
 
-    public function destroyQuestion($id, Request $request)
+    public function destroyQuestion($id)
     {
         $success = $this->deleteQuestionRecord($id);
 
@@ -53,21 +54,22 @@ class QuestionController extends Controller
         } else {
             return response()->json(['message' => 'Question not found.'], 404);
         }
-
-
     }
 
-    public function editQuestion(array $data, Question $question)
+
+    public function editQuestion(Request $request, $id)
     {
-        $question = Question::findOrFail($data['id']);
+        $question = Question::findOrFail($id);
         if ($question == null) {
             return response()->json(['message' => 'Not Found'], 404);
         }
         try {
             DB::beginTransaction();
-            $question = $this->UpdateQuestion($data, $question);
+            $question = $this->UpdateQuestion($request->all(), $question);
+            $response = new QuestionsResource($question);
+
             DB::commit();
-            return response()->json(['message' => 'Success', 'data' => $question], 200);
+            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
