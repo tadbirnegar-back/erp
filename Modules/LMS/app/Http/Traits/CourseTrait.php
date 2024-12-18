@@ -244,7 +244,7 @@ trait CourseTrait
             if ($component['name'] === 'StudyLog') {
                 $lessonStudyLog = $component['data']['lessonStudyLog'] ?? [];
                 foreach ($lessonStudyLog as $log) {
-                    if ($log['is_completed'] === 1) {
+                    if ($log['is_completed'] == 1) {
                         $completedLessonIds[] = $log['lesson_id'];
                     }
                 }
@@ -346,23 +346,6 @@ trait CourseTrait
         ];
         return $combo;
     }
-
-
-    public function coursePresentingStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
-    }
-
-    public function courseCanceledStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
-    }
-
-    public function courseEndedStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
-    }
-
     public function isEnrolledToDefinedCourse($courseId , $user)
     {
         $user->load(['isEnrolled.orderable' => function ($q) use($courseId) {
@@ -385,5 +368,19 @@ trait CourseTrait
 
     }
 
+    public function coursePresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+    }
+
+    public function courseCanceledStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
+    }
+
+    public function courseEndedStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
+    }
 }
 
