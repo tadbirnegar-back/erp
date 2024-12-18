@@ -25,7 +25,7 @@ use Shetabit\Payment\Facade\Payment;
 
 abstract class RegisteringAbstract
 {
-    use CustomerTrait, PsPaymentTrait , OrderTrait , InvoiceTrait;
+    use CustomerTrait, PsPaymentTrait, OrderTrait, InvoiceTrait;
 
     protected Course $course;
     protected User $user;
@@ -46,52 +46,20 @@ abstract class RegisteringAbstract
 
     protected function setEnrollID()
     {
-        $courseID = $this->getCourseID()->id;
-        $enroll = Enroll::where('course_id', $courseID)->select('id')->first();
-        if ($enroll) {
-            $this->enrollID = $enroll->id;
-        } else {
-            $enroll = Enroll::create([
-                'course_id' => $courseID,
-                'study_completed' => 0,
-                'study_count' => 0
-            ]);
-            $this->enrollID = $enroll->id;
-        }
-        return $this->enrollID;
-    }
 
-    protected function getEnrollID(): int
-    {
-        return $this->enrollID ?? $this->setEnrollID();
-    }
+        $enroll = Enroll::create([
+            'course_id' => $this -> course -> id,
+            'study_completed' => 0,
+            'study_count' => 0
+        ]);
+        $this->enrollID = $enroll->id;
 
-    protected function storeEnroll()
-    {
-        $this->getEnrollID();
     }
-
 
     protected function setStudent()
     {
         $student = Student::create([]);
         $this->studentID = $student->id;
-        Log::info("hi");
-
-    }
-
-    protected function getCustomer()
-    {
-        $customer = Customer::where('person_id', $this->user->person_id)
-            ->whereMorphedTo('customerable', Student::class)
-            ->first();
-        if ($customer) {
-            $this->customerID = $customer->id;
-            $this->studentID = $customer->customerable_id;
-        } else {
-            $this->setStudent();
-            $this->setCustomer();
-        }
     }
 
     protected function setCustomer()
@@ -126,35 +94,6 @@ abstract class RegisteringAbstract
     }
 
 
-    protected function getOrder()
-    {
-        $order = Order::where("customer_id", $this->customerID)->where("orderable_type", Enroll::class)->where("orderable_id", $this->enrollID)->first();
-
-        if ($order) {
-            $this->order = $order;
-        } else {
-            $this->setOrder();
-        }
-
-        if($this -> course -> price > 0){
-
-        }else{
-            ProcessStatus::create([
-                "order_id" => $this->order->id,
-                "status_id" => $this->orderProcRegistered()->id,
-                "creator_id" => $this->user->id
-            ]);
-
-            FinancialStatus::create([
-                "order_id" => $this->order->id,
-                "status_id" => $this->orderFinPardakhtShode()->id,
-                "creator_id" => $this->user->id
-            ]);
-        }
-
-    }
-
-
     protected function setInvoice()
     {
         $invoice = Invoice::create([
@@ -166,28 +105,6 @@ abstract class RegisteringAbstract
         ]);
 
         $this->invoice = $invoice;
-    }
-
-    protected function getInvoice()
-    {
-        $invoice = Invoice::where('order_id', $this->order->id)->first();
-        if ($invoice) {
-            $this->invoice = $invoice;
-        } else {
-            $this->setInvoice();
-        }
-        if($this->course->price > 0){
-            InvoiceStatus::create([
-                "invoice_id" => $this->invoice->id,
-                "status_id" => $this->waitToPayInvoiceStatus()->id,
-            ]);
-        }else{
-            InvoiceStatus::create([
-                "invoice_id" => $this->invoice->id,
-                "status_id" => $this->payedInvoiceStatus()->id,
-            ]);
-        }
-
     }
 
 
@@ -218,14 +135,14 @@ abstract class RegisteringAbstract
                 "create_date" => now(),
                 "invoice_id" => $this->invoice->id,
                 "payment_date" => now(),
-                "total_price" => $this->course->id,
+                "total_price" => $this->course->price,
             ]);
 
-            PsPaymentStatus::created([
-                "status_id" => $this -> waitToPayStatus() -> id,
-                "payment_id" => $psPayment -> id ,
+            PsPaymentStatus::create([
+                "status_id" => $this->waitToPayStatus()->id,
+                "payment_id" => $psPayment->id,
                 "create_date" => now(),
-                "creator_id" => $this -> user -> id
+                "creator_id" => $this->user->id
             ]);
         })->pay();
 

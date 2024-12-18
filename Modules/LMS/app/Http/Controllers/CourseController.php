@@ -10,10 +10,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\App\Http\Services\PurchaseCourse;
+use Modules\LMS\App\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
+use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
 {
@@ -53,17 +57,67 @@ class CourseController extends Controller
 
     public function registerCourse($id)
     {
-        DB::beginTransaction();
-        $course = Course::with('prerequisiteCourses')->find(1);
-        //check kardane karbar ke pishniyaz hasho sabte nam karde ya na be mobtadi tarin halate momken anjam shode va dar ayande momkene update she
+        try {
+            DB::beginTransaction();
+
+            $course = Course::with('prerequisiteCourses')->find($id);
+//            $user = Auth::user();
+            $user = \Modules\AAA\app\Models\User::find(2174);
+
+            // Check if the user has completed prerequisite courses.
+            // This is currently implemented in the simplest possible way and might be updated in the future.
+            $isPreDone = $this->isJoinedPreRerequisites($user, $course);
+            if($isPreDone){
+                $purchase = new PurchaseCourse($course, $user);
+                $response = $purchase->handle();
+            }else{
+                return response()->json([
+                    'success' => false,
+                    'message' => 'پیش نیاز های دوره مطالعه نشده است',
+                ], 400);
+            }
 
 
+            DB::commit();
 
+            return response()->json($response);
+        } catch (\Exception $e) {
+            DB::rollBack();
 
-        $user = \Modules\AAA\app\Models\User::find(2295);
-        $purchase = new PurchaseCourse($course, $user);
-        $response = $purchase -> handle();
-        DB::commit();
-        return response()->json($course);
+            return response()->json([
+                'success' => false,
+                'message' => 'عضویت با مشکل مواجه شد',
+            ], 500);
+        }
+    }
+
+    public function checkPayment(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'authority' => [
+                'required',
+                'exists:onlines,authority'
+            ]
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        $online = Online::where('authority' , $data['authority'])->first();
+        try {
+            DB::beginTransaction();
+            $verify = new VerificationPayment($online);
+            $result = $verify -> verifyPayment();
+            DB::commit();
+            return response() -> json($result);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            DB::beginTransaction();
+            $verify = new VerificationPayment($online);
+            $result = $verify -> DeclinePayment();
+            DB::commit();
+            return response() -> json($result);
+        }
+
     }
 }

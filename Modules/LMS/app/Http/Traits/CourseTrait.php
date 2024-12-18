@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
@@ -332,5 +333,20 @@ trait CourseTrait
         }]);
         return $user;
     }
+
+    public function isJoinedPreRerequisites($user , $course) : bool
+    {
+        $user -> load(['enrolls' => function ($q) use($course) {
+            $q->where('course_id' , 2);
+        }]);
+        if(empty($user -> enrolls[0]))
+        {
+            return false;
+        }else{
+            return true;
+        }
+
+    }
+
 }
 

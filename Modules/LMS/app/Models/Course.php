@@ -38,6 +38,22 @@ class Course extends Model
         'privacy_id'
     ];
 
+    public function isRequired(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                if($value == 1){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        );
+    }
+
     public function accessDate(): Attribute
     {
         return Attribute::make(
