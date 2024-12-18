@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Enums\QuestionsEnum;
+use Modules\LMS\app\Models\Option;
 use Modules\LMS\app\Models\Question;
 use Modules\StatusMS\app\Models\Status;
 use Nwidart\Modules\Collection;
@@ -10,23 +11,21 @@ use Nwidart\Modules\Collection;
 trait QuestionsTrait
 {
 
-    public function storeQuestion($data)
+    public function storeQuestion($data, $user)
     {
-        $dataToInsert = $this->questionDataPreparation($data);
+        $dataToInsert = $this->questionDataPreparation($data, $user);
 
         $question = Question::create($dataToInsert->first());
 
-        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository');
+        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository', 'options');
     }
 
 
-    public function questionDataPreparation(array|Collection $question)
+    public function questionDataPreparation(array|Collection $question, $creator)
     {
-
         if (is_array($question)) {
             $question = collect($question);
         }
-        $creator = auth()->user();
 
         $status = $this->questionActiveStatus();
         $question = $question->map(fn($data) => [
@@ -38,7 +37,9 @@ trait QuestionsTrait
             'repository_id' => $data['repositoryID'] ?? null,
             'status_id' => $status->id ?? null,
             'create_date' => $data['createDate'] ?? now(),
+
         ]);
+
         return $question;
 
     }
@@ -58,9 +59,56 @@ trait QuestionsTrait
 
     }
 
-    public function DelQuestion()
+    public function deleteQuestionRecord(int $id): bool
+    {
+        $QuestionRecord = Question::find($id);
+        if ($QuestionRecord) {
+            $status = $this->questionInActiveStatus();
+            $QuestionRecord->status_id = $status->id;
+            $QuestionRecord->save();
+            return true;
+        }
+
+        return false;
+    }
+
+    public function insertOptions($data)
+    {
+        $option = Option::insert([
+            'question_id' => $data['questionID'],
+            'option' => $data['option'],
+            'is_correct' => $data['isCorrect'],
+            'create_date' => $data['createDate'],
+        ]);
+        return $option;
+    }
+
+    public function editOption(Option $option, $data)
+    {
+        $option->question_id = $data['questionID'];
+        $option->option = $data['option'];
+        $option->is_correct = $data['isCorrect'];
+        $option->create_date = $data['createDate'];
+        $option->save();
+        return $option;
+
+    }
+
+    public function deleteOption(int $id): bool
+
     {
 
+        $QuestionRecord = Question::find($id);
+
+        if ($QuestionRecord) {
+            $status = $this->questionInActiveStatus();
+            $QuestionRecord->status_id = $status->id;
+            $QuestionRecord->save();
+
+            return true;
+        }
+
+        return false;
     }
 
     public function questionActiveStatus()

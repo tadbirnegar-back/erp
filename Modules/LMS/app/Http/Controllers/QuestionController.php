@@ -3,36 +3,22 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\QuestionsTrait;
+use Modules\LMS\app\Models\Question;
 
 class QuestionController extends Controller
 {
     use QuestionsTrait;
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        return view('lms::index');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('lms::create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        //   $user=auth()->user();
+        $user = User::find(40);
+
+        $data = $request->all();
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
 //            'creatorID' => 'required|integer|exists:users,id',
@@ -46,7 +32,9 @@ class QuestionController extends Controller
         try {
             DB::beginTransaction();
 
-            $question = $this->storeQuestion($validatedData);
+            $question = $this->insertOptions([$data], $user);
+//            return response()->json($question);
+
             DB::commit();
 
             return response()->json(['message' => 'Success', 'data' => $question], 200);
@@ -56,35 +44,36 @@ class QuestionController extends Controller
         }
     }
 
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
+    public function destroyQuestion($id, Request $request)
     {
-        return view('lms::show');
+        $success = $this->deleteQuestionRecord($id);
+
+        if ($success) {
+            return response()->json(['message' => 'Question has been deactivated successfully.'], 200);
+        } else {
+            return response()->json(['message' => 'Question not found.'], 404);
+        }
+
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
+    public function editQuestion(array $data, Question $question)
     {
-        return view('lms::edit');
+        $question = Question::findOrFail($data['id']);
+        if ($question == null) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        try {
+            DB::beginTransaction();
+            $question = $this->UpdateQuestion($data, $question);
+            DB::commit();
+            return response()->json(['message' => 'Success', 'data' => $question], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش سوال', 'error' => $e->getMessage()], 500);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): RedirectResponse
-    {
-        //
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        //
-    }
 }

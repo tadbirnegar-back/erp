@@ -45,7 +45,7 @@ class Question extends Model
 
     public function difficulty()
     {
-        return $this->belongsTo(Dificulty::class, 'difficulty_id', 'id');
+        return $this->belongsTo(Difficulty::class, 'difficulty_id', 'id');
     }
 
     public function questionType()
@@ -66,6 +66,11 @@ class Question extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function repository()
+    {
+        return $this->belongsTo(Repository::class, 'repository_id', 'id');
     }
 
 
