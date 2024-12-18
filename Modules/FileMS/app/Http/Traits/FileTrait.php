@@ -17,7 +17,7 @@ trait FileTrait
 
         $path = $currentDate->year . '/' . $currentDate->month . '/' . $currentDate->day;
 
-        return $this->$method($file->getClientOriginalName(), $file, $path);
+        return $this->$method(\Str::random(10) . $file->getClientOriginalName(), $file, $path);
 
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\LMS\App\Http\Enums;
+namespace Modules\LMS\app\Http\Enums;
 
 enum AnswerSheetStatusEnum: string
 {

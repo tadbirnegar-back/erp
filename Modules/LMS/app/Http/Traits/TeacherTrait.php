@@ -2,7 +2,6 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Kirschbaum\PowerJoins\PowerJoins;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
@@ -60,21 +59,29 @@ trait TeacherTrait
 
     public function teacherIndex(int $perPage = 1, int $pageNumber = 1, array $data = [])
     {
-
-        $searchTerm = $data['display_name'] ?? null;
-
-        $teacherQuery = WorkForce::query();
-        $teacherQuery->joinRelationship('person');
-        $teacherQuery->where('workforceable_type', Teacher::class);
-        $teacherQuery->when($searchTerm, function ($query, $searchTerm) {
-            $query->whereRaw("MATCH (display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
-            $query->where('person', function ($query) use ($searchTerm) {
-                $query->where('person.display_name', 'like', '%' . $searchTerm . '%')
-                    ->where('MATCH(person.display_name) AGAINST(?)', [$searchTerm]);
-            });
-        });
-
-        $teacherQuery->with(['person:id,display_name']);
+        $searchTerm = $data['name'] ?? null;
+        $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
+            ->joinRelationship('person.avatar')
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery
+                        ->whereRaw('MATCH(persons.display_name) AGAINST(?)', [$searchTerm])
+                        ->orWhere('persons.display_name', 'LIKE', '%' . $searchTerm . '%');
+                });
+            })
+            ->addSelect([
+                // Workforce table columns
+                'work_forces.id',
+                'work_forces.workforceable_type',
+                'work_forces.workforceable_id',
+                'work_forces.isMarried',
+                // Person table columns
+                'persons.id as person_id',
+                'persons.display_name',
+                // File table columns
+                'files.slug',
+                'files.size',
+            ]);
         $result = $teacherQuery->paginate($perPage, page: $pageNumber);
 
         return $result;
@@ -85,15 +92,27 @@ trait TeacherTrait
     {
         $searchTerm = $request['name'];
 
-        $teacherQuery = WorkForce::query();
-//        $teacherQuery->where('workforceable_type', '=', Teacher::class);
+        $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
+            ->joinRelationship('person.avatar', function ($q) use ($searchTerm) {
 
-        $teacherQuery->joinRelationship('person');
+                $q
+                    ->whereRaw('MATCH(persons.display_name) AGAINST(?)', [$searchTerm])
+                    ->orWhere('persons.display_name', 'LIKE', '%' . $searchTerm . '%');
 
-        $teacherQuery->whereRaw("MATCH (persons.display_name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
-            ->orWhere('persons.display_name', 'like', '%' . $searchTerm . '%')
-            ->where('workforceable_type', '=', Teacher::class);
-        $teacherQuery->with(['person']);
+            })
+            ->addSelect([
+                // Workforce table columns
+                'work_forces.id',
+                'work_forces.workforceable_type',
+                'work_forces.workforceable_id',
+                'work_forces.isMarried',
+                // Person table columns
+                'persons.id as person_id',
+                'persons.display_name',
+                // File table columns
+                'files.slug',
+                'files.size',
+            ]);
         return $teacherQuery->get();
     }
 }

@@ -3,11 +3,7 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use http\Client\Curl\User;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +13,8 @@ use Modules\LMS\App\Http\Services\PurchaseCourse;
 use Modules\LMS\App\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Resources\CourseListResource;
+use Modules\LMS\app\Resources\LessonListResource;
 use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
@@ -27,22 +25,21 @@ class CourseController extends Controller
         try {
             DB::beginTransaction();
             $course = Course::with('latestStatus')->findOrFail($id);
-//            $user = Auth::user();
-            $user = \Modules\AAA\app\Models\User::find(2174);
+            $user = Auth::user();
             if (is_null($course)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
             }
 
-            $componentsToRenderWithData = $this -> courseShow($course , $user);
+            $componentsToRenderWithData = $this->courseShow($course, $user);
             DB::commit();
             return response()->json($componentsToRenderWithData);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()]);
         }
     }
 
-    public function courseList(Request $request): JsonResponse
+    public function courseList(Request $request)
     {
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;
@@ -50,8 +47,9 @@ class CourseController extends Controller
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
 
-        return response()->json($result);
+        $response = new CourseListResource($result);
 
+        return $response;
     }
 
 
@@ -61,9 +59,7 @@ class CourseController extends Controller
             DB::beginTransaction();
 
             $course = Course::with('prerequisiteCourses')->find($id);
-//            $user = Auth::user();
-            $user = \Modules\AAA\app\Models\User::find(2174);
-
+            $user = Auth::user();
             // Check if the user has completed prerequisite courses.
             // This is currently implemented in the simplest possible way and might be updated in the future.
             $isPreDone = $this->isJoinedPreRerequisites($user, $course);
@@ -120,4 +116,21 @@ class CourseController extends Controller
         }
 
     }
+
+    public function lessonList(Request $request)
+    {
+
+
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+
+        $result = $this->lessonIndex($perPage, $pageNum, $data);
+        $response = new LessonListResource($result);
+
+        return $response;
+
+
+    }
+
 }

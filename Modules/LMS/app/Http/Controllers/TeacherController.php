@@ -5,8 +5,10 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\LMS\app\Http\Traits\TeacherTrait;
+use Modules\LMS\app\Resources\TeacherListResource;
 
 class TeacherController extends Controller
 {
@@ -19,12 +21,14 @@ class TeacherController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->teacherIndex($perPage, $pageNum, $data);
+        $response = new TeacherListResource($result);
 
-        return response()->json($result);
+        return $response;
     }
+
     public function LiveSearchTeacher(Request $request)
     {
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string',
         ]);
 
@@ -43,7 +47,7 @@ class TeacherController extends Controller
             \DB::beginTransaction();
             $data = $request->all();
             $situation = $this->isPersonTeacher($data['nationalCode']);
-            if(isset($data['bcIssueDate'])){
+            if (isset($data['bcIssueDate'])) {
                 $data['bcIssueDate'] = convertJalaliPersianCharactersToGregorian($data['bcIssueDate']);
             }
             $data['dateOfBirth'] = convertJalaliPersianCharactersToGregorian($data['dateOfBirth']);

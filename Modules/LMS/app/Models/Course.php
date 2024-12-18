@@ -5,7 +5,6 @@ namespace Modules\LMS\app\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -135,7 +134,7 @@ class Course extends Model
 
     public function chapters()
     {
-        return $this->hasMany(Chapter::class, 'course_id', 'id');
+        return $this->hasMany(Chapter::class, 'course_id');
     }
 
     public function courseExams()
@@ -175,20 +174,22 @@ class Course extends Model
             'main_course_id'
         );
     }
+
     use HasRelationships;
+
     public function lessonStudyLog()
     {
-        return $this->hasManyDeep(LessonStudyLog::class, [Chapter::class , Lesson::class] ,
-            ['course_id' , 'chapter_id' , 'lesson_id'] ,
-            ['id' , 'id' , 'id']
+        return $this->hasManyDeep(LessonStudyLog::class, [Chapter::class, Lesson::class],
+            ['course_id', 'chapter_id', 'lesson_id'],
+            ['id', 'id', 'id']
         );
     }
 
     public function lessons()
     {
-        return $this -> hasManyDeep(Lesson::class , [Chapter::class] ,
-            ['course_id' , 'chapter_id'],
-            ['id' , 'id']
+        return $this->hasManyDeep(Lesson::class, [Chapter::class],
+            ['course_id', 'chapter_id'],
+            ['id', 'id']
         );
     }
 

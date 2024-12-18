@@ -18,23 +18,63 @@ trait CourseTrait
     private static string $deleted = CourseStatusEnum::DELETED->value;
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
+    private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = Course::query()->withCount(['chapters', 'lessons', 'questions'])
-            ->with('latestStatus');
-        $query->whereHas('latestStatus', function ($query) {
-            $query->whereIn('name', [CourseStatusEnum::PRESENTING->value, CourseStatusEnum::PISHNEVIS->value, CourseStatusEnum::WAITING_TO_PRESENT->value]);
-        });
+        $query = Course::query()->joinRelationship('cover');
+        $query->select([
+            'courses.id',
+            'courses.title',
+            'courses.cover_id',
+            'files.slug as cover_slug',
+        ]);
+        $query
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
+            });
+        $query->withCount(['chapters', 'lessons', 'questions']);
 
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where('courses.title', 'like', '%' . $searchTerm . '%')
                 ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
         });
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
+    }
+
+    public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
+    {
+        $searchTerm = $data['name'] ?? null;
+
+        $courseQuery = Course::query()
+//            ->joinRelationship('chapters.lessons')
+            ->joinRelationship('statuses')
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery->where('courses.title', 'like', '%' . $searchTerm . '%')
+                        ->orWhereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+                });
+            })
+            ->addSelect([
+                'courses.id as course_id',
+                'courses.title as course_title',
+                'statuses.model',
+                'statuses.name as aaa',
+                'status_course.id as pivot_id',
+
+            ])
+            ->withCount([
+                'chapters',
+                'lessons',
+                'questions',
+            ])
+            ->paginate($perPage, ['*'], 'page', $pageNumber);
+//        dd($courseQuery);
+        return $courseQuery;
     }
 
 

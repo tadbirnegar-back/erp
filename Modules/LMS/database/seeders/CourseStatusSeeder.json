@@ -1,7 +1,7 @@
 [
     {
         "name": "لغو شده",
-        "className": "primary"
+        "className": "danger"
     },
     {
         "name": "به پایان رسیده",
@@ -9,18 +9,18 @@
     },
     {
         "name": "در حال برگزاری",
-        "className": "primary"
+        "className": "success"
     },
     {
         "name": "پیش نویس",
-        "className": "primary"
+        "className": "warning"
     },
     {
         "name": "حذف شده",
-        "className": "primary"
+        "className": "danger"
     },
     {
-        "name": "برگزار شونده",
+        "name": "در انتظار برگزاری",
         "className": "primary"
     },
     {

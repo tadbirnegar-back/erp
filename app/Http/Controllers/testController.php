@@ -3,34 +3,28 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
-use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
-use Modules\LMS\app\Models\Chapter;
-use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Enroll;
-use Modules\PayStream\app\Http\Traits\OrderTrait;
-use Modules\PayStream\app\Http\Traits\PsPaymentTrait;
-use Modules\PayStream\app\Models\Order;
-use Modules\PersonMS\app\Models\Person;
+use Modules\LMS\app\Http\Traits\CourseTrait;
+use Modules\LMS\app\Resources\LessonListResource;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait , PsPaymentTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use CourseTrait;
 
-    public function run()
+    public function run($request)
     {
+        $user = User::with('student')->find(2174);
 
-        $data = $this->waitToPayStatus();
-        return response()->json($data);
+        $course = Course::find(1);
+
+        return $response;
 
 //        $CoursecomponentsToRender =  collect([
 //            'MainCourse' => ['latestStatus']
