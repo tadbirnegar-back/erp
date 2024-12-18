@@ -5,7 +5,7 @@ namespace Modules\LMS\app\Listeners;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
-use Modules\LMS\app\Jobs\PaymentCreatedJob;
+use Modules\LMS\app\Jobs\PaymentVerificationJob;
 
 class PaymentCreatedListener
 {
@@ -24,6 +24,6 @@ class PaymentCreatedListener
     {
         $payment = $event->payment;
 
-        PaymentCreatedJob::dispatch($payment)->delay(now()->addMinutes(15));
+        PaymentVerificationJob::dispatch($payment)->delay(now()->addMinutes(15));
     }
 }

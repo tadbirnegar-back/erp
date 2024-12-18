@@ -14,7 +14,7 @@ use Modules\PayStream\App\Http\Enums\PsPaymentStatusEnum;
 use Modules\PayStream\app\Http\Traits\PsPaymentTrait;
 use Modules\PayStream\app\Models\PsPayments;
 
-class PaymentCreatedJob implements ShouldQueue
+class PaymentVerificationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels ;
 
