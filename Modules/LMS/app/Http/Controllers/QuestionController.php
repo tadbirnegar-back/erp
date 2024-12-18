@@ -35,7 +35,7 @@ class QuestionController extends Controller
     {
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
-            'creatorID' => 'required|integer|exists:users,id',
+//            'creatorID' => 'required|integer|exists:users,id',
             'difficultyID' => 'required|integer|exists:difficulties,id',
             'lessonID' => 'required|integer|exists:lessons,id',
             'questionTypeID' => 'required|integer|exists:question_types,id',
@@ -47,16 +47,14 @@ class QuestionController extends Controller
             DB::beginTransaction();
 
             $question = $this->storeQuestion($validatedData);
-
             DB::commit();
 
-            return response()->json('success', 'سوال با موفقیت ثبت شد.');
+            return response()->json(['message' => 'Success', 'data' => $question], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json('error', 'خطایی در ثبت سوال رخ داده است.');
+            return response()->json(['message' => 'خطا در افزودن سوال', 'error' => $e->getMessage()], 500);
         }
     }
-
 
     /**
      * Show the specified resource.

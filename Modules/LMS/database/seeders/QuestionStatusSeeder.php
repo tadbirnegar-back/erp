@@ -25,6 +25,5 @@ class QuestionStatusSeeder extends Seeder
                 'class_name' => $questionStatus['className'] ?? null,
             ]);
         }
-        // $this->call([]);
     }
 }
