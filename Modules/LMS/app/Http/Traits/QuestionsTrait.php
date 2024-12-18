@@ -14,7 +14,7 @@ trait QuestionsTrait
     {
         $dataToInsert = $this->questionDataPreparation($data);
 
-        $question = Question::create($dataToInsert);
+        $question = Question::insert($dataToInsert->toArray());
 
         return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository');
     }
@@ -42,6 +42,12 @@ trait QuestionsTrait
 
     }
 
+    public function UpdateQuestion($data, Question $question)
+    {
+        $question->title = $data['title'];
+
+
+    }
 
     public function questionActiveStatus()
     {
