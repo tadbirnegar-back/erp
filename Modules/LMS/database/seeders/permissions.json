@@ -58,5 +58,5 @@
         "slug": "/lms/register/course/{id}",
         "moduleName": "LMS",
         "permissionTypeName": "operational"
-   }
+    }
 ]
