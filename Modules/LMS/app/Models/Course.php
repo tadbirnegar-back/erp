@@ -2,11 +2,13 @@
 
 namespace Modules\LMS\app\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Course extends Model
 {
@@ -35,6 +37,70 @@ class Course extends Model
         'privacy_id'
     ];
 
+    public function isRequired(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                if($value == 1){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        );
+    }
+
+    public function accessDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                $jalali = convertDateTimeGregorianToJalaliDateTime($value);
+
+                return $jalali;
+            },
+
+            set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Gregorian
+                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
+
+                return $dateTimeString;
+            }
+        );
+    }
+
+    public function expirationDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                $jalali = convertDateTimeGregorianToJalaliDateTime($value);
+
+                return $jalali;
+            },
+
+            set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Gregorian
+                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
+
+                return $dateTimeString;
+            }
+        );
+    }
+
     public function video()
     {
         return $this->belongsTo(File::class, 'preview_video_id', 'id');
@@ -57,8 +123,8 @@ class Course extends Model
 
     public function latestStatus()
     {
-        return $this->belongsToMany(Status::class, 'status_course', 'course_id', 'status_id')
-            ->latest();
+        return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->orderByDesc('status_course.id');
     }
 
     public function enrolls()
@@ -68,7 +134,7 @@ class Course extends Model
 
     public function chapters()
     {
-        return $this->hasMany(Chapter::class, 'course_id', 'id');
+        return $this->hasMany(Chapter::class, 'course_id');
     }
 
     public function courseExams()
@@ -80,5 +146,60 @@ class Course extends Model
     {
         return $this->belongsToMany(Exam::class, 'course_exams', 'course_id', 'exam_id');
     }
+
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
+    }
+
+    public function prerequisiteCourses()
+    {
+        return $this->belongsToMany(
+            self::class,
+            'course_course',
+            'main_course_id',
+            'prerequisite_course_id'
+        );
+    }
+
+    /**
+     * Get the courses that depend on this course as a prerequisite.
+     */
+    public function dependentCourses()
+    {
+        return $this->belongsToMany(
+            self::class,
+            'course_course',
+            'prerequisite_course_id',
+            'main_course_id'
+        );
+    }
+
+    use HasRelationships;
+
+    public function lessonStudyLog()
+    {
+        return $this->hasManyDeep(LessonStudyLog::class, [Chapter::class, Lesson::class],
+            ['course_id', 'chapter_id', 'lesson_id'],
+            ['id', 'id', 'id']
+        );
+    }
+
+    public function lessons()
+    {
+        return $this->hasManyDeep(Lesson::class, [Chapter::class],
+            ['course_id', 'chapter_id'],
+            ['id', 'id']
+        );
+    }
+
+    public function questions()
+    {
+        return $this->hasManyDeep(Question::class, [Chapter::class, Lesson::class],
+            ['course_id', 'chapter_id', 'lesson_id'],
+            ['id', 'id', 'id']
+        );
+    }
+
 
 }

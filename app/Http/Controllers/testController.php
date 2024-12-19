@@ -3,46 +3,40 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Http\Traits\QuestionsTrait;
+use Modules\LMS\app\Http\Traits\CourseTrait;
+
 
 class testController extends Controller
 {
-    use PaymentRepository, QuestionsTrait, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use CourseTrait;
 
-
-    public function run(Request $request)
+    public function run($request)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'creatorId' => 'required|integer|exists:users,id',
-            'difficultyId' => 'required|integer|exists:difficulties,id',
-            'lessonId' => 'required|integer|exists:lessons,id',
-            'questionTypeId' => 'required|integer|exists:question_types,id',
-            'repositoryId' => 'nullable|integer|exists:repositories,id',
-            'createDate' => 'nullable|date',
-        ]);
 
-        try {
-            DB::beginTransaction();
 
-            $question = $this->storeQuestion($validatedData);
+//        $CoursecomponentsToRender =  collect([
+//            'MainCourse' => ['latestStatus']
+//        ]);
 
-            DB::commit();
+//        $mainCourses = Course::with([
+//                'latestStatus',
+//                'cover',
+//                'video',
+//                'privacy',
+//                'prerequisiteCourses',
+//                'chapters.activeLessons'
+//            ])
+//            ->get();
 
-            return response()->json('success', 'سوال با موفقیت ثبت شد.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json('error', 'خطایی در ثبت سوال رخ داده است.');
-        }
-
+//        $course = Chapter::with('activeLessons')->find(1);
+//        return response() -> json($course);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);

@@ -8,17 +8,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\Database\factories\CustomerFactory;
+use Modules\LMS\app\Models\Enroll;
+use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Customer extends Model
 {
     use HasFactory;
-
+    use HasRelationships;
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = [
+        "creator_id",
+        "person_id",
+        "status_id",
+        "create_date",
+        "customerable_id",
+        "customerable_type",
+        "customer_type_id",
+    ];
     public $timestamps = false;
 
 //    protected static function newFactory(): CustomerFactory
@@ -53,5 +64,12 @@ class Customer extends Model
     public function customerable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function enrolls(){
+        return $this -> hasManyDeep(Enroll::class, [Order::class] ,
+            ['customer_id' , 'id'],
+            ['id', 'orderable_id']
+        );
     }
 }

@@ -41,7 +41,6 @@ trait PaymentRepository
                 $payment->organization_unit_id = $ou['ounitID'];
                 $payment->save();
 
-
             });
 
 
@@ -93,7 +92,7 @@ trait PaymentRepository
         $calculatedPrice = $this->calculatePrice($user);
 
         //if total = true user has no debts
-        $result['hasDebt'] = $calculatedPrice['total'] == 0;
+        $result['hasDebt'] = $calculatedPrice['total'] <= 0;
         $result['alreadyPayed'] = !(collect($calculatedPrice['ounits'])->sum('alreadyPayed') == 0);
 
         return $result;

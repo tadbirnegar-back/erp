@@ -34,5 +34,29 @@
         "slug": "/students/delete/{id}",
         "moduleName": "LMS",
         "permissionTypeName": "operational"
-    }
+    },
+    {
+        "name": "افزودن مدرس",
+        "slug": "/lms/teachers/add",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست مدرسان",
+        "slug": "/teacher/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست دوره های آموزشی",
+        "slug": "/lms/courses/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ثبت نام در دوره",
+        "slug": "/lms/register/course/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+   }
 ]

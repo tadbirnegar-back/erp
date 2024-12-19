@@ -4,9 +4,9 @@ namespace Modules\PayStream\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Modules\PayStream\Database\factories\OnlinesFactory;
 
-class Onlines extends Model
+
+class Online extends Model
 {
     use HasFactory;
 
@@ -16,7 +16,7 @@ class Onlines extends Model
 
     protected $table = 'onlines';
 
-    protected $fillable = ['id', 'receipt_file_id'];
+    protected $fillable = ['id', 'receipt_file_id' , 'authority'];
 
     public $timestamps = false;
 
@@ -24,5 +24,6 @@ class Onlines extends Model
     {
         return $this->morphMany(PsPayments::class, 'ps_paymentable');
     }
+
 
 }

@@ -1,0 +1,14 @@
+[
+    {
+        "name": "در حال آزمون",
+        "className": "primary"
+    },
+    {
+        "name": "قبول شده",
+        "className": "success"
+    },
+    {
+        "name": "رد شده",
+        "className": "danger"
+    }
+]

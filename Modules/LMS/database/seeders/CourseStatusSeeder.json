@@ -1,0 +1,30 @@
+[
+    {
+        "name": "لغو شده",
+        "className": "danger"
+    },
+    {
+        "name": "به پایان رسیده",
+        "className": "primary"
+    },
+    {
+        "name": "در حال برگزاری",
+        "className": "success"
+    },
+    {
+        "name": "پیش نویس",
+        "className": "warning"
+    },
+    {
+        "name": "حذف شده",
+        "className": "danger"
+    },
+    {
+        "name": "در انتظار برگزاری",
+        "className": "primary"
+    },
+    {
+        "name": "در انتظار برگزاری",
+        "className": "primary"
+    }
+]

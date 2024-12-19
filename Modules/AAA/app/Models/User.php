@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Modules\AddressMS\app\Models\Address;
+use Modules\CustomerMS\app\Models\Customer;
 use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Models\MR;
 use Modules\EvalMS\app\Models\Evaluator;
@@ -22,11 +23,17 @@ use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\LMS\app\Models\Answers;
+use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Enroll;
+use Modules\LMS\app\Models\Student;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\PayStream\app\Http\Enums\OrderStatusEnum;
 use Modules\PayStream\app\Models\Cashes;
+use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Modules\WidgetsMS\app\Models\Widget;
@@ -333,4 +340,49 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Cashes::class, 'cash_user', 'user_id', 'cash_id');
     }
+
+
+    public function enrolls(){
+        return $this -> hasManyDeep(Enroll::class, [Person::class,Customer::class,Order::class] ,
+            ['id', 'person_id' , 'customer_id' , 'id'],
+            ['person_id' , 'id' , 'id' , 'orderable_id']
+        );
+    }
+
+
+    public function answerSheets(){
+        return $this -> hasManyDeep(AnswerSheet::class , [Person::class , Customer::class],
+            ['id' , 'person_id' , 'student_id'],
+            ['person_id' , 'id' , 'customerable_id']
+        )->where("customers.customerable_type" , Student::class);
+    }
+
+    public function student()
+    {
+        return $this -> hasOneDeep(Student::class , [Person::class , Customer::class],
+            ['id' , 'person_id' , 'id'],
+            ['person_id' , 'id' , 'customerable_id']
+        )->where("customers.customerable_type" , Student::class);
+    }
+
+    public function orders()
+    {
+        return $this -> hasManyDeep(Order::class, [Customer::class],
+            ['person_id' , 'customer_id'],
+            ['person_id' , 'id']
+        );
+    }
+
+
+    public function isEnrolled()
+    {
+        return $this->orders()
+            ->whereHas('latestFinancialStatus', function ($query) {
+                $query->where('name', OrderStatusEnum::FIN_PARDAKHT_SHODE->value);
+            })
+            ->whereHas('latestProcessStatus', function ($query) {
+                $query->where('name', OrderStatusEnum::PROC_REGISTERED->value);
+            })->with('latestProcessStatuses')->where('orderable_type' , Enroll::class);
+    }
+
 }
