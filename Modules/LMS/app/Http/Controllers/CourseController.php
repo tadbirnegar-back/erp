@@ -38,7 +38,7 @@ class CourseController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage(),
-            'line' => $e->getLine()], 500);
+                'line' => $e->getLine() , 'trace' => $e -> getTrace()], 500);
         }
     }
 
@@ -62,11 +62,12 @@ class CourseController extends Controller
             DB::beginTransaction();
 
             $course = Course::with('prerequisiteCourses')->find($id);
+
             $user = Auth::user();
 //            $user = User::find(2174);
             // Check if the user has completed prerequisite courses.
             // This is currently implemented in the simplest possible way and might be updated in the future.
-            if($course->prerequisiteCourses){
+            if(empty($course->prerequisiteCourses[0])){
                 $isPreDone = true;
             }else{
                 $isPreDone = $this->isJoinedPreRerequisites($user, $course);
@@ -75,6 +76,7 @@ class CourseController extends Controller
                 $purchase = new PurchaseCourse($course, $user);
                 $response = $purchase->handle();
             }else{
+
                 return response()->json([
                     'success' => false,
                     'message' => 'پیش نیاز های دوره مطالعه نشده است',
@@ -91,6 +93,7 @@ class CourseController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
+                'trace' => $e->getTrace()
             ], 500);
         }
     }

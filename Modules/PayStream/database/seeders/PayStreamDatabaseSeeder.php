@@ -17,7 +17,8 @@ class PayStreamDatabaseSeeder extends Seeder
 //            FinancialStatusSeeder::class,
 //            ProcessStatusSeeder::class,
 //            InvoiceStatusSeeder::class,
-            PsPaymentStatusSeeder::class,
+//            PsPaymentStatusSeeder::class,
+            InvoiceStatusSeeder::class,
         ]);
     }
 }
