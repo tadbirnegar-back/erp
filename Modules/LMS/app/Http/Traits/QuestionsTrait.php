@@ -2,22 +2,50 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Modules\LMS\app\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Question;
-use Modules\StatusMS\app\Models\Status;
 use Nwidart\Modules\Collection;
 
 trait QuestionsTrait
 {
+    private static string $activeQuestionStatus = 'فعال';
+    private static string $inActiveQuestionStatus = 'غیرفعال';
 
     public function storeQuestion($data, $user)
     {
         $dataToInsert = $this->questionDataPreparation($data, $user);
 
+        /**
+         * @var Question $question
+         */
         $question = Question::create($dataToInsert->first());
 
-        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository',);
+        $a = Question::joinRelationshipUsingAlias('lesson', 'lesson_alias')
+            ->joinRelationshipUsingAlias('creator', 'creator_alias')
+            ->joinRelationshipUsingAlias('difficulty', 'difficulty_alias')
+            ->joinRelationshipUsingAlias('questionType', 'question_type_alias')
+            ->joinRelationshipUsingAlias('status', 'status_alias')
+//            ->joinRelationshipUsingAlias('chapter', 'chapter_alias')
+            ->joinRelationshipUsingAlias('repository', 'repository_alias')
+            ->addSelect([
+                'lesson_alias.title as lesson_title',
+                'creator_alias.id as creator_id',
+                'difficulty_alias.name as difficulty_name',
+                'difficulty_alias.id as difficulty_id',
+                'question_type_alias.name as question_type_name',
+                'question_type_alias.id as question_type_id',
+                'repository_alias.name as repository_name',
+                'repository_alias.id as repository_id',
+                'status_alias.name as status_name',
+                'status_alias.class_name as status_class_name',
+//                'chapter_alias.title as chapter_title',
+            ])
+            ->find($question->id);
+
+//        dd($a);
+        return $a;
     }
+
+//        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository');
 
 
     public function questionDataPreparation(array|Collection $question, $creator)
@@ -26,7 +54,7 @@ trait QuestionsTrait
             $question = collect($question);
         }
 
-        $status = $this->questionActiveStatus();
+        $status = $this->activeQuestionStatus();
         $question = $question->map(fn($data) => [
             'title' => $data['title'] ?? null,
             'creator_id' => $creator->id ?? null,
@@ -62,7 +90,7 @@ trait QuestionsTrait
     {
         $QuestionRecord = Question::find($id);
         if ($QuestionRecord) {
-            $status = $this->questionInActiveStatus();
+            $status = $this->InactiveQuestionStatus();
             $QuestionRecord->status_id = $status->id;
             $QuestionRecord->save();
             return true;
@@ -71,15 +99,17 @@ trait QuestionsTrait
         return false;
     }
 
-    public function questionActiveStatus()
+    public function activeQuestionStatus()
     {
-        return Status::firstWhere('name', QuestionsEnum::ACTIVE->value);
+        return Question::GetAllStatuses()
+            ->firstWhere('name', '=', self::$activeQuestionStatus);
     }
 
 
-    public function questionInActiveStatus()
+    public function InactiveQuestionStatus()
     {
-        return Status::firstWhere('name', QuestionsEnum::IN_ACTIVE->value);
+        return Question::GetAllStatuses()
+            ->firstWhere('name', '=', self::$inActiveQuestionStatus);
     }
 
 

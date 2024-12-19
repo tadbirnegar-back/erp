@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Modules\AAA\app\Models\User;
 use Modules\LMS\Database\factories\QuestionFactory;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Question extends Model
 {
-    use HasFactory;
+    use HasFactory, HasRelationships;
 
     /**
      * The attributes that are mass assignable.
@@ -71,6 +72,22 @@ class Question extends Model
     public function repository()
     {
         return $this->belongsTo(Repository::class, 'repository_id', 'id');
+    }
+
+    public function Questionype()
+    {
+        return $this->belongsTo(QuestionType::class, 'question_type_id', 'id');
+
+    }
+
+    public function chapter()
+    {
+        return $this->hasManyDeep(Chapter::class, [Lesson::class,],
+            ['lesson_id', 'chapter_id'],
+            ['id', 'id']
+        );
+
+
     }
 
 

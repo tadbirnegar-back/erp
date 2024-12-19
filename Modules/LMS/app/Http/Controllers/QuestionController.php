@@ -32,8 +32,10 @@ class QuestionController extends Controller
 
         try {
             DB::beginTransaction();
-
+            DB::enableQueryLog();
             $question = $this->storeQuestion([$data], $user);
+//            $a = DB::getQueryLog();
+//            dd($a);
             $response = new QuestionsResource($question);
 
             DB::commit();
