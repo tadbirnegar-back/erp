@@ -4,8 +4,7 @@ namespace Modules\PayStream\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Modules\LMS\app\Observers\OnlineObserver;
-use Modules\PayStream\Database\factories\OnlinesFactory;
+
 
 class Online extends Model
 {

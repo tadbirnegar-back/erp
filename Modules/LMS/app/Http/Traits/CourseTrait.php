@@ -83,12 +83,8 @@ trait CourseTrait
             'person.avatar'
         ]);
 
-
         $isEnrolled = $this -> isEnrolledToDefinedCourse($course->id , $user);
-        return $isEnrolled;
 
-
-        $enrolls = $user->isEnrolled;
         $answerSheet = $user->answerSheets[0] ?? null; // Handle potential null
         $student = $user->student;
 
@@ -108,7 +104,7 @@ trait CourseTrait
 
 // Check enrollment status
 
-        if (empty($enrolls[0]->orderable)) {
+        if (empty($isEnrolled)) {
             $isJoined = false;
         } else {
             $isJoined = true;
@@ -140,9 +136,10 @@ trait CourseTrait
                     ]);
                 },
             ],
-            'StudyLog' => ['lessonStudyLog' => function ($query) use ($user) {
+            'StudyLog' => ['lessonStudyLog' => function ($query) use ($user , $isEnrolled) {
                 $query->where('student_id', $user->student->id)
-                    ->where('is_completed', true);
+                    ->where('is_completed', true)
+                    ->where('study_count' , $isEnrolled->isEnrolled[0]->orderable->study_count + 1);
             }]
         ]);
 
@@ -245,7 +242,7 @@ trait CourseTrait
             if ($component['name'] === 'StudyLog') {
                 $lessonStudyLog = $component['data']['lessonStudyLog'] ?? [];
                 foreach ($lessonStudyLog as $log) {
-                    if ($log['is_completed'] === 1) {
+                    if ($log['is_completed'] == 1) {
                         $completedLessonIds[] = $log['lesson_id'];
                     }
                 }
@@ -364,13 +361,18 @@ trait CourseTrait
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
     }
 
-    public function isEnrolledToDefinedCourse($courseId , $user)
+    public function isEnrolledToDefinedCourse($courseId, $user)
     {
-        $user->load(['isEnrolled.orderable' => function ($q) use($courseId) {
-            $q -> where('course_id' , $courseId);
+        $user->load(['isEnrolled' => function ($q) use ($courseId) {
+            $q->whereHas('orderable', function ($query) use ($courseId) {
+                $query->where('course_id', $courseId);
+            });
+            $q->with('orderable');
         }]);
         return $user;
     }
+
+
 
     public function isJoinedPreRerequisites($user , $course) : bool
     {

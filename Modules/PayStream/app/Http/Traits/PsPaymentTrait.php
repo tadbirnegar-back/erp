@@ -2,7 +2,7 @@
 
 namespace Modules\PayStream\app\Http\Traits;
 
-use Modules\PayStream\App\Http\Enums\PsPaymentStatusEnum;
+use Modules\PayStream\app\Http\Enums\PsPaymentStatusEnum;
 use Modules\PayStream\app\Models\PsPayments;
 
 trait PsPaymentTrait{

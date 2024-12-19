@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Log;
 use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\app\Http\Traits\CustomerTrait;
 use Modules\CustomerMS\app\Models\Customer;
-use Modules\Gateway\app\Models\Payment as PG;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
 use Modules\LMS\app\Models\Student;
@@ -21,6 +20,7 @@ use Modules\PayStream\app\Models\Order;
 use Modules\PayStream\app\Models\ProcessStatus;
 use Modules\PayStream\app\Models\PsPayments;
 use Modules\PayStream\app\Models\PsPaymentStatus;
+use Modules\PersonMS\app\Models\Person;
 use Shetabit\Payment\Facade\Payment;
 
 abstract class RegisteringAbstract
@@ -46,9 +46,8 @@ abstract class RegisteringAbstract
 
     protected function setEnrollID()
     {
-
         $enroll = Enroll::create([
-            'course_id' => $this -> course -> id,
+            'course_id' => $this->course->id,
             'study_completed' => 0,
             'study_count' => 0
         ]);
@@ -64,17 +63,24 @@ abstract class RegisteringAbstract
 
     protected function setCustomer()
     {
-        $customerStatus = $this->activeCustomerStatus()->id;
-        $customer = Customer::create([
-            "creator_id" => $this->user->id,
-            "person_id" => $this->user->person_id,
-            "status_id" => $customerStatus,
-            "create_date" => now(),
-            "customerable_id" => $this->studentID,
-            "customerable_type" => Student::class,
-            "customer_type_id" => null
-        ]);
-        $this->customerID = $customer->id;
+        $customer = Customer::where('person_id', $this->user->person_id)->first();
+        if ($customer) {
+            $this->customerID = $customer->id;
+        } else {
+            $this->setStudent();
+            $customerStatus = $this->activeCustomerStatus()->id;
+            $customer = Customer::create([
+                "creator_id" => $this->user->id,
+                "person_id" => $this->user->person_id,
+                "status_id" => $customerStatus,
+                "create_date" => now(),
+                "customerable_id" => $this->studentID,
+                "customerable_type" => Student::class,
+                "customer_type_id" => null
+            ]);
+            $this->customerID = $customer->id;
+        }
+
     }
 
     protected function setOrder()
@@ -91,6 +97,34 @@ abstract class RegisteringAbstract
         ]);
         $this->order = $order;
 
+        if ($this->course->price > 0) {
+            ProcessStatus::create([
+                "status_id" => $this->orderProcWaitMali()->id,
+                "order_id" => $order->id,
+                "creator_id" => $this->user->id,
+                "created_date" => now(),
+            ]);
+            FinancialStatus::create([
+                "status_id" => $this->orderFinWaitPardakht()->id,
+                "order_id" => $order->id,
+                "creator_id" => $this->user->id,
+                "created_date" => now(),
+            ]);
+        } else {
+            ProcessStatus::create([
+                "order_id" => $order->id,
+                "status_id" => $this->orderProcRegistered()->id,
+                "creator_id" => $this->user->id,
+                "created_date" => now(),
+            ]);
+            FinancialStatus::create([
+                "order_id" => $order->id,
+                "status_id" => $this->orderFinPardakhtShode()->id,
+                "creator_id" => $this->user->id,
+                "created_date" => now(),
+            ]);
+        }
+
     }
 
 
@@ -103,8 +137,20 @@ abstract class RegisteringAbstract
             "order_id" => $this->order->id,
             "total_price" => $this->order->total_price
         ]);
-
         $this->invoice = $invoice;
+        if ($this->course->price > 0)
+        {
+            InvoiceStatus::create([
+                "status_id" => $this->waitToPayInvoiceStatus()->id,
+                "invoice_id" => $invoice->id,
+            ]);
+        }else{
+            InvoiceStatus::create([
+                "status_id" => $this->payedInvoiceStatus()->id,
+                "invoice_id" => $invoice->id,
+            ]);
+        }
+
     }
 
 
