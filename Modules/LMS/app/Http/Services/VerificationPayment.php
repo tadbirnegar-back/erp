@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\LMS\App\Http\Services;
+namespace Modules\LMS\app\Http\Services;
 
 use Modules\AAA\app\Models\User;
 use Modules\PayStream\app\Http\Traits\InvoiceTrait;

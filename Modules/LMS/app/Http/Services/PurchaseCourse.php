@@ -1,9 +1,10 @@
 <?php
-namespace Modules\LMS\App\Http\Services;
+namespace Modules\LMS\app\Http\Services;
 
 use Modules\PayStream\app\Models\Online;
 use Modules\PayStream\app\Models\PsPayments;
 use Modules\PayStream\app\Models\PsPaymentStatus;
+use Modules\PersonMS\app\Models\Person;
 use Shetabit\Payment\Facade\Payment;
 
 class PurchaseCourse extends RegisteringAbstract
@@ -17,7 +18,6 @@ class PurchaseCourse extends RegisteringAbstract
 
     public function handle()
     {
-        $this->setStudent();
         $this->setCustomer();
         $this->setEnrollID();
         $this->setOrder();

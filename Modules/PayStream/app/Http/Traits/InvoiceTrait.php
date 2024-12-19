@@ -3,8 +3,7 @@
 namespace Modules\PayStream\app\Http\Traits;
 
 use Modules\LMS\app\Models\Course;
-use Modules\PayStream\App\Http\Enums\InvoiceStatusEnum;
-use Modules\PayStream\App\Http\Enums\OrderStatusEnum;
+use Modules\PayStream\app\Http\Enums\InvoiceStatusEnum;
 use Modules\PayStream\app\Models\Invoice;
 
 trait InvoiceTrait {
