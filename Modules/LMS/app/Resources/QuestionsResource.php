@@ -2,42 +2,45 @@
 
 namespace Modules\LMS\app\Resources;
 
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 
-class QuestionsResource extends ResourceCollection
+class QuestionsResource extends JsonResource
 {
     /**
      * Transform the resource collection into an array.
      */
     public function toArray($request,): array
     {
+//        dd($this->resource);
         return [
             'id' => $request->id,
-            'title' => $request->title,
-            'creator' => $request->creator ? [
-                'id' => $request->creator->id,
-                'name' => $request->creator->name,
-            ] : null,
-            'difficulty' => $request->difficulty ? [
-                'id' => $request->difficulty->id,
-                'name' => $request->difficulty->name,
-            ] : null,
-            'lesson' => $request->lesson ? [
-                'id' => $request->lesson->id,
-                'title' => $request->lesson->title,
-            ] : null,
-            'questionType' => $request->questionType ? [
-                'id' => $request->questionType->id,
-                'name' => $request->questionType->name,
-            ] : null,
-            'status' => $request->status ? [
-                'name' => $request->status->name,
-                'className' => $request->status->class_name,
-            ] : null,
-            'repository' => $request->repository ? [
-                'id' => $request->repository->id,
-                'name' => $request->repository->name,
-            ] : null,
+            'title' => $this->title,
+
+            'lessons' => [
+                'id' => $request->lessonID,
+                'title' => $this->lesson_title
+            ],
+            'creator' => [
+                'id' => $request->creatorID,
+            ],
+            'difficulty' => [
+                'id' => $request->difficultyID,
+                'name' => $this->difficulty_name
+            ],
+            'questionType' => [
+                'id' => $request->questionTypeID,
+                'name' => $this->question_type_name
+            ],
+            'repository' => [
+                'id' => $request->repositoryID,
+                'name' => $this->repository_name
+            ],
+            'status' => [
+                'id' => $request->statusID,
+                'name' => $this->status_name,
+                'className' => $this->status_class_name
+            ],
+
 
         ];
 

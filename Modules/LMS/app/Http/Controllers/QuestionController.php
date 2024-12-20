@@ -5,7 +5,6 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\QuestionsTrait;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\QuestionsResource;
@@ -16,13 +15,12 @@ class QuestionController extends Controller
 
     public function store(Request $request)
     {
-        //   $user=auth()->user();
-        $user = User::find(39);
+        $user = auth()->user();
+//        $user = User::find(39);
 
         $data = $request->all();
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
-//            'creatorID' => 'required|integer|exists:users,id',
             'difficultyID' => 'required|integer|exists:difficulties,id',
             'lessonID' => 'required|integer|exists:lessons,id',
             'questionTypeID' => 'required|integer|exists:question_types,id',
@@ -34,10 +32,8 @@ class QuestionController extends Controller
             DB::beginTransaction();
             DB::enableQueryLog();
             $question = $this->storeQuestion([$data], $user);
-//            $a = DB::getQueryLog();
-//            dd($a);
-            $response = new QuestionsResource($question);
-
+//            dd(DB::getQueryLog());
+            $response = QuestionsResource::make($question);
             DB::commit();
 
             return response()->json(['message' => 'Success', 'data' => $question, $response], 200);

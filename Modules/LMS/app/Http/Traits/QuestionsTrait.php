@@ -8,27 +8,29 @@ use Nwidart\Modules\Collection;
 trait QuestionsTrait
 {
     private static string $activeQuestionStatus = 'فعال';
-    private static string $inActiveQuestionStatus = 'غیرفعال';
+    private static string $expired = 'منسوخ شده';
 
     public function storeQuestion($data, $user)
     {
         $dataToInsert = $this->questionDataPreparation($data, $user);
 
         /**
-         * @var Question $question
+         * @var Question $questionData
          */
-        $question = Question::create($dataToInsert->first());
+        $questionData = Question::create($dataToInsert->first());
 
-        $a = Question::joinRelationshipUsingAlias('lesson', 'lesson_alias')
+        $question = Question::joinRelationshipUsingAlias('lesson', function ($join) {
+            $join->as('lesson_alias');
+        })
             ->joinRelationshipUsingAlias('creator', 'creator_alias')
             ->joinRelationshipUsingAlias('difficulty', 'difficulty_alias')
             ->joinRelationshipUsingAlias('questionType', 'question_type_alias')
             ->joinRelationshipUsingAlias('status', 'status_alias')
-//            ->joinRelationshipUsingAlias('chapter', 'chapter_alias')
+            ->joinRelationshipUsingAlias('chapter', 'chapter_alias')
             ->joinRelationshipUsingAlias('repository', 'repository_alias')
             ->addSelect([
+                'lesson_alias.id as lesson_id',
                 'lesson_alias.title as lesson_title',
-                'creator_alias.id as creator_id',
                 'difficulty_alias.name as difficulty_name',
                 'difficulty_alias.id as difficulty_id',
                 'question_type_alias.name as question_type_name',
@@ -38,11 +40,9 @@ trait QuestionsTrait
                 'status_alias.name as status_name',
                 'status_alias.class_name as status_class_name',
 //                'chapter_alias.title as chapter_title',
-            ])
-            ->find($question->id);
+            ])->find($questionData->id);
 
-//        dd($a);
-        return $a;
+        return $question;
     }
 
 //        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository');
@@ -63,6 +63,7 @@ trait QuestionsTrait
             'question_type_id' => $data['questionTypeID'] ?? null,
             'repository_id' => $data['repositoryID'] ?? null,
             'status_id' => $status->id ?? null,
+            'chapter_id' => $data['chapterID'] ?? null,
             'create_date' => $data['createDate'] ?? now(),
 
         ]);
@@ -109,7 +110,7 @@ trait QuestionsTrait
     public function InactiveQuestionStatus()
     {
         return Question::GetAllStatuses()
-            ->firstWhere('name', '=', self::$inActiveQuestionStatus);
+            ->firstWhere('name', '=', self::$expired);
     }
 
 

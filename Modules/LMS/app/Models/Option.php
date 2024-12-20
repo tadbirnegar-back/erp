@@ -24,6 +24,7 @@ class Option extends Model
         'id',
         'is_correct',
         'question_id',
+        'title'
     ];
 
     public function question()

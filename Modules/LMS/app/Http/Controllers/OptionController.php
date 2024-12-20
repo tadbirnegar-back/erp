@@ -34,26 +34,30 @@ class OptionController extends Controller
         $data = $request->all();
         $validatedData = $request->validate([
             'questionID' => 'required|integer|exists:questions,id',
-            'option' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'isCorrect' => 'required|boolean',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $question = $this->insertOptions([$data]);
+            $option = $this->insertOptions($data, $validatedData ['questionID']);
+
+            if (!$option) {
+                throw new \Exception('Failed to insert option.');
+            }
 
             DB::commit();
-            $response = new OptionsResource($question);
+            $response = OptionsResource::make($option);
 
-            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
+            return response()->json(['message' => 'Success', 'data' => $option, 'response' => $response], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن گزینه', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error adding option', 'error' => $e->getMessage()], 500);
         }
     }
 
-    public function destroyQuestion($id)
+    public function destroyOption($id)
     {
         $success = $this->deleteOption($id);
 
@@ -68,23 +72,23 @@ class OptionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function editQuestion(Request $request, $id)
+    public function UpdateOption(Request $request, $id)
     {
-        $question = Option::findOrFail($id);
-        if ($question == null) {
+        $option = Option::findOrFail($id);
+        if ($option == null) {
             return response()->json(['message' => 'Not Found'], 404);
         }
         try {
             DB::beginTransaction();
-            $question = $this->editOption($request->all(), $question);
-            $response = new OptionsResource($question);
+            $option = $this->editOption($option, $request);
+            $response = OptionsResource::make($option);
 
             DB::commit();
-            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
+            return response()->json(['message' => 'Success', 'data' => $option, 'response' => $response], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش سوال', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error updating option', 'error' => $e->getMessage()], 500);
         }
     }
 //    public function update(array $data, Option $option): JsonResponse

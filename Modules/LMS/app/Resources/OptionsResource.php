@@ -2,9 +2,9 @@
 
 namespace Modules\LMS\app\Resources;
 
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 
-class OptionsResource extends ResourceCollection
+class OptionsResource extends JsonResource
 {
     /**
      * Transform the resource collection into an array.
@@ -12,10 +12,10 @@ class OptionsResource extends ResourceCollection
     public function toArray($request): array
     {
         return [
-            'id' => $request->id,
+            'id' => $this->id,
             'isCorrect' => $request->isCorrect,
             'questionID' => $request->questionID,
-            'lable' => $request->lable,
+            'title' => $request->title,
 
         ];
 

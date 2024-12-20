@@ -31,7 +31,8 @@ class Question extends Model
         'question_type_id',
         'repository_id',
         'status_id',
-        'create_date'
+        'create_date',
+        'chapter_id',
     ];
 
     public function lesson()
