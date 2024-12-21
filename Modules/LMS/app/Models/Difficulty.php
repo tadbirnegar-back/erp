@@ -4,9 +4,8 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Modules\LMS\Database\factories\DificultyFactory;
 
-class Dificulty extends Model
+class Difficulty extends Model
 {
     use HasFactory;
 
@@ -18,7 +17,7 @@ class Dificulty extends Model
 
     public $timestamps = false;
 
-    protected $table = 'dificulties';
+    protected $table = 'difficulties';
 
     protected $fillable = [
         'id',

@@ -15,11 +15,9 @@ class LMSDatabaseSeeder extends Seeder
         $this->call([
 //             ModuleCategorySeeder::class,
 //             ModuleSeeder::class,
-            PermissionSeeder::class,
-//            AnswerSheetStatusSeeder::class,
-//            ProcessStatusSeeder::class,
-            CourseStatusSeeder::class,
-            LessonStatusSeeder::class,
+//             PermissionSeeder::class,
+//            QuestionStatusSeeder::class,
+            OptionStatusSeeder::class,
         ]);
     }
 }
