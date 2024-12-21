@@ -37,8 +37,7 @@ class CourseController extends Controller
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(),
-                'line' => $e->getLine()], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
