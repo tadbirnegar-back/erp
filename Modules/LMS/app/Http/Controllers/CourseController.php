@@ -61,7 +61,8 @@ class CourseController extends Controller
 
             $course = Course::with('prerequisiteCourses')->find($id);
 
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = User::find(2174);
             // Check if the user has completed prerequisite courses.
             // This is currently implemented in the simplest possible way and might be updated in the future.
             if(empty($course->prerequisiteCourses[0])){
@@ -137,6 +138,26 @@ class CourseController extends Controller
         return $response;
 
 
+    }
+
+    public function learningShow($id)
+    {
+        $course = Course::joinRelationshipUsingAlias('chapters.lessons')->find($id);
+//        $user = Auth::user();
+        $user = User::find(2174);
+        $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
+
+        //Check user is Joined or not
+        if(empty($isEnrolled->isEnrolled[0])){
+            $joined = false;
+        }else{
+            $joined = true;
+        }
+        if(!$joined){
+            return response()->json(["message" => "شما دسترسی به این دوره را ندارید"], 400);
+        }
+
+        return response()->json($course);
     }
 
 }

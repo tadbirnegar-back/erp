@@ -10,6 +10,8 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
+use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Teacher;
 
 
 class testController extends Controller
@@ -17,8 +19,52 @@ class testController extends Controller
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
     use CourseTrait;
 
-    public function run($request)
+    public function run()
     {
+        \DB::enableQueryLog();
+
+
+//        $course = Course::joinRelationship('chapters', function ($join) {
+//            $join->as('chapter_alias'); // Alias for chapters
+//        })
+//            ->join('lessons as lesson_alias', 'chapter_alias.id', '=', 'lesson_alias.chapter_id')
+//            ->join('contents as content_alias', 'lesson_alias.id', '=', 'content_alias.lesson_id')
+//            ->join('files as files_alias', 'content_alias.file_id', '=', 'files_alias.id')
+//            ->join('content_type as ct_alias', 'content_alias.content_type_id', '=', 'ct_alias.id')
+//            ->join('work_forces as wf_alias', function ($join) {
+//                $join->on('wf_alias.workforceable_id', '=', 'content_alias.teacher_id')
+//                    ->where('wf_alias.workforceable_type', '=', Teacher::class);
+//            })
+//            ->join('persons as person_alias', 'person_alias.id', '=', 'wf_alias.person_id')
+//            ->select([
+//                'chapter_alias.id as chapter_id',
+//                'chapter_alias.title as chapter_title',
+//                'chapter_alias.description as chapter_description',
+//                'lesson_alias.id as lesson_id',
+//                'lesson_alias.title as lesson_title',
+//                'lesson_alias.description as lesson_description',
+//                'content_alias.id as content_id',
+//                'content_alias.name as content_title',
+//                'files_alias.slug as files_slug',
+//                'ct_alias.name as content_type_name',
+//                'person_alias.display_name as teacher_name',
+//            ])
+//            ->where('courses.id', 6)
+//            ->get();
+//        return response()->json($course);
+
+        $course = Course::joinRelationshipUsingAlias('chapters', function ($join) {
+            $join->as('chapter_alias'); // Alias for chapters
+        })
+
+            ->select([
+                'chapter_alias.id as chapter_id',
+                'chapter_alias.title as chapter_title',
+                'chapter_alias.description as chapter_description',
+            ])
+            ->where('courses.id', 6)
+            ->get();
+        return response()->json($course);
 
 
 //        $CoursecomponentsToRender =  collect([
