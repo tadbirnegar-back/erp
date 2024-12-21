@@ -104,7 +104,7 @@ trait CourseTrait
 
 // Check enrollment status
 
-        if (empty($isEnrolled)) {
+        if (empty($isEnrolled->isEnrolled[0])) {
             $isJoined = false;
         } else {
             $isJoined = true;
@@ -139,7 +139,8 @@ trait CourseTrait
             'StudyLog' => ['lessonStudyLog' => function ($query) use ($user , $isEnrolled) {
                 $query->where('student_id', $user->student->id)
                     ->where('is_completed', true)
-                    ->where('study_count' , $isEnrolled->isEnrolled[0]->orderable->study_count + 1);
+                    ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1);
+
             }]
         ]);
 
@@ -374,15 +375,25 @@ trait CourseTrait
 
 
 
-    public function isJoinedPreRerequisites($user , $course) : bool
+    public function isJoinedPreRerequisites($user , $course)
     {
-        $user -> load(['enrolls' => function ($q) use($course) {
-            $q->where('course_id' , 2);
-        }]);
-        if(empty($user -> enrolls[0]))
+        $preCoursesIds = $course->prerequisiteCourses->pluck('id')->toArray();
+
+        $enrolls = [];
+        foreach($preCoursesIds as $preCourseId)
         {
+            $user -> load(['enrolls' => function ($q) use ($preCourseId){
+                $q->where('course_id' , $preCourseId);
+            }]);
+            if(!empty($user -> enrolls[0])){                            $enrolls[] = true;
+            }else{
+                $enrolls[] = false;
+            }
+        }
+
+        if (in_array(false, $enrolls, true)) {
             return false;
-        }else{
+        } else {
             return true;
         }
 

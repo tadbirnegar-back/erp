@@ -2,7 +2,7 @@
 
 namespace Modules\PayStream\app\Http\Traits;
 
-use Modules\PayStream\App\Http\Enums\OrderStatusEnum;
+use Modules\PayStream\app\Http\Enums\OrderStatusEnum;
 use Modules\PayStream\app\Models\FinancialStatus;
 use Modules\PayStream\app\Models\Order;
 use Modules\PayStream\app\Models\ProcessStatus;
