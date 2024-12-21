@@ -52,7 +52,7 @@ class Question extends Model
 
     public function questionType()
     {
-        return $this->belongsTo(Repository::class, 'repository_id', 'id');
+        return $this->belongsTo(QuestionType::class, 'question_type_id', 'id');
     }
 
     public function status()

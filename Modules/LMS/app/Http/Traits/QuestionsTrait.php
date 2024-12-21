@@ -26,7 +26,6 @@ trait QuestionsTrait
             ->joinRelationshipUsingAlias('difficulty', 'difficulty_alias')
             ->joinRelationshipUsingAlias('questionType', 'question_type_alias')
             ->joinRelationshipUsingAlias('status', 'status_alias')
-            ->joinRelationshipUsingAlias('chapter', 'chapter_alias')
             ->joinRelationshipUsingAlias('repository', 'repository_alias')
             ->addSelect([
                 'lesson_alias.id as lesson_id',
@@ -39,7 +38,6 @@ trait QuestionsTrait
                 'repository_alias.id as repository_id',
                 'status_alias.name as status_name',
                 'status_alias.class_name as status_class_name',
-//                'chapter_alias.title as chapter_title',
             ])->find($questionData->id);
 
         return $question;
@@ -63,7 +61,6 @@ trait QuestionsTrait
             'question_type_id' => $data['questionTypeID'] ?? null,
             'repository_id' => $data['repositoryID'] ?? null,
             'status_id' => $status->id ?? null,
-            'chapter_id' => $data['chapterID'] ?? null,
             'create_date' => $data['createDate'] ?? now(),
 
         ]);

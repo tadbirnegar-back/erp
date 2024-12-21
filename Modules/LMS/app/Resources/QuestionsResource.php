@@ -13,30 +13,29 @@ class QuestionsResource extends JsonResource
     {
 //        dd($this->resource);
         return [
-            'id' => $request->id,
+            'id' => $this->id,
             'title' => $this->title,
 
             'lessons' => [
-                'id' => $request->lessonID,
+                'id' => $this->lesson_id,
                 'title' => $this->lesson_title
             ],
             'creator' => [
-                'id' => $request->creatorID,
+                'id' => $this->creator_id,
             ],
             'difficulty' => [
-                'id' => $request->difficultyID,
-                'name' => $this->difficulty_name
+                'id' => $this->difficulty_id,
             ],
-            'questionType' => [
-                'id' => $request->questionTypeID,
+            'question_type' => [
+                'id' => $this->question_type_id,
                 'name' => $this->question_type_name
             ],
             'repository' => [
-                'id' => $request->repositoryID,
+                'id' => $this->repository_id,
                 'name' => $this->repository_name
             ],
             'status' => [
-                'id' => $request->statusID,
+                'id' => $this->status_id,
                 'name' => $this->status_name,
                 'className' => $this->status_class_name
             ],
