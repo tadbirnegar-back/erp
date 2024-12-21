@@ -139,7 +139,7 @@ trait CourseTrait
             'StudyLog' => ['lessonStudyLog' => function ($query) use ($user , $isEnrolled) {
                 $query->where('student_id', $user->student->id)
                     ->where('is_completed', true)
-                    ->where('study_count', '>=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1);
+                    ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1);
 
             }]
         ]);
