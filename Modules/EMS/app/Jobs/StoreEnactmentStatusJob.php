@@ -51,7 +51,7 @@ class StoreEnactmentStatusJob implements ShouldQueue
                 $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
                     return [
                         'user_id' => $member->employee_id,
-                        'description' => "تایید توسط سیستم",
+                        'description' => null,
                         'status_id' => $noMoghayeratAutoStatus->id,
                         'enactment_id' => $this->encId,
                     ];
