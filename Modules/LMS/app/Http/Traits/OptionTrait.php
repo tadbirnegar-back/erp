@@ -27,7 +27,6 @@ trait OptionTrait
         $option->question_id = $data['questionID'];
         $option->title = $data['title'];
         $option->is_correct = $data['isCorrect'];
-//        $option->create_date = $data['createDate'];
         $option->save();
         return $option;
 
@@ -43,29 +42,6 @@ trait OptionTrait
 
         return false;
     }
-
-//        if ($OptionRecord) {
-//            $status = $this->optionInActiveStatus();
-//            $OptionRecord->status_id = $status->id;
-//            $OptionRecord->save();
-//
-//            return true;
-//        }
-//
-//        return false;
-
-
-//    public function optionActiveStatus()
-//    {
-//        return Status::firstWhere('name', '=', self::$activeQuestionStatus);
-//    }
-//
-//
-//    public function optionInActiveStatus()
-//    {
-//        return Status::firstWhere('name', '=', self::$expired);
-//    }
-
 
 }
 

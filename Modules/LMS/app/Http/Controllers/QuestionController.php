@@ -16,7 +16,6 @@ class QuestionController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-//        $user = User::find(39);
 
         $data = $request->all();
         $validatedData = $request->validate([

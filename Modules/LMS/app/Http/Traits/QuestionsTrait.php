@@ -43,8 +43,6 @@ trait QuestionsTrait
         return $question;
     }
 
-//        return $question->load('lesson', 'creator', 'difficulty', 'questionType', 'status', 'repository');
-
 
     public function questionDataPreparation(array|Collection $question, $creator)
     {
