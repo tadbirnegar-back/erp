@@ -92,7 +92,6 @@ class CourseController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-                'trace' => $e->getTrace()
             ], 500);
         }
     }
