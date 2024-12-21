@@ -5,7 +5,6 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\QuestionsTrait;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\QuestionsResource;
@@ -16,8 +15,8 @@ class QuestionController extends Controller
 
     public function store(Request $request)
     {
-//        $user = auth()->user();
-        $user = User::find(39);
+        $user = auth()->user();
+//        $user = User::find(39);
 
         $data = $request->all();
         $validatedData = $request->validate([
