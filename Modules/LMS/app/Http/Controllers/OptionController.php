@@ -91,24 +91,4 @@ class OptionController extends Controller
             return response()->json(['message' => 'Error updating option', 'error' => $e->getMessage()], 500);
         }
     }
-//    public function update(array $data, Option $option): JsonResponse
-//    {
-//        $option = Option::findOrFail($data['id']);
-//        if ($option == null) {
-//            return response()->json(['message' => 'Not Found'], 404);
-//        }
-//
-//        try {
-//            DB::beginTransaction();
-//            $option = $this->UpdateQuestion($data, $option);
-//            $response = new OptionsResource($option);
-//
-//            DB::commit();
-//            return response()->json(['message' => 'Success', 'data' => $option, $response], 200);
-//
-//        } catch (\Exception $e) {
-//            DB::rollBack();
-//            return response()->json(['message' => 'خطا در ویرایش گزینه', 'error' => $e->getMessage()], 500);
-//        }
-//    }
 }
