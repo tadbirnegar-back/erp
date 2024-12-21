@@ -27,7 +27,6 @@ class CourseController extends Controller
             DB::beginTransaction();
             $course = Course::with('latestStatus')->findOrFail($id);
             $user = Auth::user();
-//            $user = User::find(2174);
             if (is_null($course)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
             }
@@ -63,7 +62,6 @@ class CourseController extends Controller
             $course = Course::with('prerequisiteCourses')->find($id);
 
             $user = Auth::user();
-//            $user = User::find(2174);
             // Check if the user has completed prerequisite courses.
             // This is currently implemented in the simplest possible way and might be updated in the future.
             if(empty($course->prerequisiteCourses[0])){
@@ -91,7 +89,6 @@ class CourseController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
             ], 500);
         }
     }
