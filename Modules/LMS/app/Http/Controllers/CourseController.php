@@ -26,8 +26,8 @@ class CourseController extends Controller
         try {
             DB::beginTransaction();
             $course = Course::with('latestStatus')->findOrFail($id);
-            $user = Auth::user();
-//            $user = User::find(2174);
+//            $user = Auth::user();
+            $user = User::find(2174);
             if (is_null($course)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
             }
