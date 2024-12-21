@@ -38,7 +38,7 @@ class CourseController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage(),
-                'line' => $e->getLine() , 'trace' => $e -> getTrace()], 500);
+                'line' => $e->getLine()], 500);
         }
     }
 
