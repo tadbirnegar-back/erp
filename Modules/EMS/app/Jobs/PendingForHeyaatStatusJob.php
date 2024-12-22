@@ -33,13 +33,20 @@ class PendingForHeyaatStatusJob implements ShouldQueue
     {
         try {
             \DB::beginTransaction();
-            $enactment = Enactment::find($this->encId);
-            $takmilshodeStatus = $this->enactmentHeyaatStatus()->id;
-            EnactmentStatus::create([
-                'status_id' => $takmilshodeStatus,
-                'enactment_id' => $this->encId,
-            ]);
-            \DB::commit();
+            $enactment = Enactment::with('status')->find($this->encId);
+
+            if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
+                $takmilshodeStatus = $this->enactmentHeyaatStatus()->id;
+                EnactmentStatus::create([
+                    'status_id' => $takmilshodeStatus,
+                    'enactment_id' => $this->encId,
+                ]);
+            }else {
+                // If the condition fails, we manually delete the job to stop retries and mark it as "done"
+                $this->delete();
+                return; // Return to stop further execution
+            }
+                \DB::commit();
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail($e);

@@ -9,12 +9,13 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Modules\EMS\app\Http\Enums\RolesEnum;
 use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
+use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentReview;
 
 class StoreEnactmentStatusKarshenasJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, EnactmentReviewTrait;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, EnactmentReviewTrait, EnactmentTrait;
 
     public int $encId;
 
@@ -35,32 +36,38 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
 
         try {
             \DB::beginTransaction();
-            $enactment = Enactment::with(['members' => function ($query) {
-                $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
-                    $subQuery->where('enactment_id', $this->encId);
-                })->whereHas('roles', function ($q) {
-                    $q->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
-                });
+            $enactment = Enactment::with([
+                'status',
+                'members' => function ($query) {
+                    $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
+                        $subQuery->where('enactment_id', $this->encId);
+                    })->whereHas('roles', function ($q) {
+                        $q->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
+                    });
 
-            },])->find($this->encId);
+                },])->find($this->encId);
 
+            if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
+                if ($enactment->members->isNotEmpty()) {
+                    $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
 
-            if ($enactment->members->isNotEmpty()) {
-                $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
+                    $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
+                        return [
+                            'user_id' => $member->employee_id,
+                            'description' => null,
+                            'status_id' => $noMoghayeratAutoStatus->id,
+                            'enactment_id' => $this->encId,
+                        ];
+                    })->toArray();
 
-                $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
-                    return [
-                        'user_id' => $member->employee_id,
-                        'description' => null,
-                        'status_id' => $noMoghayeratAutoStatus->id,
-                        'enactment_id' => $this->encId,
-                    ];
-                })->toArray();
-
-                // Insert the data into EnactmentReview only if the data array is not empty
-                if (!empty($data)) {
-                    EnactmentReview::insert($data);
+                    // Insert the data into EnactmentReview only if the data array is not empty
+                    if (!empty($data)) {
+                        EnactmentReview::insert($data);
+                    }
                 }
+            }else{
+                $this->delete();
+                return;
             }
             \DB::commit();
         } catch (\Exception $e) {

@@ -8,13 +8,14 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Modules\EMS\app\Http\Enums\RolesEnum;
+use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Notifications\AlertMMLastDayNotification;
 use Modules\PersonMS\app\Models\Person;
 
 class AlertHeyaat implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, EnactmentTrait;
 
     public int $encId;
 
@@ -34,6 +35,7 @@ class AlertHeyaat implements ShouldQueue
         try {
             \DB::beginTransaction();
             $enactment = Enactment::with([
+                'status',
                 'meeting.meetingMembers' => function ($query) {
                     $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
                         $subQuery->where('enactment_id', $this->encId);
@@ -43,15 +45,21 @@ class AlertHeyaat implements ShouldQueue
                 },
             ])->find($this->encId);
 
+            if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
+                foreach ($enactment->meeting->meetingMembers as $meetingMember) {
+                    $user = $meetingMember->user; // Access the User model associated with the meeting member
 
-            foreach ($enactment->meeting->meetingMembers as $meetingMember) {
-                $user = $meetingMember->user; // Access the User model associated with the meeting member
+                    $username = Person::find($user->person_id)->display_name;
 
-                $username = Person::find($user->person_id)->display_name;
+                    $user->notify(new AlertMMLastDayNotification($username));
 
-                $user->notify(new AlertMMLastDayNotification($username));
-
+                }
+            }else{
+                $this->delete();
+                return;
             }
+
+
             \DB::commit();
         } catch (\Exception $e) {
             \DB::rollBack();

@@ -10,13 +10,14 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\DateTrait;
+use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Notifications\MeetingLastDayNotifications;
 use Modules\PersonMS\app\Models\Person;
 
 class StoreMeetingJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, DateTrait;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, DateTrait, MeetingTrait;
 
     /**
      * Create a new job instance.
@@ -48,37 +49,43 @@ class StoreMeetingJob implements ShouldQueue
      */
     public function handle(): void
     {
-        // Log the meeting date
-        // Extract the month number from the Jalali date
-        $jalaliDate = $this->meeting->meeting_date; // e.g., ۱۴۰۴/۰۸/۰۹
-        $parts = explode('/', $jalaliDate); // Split the date string by '/'
-        $monthNumber = $parts[1]; // Get the second part as the month number
-        $day = $parts[2];
+        $cancelStatus = $this->meetingCancelStatus();
+        if ($this->meeting->latestStatus != $cancelStatus->id) {
+            // Log the meeting date
+            // Extract the month number from the Jalali date
+            $jalaliDate = $this->meeting->meeting_date; // e.g., ۱۴۰۴/۰۸/۰۹
+            $parts = explode('/', $jalaliDate); // Split the date string by '/'
+            $monthNumber = $parts[1]; // Get the second part as the month number
+            $day = $parts[2];
 
-        //For Month
-        $eng = $this->persianNumbersToEng($monthNumber);
+            //For Month
+            $eng = $this->persianNumbersToEng($monthNumber);
 
-        $monthName = $this->humanReadableDate($eng);
+            $monthName = $this->humanReadableDate($eng);
 
 
-        //For Day
-        $daywithoutZero = $this->removeLeftZero($day);
+            //For Day
+            $daywithoutZero = $this->removeLeftZero($day);
 
-        //message text for date
-        $messageTextDate = $daywithoutZero['day'] . ' ' . $monthName . ' ساعت ' . $daywithoutZero['time'];
+            //message text for date
+            $messageTextDate = $daywithoutZero['day'] . ' ' . $monthName . ' ساعت ' . $daywithoutZero['time'];
 
 //        Log::info($messageTextDate);
 
 
-        // Process members
-        $members = $this->meeting->load('meetingMembers'); // Load related 'meetingMembers'
+            // Process members
+            $members = $this->meeting->load('meetingMembers'); // Load related 'meetingMembers'
 
 
-        foreach ($members->meetingMembers as $member) {
-            $user = User::find($member->employee_id);
-            $username = Person::find($user->person_id)->display_name;
+            foreach ($members->meetingMembers as $member) {
+                $user = User::find($member->employee_id);
+                $username = Person::find($user->person_id)->display_name;
 
-            $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
+                $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
+            }
+        }else{
+            $this->delete();
+            return;
         }
     }
 
