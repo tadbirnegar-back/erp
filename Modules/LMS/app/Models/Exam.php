@@ -52,4 +52,5 @@ class Exam extends Model
         return $this->belongsToMany(Question::class, 'course_exams', 'exam_id', 'question_id');
     }
 
+
 }
