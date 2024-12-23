@@ -16,12 +16,13 @@ class ExamResultController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $result = $this->result();
+        $data = $request->all();
+
+        $result = $this->result($data);
         return response()->json($result);
 
-        return response()->json($this->data);
     }
 
     /**
