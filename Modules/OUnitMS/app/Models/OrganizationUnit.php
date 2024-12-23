@@ -183,7 +183,7 @@ class OrganizationUnit extends Model
                             ->from('enactment_status')
                             ->join('statuses', 'statuses.id', '=', 'enactment_status.status_id') // Join statuses table
                             ->whereColumn('enactment_status.enactment_id', 'enactments.id') // Match enactment IDs
-                            ->where('statuses.name', '=', 'باطل شده'); // Exclude enactments with this status
+                            ->where('statuses.name', '=', EnactmentStatusEnum::CANCELED->value); // Exclude enactments with this status
                     })
                     ->groupBy('enactment_meeting.meeting_id') // Group by meeting
                     ->havingRaw('COUNT(DISTINCT enactment_meeting.enactment_id) >= ?', [$enactmentLimitPerMeeting]); // Check enactment count
