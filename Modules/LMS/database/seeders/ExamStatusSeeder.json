@@ -1,0 +1,10 @@
+[
+    {
+        "name": " مردود",
+        "className": "danger"
+    },
+    {
+        "name": " قبول",
+        "className": "success"
+    }
+]
