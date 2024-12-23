@@ -16,7 +16,8 @@ use Modules\LMS\app\Models\Lesson;
 
 class LessonController extends Controller
 {
-    use ChapterTrait , LessonTrait , ContentTrait;
+    use ChapterTrait, LessonTrait, ContentTrait;
+
     public function storeComment(Request $request)
     {
         try {
@@ -41,22 +42,29 @@ class LessonController extends Controller
 
     public function addLesson(Request $request)
     {
-        $data = $request->all();
-        //Chapter Part
-        $chapter = $data['isNewChapter'] ? $this -> storeChapter($data) : $this -> getChapter($data);
-        $data['chapterID'] = $chapter->id;
-        //Lesson Part
-        $lesson = $this -> storeLesson($data);
-        $data['lessonID'] = $lesson->id;
-        //LessonFiles
-        if(isset($data['lessonFiles']))
-        {
-            $this->storeLessonFiles($data);
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            //Chapter Part
+            $chapter = $data['isNewChapter'] ? $this->storeChapter($data) : $this->getChapter($data);
+            $data['chapterID'] = $chapter->id;
+            //Lesson Part
+            $lesson = $this->storeLesson($data);
+            $data['lessonID'] = $lesson->id;
+            //LessonFiles
+            if (isset($data['lessonFiles'])) {
+                $this->storeLessonFiles($data);
+            }
+            //Content
+            if (isset($data['contents'])) {
+                $this->storeContent($data);
+            }
+            DB::commit();
+            return response()->json(['message' => "درس مورد نظر شما با موفقیت ساخته شد"], 404);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => "درس مورد نظر شما ساخته نشد"], 404);
         }
-        //Content
-        if(isset($data['contents'])){
-            $this->storeContent($data);
-        }
-        return response() -> json($lesson);
+
     }
 }
