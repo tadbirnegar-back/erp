@@ -23,9 +23,9 @@ use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
-use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Enroll;
+use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Student;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -342,34 +342,36 @@ class User extends Authenticatable
     }
 
 
-    public function enrolls(){
-        return $this -> hasManyDeep(Enroll::class, [Person::class,Customer::class,Order::class] ,
-            ['id', 'person_id' , 'customer_id' , 'id'],
-            ['person_id' , 'id' , 'id' , 'orderable_id']
+    public function enrolls()
+    {
+        return $this->hasManyDeep(Enroll::class, [Person::class, Customer::class, Order::class],
+            ['id', 'person_id', 'customer_id', 'id'],
+            ['person_id', 'id', 'id', 'orderable_id']
         );
     }
 
 
-    public function answerSheets(){
-        return $this -> hasManyDeep(AnswerSheet::class , [Person::class , Customer::class],
-            ['id' , 'person_id' , 'student_id'],
-            ['person_id' , 'id' , 'customerable_id']
-        )->where("customers.customerable_type" , Student::class);
+    public function answerSheets()
+    {
+        return $this->hasManyDeep(AnswerSheet::class, [Person::class, Customer::class],
+            ['id', 'person_id', 'student_id'],
+            ['person_id', 'id', 'customerable_id']
+        )->where("customers.customerable_type", Student::class);
     }
 
     public function student()
     {
-        return $this -> hasOneDeep(Student::class , [Person::class , Customer::class],
-            ['id' , 'person_id' , 'id'],
-            ['person_id' , 'id' , 'customerable_id']
-        )->where("customers.customerable_type" , Student::class);
+        return $this->hasOneDeep(Student::class, [Person::class, Customer::class],
+            ['id', 'person_id', 'id'],
+            ['person_id', 'id', 'customerable_id']
+        )->where("customers.customerable_type", Student::class);
     }
 
     public function orders()
     {
-        return $this -> hasManyDeep(Order::class, [Customer::class],
-            ['person_id' , 'customer_id'],
-            ['person_id' , 'id']
+        return $this->hasManyDeep(Order::class, [Customer::class],
+            ['person_id', 'customer_id'],
+            ['person_id', 'id']
         );
     }
 
@@ -382,7 +384,16 @@ class User extends Authenticatable
             })
             ->whereHas('latestProcessStatus', function ($query) {
                 $query->where('name', OrderStatusEnum::PROC_REGISTERED->value);
-            })->with('latestProcessStatuses')->where('orderable_type' , Enroll::class);
+            })->with('latestProcessStatuses')->where('orderable_type', Enroll::class);
+    }
+
+    public function exams()
+    {
+        return $this->hasManyDeep(Exam::class, [Customer::class, AnswerSheet::class],
+            ['person_id', 'student_id', 'id'],
+            ['person_id', 'customerable_id', 'exam_id'],
+
+        )->where("customers.customerable_type", Student::class);
     }
 
 }
