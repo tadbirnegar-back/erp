@@ -15,6 +15,7 @@ use Modules\LMS\App\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Resources\CourseListResource;
+use Modules\LMS\app\Resources\CourseViewLearningResource;
 use Modules\LMS\app\Resources\LessonListResource;
 use Modules\PayStream\app\Models\Online;
 
@@ -143,8 +144,7 @@ class CourseController extends Controller
     public function learningShow($id)
     {
         $course = Course::joinRelationshipUsingAlias('chapters.lessons')->find($id);
-//        $user = Auth::user();
-        $user = User::find(2174);
+        $user = Auth::user();
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         //Check user is Joined or not
@@ -157,7 +157,9 @@ class CourseController extends Controller
             return response()->json(["message" => "شما دسترسی به این دوره را ندارید"], 400);
         }
 
-        return response()->json($course);
+        $data = $this -> dataShowViewCourse($course , $user);
+
+        return CourseViewLearningResource::collection($data);
     }
 
 }
