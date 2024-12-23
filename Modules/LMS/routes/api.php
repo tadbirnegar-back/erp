@@ -55,3 +55,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/view-course/{id}' , [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/comment' , [LessonController::class, 'storeComment']);
 });
+Route::get('/lms/lesson/adding-requirements/{id}' , [LessonController::class, 'addLessonRequirements']);
