@@ -71,5 +71,10 @@ class Lesson extends Model
             ->latest('status_lesson.id');
     }
 
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
 
 }

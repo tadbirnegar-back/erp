@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\LMS\app\Http\Controllers\CourseController;
+use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
@@ -51,4 +52,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
     Route::post('/lms/register/course/{id}', [CourseController::class, 'registerCourse']);
     Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
+    Route::get('/lms/view-course/{id}' , [CourseController::class, 'learningShow']);
+    Route::post('/lms/lesson/comment' , [LessonController::class, 'storeComment']);
 });

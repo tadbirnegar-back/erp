@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\LMS\app\Enums;
+namespace Modules\LMS\app\Http\Enums;
 enum QuestionsEnum: string
 {
     case ACTIVE = 'فعال';

@@ -5,8 +5,11 @@ namespace Modules\LMS\app\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\CourseFactory;
+use Modules\PayStream\app\Models\Order;
+use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
@@ -44,9 +47,9 @@ class Course extends Model
                 if (is_null($value)) {
                     return null;
                 }
-                if($value == 1){
+                if ($value == 1) {
                     return true;
-                }else{
+                } else {
                     return false;
                 }
             }
@@ -198,6 +201,14 @@ class Course extends Model
         return $this->hasManyDeep(Question::class, [Chapter::class, Lesson::class],
             ['course_id', 'chapter_id', 'lesson_id'],
             ['id', 'id', 'id']
+        );
+    }
+
+    public function person()
+    {
+        return $this->hasOneDeep(Person::class, [Enroll::class, Order::class, Customer::class],
+            ['id' ,  'id' , 'customer_id' , 'person_id'],
+            ['course_id' , 'orderable_id' , 'id' , 'id']
         );
     }
 
