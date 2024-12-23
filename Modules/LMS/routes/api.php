@@ -50,6 +50,5 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
     Route::post('/lms/register/course/{id}', [CourseController::class, 'registerCourse']);
     Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
+    Route::get('/lms/view-course/{id}' , [CourseController::class, 'learningShow']);
 });
-Route::get('/lms/view-course/{id}' , [CourseController::class, 'learningShow']);
-Route::post('/lms/register/course/{id}', [CourseController::class, 'registerCourse']);
