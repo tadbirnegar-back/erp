@@ -39,9 +39,20 @@ class AnswerSheet extends Model
     {
         return $this->belongsTo(Student::class, 'student_id', 'id');
     }
+
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function answers()
+    {
+        return $this->hasMany(Answers::class, 'answer_sheet_id', 'id');
+    }
+
+    public function questionExam()
+    {
+        return $this->hasMany(QuestionExam::class, 'exam_id', 'exam_id');
     }
 
 }
