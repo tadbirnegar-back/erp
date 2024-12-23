@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\LMS\app\Http\Controllers\CourseController;
+use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
@@ -35,6 +36,8 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/lms/delete/questions/{id}', [QuestionController::class, 'destroyQuestion']);
     Route::post('/lms/edit/options/{id}', [OptionController::class, 'editOption']);
     Route::post('/lms/delete/options/{id}', [OptionController::class, 'destroyOption']);
+    Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
+
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
@@ -49,5 +52,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
     Route::post('/lms/register/course/{id}', [CourseController::class, 'registerCourse']);
     Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
+    Route::get('/lms/view-course/{id}' , [CourseController::class, 'learningShow']);
+    Route::post('/lms/lesson/comment' , [LessonController::class, 'storeComment']);
 });
 Route::post('/lms/exam/result', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'index']);

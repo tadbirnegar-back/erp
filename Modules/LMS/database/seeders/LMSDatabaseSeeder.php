@@ -17,7 +17,9 @@ class LMSDatabaseSeeder extends Seeder
 //             ModuleSeeder::class,
 //             PermissionSeeder::class,
 //            QuestionStatusSeeder::class,
-            OptionStatusSeeder::class,
+//            OptionStatusSeeder::class,
+//            LessonStatusSeeder::class,
+            FillCommentsTable::class,
         ]);
     }
 }

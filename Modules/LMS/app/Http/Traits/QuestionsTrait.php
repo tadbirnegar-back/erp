@@ -2,13 +2,14 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Question;
 use Nwidart\Modules\Collection;
 
 trait QuestionsTrait
 {
-    private static string $activeQuestionStatus = 'فعال';
-    private static string $expired = 'منسوخ شده';
+    private static string $activeQuestionStatus = QuestionsEnum::ACTIVE->value;
+    private static string $expired = QuestionsEnum::EXPIRED->value;
 
     public function storeQuestion($data, $user)
     {
