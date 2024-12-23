@@ -94,4 +94,16 @@ trait DateTrait
 
         return $humanReadableDate;
     }
+
+    public function convertGregorianToJalali(string $gregorianDate)
+    {
+        // Convert the Gregorian date to a Jalali date
+        $jalaliDate = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d', strtotime($gregorianDate));
+
+        // Convert numbers to Persian characters
+        $persianCharJalaliDate = \Morilog\Jalali\CalendarUtils::convertNumbers($jalaliDate, false);
+
+        return $persianCharJalaliDate;
+    }
+
 }

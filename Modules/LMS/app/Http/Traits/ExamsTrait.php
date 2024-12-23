@@ -15,14 +15,17 @@ trait ExamsTrait
             ->joinRelationship('status',);
 
         $query->addSelect([
-            'repositories.name as repository_name',
-            'repositories.id as repository_id',
-            'exams.id as exam_id',
-            'exams.title as exam_title',
-            'question_types.id as question_type_id',
-            'statuses.name as status_name',
-            'statuses.id as status_id'
+            'answer_sheets.start_date_time as startDate',
+            'answer_sheets.finish_date_time as finishDate',
+            'repositories.name as repositoryName',
+            'repositories.id as repositoryID',
+            'exams.id as examID',
+            'exams.title as examTitle',
+            'question_types.id as questionTypeID',
+            'statuses.name as statusName',
+            'statuses.id as statusID'
         ]);
+
 
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
 
