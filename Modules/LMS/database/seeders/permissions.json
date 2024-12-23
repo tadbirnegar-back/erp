@@ -58,5 +58,11 @@
         "slug": "/lms/register/course/{id}",
         "moduleName": "LMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن درس",
+        "slug": "/lms/lesson/add",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
     }
 ]
