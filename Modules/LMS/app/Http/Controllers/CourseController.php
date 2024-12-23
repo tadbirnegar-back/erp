@@ -62,8 +62,7 @@ class CourseController extends Controller
 
             $course = Course::with('prerequisiteCourses')->find($id);
 
-//            $user = Auth::user();
-            $user = User::find(2174);
+            $user = Auth::user();
             // Check if the user has completed prerequisite courses.
             // This is currently implemented in the simplest possible way and might be updated in the future.
             if(empty($course->prerequisiteCourses[0])){
