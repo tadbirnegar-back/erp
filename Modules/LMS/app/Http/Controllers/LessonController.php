@@ -8,11 +8,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
+use Modules\LMS\app\Http\Traits\ChapterTrait;
+use Modules\LMS\app\Http\Traits\ContentTrait;
+use Modules\LMS\app\Http\Traits\LessonTrait;
 use Modules\LMS\app\Models\Comment;
 use Modules\LMS\app\Models\Lesson;
 
 class LessonController extends Controller
 {
+    use ChapterTrait, LessonTrait, ContentTrait;
+
     public function storeComment(Request $request)
     {
         try {
@@ -33,5 +38,33 @@ class LessonController extends Controller
             DB::rollBack();
             return response()->json(['message' => "نظر شما ذخیره نشد"], 400);
         }
+    }
+
+    public function addLesson(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            //Chapter Part
+            $chapter = $data['isNewChapter'] ? $this->storeChapter($data) : $this->getChapter($data);
+            $data['chapterID'] = $chapter->id;
+            //Lesson Part
+            $lesson = $this->storeLesson($data);
+            $data['lessonID'] = $lesson->id;
+            //LessonFiles
+            if (isset($data['lessonFiles'])) {
+                $this->storeLessonFiles($data);
+            }
+            //Content
+            if (isset($data['contents'])) {
+                $this->storeContent($data);
+            }
+            DB::commit();
+            return response()->json(['message' => "درس مورد نظر شما با موفقیت ساخته شد"], 404);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => "درس مورد نظر شما ساخته نشد"], 404);
+        }
+
     }
 }
