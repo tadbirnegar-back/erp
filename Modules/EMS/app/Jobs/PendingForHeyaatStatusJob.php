@@ -34,6 +34,10 @@ class PendingForHeyaatStatusJob implements ShouldQueue
         try {
             \DB::beginTransaction();
             $enactment = Enactment::with('status')->find($this->encId);
+            if (is_null($enactment)) {
+                $this->delete();
+                return;
+            }
 
             if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
                 $takmilshodeStatus = $this->enactmentHeyaatStatus()->id;
@@ -41,12 +45,12 @@ class PendingForHeyaatStatusJob implements ShouldQueue
                     'status_id' => $takmilshodeStatus,
                     'enactment_id' => $this->encId,
                 ]);
-            }else {
+            } else {
                 // If the condition fails, we manually delete the job to stop retries and mark it as "done"
                 $this->delete();
                 return; // Return to stop further execution
             }
-                \DB::commit();
+            \DB::commit();
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail($e);
