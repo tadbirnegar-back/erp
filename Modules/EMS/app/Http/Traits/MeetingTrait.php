@@ -105,5 +105,10 @@ trait MeetingTrait
         return Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::APPROVED->value);
     }
 
+    public function meetingCancelStatus()
+    {
+        return Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::CANCELED->value);
+    }
+
 
 }

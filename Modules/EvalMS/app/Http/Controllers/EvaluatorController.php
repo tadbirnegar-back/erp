@@ -136,9 +136,9 @@ class EvaluatorController extends Controller
                     // Handle unfilled evaluations (optional)
                     if (!empty($unfilledEvaluations)) {
                         // Access details of unfilled evaluations here (e.g., loop and print names)
-                        $recordExists = true;
-                    } else {
                         $recordExists = false;
+                    } else {
+                        $recordExists = true;
                     }
 
                 } else {

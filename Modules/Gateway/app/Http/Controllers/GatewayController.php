@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\Gateway\app\Jobs\VerifyPaymentJob;
 use Modules\Gateway\app\Models\Payment as PG;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Payment\Facade\Payment;
 
@@ -193,15 +194,45 @@ class GatewayController extends Controller
     public function paymentsPerDistrict(Request $request)
     {
         $user = auth()->user();
+        if ($request->districtID) {
+            $ounit = OrganizationUnit::find($request->districtID);
+        } else {
+            $ounit = $user->organizationUnits[0];
+        }
 
 
-        $villages = $user->organizationUnits[0]->descendants()->whereDepth(2)->with(['head.person',
+        $villages = $ounit->descendants()->whereDepth(2)->with(['head.person',
             'head.notifications',
             'unitable',
 //            'ancestors',
             'payments' => function ($query) {
                 $query->where('status_id', '=', '46');
             }, 'evaluator'])->get();
-        return response()->json($villages);
+
+        $b = collect($this->calculatePrice($villages)['ounits']);
+        $c = $b->map(function ($item) {
+            $phase1 = ($item['alreadyPayed'] > 0);
+            $phase2 = ($item['price'] <= 0 && $item['alreadyPayed'] > 0);
+            $verified = $item['ounitObject']?->head?->notifications->isNotEmpty() && $item['ounitObject']?->head?->notifications[0]->read_at != null;
+            $hasEval = $item['ounitObject']?->evaluator != null;
+            /**
+             * @var OrganizationUnit $ou
+             */
+            $ou = $item['ounitObject'];
+            $ou->setAttribute('payStat', [
+                'phase_1' => $phase1,
+                'phase_2' => $phase2,
+                'verified' => $verified,
+                'hasEval' => $hasEval,
+                'person' => $item['ounitObject']?->head?->person,
+
+            ]);
+            unset($ou->head);
+            unset($ou->payments);
+            unset($ou->evaluator);
+
+            return $ou;
+        });
+        return response()->json($c);
     }
 }
