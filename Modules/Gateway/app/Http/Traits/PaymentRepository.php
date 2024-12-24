@@ -2,6 +2,7 @@
 
 namespace Modules\Gateway\app\Http\Traits;
 
+use Illuminate\Support\Collection;
 use Modules\AAA\app\Models\User;
 use Modules\Gateway\app\Models\Payment as PG;
 use Shetabit\Multipay\Invoice;
@@ -22,7 +23,7 @@ trait PaymentRepository
     {
 
 
-        $calculated = $this->calculatePrice($user);
+        $calculated = $this->calculatePrice($user->organizationUnits);
         $ounits = collect($calculated['ounits']);
         $invoice = (new Invoice)->amount($calculated['total']);
 
@@ -48,10 +49,9 @@ trait PaymentRepository
         })->pay();
     }
 
-    public function calculatePrice(User $user)
+    public function calculatePrice(Collection $ounitVillages)
     {
 
-        $ounitVillages = $user->organizationUnits;
 
         $totalAmount = 0;
         $amountPerUnit = [];
@@ -67,6 +67,7 @@ trait PaymentRepository
             }
             $mustPay = $priceForOunit - $payedPrice;
             $amountPerUnit[] = [
+                'ounitObject' => $ounitVill,
                 'ounitID' => $ounitVill->id,
                 'price' => $mustPay,
                 'alreadyPayed' => $payedPrice,
@@ -90,7 +91,7 @@ trait PaymentRepository
             }]);
         }
 
-        $calculatedPrice = $this->calculatePrice($user);
+        $calculatedPrice = $this->calculatePrice($user->organizationUnits);
 
         //if total = true user has no debts
         $result['hasDebt'] = $calculatedPrice['total'] <= 0;
