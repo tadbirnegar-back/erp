@@ -45,6 +45,11 @@ class AlertKarshenas implements ShouldQueue
                 },
             ])->find($this->encId);
 
+            if (is_null($enactment)) {
+                $this->delete();
+                return;
+            }
+
             if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
                 foreach ($enactment->meeting->meetingMembers as $meetingMember) {
                     $user = $meetingMember->user; // Access the User model associated with the meeting member

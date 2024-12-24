@@ -48,6 +48,11 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
 
                 },])->find($this->encId);
 
+            if (is_null($enactment)) {
+                $this->delete();
+                return;
+            }
+
             if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
                 if ($enactment->members->isNotEmpty() || !isEmpty($enactment->members)) {
                     $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();

@@ -50,7 +50,7 @@ class StoreMeetingJob implements ShouldQueue
     public function handle(): void
     {
         $cancelStatus = $this->meetingCancelStatus();
-        if ($this->meeting->latestStatus != $cancelStatus->id) {
+        if ($this->meeting->latestStatus->id != $cancelStatus->id) {
             // Log the meeting date
             // Extract the month number from the Jalali date
             $jalaliDate = $this->meeting->meeting_date; // e.g., ۱۴۰۴/۰۸/۰۹
@@ -83,7 +83,7 @@ class StoreMeetingJob implements ShouldQueue
 
                 $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
             }
-        }else{
+        } else {
             $this->delete();
             return;
         }
