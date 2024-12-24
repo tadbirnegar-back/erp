@@ -447,14 +447,12 @@ trait EnactmentTrait
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
-                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
                     'FormNumThree',
-                    'ReviewBtn',
                 ],
                 self::$karshenasMashvarati => [
                     'MainEnactment',
                     'CurrentReviewCard',
-                    'ReviewBtn',
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
