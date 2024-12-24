@@ -6,7 +6,7 @@ use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
-
+use Modules\LMS\app\Http\Controllers\ChapterController;
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -55,3 +55,5 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/view-course/{id}' , [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/comment' , [LessonController::class, 'storeComment']);
 });
+Route::post('/lms/chapter/edit/{id}' , [ChapterController::class, 'update']);
+Route::get('/lms/chapter/delete/{id}' , [ChapterController::class, 'delete']);
