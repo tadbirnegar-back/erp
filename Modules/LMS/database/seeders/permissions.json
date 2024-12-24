@@ -64,5 +64,17 @@
         "slug": "/lms/lesson/add",
         "moduleName" : "LMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش فصل",
+        "slug": "/lms/chapter/edit/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف فصل",
+        "slug": "/lms/chapter/delete/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
     }
 ]
