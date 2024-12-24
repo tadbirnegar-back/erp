@@ -29,7 +29,7 @@ class CourseViewLearningResource extends JsonResource
                     ],
                     'comments' => [
                         'text' => $this->comment_text,
-                        'created_at' => $this->comment_created_at,
+                        'created_at' => convertGregorianToJalali($this->comment_created_at),
                         'commented_person' => $this->commented_person_name,
                     ]
                 ]

@@ -12,7 +12,10 @@ use Modules\LMS\app\Http\Traits\ChapterTrait;
 use Modules\LMS\app\Http\Traits\ContentTrait;
 use Modules\LMS\app\Http\Traits\LessonTrait;
 use Modules\LMS\app\Models\Comment;
+use Modules\LMS\app\Models\ContentType;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Lesson;
+use Modules\LMS\app\Models\Teacher;
 
 class LessonController extends Controller
 {
@@ -65,6 +68,26 @@ class LessonController extends Controller
             DB::rollBack();
             return response()->json(['message' => "درس مورد نظر شما ساخته نشد"], 404);
         }
+    }
 
+    public function addLessonRequirements($id)
+    {
+        $course = Course::joinRelationship('chapters', function ($join) {
+            $join->as('chapter_alias');
+        })
+            ->where('courses.id', $id)
+            ->select('chapter_alias.id as chapter_id', 'chapter_alias.title as chapter_title')
+            ->get();
+
+        $teacher = Teacher::with(['person' => function ($query) {
+            $query->select('display_name');
+        }])->get();
+
+        $contentTypes = ContentType::all();
+        if ($course->isEmpty()) {
+            return response()->json(['message' => 'Course not found'], 404);
+        }
+
+        return response()->json(["teacher" => $teacher , "course" => $course , "contentTypes" => $contentTypes]);
     }
 }

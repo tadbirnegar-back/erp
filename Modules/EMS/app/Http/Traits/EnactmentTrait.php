@@ -344,10 +344,10 @@ trait EnactmentTrait
             ],
             self::$enactmentPendingForHeyaatDateStatus => [
                 'priorities' => [
+                    self::$dabirHeyaat,
                     self::$karshenasMashvarati,
                     self::$ozvHeyaat,
                     self::$karshenasOstandari,
-                    self::$dabirHeyaat,
                     self::$bakhshdar,
                     self::$ozvShouraRusta
 
@@ -375,6 +375,8 @@ trait EnactmentTrait
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
+                    'RevokeBtn',
+                    'CurrentReviewCard',
                 ],
                 self::$ozvShouraRusta => [
                     'MainEnactment',
@@ -445,14 +447,12 @@ trait EnactmentTrait
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
-                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
                     'FormNumThree',
-                    'ReviewBtn',
                 ],
                 self::$karshenasMashvarati => [
                     'MainEnactment',
                     'CurrentReviewCard',
-                    'ReviewBtn',
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
@@ -477,32 +477,32 @@ trait EnactmentTrait
                 //roles with components
                 self::$bakhshdar => [
                     'MainEnactment',
-                    'MembersBeforeReview',
                     'DenyCard',
+
                 ],
                 self::$karshenasOstandari => [
                     'MainEnactment',
-                    'MembersBeforeReview',
                     'DenyCard',
+
                 ],
                 self::$dabirHeyaat => [
                     'MainEnactment',
-                    'MembersBeforeReview',
                     'DenyCard',
+
                 ],
                 self::$karshenasMashvarati => [
                     'MainEnactment',
-                    'MembersBeforeReview',
                     'DenyCard',
+
                 ],
                 self::$ozvHeyaat => [
                     'MainEnactment',
-                    'MembersBeforeReview',
                     'DenyCard',
+
                 ],
                 self::$ozvShouraRusta => [
                     'MainEnactment',
-                    'DenyCard',
+
                 ],
             ],
             self::$enactmentDeclinedStatus => [
@@ -618,7 +618,13 @@ trait EnactmentTrait
             'DenyCard' => ['canceledStatus.meetingMember'],
             'ReviewBtn' => [
                 'members' => function ($query) use ($user) {
-                    $query->where('employee_id', $user->id);
+                    $query->where('employee_id', $user->id)
+                        ->with([
+                            'roles' => function ($q) {
+                                $q->where('name', RolesEnum::OZV_HEYAAT->value)
+                                    ->orWhere('name', RolesEnum::KARSHENAS_MASHVARATI->value)
+                                    ->distinct();
+                            }]);
                 },
                 'userHasReviews' => function ($query) use ($user) {
                     $query->where('user_id', $user->id);
@@ -653,6 +659,14 @@ trait EnactmentTrait
                         ->with('user.employee.signatureFile');
                 },
             ],
+            'RevokeBtn' => [
+                'members' => function ($query) use ($user) {
+                    $query->where('employee_id', $user->id);
+
+                },
+                'userHasReviews' => function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                },],
         ]);
 
         $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())

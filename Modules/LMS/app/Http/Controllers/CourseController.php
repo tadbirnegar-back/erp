@@ -26,10 +26,10 @@ class CourseController extends Controller
     {
         try {
             DB::beginTransaction();
-            $course = Course::with('latestStatus')->find($id);
+            $course = Course::with('latestStatus')->findOrFail($id);
             $user = Auth::user();
             if (is_null($course)) {
-                return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
+                return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
