@@ -6,7 +6,7 @@ use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
-
+use Modules\LMS\app\Http\Controllers\ChapterController;
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -46,6 +46,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/add/questions', [QuestionController::class, 'store']);
     Route::post('/lms/add/options', [OptionController::class, 'store']);
     Route::post('/lms/lesson/add' , [LessonController::class, 'addLesson']);
+    Route::post('/lms/chapter/edit/{id}' , [ChapterController::class, 'update']);
+    Route::get('/lms/chapter/delete/{id}' , [ChapterController::class, 'delete']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
@@ -56,4 +58,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/comment' , [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}' , [LessonController::class, 'addLessonRequirements']);
 });
-Route::get('/lms/lesson/adding-requirements/{id}' , [LessonController::class, 'addLessonRequirements']);
