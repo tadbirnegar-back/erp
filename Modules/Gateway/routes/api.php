@@ -20,4 +20,6 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::post('payments/verify', [\Modules\Gateway\app\Http\Controllers\GatewayController::class,'verifyPayment']);
 
     Route::post('/payments/log/district/list', [\Modules\Gateway\app\Http\Controllers\GatewayController::class,'paymentsPerDistrict'])->middleware(['route']);
+
+    Route::post('/payments/log/total-villages/list', [\Modules\Gateway\app\Http\Controllers\GatewayController::class,'paymentsPerDistrict']);
 });

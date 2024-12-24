@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Modules\EMS\app\Observers\EnactmentMeetingObserver;
 use Modules\EMS\Database\factories\EnactmentMeetingFactory;
@@ -26,6 +27,11 @@ class EnactmentMeeting extends pivot
 
     public $timestamps = false;
     protected $table = 'enactment_meeting';
+
+    public function enactment(): BelongsTo
+    {
+        return $this->belongsTo(Enactment::class);
+    }
 
 
 }

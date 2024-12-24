@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\SettingsEnum;
 use Modules\EMS\app\Models\Meeting;
@@ -134,15 +135,24 @@ class OrganizationUnit extends Model
 
         return $this->hasOne(Meeting::class, 'ounit_id')
             ->where('meeting_type_id', $meetingtypeId)
-            ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)]) // Filter by meeting date range
+            ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)])
             ->whereNotExists(function ($query) use ($enactmentLimitPerMeeting) {
                 $query->selectRaw('1')
                     ->from('enactment_meeting')
-                    ->whereColumn('enactment_meeting.meeting_id', 'meetings.id') // Match meeting IDs
-                    ->groupBy('enactment_meeting.meeting_id')                  // Group by meeting
-                    ->havingRaw('COUNT(DISTINCT enactment_id) >= ?', [$enactmentLimitPerMeeting]); // Check enactment count
+                    ->join('enactments', 'enactments.id', '=', 'enactment_meeting.enactment_id')
+                    ->whereColumn('enactment_meeting.meeting_id', 'meetings.id')
+                    ->whereNotExists(function ($subQuery) {
+                        $subQuery->selectRaw('1')
+                            ->from('enactment_status')
+                            ->join('statuses', 'statuses.id', '=', 'enactment_status.status_id')
+                            ->whereColumn('enactment_status.enactment_id', 'enactments.id')
+                            ->where('statuses.name', '=', EnactmentStatusEnum::CANCELED->value); // Exclude enactments with "باطل شده"
+                    })
+                    ->groupBy('enactment_meeting.meeting_id')
+                    ->havingRaw('COUNT(DISTINCT enactment_meeting.enactment_id) >= ?', [$enactmentLimitPerMeeting]);
             })
-            ->orderBy('meeting_date', 'asc'); // Get the nearest meeting
+            ->orderBy('meeting_date', 'asc');
+
     }
 
 
@@ -169,11 +179,20 @@ class OrganizationUnit extends Model
             ->whereExists(function ($query) use ($enactmentLimitPerMeeting) {
                 $query->selectRaw('1')
                     ->from('enactment_meeting')
+                    ->join('enactments', 'enactments.id', '=', 'enactment_meeting.enactment_id') // Join enactments table
                     ->whereColumn('enactment_meeting.meeting_id', 'meetings.id') // Match meeting IDs
-                    ->groupBy('enactment_meeting.meeting_id')                  // Group by meeting
-                    ->havingRaw('COUNT(DISTINCT enactment_id) >= ?', [$enactmentLimitPerMeeting]); // Check enactment count
+                    ->whereNotExists(function ($subQuery) {
+                        $subQuery->selectRaw('1')
+                            ->from('enactment_status')
+                            ->join('statuses', 'statuses.id', '=', 'enactment_status.status_id') // Join statuses table
+                            ->whereColumn('enactment_status.enactment_id', 'enactments.id') // Match enactment IDs
+                            ->where('statuses.name', '=', EnactmentStatusEnum::CANCELED->value); // Exclude enactments with this status
+                    })
+                    ->groupBy('enactment_meeting.meeting_id') // Group by meeting
+                    ->havingRaw('COUNT(DISTINCT enactment_meeting.enactment_id) >= ?', [$enactmentLimitPerMeeting]); // Check enactment count
             })
             ->orderBy('meeting_date', 'asc'); // Order by meeting date
+
     }
 
     public function meetingTemplate(): HasOne

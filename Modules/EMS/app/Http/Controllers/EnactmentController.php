@@ -19,10 +19,10 @@ use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EMS\app\Models\Enactment;
-use Modules\EMS\app\Models\EnactmentMeeting;
 use Modules\EMS\app\Models\EnactmentReview;
 use Modules\EMS\app\Models\EnactmentStatus;
 use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingStatus;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -154,9 +154,17 @@ class EnactmentController extends Controller
             if (isset($data['meetingID'])) {
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
-                $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $data['meetingID'])
-                    ->distinct('enactment_id')
-                    ->count('enactment_id');
+                $EncInMeetingcount =
+//                    EnactmentMeeting::where('meeting_id', $data['meetingID'])
+//                    ->distinct('enactment_id')
+//                    ->count('enactment_id');
+                    Meeting::withCount(['enactments' => function ($query) {
+                        $query->whereDoesntHave('status', function ($query) {
+                            $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                        });
+                    }])
+                        ->first()
+                        ->enactments_count;
 
                 if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
                     return response()->json([
@@ -459,7 +467,7 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $user = Auth::user();
-            $enactment = Enactment::with('status')->find($id);
+            $enactment = Enactment::with(['status', 'latestMeeting'])->find($id);
 
             if (is_null($enactment)) {
                 return response()->json(['message' => 'مصوبه مورد نظر یافت نشد'], 404);
@@ -477,13 +485,34 @@ class EnactmentController extends Controller
             $enactmentStatus->description = $data['description'] ?? null;
             $enactmentStatus->attachment_id = $data['attachmentID'] ?? null;
             $enactmentStatus->save();
+
+
+            //latest meeting check for emptiness
+            $latestMeeting = $enactment->latestMeeting;
+            $latestMeeting->loadCount(['enactments' => function ($query) {
+                $query->whereDoesntHave('status', function ($query) {
+                    $query->where('statuses.id', $this->enactmentCancelStatus()->id);
+                });
+            }]);
+
+            if ($latestMeeting->enactments_count == 0) {
+                $status = $this->meetingCancelStatus();
+                $meetingStatus = new MeetingStatus();
+                $meetingStatus->meeting_id = $latestMeeting->id;
+                $meetingStatus->status_id = $status->id;
+                $meetingStatus->operator_id = $user->id;
+                $meetingStatus->save();
+
+            }
+
+
             DB::commit();
 
             return response()->json(['message' => 'عملیات با موفقیت انجام شد']);
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => $e->getMessage(),], 500);
         }
     }
 
@@ -494,19 +523,17 @@ class EnactmentController extends Controller
             $user = Auth::user();
             $data = $request->all();
             $enactment = Enactment::find($id);
-
-            $reviewResult = EnactmentReview::where('enactment_id', $id)->where('user_id', $user->id)->exists();
-            if ($reviewResult) {
-                return response()->json(['message' => 'شما قبلا نظر خود را ثبت کرده اید'], 400);
-            }
             $status = $this->reviewInconsistencyStatus();
-            $enactmentReview = new EnactmentReview();
-            $enactmentReview->enactment_id = $id;
-            $enactmentReview->user_id = $user->id;
-            $enactmentReview->status_id = $status->id;
-            $enactmentReview->description = $data['description'] ?? null;
-            $enactmentReview->attachment_id = $data['attachmentID'] ?? null;
-            $enactmentReview->save();
+
+            EnactmentReview::updateOrCreate(
+                ['enactment_id' => $id, 'user_id' => $user->id],
+                [
+                    'status_id' => $status->id,
+                    'description' => $data['description'] ?? null,
+                    'attachment_id' => $data['attachmentID'] ?? null
+                ]
+            );
+
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {
@@ -563,18 +590,16 @@ class EnactmentController extends Controller
             DB::beginTransaction();
             $user = Auth::user();
             $enactment = Enactment::find($id);
-            $reviewResult = EnactmentReview::where('enactment_id', $id)->where('user_id', $user->id)->exists();
-            if ($reviewResult) {
-                return response()->json(['message' => 'شما قبلا نظر خود را ثبت کرده اید'], 400);
-            }
             $status = $this->reviewNoInconsistencyStatus();
-            $enactmentReview = new EnactmentReview();
-            $enactmentReview->enactment_id = $id;
-            $enactmentReview->user_id = $user->id;
-            $enactmentReview->status_id = $status->id;
-            $enactmentReview->description = $data['description'] ?? null;
-            $enactmentReview->attachment_id = $data['attachmentID'] ?? null;
-            $enactmentReview->save();
+
+            EnactmentReview::updateOrCreate(
+                ['enactment_id' => $id, 'user_id' => $user->id],
+                [
+                    'status_id' => $status->id,
+                    'description' => $data['description'] ?? null,
+                    'attachment_id' => $data['attachmentID'] ?? null
+                ]
+            );
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {

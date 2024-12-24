@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Requests\UpdateMeetingDateReq;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Http\Traits\EMSSettingTrait;
@@ -122,9 +123,20 @@ class MeetingController extends Controller
 
             $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
-            $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $firstFreeMeeting->id)
-                ->distinct('enactment_id')
-                ->count('enactment_id');
+//            $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $firstFreeMeeting->id)
+//                ->whereDoesntHave('enactment.status', function ($q) {
+//                    $q->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+//                })
+//                ->distinct('enactment_id')
+//                ->count('enactment_id');
+            /**
+             * @var Meeting $firstFreeMeeting
+             */
+            $EncInMeetingcount = $firstFreeMeeting->loadCount(['enactments' => function ($query) {
+                $query->whereDoesntHave('status', function ($query) {
+                    $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                });
+            }])->enactments_count;
 
 
             if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
