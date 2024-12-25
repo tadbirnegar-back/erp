@@ -130,7 +130,7 @@ class EnactmentController extends Controller
             //Validations
 
             $heyatOunit = OrganizationUnit::with([
-                'ancestors' => function ($query) {
+                'ancestorsAndSelf' => function ($query) {
                     $query->where('unitable_type', DistrictOfc::class)
                         ->with(['meetingMembers' => function ($query) {
                             $query->whereHas('roles', function ($query) {
@@ -140,31 +140,27 @@ class EnactmentController extends Controller
                 },
             ])->find($data['ounitID']);
 
-            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->meetingMembers;
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
 
             if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 
-            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->load('meetingMembers');
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->load('meetingMembers');
 
-            $heyaatTemplateMembers = $heyatOunit->ancestors[0]?->meetingMembers;
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
 
 
             if (isset($data['meetingID'])) {
                 $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
 
-                $EncInMeetingcount =
-//                    EnactmentMeeting::where('meeting_id', $data['meetingID'])
-//                    ->distinct('enactment_id')
-//                    ->count('enactment_id');
-                    Meeting::withCount(['enactments' => function ($query) {
-                        $query->whereDoesntHave('status', function ($query) {
-                            $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
-                        });
-                    }])
-                        ->first()
-                        ->enactments_count;
+                $EncInMeetingcount = Meeting::withCount(['enactments' => function ($query) {
+                    $query->whereDoesntHave('status', function ($query) {
+                        $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                    });
+                }])
+                    ->first()
+                    ->enactments_count;
 
                 if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
                     return response()->json([
@@ -172,9 +168,13 @@ class EnactmentController extends Controller
                     ], 422);
                 }
 
-
+                if ($data['meetingType'] == 2) {
+                    $meetingTypeEnum = MeetingTypeEnum::SHURA_DISTRICT_MEETING;
+                } else {
+                    $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
+                }
                 //Shura Meeting
-                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING)->first()->id;
+                $data['meetingTypeID'] = MeetingType::where('title', '=', $meetingTypeEnum)->first()->id;
 
 
                 $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
@@ -260,7 +260,13 @@ class EnactmentController extends Controller
 
                 $meetingDate = $data['meetingDate'];
                 $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
-                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::SHURA_MEETING->value)->first()->id;
+                if ($data['meetingType'] == 2) {
+                    $meetingTypeEnum = MeetingTypeEnum::SHURA_DISTRICT_MEETING;
+                } else {
+                    $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
+                }
+                //Shura Meeting
+                $data['meetingTypeID'] = MeetingType::where('title', '=', $meetingTypeEnum)->first()->id;
                 $meetingShura = $this->storeMeeting($data);
 
                 $data['meetingDate'] = $meetingDate;
