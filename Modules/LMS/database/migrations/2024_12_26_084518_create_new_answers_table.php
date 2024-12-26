@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('answers', function (Blueprint $table) {
+            $table->dropColumn('option_id');
+
+            $table->foreign('answer_sheet_id')->references('id')->on('answer_sheets');
+
+            $table->foreign('question_exam_id')->references('id')->on('question_exam');
+            $table->unsignedBigInteger('question_id');
+            $table->foreign('question_id')
+                ->references('id')
+                ->on('questions');
+            $table->UnsignedBigInteger('value')->change()->nullable();
+
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('new_answers');
+    }
+};

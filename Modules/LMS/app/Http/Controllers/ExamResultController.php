@@ -5,7 +5,10 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Modules\LMS\app\Http\Traits\ExamResultTrait;
+use Modules\LMS\app\Resources\ExamResultDetailResource;
+use Modules\LMS\app\Resources\ExamResultResource;
 
 class ExamResultController extends Controller
 {
@@ -18,50 +21,23 @@ class ExamResultController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $auth = Auth::user();
+        $auth->load('student');
         $data = $request->all();
-
         $result = $this->result($data);
-        return response()->json($result);
+        $response = new ExamResultResource($result);
+        return response()->json($response);
 
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
+    public function detailShow(Request $request): JsonResponse
     {
-        //
-
-        return response()->json($this->data);
+        $auth = Auth::user();
+        $auth->load('student');
+        $data = $request->all();
+        $result = $this->detailResult($data);
+        $response = new ExamResultDetailResource($result);
+        return response()->json($response);
     }
 
-    /**
-     * Show the specified resource.
-     */
-    public function show($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
 }

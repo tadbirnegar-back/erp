@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\LMS\Database\factories\AnswerSheetFactory;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class AnswerSheet extends Model
 {
-    use HasFactory;
+    use HasFactory, HasRelationships;
 
     /**
      * The attributes that are mass assignable.
@@ -20,6 +21,7 @@ class AnswerSheet extends Model
     public $timestamps = false;
 
     protected $table = 'answer_sheets';
+
 
     protected $fillable = [
         'id',
@@ -44,5 +46,29 @@ class AnswerSheet extends Model
     {
         return Status::all()->where('model', '=', self::class);
     }
+
+
+    public function status()
+    {
+        return $this->belongsTo(Status::class, 'status_id', 'id');
+    }
+
+    public function answers()
+    {
+        return $this->hasMany(Answers::class, 'answer_sheet_id', 'id');
+    }
+
+    public function repository()
+    {
+        return $this->hasOneThrough(
+            Repository::class,
+            Exam::class,
+            'id',
+            'id',
+            'exam_id',
+            'repository_id'
+        );
+    }
+
 
 }

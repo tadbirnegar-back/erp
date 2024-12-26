@@ -37,4 +37,14 @@ class Answers extends Model
         return $this->belongsTo(QuestionExam::class, 'question_exam_id', 'id');
     }
 
+    public function questions()
+    {
+        return $this->belongsTo(Question::class, 'question_id', 'id');
+    }
+
+    public function options()
+    {
+        return $this->belongsTo(Option::class, 'value', 'id');
+    }
+
 }

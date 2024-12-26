@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('answer_sheet_id');
             $table->unsignedBigInteger('option_id');
             $table->unsignedBigInteger('question_exam_id');
-            $table->float('value');
+            $table->unsignedBigInteger('value');
         });
     }
 
