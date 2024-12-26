@@ -83,10 +83,10 @@ class StoreMeetingJob implements ShouldQueue
 
                 $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
             }
-        } else {
+        }
             $this->delete();
             return;
-        }
+
     }
 
 }

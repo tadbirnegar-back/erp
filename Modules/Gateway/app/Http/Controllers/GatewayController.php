@@ -91,6 +91,7 @@ class GatewayController extends Controller
                 });
             }]);
 
+
             if ($user->organizationUnits->isEmpty()) {
                 return response()->json(['message' => 'شما مجاز به پرداخت نمی باشید'], 403);
             }
@@ -102,11 +103,13 @@ class GatewayController extends Controller
 
             $urlArray = explode('/', $url);
             $authority = end($urlArray);
-
-            VerifyPaymentJob::dispatch($authority)->delay(now()->addMinutes(12));
-
-
             DB::commit();
+
+            dispatch(new VerifyPaymentJob($authority))
+                ->onQueue('high')
+                ->delay(now()->addMinutes(12));
+
+
             return response()->json($result);
         } catch (\Exception $e) {
             DB::rollBack();

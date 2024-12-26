@@ -71,11 +71,11 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
                         EnactmentReview::insert($data);
                     }
                 }
-            } else {
-                $this->delete();
-                return;
             }
             \DB::commit();
+                $this->delete();
+                return;
+
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail($e);
