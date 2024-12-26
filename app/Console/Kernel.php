@@ -13,8 +13,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('queue:work')
-            ->everyMinute()
+        $schedule->command('horizon')
+            ->everySecond()
             ->runInBackground()
             ->withoutOverlapping();
         Log::info('Queue worker started' . ' on ' . date('Y-m-d H:i:s'));

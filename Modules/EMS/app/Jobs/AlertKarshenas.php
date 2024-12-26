@@ -61,6 +61,8 @@ class AlertKarshenas implements ShouldQueue
                 }
             }
             \DB::commit();
+            $this->delete();
+            return;
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail($e);
