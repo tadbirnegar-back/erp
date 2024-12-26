@@ -26,10 +26,10 @@ class CourseController extends Controller
     {
         try {
             DB::beginTransaction();
-            $course = Course::with('latestStatus')->findOrFail($id);
+            $course = Course::with('latestStatus')->find($id);
             $user = Auth::user();
             if (is_null($course)) {
-                return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
+                return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
@@ -142,8 +142,9 @@ class CourseController extends Controller
 
     public function learningShow($id)
     {
-        $course = Course::joinRelationshipUsingAlias('chapters.lessons')->find($id);
-        $user = Auth::user();
+        $course = Course::with('chapters.lessons')->find($id);
+//        $user = Auth::user();
+        $user = User::find(2174);
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         //Check user is Joined or not
@@ -156,9 +157,8 @@ class CourseController extends Controller
             return response()->json(["message" => "شما دسترسی به این دوره را ندارید"], 400);
         }
 
-        $data = $this -> dataShowViewCourse($course , $user);
-
-        return CourseViewLearningResource::collection($data);
+        $data = $this -> dataShowViewCourseSideBar($course , $user);
+        return response() -> json(["data"=>$data]);
     }
 
 }

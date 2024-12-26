@@ -1,0 +1,10 @@
+[
+    {
+        "name": "فعال",
+        "className": "primary"
+    },
+    {
+        "name": "غیر فعال",
+        "className": "primary"
+    }
+]

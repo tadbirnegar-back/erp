@@ -58,6 +58,7 @@ trait FileTrait
         $file->size = $data['fileSize'];
         $file->description = $data['description'] ?? null;
         $file->creator_id = $data['userID'] ?? null;
+        $file->duration = $data['duration'] ?? null;
 
         $file->extension_id = $extension->id;
         $file->slug = $isPrivate ? $path : 'uploads/' . $path;
