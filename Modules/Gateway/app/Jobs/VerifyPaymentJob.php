@@ -57,7 +57,10 @@ class VerifyPaymentJob implements ShouldQueue
                 });
             }
 
+
             \DB::commit();
+                $this->delete();
+                return;
         } catch (InvalidPaymentException $e) {
             \DB::rollBack();
             if ($e->getCode() == -51) {
@@ -69,7 +72,8 @@ class VerifyPaymentJob implements ShouldQueue
                     $payment->save();
                 });
                 \DB::commit();
-
+                $this->delete();
+                return;
             } else {
                 $this->fail($e);
             }

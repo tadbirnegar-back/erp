@@ -75,12 +75,13 @@ class StoreEnactmentStatusJob implements ShouldQueue
                         $enactment->final_status_id = $noMoghayeratAutoStatus->id;
                         $enactment->save();
                     }
-                    \DB::commit();
+
                 }
-            } else {
+            }
+                    \DB::commit();
                 $this->delete();
                 return;
-            }
+
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail($e);

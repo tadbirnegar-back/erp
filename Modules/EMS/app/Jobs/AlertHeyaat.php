@@ -59,13 +59,13 @@ class AlertHeyaat implements ShouldQueue
                     $user->notify(new AlertMMLastDayNotification($username));
 
                 }
-            }else{
+            }
+            \DB::commit();
                 $this->delete();
                 return;
-            }
 
 
-            \DB::commit();
+
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail($e);
