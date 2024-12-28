@@ -76,11 +76,11 @@ class ReportsController extends Controller
                         $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
                     })
                     ->with(['enactmentReviews' => function ($qq) use ($employeeId) {
-                    $qq->where('user_id', $employeeId)
-                        ->with(['status']);
-                }, 'title', 'latestHeyaatMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
-                    $q->where('unitable_type', '!=', StateOfc::class);
-                }]);
+                        $qq->where('user_id', $employeeId)
+                            ->with(['status']);
+                    }, 'title', 'latestHeyaatMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
+                        $q->where('unitable_type', '!=', StateOfc::class);
+                    }]);
             }])
             ->with(['meetingMembers' => function ($query) use ($employeeId) {
                 $query->where('employee_id', $employeeId)->with('mr');
@@ -166,8 +166,8 @@ class ReportsController extends Controller
                         $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
                     })
                     ->with(['enactmentReviews' => function ($qq) {
-                    $qq->with(['status']);
-                }, 'title', 'latestHeyaatMeeting', 'status']);
+                        $qq->with(['status']);
+                    }, 'title', 'latestHeyaatMeeting', 'status']);
             }])
             ->with(['meetingMembers' => function ($query) {
                 $query->with('mr', 'person.avatar');
@@ -285,8 +285,8 @@ class ReportsController extends Controller
                                 $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
                             })
                             ->with(['enactmentReviews' => function ($qq) {
-                            $qq->with(['status']);
-                        }, 'title', 'latestHeyaatMeeting', 'status']);
+                                $qq->with(['status']);
+                            }, 'title', 'latestHeyaatMeeting', 'status']);
                     }]);
             }]);
 
@@ -391,8 +391,8 @@ class ReportsController extends Controller
                                 $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
                             })
                             ->with(['enactmentReviews' => function ($qq) {
-                            $qq->with(['status']);
-                        }, 'title', 'latestHeyaatMeeting', 'status']);
+                                $qq->with(['status']);
+                            }, 'title', 'latestHeyaatMeeting', 'status']);
                     }]);
             }]);
 
