@@ -37,8 +37,8 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/lms/edit/options/{id}', [OptionController::class, 'editOption']);
     Route::post('/lms/delete/options/{id}', [OptionController::class, 'destroyOption']);
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
-    Route::post('/lms/exam/result', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'index']);
-    Route::post('/lms/exam/result/detail', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'detailShow']);
+//    Route::post('/lms/exam/result', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'index']);
+//    Route::post('/lms/exam/result/detail', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'detailShow']);
 
 
 });
@@ -58,3 +58,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
 });
+Route::post('/lms/exam/result/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'result']);

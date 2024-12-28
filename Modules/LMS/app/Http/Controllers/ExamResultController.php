@@ -4,10 +4,8 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\ExamResultTrait;
-use Modules\LMS\app\Resources\ExamResultDetailResource;
 use Modules\LMS\app\Resources\ExamResultResource;
 
 class ExamResultController extends Controller
@@ -19,25 +17,17 @@ class ExamResultController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): JsonResponse
+    public function result($id): JsonResponse
     {
-        $auth = Auth::user();
+
+//        $auth = Auth::user();
+//        $auth->load('student');
+        $auth = User::find(68);
         $auth->load('student');
-        $data = $request->all();
-        $result = $this->result($data);
+        $result = $this->examResult($auth, $id);
+//        dd($result);
         $response = new ExamResultResource($result);
         return response()->json($response);
 
     }
-
-    public function detailShow(Request $request): JsonResponse
-    {
-        $auth = Auth::user();
-        $auth->load('student');
-        $data = $request->all();
-        $result = $this->detailResult($data);
-        $response = new ExamResultDetailResource($result);
-        return response()->json($response);
-    }
-
 }

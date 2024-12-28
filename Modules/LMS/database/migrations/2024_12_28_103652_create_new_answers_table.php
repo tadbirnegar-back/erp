@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->foreign('question_id')
                 ->references('id')
                 ->on('questions');
-            $table->UnsignedBigInteger('value')->change()->nullable();
+            $table->longText('value')->change()->nullable();
 
         });
     }

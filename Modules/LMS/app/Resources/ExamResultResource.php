@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class ExamResultResource extends ResourceCollection
@@ -16,25 +17,37 @@ class ExamResultResource extends ResourceCollection
         return [
             'data' => $groupedResults->map(function ($group) {
                 return $group->unique('exam_id')->map(function ($item) {
+
+                    $startTime = Carbon::parse($item->start_date_time);
+                    $finishTime = Carbon::parse($item->finish_date_time);
+                    $usedTimeInMinutes = $startTime->diffInMinutes($finishTime);
+
                     return [
-                        'exam_id' => $item->exam_id,
-                        'student_id' => $item->student_id,
+//                        'courseID' => $item->courseID,
+                        'studentID' => $item->student_id,
                         'score' => $item->score,
                         'status' => [
-                            'status_name' => $item->status->name,
-                            'class_name' => $item->status->class_name,
+                            'statusName' => $item->status->name,
+                            'className' => $item->status->class_name,
+                        ],
+                        'questions' => [
+                            'questionTitle' => $item->questionTitle,
+                        ],
+                        'options' => [
+                            'optionTitle' => $item->optionTitle,
                         ],
                         'answer_sheet' => [
-                            'start_date_time' => $item->start_date_time,
-                            'finish_date_time' => $item->finish_date_time,
-                            'used_time_in_minutes' => $item->used_time_in_minutes,
+                            'startDateTime' => $item->startDateTime,
+                            'finishDateTime' => $item->finishDateTime,
+                            'usedTimeInMinutes' => $usedTimeInMinutes,
                         ],
                         'answers' => [
-                            'null_answers_count' => $item->null_answers_count,
-                            'correct_answers_count' => $item->correct_answers_count,
-                            'questions_count' => $item->questions_count,
-                            'false_answers_count' => $item->false_answers_count,
-                        ]
+                            'nullAnswersCount' => $item->null_answers_count,
+                            'correctAnswersCount' => $item->correct_answers_count,
+                            'questionsCount' => $item->questions_count,
+                            'falseAnswersCount' => $item->false_answers_count,
+                            'trueAnswer' => $item->correct_answer,
+                        ],
                     ];
                 });
             }),
