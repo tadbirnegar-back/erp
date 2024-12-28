@@ -2,8 +2,6 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Course;
@@ -27,13 +25,26 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = Course::query()->joinRelationship('cover');
+//        return Course::with('latestStatus')->find(1);
+
+        $query = Course::query();
+        $query->leftJoinRelationshipUsingAlias('cover', 'cover_alias');
+        $query->leftJoinRelationship('statusCourse.statuses', [
+            'statusCourse' => fn($join) => $join->as('statusCourse_alias')
+                ->on('statusCourse_alias.course_id', '=', 'courses.id'),
+            'statuses' => fn($join) => $join->as('statuses_alias')->whereIn('statuses_alias.name', [
+                $this::$presenting, $this::$waitToPresent, $this::$pishnevis
+            ])
+        ]);
+
         $query->select([
             'courses.id',
             'courses.title',
             'courses.cover_id',
-            'files.slug as cover_slug',
+            'cover_alias.slug as cover_slug',
+            'statuses_alias.name as status_name',
         ]);
+
         $query
             ->when($searchTerm, function ($query) use ($searchTerm) {
                 $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
@@ -85,7 +96,7 @@ trait CourseTrait
             'person.avatar'
         ]);
 
-        $isEnrolled = $this -> isEnrolledToDefinedCourse($course->id , $user);
+        $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         $answerSheet = $user->answerSheets[0] ?? null; // Handle potential null
         $student = $user->student;
@@ -125,7 +136,7 @@ trait CourseTrait
                 'cover',
                 'video',
                 'privacy',
-                'prerequisiteCourses'=> function ($query) {
+                'prerequisiteCourses' => function ($query) {
                     $query->with('cover');
                 },
                 'chapters' => function ($query) {
@@ -138,7 +149,7 @@ trait CourseTrait
                     ]);
                 },
             ],
-            'StudyLog' => ['lessonStudyLog' => function ($query) use ($user , $isEnrolled) {
+            'StudyLog' => ['lessonStudyLog' => function ($query) use ($user, $isEnrolled) {
                 $query->where('student_id', $user->student->id)
                     ->where('is_completed', true)
                     ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1);
@@ -376,19 +387,18 @@ trait CourseTrait
     }
 
 
-
-    public function isJoinedPreRerequisites($user , $course)
+    public function isJoinedPreRerequisites($user, $course)
     {
         $preCoursesIds = $course->prerequisiteCourses->pluck('id')->toArray();
 
         $enrolls = [];
-        foreach($preCoursesIds as $preCourseId)
-        {
-            $user -> load(['enrolls' => function ($q) use ($preCourseId){
-                $q->where('course_id' , $preCourseId);
+        foreach ($preCoursesIds as $preCourseId) {
+            $user->load(['enrolls' => function ($q) use ($preCourseId) {
+                $q->where('course_id', $preCourseId);
             }]);
-            if(!empty($user -> enrolls[0])){                            $enrolls[] = true;
-            }else{
+            if (!empty($user->enrolls[0])) {
+                $enrolls[] = true;
+            } else {
                 $enrolls[] = false;
             }
         }
@@ -402,7 +412,7 @@ trait CourseTrait
     }
 
 
-    public function dataShowViewCourse($course , $user)
+    public function dataShowViewCourse($course, $user)
     {
         $course = Course::joinRelationship('chapters', function ($join) {
             $join->as('chapter_alias');
@@ -416,14 +426,13 @@ trait CourseTrait
                     ->where('wf_alias.workforceable_type', '=', Teacher::class);
             })
             ->leftJoin('persons as person_alias', 'person_alias.id', '=', 'wf_alias.person_id')
-            ->leftJoin('comments as comments_alias', function ($join) use ($user){
-                $join->on('comments_alias.commentable_id' , '=' , 'lesson_alias.id')
-                    ->where('comments_alias.creator_id', '=', $user -> id)
-                    ->where('comments_alias.commentable_type' , '=' , Lesson::class);
+            ->leftJoin('comments as comments_alias', function ($join) use ($user) {
+                $join->on('comments_alias.commentable_id', '=', 'lesson_alias.id')
+                    ->where('comments_alias.creator_id', '=', $user->id)
+                    ->where('comments_alias.commentable_type', '=', Lesson::class);
             })
-            ->leftJoin('users as commented_user_alias' , 'comments_alias.creator_id' , '=' , 'commented_user_alias.id')
-            ->leftJoin('persons as commented_person_alias' , 'commented_user_alias.person_id' , '=' , 'commented_person_alias.id')
-
+            ->leftJoin('users as commented_user_alias', 'comments_alias.creator_id', '=', 'commented_user_alias.id')
+            ->leftJoin('persons as commented_person_alias', 'commented_user_alias.person_id', '=', 'commented_person_alias.id')
             ->select([
                 'chapter_alias.id as chapter_id',
                 'chapter_alias.title as chapter_title',
@@ -440,7 +449,7 @@ trait CourseTrait
                 'comments_alias.create_date as comment_created_at',
                 'commented_person_alias.display_name as commented_person_name',
             ])
-            ->where('courses.id', $course -> id)
+            ->where('courses.id', $course->id)
             ->get();
         return $course;
     }

@@ -1,12 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\LMS\app\Http\Controllers\ChapterController;
 use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
-use Modules\LMS\app\Http\Controllers\ChapterController;
+
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -42,19 +43,20 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
     Route::post('/lms/courses/questions/list', [\Modules\LMS\app\Http\Controllers\CourseController::class, 'courseList']);
-    Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
+//    Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
     Route::post('/lms/add/questions', [QuestionController::class, 'store']);
     Route::post('/lms/add/options', [OptionController::class, 'store']);
-    Route::post('/lms/lesson/add' , [LessonController::class, 'addLesson']);
-    Route::post('/lms/chapter/edit/{id}' , [ChapterController::class, 'update']);
-    Route::get('/lms/chapter/delete/{id}' , [ChapterController::class, 'delete']);
+    Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
+    Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
+    Route::get('/lms/chapter/delete/{id}', [ChapterController::class, 'delete']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
     Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
     Route::post('/lms/register/course/{id}', [CourseController::class, 'registerCourse']);
     Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
-    Route::get('/lms/view-course/{id}' , [CourseController::class, 'learningShow']);
-    Route::post('/lms/lesson/comment' , [LessonController::class, 'storeComment']);
-    Route::get('/lms/lesson/adding-requirements/{id}' , [LessonController::class, 'addLessonRequirements']);
+    Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
+    Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
+    Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
 });
+Route::post('/lms/courses/questions/list', [\Modules\LMS\app\Http\Controllers\CourseController::class, 'courseList']);

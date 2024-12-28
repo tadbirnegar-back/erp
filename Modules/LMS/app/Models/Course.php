@@ -207,9 +207,14 @@ class Course extends Model
     public function person()
     {
         return $this->hasOneDeep(Person::class, [Enroll::class, Order::class, Customer::class],
-            ['id' ,  'id' , 'customer_id' , 'person_id'],
-            ['course_id' , 'orderable_id' , 'id' , 'id']
+            ['id', 'id', 'customer_id', 'person_id'],
+            ['course_id', 'orderable_id', 'id', 'id']
         );
+    }
+
+    public function statusCourse()
+    {
+        return $this->hasMany(StatusCourse::class, 'course_id', 'id');
     }
 
 
