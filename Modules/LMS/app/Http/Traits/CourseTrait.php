@@ -422,6 +422,7 @@ trait CourseTrait
             ])
             ->select([
                 'chapters_alias.title as chapter_title',
+                'chapters_alias.description as chapter_description',
                 'lesson_alias.id as lesson_id',
                 'lesson_alias.title as lesson_title',
                 'chapters_alias.id as chapter_id',
@@ -432,7 +433,6 @@ trait CourseTrait
             ->get();
 
         $groupedData = $data->groupBy('chapter_id')->map(function ($chapter) {
-            // Check if there's at least one lesson in the chapter
             if ($chapter->isNotEmpty()) {
                 return [
                     'id' => $chapter->first()->chapter_id,
@@ -449,8 +449,8 @@ trait CourseTrait
                     })->values(),
                 ];
             }
-            return null; // In case the chapter has no lessons, or you could use an empty array or different logic
-        })->filter()->values(); // This will remove any null values if chapters have no lessons
+            return null;
+        })->filter()->values();
 
 
         //Get those with is complete of 0
@@ -461,7 +461,8 @@ trait CourseTrait
             ->all();
 
         $incompleteLessonInfo = $this -> getLessonDatasBasedOnLessonId($lessonsWithIncomplete[0] , $user);
-        return $incompleteLessonInfo;
+
+        return ["lessonData" => $incompleteLessonInfo , "sidebar" =>  $data];
     }
 }
 

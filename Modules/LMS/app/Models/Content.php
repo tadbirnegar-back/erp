@@ -56,4 +56,9 @@ class Content extends Model
     {
         return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
     }
+
+    public function consumeLog()
+    {
+        return $this->belongsTo(ContentConsumeLog::class, 'id', 'content_id');
+    }
 }

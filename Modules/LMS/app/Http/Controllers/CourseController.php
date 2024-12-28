@@ -16,7 +16,10 @@ use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Resources\CourseListResource;
 use Modules\LMS\app\Resources\CourseViewLearningResource;
+use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
+use Modules\LMS\app\Resources\SideBarCourseShowResource;
+use Modules\LMS\app\Resources\ViewCourseSideBarResource;
 use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
@@ -157,7 +160,10 @@ class CourseController extends Controller
         }
 
         $data = $this -> dataShowViewCourseSideBar($course , $user);
-        return response() -> json(["data"=>$data]);
+
+        $sidebar = new SideBarCourseShowResource($data);
+        return response() -> json($sidebar);
+
     }
 
 }
