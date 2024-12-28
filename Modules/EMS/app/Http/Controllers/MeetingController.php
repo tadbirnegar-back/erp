@@ -103,14 +103,14 @@ class MeetingController extends Controller
     public function getSelection(Request $req)
     {
 
-        $organ = OrganizationUnit::with(['ancestors' => function ($q) {
+        $organ = OrganizationUnit::with(['ancestorsAndSelf' => function ($q) {
             $q->where('unitable_type', DistrictOfc::class);
             $q->with('firstFreeMeetingByNow');
             $q->with('fullMeetingsByNow');
         }])->find($req->ounitID);
 
-        $firstFreeMeeting = $organ->ancestors->first()?->firstFreeMeetingByNow;
-        $fullMeetings = $organ->ancestors->first()?->fullMeetingsByNow;
+        $firstFreeMeeting = $organ->ancestorsAndSelf->first()?->firstFreeMeetingByNow;
+        $fullMeetings = $organ->ancestorsAndSelf->first()?->fullMeetingsByNow;
 
         $data = [];
         if (!empty($fullMeetings)) {

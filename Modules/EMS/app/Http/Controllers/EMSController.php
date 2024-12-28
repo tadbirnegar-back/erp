@@ -307,12 +307,24 @@ class EMSController extends Controller
             ->get();
 
 
+        $districtOunits = $user->activeRecruitmentScript()
+            ->whereHas('ounit', function ($query) {
+                $query->where('unitable_type', DistrictOfc::class);
+            })
+            ->whereHas('scriptType', function ($query) {
+                $query->where('title', 'انتصاب دبیر');
+            })
+            ->with('ounit.ancestors')
+            ->get();
+
+
         $result = [
             'enactmentTitles' => $titles,
             'shouraMaxMeetingDateDaysAgo' => $this->getShouraMaxMeetingDateDaysAgo(),
             'receiptionMaxDays' => $this->getReceptionMaxDays(),
             'emsEnactmentLimitPerMeeting' => $this->getEnactmentLimitPerMeeting(),
             'ounits' => $ounits->pluck('ounit'),
+            'districtOunits' => $districtOunits->pluck('ounit'),
         ];
 
         return response()->json($result);
