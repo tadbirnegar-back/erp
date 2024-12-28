@@ -227,8 +227,8 @@ class EnactmentController extends Controller
 
                 $ancestor = "";
 // Ensure ancestors are loaded and not null before attempting to access the first ancestor
-                if ($heyatOunit && $heyatOunit->ancestors->isNotEmpty()) {
-                    $ancestor = $heyatOunit->ancestors->first();
+                if ($heyatOunit && $heyatOunit->ancestorsAndSelf->isNotEmpty()) {
+                    $ancestor = $heyatOunit->ancestorsAndSelf->first();
 
                     $ancestor->load('firstFreeMeetingByNow');
 
