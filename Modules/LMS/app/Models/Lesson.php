@@ -76,5 +76,10 @@ class Lesson extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    public function lessonStudyLog()
+    {
+        return $this->hasMany(LessonStudyLog::class, 'lesson_id', 'id');
+    }
+
 
 }
