@@ -7,7 +7,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -23,24 +22,11 @@ class StoreMeetingJob implements ShouldQueue
      * Create a new job instance.
      */
 
-    protected $meeting;
+    protected $meetingID;
 
-    public function __construct(Meeting $meeting)
+    public function __construct(int $meetingID)
     {
-        $this->meeting = $meeting;
-        $meetingId = $meeting->id;
-        $jobIds = DB::table('queueable_jobs')
-            ->where('payload', 'like', '%StoreMeetingJob%')
-            ->where('payload', 'like', "%i:$meetingId%")
-            ->select('id')
-            ->get();
-
-        foreach ($jobIds as $jobId) {
-            DB::table('queueable_jobs')
-                ->where('id', $jobId->id)
-                ->delete();
-        }
-
+        $this->meetingID = $meetingID;
     }
 
 
@@ -49,11 +35,12 @@ class StoreMeetingJob implements ShouldQueue
      */
     public function handle(): void
     {
+        $meeting = Meeting::with('latestStatus', 'meetingMembers')->find($this->meetingID);
         $cancelStatus = $this->meetingCancelStatus();
-        if ($this->meeting->latestStatus->id != $cancelStatus->id) {
+        if ($meeting->latestStatus->id != $cancelStatus->id) {
             // Log the meeting date
             // Extract the month number from the Jalali date
-            $jalaliDate = $this->meeting->meeting_date; // e.g., ۱۴۰۴/۰۸/۰۹
+            $jalaliDate = $meeting->meeting_date; // e.g., ۱۴۰۴/۰۸/۰۹
             $parts = explode('/', $jalaliDate); // Split the date string by '/'
             $monthNumber = $parts[1]; // Get the second part as the month number
             $day = $parts[2];
@@ -74,7 +61,7 @@ class StoreMeetingJob implements ShouldQueue
 
 
             // Process members
-            $members = $this->meeting->load('meetingMembers'); // Load related 'meetingMembers'
+            $members = $meeting->load('meetingMembers'); // Load related 'meetingMembers'
 
 
             foreach ($members->meetingMembers as $member) {
@@ -84,8 +71,7 @@ class StoreMeetingJob implements ShouldQueue
                 $user->notify(new MeetingLastDayNotifications($username, $messageTextDate));
             }
         }
-            $this->delete();
-            return;
+
 
     }
 
