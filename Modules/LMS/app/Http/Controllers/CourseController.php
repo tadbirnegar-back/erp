@@ -142,7 +142,7 @@ class CourseController extends Controller
 
     public function learningShow($id)
     {
-        $course = Course::with('chapters.lessons')->find($id);
+        $course = Course::joinRelationship('chapters.lessons')->find($id);
 //        $user = Auth::user();
         $user = User::find(2174);
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
