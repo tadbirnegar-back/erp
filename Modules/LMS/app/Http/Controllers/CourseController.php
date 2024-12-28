@@ -25,6 +25,7 @@ use Modules\PayStream\app\Models\Online;
 class CourseController extends Controller
 {
     use CourseTrait;
+
     public function show($id)
     {
         try {
@@ -65,15 +66,15 @@ class CourseController extends Controller
             $user = Auth::user();
             // Check if the user has completed prerequisite courses.
             // This is currently implemented in the simplest possible way and might be updated in the future.
-            if(empty($course->prerequisiteCourses[0])){
+            if (empty($course->prerequisiteCourses[0])) {
                 $isPreDone = true;
-            }else{
+            } else {
                 $isPreDone = $this->isJoinedPreRerequisites($user, $course);
             }
-            if($isPreDone){
+            if ($isPreDone) {
                 $purchase = new PurchaseCourse($course, $user);
                 $response = $purchase->handle();
-            }else{
+            } else {
 
                 return response()->json([
                     'success' => false,
@@ -106,20 +107,20 @@ class CourseController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        $online = Online::where('authority' , $data['authority'])->first();
+        $online = Online::where('authority', $data['authority'])->first();
         try {
             DB::beginTransaction();
             $verify = new VerificationPayment($online);
-            $result = $verify -> verifyPayment();
+            $result = $verify->verifyPayment();
             DB::commit();
-            return response() -> json($result);
-        }catch (\Exception $exception){
+            return response()->json($result);
+        } catch (\Exception $exception) {
             DB::rollBack();
             DB::beginTransaction();
             $verify = new VerificationPayment($online);
-            $result = $verify -> DeclinePayment();
+            $result = $verify->DeclinePayment();
             DB::commit();
-            return response() -> json($result);
+            return response()->json($result);
         }
 
     }
@@ -147,19 +148,19 @@ class CourseController extends Controller
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         //Check user is Joined or not
-        if(empty($isEnrolled->isEnrolled[0])){
+        if (empty($isEnrolled->isEnrolled[0])) {
             $joined = false;
-        }else{
+        } else {
             $joined = true;
         }
-        if(!$joined){
+        if (!$joined) {
             return response()->json(["message" => "شما دسترسی به این دوره را ندارید"], 400);
         }
 
-        $data = $this -> dataShowViewCourseSideBar($course , $user);
+        $data = $this->dataShowViewCourseSideBar($course, $user);
 
         $sidebar = new SideBarCourseShowResource($data);
-        return response() -> json($sidebar);
+        return response()->json($sidebar);
 
     }
 

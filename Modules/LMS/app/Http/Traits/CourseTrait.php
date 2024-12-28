@@ -13,7 +13,7 @@ use Modules\LMS\app\Models\Teacher;
 
 trait CourseTrait
 {
-    use AnswerSheetTrait , LessonTrait;
+    use AnswerSheetTrait, LessonTrait;
 
     private static string $presenting = CourseStatusEnum::PRESENTING->value;
     private static string $ended = CourseStatusEnum::ENDED->value;
@@ -460,9 +460,9 @@ trait CourseTrait
             ->pluck('id')
             ->all();
 
-        $incompleteLessonInfo = $this -> getLessonDatasBasedOnLessonId($lessonsWithIncomplete[0] , $user);
+        $incompleteLessonInfo = $this->getLessonDatasBasedOnLessonId($lessonsWithIncomplete[0], $user);
 
-        return ["lessonData" => $incompleteLessonInfo , "sidebar" =>  $data];
+        return ["lessonData" => $incompleteLessonInfo, "sidebar" => $data];
     }
 }
 
