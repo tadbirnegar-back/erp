@@ -28,7 +28,6 @@ class CourseController extends Controller
     public function show($id)
     {
         try {
-            DB::beginTransaction();
             $course = Course::with('latestStatus')->find($id);
             $user = Auth::user();
             if (is_null($course)) {
@@ -36,10 +35,8 @@ class CourseController extends Controller
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
-            DB::commit();
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json(['message' => "اطلاعات دربافت نشد"], 500);
         }
     }
@@ -146,7 +143,8 @@ class CourseController extends Controller
     public function learningShow($id)
     {
         $course = Course::with('chapters.lessons')->find($id);
-        $user = Auth::user();
+//        $user = Auth::user();
+        $user = User::find(2174);
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         //Check user is Joined or not
