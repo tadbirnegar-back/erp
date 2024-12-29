@@ -29,7 +29,13 @@ class CourseController extends Controller
     public function show($id)
     {
         try {
-            $course = Course::with('latestStatus')->find($id);
+            $course = Course::with(['latestStatus' => function ($query) {
+                $query->whereIn('id' , [$this->coursePresentingStatus()->id , $this->courseEndedStatus()->id , $this->courseCanceledStatus()->id]);
+            }])->find($id);
+
+            if(empty($course -> latestStatus)){
+                return response()->json(['message' => 'دوره در وضعیت مناسب قرار ندارد'], 403);
+            }
             $user = Auth::user();
             if (is_null($course)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
@@ -38,7 +44,7 @@ class CourseController extends Controller
             $componentsToRenderWithData = $this->courseShow($course, $user);
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            return response()->json(['message' => "اطلاعات دربافت نشد"], 500);
+            return response()->json(['message' => "اطلاعات دربافت نشد"], 403);
         }
     }
 

@@ -350,20 +350,7 @@ trait CourseTrait
     }
 
 
-    public function coursePresentingStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
-    }
 
-    public function courseCanceledStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
-    }
-
-    public function courseEndedStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
-    }
 
     public function isEnrolledToDefinedCourse($courseId, $user)
     {
@@ -463,6 +450,22 @@ trait CourseTrait
         $incompleteLessonInfo = $this->getLessonDatasBasedOnLessonId($lessonsWithIncomplete[0], $user);
 
         return ["lessonData" => $incompleteLessonInfo, "sidebar" => $data];
+    }
+
+
+    public function coursePresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+    }
+
+    public function courseCanceledStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
+    }
+
+    public function courseEndedStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
     }
 }
 
