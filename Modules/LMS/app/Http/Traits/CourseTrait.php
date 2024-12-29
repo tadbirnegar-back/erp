@@ -28,13 +28,24 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = Course::query()->joinRelationship('cover');
+        $query = Course::query();
+        $query->leftJoinRelationshipUsingAlias('cover', 'cover_alias');
+        $query->leftJoinRelationship('statusCourse.statuses', [
+            'statusCourse' => fn($join) => $join->as('statusCourse_alias')
+                ->on('statusCourse_alias.course_id', '=', 'courses.id'),
+            'statuses' => fn($join) => $join->as('statuses_alias')->whereIn('statuses_alias.name', [
+                $this::$presenting, $this::$waitToPresent, $this::$pishnevis
+            ])
+        ]);
+
         $query->select([
             'courses.id',
             'courses.title',
             'courses.cover_id',
-            'files.slug as cover_slug',
+            'cover_alias.slug as cover_slug',
+            'statuses_alias.name as status_name',
         ]);
+
         $query
             ->when($searchTerm, function ($query) use ($searchTerm) {
                 $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
@@ -350,7 +361,20 @@ trait CourseTrait
     }
 
 
+    public function coursePresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+    }
 
+    public function courseCanceledStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
+    }
+
+    public function courseEndedStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
+    }
 
     public function isEnrolledToDefinedCourse($courseId, $user)
     {
@@ -447,25 +471,20 @@ trait CourseTrait
             ->pluck('id')
             ->all();
 
-        $incompleteLessonInfo = $this->getLessonDatasBasedOnLessonId($lessonsWithIncomplete[0], $user);
+        if (!empty($lessonsWithIncomplete)) {
+            $lastLessonId = $lessonsWithIncomplete->last();
+        } else {
 
-        return ["lessonData" => $incompleteLessonInfo, "sidebar" => $data];
-    }
+            $lastLessonId = collect($groupedData)
+                ->flatMap(fn($chapter) => $chapter['lessons'])
+                ->pluck('id')
+                ->first();
+        }
 
-
-    public function coursePresentingStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
-    }
-
-    public function courseCanceledStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
-    }
-
-    public function courseEndedStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
+        return [
+            "lessonID" => $lastLessonId,
+            "sidebar" => $data,
+        ];
     }
 }
 

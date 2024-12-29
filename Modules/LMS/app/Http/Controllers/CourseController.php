@@ -29,10 +29,12 @@ class CourseController extends Controller
     public function show($id)
     {
         try {
+
             $course = Course::with(['latestStatus' => function ($query) {
                 $query->whereIn('id' , [$this->coursePresentingStatus()->id , $this->courseEndedStatus()->id , $this->courseCanceledStatus()->id]);
             }])->find($id);
 
+            return response() -> json($course);
             $user = Auth::user();
             if (is_null($course) || empty($course -> latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
