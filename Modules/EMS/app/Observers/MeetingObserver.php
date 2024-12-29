@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Observers;
 
 
+use Modules\EMS\app\Events\CreateMeetingEvent;
 use Modules\EMS\app\Models\Meeting;
 
 class MeetingObserver
@@ -12,8 +13,8 @@ class MeetingObserver
      */
     public function created(Meeting $meeting): void
     {
-        \Log::info($meeting);
-//        event(new CreateMeetingEvent($meeting));
+//        \Log::info($meeting);
+        event(new CreateMeetingEvent($meeting));
     }
 
     /**

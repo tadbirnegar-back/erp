@@ -10,6 +10,10 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\LMS\app\Models\Content;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\LMS\app\Http\Enums\ExamsStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 
@@ -18,21 +22,11 @@ class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
-    public function run($student)
+    public function run()
     {
 
-        $user = User::find(68)
-            ->load('student');
-
-        $hasFailedOrNoAttempt = !AnswerSheet::where('student_id', $student->id)
-            ->where(function ($query) {
-                $query->where('status_id', ExamsStatusEnum::FAILED->value)
-                    ->orWhereNull('status_id');
-            })
-            ->exists();
-
-        return $hasFailedOrNoAttempt;
-
+        $r = Content::with('consumeLog')->find(7);
+        return response() -> json($r);
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);

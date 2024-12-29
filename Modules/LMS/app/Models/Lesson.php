@@ -82,4 +82,8 @@ class Lesson extends Model
     }
 
 
+    public function lessonStudyLog()
+    {
+        return $this->hasMany(LessonStudyLog::class, 'lesson_id', 'id');
+    }
 }

@@ -103,3 +103,11 @@ function convertGregorianToJalali(string $gregorianDate)
 
     return $persianCharJalaliDate;
 }
+
+function convertSecondToMinute($second)
+{
+    $minutes = floor($second / 60);
+    $remainingSeconds = $second % 60;
+
+    return "{$minutes}:{$remainingSeconds}";
+}

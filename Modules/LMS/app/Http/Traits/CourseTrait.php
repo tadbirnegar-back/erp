@@ -2,6 +2,9 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\ExamsStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
@@ -12,7 +15,7 @@ use Modules\LMS\app\Models\Teacher;
 
 trait CourseTrait
 {
-    use AnswerSheetTrait;
+    use AnswerSheetTrait, LessonTrait;
 
     private static string $presenting = CourseStatusEnum::PRESENTING->value;
     private static string $ended = CourseStatusEnum::ENDED->value;
@@ -401,48 +404,68 @@ trait CourseTrait
     }
 
 
-    public function dataShowViewCourse($course, $user)
+    public function dataShowViewCourseSideBar($course, $user)
     {
-        $course = Course::joinRelationship('chapters', function ($join) {
-            $join->as('chapter_alias');
-        })
-            ->leftJoin('lessons as lesson_alias', 'chapter_alias.id', '=', 'lesson_alias.chapter_id')
-            ->leftJoin('contents as content_alias', 'lesson_alias.id', '=', 'content_alias.lesson_id')
-            ->leftJoin('files as files_alias', 'content_alias.file_id', '=', 'files_alias.id')
-            ->leftJoin('content_type as ct_alias', 'content_alias.content_type_id', '=', 'ct_alias.id')
-            ->leftJoin('work_forces as wf_alias', function ($join) {
-                $join->on('wf_alias.workforceable_id', '=', 'content_alias.teacher_id')
-                    ->where('wf_alias.workforceable_type', '=', Teacher::class);
-            })
-            ->leftJoin('persons as person_alias', 'person_alias.id', '=', 'wf_alias.person_id')
-            ->leftJoin('comments as comments_alias', function ($join) use ($user) {
-                $join->on('comments_alias.commentable_id', '=', 'lesson_alias.id')
-                    ->where('comments_alias.creator_id', '=', $user->id)
-                    ->where('comments_alias.commentable_type', '=', Lesson::class);
-            })
-            ->leftJoin('users as commented_user_alias', 'comments_alias.creator_id', '=', 'commented_user_alias.id')
-            ->leftJoin('persons as commented_person_alias', 'commented_user_alias.person_id', '=', 'commented_person_alias.id')
+        $user->load('student');
+        $data = Course::query()
+            ->leftJoinRelationshipUsingAlias('chapters', 'chapters_alias')
+            ->leftJoinRelationship('chapters.lessons', [
+                'lessons' => fn($join) => $join->as('lesson_alias'),
+                'chapters' => fn($join) => $join->on('chapters.id', 'chapters_alias.id')
+            ])
+            ->leftJoinRelationship('chapters.lessons.contents.file', [
+                'file' => fn($join) => $join->as('file_alias'),
+                'lessons' => fn($join) => $join->on('lessons.id', 'lesson_alias.id')
+            ])
+            ->leftJoinRelationship('chapters.lessons.lessonStudyLog', [
+                'lessonStudyLog' => fn($join) => $join->as('lessonStudyLog_alias')->where('student_id', $user->student->id),
+                'lessons' => fn($join) => $join->on('lessons.id', 'lesson_alias.id'),
+                'chapters' => fn($join) => $join->on('chapters.id', 'chapters_alias.id'),
+            ])
             ->select([
-                'chapter_alias.id as chapter_id',
-                'chapter_alias.title as chapter_title',
-                'chapter_alias.description as chapter_description',
+                'chapters_alias.title as chapter_title',
+                'chapters_alias.description as chapter_description',
                 'lesson_alias.id as lesson_id',
                 'lesson_alias.title as lesson_title',
-                'lesson_alias.description as lesson_description',
-                'content_alias.id as content_id',
-                'content_alias.name as content_title',
-                'files_alias.slug as files_slug',
-                'ct_alias.name as content_type_name',
-                'person_alias.display_name as teacher_name',
-                'comments_alias.text as comment_text',
-                'comments_alias.create_date as comment_created_at',
-                'commented_person_alias.display_name as commented_person_name',
+                'chapters_alias.id as chapter_id',
+                'file_alias.duration as files_duration',
+                'lessonStudyLog_alias.is_completed as is_completed',
             ])
             ->where('courses.id', $course->id)
             ->get();
-        return $course;
-    }
 
+        $groupedData = $data->groupBy('chapter_id')->map(function ($chapter) {
+            if ($chapter->isNotEmpty()) {
+                return [
+                    'id' => $chapter->first()->chapter_id,
+                    'title' => $chapter->first()->chapter_title,
+                    'description' => $chapter->first()->chapter_description,
+                    'lessons' => $chapter->groupBy('lesson_id')->map(function ($lesson) {
+                        return [
+                            'id' => $lesson->first()->lesson_id,
+                            'title' => $lesson->first()->lesson_title,
+                            'isComplete' => $lesson->first()->is_completed,
+                            'duration' => convertSecondToMinute($lesson->first()->files_duration),
+                            'chapter_id' => $lesson->first()->chapter_id,
+                        ];
+                    })->values(),
+                ];
+            }
+            return null;
+        })->filter()->values();
+
+
+        //Get those with is complete of 0
+        $lessonsWithIncomplete = collect($groupedData)
+            ->flatMap(fn($chapter) => $chapter['lessons'])
+            ->filter(fn($lesson) => $lesson['isComplete'] === 0)
+            ->pluck('id')
+            ->all();
+
+        $incompleteLessonInfo = $this->getLessonDatasBasedOnLessonId($lessonsWithIncomplete[0], $user);
+
+        return ["lessonData" => $incompleteLessonInfo, "sidebar" => $data];
+    }
     public function isCourseCompleted($course, $student)
     {
 
@@ -470,8 +493,5 @@ trait CourseTrait
         return $hasFailedOrNoAttempt;
     }
 
-
 }
-
-
 
