@@ -63,7 +63,7 @@ class LessonController extends Controller
                 $this->storeContent($data);
             }
             DB::commit();
-            return response()->json(['message' => "درس مورد نظر شما با موفقیت ساخته شد"], 404);
+            return response()->json(['message' => "درس مورد نظر شما با موفقیت ساخته شد"], 200);
         } catch (\Exception $exception) {
             DB::rollBack();
             return response()->json(['message' => "درس مورد نظر شما ساخته نشد"], 404);

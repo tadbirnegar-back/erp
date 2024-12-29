@@ -212,5 +212,10 @@ class Course extends Model
         );
     }
 
+    public function lastStatusForJoin()
+    {
+        return $this->hasOne(StatusCourse::class, 'course_id', 'id');
+    }
+
 
 }

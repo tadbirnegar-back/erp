@@ -432,8 +432,9 @@ trait CourseTrait
                 'chapters' => fn($join) => $join->on('chapters.id', 'chapters_alias.id'),
             ])
             ->select([
-                'chapters_alias.title as chapter_title',
+                'chapters_alias.id as chapter_id',
                 'chapters_alias.description as chapter_description',
+                'chapters_alias.title as chapter_title',
                 'lesson_alias.id as lesson_id',
                 'lesson_alias.title as lesson_title',
                 'chapters_alias.id as chapter_id',
@@ -468,10 +469,9 @@ trait CourseTrait
         $lessonsWithIncomplete = collect($groupedData)
             ->flatMap(fn($chapter) => $chapter['lessons'])
             ->filter(fn($lesson) => $lesson['isComplete'] === 0)
-            ->pluck('id')
-            ->all();
+            ->pluck('id');
 
-        if (!empty($lessonsWithIncomplete)) {
+        if ($lessonsWithIncomplete->isNotEmpty()) {
             $lastLessonId = $lessonsWithIncomplete->last();
         } else {
 

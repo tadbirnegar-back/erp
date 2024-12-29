@@ -29,21 +29,25 @@ class CourseController extends Controller
     public function show($id)
     {
         try {
+            $course = Course::whereHas('latestStatus', function ($query) {
+                $query->whereIn('statuses.id', [
+                    $this->coursePresentingStatus()->id,
+                    $this->courseEndedStatus()->id,
+                    $this->courseCanceledStatus()->id
+                ]);
+            })->with('latestStatus')->find($id);
 
-            $course = Course::with(['latestStatus' => function ($query) {
-                $query->whereIn('id' , [$this->coursePresentingStatus()->id , $this->courseEndedStatus()->id , $this->courseCanceledStatus()->id]);
-            }])->find($id);
 
-            return response() -> json($course);
+            return response()->json($course);
             $user = Auth::user();
-            if (is_null($course) || empty($course -> latestStatus)) {
+            if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            return response()->json(['message' => "اطلاعات دربافت نشد"], 403);
+            return response()->json(['message' => $e->getMessage()], 403);
         }
     }
 
@@ -149,7 +153,8 @@ class CourseController extends Controller
     public function learningShow($id)
     {
         $course = Course::joinRelationship('chapters.lessons')->find($id);
-        $user = Auth::user();
+//        $user = Auth::user();
+        $user = User::find(2174);
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         //Check user is Joined or not

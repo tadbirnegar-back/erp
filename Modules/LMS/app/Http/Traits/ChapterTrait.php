@@ -13,7 +13,7 @@ trait ChapterTrait
             "course_id" => $data['courseID'],
             "description" => null,
             "title" => $data['chapterTitle'],
-            "read_only" => $data['readOnly'],
+            "read_only" => false,
         ]);
     }
 

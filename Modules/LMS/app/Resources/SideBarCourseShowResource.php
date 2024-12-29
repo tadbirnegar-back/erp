@@ -11,30 +11,43 @@ class SideBarCourseShowResource extends JsonResource
      */
     public function toArray($request)
     {
-        // Grouping the sidebar data by 'sidebar' key
-        $sidebarData = collect($this->resource['sidebar'])->groupBy('sidebar')->map(function ($item) {
-            // Process sidebar items here, such as chapter and lessons information
+        $sidebarData = collect($this->resource['sidebar'])->groupBy('chapter_id')->map(function ($items, $chapterId) {
             return [
-                'title' => $item->first()->chapter_title,
-                'description' => $item->first()->chapter_description,
-                'lessons' => $item->groupBy('lesson_id')->map(function ($lesson) {
-                    return [
-                        'id' => $lesson->first()->lesson_id,
-                        'title' => $lesson->first()->lesson_title,
-                        'isComplete' => $lesson->first()->is_completed,
-                        'duration' => convertSecondToMinute($lesson->first()->files_duration),
-                        'chapter_id' => $lesson->first()->chapter_id,
-                    ];
-                })->values(),
+                'chapter_name' => $items->first()->chapter_title,
+                'chapter_id' => $chapterId,
+                'lessons' => $items->groupBy(function ($lessonItem) {
+                    return $lessonItem->lesson_id . '-' . $lessonItem->chapter_id;
+                })->map(function ($lessonGroup) {
+                    return $lessonGroup->map(function ($lessonItem) {
+                        $durations = is_array($lessonItem->files_duration) ? $lessonItem->files_duration : [convertSecondToMinute($lessonItem->files_duration)];
+
+                        return [
+                            'lesson_title' => $lessonItem->lesson_title,
+                            'is_completed' => $lessonItem->is_completed,
+                            'durations' => $durations,
+                            'lesson_id' => $lessonItem->lesson_id,
+                            'chapter_id' => $lessonItem->chapter_id,
+                        ];
+                    })->reduce(function ($carry, $lessonItem) {
+                        $carry['durations'] = array_unique(array_merge($carry['durations'] ?? [], $lessonItem['durations']));
+                        if (!isset($carry['lesson_title'])) {
+                            $carry['lesson_title'] = $lessonItem['lesson_title'];
+                        }
+                        if (!isset($carry['is_completed'])) {
+                            $carry['is_completed'] = $lessonItem['is_completed'];
+                        }
+                        $carry['lesson_id'] = $lessonItem['lesson_id'];
+                        return $carry;
+                    }, []);
+                })->values()->all(),
             ];
-        })->values();
+        })->values()->all();
 
         $lessonDetailsData = $this->resource['lessonID'];
+
         return [
             'sidebar' => $sidebarData,
-            'lesson_details' => $lessonDetailsData,
+            'activeLessonID' => $lessonDetailsData,
         ];
     }
-
-
 }
