@@ -214,7 +214,7 @@ class Course extends Model
 
     public function statusCourse()
     {
-        return $this->hasMany(StatusCourse::class, 'course_id', 'id');
+        return $this->hasMany(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);
     }
 
 

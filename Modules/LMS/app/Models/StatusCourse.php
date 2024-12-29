@@ -11,6 +11,7 @@ class StatusCourse extends Model
 {
     use HasFactory;
 
+
     /**
      * The attributes that are mass assignable.
      */
@@ -28,9 +29,9 @@ class StatusCourse extends Model
 
     public $timestamps = false;
 
-    public function statuses()
+    public function status()
     {
-        return $this->belongsTo(Status::class, 'status_id');
+        return $this->belongsTo(Status::class, 'status_id')->limit(1);
     }
 
 

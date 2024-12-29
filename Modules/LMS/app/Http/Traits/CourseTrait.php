@@ -25,32 +25,30 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-//        return Course::with('latestStatus')->find(1);
-
-        $query = Course::query();
-        $query->leftJoinRelationshipUsingAlias('cover', 'cover_alias');
-        $query->leftJoinRelationship('statusCourse.statuses', [
-            'statusCourse' => fn($join) => $join->as('statusCourse_alias')
-                ->on('statusCourse_alias.course_id', '=', 'courses.id'),
-            'statuses' => fn($join) => $join->as('statuses_alias')->whereIn('statuses_alias.name', [
-                $this::$presenting, $this::$waitToPresent, $this::$pishnevis
+        $query = Course::joinRelationship('cover')
+            ->addSelect([
+                'courses.id',
+                'courses.title',
+                'courses.cover_id',
+                'files.slug as cover_slug',
             ])
-        ]);
+            ->whereHas('statusCourse.status', function ($query) {
+                $query->whereIn('name', [
+                    $this::$presenting,
+                    $this::$pishnevis,
+                    $this::$waitToPresent,
+                ]);
+            })
+            ->with(['statusCourse.status']);
 
-        $query->select([
-            'courses.id',
-            'courses.title',
-            'courses.cover_id',
-            'cover_alias.slug as cover_slug',
-            'statuses_alias.name as status_name',
-        ]);
+        $query->withCount(['chapters', 'lessons', 'questions']);
+
 
         $query
             ->when($searchTerm, function ($query) use ($searchTerm) {
                 $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
                     ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
             });
-        $query->withCount(['chapters', 'lessons', 'questions']);
 
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where('courses.title', 'like', '%' . $searchTerm . '%')
