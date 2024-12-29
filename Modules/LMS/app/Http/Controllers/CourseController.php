@@ -33,11 +33,8 @@ class CourseController extends Controller
                 $query->whereIn('id' , [$this->coursePresentingStatus()->id , $this->courseEndedStatus()->id , $this->courseCanceledStatus()->id]);
             }])->find($id);
 
-            if(empty($course -> latestStatus)){
-                return response()->json(['message' => 'دوره در وضعیت مناسب قرار ندارد'], 403);
-            }
             $user = Auth::user();
-            if (is_null($course)) {
+            if (is_null($course) || empty($course -> latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
