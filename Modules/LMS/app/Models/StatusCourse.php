@@ -31,7 +31,7 @@ class StatusCourse extends Model
 
     public function status()
     {
-        $this->belongsTo(StatusCourse::class);
+        return $this->belongsTo(Status::class);
     }
 
 
