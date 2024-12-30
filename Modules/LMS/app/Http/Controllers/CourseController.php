@@ -33,9 +33,6 @@ class CourseController extends Controller
                     $this->courseCanceledStatus()->id
                 ]);
             })->with('latestStatus')->find($id);
-
-
-            return response()->json($course);
             $user = Auth::user();
             if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
