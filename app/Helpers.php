@@ -111,3 +111,11 @@ function convertSecondToMinute($second)
 
     return "{$minutes}:{$remainingSeconds}";
 }
+function convertMinuteToSecondFormatted($time)
+{
+    list($minutes, $seconds) = explode(':', $time);
+
+    $totalSeconds = ($minutes * 60) + $seconds;
+
+    return $totalSeconds;
+}
