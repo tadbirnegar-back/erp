@@ -13,7 +13,10 @@ use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Resources\CourseListResource;
 use Modules\LMS\app\Resources\CourseViewLearningResource;
+use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
+use Modules\LMS\app\Resources\SideBarCourseShowResource;
+use Modules\LMS\app\Resources\ViewCourseSideBarResource;
 use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
@@ -23,19 +26,25 @@ class CourseController extends Controller
     public function show($id)
     {
         try {
-            DB::beginTransaction();
-            $course = Course::with('latestStatus')->findOrFail($id);
+            $course = Course::whereHas('latestStatus', function ($query) {
+                $query->whereIn('statuses.id', [
+                    $this->coursePresentingStatus()->id,
+                    $this->courseEndedStatus()->id,
+                    $this->courseCanceledStatus()->id
+                ]);
+            })->with('latestStatus')->find($id);
+
+
+            return response()->json($course);
             $user = Auth::user();
-            if (is_null($course)) {
-                return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 404);
+            if (is_null($course) || empty($course->latestStatus)) {
+                return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
-            DB::commit();
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => "اطلاعات دربافت نشد"], 500);
+            return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
         }
     }
 
@@ -139,7 +148,7 @@ class CourseController extends Controller
 
     public function learningShow($id)
     {
-        $course = Course::joinRelationshipUsingAlias('chapters.lessons')->find($id);
+        $course = Course::joinRelationship('chapters.lessons')->find($id);
         $user = Auth::user();
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
@@ -153,9 +162,11 @@ class CourseController extends Controller
             return response()->json(["message" => "شما دسترسی به این دوره را ندارید"], 400);
         }
 
-        $data = $this->dataShowViewCourse($course, $user);
+        $data = $this->dataShowViewCourseSideBar($course, $user);
 
-        return CourseViewLearningResource::collection($data);
+        $sidebar = new SideBarCourseShowResource($data);
+        return response()->json($sidebar);
+
     }
 
 }

@@ -212,6 +212,11 @@ class Course extends Model
         );
     }
 
+    public function lastStatusForJoin()
+    {
+        return $this->hasOne(StatusCourse::class, 'course_id', 'id');
+    }
+
     public function statusCourse()
     {
         return $this->hasMany(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);

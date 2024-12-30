@@ -10,7 +10,6 @@ use Modules\EMS\app\Jobs\PendingForHeyaatStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJobJob;
-use Modules\EMS\app\Jobs\StoreMeetingJob;
 use Modules\EMS\app\Models\Enactment;
 
 class StoreEnactmentStatusInQueueListener
@@ -72,9 +71,9 @@ class StoreEnactmentStatusInQueueListener
 
             PendingForHeyaatStatusJob::dispatch($enactmentStatus->enactment_id)->delay($delayPending);
 
-            $alertMembers = Carbon::parse($meetingDate3)->subDays(1);
+//            $alertMembers = Carbon::parse($meetingDate3)->subDays(1);
 
-            StoreMeetingJob::dispatch($enactment->latestHeyaatMeeting)->delay($alertMembers);
+//            StoreMeetingJob::dispatch($enactment->latestHeyaatMeeting)->delay($alertMembers);
 
         }
     }

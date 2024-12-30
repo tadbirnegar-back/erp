@@ -43,7 +43,7 @@
     },
     {
         "name": "لیست مدرسان",
-        "slug": "/teacher/list",
+        "slug": "/teachers/list",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"
     },

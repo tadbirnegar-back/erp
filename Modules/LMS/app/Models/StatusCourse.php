@@ -31,7 +31,7 @@ class StatusCourse extends Model
 
     public function status()
     {
-        return $this->belongsTo(Status::class, 'status_id')->limit(1);
+        $this->belongsTo(StatusCourse::class);
     }
 
 
