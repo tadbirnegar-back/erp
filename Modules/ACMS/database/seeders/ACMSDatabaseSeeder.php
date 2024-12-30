@@ -11,6 +11,11 @@ class ACMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            ModuleCategorySeeder::class,
+            ModuleSeeder::class,
+            PermissionsSeeder::class,
+            StatusSeeder::class,
+        ]);
     }
 }

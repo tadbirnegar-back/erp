@@ -14,7 +14,10 @@ class CircularItem extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'circular_id',
+        'subject_id',
+    ];
 
     public $timestamps = false;
     protected $table = 'bgt_circular_items';

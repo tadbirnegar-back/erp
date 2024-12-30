@@ -170,6 +170,8 @@ return [
         App\Providers\HorizonServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\HelperServiceProvider::class,
+        \Modules\ACMS\app\Providers\MacroServiceProvider::class,
+
 
     ])->toArray(),
 

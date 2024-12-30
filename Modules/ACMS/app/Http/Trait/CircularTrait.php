@@ -1,0 +1,98 @@
+<?php
+
+namespace Modules\ACMS\app\Http\Trait;
+
+use Modules\ACMS\app\Http\Enums\CircularStatusEnum;
+use Modules\ACMS\app\Models\Circular;
+use Modules\ACMS\app\Models\CircularStatus;
+use Modules\ACMS\app\Models\FiscalYear;
+
+trait CircularTrait
+{
+
+    public function createCircular(array $data, FiscalYear $fiscalYear)
+    {
+        $preparedData = $this->circularDataPreparation($data, $fiscalYear);
+        $circular = Circular::create($preparedData->toArray()[0]);
+
+        $circularStatuses = $this->circularStatusDataPreparation($data, $circular);
+
+        CircularStatus::create($circularStatuses->toArray()[0]);
+        return $circular;
+
+    }
+
+    public function indexCircular(array $data)
+    {
+        $searchTerm = $data['name'] ?? null;
+
+        $circulars = Circular::joinRelationship('finalStatus.status', [
+            'finalStatus' => function ($join) {
+                $join->on('bgtCircular_status.id', '=', \DB::raw('(
+                                SELECT id
+                                FROM bgtCircular_status AS ps
+                                WHERE ps.circular_id = bgt_circulars.id
+                                ORDER BY ps.create_date DESC
+                                LIMIT 1
+                            )'));
+            },
+        ])
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                    ->orWhere('name', 'like', '%' . $searchTerm . '%');
+            })
+            ->select([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+                'bgt_circulars.id as circular_id',
+                'bgt_circulars.name as circular_name'
+            ])
+            ->get();
+
+        return $circulars;
+    }
+
+    public function circularDataPreparation(array $data, FiscalYear $fiscalYear)
+    {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+        $data = collect($data)->map(function ($item) use ($fiscalYear) {
+
+
+            return [
+                'name' => $item['circularName'],
+                'file_id' => $item['fileID'] ?? null,
+                'fiscal_year_id' => $fiscalYear->id,
+            ];
+        });
+
+        return $data;
+
+    }
+
+    public function circularStatusDataPreparation(array $data, Circular $circular)
+    {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+        $draftCircularStatus = $this->draftCircularStatus();
+        $data = collect($data)->map(function ($item) use ($circular, $draftCircularStatus) {
+
+            return [
+                'circular_id' => $circular->id,
+                'status_id' => $item['statusID'] ?? $draftCircularStatus->id,
+                'creator_id' => $item['userID'],
+                'create_date' => now(),
+            ];
+        });
+
+        return $data;
+
+    }
+
+    public function draftCircularStatus()
+    {
+        return Circular::GetAllStatuses()->firstWhere('name', CircularStatusEnum::DRAFT->value);
+    }
+}

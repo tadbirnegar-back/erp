@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\ACMS\app\Http\Controllers\CircularController;
 
 /*
     |--------------------------------------------------------------------------
@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('acms', fn (Request $request) => $request->user())->name('acms');
+Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
+
+    Route::get('/acms/circulars/list', [CircularController::class, 'index']);
+
+    Route::get('/acms/circulars/{id}', [CircularController::class, 'show']);
+
+    Route::post('/acms/circulars/add', [CircularController::class, 'store']);
 });

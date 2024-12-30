@@ -10,6 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('bgt_budget_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedDecimal('proposed_amount', 65, 2);

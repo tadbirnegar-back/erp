@@ -11,19 +11,15 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::create('bgtBudget_status', function (Blueprint $table) {
+        Schema::create('bgtCircular_status', function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedBigInteger('budget_id');
+            $table->unsignedBigInteger('circular_id');
             $table->unsignedBigInteger('status_id');
-            $table->unsignedBigInteger('creator_id')->nullable();
-
             $table->dateTime('create_date')->useCurrent();
 
-
-            $table->foreign('budget_id')->references('id')->on('bgt_budgets')->onDelete('cascade');
+            $table->foreign('circular_id')->references('id')->on('bgt_circulars')->onDelete('cascade');
             $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade');
-            $table->foreign('creator_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 
@@ -32,6 +28,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('bgtBudget_status');
+        Schema::dropIfExists('bgtCircular_status');
     }
 };

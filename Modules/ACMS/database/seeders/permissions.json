@@ -1,0 +1,20 @@
+[
+    {
+        "name": "افزودن بخشنامه",
+        "slug": "/acms/circulars/add",
+        "moduleName": "ACMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست بخشنامه ها",
+        "slug": "/acms/circulars/list",
+        "moduleName": "ACMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده بخشنامه",
+        "slug": "/acms/circulars/{id}",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    }
+]

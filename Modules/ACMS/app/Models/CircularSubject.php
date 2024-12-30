@@ -4,6 +4,7 @@ namespace Modules\ACMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\ACMS\app\Scopes\ActiceOnlyScope;
 use Modules\ACMS\Database\factories\CircularSubjectFactory;
 
 class CircularSubject extends Model
@@ -14,7 +15,18 @@ class CircularSubject extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'name',
+        'isActive',
+        'old_item_id',
+        'parent_id',
+        'create_date',
+    ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new ActiceOnlyScope);
+    }
 
     public $timestamps = false;
     protected $table = 'bgt_circular_subjects';

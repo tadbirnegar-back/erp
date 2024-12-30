@@ -10,11 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('bgt_circular_subjects', function (Blueprint $table) {
             $table->id();
 
             $table->string('name');
-            $table->boolean('isActive');
+            $table->boolean('isActive')->default(true);
 
             $table->unsignedBigInteger('old_item_id')->nullable();
             $table->unsignedBigInteger('parent_id')->nullable();

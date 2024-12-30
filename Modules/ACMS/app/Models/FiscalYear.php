@@ -14,7 +14,11 @@ class FiscalYear extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'name',
+        'start_date',
+        'finish_date',
+    ];
 
     public $timestamps = false;
     protected $table = 'fiscal_years';
