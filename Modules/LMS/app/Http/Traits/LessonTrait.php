@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\FileLesson;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\Teacher;
@@ -89,8 +90,11 @@ trait LessonTrait
                 'contents_alias.name as content_title', // done
                 'content_file_alias.slug as content_file_alias', //done
                 'contents_alias.id as content_id', // done
+                'lesson_files_alias.id as lesson_file_id',
                 'lesson_files_alias.slug as lesson_file_slug',
                 'comments_alias.text as lesson_comment_text',
+                'comments_alias.id as lesson_comment_id',
+                'comments_alias.create_date as lesson_comment_create_date',
                 'person_alias.display_name as commented_person_name',
                 'person_avatar_alias.slug as commented_person_avatar',
                 'teacher_alias.id as teacher_alias_id',
@@ -101,13 +105,19 @@ trait LessonTrait
                 'content_consume_alias.id as content_consume_id',
                 'content_consume_alias.last_played as content_consume_last_played',
                 'content_consume_alias.set as content_consume_set',
+                'content_consume_alias.create_date as content_consume_create_date',
             ])
             ->where('lessons.id', $lessonID)
             ->get();
-        return $query;
+        return ["lessonDetails" => $query];
     }
 
 
+    public function getLessonDatasBasedOnContentLog($content_id , $user){
+        $content = Content::with('lesson')->find($content_id);
+        $lessonID = $content->lesson->id;
+        return $this->getLessonDatasBasedOnLessonId($lessonID , $user);
+    }
 
     public function lessonActiveStatus()
     {
