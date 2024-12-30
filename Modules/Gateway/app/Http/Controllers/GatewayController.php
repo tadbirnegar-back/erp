@@ -125,19 +125,9 @@ class GatewayController extends Controller
     {
 
         $data = $request->all();
-        $user = \Auth::user();
-
-
-        $validator = Validator::make($data, [
-            'authority' => [
-                'required',
-                'exists:payments,authority'
-            ]
-        ]);
 
         $online = Online::where('authority', $data['authority'])->first();
         if (!empty($online)) {
-            $data = $request->all();
             $validator = Validator::make($data, [
                 'authority' => [
                     'required',
@@ -163,6 +153,15 @@ class GatewayController extends Controller
                 return response()->json($result);
             }
         } else {
+            $user = \Auth::user();
+
+
+            $validator = Validator::make($data, [
+                'authority' => [
+                    'required',
+                    'exists:payments,authority'
+                ]
+            ]);
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
