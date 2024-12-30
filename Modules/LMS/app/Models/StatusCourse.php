@@ -27,5 +27,10 @@ class StatusCourse extends Model
 
     public $timestamps = false;
 
+    public function status()
+    {
+        $this->belongsTo(StatusCourse::class);
+    }
+
 
 }

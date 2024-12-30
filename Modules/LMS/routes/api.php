@@ -24,7 +24,7 @@ use Modules\LMS\app\Http\Controllers\ChapterController;
 //});
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/teacher/list', [TeacherController::class, 'index']);
+    Route::post('/teachers/list', [TeacherController::class, 'index']);
     Route::post('/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
     Route::post('/students/search', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'isPersonStudent']);
     Route::post('/dehyari/add', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'store']);
