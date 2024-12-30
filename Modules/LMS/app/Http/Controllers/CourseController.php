@@ -47,7 +47,7 @@ class CourseController extends Controller
             $componentsToRenderWithData = $this->courseShow($course, $user);
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 403);
+            return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
         }
     }
 
@@ -153,8 +153,7 @@ class CourseController extends Controller
     public function learningShow($id)
     {
         $course = Course::joinRelationship('chapters.lessons')->find($id);
-//        $user = Auth::user();
-        $user = User::find(2174);
+        $user = Auth::user();
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         //Check user is Joined or not
