@@ -99,6 +99,8 @@ class LessonController extends Controller
         $data = $request->all();
 
         if(isset($data['contentID'])) {
+            $log = $this->contentLogUpsert($data , $user);
+            $this->calculateRounds($log , $user);
             $lessonDatas = $this->getLessonDatasBasedOnContentLog($data['contentID'] , $user);
         }else{
             $lessonDatas = $this->getLessonDatasBasedOnLessonId($data['lessonID'] , $user);
