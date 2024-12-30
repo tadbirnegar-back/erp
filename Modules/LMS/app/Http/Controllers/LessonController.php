@@ -16,6 +16,7 @@ use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\Teacher;
+use Modules\LMS\app\Resources\LessonDatasWithLessonIDResource;
 
 class LessonController extends Controller
 {
@@ -89,5 +90,20 @@ class LessonController extends Controller
         }
 
         return response()->json(["teacher" => $teacher , "course" => $course , "contentTypes" => $contentTypes]);
+    }
+
+    public function sendLessonDatas(Request $request)
+    {
+        $user = Auth::user();
+        $user->load('student');
+        $data = $request->all();
+
+        if(isset($data['contentID'])) {
+            $lessonDatas = $this->getLessonDatasBasedOnContentLog($data['contentID'] , $user);
+        }else{
+            $lessonDatas = $this->getLessonDatasBasedOnLessonId($data['lessonID'] , $user);
+        }
+        $response = new LessonDatasWithLessonIDResource($lessonDatas);
+        return response()->json($response);
     }
 }
