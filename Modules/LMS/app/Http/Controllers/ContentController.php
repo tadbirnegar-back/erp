@@ -16,8 +16,7 @@ class ContentController extends Controller
     public function setLog(Request $request)
     {
         $data = $request->all();
-//        $user = Auth::user();
-        $user = User::find(2174);
+        $user = Auth::user();
         $user->load('student');
         $log = $this->contentLogUpsert($data , $user);
         $round = $this->calculateRounds($log , $user);

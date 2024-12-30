@@ -60,5 +60,5 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
     Route::post('/lms/lesson/data' , [LessonController::class, 'sendLessonDatas']);
+    Route::post('/lms/content-log/set' , [ContentController::class , 'setLog']);
 });
-Route::post('/lms/content-log/set' , [ContentController::class , 'setLog']);
