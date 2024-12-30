@@ -7,6 +7,7 @@ use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\FileLesson;
 use Modules\LMS\app\Models\Lesson;
+use Modules\LMS\app\Models\LessonStudyLog;
 use Modules\LMS\app\Models\Teacher;
 
 trait LessonTrait
@@ -113,10 +114,26 @@ trait LessonTrait
     }
 
 
-    public function getLessonDatasBasedOnContentLog($content_id , $user){
+    public function getLessonDatasBasedOnContentLog($content_id, $user)
+    {
         $content = Content::with('lesson')->find($content_id);
         $lessonID = $content->lesson->id;
-        return $this->getLessonDatasBasedOnLessonId($lessonID , $user);
+        return $this->getLessonDatasBasedOnLessonId($lessonID, $user);
+    }
+
+
+    public function lessonLogCreate($lessonID, $user)
+    {
+        return LessonStudyLog::create(
+            [
+                'lesson_id' => $lessonID,
+                'student_id' => $user->student->id,
+                'study_count' => 1,
+                'is_complete' => true,
+                'first_study_date' => now(),
+                'last_study_date' => now(),
+            ]
+        );
     }
 
     public function lessonActiveStatus()
