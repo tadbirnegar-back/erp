@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
-use Modules\LMS\App\Http\Services\VerificationPayment;
+use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Resources\CourseListResource;
