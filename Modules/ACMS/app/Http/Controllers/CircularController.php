@@ -4,6 +4,7 @@ namespace Modules\ACMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
+use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Mockery\Exception;
@@ -39,15 +40,88 @@ class CircularController extends Controller
         $data['userID'] = $user->id;
 
         try {
+            DB::beginTransaction();
             $fiscalYear = $this->createFiscalYear($data);
             $circular = $this->createCircular($data, $fiscalYear);
             $circularSubjects = CircularSubject::get(['id']);
-            $circular->statuses()->attach($circularSubjects->toArray());
+            $circular->circularSubjects()->sync($circularSubjects->pluck('id')->toArray());
 
+            DB::commit();
             return response()->json(['data' => $circular]);
         } catch (Exception $e) {
+            DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
         }
+    }
+
+    public function edit($id)
+    {
+        $circular = Circular::with('fiscalYear:id,name', 'file:id,slug,name,size')->find($id);
+
+        if (is_null($circular)) {
+            return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);
+        }
+
+        return CircularShowResource::make($circular);
+    }
+
+    public function update(Request $request, $id)
+    {
+
+        $data = $request->all();
+        $data['circularID'] = $id;
+        $validate = Validator::make($data, [
+            'fileID' => 'required',
+            'circularID' => 'exists:bgt_circulars,id',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['message' => $validate->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            $circular = Circular::find($data['circularID']);
+            $circular->file_id = $data['fileID'];
+            $circular->save();
+
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت بروز شد'], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+    }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+            $user = Auth::user();
+            $circular = Circular::with('latestStatus')->find($id);
+
+            if (is_null($circular)) {
+                return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);
+            }
+            $deleteStatus = $this->deleteCircularStatus();
+            if ($circular->latestStatus->id == $deleteStatus->id) {
+                return response()->json(['message' => ' بخشنامه از قبل حذف شده است'], 403);
+            }
+
+            $data = [
+                'statusID' => $deleteStatus->id,
+                'userID' => $user->id,
+            ];
+            $circularStatus = $this->circularStatusAttach($data, $circular);
+
+            DB::commit();
+            return response()->json(['message' => 'بخشنامه حذف شد'], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
     }
 
     public function index(Request $request)
@@ -62,7 +136,7 @@ class CircularController extends Controller
 
     public function show($id)
     {
-        $circular = Circular::with('circularSubjects', 'latestStatus:name,class_name', 'file:id,slug')->find($id);
+        $circular = Circular::with('circularSubjects', 'latestStatus:name,class_name', 'file:id,slug,name,size')->find($id);
 
         if (is_null($circular)) {
             return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);

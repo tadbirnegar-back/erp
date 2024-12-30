@@ -16,5 +16,29 @@
         "slug": "/acms/circulars/{id}",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش بخشنامه",
+        "slug": "/acms/circulars/edit/{id}",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف بخشنامه",
+        "slug": "/acms/circulars/delete/{id}",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن آیتم بخشنامه",
+        "slug": "/acms/circulars/subject/add",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف آیتم بخشنامه",
+        "slug": "/acms/circulars/subject/delete",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]

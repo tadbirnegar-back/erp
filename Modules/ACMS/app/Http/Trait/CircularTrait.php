@@ -15,16 +15,24 @@ trait CircularTrait
         $preparedData = $this->circularDataPreparation($data, $fiscalYear);
         $circular = Circular::create($preparedData->toArray()[0]);
 
-        $circularStatuses = $this->circularStatusDataPreparation($data, $circular);
-
-        CircularStatus::create($circularStatuses->toArray()[0]);
+        $circularStatuses = $this->circularStatusAttach($data, $circular);;
         return $circular;
 
+    }
+
+    public function circularStatusAttach(array $data, Circular $circular)
+    {
+        $circularStatuses = $this->circularStatusDataPreparation($data, $circular);
+
+        $circularStatus = CircularStatus::create($circularStatuses->toArray()[0]);
+        return $circularStatus;
     }
 
     public function indexCircular(array $data)
     {
         $searchTerm = $data['name'] ?? null;
+        $pageNumber = $data['pageNum'] ?? 1;
+        $perPage = $data['perPage'] ?? 10;
 
         $circulars = Circular::joinRelationship('finalStatus.status', [
             'finalStatus' => function ($join) {
@@ -38,8 +46,8 @@ trait CircularTrait
             },
         ])
             ->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
-                    ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                $query->whereRaw("MATCH (bgt_circulars.name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                    ->orWhere('bgt_circulars.name', 'like', '%' . $searchTerm . '%');
             })
             ->select([
                 'statuses.name as status_name',
@@ -47,7 +55,7 @@ trait CircularTrait
                 'bgt_circulars.id as circular_id',
                 'bgt_circulars.name as circular_name'
             ])
-            ->get();
+            ->paginate($perPage, page: $pageNumber);
 
         return $circulars;
     }
@@ -94,5 +102,10 @@ trait CircularTrait
     public function draftCircularStatus()
     {
         return Circular::GetAllStatuses()->firstWhere('name', CircularStatusEnum::DRAFT->value);
+    }
+
+    public function deleteCircularStatus()
+    {
+        return Circular::GetAllStatuses()->firstWhere('name', CircularStatusEnum::DELETED->value);
     }
 }

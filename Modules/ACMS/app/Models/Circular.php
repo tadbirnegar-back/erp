@@ -54,6 +54,11 @@ class Circular extends Model
         return $this->belongsTo(File::class);
     }
 
+    public function fiscalYear(): BelongsTo
+    {
+        return $this->belongsTo(FiscalYear::class);
+    }
+
 
     public static function GetAllStatuses()
     {

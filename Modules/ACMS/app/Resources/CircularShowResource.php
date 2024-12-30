@@ -11,15 +11,34 @@ class CircularShowResource extends JsonResource
      */
     public function toArray($request): array
     {
-        return [
+        $result = [
             'id' => $this->id,
             'name' => $this->name,
-            'status' => [
+            'file' => [
+                'id' => $this->file->id,
+                'slug' => $this->file->slug,
+                'name' => $this->file->name,
+                'size' => $this->file->size,
+            ],
+        ];
+
+        if ($this->relationLoaded('fiscalYear')) {
+            $result['fiscalYear'] = [
+                'name' => $this->fiscalYear->name,
+                'id' => $this->fiscalYear->id,
+            ];
+        }
+
+        if ($this->relationLoaded('circularSubjects')) {
+            $result['subjects'] = $this->circularSubjects->toHierarchy();
+        }
+
+        if ($this->relationLoaded('circularSubjects')) {
+            $result['status'] = [
                 'name' => $this->latestStatus->name,
                 'class_name' => $this->latestStatus->class_name
-            ],
-            'file' => $this->file->slug,
-            'subjects' => $this->circularSubjects->toHierarchy(),
-        ];
+            ];
+        }
+        return $result;
     }
 }

@@ -13,15 +13,12 @@ class CircularListResource extends JsonResource
     {
 
         return [
-            [
                 'id' => $this->circular_id,
                 'name' => $this->circular_name,
                 'status' => [
                     'name' => $this->status_name,
                     'class_name' => $this->status_class_name
                 ]
-            ]
-
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\ACMS\app\Http\Controllers\CircularController;
+use Modules\ACMS\app\Http\Controllers\SubjectController;
 
 /*
     |--------------------------------------------------------------------------
@@ -20,5 +21,15 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::get('/acms/circulars/{id}', [CircularController::class, 'show']);
 
+    Route::put('/acms/circulars/edit/{id}', [CircularController::class, 'update']);
+
+    Route::get('/acms/circulars/edit/{id}', [CircularController::class, 'edit']);
+
+    Route::delete('/acms/circulars/delete/{id}', [CircularController::class, 'destroy']);
+
     Route::post('/acms/circulars/add', [CircularController::class, 'store']);
+
+    Route::post('/acms/circulars/subject/add', [SubjectController::class, 'storeSubjectAndAttachToCircular']);
+
+    Route::put('/acms/circulars/subject/delete', [SubjectController::class, 'deActiveSubjectAndDetachToCircular']);
 });
