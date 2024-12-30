@@ -2,16 +2,11 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\DB;
-use Modules\AAA\app\Models\User;
+use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
-use Modules\LMS\app\Http\Enums\ExamsStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Lesson;
-use Modules\LMS\app\Models\Teacher;
 
 trait CourseTrait
 {
@@ -466,32 +461,41 @@ trait CourseTrait
 
         return ["lessonData" => $incompleteLessonInfo, "sidebar" => $data];
     }
+
+
+    public function ActiveAnswerSheetStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
+    }
+
     public function isCourseCompleted($course, $student)
     {
-
-        $query = Course::joinRelationship('lessons.lessonStudyLog', [
-            'lessonStudyLog' => fn($join) => $join->on('is_completed', 0)
-                ->orWhereNull('lesson_study_logs.is_completed')->where('student_id', $student->id)
-        ])
-            ->where('courses.id', $course->id)
-            ->get();
-        return $query;
-
-
-    }
-
-
-    public function isNotPassedOrNotAttemptedExam($student)
-    {
-        $hasFailedOrNoAttempt = !AnswerSheet::where('student_id', $student->id)
-            ->where(function ($query) {
-                $query->where('status_id', ExamsStatusEnum::FAILED->value)
-                    ->orWhereNull('status_id');
-            })
+        $iscomplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
+            $query->where('is_completed', 0, null);
+        })
+            ->where('student_id', $student->id)
             ->exists();
 
-        return $hasFailedOrNoAttempt;
+        return $iscomplete;
     }
 
-}
 
+    public function isPassedOrAttemptedExam($student, $examID)
+    {
+
+        $status = $this->ActiveAnswerSheetStatus();
+
+        $query = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
+            $query->where('status_id', $status->id);
+        })
+            ->joinRelationship('exam', function ($query) use ($examID) {
+                $query->where('exam_id', $examID);
+            })
+            ->where('student_id', $student->id)
+            ->exists();
+        return $query;
+
+    }
+
+
+}

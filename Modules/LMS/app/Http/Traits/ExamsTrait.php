@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Student;
 
 trait ExamsTrait
@@ -32,5 +33,19 @@ trait ExamsTrait
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
 
 
+    }
+
+    public function examDetails()
+    {
+        $query = Course::joinRelationship('courseExams.exams.answerSheets.answer.questions')
+            ->addSelect([
+                'courses.title as courseTitle',
+                'exams.title as examTitle',
+                'answer_sheets.start_date_time as startDate',
+                'answer_sheets.finish_date_time as finishDate',
+                'chapters.title as chapterTitle',
+                'lessons.title as lessonTitle',
+            ]);
+        $query->withCount(['questions as totalQuestions', 'chapters as totalChapters', 'lessons as totalLessons']);
     }
 }

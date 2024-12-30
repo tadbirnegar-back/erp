@@ -3,30 +3,51 @@
 namespace App\Http\Controllers;
 
 
-use Laravel\Passport\Bridge\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Models\Content;
-use Modules\OUnitMS\app\Models\DistrictOfc;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\VillageOfc;
-use Modules\LMS\app\Http\Enums\ExamsStatusEnum;
+use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Student;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 
+
+    public function ActiveAnswerSheetStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
+    }
+
     public function run()
     {
+        $student = Student::find(40);
+        $iscomplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
+            $query->where('is_completed', 0, null);
+        })
+            ->where('student_id', $student->id)
+            ->exists();
 
-        $r = Content::with('consumeLog')->find(7);
-        return response() -> json($r);
+        return response()->json([
+            'student_id' => $student->id,
+            'is_passed' => $iscomplete,
+        ]);
+
+
+//        $hasFailedOrNoAttempt = !AnswerSheet::where('student_id', $student->id)
+//            ->joinRelationship('status', function ($query) {
+//                $query->where('status_id', $this->inActiveAnswerSheetStatus());
+//            })
+//            ->exists();
+//
+//        return $hasFailedOrNoAttempt;
+
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
