@@ -6,10 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Modules\AAA\app\Models\User;
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\App\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseTrait;
@@ -36,9 +33,6 @@ class CourseController extends Controller
                     $this->courseCanceledStatus()->id
                 ]);
             })->with('latestStatus')->find($id);
-
-
-            return response()->json($course);
             $user = Auth::user();
             if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
@@ -58,7 +52,6 @@ class CourseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
-
         $response = new CourseListResource($result);
 
         return $response;
