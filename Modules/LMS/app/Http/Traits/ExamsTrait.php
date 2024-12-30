@@ -38,14 +38,16 @@ trait ExamsTrait
     public function examDetails()
     {
         $query = Course::joinRelationship('courseExams.exams.answerSheets.answer.questions')
-            ->addSelect([
-                'courses.title as courseTitle',
-                'exams.title as examTitle',
-                'answer_sheets.start_date_time as startDate',
-                'answer_sheets.finish_date_time as finishDate',
-                'chapters.title as chapterTitle',
-                'lessons.title as lessonTitle',
-            ]);
+            ->joinRelationship('chapters.lessons');
+        $query->addSelect([
+            'courses.title as courseTitle',
+            'exams.title as examTitle',
+            'answer_sheets.start_date_time as startDate',
+            'answer_sheets.finish_date_time as finishDate',
+            'chapters.title as chapterTitle',
+            'lessons.title as lessonTitle',
+        ]);
         $query->withCount(['questions as totalQuestions', 'chapters as totalChapters', 'lessons as totalLessons']);
+        return $query->first();
     }
 }

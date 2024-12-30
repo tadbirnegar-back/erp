@@ -468,10 +468,10 @@ trait CourseTrait
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
     }
 
-    public function isCourseCompleted($course, $student)
+    public function isCourseCompleted($student)
     {
         $iscomplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
-            $query->where('is_completed', 0, null);
+            $query->where('is_completed', 0);
         })
             ->where('student_id', $student->id)
             ->exists();
@@ -480,18 +480,25 @@ trait CourseTrait
     }
 
 
-    public function isPassedOrAttemptedExam($student, $examID)
+    public function isAttemptedExam($student, $examID)
     {
 
+        $query = AnswerSheet::joinRelationship('exam', function ($query) use ($examID) {
+            $query->where('exam_id', $examID);
+        })
+            ->where('student_id', $student->id)
+            ->exists();
+        return $query;
+
+    }
+
+    public function isPassed()
+    {
         $status = $this->ActiveAnswerSheetStatus();
 
         $query = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
             $query->where('status_id', $status->id);
         })
-            ->joinRelationship('exam', function ($query) use ($examID) {
-                $query->where('exam_id', $examID);
-            })
-            ->where('student_id', $student->id)
             ->exists();
         return $query;
 

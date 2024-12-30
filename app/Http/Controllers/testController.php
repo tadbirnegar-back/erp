@@ -10,34 +10,37 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
+use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\AnswerSheet;
-use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Student;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
-
+    use ExamsTrait;
 
     public function ActiveAnswerSheetStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
     }
 
-    public function run()
+    public function run($examID)
     {
-        $student = Student::find(40);
-        $iscomplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
-            $query->where('is_completed', 0, null);
+        $student = Student::find(60);
+
+        $status = $this->ActiveAnswerSheetStatus();
+
+        $query = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
+            $query->where('status_id', $status->id);
         })
-            ->where('student_id', $student->id)
+//        $query = AnswerSheet::joinRelationship('exam', function ($query) use ($examID) {
+//            $query->where('exam_id', $examID);
+//        })
+//            ->where('student_id', $student->id)
             ->exists();
 
-        return response()->json([
-            'student_id' => $student->id,
-            'is_passed' => $iscomplete,
-        ]);
+        return response()->json($query);
 
 
 //        $hasFailedOrNoAttempt = !AnswerSheet::where('student_id', $student->id)
