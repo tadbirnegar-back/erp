@@ -2,14 +2,9 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\DB;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Lesson;
-use Modules\LMS\app\Models\Teacher;
 
 trait CourseTrait
 {
@@ -47,16 +42,13 @@ trait CourseTrait
         $query->withCount(['chapters', 'lessons', 'questions']);
 
 
-        $query
-            ->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
-            });
-
         $query->when($searchTerm, function ($query, $searchTerm) {
-            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+            $query->where(function ($subQuery) use ($searchTerm) {
+                $subQuery->where('courses.title', 'like', '%' . $searchTerm . '%')
+                    ->orWhereRaw("MATCH (courses.title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+            });
         });
+
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 

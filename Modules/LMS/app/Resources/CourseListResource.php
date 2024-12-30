@@ -28,7 +28,7 @@ class CourseListResource extends ResourceCollection
                     'title' => $item->title,
 
                     'cover' => $item->cover_slug ? [
-                        'slug' => $this->baseUrl . $item->slug,
+                        'slug' => $this->baseUrl . '/' . $item->cover_slug,
                     ] : null,
                     'statuses' => [
                         'name' => $item->latestStatus->name,
