@@ -94,7 +94,8 @@ class LessonController extends Controller
 
     public function sendLessonDatas(Request $request)
     {
-        $user = Auth::user();
+//        $user = Auth::user();
+        $user = User::find(2174);
         $user->load('student');
         $data = $request->all();
 
