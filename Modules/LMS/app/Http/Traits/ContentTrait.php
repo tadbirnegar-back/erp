@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\ContentStatusEnum;
+use Modules\LMS\app\Http\GlobalScope\ContentScope;
 use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\ContentConsumeLog;
 use Modules\LMS\app\Models\LessonStudyLog;
@@ -100,6 +101,15 @@ trait ContentTrait
             }
         }
         return $log;
+    }
+
+
+    public function deactiveContent($data)
+    {
+        $contentIDs = json_decode($data['deleteContent']);
+        $statusId = $this -> contentInActiveStatus() -> id;
+
+        Content::withoutGlobalScope(ContentScope::class)->whereIn('id' , $contentIDs)->update(['status_id' => $statusId]);
     }
 
     public function contentActiveStatus()
