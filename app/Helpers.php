@@ -119,3 +119,10 @@ function convertMinuteToSecondFormatted($time)
 
     return $totalSeconds;
 }
+function convertByteToMb($byte)
+{
+    if (!is_numeric($byte) || $byte < 0) {
+        return null;
+    }
+    return $byte / (1024 * 1024);
+}

@@ -50,6 +50,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
     Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
     Route::get('/lms/chapter/delete/{id}', [ChapterController::class, 'delete']);
+    Route::get('/lms/lesson/show/{id}' , [LessonController::class, 'show']);
+    Route::post('/lms/lesson/update/{id}' , [LessonController::class, 'update']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
@@ -61,6 +63,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
     Route::post('/lms/lesson/data' , [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set' , [ContentController::class , 'setLog']);
-    Route::get('/lms/lesson/show/{id}' , [LessonController::class, 'show']);
-    Route::post('/lms/lesson/update/{id}' , [LessonController::class, 'update']);
 });

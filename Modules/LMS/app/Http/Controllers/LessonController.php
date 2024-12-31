@@ -16,6 +16,7 @@ use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\Teacher;
+use Modules\LMS\app\Resources\LessonDataForupdateResource;
 use Modules\LMS\app\Resources\LessonDatasWithLessonIDResource;
 
 class LessonController extends Controller
@@ -112,9 +113,27 @@ class LessonController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        $lessonData = $this->getLessonDatasBasedOnLessonId($id, $user);
-        $response = new LessonDatasWithLessonIDResource($lessonData);
-        return response()->json($response);
+        $lesson = Lesson::find($id);
+        if(empty($lesson))
+        {
+            return response()->json(['message' => 'Lesson not found'], 404);
+        }
+        $lessonData = $this->getLessonDatasForUpdate($id, $user);
+        $response = new LessonDataForupdateResource($lessonData);
+        $course = Course::joinRelationship('chapters', function ($join) {
+            $join->as('chapter_alias');
+        })
+            ->where('courses.id', $id)
+            ->select('chapter_alias.id as chapter_id', 'chapter_alias.title as chapter_title')
+            ->get();
+
+        $teacher = Teacher::with(['person' => function ($query) {
+            $query->select('display_name');
+        }])->get();
+
+        $contentTypes = ContentType::all();
+
+        return response()->json(["mainData" => $response , "course" => $course, "teacher" => $teacher, "contentTypes" => $contentTypes]);
     }
 
     public function update(Request $request, $id)

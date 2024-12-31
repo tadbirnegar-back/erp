@@ -68,10 +68,6 @@ trait LessonTrait
                 'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'contentType' => fn($join) => $join->as('content_type_alias'),
             ])
-            ->leftJoinRelationship('contents.contentType', [
-                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
-                'contentType' => fn($join) => $join->as('content_type_alias'),
-            ])
             ->leftJoinRelationship('contents.file', [
                 'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'file' => fn($join) => $join->as('content_file_alias'),
@@ -123,6 +119,45 @@ trait LessonTrait
         return ["lessonDetails" => $query];
     }
 
+    public function getLessonDatasForUpdate($lessonID, $user)
+    {
+        $query = Lesson::query()
+            ->leftJoinRelationship('contents.teacher.workForceForJoin.person', [
+                'contents' => fn($join) => $join->as('contents_alias'),
+                'teacher' => fn($join) => $join->as('teacher_alias'),
+                'workForceForJoin' => fn($join) => $join->as('workForce_alias')
+                    ->on('workForce_alias.workforceable_type', '=', DB::raw("'" . addslashes(Teacher::class) . "'")),
+                'person' => fn($join) => $join->as('teacher_person_alias'),
+            ])
+            ->leftJoinRelationship('contents.contentType', [
+                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
+                'contentType' => fn($join) => $join->as('content_type_alias'),
+            ])
+            ->leftJoinRelationship('files.file', [
+                'file' => fn($join) => $join->as('lesson_files_alias'),
+                'files' => fn($join) => $join->on('file_lesson.lesson_id', '=', 'lessons.id')
+            ])
+            ->leftJoinRelationshipUsingAlias('chapter' , 'chapter_alias')
+            ->select([
+                'lessons.id as activeLesson',
+                'lessons.description as lesson_description',
+                'lessons.title as lesson_title',
+                'contents_alias.name as content_title',
+                'contents_alias.id as content_id',
+                'lesson_files_alias.id as lesson_file_id',
+                'lesson_files_alias.name as lesson_file_title',
+                'lesson_files_alias.size as lesson_file_size',
+                'teacher_alias.id as teacher_alias_id',
+                'teacher_person_alias.display_name as teacher_name',
+                'content_type_alias.name as content_type_name',
+                'content_type_alias.id as content_type_id',
+                'chapter_alias.id as chapter_alias_id',
+                'chapter_alias.title as chapter_alias_title',
+            ])
+            ->where('lessons.id', $lessonID)
+            ->get();
+        return ["lessonDetails" => $query];
+    }
 
     public function getLessonDatasBasedOnContentLog($content_id, $user)
     {
@@ -156,7 +191,7 @@ trait LessonTrait
         return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
     }
 
-    public function updateLessonDatas($lesson , $data)
+    public function updateLessonDatas($lesson, $data)
     {
         $lesson->update([
             'description' => $data['lesson_description'],
