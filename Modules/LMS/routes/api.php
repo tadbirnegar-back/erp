@@ -2,12 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\LMS\app\Http\Controllers\ChapterController;
+use Modules\LMS\app\Http\Controllers\ContentController;
 use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
-use Modules\LMS\app\Http\Controllers\ContentController;
 
 /*
     |--------------------------------------------------------------------------
@@ -45,7 +45,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
     Route::post('/lms/courses/questions/list', [\Modules\LMS\app\Http\Controllers\CourseController::class, 'courseList']);
     Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
-    Route::post('/lms/add/questions', [QuestionController::class, 'store']);
+//    Route::post('/lms/add/questions', [QuestionController::class, 'store']);
     Route::post('/lms/add/options', [OptionController::class, 'store']);
     Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
     Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
@@ -59,6 +59,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
-    Route::post('/lms/lesson/data' , [LessonController::class, 'sendLessonDatas']);
-    Route::post('/lms/content-log/set' , [ContentController::class , 'setLog']);
+    Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
+    Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
 });
+Route::post('/lms/add/questions/{id}', [QuestionController::class, 'store']);
+Route::post('/lms/chapter/lessons/{id}', [QuestionController::class, 'chapter']);

@@ -5,6 +5,7 @@ namespace Modules\LMS\app\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\CourseFactory;
@@ -222,5 +223,9 @@ class Course extends Model
         return $this->hasMany(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);
     }
 
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'creator_id', 'id');
+    }
 
 }

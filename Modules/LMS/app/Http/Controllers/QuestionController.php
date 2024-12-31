@@ -5,7 +5,9 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\QuestionsTrait;
+use Modules\LMS\app\Models\Chapter;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\QuestionsResource;
 
@@ -13,32 +15,46 @@ class QuestionController extends Controller
 {
     use QuestionsTrait;
 
-    public function store(Request $request)
+    public function store(Request $request, $courseID)
     {
-        $user = auth()->user();
+////        $user = auth()->user();
 
+        $user = User::find(50);
         $data = $request->all();
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'difficultyID' => 'required|integer|exists:difficulties,id',
             'lessonID' => 'required|integer|exists:lessons,id',
             'questionTypeID' => 'required|integer|exists:question_types,id',
-            'repositoryID' => 'nullable|integer|exists:repositories,id',
+            'repositoryID' => 'nullable|array|exists:repositories,id',
             'createDate' => 'nullable|date',
+            'chapterID' => 'nullable|integer|exists:chapters,id',
         ]);
+        $validatedData['creator_id'] = $user->id; // Add this line
 
-        try {
-            DB::beginTransaction();
-            DB::enableQueryLog();
-            $question = $this->storeQuestion([$data], $user);
-            $response = QuestionsResource::make($question);
-            DB::commit();
+        $question = $this->storeQuestion($validatedData, $user, $courseID);
+        return response()->json($question);
 
-            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن سوال', 'error' => $e->getMessage()], 500);
-        }
+//        try {
+//            DB::beginTransaction();
+//            DB::enableQueryLog();
+//            $question = $this->storeQuestion($data, $user, $courseID);
+//            return response()->json($question);
+//
+//            $response = QuestionsResource::make($question);
+//            DB::commit();
+//
+//            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
+//        } catch (\Exception $e) {
+//            DB::rollBack();
+//            return response()->json(['message' => 'خطا در افزودن سوال', 'error' => $e->getMessage()], 500);
+//        }
+    }
+
+    public function chapter($id)
+    {
+        $chapter = Chapter::with('lessons')->find($id);
+        return response()->json(['message' => 'Success', 'data' => $chapter], 200);
     }
 
     public function destroyQuestion($id)

@@ -62,19 +62,25 @@
     {
         "name": "افزودن درس",
         "slug": "/lms/lesson/add",
-        "moduleName" : "LMS",
+        "moduleName": "LMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "ویرایش فصل",
         "slug": "/lms/chapter/edit/{id}",
-        "moduleName" : "LMS",
+        "moduleName": "LMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "حذف فصل",
         "slug": "/lms/chapter/delete/{id}",
-        "moduleName" : "LMS",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن سوال",
+        "slug": "/lms/add/questions",
+        "moduleName": "LMS",
         "permissionTypeName": "operational"
     }
 ]

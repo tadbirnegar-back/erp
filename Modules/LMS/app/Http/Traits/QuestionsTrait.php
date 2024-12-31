@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Question;
 use Nwidart\Modules\Collection;
 
@@ -11,41 +12,44 @@ trait QuestionsTrait
     private static string $activeQuestionStatus = QuestionsEnum::ACTIVE->value;
     private static string $expired = QuestionsEnum::EXPIRED->value;
 
-    public function storeQuestion($data, $user)
+    public function storeQuestion($data, $user, $courseID)
     {
-        $dataToInsert = $this->questionDataPreparation($data, $user);
+        $course = Course::find($courseID);
+        $dataToInsert = $this->questionDataPreparation($data, $user, $courseID);
 
-        /**
-         * @var Question $questionData
-         */
-        $questionData = Question::create($dataToInsert->first());
+        $question = Course::query()
+            ->joinRelationship('chapters')
+            ->joinRelationship('lessons.questions')
+            ->joinRelationship('lessons.questions.creator',)
+            ->joinRelationship('lessons.questions.difficulty')
+            ->joinRelationship('lessons.questions.questionType')
+            ->joinRelationship('lessons.questions.status', 'status_alias')
+            ->joinRelationship('lessons.questions.repository', 'repository_alias');
+        $question = Question::create($dataToInsert);
 
-        $question = Question::joinRelationshipUsingAlias('lesson', function ($join) {
-            $join->as('lesson_alias');
-        })
-            ->joinRelationshipUsingAlias('creator', 'creator_alias')
-            ->joinRelationshipUsingAlias('difficulty', 'difficulty_alias')
-            ->joinRelationshipUsingAlias('questionType', 'question_type_alias')
-            ->joinRelationshipUsingAlias('status', 'status_alias')
-            ->joinRelationshipUsingAlias('repository', 'repository_alias')
-            ->addSelect([
-                'lesson_alias.id as lesson_id',
-                'lesson_alias.title as lesson_title',
-                'difficulty_alias.name as difficulty_name',
-                'difficulty_alias.id as difficulty_id',
-                'question_type_alias.name as question_type_name',
-                'question_type_alias.id as question_type_id',
-                'repository_alias.name as repository_name',
-                'repository_alias.id as repository_id',
-                'status_alias.name as status_name',
-                'status_alias.class_name as status_class_name',
-            ])->find($questionData->id);
+        $question->select([
+            'questions.title as title',
+            'lessons.id as lessonID',
+            'chapters.id as chapterID',
+            'difficulty.id as difficultyID',
+            'question_type.id as questionTypeID',
+            'repository.id as repositoryID',
+            'status.name as statusName',
+            'status.class_name as statusClassName',
+            'question_type.name as questionTypeName',
+            'difficulty.name as difficultyName',
+            'creator_alias.id as creatorID',
+            'creators.id as creatorID',
 
+
+        ]);
         return $question;
+
+
     }
 
 
-    public function questionDataPreparation(array|Collection $question, $creator)
+    public function questionDataPreparation(array|Collection $question, $creator, $course)
     {
         if (is_array($question)) {
             $question = collect($question);
@@ -61,11 +65,11 @@ trait QuestionsTrait
             'repository_id' => $data['repositoryID'] ?? null,
             'status_id' => $status->id ?? null,
             'create_date' => $data['createDate'] ?? now(),
-
-        ]);
+            'chapter_id' => $data['chapterID'] ?? null,
+            'course_id' => $course->id ?? null,
+        ])->first();
 
         return $question;
-
     }
 
     public function UpdateQuestion($data, Question $question)
@@ -78,6 +82,7 @@ trait QuestionsTrait
         $question->repository_id = $data['repositoryID'];
         $question->status_id = $data['statusID'];
         $question->create_date = $data['createDate'];
+        $question->chapter_id = $data['chapterID'];
         $question->save();
         return $question;
 
@@ -95,6 +100,7 @@ trait QuestionsTrait
 
         return false;
     }
+
 
     public function activeQuestionStatus()
     {

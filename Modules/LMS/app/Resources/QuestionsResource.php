@@ -20,6 +20,9 @@ class QuestionsResource extends JsonResource
                 'id' => $this->lesson_id,
                 'title' => $this->lesson_title
             ],
+            'chapter' => [
+                'id' => $this->chapterID,
+            ],
             'creator' => [
                 'id' => $this->creator_id,
             ],
