@@ -22,7 +22,7 @@ use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Models\Payment;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\OUnitMS\app\Http\GlobalScope\ActiveScope;
+use Modules\OUnitMS\app\Http\GlobalScope\ContentScope;
 use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -243,7 +243,7 @@ class OrganizationUnit extends Model
 
     protected static function booted()
     {
-        static::addGlobalScope(new ActiveScope());
+        static::addGlobalScope(new ContentScope());
     }
 //
 //    public function GetStatuses()

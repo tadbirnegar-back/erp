@@ -5,6 +5,7 @@ namespace Modules\LMS\app\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\FileMS\app\Models\File;
+use Modules\LMS\app\Http\GlobalScope\ContentScope;
 use Modules\LMS\Database\factories\ContentFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -31,6 +32,11 @@ class Content extends Model
         'status_id',
         'teacher_id',
     ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new ContentScope());
+    }
 
     public function contentType()
     {

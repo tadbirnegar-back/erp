@@ -62,4 +62,5 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/data' , [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set' , [ContentController::class , 'setLog']);
     Route::get('/lms/lesson/show/{id}' , [LessonController::class, 'show']);
+    Route::post('/lms/lesson/update/{id}' , [LessonController::class, 'update']);
 });

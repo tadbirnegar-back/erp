@@ -43,6 +43,16 @@ trait LessonTrait
         }, $lessonFiles);
     }
 
+    public function deleteLessonFiles($lesson, $data)
+    {
+        $fileIds = json_decode($data['deleteLessonFiles']);
+
+        // Perform a bulk delete using whereIn
+        FileLesson::where('lesson_id', $lesson->id)
+            ->whereIn('file_id', $fileIds)
+            ->delete();
+    }
+
     public function getLessonDatasBasedOnLessonId($lessonID, $user)
     {
         $query = Lesson::query()
@@ -144,5 +154,14 @@ trait LessonTrait
     public function lessonInActiveStatus()
     {
         return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
+    }
+
+    public function updateLessonDatas($lesson , $data)
+    {
+        $lesson->update([
+            'description' => $data['lesson_description'],
+            'title' => $data['lesson_title'],
+            'chapter_id' => $data['chapterID'],
+        ]);
     }
 }
