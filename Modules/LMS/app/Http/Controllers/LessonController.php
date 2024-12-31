@@ -108,4 +108,24 @@ class LessonController extends Controller
         $response = new LessonDatasWithLessonIDResource($lessonDatas);
         return response()->json($response);
     }
+
+    public function show($id)
+    {
+        $user = User::find(2174);
+        $course = Course::joinRelationship('chapters', function ($join) {
+            $join->as('chapter_alias');
+        })
+            ->where('courses.id', $id)
+            ->select('chapter_alias.id as chapter_id', 'chapter_alias.title as chapter_title')
+            ->get();
+
+        $teacher = Teacher::with(['person' => function ($query) {
+            $query->select('display_name');
+        }])->get();
+
+        $contentTypes = ContentType::all();
+        $lessonData = $this->getLessonDatasBasedOnLessonId($id , $user);
+        $response = new LessonDatasWithLessonIDResource($lessonData);
+        return response()->json(["mainData" => $response , "AdditionalData" => [$course , $teacher , $contentTypes]]);
+    }
 }
