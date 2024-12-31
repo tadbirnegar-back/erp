@@ -43,32 +43,34 @@ class ExamsController extends Controller
         $courseID = $examID->courses->first()->id;
         $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
         $completed = $this->isCourseCompleted($student);
-        $passed = $this->isPassedOrAttemptedExam($student, $id);
-        return response()->json([
-            'enrolled' => $enrolled,
-            'completed' => $completed,
-            'passed' => $passed
-        ]);
+        $attempted = $this->isAttemptedExam($student, $id);
+        $passed = $this->isPassed($student);
+//        return response()->json([
+//            'enrolled' => $enrolled,
+//            'completed' => $completed,
+//            'passed' => $passed,
+//            'attempted' => $attempted
+//        ]);
+//
 
 
-//
-//        try {
-//            if ($enrolled && $completed && !$passed) {
-//                $exam = $this->examDetails();
-//                $response = ExamsResultResource::make($exam);
-//                DB::commit();
-//                return response()->json($response);
-//            } else {
-////                dd($enrolled, $completed, $passed);
-//
-//                DB::rollBack();
-//                return response()->json(['message' => 'شما اجازه دسترسی به این آزمون را ندارید'], 403);
-//            }
-//        } catch (\Exception $e) {
-//            DB::rollBack();
-//            return response()->json(['message' => 'خطایی رخ داده است'], 500);
-//        }
-//
+        try {
+            if ($enrolled && !$completed && !$passed && $attempted) {
+                $exam = $this->examDetails();
+                $response = ExamsResultResource::make($exam);
+                DB::commit();
+                return response()->json($response);
+            } else {
+//                dd($enrolled, $completed, $passed);
+
+                DB::rollBack();
+                return response()->json(['message' => 'شما اجازه دسترسی به این آزمون را ندارید'], 403);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([$e, 'message' => 'خطایی رخ داده است'], 500);
+        }
+
 
     }
 

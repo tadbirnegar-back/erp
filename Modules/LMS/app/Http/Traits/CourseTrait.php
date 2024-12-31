@@ -492,7 +492,7 @@ trait CourseTrait
 
     }
 
-    public function isPassed()
+    public function isPassed($student)
     {
         $status = $this->ActiveAnswerSheetStatus();
 
