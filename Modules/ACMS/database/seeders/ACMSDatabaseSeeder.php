@@ -16,6 +16,8 @@ class ACMSDatabaseSeeder extends Seeder
             ModuleSeeder::class,
             PermissionsSeeder::class,
             StatusSeeder::class,
+            BudgetStatusSeeder::class,
+
         ]);
     }
 }

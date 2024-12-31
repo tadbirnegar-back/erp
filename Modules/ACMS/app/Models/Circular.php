@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\ACMS\Database\factories\CircularsFactory;
 use Modules\FileMS\app\Models\File;
@@ -57,6 +58,11 @@ class Circular extends Model
     public function fiscalYear(): BelongsTo
     {
         return $this->belongsTo(FiscalYear::class);
+    }
+
+    public function circularItems(): HasMany
+    {
+        return $this->hasMany(CircularItem::class, 'circular_id');
     }
 
 

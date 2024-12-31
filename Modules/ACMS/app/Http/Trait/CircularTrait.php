@@ -6,6 +6,8 @@ use Modules\ACMS\app\Http\Enums\CircularStatusEnum;
 use Modules\ACMS\app\Models\Circular;
 use Modules\ACMS\app\Models\CircularStatus;
 use Modules\ACMS\app\Models\FiscalYear;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 trait CircularTrait
 {
@@ -85,6 +87,7 @@ trait CircularTrait
             $data = [$data];
         }
         $draftCircularStatus = $this->draftCircularStatus();
+
         $data = collect($data)->map(function ($item) use ($circular, $draftCircularStatus) {
 
             return [
@@ -104,8 +107,39 @@ trait CircularTrait
         return Circular::GetAllStatuses()->firstWhere('name', CircularStatusEnum::DRAFT->value);
     }
 
+    public function approvedCircularStatus()
+    {
+        return Circular::GetAllStatuses()->firstWhere('name', CircularStatusEnum::APPROVED->value);
+    }
+
     public function deleteCircularStatus()
     {
         return Circular::GetAllStatuses()->firstWhere('name', CircularStatusEnum::DELETED->value);
     }
+
+    public function ounitsIncludingForAddingBudget(int $fiscalYearID, bool $count = false)
+    {
+        $vills = OrganizationUnit::where('unitable_type', VillageOfc::class)->joinRelationship('village', function ($join) {
+            $join->where('hasLicense', true);
+        })
+            ->leftJoinRelationship('ounitFiscalYears.budget', [
+                'ounitFiscalYears' => function ($join) use ($fiscalYearID) {
+                    $join->where('ounit_fiscalYear.fiscal_year_id', $fiscalYearID);
+                },
+                'budget' => function ($join) {
+                    $join->where('isSupplementary', false);
+                }
+            ])
+            ->where(function ($query) {
+                $query->whereNull('ounit_fiscalYear.fiscal_year_id')
+                    ->orWhereNull('bgt_budgets.ounitFiscalYear_id');
+            })
+            ->distinct();
+
+        return $count ? $vills->count() : $vills->select([
+            'organization_units.id as ounitID'])
+            ->get();
+    }
+
+
 }

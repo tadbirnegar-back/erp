@@ -68,15 +68,17 @@ class SubjectController extends Controller
         }
         try {
             DB::beginTransaction();
-            $circularSubject = CircularSubject::with('descendantsAndSelf')->find($data['circularSubjectID']);
+            $circularSubject = CircularSubject::with('descendantsAndSelf')->find($data['subjectID']);
             $descendants = $circularSubject->descendantsAndSelf;
-            $descendants->update(['isActive' => false]);
+            $descendants->each(function ($item) {
+                $item->update(['isActive' => false]);
+            });
             $subjectIDs = $descendants->pluck('id')->toArray();
             $circular = Circular::find($data['circularID']);
 
             $circular->circularSubjects()->detach($subjectIDs);
             DB::commit();
-            return response()->json(['message' => 'با موفقیت حذف شد'], 200);
+            return response()->json(['data' => $circular->circularSubjects->toHierarchy(), 'message' => 'با موفقیت حذف شد'], 200);
 
         } catch (Exception $e) {
             DB::rollBack();

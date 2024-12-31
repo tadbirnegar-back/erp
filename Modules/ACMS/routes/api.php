@@ -31,5 +31,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/acms/circulars/subject/add', [SubjectController::class, 'storeSubjectAndAttachToCircular']);
 
-    Route::put('/acms/circulars/subject/delete', [SubjectController::class, 'deActiveSubjectAndDetachToCircular']);
+    Route::delete('/acms/circulars/subject/delete', [SubjectController::class, 'deActiveSubjectAndDetachToCircular']);
+
+    Route::post('/acms/circulars/verified/ounits-count', [CircularController::class, 'unitsIncludingForAddingBudgetCount']);
+
+    Route::post('/acms/circulars/dispatch', [CircularController::class, 'dispatchCircularToVillages']);
 });

@@ -16,13 +16,12 @@ return new class extends Migration {
 
             $table->string('name');
             $table->boolean('isSupplementary');
-            $table->unsignedBigInteger('ounit_id');
-            $table->unsignedBigInteger('fiscal_year_id');
+            $table->unsignedBigInteger('ounitFiscalYear_id');
             $table->unsignedBigInteger('parent_id')->nullable();
 
             $table->foreign('parent_id')->references('id')->on($table->getTable())->onDelete('set null');
-            $table->foreign('ounit_id')->references('id')->on('organization_units')->onDelete('cascade');
-            $table->foreign('fiscal_year_id')->references('id')->on('fiscal_years')->onDelete('cascade');
+            $table->foreign('ounitFiscalYear_id')->references('id')->on('ounit_fiscalYear')->onDelete('cascade');
+
 
         });
     }

@@ -21,6 +21,7 @@ class CircularSubject extends Model
         'old_item_id',
         'parent_id',
         'create_date',
+        'code',
     ];
 
     protected static function booted()

@@ -14,7 +14,12 @@ class BudgetItem extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'proposed_amount',
+        'finalized_amount',
+        'budget_id',
+        'circular_item_id',
+    ];
 
     public $timestamps = false;
     protected $table = 'bgt_budget_items';

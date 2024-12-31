@@ -1,0 +1,14 @@
+[
+    {
+        "name": "پیشنهاد شده",
+        "className": "warning"
+    },
+    {
+        "name": "نهایی شده",
+        "className": "primary"
+    },
+    {
+        "name": "حذف شده",
+        "className": "danger"
+    }
+]

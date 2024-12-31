@@ -40,5 +40,17 @@
         "slug": "/acms/circulars/subject/delete",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "استعلام تعداد روستا برای ابلاغ بخشنامه بودجه",
+        "slug": "/acms/circulars/verified/ounits-count",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ابلاغ بخشنامه بودجه",
+        "slug": "/acms/circulars/dispatch",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]

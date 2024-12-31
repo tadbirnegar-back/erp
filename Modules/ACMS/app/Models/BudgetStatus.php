@@ -14,8 +14,13 @@ class BudgetStatus extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'budget_id',
+        'status_id',
+        'creator_id',
+        'create_date',
+    ];
 
     public $timestamps = false;
-    protected $table = 'bgt_budget_status';
+    protected $table = 'bgtBudget_status';
 }

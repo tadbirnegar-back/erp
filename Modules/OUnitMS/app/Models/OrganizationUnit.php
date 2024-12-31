@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
+use Modules\ACMS\app\Models\FiscalYear;
+use Modules\ACMS\app\Models\OunitFiscalYear;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\SettingsEnum;
@@ -232,14 +234,20 @@ class OrganizationUnit extends Model
         return Status::all()->where('model', '=', self::class);
     }
 
-//    public function GetAllUsers(): Collection
-//    {
-//        {
-//            return  User::all()->where('model', '=', self::class);
-//        }
-//
-//    }
+    public function village(): HasOne
+    {
+        return $this->hasOne(VillageOfc::class, 'id', 'unitable_id');
+    }
 
+    public function fiscalYears()
+    {
+        return $this->belongsToMany(FiscalYear::class, 'ounit_fiscalYear', 'ounit_id', 'fiscal_year_id');
+    }
+ 
+    public function ounitFiscalYears(): HasMany
+    {
+        return $this->hasMany(OunitFiscalYear::class, 'ounit_id');
+    }
 
     protected static function booted()
     {
