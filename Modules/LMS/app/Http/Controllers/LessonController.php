@@ -111,7 +111,7 @@ class LessonController extends Controller
 
     public function show($id)
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         $course = Course::joinRelationship('chapters', function ($join) {
             $join->as('chapter_alias');
         })
