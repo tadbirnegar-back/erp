@@ -87,6 +87,22 @@ trait CourseTrait
         return $courseQuery;
     }
 
+    public function storeCourseDatas($data , $user)
+    {
+        return Course::create([
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'privacy_id' => $data['privacyID'],
+            'is_required' => $data['isRequired'],
+            'access_date' => $data['accessDate'],
+            'expiration_date' => $data['expireDate'],
+            'cover_id' => $data['coverID'],
+            'preview_video_id' => $data['previewVideoID'],
+            'price' => $data['price'] ?? 0,
+            'creator_id' => $user->id,
+            'created_date' => now()
+        ]);
+    }
 
     public function courseShow($course, $user)
     {

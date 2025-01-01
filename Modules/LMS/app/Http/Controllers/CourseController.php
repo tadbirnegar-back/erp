@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
+use Modules\LMS\app\Http\Traits\CourseCourseTrait;
+use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Resources\CourseListResource;
@@ -21,7 +24,33 @@ use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
 {
-    use CourseTrait;
+    use CourseTrait , CourseCourseTrait , CourseTargetTrait;
+
+    public function store(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $user = Auth::user();
+            //Store Course base datas
+            $course = $this->storeCourseDatas($data , $user);
+            //store preRequisites
+            if(isset($data['preRequisiteCourseIDs']))
+            {
+                $this-> storePreRequisite($course -> id,$data['preRequisiteCourseIDs']);
+            }
+            //Store Target Points
+            if(isset($data['courseTargets']))
+            {
+                $this -> storeCourseTarget($course -> id,$data['courseTargets']);
+            }
+            DB::commit();
+            return response() -> json(['message' => "دوره با موفقیت ساخته شد"]);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json(['message' => $exception->getMessage()]);
+        }
+    }
 
     public function show($id)
     {
