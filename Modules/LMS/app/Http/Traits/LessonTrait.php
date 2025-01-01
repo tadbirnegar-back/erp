@@ -137,7 +137,12 @@ trait LessonTrait
                 'file' => fn($join) => $join->as('lesson_files_alias'),
                 'files' => fn($join) => $join->on('file_lesson.lesson_id', '=', 'lessons.id')
             ])
-            ->leftJoinRelationshipUsingAlias('chapter' , 'chapter_alias')
+
+            ->leftJoinRelationship('chapter.course.chapters' , [
+                'chapter' => fn($join) => $join->as('chapter_alias'),
+                'course' => fn($join) => $join->as('course_alias'),
+                'chapters' => fn($join) => $join->as('chapters_alias'),
+            ])
             ->select([
                 'lessons.id as activeLesson',
                 'lessons.description as lesson_description',
@@ -153,6 +158,8 @@ trait LessonTrait
                 'content_type_alias.id as content_type_id',
                 'chapter_alias.id as chapter_alias_id',
                 'chapter_alias.title as chapter_alias_title',
+                'chapters_alias.id as chapters_alias_id',
+                'chapters_alias.title as chapters_alias_title',
             ])
             ->where('lessons.id', $lessonID)
             ->get();

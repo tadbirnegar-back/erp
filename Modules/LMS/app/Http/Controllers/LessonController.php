@@ -120,12 +120,6 @@ class LessonController extends Controller
         }
         $lessonData = $this->getLessonDatasForUpdate($id, $user);
         $response = new LessonDataForupdateResource($lessonData);
-        $course = Course::joinRelationship('chapters', function ($join) {
-            $join->as('chapter_alias');
-        })
-            ->where('courses.id', $id)
-            ->select('chapter_alias.id as chapter_id', 'chapter_alias.title as chapter_title')
-            ->get();
 
         $teacher = Teacher::with(['person' => function ($query) {
             $query->select('display_name');
@@ -133,7 +127,7 @@ class LessonController extends Controller
 
         $contentTypes = ContentType::all();
 
-        return response()->json(["mainData" => $response , "course" => $course, "teacher" => $teacher, "contentTypes" => $contentTypes]);
+        return response()->json(["mainData" => $response ,"teacher" => $teacher, "contentTypes" => $contentTypes]);
     }
 
     public function update(Request $request, $id)
