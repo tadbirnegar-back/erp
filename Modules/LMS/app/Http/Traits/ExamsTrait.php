@@ -3,7 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Models\AnswerSheet;
-use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Student;
 
 trait ExamsTrait
@@ -35,19 +35,17 @@ trait ExamsTrait
 
     }
 
-    public function examDetails()
+    public function examDetails($id)
     {
-        $query = Course::joinRelationship('courseExams.exams.answerSheets.answer.questions')
-            ->joinRelationship('chapters.lessons');
+        $query = Exam::joinRelationship('course');
+        $query->leftJoinRelationship('questions');
         $query->addSelect([
-            'courses.title as courseTitle',
             'exams.title as examTitle',
-            'answer_sheets.start_date_time as startDate',
-            'answer_sheets.finish_date_time as finishDate',
-            'chapters.title as chapterTitle',
-            'lessons.title as lessonTitle',
+            'courses.title as coursesTitle',
+            'questions.title as question_title',
         ]);
-        $query->withCount(['questions as totalQuestions', 'chapters as totalChapters', 'lessons as totalLessons']);
-        return $query->first();
+        $query->withCount(['questions as totalQuestions']);
+
+        return $query->where('exams.id', $id)->get();
     }
 }

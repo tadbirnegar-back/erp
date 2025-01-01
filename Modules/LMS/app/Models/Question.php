@@ -75,11 +75,6 @@ class Question extends Model
         return $this->belongsTo(Repository::class, 'repository_id', 'id');
     }
 
-    public function Questionype()
-    {
-        return $this->belongsTo(QuestionType::class, 'question_type_id', 'id');
-
-    }
 
     public function chapter()
     {
@@ -94,6 +89,11 @@ class Question extends Model
     public function answers()
     {
         return $this->hasMany(Answers::class, 'question_id', 'id');
+    }
+
+    public function questionExams()
+    {
+        return $this->hasMany(QuestionExam::class, 'question_id', 'id');
     }
 
 

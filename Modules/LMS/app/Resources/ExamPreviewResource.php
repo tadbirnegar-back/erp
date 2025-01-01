@@ -12,9 +12,8 @@ class ExamPreviewResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'exam' => $this->examTitle ? [
-                'title' => $this->examTitle,
-            ] : null,
+            'id' => $this->id,
+            'title' => $this->title,
 
             'course' => $this->courseTitle ? [
                 'title' => $this->courseTitle,
@@ -27,16 +26,8 @@ class ExamPreviewResource extends JsonResource
 
             'counts' => [
                 'questions' => $this->totalQuestions ?? 0,
-                'chapters' => $this->chapters_count ?? 0,
             ],
 
-            'chapter' => $this->chapter_title ? [
-                'title' => $this->chapter_title,
-
-                'lesson' => $this->lesson_title ? [
-                    'title' => $this->lesson_title,
-                ] : null,
-            ] : null,
         ];
 
     }

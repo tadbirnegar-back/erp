@@ -45,13 +45,12 @@ class ExamsController extends Controller
         $completed = $this->isCourseCompleted($student);
         $attempted = $this->isAttemptedExam($student, $id);
         $passed = $this->isPassed($student);
-//        return response()->json([
-//            'enrolled' => $enrolled,
-//            'completed' => $completed,
-//            'passed' => $passed,
-//            'attempted' => $attempted
-//        ]);
-//
+        return response()->json([
+            'enrolled' => $enrolled,
+            'completed' => $completed,
+            'passed' => $passed,
+            'attempted' => $attempted
+        ]);
 
 
         try {
