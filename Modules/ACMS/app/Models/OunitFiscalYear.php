@@ -5,7 +5,10 @@ namespace Modules\ACMS\app\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\ACMS\Database\factories\OunitFiscalYearFactory;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 class OunitFiscalYear extends Model
 {
@@ -32,8 +35,14 @@ class OunitFiscalYear extends Model
         return $this->hasMany(Budget::class, 'ounitFiscalYear_id');
     }
 
-    public function budget(): HasMany
+    public function budget(): HasOne
     {
-        return $this->hasMany(Budget::class, 'ounitFiscalYear_id');
+        return $this->hasOne(Budget::class, 'ounitFiscalYear_id');
     }
+
+    public function village()
+    {
+        return $this->hasOneThrough(VillageOfc::class, OrganizationUnit::class, 'id', 'id', 'ounit_id', 'unitable_id');
+    }
+
 }

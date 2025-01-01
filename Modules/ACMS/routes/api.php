@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\ACMS\app\Http\Controllers\BudgetController;
 use Modules\ACMS\app\Http\Controllers\CircularController;
 use Modules\ACMS\app\Http\Controllers\SubjectController;
 
@@ -36,4 +37,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/acms/circulars/verified/ounits-count', [CircularController::class, 'unitsIncludingForAddingBudgetCount']);
 
     Route::post('/acms/circulars/dispatch', [CircularController::class, 'dispatchCircularToVillages']);
+
+    Route::get('/acms/bgt/budgets/current-year/list', [BudgetController::class, 'index']);
 });

@@ -52,5 +52,11 @@
         "slug": "/acms/circulars/dispatch",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "بودجه های سال جاری من",
+        "slug": "/acms/bgt/budgets/current-year/list",
+        "moduleName": "ACMS",
+        "permissionTypeName": "sidebar"
     }
 ]
