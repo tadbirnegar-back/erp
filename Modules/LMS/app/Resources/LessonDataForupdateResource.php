@@ -43,7 +43,7 @@ class LessonDataForupdateResource extends JsonResource
                     $parts = explode(' ', $sizeWithUnit, 2);
                     return [
                         'id' => $file->lesson_file_id,
-                        'file_title' => $file->lesson_file_title,
+                        'file_title' => $file->lesson_file_name,
                         'size' => intval(Number::fileSize($file->lesson_file_size, 2, 3)),
                         'Measurement_criteria' => $parts[1],
                     ];

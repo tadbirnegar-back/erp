@@ -135,7 +135,8 @@ trait LessonTrait
             ])
             ->leftJoinRelationship('files.file', [
                 'file' => fn($join) => $join->as('lesson_files_alias'),
-                'files' => fn($join) => $join->on('file_lesson.lesson_id', '=', 'lessons.id')
+                'files' => fn($join) => $join->as('lesson_file_pivot_alias')
+                    ->on('file_lesson.lesson_id', '=', 'lessons.id')
             ])
 
             ->leftJoinRelationship('chapter.course.chapters' , [
@@ -152,6 +153,7 @@ trait LessonTrait
                 'lesson_files_alias.id as lesson_file_id',
                 'lesson_files_alias.name as lesson_file_title',
                 'lesson_files_alias.size as lesson_file_size',
+                'lesson_file_pivot_alias.title as lesson_file_name',
                 'teacher_alias.id as teacher_alias_id',
                 'teacher_person_alias.display_name as teacher_name',
                 'content_type_alias.name as content_type_name',
