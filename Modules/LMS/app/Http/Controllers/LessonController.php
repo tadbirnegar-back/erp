@@ -135,7 +135,7 @@ class LessonController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $lesson = Lesson::find($id);
+            $lesson = Lesson::with('chapter.course')->find($id);
             $chapter = $data['isNewChapter'] ? $this->storeChapter($data) : $this->getChapter($data);
             $data['chapterID'] = $chapter->id;
             $this->updateLessonDatas($lesson, $data);
@@ -158,7 +158,7 @@ class LessonController extends Controller
                 $this->storeContent($data);
             }
             DB::commit();
-            return response()->json(['message' => 'تغییرات با موفقیت انجام شد']);
+            return response()->json(['message' => "دوره با موفقیت ویرایش شد"  , 'course_id' => $lesson -> chapter -> course->id]);
         } catch (\Exception $exception) {
             DB::rollBack();
             return response()->json(['message' => $exception->getMessage()], 400);

@@ -39,10 +39,13 @@ class LessonDataForupdateResource extends JsonResource
                     ];
                 })->values(),
                 'files' => $lesson->map(function ($file) {
+                    $sizeWithUnit = Number::fileSize($file->lesson_file_size, 2, 3);
+                    $parts = explode(' ', $sizeWithUnit, 2);
                     return [
                         'id' => $file->lesson_file_id,
-                        'file_title' => $file->lesson_file_title,
-                        'size' => Number::fileSize($file->lesson_file_size , 2 , 3),
+                        'file_title' => $file->lesson_file_name,
+                        'size' => intval(Number::fileSize($file->lesson_file_size, 2, 3)),
+                        'Measurement_criteria' => $parts[1],
                     ];
                 })->filter()->unique('id')->values(),
             ];
