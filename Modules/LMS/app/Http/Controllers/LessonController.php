@@ -112,7 +112,8 @@ class LessonController extends Controller
 
     public function show($id)
     {
-        $user = Auth::user();
+//        $user = Auth::user();
+        $user = User::find(2174);
         $lesson = Lesson::find($id);
         if(empty($lesson))
         {
