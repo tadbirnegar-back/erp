@@ -9,14 +9,12 @@ trait CourseCourseTrait
     public function storePreRequisite($course_id, $preRequisiteCourseIDs)
     {
         $preparedData = $this->prepareData($course_id, $preRequisiteCourseIDs);
-        return $preparedData;
         CourseCourse::insert($preparedData);
     }
 
     private function prepareData($course_id, $preRequisiteCourseIDs)
     {
         $preIds = json_decode($preRequisiteCourseIDs, true);
-        return $preIds;
         $data = [];
 
         foreach ($preIds as $preId) {
