@@ -120,7 +120,7 @@ class LessonController extends Controller
         }
         $lessonData = $this->getLessonDatasForUpdate($id, $user);
         $response = new LessonDataForupdateResource($lessonData);
-        $course = Course::joinRelationship('chapters', function ($join) {
+        $course = Course::leftJoinRelationship('chapters', function ($join) {
             $join->as('chapter_alias');
         })
             ->where('courses.id', $id)

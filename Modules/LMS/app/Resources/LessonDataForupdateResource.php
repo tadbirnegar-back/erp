@@ -18,6 +18,12 @@ class LessonDataForupdateResource extends JsonResource
                     'id' => $lesson->first()->chapter_alias_id,
                     'title' => $lesson->first()->chapter_alias_title,
                 ],
+                'extraChapters' => $lesson->map(function ($extraChapter) {
+                    return[
+                        'id' => $extraChapter->chapters_alias_id,
+                        'title' => $extraChapter->chapters_alias_title,
+                    ];
+                })->filter()->unique('id')->values(),
                 'contents' => $lesson->groupBy('content_id')->map(function ($content) {
                     return [
                         'id' => $content->first()->content_id,
