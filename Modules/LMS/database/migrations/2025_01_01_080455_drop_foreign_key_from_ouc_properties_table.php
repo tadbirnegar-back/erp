@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,7 +12,8 @@ return new class extends Migration
     {
         Schema::table('ouc_properties', function (Blueprint $table) {
             $table->dropForeign('ouc_properties_ounit_cat_id_foreign');
-        });    }
+        });
+    }
 
     /**
      * Reverse the migrations.

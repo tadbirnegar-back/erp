@@ -73,7 +73,8 @@ class Course extends Model
                     return null;
                 }
                 // Convert to Gregorian
-                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
+                $dateTimeString = convertJalaliPersianCharactersToGregorian($value);
+
 
                 return $dateTimeString;
             }
@@ -97,7 +98,7 @@ class Course extends Model
                     return null;
                 }
                 // Convert to Gregorian
-                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
+                $dateTimeString = convertJalaliPersianCharactersToGregorian($value);
 
                 return $dateTimeString;
             }
