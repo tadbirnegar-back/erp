@@ -171,6 +171,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\HelperServiceProvider::class,
         \Modules\ACMS\app\Providers\MacroServiceProvider::class,
+        Barryvdh\Debugbar\ServiceProvider::class,
 
 
     ])->toArray(),

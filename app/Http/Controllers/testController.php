@@ -3,15 +3,14 @@
 namespace App\Http\Controllers;
 
 
+use DB;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\OUnitMS\app\Models\DistrictOfc;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\VillageOfc;
 
 
 class testController extends Controller
@@ -20,8 +19,40 @@ class testController extends Controller
 
     public function run()
     {
+//        Debugbar::startMeasure('render', 'Time for rendering');
+//        dd(config('cache.default')
+//        );
 
+        $user = User::find(1200);
+        DB::enableQueryLog();
+        $a = $user
+            ->activeRecruitmentScripts()
+            ->whereHas('scriptType', function ($query) {
+                $query->where('title', 'مسئول مالی دهیاری');
+            })
+            ->with(['organizationUnit' => function ($query) {
+                $query
+                    ->with(['village', 'ancestors',
+                    ]);
+            }])->get();
+        $output = "<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Test Debugbar</title>
+    </head>";
+        dump($a);
+        $output .= "<body>
+        <h1>Testing Debugbar Rendering</h1>
+    </body>";
 
+        // Append Debugbar's output
+//        $output .= Debugbar::render();
+        $output .= "</html>";
+
+        echo $output;
+//        dd($a);
+//        Debugbar::stopMeasure('render');
+//        dd($a, DB::getQueryLog());
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //
@@ -105,7 +136,6 @@ class testController extends Controller
 //
 //        // Print the table
 //        echo $html;
-
 
 
     }

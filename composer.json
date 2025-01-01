@@ -27,6 +27,7 @@
         "tzsk/sms": "^8.0"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.14",
         "fakerphp/faker": "^1.9.1",
         "knuckleswtf/scribe": "^4.29",
         "laravel/pint": "^1.0",

@@ -2,7 +2,6 @@
 
 namespace Modules\OUnitMS\app\Models;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -229,9 +228,9 @@ class OrganizationUnit extends Model
             ->with('mr', 'person.avatar');
     }
 
-    public static function GetAllStatuses(): Collection
+    public static function GetAllStatuses()
     {
-        return Status::all()->where('model', '=', self::class);
+        return Status::where('model', '=', self::class);
     }
 
     public function village(): HasOne
@@ -243,7 +242,7 @@ class OrganizationUnit extends Model
     {
         return $this->belongsToMany(FiscalYear::class, 'ounit_fiscalYear', 'ounit_id', 'fiscal_year_id');
     }
- 
+
     public function ounitFiscalYears(): HasMany
     {
         return $this->hasMany(OunitFiscalYear::class, 'ounit_id');
