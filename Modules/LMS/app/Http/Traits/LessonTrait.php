@@ -126,7 +126,7 @@ trait LessonTrait
         return ["lessonDetails" => $query];
     }
 
-    public function getLessonDatasForUpdate($lessonID, $user)
+    public function getLessonDatasForUpdate($lessonID)
     {
         $query = Lesson::query()
             ->leftJoinRelationship('contents.teacher.workForceForJoin.person', [
@@ -138,8 +138,7 @@ trait LessonTrait
                 'person' => fn($join) => $join->as('teacher_person_alias'),
             ])
             ->leftJoinRelationship('contents.contentType', [
-                'contents' => fn($join) => $join->withGlobalScopes()
-                    ->on('contents.id', '=', 'contents_alias.id'),
+                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'contentType' => fn($join) => $join->as('content_type_alias'),
             ])
             ->leftJoinRelationship('files.file', [

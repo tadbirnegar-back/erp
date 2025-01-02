@@ -8,7 +8,10 @@ use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 use Modules\LMS\app\Http\Controllers\ContentController;
-
+use Modules\LMS\app\Http\Controllers\PriviciesController;
+use Modules\LMS\app\Http\Controllers\OucPropertyController;
+use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
+use Modules\LMS\app\Http\Controllers\CourseOunitFeatureController;
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -64,4 +67,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
     Route::post('/lms/lesson/data' , [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set' , [ContentController::class , 'setLog']);
+    Route::post('/lms/course/live-search', [CourseController::class, 'liveSearch']);
+    Route::get('/lms/privicies/index' , [PriviciesController::class , 'index']);
+    Route::post('/lms/ounit/live-search' , [CourseController::class, 'liveSearchOunit']);
+    Route::post('/lms/ouc-properties/list' , [OucPropertyController::class , 'listing']);
+    Route::post('/lms/ouc-property-values/list' , [OucPropertyValueController::class , 'listing']);
+    Route::post('/lms/feature/list' , [CourseOunitFeatureController::class , 'listing']);
 });
+

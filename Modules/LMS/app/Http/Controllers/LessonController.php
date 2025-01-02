@@ -112,13 +112,12 @@ class LessonController extends Controller
 
     public function show($id)
     {
-        $user = Auth::user();
         $lesson = Lesson::find($id);
         if(empty($lesson))
         {
-            return response()->json(['message' => 'Lesson not found'], 404);
+            return response()->json(['message' => 'Lesson not found'], 403);
         }
-        $lessonData = $this->getLessonDatasForUpdate($id, $user);
+        $lessonData = $this->getLessonDatasForUpdate($id);
         $response = new LessonDataForupdateResource($lessonData);
 
         $teacher = Teacher::with(['person' => function ($query) {

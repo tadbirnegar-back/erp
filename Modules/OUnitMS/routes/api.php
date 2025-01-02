@@ -74,4 +74,3 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/oms/districtofc/all/list', [OUnitMSController::class, 'districtsAllList']);
 
 });
-

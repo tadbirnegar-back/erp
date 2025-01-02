@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Models\User;
+use Modules\AddressMS\app\Models\City;
+use Modules\AddressMS\app\Models\District;
+use Modules\AddressMS\app\Models\State;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseCourseTrait;
@@ -18,8 +21,14 @@ use Modules\LMS\app\Resources\CourseListResource;
 use Modules\LMS\app\Resources\CourseViewLearningResource;
 use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
+use Modules\LMS\app\Resources\LiveOunitSearchForCourseResource;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
 use Modules\LMS\app\Resources\ViewCourseSideBarResource;
+use Modules\OUnitMS\app\Models\CityOfc;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
@@ -193,6 +202,40 @@ class CourseController extends Controller
         $sidebar = new SideBarCourseShowResource($data);
         return response()->json($sidebar);
 
+    }
+
+
+    public function liveSearch(Request $request)
+    {
+        $data = $request->all();
+        $searchTerm = $data['name'] ?? '';
+
+        $hasFullText = DB::select("SHOW INDEX FROM courses WHERE Column_name='title' AND Index_type='FULLTEXT'");
+
+        $query = Course::query();
+
+        $query->where('title', 'like', '%' . $searchTerm . '%');
+
+        $course = $query->select('id' , 'title')->take(7)->get();
+
+        return response()->json($course);
+    }
+
+
+    public function liveSearchOunit(Request $request)
+    {
+        $data = $request->all();
+        $searchTerm = $data['name'] ?? '';
+
+        $results = OrganizationUnit::query()
+            ->where('name', 'like', '%' . $searchTerm . '%')
+            ->whereIn('unitable_type', [StateOfc::class, CityOfc::class, DistrictOfc::class, VillageOfc::class])
+            ->take(7)
+            ->get();
+
+        $response = LiveOunitSearchForCourseResource::collection($results);
+
+        return response()->json($response);
     }
 
 }
