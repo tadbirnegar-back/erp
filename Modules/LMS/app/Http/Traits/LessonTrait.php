@@ -123,7 +123,8 @@ trait LessonTrait
     {
         $query = Lesson::query()
             ->leftJoinRelationship('contents.teacher.workForceForJoin.person', [
-                'contents' => fn($join) => $join->as('contents_alias'),
+                'contents' => fn($join) => $join->as('contents_alias')
+                    ->withGlobalScopes(),
                 'teacher' => fn($join) => $join->as('teacher_alias'),
                 'workForceForJoin' => fn($join) => $join->as('workForce_alias')
                     ->on('workForce_alias.workforceable_type', '=', DB::raw("'" . addslashes(Teacher::class) . "'")),
@@ -135,9 +136,15 @@ trait LessonTrait
             ])
             ->leftJoinRelationship('files.file', [
                 'file' => fn($join) => $join->as('lesson_files_alias'),
-                'files' => fn($join) => $join->on('file_lesson.lesson_id', '=', 'lessons.id')
+                'files' => fn($join) => $join->as('lesson_file_pivot_alias')
+                    ->on('file_lesson.lesson_id', '=', 'lessons.id')
             ])
-            ->leftJoinRelationshipUsingAlias('chapter' , 'chapter_alias')
+
+            ->leftJoinRelationship('chapter.course.chapters' , [
+                'chapter' => fn($join) => $join->as('chapter_alias'),
+                'course' => fn($join) => $join->as('course_alias'),
+                'chapters' => fn($join) => $join->as('chapters_alias'),
+            ])
             ->select([
                 'lessons.id as activeLesson',
                 'lessons.description as lesson_description',
@@ -147,12 +154,16 @@ trait LessonTrait
                 'lesson_files_alias.id as lesson_file_id',
                 'lesson_files_alias.name as lesson_file_title',
                 'lesson_files_alias.size as lesson_file_size',
+                'lesson_file_pivot_alias.title as lesson_file_name',
                 'teacher_alias.id as teacher_alias_id',
                 'teacher_person_alias.display_name as teacher_name',
                 'content_type_alias.name as content_type_name',
                 'content_type_alias.id as content_type_id',
                 'chapter_alias.id as chapter_alias_id',
                 'chapter_alias.title as chapter_alias_title',
+                'chapters_alias.id as chapters_alias_id',
+                'chapters_alias.title as chapters_alias_title',
+                'course_alias.id as course_alias_id',
             ])
             ->where('lessons.id', $lessonID)
             ->get();

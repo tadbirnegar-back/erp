@@ -88,5 +88,11 @@
         "slug": "/lms/lesson/update/{id}",
         "moduleName" : "LMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن دوره آموزشی",
+        "slug": "/lms/course/add",
+        "moduleName" : "LMS",
+        "permissionTypeName": "sidebar"
     }
 ]

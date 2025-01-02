@@ -52,6 +52,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/chapter/delete/{id}', [ChapterController::class, 'delete']);
     Route::get('/lms/lesson/show/{id}' , [LessonController::class, 'show']);
     Route::post('/lms/lesson/update/{id}' , [LessonController::class, 'update']);
+    Route::post('/lms/course/add' , [CourseController::class , 'store']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);

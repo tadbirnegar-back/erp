@@ -1,0 +1,27 @@
+[
+    {
+        "name": "درجه",
+        "column_name": "degree",
+        "ounit_cat_name": "دهیاری"
+    },
+    {
+        "name": "منطقه توریستی",
+        "column_name": "isTourism",
+        "ounit_cat_name": "دهیاری"
+    },
+    {
+        "name": "منطقه کشاورزی",
+        "column_name": "isFarm",
+        "ounit_cat_name": "دهیاری"
+    },
+    {
+        "name": "متصل به شهر",
+        "column_name": "isAttached_to_city",
+        "ounit_cat_name": "دهیاری"
+    },
+    {
+        "name": "مدرک",
+        "column_name": "hasLicense",
+        "ounit_cat_name": "دهیاری"
+    }
+]

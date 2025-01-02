@@ -13,11 +13,18 @@ class LessonDataForupdateResource extends JsonResource
             return [
                 'id' => $lesson->first()->activeLesson,
                 'title' => $lesson->first()->lesson_title,
+                'course_id' => $lesson->first()->course_alias_id,
                 'description' => $lesson->first()->lesson_description,
                 'chapter' => [
                     'id' => $lesson->first()->chapter_alias_id,
                     'title' => $lesson->first()->chapter_alias_title,
                 ],
+                'extraChapters' => $lesson->map(function ($extraChapter) {
+                    return[
+                        'id' => $extraChapter->chapters_alias_id,
+                        'title' => $extraChapter->chapters_alias_title,
+                    ];
+                })->filter()->unique('id')->values(),
                 'contents' => $lesson->groupBy('content_id')->map(function ($content) {
                     return [
                         'id' => $content->first()->content_id,
@@ -33,10 +40,13 @@ class LessonDataForupdateResource extends JsonResource
                     ];
                 })->values(),
                 'files' => $lesson->map(function ($file) {
+                    $sizeWithUnit = Number::fileSize($file->lesson_file_size, 2, 3);
+                    $parts = explode(' ', $sizeWithUnit, 2);
                     return [
                         'id' => $file->lesson_file_id,
-                        'file_title' => $file->lesson_file_title,
-                        'size' => Number::fileSize($file->lesson_file_size , 2 , 3),
+                        'file_title' => $file->lesson_file_name,
+                        'size' => intval(Number::fileSize($file->lesson_file_size, 2, 3)),
+                        'Measurement_criteria' => $parts[1],
                     ];
                 })->filter()->unique('id')->values(),
             ];
