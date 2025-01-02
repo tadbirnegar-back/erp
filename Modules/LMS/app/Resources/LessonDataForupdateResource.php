@@ -13,6 +13,7 @@ class LessonDataForupdateResource extends JsonResource
             return [
                 'id' => $lesson->first()->activeLesson,
                 'title' => $lesson->first()->lesson_title,
+                'course_id' => $lesson->first()->course_alias_id,
                 'description' => $lesson->first()->lesson_description,
                 'chapter' => [
                     'id' => $lesson->first()->chapter_alias_id,

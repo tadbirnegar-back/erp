@@ -13,7 +13,7 @@ class ContentScope implements Scope
 {
     use ContentTrait;
 
-    public function apply(Builder $builder, Model $model)
+    public function apply($builder,$model)
     {
         $status = $this->contentActiveStatus()->id;
         $builder->where('status_id', $status);

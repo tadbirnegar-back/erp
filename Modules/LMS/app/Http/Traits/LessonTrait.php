@@ -123,7 +123,8 @@ trait LessonTrait
     {
         $query = Lesson::query()
             ->leftJoinRelationship('contents.teacher.workForceForJoin.person', [
-                'contents' => fn($join) => $join->as('contents_alias'),
+                'contents' => fn($join) => $join->as('contents_alias')
+                    ->withGlobalScopes(),
                 'teacher' => fn($join) => $join->as('teacher_alias'),
                 'workForceForJoin' => fn($join) => $join->as('workForce_alias')
                     ->on('workForce_alias.workforceable_type', '=', DB::raw("'" . addslashes(Teacher::class) . "'")),
@@ -162,6 +163,7 @@ trait LessonTrait
                 'chapter_alias.title as chapter_alias_title',
                 'chapters_alias.id as chapters_alias_id',
                 'chapters_alias.title as chapters_alias_title',
+                'course_alias.id as course_alias_id',
             ])
             ->where('lessons.id', $lessonID)
             ->get();
