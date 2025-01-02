@@ -154,7 +154,7 @@ class LessonController extends Controller
                 $this->storeLessonFiles($data);
             }
             //Content
-            if (isset($data['contents'])) {
+            if (!is_null($data['contents'])) {
                 $this->storeContent($data);
             }
             DB::commit();
@@ -163,6 +163,5 @@ class LessonController extends Controller
             DB::rollBack();
             return response()->json(['message' => $exception->getMessage()], 400);
         }
-
     }
 }
