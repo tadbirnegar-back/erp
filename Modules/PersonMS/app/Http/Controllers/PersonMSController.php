@@ -559,8 +559,13 @@ class PersonMSController extends Controller
              */
             $natural = $person->personable;
 
-
-            $user->notify(new ChangeNumNotification($user->mobile, $data['mobile']));
+            if(isset($data['mobile']))
+            {
+                if($natural -> mobile != $data['mobile'])
+                {
+                    $user->notify(new ChangeNumNotification($user->mobile, $data['mobile']));
+                }
+            }
 
             $natural->mobile = $data['mobile'] ?? null;
             $natural->home_address_id = $data['homeAddressID'] ?? null;
