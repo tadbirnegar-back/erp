@@ -12,7 +12,6 @@ use Modules\EMS\app\Http\Traits\EnactmentReviewTrait;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\EnactmentReview;
-use function PHPUnit\Framework\isEmpty;
 
 class StoreEnactmentStatusKarshenasJob implements ShouldQueue
 {
@@ -54,7 +53,7 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
             }
 
             if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
-                if ($enactment->members->isNotEmpty() || !isEmpty($enactment->members)) {
+                if ($enactment->members->isNotEmpty()) {
                     $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
 
                     $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
@@ -73,8 +72,8 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
                 }
             }
             \DB::commit();
-                $this->delete();
-                return;
+            $this->delete();
+            return;
 
         } catch (\Exception $e) {
             \DB::rollBack();
