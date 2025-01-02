@@ -92,9 +92,10 @@ class ActiveHandler implements StatusHandlerInterface
     public function notifyNewUser()
     {
         $Notifibleuser = $this->script->user;
-
+        $ounit = $this->script->ounit;
+        $position = $this->script->position;
         $person = $Notifibleuser->person;
-        $Notifibleuser->notify(new ApproveRsNotification($person->display_name));
+        $Notifibleuser->notify(new ApproveRsNotification($person->display_name,$position->name,$ounit->name));
     }
 
     public function dispatchQueueForExpireScript()
