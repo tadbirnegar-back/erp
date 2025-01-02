@@ -23,8 +23,6 @@ class testController extends Controller
     public function run()
     {
 
-        $q = Lesson::joinRelationship('contents', fn($join) => $join->withGlobalScopes())->where('lessons.id', 24)->get();
-            return response() -> json($q);
 //        $r = Content::with('consumeLog')->find(7);
 //        return response() -> json($r);
 
