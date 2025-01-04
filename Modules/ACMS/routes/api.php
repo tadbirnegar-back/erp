@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\ACMS\app\Http\Controllers\ACMSController;
 use Modules\ACMS\app\Http\Controllers\BudgetController;
 use Modules\ACMS\app\Http\Controllers\CircularController;
 use Modules\ACMS\app\Http\Controllers\SubjectController;
@@ -39,4 +40,10 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/acms/circulars/dispatch', [CircularController::class, 'dispatchCircularToVillages']);
 
     Route::get('/acms/bgt/budgets/current-year/list', [BudgetController::class, 'index']);
+
+    Route::get('/acms/bgt/budgets/my-villages/list', [ACMSController::class, 'dispatchedCircularsForMyVillage']);
+
+    Route::get('/acms/bgt/budgets/archive/list', [BudgetController::class, 'villagesBudgetsByOunitID']);
+
+    Route::get('/bgt/budgets/{id}', [BudgetController::class, 'show']);
 });

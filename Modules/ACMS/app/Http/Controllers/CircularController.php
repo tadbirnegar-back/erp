@@ -178,7 +178,7 @@ class CircularController extends Controller
             return response()->json(['message' => $validate->errors()], 422);
         }
 
-        $circular = Circular::with('fiscalYear')->find($data['circularID']);
+        $circular = Circular::with('fiscalYear', 'circularItems')->find($data['circularID']);
         if (is_null($circular)) {
             return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);
         }
@@ -195,10 +195,10 @@ class CircularController extends Controller
 
                 $ounitFiscalYears = $this->bulkStoreOunitFiscalYear($chunkedUnits->toArray(), $fiscalYear, $user);
 
-                $budgetName = ' بودجه سال ' . $fiscalYear->name;
+                $budgetName = 'بودجه سال ' . $fiscalYear->name;
                 $budgets = $this->bulkStoreBudget($ounitFiscalYears->toArray(), $budgetName, $user);
 
-                $budgetItems = $this->bulkStoreBudgetItems($budgets->toArray(), $circular);
+                $budgetItems = $this->bulkStoreBudgetItems($budgets, $circular->circularItems->toArray());
             });
             $this->circularStatusAttach([
                 'userID' => $user->id,

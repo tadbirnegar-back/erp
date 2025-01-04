@@ -12,7 +12,7 @@ class VillageBudgetListResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'name' => $this->ounit_name,
+            'name' => $this->ounit_name ?? $this->budget_name,
             'status' => [
                 'name' => $this->status_name,
                 'class_name' => $this->status_class_name,

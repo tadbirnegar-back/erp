@@ -58,5 +58,23 @@
         "slug": "/acms/bgt/budgets/current-year/list",
         "moduleName": "ACMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست دهیاری های با مسئولیت مالی من",
+        "slug": "/acms/bgt/budgets/my-villages/list",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بایگانی بودجه ها",
+        "slug": "/acms/bgt/budgets/archive/list",
+        "moduleName": "ACMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده بودجه",
+        "slug": "/bgt/budgets/{id}",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]

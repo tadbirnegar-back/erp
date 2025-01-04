@@ -1,10 +1,14 @@
 [
     {
-        "name": "پیشنهاد شده",
-        "className": "warning"
+        "name": "در انتظار پیشنهاد بودجه",
+        "className": "primary"
     },
     {
-        "name": "نهایی شده",
+        "name": "تصویب شده",
+        "className": "success"
+    },
+    {
+        "name": "در انتظار تصویب بودجه",
         "className": "primary"
     },
     {

@@ -3,86 +3,47 @@
 namespace App\Http\Controllers;
 
 
-use Modules\AAA\app\Models\User;
-use Modules\ACMS\app\Models\Budget;
-use Modules\ACMS\app\Models\FiscalYear;
-use Modules\ACMS\app\Resources\VillageBudgetListResource;
+use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
+use Modules\ACMS\app\Models\BudgetItem;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Morilog\Jalali\Jalalian;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait, BudgetItemsTrait;
 
     public function run()
     {
-//        Debugbar::startMeasure('render', 'Time for rendering');
-//        dd(config('cache.default')
-//        );
 
-        $user = User::find(1200);
-        $a = $user
-            ->activeRecruitmentScripts()
-            ->where('organization_unit_id', 2309)
-            ->with(['organizationUnit' => function ($query) {
-//                $query
-//                    ->with([
-////                        'village',
-////                        'ancestors' => function ($query) {
-////                        $query->where('unitable_type', '!=', StateOfc::class);
-////                    },
-//                    ]);
-            }])->get();
 
-        $fiscalYears = FiscalYear::where('name', '>=', Jalalian::now()->getYear())->get()->pluck('id');
-
-        $ounits = $a->pluck('organizationUnit.id');
-        $budgets = Budget::joinRelationship('statuses', [
-            'statuses' => function ($join) {
-                $join->on('bgtBudget_status.id', '=', \DB::raw('(
-                                SELECT id
-                                FROM bgtBudget_status AS ps
-                                WHERE ps.budget_id = bgt_budgets.id
-                                ORDER BY ps.create_date DESC
-                                LIMIT 1
-                            )'));
-            }
-        ])
-            ->joinRelationship('ounitFiscalYear.village')
-            ->whereIntegerInRaw('ounit_fiscalYear.ounit_id', $ounits->toArray())
-            ->whereIntegerInRaw('fiscal_year_id', $fiscalYears->toArray())
-            ->select([
-
-                'organization_units.name as ounit_name',
-                'statuses.name as status_name',
-                'statuses.class_name as status_class_name',
-                'bgt_budgets.id as budget_id',
-                'bgt_budgets.name as budget_name',
-                'village_ofcs.abadi_code as village_abadicode',
+        $budget = BudgetItem::joinRelationship('circularItem.subject')
+            ->where('budget_id', 4774)
+            ->addSelect([
+                'bgt_budget_items.*',
+                'bgt_circular_subjects.*',
             ])
             ->get();
-        dump($budgets, $ounits, $fiscalYears);
+//        $budget->statuses = $budget->statuses->sortBy('pivot.create_date');
+        dump($budget);
+//        dump($budgets);
         $output = "<!DOCTYPE html>
     <html>
     <head>
         <title>Test Debugbar</title>
-    </head>";
-        $output .= "<body>
+    </head>
+    <body>
         <h1>Testing Debugbar Rendering</h1>
     </body>";
 
-        // Append Debugbar's output
-//        $output .= Debugbar::render();
         $output .= "</html>";
 
         echo $output;
-        return VillageBudgetListResource::collection($budgets);
+//        return VillageBudgetListResource::collection($budgets);
 //        dd($a);
 //        Debugbar::stopMeasure('render');
 //        dd($a, DB::getQueryLog());

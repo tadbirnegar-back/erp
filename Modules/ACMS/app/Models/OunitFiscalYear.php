@@ -4,6 +4,7 @@ namespace Modules\ACMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\ACMS\Database\factories\OunitFiscalYearFactory;
@@ -43,6 +44,16 @@ class OunitFiscalYear extends Model
     public function village()
     {
         return $this->hasOneThrough(VillageOfc::class, OrganizationUnit::class, 'id', 'id', 'ounit_id', 'unitable_id');
+    }
+
+    public function ounit(): BelongsTo
+    {
+        return $this->belongsTo(OrganizationUnit::class, 'ounit_id');
+    }
+
+    public function fiscalYear(): BelongsTo
+    {
+        return $this->belongsTo(FiscalYear::class, 'fiscal_year_id');
     }
 
 }
