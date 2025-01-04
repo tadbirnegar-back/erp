@@ -197,7 +197,7 @@ class RecruitmentScriptController extends Controller
 
             $person = Person::find($user->person_id);
 
-            $user->notify(new NewRsNotification($person->display_name));
+            $user->notify((new NewRsNotification($person->display_name))->onQueue('default'));
 
 
             DB::commit();
@@ -420,7 +420,7 @@ class RecruitmentScriptController extends Controller
 
             $person = Person::find($user->person_id);
 
-            $user->notify(new NewRsNotification($person->display_name));
+            $user->notify((new NewRsNotification($person->display_name))->onQueue('default'));
 
 
             DB::commit();
@@ -459,7 +459,7 @@ class RecruitmentScriptController extends Controller
 
             $person = Person::find($notifibleUser->person_id);
 
-            $notifibleUser->notify(new DeclineRsNotification($person->display_name));
+            $notifibleUser->notify((new DeclineRsNotification($person->display_name))->onQueue('default'));
 
             DB::commit();
 

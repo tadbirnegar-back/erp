@@ -41,7 +41,7 @@ class ExpireHandler implements StatusHandlerInterface
         $ExpDateFarsi = \Morilog\Jalali\CalendarUtils::convertNumbers($ExpDateEng); // ۱۳۹۵-۰۲-۱۹
 
 
-        $user->notify(new ScriptExpireNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name));
+        $user->notify((new ScriptExpireNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name))->onQueue('default'));
     }
 
     public function AddFinishDate($script): void
