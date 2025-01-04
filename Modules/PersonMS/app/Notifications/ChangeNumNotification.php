@@ -1,29 +1,31 @@
 <?php
 
-namespace Modules\OUnitMS\app\Notifications;
+namespace Modules\PersonMS\app\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class VerifyPanelNotification extends Notification
+class ChangeNumNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    private string $username;
+    private string $pre_num;
+    private string $current_num;
 
-    /**
-     * @param string $otpCode
-     */
-    public function __construct(string $username)
+
+    public function __construct(string $pre_num, string $current_num)
     {
-        $this->username = $username;
+        $this->pre_num = $pre_num;
+        $this->current_num = $current_num;
+
     }
 
 
@@ -55,8 +57,8 @@ class VerifyPanelNotification extends Notification
     public function toSms($notifiable)
     {
         try {
-            $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=6vr7t21kh64tkhv \n username={$this->username}")
+            $a = (new Builder)->via('farazsmspattern')
+            ->send("patterncode=zd9ez1vcrggytr8 \n pre_num={$this->pre_num} \n current_num={$this -> current_num}")
                 ->to($notifiable->mobile);
 
 

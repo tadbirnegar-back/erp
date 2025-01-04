@@ -1,32 +1,27 @@
 <?php
 
-namespace Modules\OUnitMS\app\Notifications;
+namespace Modules\PersonMS\App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Modules\AAA\app\Models\User;
 use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class ChangeNumNotification extends Notification
+class VerifyInfoSuccessNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    private string $pre_num;
-    private string $current_num;
-
-
-    public function __construct(string $pre_num, string $current_num)
+    public function __construct()
     {
-        $this->pre_num = $pre_num;
-        $this->current_num = $current_num;
-
+        //
     }
-
 
     /**
      * Get the notification's delivery channels.
@@ -47,17 +42,14 @@ class ChangeNumNotification extends Notification
             ->line('Thank you for using our application!');
     }
 
-    /**
-     * Get the repicients and body of the notification.
-     *
-     * @param mixed $notifiable
-     * @return \Exception|Builder
-     */
     public function toSms($notifiable)
     {
+        /**
+         * @var User $notifiable
+         */
         try {
-            $a = (new Builder)->via('farazsmspattern')
-            ->send("patterncode=zd9ez1vcrggytr8 \n pre_num={$this->pre_num} \n current_num={$this -> current_num}")
+            $a= (new Builder)->via('farazsmspattern') # via() is Optional
+            ->send("patterncode=ywduizx2xjyfcq3 \n fullname={$notifiable->person->display_name}")
                 ->to($notifiable->mobile);
 
 
