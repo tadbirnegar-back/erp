@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +15,11 @@ use Modules\AddressMS\app\Models\State;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseCourseTrait;
+use Modules\LMS\app\Http\Traits\CourseEmployeeFeatureTrait;
 use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\CourseCourse;
 use Modules\LMS\app\Resources\CourseListResource;
 use Modules\LMS\app\Resources\CourseViewLearningResource;
 use Modules\LMS\app\Resources\LessonDetailsResource;
@@ -33,32 +36,68 @@ use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
 {
-    use CourseTrait , CourseCourseTrait , CourseTargetTrait;
+    use CourseTrait, CourseCourseTrait, CourseTargetTrait, CourseEmployeeFeatureTrait;
 
     public function store(Request $request)
     {
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = User::find(2174);
             //Store Course base datas
-            $course = $this->storeCourseDatas($data , $user);
+            $course = $this->storeCourseDatas($data, $user);
             //store preRequisites
-            if(isset($data['preRequisiteCourseIDs']))
-            {
-                $this-> storePreRequisite($course -> id,$data['preRequisiteCourseIDs']);
+            if (isset($data['preRequisiteCourseIDs'])) {
+                $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
             }
             //Store Target Points
-            if(isset($data['courseTargets']))
-            {
-                $this -> storeCourseTarget($course -> id,$data['courseTargets']);
+            if (isset($data['courseTargets'])) {
+                $this->storeCourseTarget($course->id, $data['courseTargets']);
             }
             DB::commit();
-            return response() -> json(['message' => "دوره با موفقیت ساخته شد"]);
-        }catch (\Exception $exception){
+            return response()->json(['message' => "دوره با موفقیت ساخته شد"]);
+        } catch (\Exception $exception) {
             DB::rollBack();
             return response()->json(['message' => $exception->getMessage()]);
         }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $data = $request->all();
+        $course = Course::find($id);
+        $course = $this->updateCourseDatas($course, $data);
+        //store preRequisites
+        if (isset($data['preRequisiteCourseIDs'])) {
+            $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
+        }
+        //Store Target Points
+        if (isset($data['courseTargets'])) {
+            $this->storeCourseTarget($course->id, $data['courseTargets']);
+        }
+
+        //Delete pre requisites
+        if (isset($data['preReqDeletedIDs'])) {
+            $reqIDs = json_decode($data['preReqDeletedIDs']);
+            $this->deletePreRequisite($reqIDs);
+        }
+
+
+        if (isset($data['courseTargetsIDs'])) {
+            $ctIDs = json_decode($data['courseTargetsIDs']);
+            $this->deleteCourseTarget($ctIDs);
+        }
+    }
+
+    public function updateDataShow($id)
+    {
+        $course = Course::find($id);
+        if (empty($course)) {
+            return response()->json(['message' => "همچین دوره ای وجود ندارد"], 403);
+        }
+        $data = $this->showCourseForUpdate($id);
+        return \response()->json($data);
     }
 
     public function show($id)
@@ -183,7 +222,15 @@ class CourseController extends Controller
 
     public function learningShow($id)
     {
-        $course = Course::joinRelationship('chapters.lessons')->find($id);
+        $course = Course::leftJoinRelationship('chapters.lessons')->whereHas('latestStatus', function ($query) {
+            $query->whereIn('statuses.id', [
+                $this->coursePresentingStatus()->id,
+                $this->courseEndedStatus()->id,
+            ]);
+        })->find($id);
+        if (empty($course)) {
+            return response()->json(["message" => "دوره با این مشخصات وجود ندارد"], 403);
+        }
         $user = Auth::user();
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
@@ -216,7 +263,7 @@ class CourseController extends Controller
 
         $query->where('title', 'like', '%' . $searchTerm . '%');
 
-        $course = $query->select('id' , 'title')->take(7)->get();
+        $course = $query->select('id', 'title')->take(7)->get();
 
         return response()->json($course);
     }

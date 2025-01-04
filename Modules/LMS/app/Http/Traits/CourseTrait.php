@@ -23,7 +23,6 @@ trait CourseTrait
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
 
-
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
@@ -87,7 +86,7 @@ trait CourseTrait
         return $courseQuery;
     }
 
-    public function storeCourseDatas($data , $user)
+    public function storeCourseDatas($data, $user)
     {
         return Course::create([
             'title' => $data['title'],
@@ -102,6 +101,21 @@ trait CourseTrait
             'creator_id' => $user->id,
             'created_date' => now()
         ]);
+    }
+
+    public function updateCourseDatas($course, $data): Course
+    {
+
+        $course->title = $data['title'] ?? $course->title;
+        $course->description = $data['description'] ?? $course->description;
+        $course->privacy_id = $data['privacyID'] ?? $course->privacy_id;
+        $course->is_required = $data['isRequired'] ?? $course->is_required;
+        $course->access_date = $data['accessDate'] ?? $course->access_date;
+        $course->expiration_date = $data['expireDate'] ?? $course->expiration_date;
+        $course->preview_video_id = $data['previewVideoID'] ?? $course->preview_video_id;
+        $course->cover_id = $data['coverID'] ?? $course->cover_id;
+        $course->save();
+        return $course;
     }
 
     public function courseShow($course, $user)
@@ -245,7 +259,6 @@ trait CourseTrait
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
 
-
     private function calculateLessonCompletion($response)
     {
         $totalLessons = 0;
@@ -307,7 +320,6 @@ trait CourseTrait
 
         return $filterApproveFromExam;
     }
-
 
     private function getByJoinAndStatusAndApproveCombination()
     {
@@ -376,22 +388,6 @@ trait CourseTrait
         return $combo;
     }
 
-
-    public function coursePresentingStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
-    }
-
-    public function courseCanceledStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
-    }
-
-    public function courseEndedStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
-    }
-
     public function isEnrolledToDefinedCourse($courseId, $user)
     {
         $user->load(['isEnrolled' => function ($q) use ($courseId) {
@@ -402,7 +398,6 @@ trait CourseTrait
         }]);
         return $user;
     }
-
 
     public function isJoinedPreRerequisites($user, $course)
     {
@@ -427,7 +422,6 @@ trait CourseTrait
         }
 
     }
-
 
     public function dataShowViewCourseSideBar($course, $user)
     {
@@ -501,6 +495,41 @@ trait CourseTrait
             "lessonID" => $lastLessonId,
             "sidebar" => $data,
         ];
+    }
+
+    public function showCourseForUpdate($id)
+    {
+        $query = Course::query()
+            ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
+            ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
+            ->select([
+                'courses.id as course_alias_id',
+                'courses.title as course_alias_title',
+                'courses.description as course_alias_description',
+                'courses.is_required as course_alias_is_required',
+                'courses.expiration_date as course_alias_expiration_date',
+                'courses.access_date as course_alias_access_date',
+                'courses.privacy_id as course_alias_privacy_id',
+                'course_video_alias.slug as course_alias_slug',
+                'course_video_alias.name as course_alias_title',
+                'course_video_alias.id as course_alias_id',
+            ])->where('courses.id', $id)->first();
+        return $query;
+    }
+
+    public function coursePresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+    }
+
+    public function courseCanceledStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
+    }
+
+    public function courseEndedStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
     }
 }
 

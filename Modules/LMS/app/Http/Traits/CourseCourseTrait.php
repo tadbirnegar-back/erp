@@ -26,4 +26,10 @@ trait CourseCourseTrait
 
         return $data;
     }
+
+    public function deletePreRequisite($ids)
+    {
+        CourseCourse::destroy($ids);
+    }
+
 }

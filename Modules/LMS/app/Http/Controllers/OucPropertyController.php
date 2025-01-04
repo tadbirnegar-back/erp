@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\LMS\app\Models\OucProperty;
+use Modules\LMS\app\Resources\OucPropertyListResource;
 
 class OucPropertyController extends Controller
 {
@@ -14,6 +15,7 @@ class OucPropertyController extends Controller
         $data = $request -> all();
         $ids = json_decode($data['ids']);
         $properties = OucProperty::whereIn('ounit_cat_id' , $ids)->select('id' , 'name')->get();
-        return response() -> json($properties);
+
+        return OucPropertyListResource::collection($properties);
     }
 }
