@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Notifications\ApproveRsNotification;
+use Modules\PersonMS\App\Notifications\ChangeNumNotification;
 
 
 class testController extends Controller
@@ -17,6 +20,8 @@ class testController extends Controller
 
     public function run()
     {
+        $Notifibleuser = User::find(2174);
+        $Notifibleuser->notify((new ApproveRsNotification("یاسین آهنج","بخشدار","ارومیه"))->onQueue('default'));
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);

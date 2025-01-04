@@ -5,6 +5,7 @@ namespace Modules\PersonMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
@@ -29,13 +30,13 @@ use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\HRMS\app\Models\Relative;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\SkillWorkForce;
-use Modules\OUnitMS\app\Notifications\ChangeNumNotification;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Religion;
 use Modules\PersonMS\app\Models\ReligionType;
+use Modules\PersonMS\app\Notifications\ChangeNumNotification;
 
 class PersonMSController extends Controller
 {
@@ -543,7 +544,7 @@ class PersonMSController extends Controller
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
-            $data['userID'] = \Auth::user()->id;
+            $data['userID'] = Auth::user()->id;
 
 //            if ($request->isNewAddress) {
 //                $address = $this->addressStore($data);
@@ -552,15 +553,16 @@ class PersonMSController extends Controller
             $addressID = $request->homeAddressID ?? null;
 //            }
             $data['homeAddressID'] = $addressID;
-
             $user = $person->user;
             /**
              * @var Natural $natural
              */
             $natural = $person->personable;
-
-
-            $user->notify(new ChangeNumNotification($user->mobile, $data['mobile']));
+            if (isset($data['mobile'])) {
+                if ($natural->mobile !== $data['mobile']) {
+                    $user->notify((new ChangeNumNotification($user->mobile, $data['mobile']))->onQueue('default'));
+                }
+            }
 
             $natural->mobile = $data['mobile'] ?? null;
             $natural->home_address_id = $data['homeAddressID'] ?? null;
@@ -579,7 +581,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش اطلاعات تماس'], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 

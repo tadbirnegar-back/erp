@@ -36,7 +36,7 @@ class CancelHandler implements StatusHandlerInterface
 
         $ounit = $this->script->ounit;
 
-        $user->notify(new PayanKhedmatRsNotification($person->display_name, $ounit->name, $this->script->position->name));
+        $user->notify((new PayanKhedmatRsNotification($person->display_name, $ounit->name, $this->script->position->name))->onQueue('default'));
     }
 
     public function AddFinishDate($script): void
