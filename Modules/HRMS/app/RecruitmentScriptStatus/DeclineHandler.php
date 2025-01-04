@@ -35,6 +35,6 @@ class DeclineHandler implements StatusHandlerInterface
 
         $person = $notifibleUser->person;
 
-        $notifibleUser->notify(new DeclineRsNotification($person->display_name));
+        $notifibleUser->notify((new DeclineRsNotification($person->display_name))->onQueue('default'));
     }
 }

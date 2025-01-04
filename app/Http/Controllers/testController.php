@@ -10,6 +10,7 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Notifications\ApproveRsNotification;
 use Modules\PersonMS\App\Notifications\ChangeNumNotification;
 
 
@@ -19,9 +20,9 @@ class testController extends Controller
 
     public function run()
     {
+        $Notifibleuser = User::find(2174);
+        $Notifibleuser->notify((new ApproveRsNotification("یاسین آهنج","بخشدار","ارومیه"))->onQueue('default'));
 
-        $user = User::find(2174);
-        $user->notify(new ChangeNumNotification());
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);

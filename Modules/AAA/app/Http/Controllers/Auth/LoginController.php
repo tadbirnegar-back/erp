@@ -479,7 +479,7 @@ class LoginController extends Controller
             return response()->json(['message' => 'خطا در ارسال رمز یکبار مصرف'], 500);
 
         }
-        $user->notify(new OtpNotification($otpCode));
+        $user->notify((new OtpNotification($otpCode))->onQueue('default'));
         return response()->json(['message' => 'رمز یکبارمصرف ارسال شد']);
 
     }

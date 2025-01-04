@@ -95,7 +95,7 @@ class ActiveHandler implements StatusHandlerInterface
         $ounit = $this->script->ounit;
         $position = $this->script->position;
         $person = $Notifibleuser->person;
-        $Notifibleuser->notify(new ApproveRsNotification($person->display_name,$position->name,$ounit->name));
+        $Notifibleuser->notify((new ApproveRsNotification($person->display_name,$position->name,$ounit->name))->onQueue('default'));
     }
 
     public function dispatchQueueForExpireScript()
