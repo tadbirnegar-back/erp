@@ -3,13 +3,14 @@
 namespace Modules\HRMS\app\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class RegisterNotification extends Notification
+class RegisterNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
