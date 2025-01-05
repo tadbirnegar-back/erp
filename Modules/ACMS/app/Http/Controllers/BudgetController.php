@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Auth;
 use Illuminate\Http\Request;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
+use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
 use Modules\ACMS\app\Models\Budget;
+use Modules\ACMS\app\Models\BudgetItem;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\ACMS\app\Resources\BudgetSingleResource;
 use Modules\ACMS\app\Resources\VillageBudgetListResource;
@@ -119,5 +121,37 @@ class BudgetController extends Controller
         }
 
         return BudgetSingleResource::make($budget);
+    }
+
+    public function budgetSubjects(Request $request)
+    {
+        $data = $request->all();
+        $validation = Validator::make($data, [
+            'budgetID' => 'required',
+            'subjectTypeID' => 'required',
+        ]);
+
+        if ($validation->fails()) {
+            return response()->json(['error' => $validation->errors()], 422);
+        }
+        $select = [
+            'bgt_budget_items.id as item_id',
+            'bgt_budget_items.finalized_amount as approved_amount',
+            'bgt_budget_items.proposed_amount as proposed_amount',
+            'bgt_circular_subjects.id as id', 'bgt_circular_subjects.name as name',
+            'bgt_circular_subjects.id as id', 'bgt_circular_subjects.parent_id as parent_id',
+        ];
+
+        if ($request->subjectTypeID == SubjectTypeEnum::INCOME->value) {
+            $select[] = 'bgt_budget_items.percentage as percentage';
+        }
+
+        $budget = BudgetItem::joinRelationship('circularItem.subject')
+            ->where('budget_id', $request->budgetID)
+            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::from($request->subjectTypeID)->value)
+            ->select($select)
+            ->get();
+
+        return response()->json(['data' => $budget->toHierarchy()], 200);
     }
 }

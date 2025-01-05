@@ -198,7 +198,9 @@ class CircularController extends Controller
                 $budgetName = 'بودجه سال ' . $fiscalYear->name;
                 $budgets = $this->bulkStoreBudget($ounitFiscalYears->toArray(), $budgetName, $user);
 
-                $budgetItems = $this->bulkStoreBudgetItems($budgets, $circular->circularItems->toArray());
+                $budgets->each(function ($budget) use ($circular, $user) {
+                    $budgetItems = $this->bulkStoreBudgetItems($budget, $circular->circularItems->toArray());
+                });
             });
             $this->circularStatusAttach([
                 'userID' => $user->id,

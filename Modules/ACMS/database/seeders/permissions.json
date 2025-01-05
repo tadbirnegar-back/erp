@@ -76,5 +76,11 @@
         "slug": "/bgt/budgets/{id}",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "ریز هزینه های بودجه",
+        "slug": "/bgt/budgets/subjects",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]

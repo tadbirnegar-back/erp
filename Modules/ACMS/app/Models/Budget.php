@@ -26,6 +26,7 @@ class Budget extends Model
         'isSupplementary',
         'ounitFiscalYear_id',
         'parent_id',
+        'create_date',
     ];
 
     public $timestamps = false;

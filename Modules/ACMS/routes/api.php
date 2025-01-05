@@ -46,4 +46,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::get('/acms/bgt/budgets/archive/list', [BudgetController::class, 'villagesBudgetsByOunitID']);
 
     Route::get('/bgt/budgets/{id}', [BudgetController::class, 'show']);
+
+    Route::post('/bgt/budgets/subjects', [BudgetController::class, 'budgetSubjects']);
 });

@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
-use Modules\ACMS\app\Models\BudgetItem;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 
 class testController extends Controller
@@ -20,16 +20,32 @@ class testController extends Controller
     public function run()
     {
 
-
-        $budget = BudgetItem::joinRelationship('circularItem.subject')
-            ->where('budget_id', 4774)
-            ->addSelect([
-                'bgt_budget_items.*',
-                'bgt_circular_subjects.*',
-            ])
+        $a = OrganizationUnit::leftJoinRelationshipUsingAlias('parent', function ($join) {
+            $join->as('unit_alias')//                ->on('unit_alias.parent_id', '=', 'organization_units.id')
+            ;
+        })
+            ->withoutGlobalScopes()
+            ->whereNull('unit_alias.id')
+            ->with('ancestorsAndSelf')
+            ->addSelect(['unit_alias.id as unit_alias_id', 'unit_alias.name as unit_alias_name'])
             ->get();
+
+        dump($a);
+
+//        $budget = BudgetItem::joinRelationship('circularItem.subject')
+//            ->where('budget_id', 4774)
+//            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::EXPENSE->value)
+//            ->select([
+//                'bgt_budget_items.id as item_id',
+//                'bgt_budget_items.finalized_amount as approved_amount',
+//                'bgt_budget_items.percentage as percentage',
+//                'bgt_budget_items.proposed_amount as proposed_amount',
+//                'bgt_circular_subjects.id as id', 'bgt_circular_subjects.name as name',
+//                'bgt_circular_subjects.id as id', 'bgt_circular_subjects.parent_id as parent_id',
+//            ])
+//            ->get();
 //        $budget->statuses = $budget->statuses->sortBy('pivot.create_date');
-        dump($budget);
+//        dump($budget->toHierarchy());
 //        dump($budgets);
         $output = "<!DOCTYPE html>
     <html>

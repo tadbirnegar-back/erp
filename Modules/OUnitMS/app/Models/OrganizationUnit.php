@@ -248,6 +248,11 @@ class OrganizationUnit extends Model
         return $this->hasMany(OunitFiscalYear::class, 'ounit_id');
     }
 
+    public function customChildren()
+    {
+        return $this->hasMany(OrganizationUnit::class, 'parent_id');
+    }
+
     protected static function booted()
     {
         static::addGlobalScope(new ActiveScope());

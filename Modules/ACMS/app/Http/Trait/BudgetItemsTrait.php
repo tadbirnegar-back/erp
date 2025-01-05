@@ -2,20 +2,17 @@
 
 namespace Modules\ACMS\app\Http\Trait;
 
-use Illuminate\Support\Collection;
 use Modules\ACMS\app\Models\Budget;
 use Modules\ACMS\app\Models\BudgetItem;
 
 trait BudgetItemsTrait
 {
-    public function bulkStoreBudgetItems(Collection|array $data, array $circulars)
+    public function bulkStoreBudgetItems(Budget $budget, array $circulars)
     {
 
-        foreach ($data as $datum) {
-            $preparadoData = $this->budgetItemsDataPreparation($datum, $circulars);
+        $preparadoData = $this->budgetItemsDataPreparation($budget, $circulars);
 
-            $circularItems = BudgetItem::insert($preparadoData->toArray());
-        }
+        $circularItems = BudgetItem::insert($preparadoData->toArray());
 
         return $circularItems;
     }

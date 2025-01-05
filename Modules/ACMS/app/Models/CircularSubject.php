@@ -22,6 +22,7 @@ class CircularSubject extends Model
         'parent_id',
         'create_date',
         'code',
+        'subject_type_id',
     ];
 
     protected static function booted()
