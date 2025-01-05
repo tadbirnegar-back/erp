@@ -20,6 +20,7 @@ use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\CourseCourse;
+use Modules\LMS\app\Resources\AllCoursesListResource;
 use Modules\LMS\app\Resources\CourseListResource;
 use Modules\LMS\app\Resources\CourseViewLearningResource;
 use Modules\LMS\app\Resources\LessonDetailsResource;
@@ -252,20 +253,15 @@ class CourseController extends Controller
     }
 
 
-    public function liveSearch(Request $request)
+    public function courseListAll()
     {
-        $data = $request->all();
-        $searchTerm = $data['name'] ?? '';
-
-        $hasFullText = DB::select("SHOW INDEX FROM courses WHERE Column_name='title' AND Index_type='FULLTEXT'");
-
         $query = Course::query();
 
-        $query->where('title', 'like', '%' . $searchTerm . '%');
+        $course = $query->select('id', 'title')->get();
 
-        $course = $query->select('id', 'title')->take(7)->get();
+        $response = AllCoursesListResource::collection($course);
 
-        return response()->json($course);
+        return response()->json($response);
     }
 
 
@@ -278,6 +274,10 @@ class CourseController extends Controller
             ->where('name', 'like', '%' . $searchTerm . '%')
             ->whereIn('unitable_type', [StateOfc::class, CityOfc::class, DistrictOfc::class, VillageOfc::class])
             ->take(7)
+            ->with([
+                'ancestors',
+                'unitable'
+            ])
             ->get();
 
         $response = LiveOunitSearchForCourseResource::collection($results);

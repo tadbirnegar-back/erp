@@ -156,6 +156,11 @@ class Course extends Model
         return Status::all()->where('model', '=', self::class);
     }
 
+    public function preReqForJoin()
+    {
+        return $this->hasMany(CourseCourse::class , 'main_course_id', 'id');
+    }
+
     public function prerequisiteCourses()
     {
         return $this->belongsToMany(
@@ -223,5 +228,10 @@ class Course extends Model
         return $this->hasMany(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);
     }
 
+
+    public function courseTarget()
+    {
+        return $this->hasOne(CourseTarget::class, 'course_id', 'id');
+    }
 
 }

@@ -13,9 +13,12 @@ class LiveOunitSearchForCourseResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'type' => class_basename($this->unitable_type),
-            'childs' => $this->formatChilds(class_basename($this->unitable_type))
+            'childs' => $this->formatChilds(class_basename($this->unitable_type)),
+            'ancestors' => $this->formatAncestors(),
+            'abadi_code' => $this->unitable->abadi_code
         ];
     }
+
 
     private function components(): array
     {
@@ -60,4 +63,16 @@ class LiveOunitSearchForCourseResource extends JsonResource
             ];
         }, $components[$type] ?? []);
     }
+
+    private function formatAncestors(): array
+    {
+        return $this->ancestors->reverse()->map(function ($ancestor) {
+            return [
+                'id' => $ancestor->id,
+                'name' => $ancestor->name,
+                'type' => class_basename($ancestor->unitable_type),
+            ];
+        })->toArray();
+    }
+
 }

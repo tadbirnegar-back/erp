@@ -22,4 +22,9 @@ class CourseEmployeeFeature extends Model
     {
         return $this->belongsTo(CourseTarget::class, 'course_target_id');
     }
+
+    public function propertyble()
+    {
+        return $this->morphTo();
+    }
 }
