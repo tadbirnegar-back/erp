@@ -11,12 +11,12 @@ class CourseEmployeeFeature extends Model
 
     public $timestamps = false;
 
-    protected $table = 'course_employee_features'; // Assuming the table name
+    protected $table = 'course_employees_features'; // Assuming the table name
 
     protected $fillable = ['id', 'course_target_id', 'propertyble_type', 'propertyble_id'];
 
     /**
-     * Define the inverse relationship to CourseTarget.
+     * Define the inverse relationship to CourseTargetTrait.
      */
     public function courseTarget()
     {

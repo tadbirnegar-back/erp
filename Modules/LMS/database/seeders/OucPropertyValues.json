@@ -1,0 +1,67 @@
+[
+    {
+        "ouc_property_name": "درجه",
+        "value": "1",
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "درجه",
+        "value": "2",
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "درجه",
+        "value": "3",
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "درجه",
+        "value": "4",
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "درجه",
+        "value": "5",
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "درجه",
+        "value": "6",
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "منطقه توریستی",
+        "value": true,
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "منطقه کشاورزی",
+        "value": true,
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "منطقه کشاورزی",
+        "value": false,
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "متصل به شهر",
+        "value": true,
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "متصل به شهر",
+        "value": false,
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "مدرک",
+        "value": true,
+        "operator": "="
+    },
+    {
+        "ouc_property_name": "مدرک",
+        "value": false,
+        "operator": "="
+    }
+]

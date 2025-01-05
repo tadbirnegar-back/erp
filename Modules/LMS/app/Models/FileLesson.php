@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\FileMS\app\Models\File;
 use Modules\LMS\Database\factories\FileLessonFactory;
 
 class FileLesson extends Model
@@ -27,5 +28,10 @@ class FileLesson extends Model
         'title'
     ];
 
+
+    public function file()
+    {
+        return $this->belongsTo(File::class , 'file_id' , 'id');
+    }
 
 }

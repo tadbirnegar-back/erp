@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\FileMS\app\Models\File;
@@ -43,6 +44,21 @@ class Enroll extends Model
     public function order()
     {
         return $this->morphOne(Order::class, 'orderable');
+    }
+
+
+    public function lastCompletedDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                $jalali = convertDateTimeGregorianToJalaliDateTime($value);
+
+                return $jalali;
+            }
+        );
     }
 
 }
