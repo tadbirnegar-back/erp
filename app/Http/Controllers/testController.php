@@ -9,7 +9,11 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Models\Level;
+use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\app\Models\Content;
+use Modules\LMS\app\Models\CourseEmployeeFeature;
+use Modules\LMS\app\Models\CourseOunitFeature;
 use Modules\LMS\app\Models\Lesson;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -25,6 +29,8 @@ class testController extends Controller
     public function run()
     {
 
+        $okoko = CourseOunitFeature::with('value')->find(64);
+        return response() -> json($okoko);
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);

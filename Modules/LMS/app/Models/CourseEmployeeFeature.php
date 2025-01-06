@@ -4,6 +4,10 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Modules\HRMS\app\Models\Job;
+use Modules\HRMS\app\Models\Level;
+use Modules\HRMS\app\Models\Position;
 
 class CourseEmployeeFeature extends Model
 {
@@ -15,9 +19,7 @@ class CourseEmployeeFeature extends Model
 
     protected $fillable = ['id', 'course_target_id', 'propertyble_type', 'propertyble_id'];
 
-    /**
-     * Define the inverse relationship to CourseTargetTrait.
-     */
+
     public function courseTarget()
     {
         return $this->belongsTo(CourseTarget::class, 'course_target_id');

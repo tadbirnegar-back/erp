@@ -22,6 +22,7 @@ use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\CourseCourse;
 use Modules\LMS\app\Resources\AllCoursesListResource;
 use Modules\LMS\app\Resources\CourseListResource;
+use Modules\LMS\app\Resources\CourseShowForUpdateResource;
 use Modules\LMS\app\Resources\CourseViewLearningResource;
 use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
@@ -98,7 +99,7 @@ class CourseController extends Controller
             return response()->json(['message' => "همچین دوره ای وجود ندارد"], 403);
         }
         $data = $this->showCourseForUpdate($id);
-        return \response()->json($data);
+        return new CourseShowForUpdateResource($data);
     }
 
     public function show($id)
