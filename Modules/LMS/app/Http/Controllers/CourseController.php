@@ -50,7 +50,7 @@ class CourseController extends Controller
             $course = $this->storeCourseDatas($data, $user);
             //store preRequisites
             if (isset($data['preRequisiteCourseIDs']) && !is_null($data['preRequisiteCourseIDs'])) {
-                $pp = $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
+                $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
             }
             //Store Target Points
             if (isset($data['courseTargets'])) {
