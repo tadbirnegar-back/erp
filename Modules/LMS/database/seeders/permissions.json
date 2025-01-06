@@ -94,5 +94,11 @@
         "slug": "/lms/course/add",
         "moduleName" : "LMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی دوره آموزشی",
+        "slug": "/lms/course/update/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
     }
 ]

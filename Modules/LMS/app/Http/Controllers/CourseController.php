@@ -45,8 +45,7 @@ class CourseController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-//            $user = Auth::user();
-            $user = User::find(2174);
+            $user = Auth::user();
             //Store Course base datas
             $course = $this->storeCourseDatas($data, $user);
             //store preRequisites
