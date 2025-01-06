@@ -11,18 +11,20 @@ trait VerifyInfoRepository
 {
     public function userVerified(User $user)
     {
-        $notif = $user->notifications()->where('type', '=', VerifyInfoNotification::class)->first();
+        $notif = $user->notifications()->where('type', VerifyInfoNotification::class)
+            ->orderBy('created_at', 'asc')
+            ->first();
 
         if (is_null($notif)) {
-            $user->notify((new VerifyInfoNotification())->onQueue('default'));
+            // If no notification exists, send new ones
+            $user->notify((new VerifyInfoNotification()));
             $username = Person::find($user->person_id)->display_name;
-            $user->notify((new VerifyPanelNotification($username))->onQueue('default'));
-            $hasConfirmed = false;
-        } elseif (!$notif->read()) {
-            $hasConfirmed = false;
-
+            $user->notify((new VerifyPanelNotification($username)));
+            $hasConfirmed = false; // User is not confirmed yet
+        } elseif (!$notif->read_at) { // Check if the notification has been read
+            $hasConfirmed = false; // Notification exists but not read
         } else {
-            $hasConfirmed = true;
+            $hasConfirmed = true; // Notification exists and is read
         }
 
         return $hasConfirmed;
