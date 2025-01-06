@@ -2,33 +2,44 @@
 
 namespace Modules\LMS\app\Resources;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\ResourceCollection;
+use Modules\SettingsMS\app\Models\Setting;
 
-class ExamPreviewResource extends JsonResource
+class ExamPreviewResource extends ResourceCollection
 {
     /**
-     * Transform the resource into an array.
+     * Transform the resource collection into an array.
      */
     public function toArray($request): array
     {
-        return [
-            'id' => $this->id,
-            'title' => $this->title,
+        // Retrieve settings
+        $questionTimeSetting = Setting::where('key', 'time_per_questions')->first();
+        $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
 
-            'course' => $this->courseTitle ? [
-                'title' => $this->courseTitle,
-            ] : null,
+        $questionTime = $questionTimeSetting ? $questionTimeSetting->value : 0;
+        $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
 
-            'answer_sheet' => [
-                'start_date_time' => $this->start_date_time ? convertGregorianToJalali($this->start_date_time) : null,
-                'finish_date_time' => $this->finish_date_time ? convertGregorianToJalali($this->finish_date_time) : null,
-            ],
+        // Group by exam ID
+        $grouped = $this->collection->groupBy('id');
 
-            'counts' => [
-                'questions' => $this->totalQuestions ?? 0,
-            ],
+        return $grouped->map(function ($items, $id) use ($questionTime, $examNumber) {
+            $firstItem = $items->first();
+            $totalQuestions = $items->count(); // Total questions
+            $examTime = $questionTime * $examNumber;
 
-        ];
+            return [
+                'exam_id' => $id,
+                'title' => $firstItem->examTitle ?? null,
 
+                'counts' => [
+                    'questions' => $totalQuestions,
+                ],
+                'courses' => [
+                    'title' => $firstItem->courseTitle ?? null,
+                ],
+
+                'exam_time' => $examTime,
+            ];
+        })->values()->toArray();
     }
 }

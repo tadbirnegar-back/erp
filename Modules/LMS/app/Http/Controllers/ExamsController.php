@@ -7,9 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
+use Modules\LMS\app\Http\Enums\QuestionTypeEnum;
+use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Exam;
+use Modules\LMS\app\Models\QuestionType;
+use Modules\LMS\app\Models\Repository;
+use Modules\LMS\app\Resources\ExamPreviewResource;
 use Modules\LMS\app\Resources\ExamsResultResource;
 
 class ExamsController extends Controller
@@ -40,37 +46,58 @@ class ExamsController extends Controller
         DB::beginTransaction();
         $student = User::with('student')->find(68);
         $examID = Exam::with('courses')->find($id);
+
+//        $student = Auth::user()->load('student');
+//        $examID = Exam::with('courses')->find($id);
         $courseID = $examID->courses->first()->id;
         $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
         $completed = $this->isCourseCompleted($student);
         $attempted = $this->isAttemptedExam($student, $id);
         $passed = $this->isPassed($student);
-        return response()->json([
-            'enrolled' => $enrolled,
-            'completed' => $completed,
-            'passed' => $passed,
-            'attempted' => $attempted
-        ]);
-
 
         try {
-            if ($enrolled && !$completed && !$passed && $attempted) {
-                $exam = $this->examDetails();
-                $response = ExamsResultResource::make($exam);
+            if ($enrolled && $passed && !$attempted && !$completed) {
+                $exam = $this->examDetails($id);
+                $response = new ExamPreviewResource($exam);
                 DB::commit();
                 return response()->json($response);
             } else {
-//                dd($enrolled, $completed, $passed);
 
                 DB::rollBack();
                 return response()->json(['message' => 'شما اجازه دسترسی به این آزمون را ندارید'], 403);
             }
         } catch (\Exception $e) {
             DB::rollBack();
+//            dd($e);
             return response()->json([$e, 'message' => 'خطایی رخ داده است'], 500);
         }
 
 
     }
+
+
+    public function generateExam($id)
+    {
+        try {
+            DB::beginTransaction();
+            $course = Course::findOrFail($id);
+
+            $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
+            $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
+
+            $exam = $this->createExam($course, $questionType, $repository);
+
+//            $response = PreViewCourseResource::make($exam);
+
+            return response()->json($exam);
+
+        } catch (\Exception $exception) {
+            return response()->json([
+                'message' => 'خطایی در ایجاد آزمون رخ داد.',
+                'error' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
 
 }

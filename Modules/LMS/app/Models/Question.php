@@ -96,5 +96,10 @@ class Question extends Model
         return $this->hasMany(QuestionExam::class, 'question_id', 'id');
     }
 
+    public function options()
+    {
+        return $this->hasMany(Option::class, 'question_id', 'id');
+    }
+
 
 }

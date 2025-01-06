@@ -69,16 +69,6 @@ class Exam extends Model
         );
     }
 
-    public function course()
-    {
-        return $this->hasOneThrough(Course::class,
-            CourseExam::class,
-            'exam_id',
-            'id',
-            'id',
-            'course_id'
-        );
-    }
 
     public function answerSheets()
     {

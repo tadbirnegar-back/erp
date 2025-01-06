@@ -471,7 +471,7 @@ trait CourseTrait
     public function isCourseCompleted($student)
     {
         $iscomplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
-            $query->where('is_completed', 0);
+            $query->where('is_completed', 1);
         })
             ->where('student_id', $student->id)
             ->exists();

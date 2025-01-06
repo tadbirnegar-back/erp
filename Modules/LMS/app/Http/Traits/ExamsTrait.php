@@ -2,9 +2,12 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Exam;
+use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\Student;
+use Modules\SettingsMS\app\Models\Setting;
 
 trait ExamsTrait
 {
@@ -41,11 +44,49 @@ trait ExamsTrait
         $query->leftJoinRelationship('questions');
         $query->addSelect([
             'exams.title as examTitle',
-            'courses.title as coursesTitle',
-            'questions.title as question_title',
+            'courses.title as courseTitle',
+            'questions.title as questionTitle',
         ]);
         $query->withCount(['questions as totalQuestions']);
 
         return $query->where('exams.id', $id)->get();
+
     }
+
+    public function createExam($course, $questionType, $repository)
+    {
+
+
+        $exam = Exam::create([
+            'title' => $course->title,
+            'questions_type_id' => $questionType->id,
+            'repository_id' => $repository->id,
+        ]);
+
+        DB::table('course_exams')->insert([
+            'exam_id' => $exam->id,
+            'course_id' => $course->id,
+        ]);
+
+        $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
+        $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
+
+        $randomQuestions = Question::inRandomOrder()
+            ->limit($questionCount)
+            ->get();
+
+        foreach ($randomQuestions as $question) {
+            DB::table('question_exam')->insert([
+                'exam_id' => $exam->id,
+                'question_id' => $question->id,
+            ]);
+        }
+        return $exam;
+
+
+    }
+
+//                return $exam->where('id', $id)->get();
+
+
 }
