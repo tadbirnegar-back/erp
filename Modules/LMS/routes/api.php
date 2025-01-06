@@ -75,3 +75,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course-add-providers/list' , [CourseOunitFeatureController::class , 'listing']);
     Route::get('/lms/course/update-show/{id}' , [CourseController::class , 'updateDataShow']);
 });
+Route::post('/lms/course/add' , [CourseController::class , 'store']);

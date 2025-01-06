@@ -66,17 +66,6 @@ class Course extends Model
                 $jalali = convertDateTimeGregorianToJalaliDateTime($value);
 
                 return $jalali;
-            },
-
-            set: function ($value) {
-                if (is_null($value)) {
-                    return null;
-                }
-                // Convert to Gregorian
-                $dateTimeString = convertPersianToGregorianBothHaveTimeAndDont($value);
-
-
-                return $dateTimeString;
             }
         );
     }
@@ -91,16 +80,6 @@ class Course extends Model
                 $jalali = convertDateTimeGregorianToJalaliDateTime($value);
 
                 return $jalali;
-            },
-
-            set: function ($value) {
-                if (is_null($value)) {
-                    return null;
-                }
-                // Convert to Gregorian
-                $dateTimeString = convertPersianToGregorianBothHaveTimeAndDont($value);
-
-                return $dateTimeString;
             }
         );
     }
