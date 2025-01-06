@@ -22,15 +22,15 @@ trait CourseTargetTrait
                     'parent_ounit_id' => $ounitCatId,
                 ]);
                 //Store Course Feature
-                if (isset($target->oucPropertyValueID)) {
+                if (isset($target->oucPropertyValueID) && !is_null($target->oucPropertyValueID)) {
                     CourseOunitFeature::create([
                         'course_target_id' => $courseTargetRecord->id,
                         'ouc_property_value' => $target->oucPropertyValueID
                     ]);
                 }
                 //Store Employee Feature
-                if (isset($target->features)) {
-                    if (isset($target->features->jobs)) {
+                if (isset($target->features) && !is_null($target->features)) {
+                    if (isset($target->features->jobs) && !is_null($target->features->jobs)) {
                         foreach ($target->features->jobs as $job) {
                             CourseEmployeeFeature::create([
                                 'course_target_id' => $courseTargetRecord->id,
@@ -39,7 +39,7 @@ trait CourseTargetTrait
                             ]);
                         }
                     }
-                    if (isset($target->features->levels)) {
+                    if (isset($target->features->levels) && !is_null($target->features->levels)) {
                         foreach ($target->features->levels as $level) {
                             CourseEmployeeFeature::create([
                                 'course_target_id' => $courseTargetRecord->id,
@@ -48,13 +48,15 @@ trait CourseTargetTrait
                             ]);
                         }
                     }
-                    if (isset($target->features->positions)) {
-                        foreach ($target->features->positions as $position) {
-                            CourseEmployeeFeature::create([
-                                'course_target_id' => $courseTargetRecord->id,
-                                'propertyble_type' => Position::class,
-                                'propertyble_id' => $position,
-                            ]);
+                    if (isset($target->features->positions)){
+                        if(!empty($target->features->positions)){
+                            foreach ($target->features->positions as $position) {
+                                CourseEmployeeFeature::create([
+                                    'course_target_id' => $courseTargetRecord->id,
+                                    'propertyble_type' => Position::class,
+                                    'propertyble_id' => $position,
+                                ]);
+                            }
                         }
                     }
                 }
