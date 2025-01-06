@@ -114,7 +114,7 @@ trait CourseTrait
         StatusCourse::create([
             'course_id' => $id,
             'status_id' => $pishnevis,
-            'created_date' => now()
+            'create_date' => now()
         ]);
     }
 
