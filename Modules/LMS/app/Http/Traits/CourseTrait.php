@@ -12,6 +12,7 @@ use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Lesson;
+use Modules\LMS\app\Models\StatusCourse;
 use Modules\LMS\app\Models\Teacher;
 
 trait CourseTrait
@@ -96,12 +97,23 @@ trait CourseTrait
             'description' => $data['description'],
             'privacy_id' => $data['privacyID'],
             'is_required' => $data['isRequired'],
-            'access_date' => convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) ?? null,
-            'expiration_date' => convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) ?? null,
+            'access_date' => isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
+            'expiration_date' => isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null,
             'cover_id' => $data['coverID'],
             'preview_video_id' => $data['previewVideoID'],
             'price' => $data['price'] ?? 0,
             'creator_id' => $user->id,
+            'created_date' => now()
+        ]);
+    }
+
+
+    public function storePishnevisStatus($id)
+    {
+        $pishnevis = $this->coursePishnevisStatus()->id;
+        StatusCourse::create([
+            'course_id' => $id,
+            'status_id' => $pishnevis,
             'created_date' => now()
         ]);
     }
@@ -583,6 +595,11 @@ trait CourseTrait
     public function courseEndedStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
+    }
+
+    public function coursePishnevisStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
     }
 }
 
