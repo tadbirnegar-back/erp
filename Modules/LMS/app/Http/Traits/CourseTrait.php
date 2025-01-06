@@ -5,6 +5,9 @@ namespace Modules\LMS\app\Http\Traits;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
+use Modules\HRMS\app\Models\Job;
+use Modules\HRMS\app\Models\Level;
+use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Course;
@@ -22,7 +25,6 @@ trait CourseTrait
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
-
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
@@ -87,7 +89,7 @@ trait CourseTrait
         return $courseQuery;
     }
 
-    public function storeCourseDatas($data , $user)
+    public function storeCourseDatas($data, $user)
     {
         return Course::create([
             'title' => $data['title'],
@@ -102,6 +104,21 @@ trait CourseTrait
             'creator_id' => $user->id,
             'created_date' => now()
         ]);
+    }
+
+    public function updateCourseDatas($course, $data): Course
+    {
+
+        $course->title = $data['title'] ?? $course->title;
+        $course->description = $data['description'] ?? $course->description;
+        $course->privacy_id = $data['privacyID'] ?? $course->privacy_id;
+        $course->is_required = $data['isRequired'] ?? $course->is_required;
+        $course->access_date = $data['accessDate'] ?? $course->access_date;
+        $course->expiration_date = $data['expireDate'] ?? $course->expiration_date;
+        $course->preview_video_id = $data['previewVideoID'] ?? $course->preview_video_id;
+        $course->cover_id = $data['coverID'] ?? $course->cover_id;
+        $course->save();
+        return $course;
     }
 
     public function courseShow($course, $user)
@@ -245,7 +262,6 @@ trait CourseTrait
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
 
-
     private function calculateLessonCompletion($response)
     {
         $totalLessons = 0;
@@ -307,7 +323,6 @@ trait CourseTrait
 
         return $filterApproveFromExam;
     }
-
 
     private function getByJoinAndStatusAndApproveCombination()
     {
@@ -376,22 +391,6 @@ trait CourseTrait
         return $combo;
     }
 
-
-    public function coursePresentingStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
-    }
-
-    public function courseCanceledStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
-    }
-
-    public function courseEndedStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
-    }
-
     public function isEnrolledToDefinedCourse($courseId, $user)
     {
         $user->load(['isEnrolled' => function ($q) use ($courseId) {
@@ -402,7 +401,6 @@ trait CourseTrait
         }]);
         return $user;
     }
-
 
     public function isJoinedPreRerequisites($user, $course)
     {
@@ -427,7 +425,6 @@ trait CourseTrait
         }
 
     }
-
 
     public function dataShowViewCourseSideBar($course, $user)
     {
@@ -501,6 +498,91 @@ trait CourseTrait
             "lessonID" => $lastLessonId,
             "sidebar" => $data,
         ];
+    }
+
+    public function showCourseForUpdate($id)
+    {
+        $query = Course::query()
+            ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
+            ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
+            ->leftJoinRelationship('preReqForJoin.preReqCourse' , [
+                'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
+                    ->on('pre_req_pivot_alias.main_course_id', 'courses.id'),
+                'preReqCourse' => fn($join) => $join->as('pre_reg_alias')
+                    ->on('pre_reg_alias.id', 'pre_req_pivot_alias.prerequisite_course_id'),
+            ])
+            ->leftJoin('course_targets as course_target_alias' , 'course_target_alias.course_id' , 'courses.id')
+            ->leftJoin('course_employees_features as course_employee_alias' , 'course_employee_alias.course_target_id' , 'course_target_alias.id')
+            ->leftJoin('organization_units as ounit_alias' , 'course_target_alias.parent_ounit_id' , 'ounit_alias.id')
+            // Join Levels
+            ->leftJoin('levels as level_alias', function ($join) {
+                $join->on('course_employee_alias.propertyble_id', '=', 'level_alias.id')
+                    ->where('course_employee_alias.propertyble_type', '=', DB::raw("'" . addslashes(Level::class) . "'"));
+            })
+
+            // Join Jobs
+            ->leftJoin('jobs as job_alias', function ($join) {
+                $join->on('course_employee_alias.propertyble_id', '=', 'job_alias.id')
+                    ->where('course_employee_alias.propertyble_type', '=', DB::raw("'" . addslashes(Job::class) . "'"));
+            })
+
+            // Join Positions
+            ->leftJoin('positions as position_alias', function ($join) {
+                $join->on('course_employee_alias.propertyble_id', '=', 'position_alias.id')
+                    ->where('course_employee_alias.propertyble_type', '=', DB::raw("'" . addslashes(Position::class) . "'"));
+            })
+
+            ->leftJoinRelationship('courseTarget.ounitFeatures.value.oucProperty' , [
+                'ounitFeatures' => fn($join) => $join->as('ounit_feature_alias'),
+                'value' => fn($join) => $join->as('value_alias'),
+                'oucProperty' => fn($join) => $join->as('oucProperty'),
+            ])
+            ->select([
+                'courses.id as course_alias_id',
+                'courses.title as course_alias_title',
+                'courses.description as course_alias_description',
+                'courses.is_required as course_alias_is_required',
+                'courses.expiration_date as course_alias_expiration_date',
+                'courses.access_date as course_alias_access_date',
+                'courses.privacy_id as course_alias_privacy_id',
+                'course_video_alias.slug as course_video_slug',
+                'course_video_alias.name as course_video_title',
+                'course_cover_alias.id as course_video_id',
+                'course_cover_alias.slug as course_cover_slug',
+                'course_cover_alias.name as course_cover_title',
+                'course_video_alias.id as course_cover_id',
+                'pre_reg_alias.id as pre_reg_alias_id',
+                'pre_reg_alias.title as pre_reg_alias_title',
+                'course_target_alias.id as course_target_id',
+                'ounit_alias.name as ounit_alias_name',
+                'course_employee_alias.propertyble_type as course_employee_alias_propertyble_type',
+                'ounit_feature_alias.id as ounit_feature_alias_id',
+                'level_alias.name as level_alias_name',
+                'job_alias.title as job_alias_title',
+                'position_alias.name as position_alias_name',
+                'value_alias.value as value_alias_value',
+                'value_alias.operator as value_alias_operator',
+                'oucProperty.name as oucProperty_name',
+                'oucProperty.id as oucProperty_id',
+                'oucProperty.ounit_cat_id as ounit_category_id'
+
+            ])->where('courses.id', $id)->get();
+        return $query;
+    }
+
+    public function coursePresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+    }
+
+    public function courseCanceledStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
+    }
+
+    public function courseEndedStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
     }
 }
 

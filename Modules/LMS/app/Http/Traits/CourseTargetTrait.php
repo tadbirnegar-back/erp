@@ -61,4 +61,9 @@ trait CourseTargetTrait
             }
         }
     }
+
+    public function deleteCourseTarget($ids)
+    {
+        CourseTarget::destroy($ids);
+    }
 }

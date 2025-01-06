@@ -73,7 +73,7 @@ class Course extends Model
                     return null;
                 }
                 // Convert to Gregorian
-                $dateTimeString = convertJalaliPersianCharactersToGregorian($value);
+                $dateTimeString = convertPersianToGregorianBothHaveTimeAndDont($value);
 
 
                 return $dateTimeString;
@@ -98,7 +98,7 @@ class Course extends Model
                     return null;
                 }
                 // Convert to Gregorian
-                $dateTimeString = convertJalaliPersianCharactersToGregorian($value);
+                $dateTimeString = convertPersianToGregorianBothHaveTimeAndDont($value);
 
                 return $dateTimeString;
             }
@@ -154,6 +154,11 @@ class Course extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function preReqForJoin()
+    {
+        return $this->hasMany(CourseCourse::class , 'main_course_id', 'id');
     }
 
     public function prerequisiteCourses()
@@ -223,5 +228,10 @@ class Course extends Model
         return $this->hasMany(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);
     }
 
+
+    public function courseTarget()
+    {
+        return $this->hasOne(CourseTarget::class, 'course_id', 'id');
+    }
 
 }
