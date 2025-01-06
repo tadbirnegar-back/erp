@@ -92,10 +92,22 @@ class ActiveHandler implements StatusHandlerInterface
     public function notifyNewUser()
     {
         $Notifibleuser = $this->script->user;
-        $ounit = $this->script->ounit;
+        $ounit = $this->script->ounit->ancestorsAndSelf;
+        $typePriority = [
+            "Modules\\OUnitMS\\app\\Models\\CityOfc" => 1,
+            "Modules\\OUnitMS\\app\\Models\\DistrictOfc" => 2,
+            "Modules\\OUnitMS\\app\\Models\\TownOfc" => 3,
+            "Modules\\OUnitMS\\app\\Models\\VillageOfc" => 4,
+        ];
+        $filteredAndSorted = $ounit->filter(function ($item) {
+            return $item->unitable_type !== "Modules\\OUnitMS\\app\\Models\\StateOfc";
+        })->sortBy(function ($item) use ($typePriority) {
+            return $typePriority[$item->unitable_type] ?? 999;
+        });
+        $orderedNames = $filteredAndSorted->pluck('name')->join('،');
         $position = $this->script->position;
         $person = $Notifibleuser->person;
-        $Notifibleuser->notify((new ApproveRsNotification($person->display_name,$position->name,$ounit->name))->onQueue('default'));
+        $Notifibleuser->notify((new ApproveRsNotification($person->display_name,$position->name,$orderedNames))->onQueue('default'));
     }
 
     public function dispatchQueueForExpireScript()
