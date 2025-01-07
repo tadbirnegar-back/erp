@@ -2,7 +2,6 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Question;
@@ -63,10 +62,13 @@ trait ExamsTrait
             'repository_id' => $repository->id,
         ]);
 
-        DB::table('course_exams')->insert([
-            'exam_id' => $exam->id,
-            'course_id' => $course->id,
-        ]);
+
+        $exam->courses()->attach($course->id);
+
+//        DB::table('course_exams')->insert([
+//            'exam_id' => $exam->id,
+//            'course_id' => $course->id,
+//        ]);
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
@@ -76,10 +78,12 @@ trait ExamsTrait
             ->get();
 
         foreach ($randomQuestions as $question) {
-            DB::table('question_exam')->insert([
-                'exam_id' => $exam->id,
-                'question_id' => $question->id,
-            ]);
+            $exam->questions()->attach($question->id);
+
+//            DB::table('question_exam')->insert([
+//                'exam_id' => $exam->id,
+//                'question_id' => $question->id,
+//            ]);
         }
         return $exam;
 
