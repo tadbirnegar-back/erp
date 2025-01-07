@@ -35,15 +35,37 @@ trait AnswerSheetTrait
         $status = Status::where('name', $score >= 50 ? 'قبول شده' : 'رد شده')->first();
 
 
-        $store = AnswerSheet::create([
+        $answerSheet = AnswerSheet::create([
             'exam_id' => $id,
             'score' => $score,
             'status_id' => $status?->id,
-            'student_id' => $student
+            'student_id' => $student->id,
         ]);
 
+        $questionsWithAnswers = $this->value();
+
+        foreach ($questionsWithAnswers as $question) {
+            Answers::create([
+                'answer_sheet_id' => $answerSheet->id,
+                'question_id' => $question->questionID,
+                'value' => $question->optionID,
+            ]);
+        }
+        return $answerSheet;
 
     }
+
+    public function getValue()
+    {
+        $query = AnswerSheet::joinRelationship('answers.questions.options');
+        $query->select([
+            'question_id as questionID',
+            'option_id ad optionID',
+        ])->get();
+        return $query;
+
+    }
+
 
     public function correctAnswers()
     {

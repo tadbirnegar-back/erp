@@ -5,12 +5,13 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Modules\AAA\app\Models\User;
+use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
 use Modules\LMS\app\Http\Traits\ExamResultTrait;
 use Modules\LMS\app\Resources\ExamResultResource;
 
 class ExamResultController extends Controller
 {
-    use ExamResultTrait;
+    use ExamResultTrait, AnswerSheetTrait;
 
     public array $data = [];
 
@@ -32,8 +33,16 @@ class ExamResultController extends Controller
     }
 
 
-    public function storeAnsS()
+    public function storeAnsS(\Illuminate\Http\Request $request, $id, $student)
     {
+        $student =
+
+            validator([
+                'optionID',
+                'questionID'
+            ]);
+        return $this->StoringAnswerSheet($id, $student);
+
 
     }
 
