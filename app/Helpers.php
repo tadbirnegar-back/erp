@@ -73,6 +73,24 @@ function convertDateTimeJalaliPersianCharactersToGregorian(string $persianCharDa
 }
 
 
+function convertPersianToGregorianBothHaveTimeAndDont(string $persianCharDateTime)
+{
+    // Convert Persian numbers to English numbers
+    $englishJalaliDateTimeString = \Morilog\Jalali\CalendarUtils::convertNumbers($persianCharDateTime, true);
+
+    // Check if the input string contains time information
+    $hasTime = strpos($englishJalaliDateTimeString, ':') !== false;
+
+    // Define the format based on the presence of time
+    $format = $hasTime ? 'Y/m/d H:i:s' : 'Y/m/d';
+
+    // Parse the date and time from the Jalali format and convert to Gregorian
+    $dateTime = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat($format, $englishJalaliDateTimeString);
+
+    // Return the datetime string, including the time if it was provided
+    return $hasTime ? $dateTime->toDateTimeString() : $dateTime->toDateString();
+}
+
 function convertDateTimeGregorianToJalaliDateTime(string $value)
 {
     $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19
@@ -110,4 +128,12 @@ function convertSecondToMinute($second)
     $remainingSeconds = $second % 60;
 
     return "{$minutes}:{$remainingSeconds}";
+}
+function convertMinuteToSecondFormatted($time)
+{
+    list($minutes, $seconds) = explode(':', $time);
+
+    $totalSeconds = ($minutes * 60) + $seconds;
+
+    return $totalSeconds;
 }

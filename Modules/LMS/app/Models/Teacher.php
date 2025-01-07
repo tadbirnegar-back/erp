@@ -47,6 +47,6 @@ class Teacher extends Model
         return $this->hasManyDeep(Person::class, [WorkForce::class],
             ['workforceable_id', 'id'],
             ['id', 'person_id']
-        );
+        )->where('workforceable_type', $this::class);
     }
 }

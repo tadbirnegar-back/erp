@@ -21,12 +21,7 @@ class CourseTarget extends Model
 
     protected $table = 'course_targets';
 
-    protected $fillable = ['id', 'parent_ounit_id'];
-
-    public function propertyble()
-    {
-        return $this->morphTo();
-    }
+    protected $fillable = ['id', 'parent_ounit_id' , 'course_id'];
 
     public function ounitFeatures()
     {

@@ -7,6 +7,11 @@ use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
+use Modules\LMS\app\Http\Controllers\ContentController;
+use Modules\LMS\app\Http\Controllers\PriviciesController;
+use Modules\LMS\app\Http\Controllers\OucPropertyController;
+use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
+use Modules\LMS\app\Http\Controllers\CourseOunitFeatureController;
 
 /*
     |--------------------------------------------------------------------------
@@ -24,7 +29,7 @@ use Modules\LMS\app\Http\Controllers\TeacherController;
 //});
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/teacher/list', [TeacherController::class, 'index']);
+    Route::post('/teachers/list', [TeacherController::class, 'index']);
     Route::post('/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
     Route::post('/students/search', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'isPersonStudent']);
     Route::post('/dehyari/add', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'store']);
@@ -38,7 +43,6 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/lms/edit/options/{id}', [OptionController::class, 'editOption']);
     Route::post('/lms/delete/options/{id}', [OptionController::class, 'destroyOption']);
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
-
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
@@ -49,6 +53,10 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
     Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
     Route::get('/lms/chapter/delete/{id}', [ChapterController::class, 'delete']);
+    Route::get('/lms/lesson/show/{id}' , [LessonController::class, 'show']);
+    Route::post('/lms/lesson/update/{id}' , [LessonController::class, 'update']);
+    Route::post('/lms/course/add' , [CourseController::class , 'store']);
+    Route::post('/lms/course/update/{id}' , [CourseController::class , 'update']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
@@ -63,4 +71,13 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
 
 
+    Route::post('/lms/lesson/data' , [LessonController::class, 'sendLessonDatas']);
+    Route::post('/lms/content-log/set' , [ContentController::class , 'setLog']);
+    Route::get('/lms/ounit/list/course-all' , [CourseController::class, 'courseListAll']);
+    Route::get('/lms/privicies/index' , [PriviciesController::class , 'index']);
+    Route::post('/lms/ounit/live-search' , [CourseController::class, 'liveSearchOunit']);
+    Route::post('/lms/ouc-properties/list' , [OucPropertyController::class , 'listing']);
+    Route::post('/lms/ouc-property-values/list' , [OucPropertyValueController::class , 'listing']);
+    Route::get('/lms/course-add-providers/list' , [CourseOunitFeatureController::class , 'listing']);
+    Route::get('/lms/course/update-show/{id}' , [CourseController::class , 'updateDataShow']);
 });

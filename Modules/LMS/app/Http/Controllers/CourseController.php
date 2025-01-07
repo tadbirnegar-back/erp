@@ -3,42 +3,124 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Models\User;
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\AddressMS\app\Models\City;
+use Modules\AddressMS\app\Models\District;
+use Modules\AddressMS\app\Models\State;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
-use Modules\LMS\App\Http\Services\VerificationPayment;
+use Modules\LMS\app\Http\Services\VerificationPayment;
+use Modules\LMS\app\Http\Traits\CourseCourseTrait;
+use Modules\LMS\app\Http\Traits\CourseEmployeeFeatureTrait;
+use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\CourseCourse;
+use Modules\LMS\app\Resources\AllCoursesListResource;
 use Modules\LMS\app\Resources\CourseListResource;
+use Modules\LMS\app\Resources\CourseShowForUpdateResource;
 use Modules\LMS\app\Resources\CourseViewLearningResource;
 use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
+use Modules\LMS\app\Resources\LiveOunitSearchForCourseResource;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
 use Modules\LMS\app\Resources\ViewCourseSideBarResource;
+use Modules\OUnitMS\app\Models\CityOfc;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
 {
-    use CourseTrait;
+    use CourseTrait, CourseCourseTrait, CourseTargetTrait, CourseEmployeeFeatureTrait;
+
+    public function store(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $user = Auth::user();
+            //Store Course base datas
+            $course = $this->storeCourseDatas($data, $user);
+            $this->storePishnevisStatus($course->id);
+            //store preRequisites
+            if (isset($data['preRequisiteCourseIDs']) && !is_null($data['preRequisiteCourseIDs'])) {
+                $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
+            }
+            //Store Target Points
+            if (isset($data['courseTargets'])) {
+                $this->storeCourseTarget($course->id, $data['courseTargets']);
+            }
+            DB::commit();
+            return response()->json(['message' => "دوره با موفقیت ساخته شد"]);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => $exception->getMessage()]);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $data = $request->all();
+        $course = Course::find($id);
+        $course = $this->updateCourseDatas($course, $data);
+        //store preRequisites
+        if (isset($data['preRequisiteCourseIDs'])) {
+            $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
+        }
+        //Store Target Points
+        if (isset($data['courseTargets'])) {
+            $this->storeCourseTarget($course->id, $data['courseTargets']);
+        }
+
+        //Delete pre requisites
+        if (isset($data['preReqDeletedIDs'])) {
+            $reqIDs = json_decode($data['preReqDeletedIDs']);
+            $this->deletePreRequisite($reqIDs);
+        }
+
+
+        if (isset($data['courseTargetsIDs'])) {
+            $ctIDs = json_decode($data['courseTargetsIDs']);
+            $this->deleteCourseTarget($ctIDs);
+        }
+    }
+
+    public function updateDataShow($id)
+    {
+        $course = Course::find($id);
+        if (empty($course)) {
+            return response()->json(['message' => "همچین دوره ای وجود ندارد"], 403);
+        }
+        $data = $this->showCourseForUpdate($id);
+        return new CourseShowForUpdateResource($data);
+    }
 
     public function show($id)
     {
         try {
-            $course = Course::with('latestStatus')->find($id);
+            $course = Course::whereHas('latestStatus', function ($query) {
+                $query->whereIn('statuses.id', [
+                    $this->coursePresentingStatus()->id,
+                    $this->courseEndedStatus()->id,
+                    $this->courseCanceledStatus()->id
+                ]);
+            })->with('latestStatus')->find($id);
             $user = Auth::user();
-            if (is_null($course)) {
+            if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            return response()->json(['message' => "اطلاعات دربافت نشد"], 500);
+            return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
         }
     }
 
@@ -49,7 +131,6 @@ class CourseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
-
         $response = new CourseListResource($result);
 
         return $response;
@@ -143,7 +224,15 @@ class CourseController extends Controller
 
     public function learningShow($id)
     {
-        $course = Course::joinRelationship('chapters.lessons')->find($id);
+        $course = Course::leftJoinRelationship('chapters.lessons')->whereHas('latestStatus', function ($query) {
+            $query->whereIn('statuses.id', [
+                $this->coursePresentingStatus()->id,
+                $this->courseEndedStatus()->id,
+            ]);
+        })->find($id);
+        if (empty($course)) {
+            return response()->json(["message" => "دوره با این مشخصات وجود ندارد"], 403);
+        }
         $user = Auth::user();
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
@@ -162,6 +251,39 @@ class CourseController extends Controller
         $sidebar = new SideBarCourseShowResource($data);
         return response()->json($sidebar);
 
+    }
+
+
+    public function courseListAll()
+    {
+        $query = Course::query();
+
+        $course = $query->select('id', 'title')->get();
+
+        $response = AllCoursesListResource::collection($course);
+
+        return response()->json($response);
+    }
+
+
+    public function liveSearchOunit(Request $request)
+    {
+        $data = $request->all();
+        $searchTerm = $data['name'] ?? '';
+
+        $results = OrganizationUnit::query()
+            ->where('name', 'like', '%' . $searchTerm . '%')
+            ->whereIn('unitable_type', [StateOfc::class, CityOfc::class, DistrictOfc::class, VillageOfc::class])
+            ->take(7)
+            ->with([
+                'ancestors',
+                'unitable'
+            ])
+            ->get();
+
+        $response = LiveOunitSearchForCourseResource::collection($results);
+
+        return response()->json($response);
     }
 
 }

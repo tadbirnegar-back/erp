@@ -23,7 +23,7 @@ trait TeacherTrait
             $message = 'found';
             $religion = $result->personable->religion;
             $religion_typee = $result->personable->religionType;
-            $levelOfEducation = $result->workForce->load('educationalRecords.levelOfEducation');
+            $levelOfEducation = $result->workForce?->load('educationalRecords.levelOfEducation');
             $data = [
                 'result' => $result,
                 'educationalRecords' => $levelOfEducation ?? null,
@@ -34,7 +34,6 @@ trait TeacherTrait
         return ['data' => $data, 'message' => $message];
 
     }
-
 
     public function isTeacher($personId): bool
     {

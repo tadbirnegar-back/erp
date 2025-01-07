@@ -43,7 +43,7 @@
     },
     {
         "name": "لیست مدرسان",
-        "slug": "/teacher/list",
+        "slug": "/teachers/list",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"
     },
@@ -74,6 +74,30 @@
     {
         "name": "حذف فصل",
         "slug": "/lms/chapter/delete/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش درس",
+        "slug": "/lms/lesson/update/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات ویرایش درس",
+        "slug": "/lms/lesson/update/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن دوره آموزشی",
+        "slug": "/lms/course/add",
+        "moduleName" : "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی دوره آموزشی",
+        "slug": "/lms/course/update/{id}",
         "moduleName" : "LMS",
         "permissionTypeName": "operational"
     }
