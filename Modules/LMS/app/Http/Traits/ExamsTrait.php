@@ -29,19 +29,27 @@ trait ExamsTrait
 
     public function createExam($course, $questionType, $repository)
     {
-
-
         $exam = Exam::create([
             'title' => $course->title,
             'questions_type_id' => $questionType->id,
             'repository_id' => $repository->id,
         ]);
 
-
         CourseExam::insert([
             'exam_id' => $exam->id,
             'course_id' => $course->id,
         ]);
+
+        $questionExamData = $this->DataPreparation($exam);
+
+        QuestionExam::insert($questionExamData);
+
+        return $exam;
+    }
+
+
+    public function DataPreparation($exam)
+    {
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
@@ -49,16 +57,13 @@ trait ExamsTrait
         $randomQuestions = Question::inRandomOrder()
             ->limit($questionCount)
             ->get();
-
-        foreach ($randomQuestions as $question) {
-
-            QuestionExam::insert([
+        $data = $randomQuestions->map(function ($question) use ($exam) {
+            return [
                 'exam_id' => $exam->id,
                 'question_id' => $question->id,
-            ]);
-        }
-        return $exam;
-
+            ];
+        })->toArray();
+        return $data;
 
     }
 

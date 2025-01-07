@@ -63,12 +63,11 @@ class ExamsController extends Controller
         try {
             DB::beginTransaction();
 
-            $course = Course::findOrFail($courseId);
-
-            $exams = $course->exams;
-            if ($exams->isEmpty()) {
-                return response()->json(['message' => 'هیچ آزمونی برای این دوره یافت نشد.'], 404);
+            $course = Course::find($courseId);
+            if (empty($course)) {
+                return response()->json(['message' => 'دوره‌ای با این شناسه یافت نشد.'], 404);
             }
+            $exams = $course->exams;
 
             $examID = $exams->first()->id;
 
