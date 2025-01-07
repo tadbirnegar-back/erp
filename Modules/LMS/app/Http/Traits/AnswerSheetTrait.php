@@ -26,7 +26,7 @@ trait AnswerSheetTrait
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
     }
 
-    public function StoringAnswerSheet($id, Student $student)
+    public function StoringAnswerSheet($id, Student $student, $auth)
     {
         $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
@@ -40,7 +40,7 @@ trait AnswerSheetTrait
             'score' => $score,
             'status_id' => $status?->id,
             'student_id' => $student->id,
-        ]);
+        ])->where('student_id', $auth->student->id);
 
         $questionsWithAnswers = $this->value();
 

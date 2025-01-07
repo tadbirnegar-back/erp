@@ -35,13 +35,14 @@ class ExamResultController extends Controller
 
     public function storeAnsS(\Illuminate\Http\Request $request, $id, $student)
     {
-        $student =
+        $auth = User::with('student')->find(68);
 
-            validator([
-                'optionID',
-                'questionID'
-            ]);
-        return $this->StoringAnswerSheet($id, $student);
+        validator([
+            'optionID',
+            'questionID'
+        ]);
+        $result = $this->StoringAnswerSheet($id, $student, $auth);
+        return response()->json($result);
 
 
     }

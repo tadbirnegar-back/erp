@@ -59,3 +59,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
 });
 Route::post('/lms/exam/result/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'result']);
+Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
