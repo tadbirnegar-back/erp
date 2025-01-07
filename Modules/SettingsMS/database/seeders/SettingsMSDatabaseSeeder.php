@@ -11,6 +11,12 @@ class SettingsMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            TimingSeeder::class,
+            LmsSettingDifficultySeeder::class,
+            LmsQuestionTypeSeeder::class,
+            LmsQuestionsNumberSeeder::class,
+
+        ]);
     }
 }

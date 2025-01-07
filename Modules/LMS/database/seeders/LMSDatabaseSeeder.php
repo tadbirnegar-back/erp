@@ -22,9 +22,11 @@ class LMSDatabaseSeeder extends Seeder
 //            LessonStatusSeeder::class,
 //            FillCommentsTable::class,
 //            ContentStatusSeeder::class,
+//            AnswerSheetStatusSeeder::class
+//            ContentStatusSeeder::class,
 //            OunitCatsSeeder::class,
-            OucPropertiesSeeder::class,
-            OucPropertyValues::class,
+//            OucPropertiesSeeder::class,
+//            OucPropertyValues::class,
         ]);
     }
 }

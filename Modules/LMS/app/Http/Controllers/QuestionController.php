@@ -25,6 +25,7 @@ class QuestionController extends Controller
             'questionTypeID' => 'required|integer|exists:question_types,id',
             'repositoryID' => 'nullable|integer|exists:repositories,id',
             'createDate' => 'nullable|date',
+            'chapterID' => 'nullable|integer|exists:chapters,id',
         ]);
 
         try {

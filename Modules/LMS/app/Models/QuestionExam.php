@@ -26,5 +26,10 @@ class QuestionExam extends Model
         'id'
     ];
 
+    public function questions()
+    {
+        return $this->belongsTo(Question::class, 'question_id', 'id');
+    }
+
 
 }

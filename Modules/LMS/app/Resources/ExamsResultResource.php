@@ -4,7 +4,7 @@ namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class ExamsResource extends ResourceCollection
+class ExamsResultResource extends ResourceCollection
 {
 
 

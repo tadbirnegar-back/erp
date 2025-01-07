@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
@@ -10,6 +11,7 @@ use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
@@ -26,6 +28,7 @@ trait CourseTrait
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
+
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
@@ -274,6 +277,7 @@ trait CourseTrait
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
 
+
     private function calculateLessonCompletion($response)
     {
         $totalLessons = 0;
@@ -335,6 +339,7 @@ trait CourseTrait
 
         return $filterApproveFromExam;
     }
+
 
     private function getByJoinAndStatusAndApproveCombination()
     {
@@ -414,6 +419,7 @@ trait CourseTrait
         return $user;
     }
 
+
     public function isJoinedPreRerequisites($user, $course)
     {
         $preCoursesIds = $course->prerequisiteCourses->pluck('id')->toArray();
@@ -437,6 +443,7 @@ trait CourseTrait
         }
 
     }
+
 
     public function dataShowViewCourseSideBar($course, $user)
     {
@@ -601,5 +608,49 @@ trait CourseTrait
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
     }
-}
 
+
+    public function ActiveAnswerSheetStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
+    }
+
+    public function isCourseCompleted($student)
+    {
+        $iscomplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
+            $query->where('is_completed', 1);
+        })
+            ->where('student_id', $student->id)
+            ->exists();
+
+        return $iscomplete;
+    }
+
+
+    public function isAttemptedExam($student, $examID)
+    {
+
+        $query = AnswerSheet::joinRelationship('exam', function ($query) use ($examID) {
+            $query->where('exam_id', $examID);
+        })
+            ->where('student_id', $student->id)
+            ->exists();
+        return $query;
+
+    }
+
+    public function isPassed($student)
+    {
+        $status = $this->ActiveAnswerSheetStatus();
+
+        $query = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
+            $query->where('status_id', $status->id);
+        })
+            ->exists();
+        return $query;
+
+    }
+
+
+
+}
