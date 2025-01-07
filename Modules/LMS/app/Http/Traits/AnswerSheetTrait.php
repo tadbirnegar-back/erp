@@ -6,7 +6,8 @@ use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Student;
-use function PHPUnit\Framework\isFalse;
+use Modules\SettingsMS\app\Models\Setting;
+use Modules\StatusMS\app\Models\Status;
 
 trait AnswerSheetTrait
 {
@@ -27,13 +28,18 @@ trait AnswerSheetTrait
 
     public function StoringAnswerSheet($id, Student $student)
     {
-        if ($this->correctAnswers() / )
+        $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
+        $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
 
+        $score = ($this->correctAnswers() / $examNumber) * 100;
+        $status = Status::where('name', $score >= 50 ? 'قبول شده' : 'رد شده')->first();
 
 
         $store = AnswerSheet::create([
             'exam_id' => $id,
-            'score'=>
+            'score' => $score,
+            'status_id' => $status?->id,
+            'student_id' => $student
         ]);
 
 
