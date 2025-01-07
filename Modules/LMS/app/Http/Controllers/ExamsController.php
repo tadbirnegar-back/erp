@@ -3,7 +3,6 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Enums\QuestionTypeEnum;
@@ -15,7 +14,6 @@ use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\QuestionType;
 use Modules\LMS\app\Models\Repository;
 use Modules\LMS\app\Resources\ExamPreviewResource;
-use Modules\LMS\app\Resources\ExamsResultResource;
 use Modules\LMS\app\Resources\ShowExamQuestionResource;
 
 class ExamsController extends Controller
@@ -25,23 +23,6 @@ class ExamsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
-        $auth = Auth::user();
-        $auth->load('student');
-
-        $student = $auth->student;
-        $data = $request->all();
-
-        $perPage = $data['perPage'] ?? 10;
-        $pageNumber = $data['pageNumber'] ?? 1;
-
-        $result = $this->examsIndex($perPage, $pageNumber, $data, $student);
-        $response = new ExamsResultResource($result);
-        return $response;
-
-    }
-
     public function previewExam($id)
     {
         DB::beginTransaction();
