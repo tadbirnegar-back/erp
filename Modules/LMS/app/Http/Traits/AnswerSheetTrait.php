@@ -11,12 +11,19 @@ trait AnswerSheetTrait
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
     }
+
     public function answerSheetTakingExamStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::TAKING_EXAM->value);
     }
+
     public function answerSheetDeclinedStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
+    }
+
+    public function StoringAnswerSheet()
+    {
+
     }
 }
