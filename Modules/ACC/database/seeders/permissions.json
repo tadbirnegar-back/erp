@@ -1,0 +1,26 @@
+[
+    {
+        "name": "سرفصل حساب ها",
+        "slug": "/acc/accounts/list",
+        "moduleName": "ACMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن حساب",
+        "slug": "/acc/accounts/add",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف حساب",
+        "slug": "/acc/accounts/delete/{id}",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی حساب",
+        "slug": "/acc/accounts/edit/{id}",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    }
+]

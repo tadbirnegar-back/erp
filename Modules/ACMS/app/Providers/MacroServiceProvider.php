@@ -13,17 +13,43 @@ class MacroServiceProvider extends ServiceProvider
     public function register(): void
     {
         Collection::macro('toHierarchy', function ($parentId = null) {
+            // Index items by their ID for quick access
+            $items = $this->keyBy('id');
+            $roots = collect();
 
-            $grouped = $this->groupBy('parent_id');
+            // Iterate through all items to build the hierarchy
+            foreach ($items as $item) {
+                // Check if the item is a root item
+                if ($item->parent_id === $parentId) {
+                    $roots->push($item);
+                }
+                // Assign the item to its parent's children collection
+                if ($item->parent_id !== null && $items->has($item->parent_id)) {
+                    $parent = $items->get($item->parent_id);
+                    // Initialize children collection if not exists
+                    if (!isset($parent->children)) {
+                        $parent->children = collect();
+                    }
+                    $parent->children->push($item);
+                }
+            }
 
-            $buildHierarchy = function ($parentId) use (&$buildHierarchy, $grouped) {
-                return $grouped->get($parentId, collect())->map(function ($item) use ($buildHierarchy) {
-                    $item['children'] = $buildHierarchy($item['id']);
-                    return $item;
-                });
-            };
+            // Traverse the hierarchy and set 'children' to an empty collection if not present
+            $queue = clone $roots;
 
-            return $buildHierarchy($parentId)->values();
+            while (!$queue->isEmpty()) {
+                $item = $queue->shift();
+                // Set 'children' to an empty collection if it doesn't exist
+                if (!isset($item->children)) {
+                    $item->children = collect();
+                }
+                // Add children to the queue for processing
+                if ($item->children !== null) {
+                    $queue = $queue->concat($item->children);
+                }
+            }
+
+            return $roots->values();
         });
     }
 

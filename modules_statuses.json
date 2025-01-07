@@ -20,5 +20,6 @@
     "PayStream": true,
     "Controller": true,
     "CourseController": true,
-    "ACMS": true
+    "ACMS": true,
+    "ACC": true
 }

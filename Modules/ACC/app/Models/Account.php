@@ -1,0 +1,50 @@
+<?php
+
+namespace Modules\ACC\app\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\ACC\app\Scopes\ActiveAccountOnlyScope;
+use Modules\ACC\Database\factories\AccountFactory;
+use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
+
+class Account extends Model
+{
+    use HasRecursiveRelationships;
+
+    /**
+     * The attributes that are mass assignable.
+     */
+
+    protected $fillable = [
+        'name',
+        'segment_code',
+        'chain_code',
+        'accountable_id',
+        'accountable_type',
+        'parent_id',
+        'ounit_id',
+        'category_id',
+        'subject_id',
+        'status_id',
+    ];
+
+    public $timestamps = false;
+    protected $table = 'acc_accounts';
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new ActiveAccountOnlyScope());
+    }
+
+    public function accountCategory(): BelongsTo
+    {
+        return $this->belongsTo(AccountCategory::class, 'category_id');
+    }
+
+    public static function GetAllStatuses()
+    {
+        return Status::where('model', self::class);
+    }
+}
