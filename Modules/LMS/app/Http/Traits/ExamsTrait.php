@@ -12,7 +12,7 @@ use Modules\SettingsMS\app\Models\Setting;
 trait ExamsTrait
 {
 
-    public function examsIndex(int $perPage = 10, int $pageNumber = 1, array $data = [], Student $auth)
+    public function examsIndex(int $perPage = 10, int $pageNumber = 1, array $data = [], Student $auth,)
     {
 
         $query = AnswerSheet::joinRelationship('repository')
@@ -38,9 +38,9 @@ trait ExamsTrait
 
     }
 
-    public function examDetails($id)
+    public function examPreview($id)
     {
-        $query = Exam::joinRelationship('course');
+        $query = Exam::joinRelationship('courses');
         $query->leftJoinRelationship('questions');
         $query->addSelect([
             'exams.title as examTitle',
@@ -86,7 +86,20 @@ trait ExamsTrait
 
     }
 
-//                return $exam->where('id', $id)->get();
+    public function showExam($id)
+    {
+        $query = Exam::joinRelationship('questions.options');
+
+        $query->addSelect([
+            'questions.id as questionID',
+            'questions.title as questionTitle',
+            'options.id as optionID',
+            'options.title as optionTitle'
+
+        ]);
+        return $query->where('exams.id', $id)->get();
+
+    }
 
 
 }

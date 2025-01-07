@@ -17,6 +17,7 @@ use Modules\LMS\app\Models\QuestionType;
 use Modules\LMS\app\Models\Repository;
 use Modules\LMS\app\Resources\ExamPreviewResource;
 use Modules\LMS\app\Resources\ExamsResultResource;
+use Modules\LMS\app\Resources\ShowExamQuestionResource;
 
 class ExamsController extends Controller
 {
@@ -29,6 +30,7 @@ class ExamsController extends Controller
     {
         $auth = Auth::user();
         $auth->load('student');
+
         $student = $auth->student;
         $data = $request->all();
 
@@ -36,7 +38,7 @@ class ExamsController extends Controller
         $pageNumber = $data['pageNumber'] ?? 1;
 
         $result = $this->examsIndex($perPage, $pageNumber, $data, $student);
-        $response = ExamsResultResource::make($result);
+        $response = new ExamsResultResource($result);
         return $response;
 
     }
@@ -57,7 +59,7 @@ class ExamsController extends Controller
 
         try {
             if ($enrolled && $passed && !$attempted && !$completed) {
-                $exam = $this->examDetails($id);
+                $exam = $this->examPreview($id);
                 $response = new ExamPreviewResource($exam);
                 DB::commit();
                 return response()->json($response);
@@ -68,7 +70,6 @@ class ExamsController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
-//            dd($e);
             return response()->json([$e, 'message' => 'خطایی رخ داده است'], 500);
         }
 
@@ -87,7 +88,6 @@ class ExamsController extends Controller
 
             $exam = $this->createExam($course, $questionType, $repository);
 
-//            $response = PreViewCourseResource::make($exam);
 
             return response()->json($exam);
 
@@ -95,6 +95,23 @@ class ExamsController extends Controller
             return response()->json([
                 'message' => 'خطایی در ایجاد آزمون رخ داد.',
                 'error' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function showExamQuestions($id)
+    {
+        try {
+            $examQuestions = $this->showExam($id);
+            $response = new ShowExamQuestionResource($examQuestions);
+            return response()->json([
+                'examQuestions' => $response
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'خطا در دریافت سوالات و گزینه‌ها.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
