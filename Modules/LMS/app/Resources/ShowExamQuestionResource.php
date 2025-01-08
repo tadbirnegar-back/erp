@@ -39,7 +39,7 @@ class ShowExamQuestionResource extends ResourceCollection
         })->values()->toArray();
 
         return [
-            'totalTime' => $totalTime,
+            'totalTime' => convertSecondToMinute($totalTime),
             'examQuestions' => $questions,
         ];
     }
