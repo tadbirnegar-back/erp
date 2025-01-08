@@ -29,14 +29,11 @@ class ExamPreviewResource extends ResourceCollection
 
             return [
                 'exam_id' => $id,
-                'title' => $firstItem->examTitle ?? null,
+                'exam_title' => $firstItem->examTitle ?? null,
 
-                'counts' => [
-                    'questions' => $totalQuestions,
-                ],
-                'courses' => [
-                    'title' => $firstItem->courseTitle ?? null,
-                ],
+                'questionsCount' => $totalQuestions,
+                'course_title' => $firstItem->courseTitle ?? null,
+                'timePerQuestion' => $questionTime,
 
                 'exam_time' => $examTime,
             ];
