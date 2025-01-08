@@ -1,0 +1,45 @@
+<?php
+
+namespace Modules\LMS\app\Resources;
+
+use Illuminate\Http\Resources\Json\ResourceCollection;
+use Modules\SettingsMS\app\Models\Setting;
+
+class ExamPreviewResource extends ResourceCollection
+{
+    /**
+     * Transform the resource collection into an array.
+     */
+    public function toArray($request): array
+    {
+        // Retrieve settings
+        $questionTimeSetting = Setting::where('key', 'time_per_questions')->first();
+        $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
+
+        $questionTime = $questionTimeSetting ? $questionTimeSetting->value : 0;
+        $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
+
+        // Group by exam ID
+        $grouped = $this->collection->groupBy('id');
+
+        return $grouped->map(function ($items, $id) use ($questionTime, $examNumber) {
+            $firstItem = $items->first();
+            $totalQuestions = $items->count(); // Total questions
+            $examTime = $questionTime * $examNumber;
+
+            return [
+                'exam_id' => $id,
+                'title' => $firstItem->examTitle ?? null,
+
+                'counts' => [
+                    'questions' => $totalQuestions,
+                ],
+                'courses' => [
+                    'title' => $firstItem->courseTitle ?? null,
+                ],
+
+                'exam_time' => $examTime,
+            ];
+        })->values()->toArray();
+    }
+}

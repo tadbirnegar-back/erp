@@ -91,14 +91,19 @@ class Question extends Model
 
     }
 
-    public function options()
-    {
-        return $this->hasMany(Option::class, 'question_id', 'id');
-    }
-
     public function answers()
     {
         return $this->hasMany(Answers::class, 'question_id', 'id');
+    }
+
+    public function questionExams()
+    {
+        return $this->hasMany(QuestionExam::class, 'question_id', 'id');
+    }
+
+    public function options()
+    {
+        return $this->hasMany(Option::class, 'question_id', 'id');
     }
 
 

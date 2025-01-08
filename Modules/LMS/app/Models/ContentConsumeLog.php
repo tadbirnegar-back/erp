@@ -25,9 +25,10 @@ class ContentConsumeLog extends Model
         'content_id',
         'consume_data',
         'consume_round',
-        'craete_date',
+        'create_date',
         'last_modified',
-        'student_id'
+        'student_id',
+        'last_played'
     ];
 
     public function content()

@@ -42,11 +42,11 @@ class Exam extends Model
         return $this->hasMany(CourseExam::class, 'exam_id', 'id');
     }
 
-    public function courses()
-    {
-        return $this->belongsToMany(Course::class, 'course_exams', 'exam_id', 'course_id');
-    }
 
+//    public function questions()
+//    {
+//        return $this->belongsToMany(Question::class, 'course_exams', 'exam_id', 'question_id');
+//    }
 //    public function questions()
 //    {
 //        return $this->belongsToMany(Question::class, 'course_exams', 'exam_id', 'question_id');
@@ -59,8 +59,7 @@ class Exam extends Model
 
     public function questions()
     {
-        return $this->hasManyThrough(
-            Question::class,
+        return $this->hasManyThrough(Question::class,
             QuestionExam::class,
             'exam_id',
             'id',
@@ -69,5 +68,26 @@ class Exam extends Model
         );
     }
 
+    public function courses()
+    {
+        return $this->hasManyThrough(Course::class,
+            CourseExam::class,
+            'exam_id',
+            'id',
+            'id',
+            'course_id'
+        );
+    }
+
+
+    public function answerSheets()
+    {
+        return $this->hasMany(AnswerSheet::class, 'exam_id', 'id');
+    }
+
+    public function questionExams()
+    {
+        return $this->hasMany(QuestionExam::class, 'exam_id');
+    }
 
 }

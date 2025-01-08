@@ -1,17 +1,17 @@
 <?php
 
-namespace Modules\OUnitMS\app\Notifications;
+namespace Modules\PersonMS\app\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Modules\AAA\app\Models\User;
 use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class VerifyInfoSuccessNotification extends Notification
+class VerifyInfoSuccessNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

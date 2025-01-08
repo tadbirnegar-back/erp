@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
+use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\Meeting;
@@ -70,12 +71,16 @@ class ReportsController extends Controller
             ->whereBelongsTo($meetingType, 'meetingType')
             ->whereBetween('meeting_date', [$startDate, $endDate])
             ->with(['enactments' => function ($q) use ($employeeId) {
-                $q->with(['enactmentReviews' => function ($qq) use ($employeeId) {
-                    $qq->where('user_id', $employeeId)
-                        ->with(['status']);
-                }, 'title', 'latestHeyaatMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
-                    $q->where('unitable_type', '!=', StateOfc::class);
-                }]);
+                $q
+                    ->whereDoesntHave('status', function ($query) {
+                        $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                    })
+                    ->with(['enactmentReviews' => function ($qq) use ($employeeId) {
+                        $qq->where('user_id', $employeeId)
+                            ->with(['status']);
+                    }, 'title', 'latestHeyaatMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
+                        $q->where('unitable_type', '!=', StateOfc::class);
+                    }]);
             }])
             ->with(['meetingMembers' => function ($query) use ($employeeId) {
                 $query->where('employee_id', $employeeId)->with('mr');
@@ -156,9 +161,13 @@ class ReportsController extends Controller
             ->where('isTemplate', false)
             ->whereBetween('meeting_date', [$startDate, $endDate])
             ->with(['enactments' => function ($q) {
-                $q->with(['enactmentReviews' => function ($qq) {
-                    $qq->with(['status']);
-                }, 'title', 'latestHeyaatMeeting', 'status']);
+                $q
+                    ->whereDoesntHave('status', function ($query) {
+                        $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                    })
+                    ->with(['enactmentReviews' => function ($qq) {
+                        $qq->with(['status']);
+                    }, 'title', 'latestHeyaatMeeting', 'status']);
             }])
             ->with(['meetingMembers' => function ($query) {
                 $query->with('mr', 'person.avatar');
@@ -271,9 +280,13 @@ class ReportsController extends Controller
                     ->where('isTemplate', false)
                     ->whereBetween('meeting_date', [$startDate, $endDate])
                     ->with(['enactments' => function ($q) {
-                        $q->with(['enactmentReviews' => function ($qq) {
-                            $qq->with(['status']);
-                        }, 'title', 'latestHeyaatMeeting', 'status']);
+                        $q
+                            ->whereDoesntHave('status', function ($query) {
+                                $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                            })
+                            ->with(['enactmentReviews' => function ($qq) {
+                                $qq->with(['status']);
+                            }, 'title', 'latestHeyaatMeeting', 'status']);
                     }]);
             }]);
 
@@ -373,9 +386,13 @@ class ReportsController extends Controller
                     ->where('isTemplate', false)
                     ->whereBetween('meeting_date', [$startDate, $endDate])
                     ->with(['enactments' => function ($q) {
-                        $q->with(['enactmentReviews' => function ($qq) {
-                            $qq->with(['status']);
-                        }, 'title', 'latestHeyaatMeeting', 'status']);
+                        $q
+                            ->whereDoesntHave('status', function ($query) {
+                                $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                            })
+                            ->with(['enactmentReviews' => function ($qq) {
+                                $qq->with(['status']);
+                            }, 'title', 'latestHeyaatMeeting', 'status']);
                     }]);
             }]);
 

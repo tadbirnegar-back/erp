@@ -3,15 +3,18 @@
 namespace Modules\Gateway\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\Gateway\app\Jobs\VerifyPaymentJob;
 use Modules\Gateway\app\Models\Payment as PG;
+use Modules\LMS\app\Http\Services\VerificationPayment;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\PayStream\app\Models\Online;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Payment\Facade\Payment;
+use Illuminate\Support\Facades\DB;
 
 class GatewayController extends Controller
 {
@@ -90,6 +93,7 @@ class GatewayController extends Controller
                 });
             }]);
 
+
             if ($user->organizationUnits->isEmpty()) {
                 return response()->json(['message' => 'شما مجاز به پرداخت نمی باشید'], 403);
             }
@@ -101,11 +105,13 @@ class GatewayController extends Controller
 
             $urlArray = explode('/', $url);
             $authority = end($urlArray);
-
-            VerifyPaymentJob::dispatch($authority)->delay(now()->addMinutes(12));
-
-
             DB::commit();
+
+            dispatch(new VerifyPaymentJob($authority))
+                ->onQueue('high')
+                ->delay(now()->addMinutes(12));
+
+
             return response()->json($result);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -119,89 +125,150 @@ class GatewayController extends Controller
     {
 
         $data = $request->all();
-        $user = \Auth::user();
 
-        $validator = Validator::make($data, [
-            'authority' => [
-                'required',
-                'exists:payments,authority'
-            ]
-        ]);
+        $online = Online::where('authority', $data['authority'])->first();
+        if (!empty($online)) {
+            $validator = Validator::make($data, [
+                'authority' => [
+                    'required',
+                    'exists:onlines,authority'
+                ]
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+            $online = Online::where('authority', $data['authority'])->first();
+            try {
+                \Illuminate\Support\Facades\DB::beginTransaction();
+                $verify = new VerificationPayment($online);
+                $result = $verify->verifyPayment();
+                DB::commit();
+                return response()->json($result);
+            } catch (\Exception $exception) {
+                DB::rollBack();
+                DB::beginTransaction();
+                $verify = new VerificationPayment($online);
+                $result = $verify->DeclinePayment();
+                DB::commit();
+                return response()->json($result);
+            }
+        } else {
+            $user = \Auth::user();
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-        try {
 
-            $payments = $user->payments()->where('authority', $request->authority)->with('organizationUnit.unitable')->get();
+            $validator = Validator::make($data, [
+                'authority' => [
+                    'required',
+                    'exists:payments,authority'
+                ]
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+            try {
 
-            $status = PG::GetAllStatuses()->where('name', 'پرداخت شده')->first();
+                $payments = $user->payments()->where('authority', $request->authority)->with('organizationUnit.unitable')->get();
 
-            $amount = 0;
-            $total = $payments->sum('amount');
+                $status = PG::GetAllStatuses()->where('name', 'پرداخت شده')->first();
 
-            $receipt = Payment::amount($total)->transactionId($request->authority)->verify();
+                $amount = 0;
+                $total = $payments->sum('amount');
 
-            // You can show payment referenceId to the user.
-            $transactionid = $receipt->getReferenceId();
+                $receipt = Payment::amount($total)->transactionId($request->authority)->verify();
 
-            $payments->each(function ($payment) use ($transactionid, $receipt, $status) {
-                $payment->transactionid = $transactionid;
-                $payment->purchase_date = $receipt->getDate();
-                $payment->status_id = $status->id;
-                $payment->save();
-            });
-            $user->load('person');
+                // You can show payment referenceId to the user.
+                $transactionid = $receipt->getReferenceId();
 
-            $factor = [
-                'transactionid' => $transactionid,
-                'purchase_date' => $receipt->getDate(),
-                'amount' => $total,
-                'status' => $status,
-                'person' => $user->person,
+                $payments->each(function ($payment) use ($transactionid, $receipt, $status) {
+                    $payment->transactionid = $transactionid;
+                    $payment->purchase_date = $receipt->getDate();
+                    $payment->status_id = $status->id;
+                    $payment->save();
+                });
+                $user->load('person');
 
-            ];
-
-            return response()->json(['data' => $factor, 'message' => 'پرداخت شما با موفقیت انجام شد']);
-
-        } catch (InvalidPaymentException $exception) {
-            if ($exception->getCode() == 101) {
-                $user?->load('person');
                 $factor = [
-                    'transactionid' => $payments[0]->transactionid,
-                    'purchase_date' => $payments[0]->purchase_date,
-                    'amount' => $amount,
+                    'transactionid' => $transactionid,
+                    'purchase_date' => $receipt->getDate(),
+                    'amount' => $total,
                     'status' => $status,
                     'person' => $user->person,
 
                 ];
-                return response()->json(['message' => $exception->getMessage(), 'data' => $factor ?? null]);
-            } elseif ($exception->getCode() == -51) {
-                $status = PG::GetAllStatuses()->where('name', 'پرداخت ناموفق')->first();
-                $payments->each(function ($payment) use ($status) {
-                    $payment->status_id = $status->id;
-                    $payment->save();
-                });
+
+                return response()->json(['data' => $factor, 'message' => 'پرداخت شما با موفقیت انجام شد']);
+
+            } catch (InvalidPaymentException $exception) {
+                if ($exception->getCode() == 101) {
+                    $user?->load('person');
+                    $factor = [
+                        'transactionid' => $payments[0]->transactionid,
+                        'purchase_date' => $payments[0]->purchase_date,
+                        'amount' => $amount,
+                        'status' => $status,
+                        'person' => $user->person,
+
+                    ];
+                    return response()->json(['message' => $exception->getMessage(), 'data' => $factor ?? null]);
+                } elseif ($exception->getCode() == -51) {
+                    $status = PG::GetAllStatuses()->where('name', 'پرداخت ناموفق')->first();
+                    $payments->each(function ($payment) use ($status) {
+                        $payment->status_id = $status->id;
+                        $payment->save();
+                    });
+
+                }
+
+                return response()->json(['message' => 'درصورت بروز مشکل با پشتیبانی تماس بگیرید'], 400);
 
             }
-
-            return response()->json(['message' => 'درصورت بروز مشکل با پشتیبانی تماس بگیرید'], 400);
-
         }
+
+
     }
 
     public function paymentsPerDistrict(Request $request)
     {
         $user = auth()->user();
+        if ($request->districtID) {
+            $ounit = OrganizationUnit::find($request->districtID);
+        } else {
+            $ounit = $user->organizationUnits[0];
+        }
 
 
-        $villages = $user->organizationUnits[0]->descendants()->whereDepth(2)->with(['head.person',
+        $villages = $ounit->descendants()->whereDepth(2)->with(['head.person',
             'head.notifications',
             'unitable',
 //            'ancestors',
             'payments' => function ($query) {
                 $query->where('status_id', '=', '46');
             }, 'evaluator'])->get();
-        return response()->json($villages);
+
+        $b = collect($this->calculatePrice($villages)['ounits']);
+        $c = $b->map(function ($item) {
+            $phase1 = ($item['alreadyPayed'] > 0);
+            $phase2 = ($item['price'] <= 0 && $item['alreadyPayed'] > 0);
+            $verified = $item['ounitObject']?->head?->notifications->isNotEmpty() && $item['ounitObject']?->head?->notifications[0]->read_at != null;
+            $hasEval = $item['ounitObject']?->evaluator != null;
+            /**
+             * @var OrganizationUnit $ou
+             */
+            $ou = $item['ounitObject'];
+            $ou->setAttribute('payStat', [
+                'phase_1' => $phase1,
+                'phase_2' => $phase2,
+                'verified' => $verified,
+                'hasEval' => $hasEval,
+                'person' => $item['ounitObject']?->head?->person,
+
+            ]);
+            unset($ou->head);
+            unset($ou->payments);
+            unset($ou->evaluator);
+
+            return $ou;
+        });
+        return response()->json($c);
     }
 }

@@ -37,38 +37,50 @@ class StoreEnactmentStatusJob implements ShouldQueue
 
         try {
             \DB::beginTransaction();
-            $enactment = Enactment::with(['members' => function ($query) {
-                $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
-                    $subQuery->where('enactment_id', $this->encId);
-                })->whereHas('roles', function ($q) {
-                    $q->where('name', RolesEnum::OZV_HEYAAT->value);
-                });
+            $enactment = Enactment::with([
+                'status',
+                'members' => function ($query) {
+                    $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
+                        $subQuery->where('enactment_id', $this->encId);
+                    })->whereHas('roles', function ($q) {
+                        $q->where('name', RolesEnum::OZV_HEYAAT->value);
+                    });
 
-            },])->find($this->encId);
-
-            if ($enactment->members->isNotEmpty()) {
-                $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
-                $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
-                    return [
-                        'user_id' => $member->employee_id,
-                        'description' => "تایید توسط سیستم",
-                        'status_id' => $noMoghayeratAutoStatus->id,
-                        'enactment_id' => $this->encId,
-                    ];
-                })->toArray();
-
-                EnactmentReview::insert($data);
-                $takmilshodeStatus = $this->enactmentCompleteStatus()->id;
-                EnactmentStatus::create([
-                    'status_id' => $takmilshodeStatus,
-                    'enactment_id' => $this->encId,
-                ]);
-                if ($enactment->members->count() > 1) {
-                    $enactment->final_status_id = $noMoghayeratAutoStatus->id;
-                    $enactment->save();
-                }
-                \DB::commit();
+                },])->find($this->encId);
+            if (is_null($enactment)) {
+                $this->delete();
+                return;
             }
+
+            if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
+                if ($enactment->members->isNotEmpty()) {
+                    $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
+                    $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
+                        return [
+                            'user_id' => $member->employee_id,
+                            'description' => null,
+                            'status_id' => $noMoghayeratAutoStatus->id,
+                            'enactment_id' => $this->encId,
+                        ];
+                    })->toArray();
+
+                    EnactmentReview::insert($data);
+                    $takmilshodeStatus = $this->enactmentCompleteStatus()->id;
+                    EnactmentStatus::create([
+                        'status_id' => $takmilshodeStatus,
+                        'enactment_id' => $this->encId,
+                    ]);
+                    if ($enactment->members->count() > 1) {
+                        $enactment->final_status_id = $noMoghayeratAutoStatus->id;
+                        $enactment->save();
+                    }
+
+                }
+            }
+            \DB::commit();
+            $this->delete();
+            return;
+
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail($e);

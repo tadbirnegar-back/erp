@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\JobFactory;
+use Modules\LMS\app\Models\CourseEmployeeFeature;
 use Modules\StatusMS\app\Models\Status;
 
 class Job extends Model
@@ -33,5 +34,10 @@ class Job extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function courseEmployeeFeatures()
+    {
+        return $this->morphMany(CourseEmployeeFeature::class, 'propertyble');
     }
 }

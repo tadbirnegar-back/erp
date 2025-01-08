@@ -1,16 +1,13 @@
 <?php
 
-namespace Modules\OUnitMS\app\Notifications;
+namespace Modules\PersonMS\app\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 
 class VerifyInfoNotification extends Notification
 {
-    use Queueable;
-
     /**
      * Create a new notification instance.
      */

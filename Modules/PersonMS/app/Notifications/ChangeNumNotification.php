@@ -1,15 +1,16 @@
 <?php
 
-namespace Modules\OUnitMS\app\Notifications;
+namespace Modules\PersonMS\app\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class ChangeNumNotification extends Notification
+class ChangeNumNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -56,7 +57,7 @@ class ChangeNumNotification extends Notification
     public function toSms($notifiable)
     {
         try {
-            $a = (new Builder)->via('farazsmspattern') # via() is Optional
+            $a = (new Builder)->via('farazsmspattern')
             ->send("patterncode=zd9ez1vcrggytr8 \n pre_num={$this->pre_num} \n current_num={$this -> current_num}")
                 ->to($notifiable->mobile);
 

@@ -3,13 +3,14 @@
 namespace Modules\HRMS\app\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class ApproveRsNotification extends Notification
+class ApproveRsNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -17,13 +18,17 @@ class ApproveRsNotification extends Notification
      * Create a new notification instance.
      */
     private string $username;
+    private string $position;
+    private string $ounit;
 
     /**
      * @param string $username
      */
-    public function __construct(string $username)
+    public function __construct(string $username , string $position , string $ounit)
     {
         $this->username = $username;
+        $this->position = $position;
+        $this->ounit = $ounit;
     }
 
 
@@ -57,10 +62,8 @@ class ApproveRsNotification extends Notification
         try {
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=x12qfe9adfr94sw \n username={$this->username}")
+            ->send("patterncode=x12qfe9adfr94sw \n username={$this->username} \n position_name={$this->position} \n ounit_name={$this->ounit}")
                 ->to($notifiable->mobile);
-
-
             return $a;
         } catch (InvalidMessageException $e) {
             return $e;

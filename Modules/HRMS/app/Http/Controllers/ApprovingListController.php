@@ -9,7 +9,6 @@ use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Notifications\ApproveRsNotification;
 use Modules\HRMS\app\Notifications\DeclineRsNotification;
 use Modules\PersonMS\app\Models\Person;
 
@@ -49,16 +48,6 @@ class ApprovingListController extends Controller
 
             $result = $this->approveScript($script, $user);
 
-            $rcstatus = $script->latestStatus;
-
-
-            $employee = Employee::find($script->employee_id);
-            $Notifibleuser = $employee->user;
-
-            $person = Person::find($Notifibleuser->person_id);
-            if ($rcstatus->name == RecruitmentScriptStatusEnum::ACTIVE->value) {
-                $Notifibleuser->notify(new ApproveRsNotification($person->display_name));
-            }
             DB::commit();
             return response()->json(['message' => 'حکم با موفقیت تایید شد']);
 
@@ -103,7 +92,7 @@ class ApprovingListController extends Controller
 
             $person = Person::find($notifibleUser->person_id);
 
-            $notifibleUser->notify(new DeclineRsNotification($person->display_name));
+            $notifibleUser->notify((new DeclineRsNotification($person->display_name))->onQueue('default'));
 
             DB::commit();
 

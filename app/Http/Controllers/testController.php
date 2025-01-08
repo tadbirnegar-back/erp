@@ -3,86 +3,23 @@
 namespace App\Http\Controllers;
 
 
-use http\Client\Curl\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Http\Traits\CourseTrait;
-use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Lesson;
-use Modules\LMS\app\Models\Teacher;
+use Modules\LMS\app\Http\Traits\ExamsTrait;
+use Modules\LMS\app\Models\Exam;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
-    use CourseTrait;
+    use ExamsTrait;
 
     public function run()
     {
-
-        $user = \Modules\AAA\app\Models\User::find(2174);
-        $course = Course::joinRelationship('chapters', function ($join) {
-            $join->as('chapter_alias');
-        })
-            ->join('lessons as lesson_alias', 'chapter_alias.id', '=', 'lesson_alias.chapter_id')
-            ->join('contents as content_alias', 'lesson_alias.id', '=', 'content_alias.lesson_id')
-            ->join('files as files_alias', 'content_alias.file_id', '=', 'files_alias.id')
-            ->join('content_type as ct_alias', 'content_alias.content_type_id', '=', 'ct_alias.id')
-            ->join('work_forces as wf_alias', function ($join) {
-                $join->on('wf_alias.workforceable_id', '=', 'content_alias.teacher_id')
-                    ->where('wf_alias.workforceable_type', '=', Teacher::class);
-            })
-            ->join('persons as person_alias', 'person_alias.id', '=', 'wf_alias.person_id')
-            ->leftJoin('comments as comments_alias', function ($join) use ($user){
-                $join->on('comments_alias.commentable_id' , '=' , 'lesson_alias.id')
-                    ->where('comments_alias.creator_id', '=', $user -> id)
-                    ->where('comments_alias.commentable_type' , '=' , Lesson::class);
-            })
-            ->leftJoin('users as commented_user_alias' , 'comments_alias.creator_id' , '=' , 'commented_user_alias.id')
-            ->leftJoin('persons as commented_person_alias' , 'commented_user_alias.person_id' , '=' , 'commented_person_alias.id')
-
-            ->select([
-                'chapter_alias.id as chapter_id',
-                'chapter_alias.title as chapter_title',
-                'chapter_alias.description as chapter_description',
-                'lesson_alias.id as lesson_id',
-                'lesson_alias.title as lesson_title',
-                'lesson_alias.description as lesson_description',
-                'content_alias.id as content_id',
-                'content_alias.name as content_title',
-                'files_alias.slug as files_slug',
-                'ct_alias.name as content_type_name',
-                'person_alias.display_name as teacher_name',
-                'comments_alias.text as comment_text',
-                'comments_alias.create_date as comment_created_at',
-                'commented_person_alias.display_name as commented_person_name',
-            ])
-            ->where('courses.id', 6)
-            ->get();
-        return response()->json($course);
-
-
-//        $CoursecomponentsToRender =  collect([
-//            'MainCourse' => ['latestStatus']
-//        ]);
-
-//        $mainCourses = Course::with([
-//                'latestStatus',
-//                'cover',
-//                'video',
-//                'privacy',
-//                'prerequisiteCourses',
-//                'chapters.activeLessons'
-//            ])
-//            ->get();
-
-//        $course = Chapter::with('activeLessons')->find(1);
-//        return response() -> json($course);
-
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);
@@ -263,6 +200,14 @@ class testController extends Controller
 //            'ounit_id' => 3889,
 //        ]);
 
+        $query = Exam::joinRelationship('course');
+        $query->leftJoinRelationship('questions');
+        $query->addSelect([
+            'exams.title as examTitle',
+            'courses.title as coursesTitle',
+            'questions.title as question_title',
+        ]);
+        $query->withCount(['questions as totalQuestions']);
 //        $user = User::find(2172);
 //        $userRoles = $user->roles->pluck('name')->toArray();
 //
@@ -319,6 +264,7 @@ class testController extends Controller
 //            $a
 //        );
 
+        return $query->where('exams.id', 1)->get();
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //

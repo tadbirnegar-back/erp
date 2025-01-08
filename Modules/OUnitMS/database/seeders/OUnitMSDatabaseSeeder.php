@@ -17,8 +17,8 @@ class OUnitMSDatabaseSeeder extends Seeder
 //             OrganizationParentSeeder::class,
 //             VillageOfcDegreeSeeder::class,
 //            OlderNamesOfVillageSeeder::class,
-            PermissionSeeder::class
-//            OUinitStatusSeeder::class
+//            PermissionSeeder::class
+            OUinitStatusSeeder::class
         ]);
     }
 }

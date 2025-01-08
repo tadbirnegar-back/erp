@@ -37,11 +37,16 @@ class Teacher extends Model
     }
 
 
+    public function workForceForJoin()
+    {
+        return $this->belongsTo(WorkForce::class, 'id' , 'workforceable_id');
+    }
+
     public function Person()
     {
         return $this->hasManyDeep(Person::class, [WorkForce::class],
             ['workforceable_id', 'id'],
             ['id', 'person_id']
-        );
+        )->where('workforceable_type', $this::class);
     }
 }

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Observers\MeetingDateObserver;
+use Modules\EMS\app\Observers\MeetingObserver;
+use Modules\EMS\app\Scopes\ActiveMeetingScope;
 use Modules\EMS\Database\factories\MeetingFactory;
 use Modules\HRMS\app\Models\Employee;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -41,11 +43,18 @@ class Meeting extends Model
         'reminder_date',
     ];
 
-    protected $appends = ['',
+    protected $appends = [
         'humanReadableJalaliDate'
     ];
 
     public $timestamps = false;
+
+    protected static function booted()
+    {
+        // using seperate scope class
+        static::addGlobalScope(new ActiveMeetingScope());
+    }
+
 
     public function statuses()
     {
@@ -53,13 +62,13 @@ class Meeting extends Model
     }
 
 
-//    protected static function boot()
-//    {
-//        parent::boot();
-//
-//        // Register the observer
-//        static::observe(\Modules\EMS\app\Observers\MeetingObserver::class);
-//    }
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Register the observer
+        static::observe(MeetingObserver::class);
+    }
 
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
@@ -148,6 +157,11 @@ class Meeting extends Model
     public function meetingType(): BelongsTo
     {
         return $this->belongsTo(MeetingType::class, 'meeting_type_id');
+    }
+
+    public function latestStatus()
+    {
+        return $this->hasOneThrough(Status::class, MeetingStatus::class, 'meeting_id', 'id', 'id', 'status_id')->orderBy('meeting_status.id', 'desc');
     }
 
 

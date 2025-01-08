@@ -66,16 +66,6 @@ class Course extends Model
                 $jalali = convertDateTimeGregorianToJalaliDateTime($value);
 
                 return $jalali;
-            },
-
-            set: function ($value) {
-                if (is_null($value)) {
-                    return null;
-                }
-                // Convert to Gregorian
-                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
-
-                return $dateTimeString;
             }
         );
     }
@@ -90,16 +80,6 @@ class Course extends Model
                 $jalali = convertDateTimeGregorianToJalaliDateTime($value);
 
                 return $jalali;
-            },
-
-            set: function ($value) {
-                if (is_null($value)) {
-                    return null;
-                }
-                // Convert to Gregorian
-                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
-
-                return $dateTimeString;
             }
         );
     }
@@ -155,6 +135,11 @@ class Course extends Model
         return Status::all()->where('model', '=', self::class);
     }
 
+    public function preReqForJoin()
+    {
+        return $this->hasMany(CourseCourse::class , 'main_course_id', 'id');
+    }
+
     public function prerequisiteCourses()
     {
         return $this->belongsToMany(
@@ -207,10 +192,25 @@ class Course extends Model
     public function person()
     {
         return $this->hasOneDeep(Person::class, [Enroll::class, Order::class, Customer::class],
-            ['id' ,  'id' , 'customer_id' , 'person_id'],
-            ['course_id' , 'orderable_id' , 'id' , 'id']
+            ['id', 'id', 'customer_id', 'person_id'],
+            ['course_id', 'orderable_id', 'id', 'id']
         );
     }
 
+    public function lastStatusForJoin()
+    {
+        return $this->hasOne(StatusCourse::class, 'course_id', 'id');
+    }
+
+    public function statusCourse()
+    {
+        return $this->hasMany(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);
+    }
+
+
+    public function courseTarget()
+    {
+        return $this->hasOne(CourseTarget::class, 'course_id', 'id');
+    }
 
 }

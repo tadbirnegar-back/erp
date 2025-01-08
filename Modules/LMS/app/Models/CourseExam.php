@@ -31,10 +31,9 @@ class CourseExam extends Model
         return $this->belongsTo(Course::class, 'course_id', 'id');
     }
 
-    public function exam()
+    public function exams()
     {
         return $this->belongsTo(Exam::class, 'exam_id', 'id');
     }
-
 
 }
