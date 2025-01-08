@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -10,6 +11,7 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
+use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Exam;
 
 
@@ -18,8 +20,17 @@ class testController extends Controller
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
     use ExamsTrait;
 
-    public function run()
+    public function run($courseId)
     {
+        $student = User::with('student')->find(60);
+
+        $query = AnswerSheet::joinRelationship('exam.courseExams.course')
+            ->where('courses.id', $courseId)
+            ->where('answer_sheets.student_id', $student->id)
+            ->exists();
+
+
+        return response()->json($query);
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);

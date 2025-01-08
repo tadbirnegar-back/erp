@@ -13,7 +13,6 @@ use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\QuestionType;
 use Modules\LMS\app\Models\Repository;
-use Modules\LMS\app\Resources\ExamPreviewResource;
 use Modules\LMS\app\Resources\ShowExamQuestionResource;
 
 class ExamsController extends Controller
@@ -23,41 +22,6 @@ class ExamsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function previewExam($id)
-    {
-        DB::beginTransaction();
-
-
-        $student = Auth::user()->load('student');
-
-        $examID = Exam::with('courses')->find($id);
-
-        $courseID = $examID->courses->first()->id;
-        $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
-        $completed = $this->isCourseCompleted($student);
-        $attempted = $this->isAttemptedExam($student, $id);
-        $passed = $this->isPassed($student);
-
-        try {
-            if ($enrolled && $passed && !$attempted && !$completed) {
-                $exam = $this->examPreview($id);
-                $response = new ExamPreviewResource($exam);
-                DB::commit();
-                return response()->json($response);
-            } else {
-
-                DB::rollBack();
-                return response()->json(['message' => 'شما اجازه دسترسی به این آزمون را ندارید'], 403);
-            }
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([$e, 'message' => 'خطایی رخ داده است'], 500);
-        }
-
-
-    }
-
-
     public function generateExam($courseId)
     {
         try {
@@ -67,24 +31,20 @@ class ExamsController extends Controller
             if (empty($course)) {
                 return response()->json(['message' => 'دوره‌ای با این شناسه یافت نشد.'], 404);
             }
-            $exams = $course->exams;
 
-            $examID = $exams->first()->id;
 
             $student = Auth::user()->load('student');
-
             $enrolled = $this->isEnrolledToDefinedCourse($courseId, $student);
             $completed = $this->isCourseCompleted($student);
-            $attempted = $this->isAttemptedExam($student, $examID);
-            $passed = $this->isPassed($student);
+            $attempted = $this->hasAttemptedAndPassedExam($student, $courseId);
+            if ($enrolled && !$attempted && !$completed) {
 
-            if ($enrolled && $passed && !$attempted && !$completed) {
                 $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
                 $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
-                $exam = $this->createExam($course, $questionType, $repository);
-
+                $data = $this->createExam($course, $questionType, $repository);
+                $previewData = $this->previewExam($data->id, $courseId, $student);
                 DB::commit();
-                return response()->json($exam);
+                return response()->json($previewData);
             } else {
                 DB::rollBack();
                 return response()->json(['message' => 'شما اجازه دسترسی به این آزمون را ندارید'], 403);
@@ -103,17 +63,15 @@ class ExamsController extends Controller
     {
         try {
             $student = Auth::user()->load('student');
-
             $examID = Exam::with('courses')->find($id);
 
             $courseID = $examID->courses->first()->id;
 
             $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
             $completed = $this->isCourseCompleted($student);
-            $attempted = $this->isAttemptedExam($student, $id);
-            $passed = $this->isPassed($student);
+            $attempted = $this->hasAttemptedAndPassedExam($student, $courseID);
 
-            if ($enrolled && $passed && !$attempted && !$completed) {
+            if ($enrolled && !$attempted && !$completed) {
                 $examQuestions = $this->showExam($id);
                 $response = new ShowExamQuestionResource($examQuestions);
                 return response()->json([
