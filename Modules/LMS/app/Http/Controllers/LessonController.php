@@ -55,6 +55,8 @@ class LessonController extends Controller
             $data['chapterID'] = $chapter->id;
             //Lesson Part
             $lesson = $this->storeLesson($data);
+            //Status Lesson
+            $this->addActiveLessonStatus($lesson);
             $data['lessonID'] = $lesson->id;
             //LessonFiles
             if (isset($data['lessonFiles'])) {
