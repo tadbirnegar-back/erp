@@ -63,7 +63,6 @@ class ExamsController extends Controller
     {
         try {
             $student = Auth::user()->load('student');
-
             $examID = Exam::with('courses')->find($id);
 
             $courseID = $examID->courses->first()->id;

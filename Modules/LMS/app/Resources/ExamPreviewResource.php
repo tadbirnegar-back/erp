@@ -30,12 +30,10 @@ class ExamPreviewResource extends ResourceCollection
             return [
                 'exam_id' => $id,
                 'exam_title' => $firstItem->examTitle ?? null,
-
                 'questionsCount' => $totalQuestions,
                 'course_title' => $firstItem->courseTitle ?? null,
-                'timePerQuestion' => $questionTime,
-
-                'exam_time' => $examTime,
+                'timePerQuestion' => convertSecondToMinute($questionTime),
+                'exam_time' => convertSecondToMinute($examTime),
             ];
         })->values()->toArray();
     }
