@@ -98,7 +98,7 @@ class ActiveHandler implements StatusHandlerInterface
             'ancestorsAndSelf' => fn($query) => $query->whereNotIn('unitable_type', [StateOfc::class, TownOfc::class])
         ]);
 
-        $filteredAndSorted = $ounit->ancestorsAndSelf->whereNotIn('unitable_type', [StateOfc::class, TownOfc::class]);
+        $filteredAndSorted = $ounit->ancestorsAndSelf;
 
         $orderedNames = $filteredAndSorted->pluck('name')->join('،');
         $position = $this->script->position;
