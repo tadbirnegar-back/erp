@@ -100,7 +100,7 @@ class ActiveHandler implements StatusHandlerInterface
 
         $filteredAndSorted = $ounit->ancestorsAndSelf;
 
-        $orderedNames = $filteredAndSorted->pluck('name')->join('،');
+        $orderedNames = $filteredAndSorted->pluck('name')->reverse()->join('،');
         $position = $this->script->position;
         $person = $Notifibleuser->person;
         $Notifibleuser->notify((new ApproveRsNotification($person->display_name, $position?->name, $orderedNames))->onQueue('default'));
