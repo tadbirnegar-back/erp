@@ -48,6 +48,7 @@ class CourseController extends Controller
             $user = Auth::user();
             //Store Course base datas
             $course = $this->storeCourseDatas($data, $user);
+            //Store course Status
             $this->storePishnevisStatus($course->id);
             //store preRequisites
             if (isset($data['preRequisiteCourseIDs']) && !is_null($data['preRequisiteCourseIDs'])) {

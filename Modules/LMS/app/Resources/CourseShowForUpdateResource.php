@@ -3,16 +3,19 @@
 namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 
 class CourseShowForUpdateResource extends JsonResource
 {
+    use CourseTargetTrait;
+
     /**
      * Transform the resource into an array.
      */
     public function toArray($request)
     {
-        // Group by course_alias_id to organize the data by course
         $grouped = $this->resource->groupBy(function ($item) {
             return $item->course_alias_id;
         });
@@ -22,36 +25,63 @@ class CourseShowForUpdateResource extends JsonResource
             $groupedTargets = $group->groupBy('course_target_id');
 
             $courseTargets = $groupedTargets->map(function ($groupedTarget) {
-                return $groupedTarget->groupBy(function ($targetInfo) {
-                    return $targetInfo->course_target_id . '_' . $targetInfo->ounit_feature_alias_id;
+                $categories = [];
+                $mappedTargets = $groupedTarget->groupBy(function ($targetInfo) use (&$categories) {
+                    $key = $targetInfo->course_target_id . '_' . $targetInfo->ounit_category_id;
+                    if (preg_match('/_(\d+)/', $key, $matches)) {
+                        $categories[] = (int)$matches[1];
+                    }
+                    return $key;
                 })->map(function ($nestedGroup) {
-                    return $nestedGroup->map(function ($targetInfo) {
-                        $isForAllEmployees = is_null($targetInfo->job_alias_title) &&
-                            is_null($targetInfo->level_alias_name) &&
-                            is_null($targetInfo->position_alias_name);
-                        return [
-                            'id' => $targetInfo->course_target_id,
-                            'ounit_name' => $targetInfo->ounit_alias_name ?? null,
-                            'ounit_category' => OunitCategoryEnum::getLabelById($targetInfo->ounit_category_id),
-                            'level_info' => $targetInfo->level_alias_name ?? null,
-                            'job_info' => $targetInfo->job_alias_title ?? null,
-                            'position_info' => $targetInfo->position_alias_name ?? null,
-                            'isForAllEmployees' => $isForAllEmployees,
-                            'property_info' => [
-                                'name' => $targetInfo->oucProperty_name ?? null,
-                                'id' => $targetInfo->oucProperty_id ?? null,
-                            ],
-                            'value_info' => [
-                                'value' => $targetInfo->value_alias_value ?? null,
-                                'operator' => $targetInfo->value_alias_operator ?? null,
-                            ],
-                            'ounit_feature_alias_id' => $targetInfo->ounit_feature_alias_id ?? null,
+                    // Merge targets based on the rules
+                    $mergedTarget = [
+                        'id' => null,
+                        'ounit_name' => null,
+                        'level_info' => null,
+                        'job_info' => null,
+                        'position_info' => null,
+                        'isForAllEmployees' => true, // Default to true
+                        'property_info' => [
+                            'name' => null,
+                            'id' => null,
+                        ],
+                        'value_info' => [
+                            'value' => null,
+                            'operator' => null,
+                        ]
+                    ];
 
-                        ];
-                    })->unique(function ($item) {
-                        return $item['ounit_name'] . $item['level_info'] . $item['position_info'];
-                    });
+                    foreach ($nestedGroup as $targetInfo) {
+                        // Update values if they are not null
+                        $mergedTarget['id'] = $targetInfo->course_target_id ?? $mergedTarget['id'];
+                        $mergedTarget['ounit_name'] = $targetInfo->ounit_alias_name ?? $mergedTarget['ounit_name'];
+                        $mergedTarget['level_info'] = $targetInfo->level_alias_name ?? $mergedTarget['level_info'];
+                        $mergedTarget['job_info'] = $targetInfo->job_alias_title ?? $mergedTarget['job_info'];
+                        $mergedTarget['position_info'] = $targetInfo->position_alias_name ?? $mergedTarget['position_info'];
+                        $mergedTarget['isForAllEmployees'] = $mergedTarget['isForAllEmployees'] && $targetInfo->isForAllEmployees;
+                        $mergedTarget['property_info']['name'] = $targetInfo->oucProperty_name ?? $mergedTarget['property_info']['name'];
+                        $mergedTarget['property_info']['id'] = $targetInfo->oucProperty_id ?? $mergedTarget['property_info']['id'];
+                        $mergedTarget['value_info']['value'] = $targetInfo->value_alias_value ?? $mergedTarget['value_info']['value'];
+                        $mergedTarget['value_info']['operator'] = $targetInfo->value_alias_operator ?? $mergedTarget['value_info']['operator'];
+                    }
+
+                    return $mergedTarget;
                 });
+
+                $uniqueTargets = $mappedTargets->unique(function ($item) {
+                    return json_encode($item); // Ensure uniqueness by comparing the serialized target
+                });
+
+                $ounits = $this->getCourseTargetOunit($groupedTarget->first()->course_target_id);
+                $uniqueCategories = array_values(array_unique($ounits));
+                $isForAllCats = $this->isForAllCats($uniqueCategories);
+
+                return [
+                    'categories' => $isForAllCats
+                        ? ['همه دسته های سازمانی']
+                        : array_map([$this, 'exactCat'], $uniqueCategories),
+                    'targets' => $uniqueTargets->values(), // convert to array of objects
+                ];
             });
 
             $preReqs = $group->map(function ($item) {
@@ -81,9 +111,18 @@ class CourseShowForUpdateResource extends JsonResource
                     'title' => $courseInfo->course_cover_title,
                     'id' => $courseInfo->course_cover_id,
                 ],
-                'pre_req' => $preReqs,  // Return all prerequisites as an array
-                'course_targets' => $courseTargets->unique(), // Filter out duplicate groups
+                'pre_req' => $preReqs,
+                'course_targets' => $courseTargets->values(), // convert to array of objects
             ];
         });
+    }
+    private function isForAllCats($ids)
+    {
+        return count($ids) > 1;
+    }
+
+    private function exactCat($id)
+    {
+        return OunitCategoryEnum::getLabelById($id);
     }
 }

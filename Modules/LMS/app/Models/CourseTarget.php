@@ -38,4 +38,9 @@ class CourseTarget extends Model
         return $this->hasMany(CourseEmployeeFeature::class, 'course_target_id', 'id');
     }
 
+    public function targetOunitCat()
+    {
+        return $this->hasMany(TargetOunitCat::class, 'course_target_id', 'id');
+    }
+
 }
