@@ -66,6 +66,11 @@ class Customer extends Model
         return $this->morphTo();
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function enrolls(){
         return $this -> hasManyDeep(Enroll::class, [Order::class] ,
             ['customer_id' , 'id'],

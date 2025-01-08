@@ -115,6 +115,8 @@ class Course extends Model
         return $this->hasMany(Enroll::class, 'course_id', 'id');
     }
 
+
+
     public function chapters()
     {
         return $this->hasMany(Chapter::class, 'course_id');

@@ -68,8 +68,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/pre-view/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'previewExam']);
     Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
     Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
-
-
     Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
     Route::get('/lms/ounit/list/course-all', [CourseController::class, 'courseListAll']);
@@ -80,3 +78,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course-add-providers/list', [CourseOunitFeatureController::class, 'listing']);
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
 });
+Route::post('/lms/course/my-enrolled-courses' , [CourseController::class, 'myEnrolledCourses']);

@@ -13,13 +13,18 @@ use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Enroll;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
+use Modules\LMS\app\Models\Student;
 use Modules\LMS\app\Models\Teacher;
+use Modules\PayStream\app\Http\Traits\OrderTrait;
+use Modules\PayStream\app\Models\FinancialStatus;
+use Modules\PayStream\app\Models\ProcessStatus;
 
 trait CourseTrait
 {
-    use AnswerSheetTrait, LessonTrait;
+    use AnswerSheetTrait, LessonTrait, OrderTrait;
 
     private static string $presenting = CourseStatusEnum::PRESENTING->value;
     private static string $ended = CourseStatusEnum::ENDED->value;
@@ -524,15 +529,15 @@ trait CourseTrait
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
-            ->leftJoinRelationship('preReqForJoin.preReqCourse' , [
+            ->leftJoinRelationship('preReqForJoin.preReqCourse', [
                 'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
                     ->on('pre_req_pivot_alias.main_course_id', 'courses.id'),
                 'preReqCourse' => fn($join) => $join->as('pre_reg_alias')
                     ->on('pre_reg_alias.id', 'pre_req_pivot_alias.prerequisite_course_id'),
             ])
-            ->leftJoin('course_targets as course_target_alias' , 'course_target_alias.course_id' , 'courses.id')
-            ->leftJoin('course_employees_features as course_employee_alias' , 'course_employee_alias.course_target_id' , 'course_target_alias.id')
-            ->leftJoin('organization_units as ounit_alias' , 'course_target_alias.parent_ounit_id' , 'ounit_alias.id')
+            ->leftJoin('course_targets as course_target_alias', 'course_target_alias.course_id', 'courses.id')
+            ->leftJoin('course_employees_features as course_employee_alias', 'course_employee_alias.course_target_id', 'course_target_alias.id')
+            ->leftJoin('organization_units as ounit_alias', 'course_target_alias.parent_ounit_id', 'ounit_alias.id')
             // Join Levels
             ->leftJoin('levels as level_alias', function ($join) {
                 $join->on('course_employee_alias.propertyble_id', '=', 'level_alias.id')
@@ -550,13 +555,12 @@ trait CourseTrait
                 $join->on('course_employee_alias.propertyble_id', '=', 'position_alias.id')
                     ->where('course_employee_alias.propertyble_type', '=', DB::raw("'" . addslashes(Position::class) . "'"));
             })
-
-            ->leftJoinRelationship('courseTarget.ounitFeatures.value.oucProperty' , [
+            ->leftJoinRelationship('courseTarget.ounitFeatures.value.oucProperty', [
                 'ounitFeatures' => fn($join) => $join->as('ounit_feature_alias'),
                 'value' => fn($join) => $join->as('value_alias'),
                 'oucProperty' => fn($join) => $join->as('oucProperty'),
             ])
-            ->leftJoinRelationship('courseTarget.targetOunitCat' , [
+            ->leftJoinRelationship('courseTarget.targetOunitCat', [
                 'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
             ])
             ->select([
@@ -653,6 +657,95 @@ trait CourseTrait
 
     }
 
+    public function enrolledCourses($user)
+    {
+        $regStatus = $this::$proc_registered;
+        $payedStatus = $this::$fin_pardakhtShode;
+//        $query = User::query()
+//            ->leftJoin('persons as person_alias', 'users.person_id', '=', 'person_alias.id')
+//            ->leftJoin('customers as customer_alias', function ($join) {
+//                $join->on('customer_alias.person_id', '=', 'person_alias.id')
+//                    ->where('customer_alias.customerable_type', '=', addslashes(Student::class));
+//            })
+//            ->leftJoin('orders as order_alias', 'order_alias.customer_id', '=', 'customer_alias.id')
+//            ->leftJoin('process_status as proc_status_alias', 'proc_status_alias.order_id', '=', 'order_alias.id')
+//            ->leftJoin('financial_status as fin_status_alias', 'fin_status_alias.order_id', '=', 'order_alias.id')
+//            ->join('statuses as status_fin_alias', function ($join) use ($payedStatus) {
+//                $join->on('status_fin_alias.model', '=', DB::raw("'" . addslashes(FinancialStatus::class) . "'"))
+//                    ->where('status_fin_alias.name', '=', DB::raw("'" . addslashes($payedStatus) . "'"));
+//            })
+//            ->join('statuses as status_proc_alias', function ($join) use ($regStatus) {
+//                $join->on('status_proc_alias.model', '=', DB::raw("'" . addslashes(ProcessStatus::class) . "'"))
+//                    ->where('status_proc_alias.name', '=', DB::raw("'" . addslashes($regStatus) . "'"));
+//            })
+//
+//            ->select([
+//                'users.id as user_id',
+//            ])
+//            ->where('users.id', $user->id)
+//            ->get();
+//
+//        return $query;
+        $course = Course::query()
+            ->joinRelationshipUsingAlias('cover', 'avatar_alias')
+            ->leftJoinRelationship('chapters.lessons.lessonStudyLog', [
+                'lessonStudyLog' => fn($query) => $query->as('lesson_study_log')
+                    ->on('lesson_study_log.student_id' , '=' , DB::raw("'" . $user->customer->id . "'")),
+                'lessons' => fn($query) => $query->as('lessons_alias')
+            ])
+            ->leftJoinRelationship('chapters.lessons.contents.contentType', [
+                'contentType' => fn($query) => $query->as('content_type_alias')
+            ])
+            ->joinRelationship('enrolls.order',
+                ['order' => function ($query) use ($user, $payedStatus, $regStatus) {
+                    $query
+                        ->as('order_alias')
+                        ->on('order_alias.orderable_type', '=', DB::raw("'" . addslashes(Enroll::class) . "'"))
+                        ->on('order_alias.customer_id', '=', DB::raw("'" . $user->customer->id . "'"))
+                        ->join('process_status as proc_status_alias', 'proc_status_alias.order_id', '=', 'order_alias.id')
+                        ->join('financial_status as fin_status_alias', 'fin_status_alias.order_id', '=', 'order_alias.id')
+                        ->join('statuses as status_fin_alias', function ($join) use ($payedStatus) {
+                            $join->on('status_fin_alias.model', '=', DB::raw("'" . addslashes(FinancialStatus::class) . "'"))
+                                ->where('status_fin_alias.name', '=', DB::raw("'" . addslashes($payedStatus) . "'"));
+                        })
+                        ->join('statuses as status_proc_alias', function ($join) use ($regStatus) {
+                            $join->on('status_proc_alias.model', '=', DB::raw("'" . addslashes(ProcessStatus::class) . "'"))
+                                ->where('status_proc_alias.name', '=', DB::raw("'" . addslashes($regStatus) . "'"));
+                        });
+                }]
+            )
+            ->select([
+                'courses.id as course_alias_id',
+                'avatar_alias.slug as avatar_alias_slug',
+                'courses.title as course_alias_title',
+                'content_type_alias.name as content_type_alias_name',
+                'lesson_study_log.is_completed as lesson_is_completed',
+                'lessons_alias.id as lesson_id',
+            ])
+            ->whereHas('latestStatus', function ($query) {
+                $query->whereIn('name', [$this::$presenting, $this::$ended, $this::$canceled]);
+            })
+            ->get();
+        return $course;
+//        $query = User::query()
+//            ->leftJoinRelationship('person.customers.orders.enroll.course.chapters.lessons.lessonStudyLog', function ($join) use ($payedStatus , $regStatus) {
+//                $join->whereHas('orders.financialStatuses', function ($query) use ($payedStatus) {
+//                    $query->where('name', $payedStatus);
+//                });
+//                $join->whereHas('orders.processStatuses', function ($query) use ($regStatus) {
+//                    $query->where('name', $regStatus);
+//                });
+//            })
+//            ->select([
+//                'users.id as user_id',
+//                'orders.id as order_id',
+//            ])
+//            ->where('users.id', $user->id)
+//            ->get();
+//
+//        return $query;
 
+
+    }
 
 }
