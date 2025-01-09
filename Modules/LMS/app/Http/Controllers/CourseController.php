@@ -27,6 +27,7 @@ use Modules\LMS\app\Resources\CourseViewLearningResource;
 use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
 use Modules\LMS\app\Resources\LiveOunitSearchForCourseResource;
+use Modules\LMS\app\Resources\MyCoursesListResource;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
 use Modules\LMS\app\Resources\ViewCourseSideBarResource;
 use Modules\OUnitMS\app\Models\CityOfc;
@@ -285,6 +286,14 @@ class CourseController extends Controller
         $response = LiveOunitSearchForCourseResource::collection($results);
 
         return response()->json($response);
+    }
+
+    public function myEnrolledCourses()
+    {
+        $user = Auth::user();
+        $user -> load('customer');
+        $enrolledCourses = $this->enrolledCourses($user);
+        return new MyCoursesListResource(collect($enrolledCourses));
     }
 
 }

@@ -56,6 +56,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/update/{id}', [LessonController::class, 'update']);
     Route::post('/lms/course/add', [CourseController::class, 'store']);
     Route::post('/lms/course/update/{id}', [CourseController::class, 'update']);
+    Route::post('/lms/course/my-enrolled-courses' , [CourseController::class, 'myEnrolledCourses']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
@@ -68,8 +69,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/pre-view/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'previewExam']);
     Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
     Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
-
-
     Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
     Route::get('/lms/ounit/list/course-all', [CourseController::class, 'courseListAll']);
