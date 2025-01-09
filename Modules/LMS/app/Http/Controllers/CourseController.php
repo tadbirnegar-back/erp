@@ -290,11 +290,10 @@ class CourseController extends Controller
 
     public function myEnrolledCourses()
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         $user -> load('customer');
         $enrolledCourses = $this->enrolledCourses($user);
-        $response = MyCoursesListResource::collection($enrolledCourses);
-        return response()->json($enrolledCourses);
+        return new MyCoursesListResource(collect($enrolledCourses));
     }
 
 }

@@ -690,10 +690,10 @@ trait CourseTrait
             ->joinRelationshipUsingAlias('cover', 'avatar_alias')
             ->leftJoinRelationship('chapters.lessons.lessonStudyLog', [
                 'lessonStudyLog' => fn($query) => $query->as('lesson_study_log')
-                    ->on('lesson_study_log.student_id' , '=' , DB::raw("'" . $user->customer->id . "'")),
+                    ->on('lesson_study_log.student_id' , '=' , DB::raw("'" . $user->customer->customerable_id . "'")),
                 'lessons' => fn($query) => $query->as('lessons_alias')
             ])
-            ->leftJoinRelationship('chapters.lessons.contents.contentType', [
+            ->joinRelationship('chapters.lessons.contents.contentType', [
                 'contentType' => fn($query) => $query->as('content_type_alias')
             ])
             ->joinRelationship('enrolls.order',
@@ -720,6 +720,8 @@ trait CourseTrait
                 'courses.title as course_alias_title',
                 'content_type_alias.name as content_type_alias_name',
                 'lesson_study_log.is_completed as lesson_is_completed',
+                'lesson_study_log.is_completed as lesson_is_completed',
+                'lesson_study_log.study_count as study_count_alias',
                 'lessons_alias.id as lesson_id',
             ])
             ->whereHas('latestStatus', function ($query) {

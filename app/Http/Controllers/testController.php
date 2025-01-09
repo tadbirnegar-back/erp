@@ -11,6 +11,9 @@ use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\Exam;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 
 class testController extends Controller
