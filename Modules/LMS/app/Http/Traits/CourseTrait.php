@@ -593,10 +593,7 @@ trait CourseTrait
         return $query;
     }
 
-    public function coursePresentingStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
-    }
+
 
     public function ActiveAnswerSheetStatus()
     {
@@ -684,9 +681,14 @@ trait CourseTrait
             ->get();
         return $course;
     }
+
     public function coursePishnevisStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
+    }
+    public function coursePresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
     }
     public function courseCanceledStatus()
     {
