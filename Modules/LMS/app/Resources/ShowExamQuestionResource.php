@@ -28,7 +28,7 @@ class ShowExamQuestionResource extends ResourceCollection
             return [
                 'question_id' => $questionID,
                 'question_title' => $firstItem->questionTitle,
-                'time_per_question' => $questionTime,
+//                'time_per_question' => $questionTime,
                 'options' => $items->map(function ($item) {
                     return [
                         'option_id' => $item->optionID,
@@ -40,6 +40,7 @@ class ShowExamQuestionResource extends ResourceCollection
 
         return [
             'totalTime' => $totalTime,
+            'time_per_question' => $questionTime,
             'examQuestions' => $questions,
         ];
     }
