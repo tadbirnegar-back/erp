@@ -25,7 +25,7 @@ trait LessonTrait
 
     public function addActiveLessonStatus(Lesson $lesson)
     {
-        $statusID = $this->activeLevelStatus()->id;
+        $statusID = $this->lessonActiveStatus()->id;
         StatusLesson::create([
             'status_id' => $statusID,
             'lesson_id' => $lesson -> id ,
