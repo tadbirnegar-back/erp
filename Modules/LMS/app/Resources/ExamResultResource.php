@@ -23,34 +23,16 @@ class ExamResultResource extends ResourceCollection
                     $usedTimeInMinutes = $startTime->diffInMinutes($finishTime);
 
                     return [
-//                        'courseID' => $item->courseID,
-                        'studentID' => $item->student_id,
-                        'score' => $item->score,
-                        'status' => [
-                            'statusName' => $item->status->name,
-                            'className' => $item->status->class_name,
-                        ],
-                        'questions' => [
-                            'questionTitle' => $item->questionTitle,
-                        ],
-                        'options' => [
-                            'optionTitle' => $item->optionTitle,
-                        ],
                         'answer_sheet' => [
-                            'startDateTime' => $item->startDateTime,
-                            'finishDateTime' => $item->finishDateTime,
+                            'start_date_time' => $finishTime->subMinutes($usedTimeInMinutes)->toDateTimeString(),
+                            'finish_date_time' => $finishTime->toDateTimeString(),
                             'usedTimeInMinutes' => $usedTimeInMinutes,
-                        ],
-                        'answers' => [
-                            'nullAnswersCount' => $item->null_answers_count,
-                            'correctAnswersCount' => $item->correct_answers_count,
-                            'questionsCount' => $item->questions_count,
-                            'falseAnswersCount' => $item->false_answers_count,
-                            'trueAnswer' => $item->correct_answer,
                         ],
                     ];
                 });
             }),
         ];
     }
+
+
 }

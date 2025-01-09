@@ -5,9 +5,10 @@ namespace Modules\LMS\app\Http\Traits;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Option;
+use Modules\LMS\app\Models\QuestionExam;
 use Modules\LMS\app\Models\Student;
 use Modules\SettingsMS\app\Models\Setting;
-use Modules\StatusMS\app\Models\Status;
 
 trait AnswerSheetTrait
 {
@@ -26,63 +27,64 @@ trait AnswerSheetTrait
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
     }
 
-    public function StoringAnswerSheet($id, Student $student, $auth)
+
+    public function StoringAnswerSheet($examId, Student $student, $auth, $data)
+    {
+
+
+    }
+
+
+    public function getValue($id, $data)
+    {
+        $option = Option::findOrFail($data['optionID']);
+
+        Answers::create([
+            'answer_sheet_id' => $id,
+            'question_id' => $data['questionID'],
+            'value' => $option->title,
+        ]);
+    }
+
+
+    public function correctAnswers($optionID)
+    {
+        $correct = Option::where('id', $optionID)
+            ->where('is_correct', 1)
+            ->count();
+
+        return $correct;
+    }
+
+
+    public function score($examId, array $optionIDs)
+    {
+        $totalQuestions = QuestionExam::where('exam_id', $examId)->count();
+        $correctAnswers = $this->correctAnswers($optionIDs);
+
+        if ($totalQuestions == 0) {
+            return 0;
+        }
+
+        return ($correctAnswers / $totalQuestions) * 100;
+    }
+
+
+    public function ScoreStatus($score)
+    {
+        if ($score >= 50) {
+            return $this->answerSheetApprovedStatus();
+        } else {
+            return $this->answerSheetDeclinedStatus();
+        }
+    }
+
+
+    public function examNumbers()
     {
         $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
+        return $examNumber;
 
-        $score = ($this->correctAnswers() / $examNumber) * 100;
-
-        $statusName = $score >= 50 ? 'قبول شده' : 'رد شده';
-        $status = Status::where('name', $statusName)->first();
-
-        $answerSheet = AnswerSheet::create([
-            'exam_id' => $id,
-            'score' => $score,
-            'status_id' => $status->id,
-            'student_id' => $student->id,
-        ]);
-
-        if ($answerSheet->student_id !== $auth->student->id) {
-            return response()->json(['error' => 'Unauthorized action'], 403);
-        }
-
-        $questionsWithAnswers = $this->getValue();
-
-        foreach ($questionsWithAnswers as $question) {
-            Answers::create([
-                'answer_sheet_id' => $answerSheet->id,
-                'question_id' => $question->questionID,
-                'value' => $question->optionID,
-            ]);
-        }
-
-        return $answerSheet;
-    }
-
-
-    public function getValue()
-    {
-        $query = AnswerSheet::joinRelationship('answers.questions.options');
-        $query->select([
-            'question_id as questionID',
-            'option_id as optionID'
-        ])->get();
-        return $query;
-
-    }
-
-
-    public function correctAnswers($id, Student $student)
-    {
-        $correctAnswers = Answers::where('student_id', $student->id)
-            ->joinRelationship('options', function ($query) {
-                $query->whereColumn('answers.value', 'options.title')
-                    ->where('options.is_correct', 1);
-            })
-            ->where('answers.exam_id', $id)
-            ->count();
-
-        return $correctAnswers;
     }
 }

@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
 use Modules\LMS\app\Http\Traits\ExamResultTrait;
@@ -33,25 +34,28 @@ class ExamResultController extends Controller
     }
 
 
-    public function storeAnsS($id)
+    public function storeAnsS(Request $req, $id)
     {
+        $data = $req->all();
+
+        if (!isset($data['questionInfos'])) {
+            return response()->json(['error' => 'Question information is required'], 400);
+        }
+        $data['questions'] = json_decode($data['questionInfos'], true);
+
         $auth = User::with('student')->find(68);
-
-
-        $validated = validator(request()->all(), [
-            'optionID' => 'required',
-            'questionID' => 'required'
-        ]);
-
-        if ($validated->fails()) {
-            return response()->json(['errors' => $validated->errors()], 400);
+        if (!$auth || !$auth->student) {
+            return response()->json(['error' => 'User or student not found'], 404);
         }
 
         $student = $auth->student;
 
-        $result = $this->StoringAnswerSheet($id, $student, $auth);
-
-        return response()->json($result);
+        try {
+            $result = $this->StoringAnswerSheet($id, $student, $auth, $data);
+//            return response()->json(new ExamResultResource($result));
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to store answers', 'message' => $e->getMessage()], 500);
+        }
     }
 
 
