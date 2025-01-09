@@ -20,6 +20,7 @@ use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
 use Modules\PayStream\app\Models\ProcessStatus;
 
+
 trait CourseTrait
 {
     use AnswerSheetTrait, LessonTrait, OrderTrait;
@@ -593,8 +594,6 @@ trait CourseTrait
         return $query;
     }
 
-
-
     public function ActiveAnswerSheetStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
@@ -682,14 +681,7 @@ trait CourseTrait
         return $course;
     }
 
-    public function coursePishnevisStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
-    }
-    public function coursePresentingStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
-    }
+
     public function courseCanceledStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
@@ -698,6 +690,16 @@ trait CourseTrait
     public function courseEndedStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
+    }
+
+    public function coursePishnevisStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
+    }
+
+    public function coursePresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
     }
 
 }
