@@ -32,17 +32,22 @@ trait AnswerSheetTrait
         $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
 
         $score = ($this->correctAnswers() / $examNumber) * 100;
-        $status = Status::where('name', $score >= 50 ? 'قبول شده' : 'رد شده')->first();
 
+        $statusName = $score >= 50 ? 'قبول شده' : 'رد شده';
+        $status = Status::where('name', $statusName)->first();
 
         $answerSheet = AnswerSheet::create([
             'exam_id' => $id,
             'score' => $score,
-            'status_id' => $status?->id,
+            'status_id' => $status->id,
             'student_id' => $student->id,
-        ])->where('student_id', $auth->student->id);
+        ]);
 
-        $questionsWithAnswers = $this->value();
+        if ($answerSheet->student_id !== $auth->student->id) {
+            return response()->json(['error' => 'Unauthorized action'], 403);
+        }
+
+        $questionsWithAnswers = $this->getValue();
 
         foreach ($questionsWithAnswers as $question) {
             Answers::create([
@@ -51,33 +56,33 @@ trait AnswerSheetTrait
                 'value' => $question->optionID,
             ]);
         }
-        return $answerSheet;
 
+        return $answerSheet;
     }
+
 
     public function getValue()
     {
         $query = AnswerSheet::joinRelationship('answers.questions.options');
         $query->select([
             'question_id as questionID',
-            'option_id ad optionID',
+            'option_id as optionID'
         ])->get();
         return $query;
 
     }
 
 
-    public function correctAnswers()
+    public function correctAnswers($id, Student $student)
     {
-        $query = AnswerSheet::joinRelationship('answers.questions.options');
-
-        $correctAnswers = Answers::where('answer_sheet_id', $query->id)
+        $correctAnswers = Answers::where('student_id', $student->id)
             ->joinRelationship('options', function ($query) {
-                $query->where('answers.value', '=', 'options.title')
+                $query->whereColumn('answers.value', 'options.title')
                     ->where('options.is_correct', 1);
             })
+            ->where('answers.exam_id', $id)
             ->count();
-        return $correctAnswers;
 
+        return $correctAnswers;
     }
 }
