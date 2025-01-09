@@ -2,13 +2,11 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\DB;
-use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\Position;
+use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
@@ -600,22 +598,6 @@ trait CourseTrait
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
     }
 
-    public function courseCanceledStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
-    }
-
-    public function courseEndedStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
-    }
-
-    public function coursePishnevisStatus()
-    {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
-    }
-
-
     public function ActiveAnswerSheetStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
@@ -623,38 +605,35 @@ trait CourseTrait
 
     public function isCourseCompleted($student)
     {
-        $iscomplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
+        $isComplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
             $query->where('is_completed', 1);
         })
             ->where('student_id', $student->id)
             ->exists();
 
-        return $iscomplete;
+        return $isComplete;
     }
 
 
-    public function isAttemptedExam($student, $examID)
+    public function hasAttemptedAndPassedExam($student, $courseId)
     {
-
-        $query = AnswerSheet::joinRelationship('exam', function ($query) use ($examID) {
-            $query->where('exam_id', $examID);
-        })
-            ->where('student_id', $student->id)
+        $attempted = AnswerSheet::joinRelationship('exam.courseExams.course')
+            ->where('courses.id', $courseId)
+            ->where('answer_sheets.student_id', $student->id)
             ->exists();
-        return $query;
 
-    }
-
-    public function isPassed($student)
-    {
         $status = $this->ActiveAnswerSheetStatus();
 
-        $query = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
+        $passed = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
             $query->where('status_id', $status->id);
         })
             ->exists();
-        return $query;
 
+        if ($attempted && $passed) {
+            return true;
+        }
+
+        return false;
     }
 
     public function enrolledCourses($user)
@@ -748,6 +727,19 @@ trait CourseTrait
 //        return $query;
 
 
+    }
+    public function coursePishnevisStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
+    }
+    public function courseCanceledStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
+    }
+
+    public function courseEndedStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
     }
 
 }
