@@ -176,7 +176,7 @@ class DocumentController extends Controller
             return response()->json($validate->errors(), 422);
         }
 
-        $result['accounts'] = Account::all();
+        $result['accounts'] = Account::where('ounit_id',$data['ounitID'])->get();
 
         return response()->json($result);
     }
