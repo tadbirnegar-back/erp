@@ -7,8 +7,6 @@ use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Option;
 use Modules\LMS\app\Models\QuestionExam;
-use Modules\LMS\app\Models\Student;
-use Modules\SettingsMS\app\Models\Setting;
 
 trait AnswerSheetTrait
 {
@@ -28,36 +26,45 @@ trait AnswerSheetTrait
     }
 
 
-    public function StoringAnswerSheet($examId, Student $student, $auth, $data)
+    public function StoringAnswerSheet($examId, $student, $optionIDs,)
     {
+        $score = $this->score($examId, $optionIDs);
+        $status = $this->ScoreStatus($score);
 
-
-    }
-
-
-    public function getValue($id, $data)
-    {
-        $option = Option::findOrFail($data['optionID']);
-
-        Answers::create([
-            'answer_sheet_id' => $id,
-            'question_id' => $data['questionID'],
-            'value' => $option->title,
+        $finish = now();
+        $start = now();
+        $answerSheet = AnswerSheet::create([
+            'score' => $score,
+            'student_id' => $student->id,
+            'exam_id' => $examId,
+            'finish_date_time' => $finish,
+            'start_date_time' => $start,
+            'status_id' => $status->id,
         ]);
+
+        foreach ($optionIDs as $questionID => $optionID) {
+            $option = Option::findOrFail($optionID);
+
+            Answers::create([
+                'answer_sheet_id' => $answerSheet->id,
+                'question_id' => $questionID,
+                'value' => $option->title,
+            ]);
+        }
+
+        return $answerSheet;
     }
 
-
-    public function correctAnswers($optionID)
+    public function correctAnswers($optionIDs)
     {
-        $correct = Option::where('id', $optionID)
+        $correct = Option::whereIn('id', $optionIDs)
             ->where('is_correct', 1)
             ->count();
 
         return $correct;
     }
 
-
-    public function score($examId, array $optionIDs)
+    public function score($examId, $optionIDs)
     {
         $totalQuestions = QuestionExam::where('exam_id', $examId)->count();
         $correctAnswers = $this->correctAnswers($optionIDs);
@@ -69,7 +76,6 @@ trait AnswerSheetTrait
         return ($correctAnswers / $totalQuestions) * 100;
     }
 
-
     public function ScoreStatus($score)
     {
         if ($score >= 50) {
@@ -79,12 +85,4 @@ trait AnswerSheetTrait
         }
     }
 
-
-    public function examNumbers()
-    {
-        $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
-        $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
-        return $examNumber;
-
-    }
 }

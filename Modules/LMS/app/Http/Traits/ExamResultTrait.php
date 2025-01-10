@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Option;
 
 trait ExamResultTrait
 {
@@ -55,7 +56,8 @@ trait ExamResultTrait
 
             $item->null_answers_count = Answers::where('answer_sheet_id', $item->id)
                 ->joinRelationship('options', function ($query) {
-                    $query->whereNull('is_correct');
+                    $query->where('answers.value', '=', 'options.title')
+                        ->whereNull('options.is_correct');
                 })
                 ->count();
 
@@ -67,12 +69,39 @@ trait ExamResultTrait
                     $query->where('options.is_correct', 0);
                 })
                 ->count();
+            $item->false_answers_with_correct = Answers::where('answer_sheet_id', $item->id)
+                ->join('options', 'answers.value', '=', 'options.title')
+                ->where('options.is_correct', 0)
+                ->get()
+                ->map(function ($answer) {
+                    $correctAnswer = Option::where('question_id', $answer->question_id)
+                        ->where('is_correct', 1)
+                        ->first();
+
+                    $answer->correct_answer = $correctAnswer ? $correctAnswer->title : null;
+
+                    return $answer;
+                });
+
+            $item->null_answers_with_correct = Answers::where('answer_sheet_id', $item->id)
+                ->join('options', 'answers.value', '=', 'options.title')
+                ->whereNull('options.is_correct')
+                ->get()
+                ->map(function ($answer) {
+                    $correctAnswer = Option::where('question_id', $answer->question_id)
+                        ->where('is_correct', 1)
+                        ->first();
+
+                    $answer->correct_answer = $correctAnswer ? $correctAnswer->title : null;
+
+                    return $answer;
+                });
 
             return $item;
         });
 
         return $result;
-
     }
+
 
 }

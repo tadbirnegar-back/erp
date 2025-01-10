@@ -29,7 +29,8 @@ class AnswerSheet extends Model
         'student_id',
         'finish_date_time',
         'start_date_time',
-        'score'
+        'score',
+        'status_id'
     ];
 
     public function exam()
