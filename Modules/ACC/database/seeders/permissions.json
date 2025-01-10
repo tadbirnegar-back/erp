@@ -2,25 +2,61 @@
     {
         "name": "سرفصل حساب ها",
         "slug": "/acc/accounts/list",
-        "moduleName": "ACMS",
+        "moduleName": "ACC",
         "permissionTypeName": "sidebar"
     },
     {
         "name": "افزودن حساب",
         "slug": "/acc/accounts/add",
-        "moduleName": "ACMS",
+        "moduleName": "ACC",
         "permissionTypeName": "operational"
     },
     {
         "name": "حذف حساب",
         "slug": "/acc/accounts/delete/{id}",
-        "moduleName": "ACMS",
+        "moduleName": "ACC",
         "permissionTypeName": "operational"
     },
     {
         "name": "بروزرسانی حساب",
         "slug": "/acc/accounts/edit/{id}",
-        "moduleName": "ACMS",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن سند",
+        "slug": "/acc/documents/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست اسناد",
+        "slug": "/acc/documents/list",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده سند",
+        "slug": "/acc/documents/{ounitID}/doc/{id}",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی سند",
+        "slug": "/acc/documents/edit/{id}",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تغییر وضعیت به قطعی",
+        "slug": "/acc/documents/confirmed-status",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تغییر وضعیت به موقت",
+        "slug": "/acc/documents/draft-status",
+        "moduleName": "ACC",
         "permissionTypeName": "operational"
     }
 ]

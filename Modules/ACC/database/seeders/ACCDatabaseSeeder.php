@@ -18,6 +18,7 @@ class ACCDatabaseSeeder extends Seeder
             ModuleSeeder::class,
             PermissionsSeeder::class,
             StatusSeeder::class,
+            DocumentStatusSeeder::class,
         ]);
 
     }
