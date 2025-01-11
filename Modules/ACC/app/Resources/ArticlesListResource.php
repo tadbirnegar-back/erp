@@ -18,17 +18,21 @@ class ArticlesListResource extends JsonResource
             'description' => $this->description,
             'debt_amount' => $this->debt_amount ?? 0,
             'credit_amount' => $this->credit_amount ?? 0,
+            'priority' => $this->priority,
             'account' => [
                 'id' => $this->account->id,
                 'name' => $this->account->name,
                 'type' => AccountLayerTypesEnum::from($this->account->accountable_type)->getLabel(),
                 'chain_code' => $this->account->chain_code,
-                'priority' => $this->priority,
-                'ancestors' => $this->account->ancestors->isNotEmpty() ? $this->account->ancestors->map(function ($ancestor) {
+                'ancestors' => $this->account->ancestorsAndSelf->isNotEmpty() ? $this->account->ancestorsAndSelf->map(function ($ancestor) {
                     return [
                         'id' => $ancestor->id,
                         'name' => $ancestor->name,
                         'type' => AccountLayerTypesEnum::from($ancestor->accountable_type)->getLabel(),
+                        'category' => [
+                            'name' => $ancestor->accountCategory->name,
+                            'code' => $ancestor->accountCategory->id,
+                        ],
                     ];
                 }) : [],
             ]

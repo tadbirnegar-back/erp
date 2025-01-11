@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
-use Modules\ACC\app\Models\Account;
+use Modules\ACC\app\Models\AccountCategory;
 use Modules\ACC\app\Models\Article;
 use Modules\ACC\app\Models\Document;
 use Modules\ACC\app\Resources\ArticlesListResource;
@@ -76,7 +76,8 @@ class DocumentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validate = Validator::make($request->all(), [
+        $data = $request->all();
+        $validate = Validator::make($data, [
             'fiscalYear' => [
                 'required',
                 'exists:fiscal_years,name'
@@ -117,7 +118,7 @@ class DocumentController extends Controller
     /**
      * Show the specified resource.
      */
-    public function show($ounitid, $id): JsonResponse
+    public function show($ounitid, $id)
     {
         $doc = Document::joinRelationship('village')
             ->joinRelationship('statuses', function ($join) {
@@ -132,7 +133,7 @@ class DocumentController extends Controller
             ->joinRelationship('fiscalYear')
             ->where('acc_documents.ounit_id', $ounitid)
             ->select([
-                'acc_documents.id as document_id',
+                'acc_documents.id as id',
                 'acc_documents.ounit_id',
                 'acc_documents.description as document_description',
                 'statuses.name as status_name',
@@ -141,6 +142,7 @@ class DocumentController extends Controller
                 'acc_documents.document_number as document_number',
                 'acc_documents.create_date as create_date',
                 'village_ofcs.abadi_code as village_abadicode',
+                'fiscal_years.name as fiscalYear_name'
             ])
             ->with(['ounit' => function ($query) {
                 $query
@@ -151,10 +153,12 @@ class DocumentController extends Controller
                     }])
                     ->withoutGlobalScopes();
 
-            }, 'articles.account' => function ($query) {
+            }, 'articles' => function ($query) {
                 $query
-                    ->with(['ancestors' => function ($query) {
+                    ->orderBy('priority', 'asc')
+                    ->with(['account.ancestorsAndSelf' => function ($query) {
                         $query
+                            ->with('accountCategory')
                             ->withoutGlobalScopes();
                     }])
                     ->withoutGlobalScopes();
@@ -176,9 +180,25 @@ class DocumentController extends Controller
             return response()->json($validate->errors(), 422);
         }
 
-        $result['accounts'] = Account::where('ounit_id',$data['ounitID'])->get();
 
-        return response()->json($result);
+        $accs = AccountCategory::leftJoinRelationship('accounts', function ($join) use ($data) {
+            $join->where('ounit_id', $data['ounitID'])
+                ->withGlobalScopes();
+        })
+            ->select([
+                'acc_accounts.id as id',
+                'acc_accounts.name as title',
+                'acc_accounts.segment_code as code',
+                'acc_accounts.chain_code as chainedCode',
+                'acc_accounts.parent_id as parent_id',
+                'acc_account_categories.id as categoryID',
+                'acc_account_categories.name as accountCategory',
+            ])
+            ->get();
+        $accs = $accs->groupBy('accountCategory')->map(function ($item) {
+            return $item->toHierarchy();
+        });
+        return response()->json($accs);
     }
 
     /**
@@ -204,10 +224,12 @@ class DocumentController extends Controller
             }
 
             DB::commit();
-            $document->load(['articles.account' => function ($query) {
+            $document->load(['articles' => function ($query) {
                 $query
-                    ->with(['ancestors' => function ($query) {
+                    ->orderBy('priority', 'asc')
+                    ->with(['account.ancestorsAndSelf' => function ($query) {
                         $query
+                            ->with('accountCategory')
                             ->withoutGlobalScopes();
                     }])
                     ->withoutGlobalScopes();

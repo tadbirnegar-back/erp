@@ -35,7 +35,7 @@ class Document extends Model
     public $timestamps = false;
     protected $table = 'acc_documents';
 
-    public function DocumentDate()
+    public function DocumentDate(): Attribute
     {
         return Attribute::make(
 
