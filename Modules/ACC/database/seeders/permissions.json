@@ -58,5 +58,11 @@
         "slug": "/acc/documents/draft-status",
         "moduleName": "ACC",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف سند",
+        "slug": "/acc/documents/delete-status",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
     }
 ]

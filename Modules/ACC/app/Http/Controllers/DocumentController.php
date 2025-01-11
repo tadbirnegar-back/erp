@@ -7,6 +7,7 @@ use Auth;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
 use Modules\ACC\app\Models\AccountCategory;
@@ -43,29 +44,25 @@ class DocumentController extends Controller
         $fiscalYear = FiscalYear::where('name', $currentYear)->first();
 
         $docs = Document::leftJoinRelationship('articles')
-            ->joinRelationship('statuses', function ($join) {
-                $join->on('accDocument_status.id', '=', \DB::raw('(
-                                SELECT id
-                                FROM accDocument_status AS ps
-                                WHERE ps.document_id = acc_documents.id
-                                ORDER BY ps.create_date DESC
-                                LIMIT 1
-                            )'));
+            ->joinRelationship('latestStatus', function ($join) {
+                $join->orderBy('accDocument_status.create_date', 'desc');
             })
+            ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
             ->where('acc_documents.ounit_id', $request->ounitID)
             ->where('acc_documents.fiscal_year_id', $fiscalYear->id)
             ->select([
-                'acc_documents.id as document_id',
+                'acc_documents.id as id',
                 'acc_documents.description as document_description',
-                'statuses.name as status_name',
-                'statuses.class_name as status_class_name',
+//                'statuses.name as status_name',
+//                'statuses.class_name as status_class_name',
                 'acc_documents.document_date as document_date',
                 'acc_documents.document_number as document_number',
                 'acc_documents.create_date as create_date',
                 \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
                 \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
             ])
-            ->groupBy('acc_documents.id', 'acc_documents.description', 'statuses.name', 'statuses.class_name', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date')
+            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date')
+            ->with('latestStatus')
             ->get();
 
         return DocumentListResource::collection($docs);
@@ -121,23 +118,12 @@ class DocumentController extends Controller
     public function show($ounitid, $id)
     {
         $doc = Document::joinRelationship('village')
-            ->joinRelationship('statuses', function ($join) {
-                $join->on('accDocument_status.id', '=', \DB::raw('(
-                                SELECT id
-                                FROM accDocument_status AS ps
-                                WHERE ps.document_id = acc_documents.id
-                                ORDER BY ps.create_date DESC
-                                LIMIT 1
-                            )'));
-            })
             ->joinRelationship('fiscalYear')
             ->where('acc_documents.ounit_id', $ounitid)
             ->select([
                 'acc_documents.id as id',
                 'acc_documents.ounit_id',
                 'acc_documents.description as document_description',
-                'statuses.name as status_name',
-                'statuses.class_name as status_class_name',
                 'acc_documents.document_date as document_date',
                 'acc_documents.document_number as document_number',
                 'acc_documents.create_date as create_date',
@@ -156,14 +142,15 @@ class DocumentController extends Controller
             }, 'articles' => function ($query) {
                 $query
                     ->orderBy('priority', 'asc')
-                    ->with(['account.ancestorsAndSelf' => function ($query) {
+                    ->with(['account' => function ($query) {
                         $query
-                            ->with('accountCategory')
+                            ->with('accountCategory', 'ancestorsAndSelf')
                             ->withoutGlobalScopes();
                     }])
                     ->withoutGlobalScopes();
 
-            }])
+            },
+                'latestStatus'])
             ->find($id);
 
         return DocumentShowResource::make($doc);
@@ -227,9 +214,9 @@ class DocumentController extends Controller
             $document->load(['articles' => function ($query) {
                 $query
                     ->orderBy('priority', 'asc')
-                    ->with(['account.ancestorsAndSelf' => function ($query) {
+                    ->with(['account' => function ($query) {
                         $query
-                            ->with('accountCategory')
+                            ->with('accountCategory', 'ancestorsAndSelf')
                             ->withoutGlobalScopes();
                     }])
                     ->withoutGlobalScopes();
@@ -302,6 +289,35 @@ class DocumentController extends Controller
         try {
             DB::beginTransaction();
             $status = $this->draftDocumentStatus();
+            $this->attachStatusToDocument($document, $status, Auth::user()->id);
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت انجام شد']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json($e->getMessage(), 500);
+        }
+    }
+
+    public function setDeleteStatusTODocument(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'documentID' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 422);
+        }
+
+        $document = Document::find($data['documentID']);
+
+        if (!$document) {
+            return response()->json(['message' => 'سند یافت نشد'], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+            $status = $this->deleteDocumentStatus();
             $this->attachStatusToDocument($document, $status, Auth::user()->id);
             DB::commit();
             return response()->json(['message' => 'با موفقیت انجام شد']);

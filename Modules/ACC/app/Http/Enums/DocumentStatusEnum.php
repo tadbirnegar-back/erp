@@ -6,5 +6,5 @@ enum DocumentStatusEnum: string
 {
     case DRAFT = 'پیش نویس';
     case CONFIRMED = 'قطعی';
-    case CANCELED = 'لغو شده';
+    case DELETED = 'حذف شده';
 }

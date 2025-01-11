@@ -61,6 +61,11 @@ class Document extends Model
         return $this->belongsToMany(Status::class, 'accDocument_status', 'document_id', 'status_id');
     }
 
+    public function latestStatus()
+    {
+        return $this->hasOneThrough(Status::class, DocumentStatus::class, 'document_id', 'id', 'id', 'status_id')->orderBy('accDocument_status.create_date', 'desc');
+    }
+
     public function village()
     {
         return $this->hasOneThrough(VillageOfc::class, OrganizationUnit::class, 'id', 'id', 'ounit_id', 'unitable_id');

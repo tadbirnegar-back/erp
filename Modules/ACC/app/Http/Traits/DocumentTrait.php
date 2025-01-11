@@ -49,6 +49,11 @@ trait DocumentTrait
         return Document::GetAllStatuses()->where('name', DocumentStatusEnum::CONFIRMED->value)->first();
     }
 
+    public function deleteDocumentStatus()
+    {
+        return Document::GetAllStatuses()->where('name', DocumentStatusEnum::DELETED->value)->first();
+    }
+
     public function documentDataPreparation(array $data)
     {
         if (!isset($data[0]) || !is_array($data[0])) {

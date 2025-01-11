@@ -16,8 +16,8 @@ class DocumentShowResource extends JsonResource
             'description' => $this->document_description,
             'document_date' => is_null($this->document_date) ? null : convertGregorianToJalali($this->document_date),
             'status' => [
-                'name' => $this->status_name,
-                'class_name' => $this->status_class_name,
+                'name' => $this->latestStatus->name,
+                'class_name' => $this->latestStatus->class_name,
             ],
             'fiscalYear' => $this->fiscalYear_name,
             'document_number' => $this->document_number,

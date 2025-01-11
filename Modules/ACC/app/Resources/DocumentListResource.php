@@ -12,17 +12,17 @@ class DocumentListResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id' => $this->document_id,
+            'id' => $this->id,
             'number' => $this->document_number,
-            'description' => $this->description,
+            'description' => $this->document_description,
             'status' => [
-                'name' => $this->status_name,
-                'class_name' => $this->status_class_name,
+                'name' => $this->latestStatus->name,
+                'class_name' => $this->latestStatus->class_name,
             ],
             'humanReadableDate' => is_null($this->document_date) ? DateformatToHumanReadableJalali(convertGregorianToJalali($this->create_date)) : DateformatToHumanReadableJalali(convertGregorianToJalali($this->document_date)),
             'totalDebtor' => $this->total_debt_amount ?? 0,
             'totalCreditor' => $this->total_credit_amount ?? 0,
-            'difference' => $this->total_credit_amount ?? 0 - $this->total_debt_amount ?? 0,
+            'difference' => (($this->total_credit_amount ?? 0) - ($this->total_debt_amount ?? 0)),
         ];
     }
 }

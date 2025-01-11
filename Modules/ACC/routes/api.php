@@ -44,4 +44,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::put('/acc/documents/confirmed-status', [DocumentController::class, 'setConfirmedStatusTODocument']);
 
     Route::put('/acc/documents/draft-status', [DocumentController::class, 'setDraftStatusTODocument']);
+
+    Route::delete('/acc/documents/delete-status', [DocumentController::class, 'setDraftStatusTODocument']);
 });

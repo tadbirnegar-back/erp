@@ -24,15 +24,16 @@ class ArticlesListResource extends JsonResource
                 'name' => $this->account->name,
                 'type' => AccountLayerTypesEnum::from($this->account->accountable_type)->getLabel(),
                 'chain_code' => $this->account->chain_code,
+                'category' => [
+                    'name' => $this->account->accountCategory->name,
+                    'code' => $this->account->accountCategory->id,
+                ],
                 'ancestors' => $this->account->ancestorsAndSelf->isNotEmpty() ? $this->account->ancestorsAndSelf->map(function ($ancestor) {
                     return [
                         'id' => $ancestor->id,
                         'name' => $ancestor->name,
+                        'chain_code' => $ancestor->chain_code,
                         'type' => AccountLayerTypesEnum::from($ancestor->accountable_type)->getLabel(),
-                        'category' => [
-                            'name' => $ancestor->accountCategory->name,
-                            'code' => $ancestor->accountCategory->id,
-                        ],
                     ];
                 }) : [],
             ]
