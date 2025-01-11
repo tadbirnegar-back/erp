@@ -23,7 +23,7 @@ class Answers extends Model
     protected $fillable = [
         'answer_sheet_id',
         'id',
-        'question_exam_id',
+        'question_id',
         'value',
     ];
 

@@ -37,40 +37,19 @@ class ExamResultController extends Controller
 
     public function storeAnsS(Request $request, $examId)
     {
-        if (!$examId) {
-            return response()->json(['message' => 'Exam ID is missing or null'], 400);
+        // دریافت داده به صورت JSON
+        $jsonData = $request->input('data');
+
+        $data = json_decode($jsonData, true);
+
+        if (!$data) {
+            return response()->json(['error' => 'Invalid JSON format'], 400);
         }
+
+        $optionId = $data['optionId'];
         $student = User::with('student')->find(68);
-        if (!$student) {
-            return response()->json(['message' => 'Student not found.'], 404);
-        }
-//        return response()->json($student);
-        $questionInfos = json_decode($request->questionInfos, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json([
-                'message' => 'Invalid JSON in questionInfos.',
-            ], 400);
-        }
 
-        $optionIDs = [];
-
-        foreach ($questionInfos as $info) {
-            if (isset($info['questionID'], $info['optionID'])) {
-                $optionIDs[$info['questionID']] = $info['optionID'];
-            } else {
-                return response()->json([
-                    'message' => 'Invalid questionInfos structure.',
-                ], 400);
-            }
-        }
-
-        $data = [
-            'finishedTime' => $request->finishedTime,
-            'startedTime' => $request->startedTime,
-            'questionInfos' => $questionInfos,
-        ];
-
-        $answerSheet = $this->StoringAnswerSheet($examId, $student, $optionIDs, $data);
+        $answerSheet = $this->storeAnswerSheet($examId, $student, $optionId, $data);
 
         return response()->json([
             'message' => 'Answer sheet stored successfully.',
