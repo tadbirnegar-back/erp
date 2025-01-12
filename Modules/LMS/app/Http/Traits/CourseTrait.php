@@ -639,7 +639,7 @@ trait CourseTrait
         return false;
     }
 
-    public function enrolledCourses($user)
+    public function enrolledCourses($user , $perPage , $pageNum)
     {
         $regStatus = $this::$proc_registered;
         $payedStatus = $this::$fin_pardakhtShode;
@@ -685,7 +685,7 @@ trait CourseTrait
                 $query->whereIn('name', [$this::$presenting, $this::$ended, $this::$canceled]);
             })
             ->get();
-        return $course;
+        return $course->paginate($perPage , $pageNum);
     }
 
     public function getRelatedLists($title, $ounit, $level, $position, $job)

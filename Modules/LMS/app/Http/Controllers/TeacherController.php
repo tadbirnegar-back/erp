@@ -17,7 +17,7 @@ class TeacherController extends Controller
     public function index(Request $request)
     {
         $data = $request->all();
-        $perPage = $data['perPage'] ?? 5;
+        $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->teacherIndex($perPage, $pageNum, $data);

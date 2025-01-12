@@ -290,11 +290,14 @@ class CourseController extends Controller
         return response()->json($response);
     }
 
-    public function myEnrolledCourses()
+    public function myEnrolledCourses(Request $request)
     {
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
         $user = Auth::user();
         $user->load('customer');
-        $enrolledCourses = $this->enrolledCourses($user);
+        $enrolledCourses = $this->enrolledCourses($user , $perPage , $pageNum);
         return new MyCoursesListResource(collect($enrolledCourses));
     }
 
