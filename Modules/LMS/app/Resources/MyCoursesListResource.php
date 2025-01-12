@@ -34,6 +34,7 @@ class MyCoursesListResource extends JsonResource
                 'avatar_alias_slug' => $courseItems->first()['avatar_alias_slug'],
                 'course_alias_title' => $courseItems->first()['course_alias_title'],
                 'content_types' => $contentTypes, // Add distinct content types
+                'lesson_count' => $totalLessons, // Add total lesson count
                 'completed_percentage' => round($completionPercentage, 2), // Add completion percentage
             ];
         });
@@ -43,4 +44,3 @@ class MyCoursesListResource extends JsonResource
         ];
     }
 }
-
