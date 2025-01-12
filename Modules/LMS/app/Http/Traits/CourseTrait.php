@@ -564,7 +564,7 @@ trait CourseTrait
                 'oucProperty' => fn($join) => $join->as('oucProperty'),
             ])
             ->leftJoinRelationship('courseTarget.targetOunitCat', [
-                'targetOunitCat' => fn($join) => $join->as('target_ounit_cat'),
+                'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
             ])
             ->select([
                 'courses.id as course_alias_id',
@@ -595,7 +595,7 @@ trait CourseTrait
                 'value_alias.operator as value_alias_operator',
                 'oucProperty.name as oucProperty_name',
                 'oucProperty.id as oucProperty_id',
-                'oucProperty.ounit_cat_id as ounit_category_id'
+                'targetOunitCat.ounit_cat_id as ounit_category_id'
 
             ])->where('courses.id', $id)->get();
         return $query;

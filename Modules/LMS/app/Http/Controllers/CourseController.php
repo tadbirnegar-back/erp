@@ -99,7 +99,6 @@ class CourseController extends Controller
     public function updateDataShow($id)
     {
         $course = Course::find($id);
-        return response() -> json($course);
         if (empty($course)) {
             return response()->json(['message' => "همچین دوره ای وجود ندارد"], 403);
         }
