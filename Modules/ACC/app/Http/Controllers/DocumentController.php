@@ -44,28 +44,25 @@ class DocumentController extends Controller
         $fiscalYear = FiscalYear::where('name', $currentYear)->first();
 
         $docs = Document::leftJoinRelationship('articles')
-            ->joinRelationship('latestStatus', function ($join) {
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
                 $join
-                    ->where('statuses.name', '=', DocumentStatusEnum::DELETED->value)//                    ->orderBy('accDocument_status.create_date', 'desc')
-
-                ;
-            })
-            ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
-            ->where('acc_documents.ounit_id', $request->ounitID)
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
+            }])
+            ->where('acc_documents.ounit_id', 2748)
             ->where('acc_documents.fiscal_year_id', $fiscalYear->id)
             ->select([
                 'acc_documents.id as id',
                 'acc_documents.description as document_description',
-//                'statuses.name as status_name',
-//                'statuses.class_name as status_class_name',
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
                 'acc_documents.document_date as document_date',
                 'acc_documents.document_number as document_number',
                 'acc_documents.create_date as create_date',
                 \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
                 \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
             ])
-            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date')
-            ->with('latestStatus')
+            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date', 'statuses.name', 'statuses.class_name')
             ->get();
 
         return DocumentListResource::collection($docs);
@@ -122,6 +119,11 @@ class DocumentController extends Controller
     {
         $doc = Document::joinRelationship('village')
             ->joinRelationship('fiscalYear')
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
+            }])
             ->where('acc_documents.ounit_id', $ounitid)
             ->select([
                 'acc_documents.id as id',
@@ -130,6 +132,8 @@ class DocumentController extends Controller
                 'acc_documents.document_date as document_date',
                 'acc_documents.document_number as document_number',
                 'acc_documents.create_date as create_date',
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
                 'village_ofcs.abadi_code as village_abadicode',
                 'fiscal_years.name as fiscalYear_name'
             ])
@@ -152,8 +156,7 @@ class DocumentController extends Controller
                     }])
                     ->withoutGlobalScopes();
 
-            },
-                'latestStatus'])
+            }])
             ->find($id);
 
         return DocumentShowResource::make($doc);

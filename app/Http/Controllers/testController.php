@@ -28,25 +28,10 @@ class testController extends Controller
         $fiscalYear = FiscalYear::where('name', $currentYear)->first();
         \DB::enableQueryLog();
         $docs = Document::leftJoinRelationship('articles')
-//            ->join('accDocument_status', 'acc_documents.id', '=', 'accDocument_status.document_id')
-//            ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
-//            ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
-//            ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
-
             ->joinRelationship('statuses', ['statuses' => function ($join) {
                 $join
-//                    ->on('accDocument_status.id', '=', \DB::raw('(
-//                    SELECT id
-//                    FROM accDocument_status AS ps
-//                    WHERE ps.document_id = acc_documents.id
-//                    ORDER BY ps.create_date DESC
-//                    LIMIT 1
-//                )'))
-//                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
                     ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
-                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)//                    ->orderBy('accDocument_status.create_date', 'desc')
-
-                ;
+                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
             }])
             ->where('acc_documents.ounit_id', 2748)
             ->where('acc_documents.fiscal_year_id', $fiscalYear->id)
@@ -62,7 +47,6 @@ class testController extends Controller
                 \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
             ])
             ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date', 'statuses.name', 'statuses.class_name')
-//            ->with('latestStatus')
             ->get();
         dd($docs, \DB::getQueryLog());
 

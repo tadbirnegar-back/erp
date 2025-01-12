@@ -16,8 +16,8 @@ class DocumentListResource extends JsonResource
             'number' => $this->document_number,
             'description' => $this->document_description,
             'status' => [
-                'name' => $this->latestStatus->name,
-                'class_name' => $this->latestStatus->class_name,
+                'name' => $this->status_name,
+                'class_name' => $this->status_class_name,
             ],
             'humanReadableDate' => is_null($this->document_date) ? DateformatToHumanReadableJalali(convertGregorianToJalali($this->create_date)) : DateformatToHumanReadableJalali(convertGregorianToJalali($this->document_date)),
             'totalDebtor' => $this->total_debt_amount ?? 0,
