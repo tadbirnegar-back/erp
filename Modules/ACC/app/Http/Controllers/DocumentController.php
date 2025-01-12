@@ -45,7 +45,10 @@ class DocumentController extends Controller
 
         $docs = Document::leftJoinRelationship('articles')
             ->joinRelationship('latestStatus', function ($join) {
-                $join->orderBy('accDocument_status.create_date', 'desc');
+                $join
+                    ->where('statuses.name', '=', DocumentStatusEnum::DELETED->value)//                    ->orderBy('accDocument_status.create_date', 'desc')
+
+                ;
             })
             ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
             ->where('acc_documents.ounit_id', $request->ounitID)

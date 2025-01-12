@@ -2,6 +2,8 @@
 
 namespace Modules\ACMS\app\Http\Enums;
 
+use Modules\ACC\app\Http\Enums\AccCategoryEnum;
+
 enum SubjectTypeEnum: int
 {
     case INCOME = 1;
@@ -22,6 +24,15 @@ enum SubjectTypeEnum: int
             'label' => $this->getLabel(),
             'value' => $this->value,
         ];
+
+    }
+
+    public function getCategoryEnum()
+    {
+        return match ($this) {
+            self::INCOME => AccCategoryEnum::INCOME,
+            self::EXPENSE => AccCategoryEnum::EXPENSE,
+        };
 
     }
 

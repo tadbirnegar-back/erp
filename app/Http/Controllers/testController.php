@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 
+use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
+use Modules\ACC\app\Models\Document;
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
+use Modules\ACMS\app\Models\FiscalYear;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Morilog\Jalali\Jalalian;
 
 
 class testController extends Controller
@@ -19,18 +22,49 @@ class testController extends Controller
 
     public function run()
     {
+//        Document::powerJoin
 
-        $a = OrganizationUnit::leftJoinRelationshipUsingAlias('parent', function ($join) {
-            $join->as('unit_alias')//                ->on('unit_alias.parent_id', '=', 'organization_units.id')
-            ;
-        })
-            ->withoutGlobalScopes()
-            ->whereNull('unit_alias.id')
-            ->with('ancestorsAndSelf')
-            ->addSelect(['unit_alias.id as unit_alias_id', 'unit_alias.name as unit_alias_name'])
+        $currentYear = Jalalian::now()->getYear();
+        $fiscalYear = FiscalYear::where('name', $currentYear)->first();
+        \DB::enableQueryLog();
+        $docs = Document::leftJoinRelationship('articles')
+//            ->join('accDocument_status', 'acc_documents.id', '=', 'accDocument_status.document_id')
+//            ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+//            ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
+//            ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+//                    ->on('accDocument_status.id', '=', \DB::raw('(
+//                    SELECT id
+//                    FROM accDocument_status AS ps
+//                    WHERE ps.document_id = acc_documents.id
+//                    ORDER BY ps.create_date DESC
+//                    LIMIT 1
+//                )'))
+//                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)//                    ->orderBy('accDocument_status.create_date', 'desc')
+
+                ;
+            }])
+            ->where('acc_documents.ounit_id', 2748)
+            ->where('acc_documents.fiscal_year_id', $fiscalYear->id)
+            ->select([
+                'acc_documents.id as id',
+                'acc_documents.description as document_description',
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+                'acc_documents.document_date as document_date',
+                'acc_documents.document_number as document_number',
+                'acc_documents.create_date as create_date',
+                \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
+                \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
+            ])
+            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date', 'statuses.name', 'statuses.class_name')
+//            ->with('latestStatus')
             ->get();
-
-        dump($a);
+        dd($docs, \DB::getQueryLog());
 
 //        $budget = BudgetItem::joinRelationship('circularItem.subject')
 //            ->where('budget_id', 4774)
