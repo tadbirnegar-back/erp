@@ -70,7 +70,7 @@ class LessonController extends Controller
             return response()->json(['message' => "درس مورد نظر شما با موفقیت ساخته شد"], 200);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => $exception->getMessage()], 404);
+            return response()->json(['message' => "درس مورد نظر شما ساخته نشد"], 404);
         }
     }
 
