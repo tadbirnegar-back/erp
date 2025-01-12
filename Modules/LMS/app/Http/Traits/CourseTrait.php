@@ -3,6 +3,8 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\Position;
@@ -16,6 +18,8 @@ use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
 use Modules\LMS\app\Models\Student;
 use Modules\LMS\app\Models\Teacher;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
 use Modules\PayStream\app\Models\ProcessStatus;
@@ -572,15 +576,18 @@ trait CourseTrait
                 'courses.privacy_id as course_alias_privacy_id',
                 'course_video_alias.slug as course_video_slug',
                 'course_video_alias.name as course_video_title',
+                'course_video_alias.size as course_video_size',
                 'course_cover_alias.id as course_video_id',
                 'course_cover_alias.slug as course_cover_slug',
                 'course_cover_alias.name as course_cover_title',
+                'course_cover_alias.size as course_cover_size',
                 'course_video_alias.id as course_cover_id',
                 'pre_reg_alias.id as pre_reg_alias_id',
                 'pre_reg_alias.title as pre_reg_alias_title',
                 'course_target_alias.id as course_target_id',
                 'ounit_alias.name as ounit_alias_name',
                 'course_employee_alias.propertyble_type as course_employee_alias_propertyble_type',
+                'ounit_feature_alias.id as ounit_feature_alias_id',
                 'level_alias.name as level_alias_name',
                 'job_alias.title as job_alias_title',
                 'position_alias.name as position_alias_name',
@@ -640,7 +647,7 @@ trait CourseTrait
             ->joinRelationshipUsingAlias('cover', 'avatar_alias')
             ->leftJoinRelationship('chapters.lessons.lessonStudyLog', [
                 'lessonStudyLog' => fn($query) => $query->as('lesson_study_log')
-                    ->on('lesson_study_log.student_id' , '=' , DB::raw("'" . $user->customer->customerable_id . "'")),
+                    ->on('lesson_study_log.student_id', '=', DB::raw("'" . $user->customer->customerable_id . "'")),
                 'lessons' => fn($query) => $query->as('lessons_alias')
             ])
             ->joinRelationship('chapters.lessons.contents.contentType', [
@@ -678,6 +685,63 @@ trait CourseTrait
                 $query->whereIn('name', [$this::$presenting, $this::$ended, $this::$canceled]);
             })
             ->get();
+        return $course;
+    }
+
+    public function getRelatedLists($title, $ounit, $level, $position, $job)
+    {
+        $ids = array_column($ounit, 'id');
+        $ounitCats = array_unique(array_column($ounit, 'category_id'));
+        $course = Course::query()
+            ->join('course_targets as targets_alias', 'targets_alias.course_id', '=', 'courses.id')
+            ->join('target_ounit_cat as target_ounit_cat_alias', 'target_ounit_cat_alias.course_target_id', '=', 'targets_alias.id')
+            ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
+            ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
+            ->where(function ($query) use ($level, $position, $job) {
+                $query->whereIn('employee_feat_alias.propertyble_id', $level)
+                    ->where('employee_feat_alias.propertyble_type', Level::class);
+
+                if (!empty($position)) {
+                    $query->orWhere(function ($subQuery) use ($position, $level) {
+                        $subQuery->whereIn('employee_feat_alias.propertyble_id', $position)
+                            ->where('employee_feat_alias.propertyble_type', Position::class);
+                        $subQuery->orWhereIn('employee_feat_alias.propertyble_id', $level)
+                            ->where('employee_feat_alias.propertyble_type', Level::class);
+                    });
+                }
+                if (!empty($job)) {
+                    $query->orWhere(function ($subQuery) use ($job) {
+                        $subQuery->whereIn('employee_feat_alias.propertyble_id', $job)
+                            ->where('employee_feat_alias.propertyble_type', Job::class);
+                    });
+                }
+            })
+            ->leftJoin('course_ounit_features as course_ounit_feat_alias', function ($join) {
+                $join->on('course_ounit_feat_alias.course_target_id', '=', 'targets_alias.id');
+            })
+            ->leftJoin('ouc_property_values as ouc_prop_value', function ($join) {
+                $join->on('ouc_prop_value.id', '=', 'course_ounit_feat_alias.ouc_property_value');
+            })
+            ->leftJoin('ouc_properties as ouc_prop_alias', function ($join) {
+                $join->on('ouc_prop_alias.id', '=', 'ouc_prop_value.ouc_property_id');
+                $join->on('target_ounit_cat_alias.ounit_cat_id', '=', 'ouc_prop_alias.ounit_cat_id');
+            })
+            ->leftJoin('organization_units as organ_alias', function ($join) use ($ids) {
+                $join->whereIn('organ_alias.unitable_id', $ids);
+                $join->where('organ_alias.unitable_type', VillageOfc::class);
+            })
+            ->leftJoin('village_ofcs as village_ofc_alias', function ($join) {
+                $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id')
+                    ->whereRaw("village_ofc_alias." . "ouc_prop_alias.column_name = ouc_prop_value.value");
+            })
+            ->select([
+                'targets_alias.id as targets_alias_id',
+                'targets_alias.parent_ounit_id as parent_ounit_id',
+                'courses.id as course_alias_id',
+                'employee_feat_alias.propertyble_type as prop_type'
+            ])->whereHas('courseTarget', function ($query) use ($ids) {
+                $query->whereIn('parent_ounit_id', $ids);
+            })->get();
         return $course;
     }
 

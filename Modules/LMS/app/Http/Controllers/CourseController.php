@@ -12,6 +12,7 @@ use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Models\City;
 use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\State;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseCourseTrait;
@@ -34,6 +35,7 @@ use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Models\Online;
 
@@ -291,9 +293,73 @@ class CourseController extends Controller
     public function myEnrolledCourses()
     {
         $user = Auth::user();
-        $user -> load('customer');
+        $user->load('customer');
         $enrolledCourses = $this->enrolledCourses($user);
         return new MyCoursesListResource(collect($enrolledCourses));
+    }
+
+    public function relatedCoursesList(Request $request)
+    {
+        $user = User::find(2174);
+        $user->load('activeRecruitmentScripts');
+        $ounits = $user->activeRecruitmentScripts
+            ->pluck('organization_unit_id')
+            ->filter()
+            ->toArray();
+
+
+        //Get All the ounits can be inside target
+        $relatedOrgans = OrganizationUnit::with(['ancestors' => function ($query) use ($ounits) {
+            $query->whereNot('unitable_type', TownOfc::class);
+        }])->whereIn('id', $ounits)->get();
+
+        $allData = [];
+
+        foreach ($relatedOrgans as $unit) {
+            $categoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
+            if ($categoryId) {
+                $allData[] = [
+                    'id' => $unit['id'],
+                    'category_id' => $categoryId,
+                ];
+            }
+
+            foreach ($unit['ancestors'] as $ancestor) {
+                $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($ancestor['unitable_type']);
+                if ($ancestorCategoryId) {
+                    $allData[] = [
+                        'id' => $ancestor['id'],
+                        'category_id' => $ancestorCategoryId,
+                    ];
+                }
+            }
+        }
+
+// Remove duplicate entries
+        $allOunits = array_unique($allData, SORT_REGULAR);
+
+        $levels = $user->activeRecruitmentScripts
+            ->pluck('level_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $positions = $user->activeRecruitmentScripts
+            ->pluck('position_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $jobs = $user->activeRecruitmentScripts
+            ->pluck('job_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $title = $request->title;
+        $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
+
+        return response()->json($courses);
     }
 
 }
