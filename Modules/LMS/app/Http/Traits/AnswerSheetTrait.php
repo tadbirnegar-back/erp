@@ -2,11 +2,13 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\AAA\app\Models\User;
 use Modules\FormGMS\app\Models\Option;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\QuestionExam;
+
 
 trait AnswerSheetTrait
 {
@@ -26,73 +28,84 @@ trait AnswerSheetTrait
     }
 
 
-    public function storeAnswerSheet($examId, $student, $optionId, $data)
+    public function storeAnswerSheet($examId, $student, $optionID, $data)
     {
-        $finish = now();
-        $start = now();
-        $score = $this->score($examId, $optionId);
+
+        $score = $this->score($examId, $optionID);
         $status = $this->ScoreStatus($score);
+
         $answerSheet = AnswerSheet::create([
             'exam_id' => $examId,
-            'finish_date_time' => $finish,
-            'start_date_time' => $start,
+            'finish_date_time',
+            'start_date_time',
             'score' => $score,
             'student_id' => $student->student->id,
-            'status_id' => $status->id
+            'status_id' => $status->id,
         ]);
-        $questionIDs = isset($data['questionID']) && is_array($data['questionID'])
-            ? $data['questionID']
-            : (is_string($data['questionID']) ? explode(',', $data['questionID']) : []);
-        foreach ($questionIDs as $questionID) {
-            if (isset($data['options'][$questionID]) && !empty($data['options'][$questionID])) {
-                $optionIds = array_filter(
-                    is_string($data['options'][$questionID])
-                        ? explode(',', $data['options'][$questionID])
-                        : $data['options'][$questionID]
-                );
 
-                if (empty($optionIds)) {
-                    Answers::create([
-                        'answer_sheet_id' => $answerSheet->id,
-                        'question_id' => $questionID,
-                        'value' => null,
-                    ]);
-                    continue;
-                }
+        $qAs = $data['questions'];
+        foreach ($qAs as $qA) {
 
-                $options = Option::where('question_id', $questionID)
-                    ->whereIn('id', $optionIds)
-                    ->get();
-
-                if (empty($options)) {
-                    continue;
-                }
-
-                foreach ($options as $option) {
-                    Answers::create([
-                        'answer_sheet_id' => $answerSheet->id,
-                        'question_id' => $questionID,
-                        'value' => $option->title ?? null,
-                    ]);
-                }
+            if (empty($qA['option_id'])) {
+                $value = null;
+            } else {
+                $option = Option::where('id', $qA['option_id'])->first();
+                $value = $option->title;
+                $optionIDs[] = $option->id;
             }
 
+            Answers::create([
+                'answer_sheet_id' => $answerSheet->id,
+                'question_id' => $qA['question_id'],
+                'value' => $value
+            ]);
         }
-        return $answerSheet;
+        $final = $this->final($answerSheet);
+        $calculate = $this->calculatingAnswers($optionIDs, $answerSheet->id);
+        $studentInfo = $this->student($student);
+
+        return [
+            'finalAns' => $final,
+            'calculated' => $calculate,
+            'student' => $studentInfo,
+        ];
+
     }
 
-    public function correctAnswers($optionIds)
+
+    public function correctAnswers($optionIDs)
     {
-        return Option::whereIn('id', (array)$optionIds)
+        return Option::whereIn('id', $optionIDs)
             ->where('is_correct', 1)
             ->count();
     }
 
+    public function falseAnswers($optionIDs)
+    {
+        return Option::whereIn('id', $optionIDs)
+            ->where('is_correct', 0)
+            ->count();
+    }
 
-    public function score($examId, $optionId)
+    public function nullAnswers($answerSheet)
+    {
+        return Answers::where('answer_sheet_id', $answerSheet)
+            ->whereNull('value')
+            ->count();
+    }
+
+    public function questionCount($answerSheet)
+    {
+        return Answers::where('answer_sheet_id', $answerSheet)
+            ->count('question_id');
+
+    }
+
+
+    public function score($examId, $optionID)
     {
         $totalQuestions = QuestionExam::where('exam_id', $examId)->count();
-        $correctAnswers = $this->correctAnswers($optionId);
+        $correctAnswers = $this->correctAnswers($optionID);
 
         if ($totalQuestions == 0) {
             return 0;
@@ -116,4 +129,55 @@ trait AnswerSheetTrait
 
         return null;
     }
+
+
+    public function calculatingAnswers($optionIDs, $answerSheet)
+    {
+        $correctAnswers = $this->correctAnswers($optionIDs);
+        $falseAnswers = $this->falseAnswers($optionIDs);
+        $nullAnswers = $this->nullAnswers($answerSheet);
+        $questionCount = $this->questionCount($answerSheet);
+
+        return [
+            'correct' => $correctAnswers,
+            'false' => $falseAnswers,
+            'null' => $nullAnswers,
+            'allQuestions' => $questionCount
+        ];
+    }
+
+    public function final($answerSheet)
+    {
+
+        $query = AnswerSheet::joinRelationship('answers.questions.options')
+            ->joinRelationship('status');
+
+        $query->select([
+            'answer_sheets.score as answerSheetScore',
+            'statuses.name as statusName',
+            'answer_sheets.start_date_time as startDateTime',
+            'answer_sheets.finish_date_time as finishDateTime',
+            'options.id as optionID',
+            'options.is_correct as isCorrect',
+            'questions.id as questionID',
+            'questions.title as questionTitle',
+            'options.title as optionTitle',
+        ])->where('answer_sheets.id', $answerSheet->id);
+        return $query->get();
+    }
+
+    public function student($student)
+    {
+
+        $query = User::query()->joinRelationship('person.avatar')
+            ->select([
+                'persons.display_name as name',
+                'files.slug as avatar'
+            ])
+            ->where('users.id', $student->id)
+            ->first();
+        return [$query, $student];
+    }
+
+
 }

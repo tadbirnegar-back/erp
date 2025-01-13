@@ -3,9 +3,8 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\AAA\app\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
 use Modules\LMS\app\Http\Traits\ExamResultTrait;
 use Modules\LMS\app\Resources\ExamResultResource;
@@ -20,41 +19,29 @@ class ExamResultController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function result($id): JsonResponse
-    {
-
-//        $auth = Auth::user();
-//        $auth->load('student');
-        $auth = User::find(68);
-        $auth->load('student');
-        $result = $this->examResult($auth, $id);
-//        dd($result);
-        $response = new ExamResultResource($result);
-        return response()->json($response);
-
-    }
 
 
     public function storeAnsS(Request $request, $examId)
     {
-        // دریافت داده به صورت JSON
         $jsonData = $request->input('data');
-
         $data = json_decode($jsonData, true);
 
-        if (!$data) {
-            return response()->json(['error' => 'Invalid JSON format'], 400);
+        if (!isset($data['questions'])) {
+            return response()->json(['error' => 'Questions are missing.'], 400);
         }
 
-        $optionId = $data['optionId'];
-        $student = User::with('student')->find(68);
+        foreach ($data['questions'] as &$question) {
+            if (!isset($question['option_id']) || $question['option_id'] === '') {
+                $question['option_id'] = null;
+            }
+        }
 
-        $answerSheet = $this->storeAnswerSheet($examId, $student, $optionId, $data);
+        $student = Auth::user()->load('student');
+        $optionID = array_filter(array_column($data['questions'], 'option_id'));
 
-        return response()->json([
-            'message' => 'Answer sheet stored successfully.',
-            'answerSheet' => $answerSheet
-        ], 200);
+        $answerSheet = $this->storeAnswerSheet($examId, $student, $optionID, $data);
+        $result = new ExamResultResource($answerSheet);
+        return response()->json($result);
     }
 
 

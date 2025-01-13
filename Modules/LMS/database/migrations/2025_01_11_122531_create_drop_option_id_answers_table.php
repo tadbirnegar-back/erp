@@ -12,16 +12,6 @@ return new class extends Migration {
     {
         Schema::table('answers', function (Blueprint $table) {
             $table->dropColumn('option_id');
-
-            $table->foreign('answer_sheet_id')->references('id')->on('answer_sheets');
-
-            $table->foreign('question_exam_id')->references('id')->on('question_exam');
-            $table->unsignedBigInteger('question_id');
-            $table->foreign('question_id')
-                ->references('id')
-                ->on('questions');
-            $table->longText('value')->change()->nullable();
-
         });
     }
 
@@ -30,6 +20,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('new_answers');
+        Schema::dropIfExists('drop_option_id_answers');
     }
 };

@@ -81,6 +81,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/ouc-property-values/list', [OucPropertyValueController::class, 'listing']);
     Route::get('/lms/course-add-providers/list', [CourseOunitFeatureController::class, 'listing']);
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
+    Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
+
 });
-Route::post('/lms/exam/result/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'result']);
-Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);

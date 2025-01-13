@@ -73,8 +73,12 @@ function convertDateTimeJalaliPersianCharactersToGregorian(string $persianCharDa
 }
 
 
-function convertPersianToGregorianBothHaveTimeAndDont(string $persianCharDateTime)
+function convertPersianToGregorianBothHaveTimeAndDont($persianCharDateTime)
 {
+    Log::info($persianCharDateTime);
+    if ($persianCharDateTime == null || empty($persianCharDateTime)) {
+        return null;
+    }
     // Convert Persian numbers to English numbers
     $englishJalaliDateTimeString = \Morilog\Jalali\CalendarUtils::convertNumbers($persianCharDateTime, true);
 
@@ -129,6 +133,7 @@ function convertSecondToMinute($second)
 
     return "{$minutes}:{$remainingSeconds}";
 }
+
 function convertMinuteToSecondFormatted($time)
 {
     list($minutes, $seconds) = explode(':', $time);
