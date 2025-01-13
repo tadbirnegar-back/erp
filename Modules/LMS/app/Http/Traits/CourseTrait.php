@@ -108,7 +108,7 @@ trait CourseTrait
             'description' => $data['description'],
             'privacy_id' => $data['privacyID'],
             'is_required' => $data['isRequired'],
-            'access_date' => isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
+            'access_date' =>     isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
             'expiration_date' => isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null,
             'cover_id' => $data['coverID'],
             'preview_video_id' => $data['previewVideoID'],
@@ -136,9 +136,8 @@ trait CourseTrait
         $course->description = $data['description'] ?? $course->description;
         $course->privacy_id = $data['privacyID'] ?? $course->privacy_id;
         $course->is_required = $data['isRequired'] ?? $course->is_required;
-        $course->access_date = $data['accessDate'] ?? $course->access_date;
-        $course->expiration_date = convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) ?? convertPersianToGregorianBothHaveTimeAndDont($course->expiration_date);
-        $course->access_date = convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) ?? convertPersianToGregorianBothHaveTimeAndDont($course->access_date);
+        $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null;
+        $course->expiration_date = isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null;
         $course->preview_video_id = $data['previewVideoID'] ?? $course->preview_video_id;
         $course->cover_id = $data['coverID'] ?? $course->cover_id;
         $course->save();
