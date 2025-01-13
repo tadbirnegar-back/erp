@@ -34,13 +34,13 @@ class CourseShowForUpdateResource extends JsonResource
                     }
                     return $key;
                 })->map(function ($nestedGroup) {
-                    // Merge targets based on the rules
+                    // Initialize merged target
                     $mergedTarget = [
                         'id' => null,
                         'ounit_name' => null,
-                        'level_info' => null,
-                        'job_info' => null,
-                        'position_info' => null,
+                        'level_info' => [],
+                        'job_info' => [],
+                        'position_info' => [],
                         'isForAllEmployees' => true, // Default to true
                         'property_info' => [
                             'name' => null,
@@ -49,19 +49,30 @@ class CourseShowForUpdateResource extends JsonResource
                         'value_info' => [
                             'value' => null,
                             'operator' => null,
-                        ]
+                        ],
                     ];
+
                     foreach ($nestedGroup as $targetInfo) {
-                        // Update values if they are not null
+                        // Update values
                         $mergedTarget['id'] = $targetInfo->course_target_id ?? $mergedTarget['id'];
                         $mergedTarget['ounit_name'] = $targetInfo->ounit_alias_name ?? $mergedTarget['ounit_name'];
-                        $mergedTarget['level_info'] = $targetInfo->level_alias_name ?? $mergedTarget['level_info'];
-                        $mergedTarget['job_info'] = $targetInfo->job_alias_title ?? $mergedTarget['job_info'];
-                        $mergedTarget['position_info'] = $targetInfo->position_alias_name ?? $mergedTarget['position_info'];
+
+                        // Append to arrays
+                        $mergedTarget['level_info'] = $this->concatValues($mergedTarget['level_info'], $targetInfo->level_alias_name);
+                        $mergedTarget['job_info'] = $this->concatValues($mergedTarget['job_info'], $targetInfo->job_alias_title);
+                        $mergedTarget['position_info'] = $this->concatValues($mergedTarget['position_info'], $targetInfo->position_alias_name);
+
                         $mergedTarget['isForAllEmployees'] = (string)(int)($mergedTarget['isForAllEmployees'] && $targetInfo->isForAllEmployees);
                         $mergedTarget['property_info']['name'] = $targetInfo->oucProperty_name ?? $mergedTarget['property_info']['name'];
-                        $mergedTarget['property_info']['id'] = $targetInfo->oucProperty_id ?? $mergedTarget['property_info']['id'];
-                        $mergedTarget['value_info']['value'] = $targetInfo->value_alias_value ?? $mergedTarget['value_info']['value'];
+
+                        if ($mergedTarget['property_info']['name'] !== 'درجه') {
+                            $mergedTarget['value_info']['value'] = $targetInfo->value_alias_value !== null
+                                ? ($targetInfo->value_alias_value == 1 ? 'بله' : 'خیر')
+                                : $mergedTarget['value_info']['value'];
+                        }                        $mergedTarget['property_info']['id'] = $targetInfo->oucProperty_id ?? $mergedTarget['property_info']['id'];
+                        $mergedTarget['value_info']['value'] = $targetInfo->value_alias_value !== null
+                            ? ($targetInfo->value_alias_value == 1 ? 'بله' : 'خیر')
+                            : $mergedTarget['value_info']['value'];
                         $mergedTarget['value_info']['operator'] = $targetInfo->value_alias_operator ?? $mergedTarget['value_info']['operator'];
                     }
 
@@ -90,11 +101,13 @@ class CourseShowForUpdateResource extends JsonResource
                     'title' => $item->pre_reg_alias_title,
                 ];
             })->unique('id')->values();
+
             $sizeWithUnitVideo = Number::fileSize($courseInfo->course_video_size, 2, 3);
             $partsvideo = explode(' ', $sizeWithUnitVideo, 2);
 
             $sizeWithCover = Number::fileSize($courseInfo->course_cover_size, 2, 3);
             $partscover = explode(' ', $sizeWithCover, 2);
+
             return [
                 'course_info' => [
                     'id' => $courseInfo->course_alias_id,
@@ -109,13 +122,13 @@ class CourseShowForUpdateResource extends JsonResource
                     'slug' => $courseInfo->course_video_slug,
                     'title' => $courseInfo->course_video_title,
                     'id' => $courseInfo->course_video_id,
-                    'size' => intval(Number::fileSize($courseInfo->course_video_size, 2, 3)).' '.$partsvideo[1],
+                    'size' => intval(Number::fileSize($courseInfo->course_video_size, 2, 3)) . ' ' . $partsvideo[1],
                 ],
                 'cover' => [
                     'slug' => $courseInfo->course_cover_slug,
                     'title' => $courseInfo->course_cover_title,
                     'id' => $courseInfo->course_cover_id,
-                    'size' => intval(Number::fileSize($courseInfo->course_cover_size, 2, 3)).' '.$partscover[1],
+                    'size' => intval(Number::fileSize($courseInfo->course_cover_size, 2, 3)) . ' ' . $partscover[1],
                 ],
                 'pre_req' => $preReqs,
                 'course_targets' => $courseTargets->values(), // convert to array of objects
@@ -131,4 +144,17 @@ class CourseShowForUpdateResource extends JsonResource
     {
         return OunitCategoryEnum::getLabelById($id);
     }
+    /**
+     * Concatenate values if both are not null.
+     */
+    private function concatValues($existingValue, $newValue)
+    {
+        // Ensure both are arrays
+        $existingValue = is_array($existingValue) ? $existingValue : ($existingValue ? [$existingValue] : []);
+        $newValue = $newValue ? [$newValue] : [];
+
+        // Merge and remove duplicates
+        return array_values(array_unique(array_merge($existingValue, $newValue)));
+    }
+
 }
