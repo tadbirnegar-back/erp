@@ -64,15 +64,13 @@ class CourseShowForUpdateResource extends JsonResource
 
                         $mergedTarget['isForAllEmployees'] = (string)(int)($mergedTarget['isForAllEmployees'] && $targetInfo->isForAllEmployees);
                         $mergedTarget['property_info']['name'] = $targetInfo->oucProperty_name ?? $mergedTarget['property_info']['name'];
+                        $mergedTarget['value_info']['value'] = $targetInfo->value_alias_value ?? $mergedTarget['value_info']['value'];
 
-                        if ($mergedTarget['property_info']['name'] !== 'درجه') {
+                        if ($mergedTarget['property_info']['name'] != 'درجه') {
                             $mergedTarget['value_info']['value'] = $targetInfo->value_alias_value !== null
                                 ? ($targetInfo->value_alias_value == 1 ? 'بله' : 'خیر')
                                 : $mergedTarget['value_info']['value'];
                         }                        $mergedTarget['property_info']['id'] = $targetInfo->oucProperty_id ?? $mergedTarget['property_info']['id'];
-                        $mergedTarget['value_info']['value'] = $targetInfo->value_alias_value !== null
-                            ? ($targetInfo->value_alias_value == 1 ? 'بله' : 'خیر')
-                            : $mergedTarget['value_info']['value'];
                         $mergedTarget['value_info']['operator'] = $targetInfo->value_alias_operator ?? $mergedTarget['value_info']['operator'];
                     }
 
@@ -100,6 +98,8 @@ class CourseShowForUpdateResource extends JsonResource
                     'id' => $item->pre_reg_alias_id,
                     'title' => $item->pre_reg_alias_title,
                 ];
+            })->filter(function ($item) {
+                return !is_null($item['id']); // Remove items with null IDs
             })->unique('id')->values();
 
             $sizeWithUnitVideo = Number::fileSize($courseInfo->course_video_size, 2, 3);
