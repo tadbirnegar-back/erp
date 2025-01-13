@@ -618,7 +618,6 @@ trait CourseTrait
         return $filteredResults;
 
     }
-
     public function ActiveAnswerSheetStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
