@@ -88,7 +88,7 @@ class CourseController extends Controller
             //Delete pre requisites
             if (isset($data['preReqDeletedIDs'])) {
                 $reqIDs = json_decode($data['preReqDeletedIDs']);
-                $this->deletePreRequisite($reqIDs);
+                $this->deletePreRequisite($course,$reqIDs);
             }
 
 

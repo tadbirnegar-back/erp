@@ -27,9 +27,9 @@ trait CourseCourseTrait
         return $data;
     }
 
-    public function deletePreRequisite($ids)
+    public function deletePreRequisite($course,$ids)
     {
-        CourseCourse::destroy($ids);
+        CourseCourse::where('main_course_id' , $course->id)->whereIn('prerequisite_course_id', $ids)->delete();
     }
 
 }
