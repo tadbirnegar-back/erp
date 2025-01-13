@@ -31,7 +31,8 @@ class MyCoursesListResource extends JsonResource
 
             return [
                 'course_alias_id' => $courseItems->first()['course_alias_id'],
-                'avatar_alias_slug' => $courseItems->first()['avatar_alias_slug'],
+                'avatar_alias_slug' => url($courseItems->first()['avatar_alias_slug']),
+
                 'course_alias_title' => $courseItems->first()['course_alias_title'],
                 'content_types' => $contentTypes, // Add distinct content types
                 'lesson_count' => $totalLessons, // Add total lesson count

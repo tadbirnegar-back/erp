@@ -559,8 +559,10 @@ trait CourseTrait
                     ->where('course_employee_alias.propertyble_type', '=', DB::raw("'" . addslashes(Position::class) . "'"));
             })
             ->leftJoinRelationship('courseTarget.ounitFeatures.value.oucProperty', [
-                'ounitFeatures' => fn($join) => $join->as('ounit_feature_alias'),
-                'value' => fn($join) => $join->as('value_alias'),
+                'ounitFeatures' => fn($join) => $join->as('ounit_feature_alias')
+                    ->on('ounit_feature_alias.course_target_id', '=', 'course_target_alias.id'),
+                'value' => fn($join) => $join->as('value_alias')
+                    ->on('value_alias.id', '=', 'ounit_feature_alias.ouc_property_value'),
                 'oucProperty' => fn($join) => $join->as('oucProperty'),
             ])
             ->leftJoinRelationship('courseTarget.targetOunitCat', [
@@ -596,9 +598,25 @@ trait CourseTrait
                 'oucProperty.name as oucProperty_name',
                 'oucProperty.id as oucProperty_id',
                 'targetOunitCat.ounit_cat_id as ounit_category_id'
+            ])
+            ->where('courses.id', $id)
+            ->get();
 
-            ])->where('courses.id', $id)->get();
-        return $query;
+        $filteredResults = $query->groupBy('course_target_id')->map(function ($group) {
+            // Check if there are any items in the group with different value_alias_value or oucProperty_name
+            if ($group->pluck('value_alias_value')->unique()->count() > 1 ||
+                $group->pluck('oucProperty_name')->unique()->count() > 1) {
+                // Keep only the item where both are not null, remove the one that is null
+                return $group->filter(function ($item) {
+                    return !(is_null($item->value_alias_value) && is_null($item->oucProperty_name));
+                });
+            }
+            // Otherwise, return the group as is
+            return $group;
+        })->flatten(1); // Flatten to get the final list of results
+
+        return $filteredResults;
+
     }
 
     public function ActiveAnswerSheetStatus()
@@ -723,25 +741,28 @@ trait CourseTrait
                 $join->on('ouc_prop_value.id', '=', 'course_ounit_feat_alias.ouc_property_value');
             })
             ->leftJoin('ouc_properties as ouc_prop_alias', function ($join) {
-                $join->on('ouc_prop_alias.id', '=', 'ouc_prop_value.ouc_property_id');
-                $join->on('target_ounit_cat_alias.ounit_cat_id', '=', 'ouc_prop_alias.ounit_cat_id');
+                $join->on('ouc_prop_alias.id', '=', 'ouc_prop_value.ouc_property_id')
+                    ->on('target_ounit_cat_alias.ounit_cat_id', '=', 'ouc_prop_alias.ounit_cat_id');
             })
             ->leftJoin('organization_units as organ_alias', function ($join) use ($ids) {
-                $join->whereIn('organ_alias.unitable_id', $ids);
-                $join->where('organ_alias.unitable_type', VillageOfc::class);
+                $join->whereIn('organ_alias.unitable_id', $ids)
+                    ->where('organ_alias.unitable_type', VillageOfc::class);
             })
             ->leftJoin('village_ofcs as village_ofc_alias', function ($join) {
-                $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id')
-                    ->whereRaw("village_ofc_alias." . "ouc_prop_alias.column_name = ouc_prop_value.value");
+                $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id');
+                // Use whereRaw with a raw expression to handle dynamic column name
+                $join->whereRaw("village_ofc_alias.`" . DB::connection()->getDatabaseName() . ".ouc_prop_alias.column_name` = ouc_prop_value.value");
             })
             ->select([
                 'targets_alias.id as targets_alias_id',
                 'targets_alias.parent_ounit_id as parent_ounit_id',
                 'courses.id as course_alias_id',
                 'employee_feat_alias.propertyble_type as prop_type'
-            ])->whereHas('courseTarget', function ($query) use ($ids) {
+            ])
+            ->whereHas('courseTarget', function ($query) use ($ids) {
                 $query->whereIn('parent_ounit_id', $ids);
-            })->get();
+            })
+            ->get();
         return $course;
     }
 

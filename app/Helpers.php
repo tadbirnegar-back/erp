@@ -91,10 +91,14 @@ function convertPersianToGregorianBothHaveTimeAndDont(string $persianCharDateTim
     return $hasTime ? $dateTime->toDateTimeString() : $dateTime->toDateString();
 }
 
-function convertDateTimeGregorianToJalaliDateTime(string $value)
+function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
 {
-    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19
-    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
+    if ($value === null) {
+        return null;
+    }
+
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali);
     return $jalaliPersianNumbers;
 }
 
