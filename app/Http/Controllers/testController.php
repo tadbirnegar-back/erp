@@ -3,53 +3,78 @@
 namespace App\Http\Controllers;
 
 
-use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
-use Modules\ACC\app\Models\Document;
+use Illuminate\Bus\Batch;
+use Illuminate\Support\Facades\Bus;
+use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
+use Modules\ACMS\app\Http\Trait\BudgetTrait;
+use Modules\ACMS\app\Http\Trait\CircularTrait;
+use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
+use Modules\ACMS\app\Http\Trait\OunitFiscalYearTrait;
+use Modules\ACMS\app\Jobs\DispatchCircularForOunitJob;
+use Modules\ACMS\app\Models\Circular;
 use Modules\ACMS\app\Models\FiscalYear;
-use Modules\EMS\app\Http\Traits\EnactmentTrait;
-use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
-use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\Gateway\app\Http\Traits\PaymentRepository;
-use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
-use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Morilog\Jalali\Jalalian;
+use Throwable;
 
 
 class testController extends Controller
 {
-    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait, BudgetItemsTrait;
+    use FiscalYearTrait, CircularTrait, OunitFiscalYearTrait, BudgetTrait, BudgetItemsTrait;
 
     public function run()
     {
+        $finishDate = convertJalaliPersianCharactersToGregorian('۱۴۰۳/۱۰/۲۴');
+        dd($finishDate);
 //        Document::powerJoin
 
         $currentYear = Jalalian::now()->getYear();
-        $fiscalYear = FiscalYear::where('name', $currentYear)->first();
-        \DB::enableQueryLog();
-        $docs = Document::leftJoinRelationship('articles')
-            ->joinRelationship('statuses', ['statuses' => function ($join) {
-                $join
-                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
-                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
-            }])
-            ->where('acc_documents.ounit_id', 2748)
-            ->where('acc_documents.fiscal_year_id', $fiscalYear->id)
-            ->select([
-                'acc_documents.id as id',
-                'acc_documents.description as document_description',
-                'statuses.name as status_name',
-                'statuses.class_name as status_class_name',
-                'acc_documents.document_date as document_date',
-                'acc_documents.document_number as document_number',
-                'acc_documents.create_date as create_date',
-                \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
-                \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
-            ])
-            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date', 'statuses.name', 'statuses.class_name')
-            ->get();
-        dd($docs, \DB::getQueryLog());
+        $fiscalYear = FiscalYear::where('name', '1403')->first();
+        $circular = Circular::with('fiscalYear', 'circularItems')->find(13);
+        $user = User::find(1905);
+        \DB::beginTransaction();
+        $includedOunitsForBudget = $this->ounitsIncludingForAddingBudget($circular->fiscalYear->id, false)
+            ->chunk(150);
+        $fiscalYear = $circular->fiscalYear;
 
+        $jobs = [];
+        $includedOunitsForBudget->each(function ($chunkedUnits, $key) use ($fiscalYear, $user, $circular, &$jobs) {
+            $chunkedUnits = $chunkedUnits->values();
+
+            $jobs[] = new DispatchCircularForOunitJob($chunkedUnits->toArray(), $circular, $user);
+
+//            $ounitFiscalYears = $this->bulkStoreOunitFiscalYear($chunkedUnits->toArray(), $fiscalYear, $user);
+//
+//            $budgetName = 'بودجه سال ' . $fiscalYear->name;
+//            $budgets = $this->bulkStoreBudget($ounitFiscalYears->toArray(), $budgetName, $user);
+//
+//            $budgets->each(function ($budget) use ($circular, $user) {
+//                $budgetItems = $this->bulkStoreBudgetItems($budget, $circular->circularItems->toArray());
+//            });
+        });
+        $a = Bus::batch($jobs)
+            ->then(function (Batch $batch) {
+                // All jobs completed successfully
+                \Log::info("All jobs in the batch have completed successfully.");
+            })
+            ->catch(function (Batch $batch, Throwable $e) {
+                // Handle the exception
+                \Log::error("An error occurred in the batch: " . $e->getMessage());
+            })
+            ->finally(function (Batch $batch) {
+                // This block runs regardless of success or failure
+                \Log::info("Batch processing is complete.");
+            })
+            ->name('DispatchCircularForOunitJob')
+            ->onQueue('default')
+            ->dispatch();
+        $this->circularStatusAttach([
+            'userID' => $user->id,
+            'statusID' => $this->approvedCircularStatus()->id,
+
+        ], $circular);
+        \DB::commit();
+        dd($a);
 //        $budget = BudgetItem::joinRelationship('circularItem.subject')
 //            ->where('budget_id', 4774)
 //            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::EXPENSE->value)
