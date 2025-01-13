@@ -61,7 +61,18 @@ enum OunitCategoryEnum: int
     public static function getDesiredLabelWithValue($label)
     {
         foreach (self::cases() as $case) {
-            if ($case->getLabel() === $label) {
+            if ($case->getUnitableType() === $label) {
+                return $case->value;
+            }
+        }
+        throw new \InvalidArgumentException("label not found: $label");
+
+    }
+
+    public static function getValueFromlabel($label)
+    {
+        foreach (self::cases() as $case) {
+            if ($case->getUnitableType() == $label) {
                 return $case->value;
             }
         }
@@ -81,6 +92,17 @@ enum OunitCategoryEnum: int
         throw new \InvalidArgumentException("ID not found: $id");
     }
 
+    public static function getModelByValue(int $value)
+    {
+        foreach (self::cases() as $case) {
+            if ($case->value === $value) {
+                return $case->getUnitableType();
+            }
+        }
+
+        // Optionally, handle cases where the value is not found
+        throw new \InvalidArgumentException("Value not found: $value");
+    }
 
 
 }

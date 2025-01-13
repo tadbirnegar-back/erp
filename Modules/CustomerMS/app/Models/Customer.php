@@ -2,8 +2,8 @@
 
 namespace Modules\CustomerMS\app\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
@@ -58,7 +58,6 @@ class Customer extends Model
     {
         return $this->belongsTo(Status::class, 'status_id');
     }
-
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
@@ -69,10 +68,14 @@ class Customer extends Model
         return $this->morphTo();
     }
 
-    public function enrolls()
+    public function orders()
     {
-        return $this->hasManyDeep(Enroll::class, [Order::class],
-            ['customer_id', 'id'],
+        return $this->hasMany(Order::class);
+    }
+
+    public function enrolls(){
+        return $this -> hasManyDeep(Enroll::class, [Order::class] ,
+            ['customer_id' , 'id'],
             ['id', 'orderable_id']
         );
     }

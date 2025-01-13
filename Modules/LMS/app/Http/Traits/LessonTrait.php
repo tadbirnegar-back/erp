@@ -9,6 +9,7 @@ use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\FileLesson;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\LessonStudyLog;
+use Modules\LMS\app\Models\StatusLesson;
 use Modules\LMS\app\Models\Teacher;
 
 trait LessonTrait
@@ -19,6 +20,16 @@ trait LessonTrait
             'chapter_id' => $data['chapterID'],
             'description' => $data['description'],
             'title' => $data['title'],
+        ]);
+    }
+
+    public function addActiveLessonStatus(Lesson $lesson)
+    {
+        $statusID = $this->lessonActiveStatus()->id;
+        StatusLesson::create([
+            'status_id' => $statusID,
+            'lesson_id' => $lesson -> id ,
+            'created_date' => now()
         ]);
     }
 

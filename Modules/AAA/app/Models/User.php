@@ -396,4 +396,11 @@ class User extends Authenticatable
         )->where("customers.customerable_type", Student::class);
     }
 
+    public function customer()
+    {
+        return $this->hasOneDeep(Customer::class, [Person::class],
+            ['id', 'person_id'],
+            ['person_id', 'id']
+        );
+    }
 }

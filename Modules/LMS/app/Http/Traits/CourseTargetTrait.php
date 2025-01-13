@@ -25,10 +25,13 @@ trait CourseTargetTrait
             //Store Course Feature
             if (isset($target->ounitCatIds) && !empty($target->ounitCatIds)) {
                 foreach ($target->ounitCatIds as $catId) {
-                    TargetOunitCat::create([
-                        'course_target_id' => $courseTargetRecord->id,
-                        'ounit_cat_id' => $catId,
-                    ]);
+                    $array = str_split((string)$catId);
+                    foreach ($array as $catigorzeId) {
+                        TargetOunitCat::create([
+                            'course_target_id' => $courseTargetRecord->id,
+                            'ounit_cat_id' => $catigorzeId,
+                        ]);
+                    }
                 }
             }
             if (isset($target->oucPropertyValueID) && !is_null($target->oucPropertyValueID)) {

@@ -24,10 +24,10 @@ class ApproveRsNotification extends Notification implements ShouldQueue
     /**
      * @param string $username
      */
-    public function __construct(string $username , string $position , string $ounit)
+    public function __construct(string $username ,$position , string $ounit)
     {
         $this->username = $username;
-        $this->position = $position;
+        $this->position = $position ?? 'سمت مورد نظر';
         $this->ounit = $ounit;
     }
 

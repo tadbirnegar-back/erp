@@ -6,6 +6,7 @@ use Modules\LMS\app\Models\CourseExam;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\QuestionExam;
+use Modules\LMS\app\Resources\ExamPreviewResource;
 use Modules\SettingsMS\app\Models\Setting;
 
 trait ExamsTrait
@@ -79,6 +80,21 @@ trait ExamsTrait
 
         ]);
         return $query->where('exams.id', $id)->get();
+
+    }
+
+    public function previewExam($examID, $courseID, $student)
+    {
+        $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
+        $completed = $this->isCourseCompleted($student);
+        $attempted = $this->hasAttemptedAndPassedExam($student, $courseID);
+        if ($enrolled && !$attempted && !$completed) {
+            $exam = $this->examPreview($examID);
+            $response = new ExamPreviewResource($exam);
+            return $response;
+        } else {
+            return null;
+        }
 
     }
 

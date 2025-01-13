@@ -95,11 +95,27 @@ function convertPersianToGregorianBothHaveTimeAndDont($persianCharDateTime)
     return $hasTime ? $dateTime->toDateTimeString() : $dateTime->toDateString();
 }
 
-function convertDateTimeGregorianToJalaliDateTime(string $value)
+function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
 {
-    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19
-    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
+    if ($value === null) {
+        return null;
+    }
+
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali);
     return $jalaliPersianNumbers;
+}
+
+
+function convertDateTimeGregorianToJalaliDateTimeButWithoutTime(string $value)
+{
+    // Convert to Jalali with time (H:i:s)
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19 12:30:45
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹ ۱۲:۳۰:۴۵
+
+    $dateOnly = substr($jalaliPersianNumbers, 0, 10); // ۱۳۹۵-۰۲-۱۹
+
+    return $dateOnly;
 }
 
 function convertDateTimeHaveDashJalaliPersianCharactersToGregorian(string $persianCharDateTime)

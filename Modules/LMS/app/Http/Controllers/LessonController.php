@@ -55,6 +55,8 @@ class LessonController extends Controller
             $data['chapterID'] = $chapter->id;
             //Lesson Part
             $lesson = $this->storeLesson($data);
+            //Status Lesson
+            $this->addActiveLessonStatus($lesson);
             $data['lessonID'] = $lesson->id;
             //LessonFiles
             if (isset($data['lessonFiles'])) {
@@ -86,9 +88,6 @@ class LessonController extends Controller
         }])->get();
 
         $contentTypes = ContentType::all();
-        if ($course->isEmpty()) {
-            return response()->json(['message' => 'Course not found'], 404);
-        }
 
         return response()->json(["teacher" => $teacher, "course" => $course, "contentTypes" => $contentTypes]);
     }
