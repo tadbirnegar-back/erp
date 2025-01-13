@@ -51,7 +51,6 @@ class CourseShowForUpdateResource extends JsonResource
                             'operator' => null,
                         ]
                     ];
-
                     foreach ($nestedGroup as $targetInfo) {
                         // Update values if they are not null
                         $mergedTarget['id'] = $targetInfo->course_target_id ?? $mergedTarget['id'];
@@ -81,7 +80,7 @@ class CourseShowForUpdateResource extends JsonResource
                     'categories' => $isForAllCats
                         ? ['همه دسته های سازمانی']
                         : array_map([$this, 'exactCat'], $uniqueCategories),
-                    'targets' => $uniqueTargets->values(), // convert to array of objects
+                    'targets' => $uniqueTargets->values(),
                 ];
             });
 

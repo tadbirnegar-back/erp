@@ -88,9 +88,6 @@ class LessonController extends Controller
         }])->get();
 
         $contentTypes = ContentType::all();
-        if ($course->isEmpty()) {
-            return response()->json(['message' => 'Course not found'], 404);
-        }
 
         return response()->json(["teacher" => $teacher, "course" => $course, "contentTypes" => $contentTypes]);
     }
