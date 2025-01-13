@@ -137,7 +137,8 @@ trait CourseTrait
         $course->privacy_id = $data['privacyID'] ?? $course->privacy_id;
         $course->is_required = $data['isRequired'] ?? $course->is_required;
         $course->access_date = $data['accessDate'] ?? $course->access_date;
-        $course->expiration_date = $data['expireDate'] ?? $course->expiration_date;
+        $course->expiration_date = convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) ?? convertPersianToGregorianBothHaveTimeAndDont($course->expiration_date);
+        $course->access_date = convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) ?? convertPersianToGregorianBothHaveTimeAndDont($course->access_date);
         $course->preview_video_id = $data['previewVideoID'] ?? $course->preview_video_id;
         $course->cover_id = $data['coverID'] ?? $course->cover_id;
         $course->save();

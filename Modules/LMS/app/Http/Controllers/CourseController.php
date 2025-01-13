@@ -71,29 +71,39 @@ class CourseController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = $request->all();
-        $course = Course::find($id);
-        $course = $this->updateCourseDatas($course, $data);
-        //store preRequisites
-        if (isset($data['preRequisiteCourseIDs'])) {
-            $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
-        }
-        //Store Target Points
-        if (isset($data['courseTargets'])) {
-            $this->storeCourseTarget($course->id, $data['courseTargets']);
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $course = Course::find($id);
+            $course = $this->updateCourseDatas($course, $data);
+            //store preRequisites
+            if (isset($data['preRequisiteCourseIDs'])) {
+                $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
+            }
+            //Store Target Points
+            if (isset($data['courseTargets'])) {
+                $this->storeCourseTarget($course->id, $data['courseTargets']);
+            }
+
+            //Delete pre requisites
+            if (isset($data['preReqDeletedIDs'])) {
+                $reqIDs = json_decode($data['preReqDeletedIDs']);
+                $this->deletePreRequisite($reqIDs);
+            }
+
+
+            if (isset($data['courseTargetsIDs'])) {
+                $ctIDs = json_decode($data['courseTargetsIDs']);
+                $this->deleteCourseTarget($ctIDs);
+            }
+            DB::commit();
+            return response() -> json(['message' => 'دوره شما با موفقیت به روز رسانی شد'] , 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response() -> json(['message' => $e->getMessage()] , 200);
         }
 
-        //Delete pre requisites
-        if (isset($data['preReqDeletedIDs'])) {
-            $reqIDs = json_decode($data['preReqDeletedIDs']);
-            $this->deletePreRequisite($reqIDs);
-        }
 
-
-        if (isset($data['courseTargetsIDs'])) {
-            $ctIDs = json_decode($data['courseTargetsIDs']);
-            $this->deleteCourseTarget($ctIDs);
-        }
     }
 
     public function updateDataShow($id)
