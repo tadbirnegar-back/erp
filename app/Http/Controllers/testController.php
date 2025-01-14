@@ -42,15 +42,6 @@ class testController extends Controller
             $chunkedUnits = $chunkedUnits->values();
 
             $jobs[] = new DispatchCircularForOunitJob($chunkedUnits->toArray(), $circular, $user);
-
-//            $ounitFiscalYears = $this->bulkStoreOunitFiscalYear($chunkedUnits->toArray(), $fiscalYear, $user);
-//
-//            $budgetName = 'بودجه سال ' . $fiscalYear->name;
-//            $budgets = $this->bulkStoreBudget($ounitFiscalYears->toArray(), $budgetName, $user);
-//
-//            $budgets->each(function ($budget) use ($circular, $user) {
-//                $budgetItems = $this->bulkStoreBudgetItems($budget, $circular->circularItems->toArray());
-//            });
         });
         $a = Bus::batch($jobs)
             ->then(function (Batch $batch) {

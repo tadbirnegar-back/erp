@@ -48,7 +48,7 @@ class DispatchCircularForOunitJob implements ShouldQueue
             $ounitFiscalYears = $this->bulkStoreOunitFiscalYear($this->ounitIDs, $this->circular->fiscalYear, $this->user);
 
             $budgetName = 'بودجه سال ' . $this->circular->fiscalYear->name;
-            $budgets = $this->bulkStoreBudget($ounitFiscalYears->toArray(), $budgetName, $this->user);
+            $budgets = $this->bulkStoreBudget($ounitFiscalYears->toArray(), $budgetName, $this->user, $this->circular);
             $budgetItemsJobs = [];
             $budgets->each(function ($budget) use (&$budgetItemsJobs) {
                 $budgetItemsJobs[] = new CalculateAndInsertBudgetItemsJob($budget, $this->circular->circularItems->toArray());

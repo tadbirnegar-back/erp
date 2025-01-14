@@ -5,14 +5,17 @@ namespace Modules\ACMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Auth;
 use DB;
+use Illuminate\Bus\Batch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Mockery\Exception;
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
 use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Http\Trait\CircularTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Http\Trait\OunitFiscalYearTrait;
+use Modules\ACMS\app\Jobs\DispatchCircularForOunitJob;
 use Modules\ACMS\app\Models\Circular;
 use Modules\ACMS\app\Models\CircularSubject;
 use Modules\ACMS\app\Resources\CircularListResource;
@@ -184,30 +187,40 @@ class CircularController extends Controller
         }
 
         try {
-            DB::beginTransaction();
+            \DB::beginTransaction();
+
             $includedOunitsForBudget = $this->ounitsIncludingForAddingBudget($circular->fiscalYear->id, false)
-                ->chunk(500);
-            $fiscalYear = $circular->fiscalYear;
+                ->chunk(150);
 
-            $includedOunitsForBudget->each(function ($chunkedUnits, $key) use ($fiscalYear, $user, $circular) {
-
+            $jobs = [];
+            $includedOunitsForBudget->each(function ($chunkedUnits, $key) use ($user, $circular, &$jobs) {
                 $chunkedUnits = $chunkedUnits->values();
 
-                $ounitFiscalYears = $this->bulkStoreOunitFiscalYear($chunkedUnits->toArray(), $fiscalYear, $user);
-
-                $budgetName = 'بودجه سال ' . $fiscalYear->name;
-                $budgets = $this->bulkStoreBudget($ounitFiscalYears->toArray(), $budgetName, $user);
-
-                $budgets->each(function ($budget) use ($circular, $user) {
-                    $budgetItems = $this->bulkStoreBudgetItems($budget, $circular->circularItems->toArray());
-                });
+                $jobs[] = new DispatchCircularForOunitJob($chunkedUnits->toArray(), $circular, $user);
             });
+
+            Bus::batch($jobs)
+                ->then(function (Batch $batch) {
+                    // All jobs completed successfully
+                    \Log::info("All jobs in the batch have completed successfully.");
+                })
+                ->catch(function (Batch $batch, \Throwable $e) {
+                    // Handle the exception
+                    \Log::error("An error occurred in the batch: " . $e->getMessage());
+                })
+                ->finally(function (Batch $batch) {
+                    // This block runs regardless of success or failure
+                    \Log::info("Batch processing is complete.");
+                })
+                ->name('DispatchCircularForOunitJob')
+                ->onQueue('default')
+                ->dispatch();
             $this->circularStatusAttach([
                 'userID' => $user->id,
                 'statusID' => $this->approvedCircularStatus()->id,
 
             ], $circular);
-            DB::commit();
+            \DB::commit();
             return response()->json(['message' => 'با موفقیت بروز شد'], 200);
 
         } catch (Exception $e) {
