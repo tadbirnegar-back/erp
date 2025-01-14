@@ -12,7 +12,7 @@ use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
-
+use Modules\LMS\app\Http\Controllers\CourseCourseController;
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -77,10 +77,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/ounit/live-search', [CourseController::class, 'liveSearchOunit']);
     Route::post('/lms/ouc-properties/list', [OucPropertyController::class, 'listing']);
     Route::post('/lms/ouc-property-values/list', [OucPropertyValueController::class, 'listing']);
-    Route::get('/lms/course-add-providers/list', [CourseOunitFeatureController::class, 'listing']);
+    Route::get('/lms/course-course/list/{id}', [CourseCourseController::class, 'listing']);
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
     Route::get('/lms/course/my-enrolled-courses' , [CourseController::class, 'myEnrolledCourses']);
     Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
-
 });

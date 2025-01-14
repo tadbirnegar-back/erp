@@ -1,12 +1,13 @@
 <?php
-
 namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Http\Traits\PositionTrait;
 
 class LiveOunitSearchForCourseResource extends JsonResource
 {
+    use PositionTrait;
     public function toArray($request): array
     {
         return [
@@ -29,25 +30,25 @@ class LiveOunitSearchForCourseResource extends JsonResource
 
         return [
             'StateOfc' => [
-                ["value" => $stateValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::StateOfc->value)],
-                ["value" => $cityValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::CityOfc->value)],
-                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value)],
-                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value)],
-                ["value"=> intval($stateValue.$cityValue.$districtValue.$villageValue), "label" => "همه دسته های سازمانی"]
+                ["value" => $stateValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::StateOfc->value) , "position" => $this->positionFilteredCatShow($stateValue)],
+                ["value" => $cityValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::CityOfc->value) , "position" => $this->positionFilteredCatShow($cityValue)],
+                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value) , "position" => $this->positionFilteredCatShow($districtValue)],
+                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value) , "position" => $this->positionFilteredCatShow($villageValue)],
+                ["value"=> intval($stateValue.$cityValue.$districtValue.$villageValue), "label" => "همه دسته های سازمانی" , "position" => $this->positionFilteredCatForAllShow($stateValue.$cityValue.$districtValue.$villageValue)],
             ],
             'CityOfc' => [
-                ["value" => $cityValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::CityOfc->value)],
-                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value)],
-                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value)],
-                ["value"=> intval($cityValue.$districtValue.$villageValue), "label" => "همه دسته های سازمانی"]
+                ["value" => $cityValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::CityOfc->value) , "position" => $this->positionFilteredCatShow($cityValue)],
+                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value) , "position" => $this->positionFilteredCatShow($districtValue)],
+                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value) , "position" => $this->positionFilteredCatShow($villageValue)],
+                ["value"=> intval($cityValue.$districtValue.$villageValue), "label" => "همه دسته های سازمانی" , "position" => $this->positionFilteredCatForAllShow($cityValue.$districtValue.$villageValue)]
             ],
             'DistrictOfc' => [
-                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value)],
-                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value)],
-                ["value"=> intval($districtValue.$villageValue), "label" => "همه دسته های سازمانی"]
+                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value) , "position" => $this->positionFilteredCatShow($districtValue)],
+                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value) , "position" => $this->positionFilteredCatShow($villageValue)],
+                ["value"=> intval($districtValue.$villageValue), "label" => "همه دسته های سازمانی" , "position" => $this->positionFilteredCatForAllShow($districtValue.$villageValue)]
             ],
             'VillageOfc' => [
-                ["value" => OunitCategoryEnum::VillageOfc->value, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value)],
+                ["value" => OunitCategoryEnum::VillageOfc->value, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value) , "position" => $this->positionFilteredCatShow($villageValue)],
             ]
         ];
     }
@@ -59,7 +60,8 @@ class LiveOunitSearchForCourseResource extends JsonResource
         return array_map(function ($component) {
             return [
                 'value' => $component['value'],
-                'label' => $component['label']
+                'label' => $component['label'],
+                'position' => $component['position'] ?? null,
             ];
         }, $components[$type] ?? []);
     }

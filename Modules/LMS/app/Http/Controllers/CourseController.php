@@ -13,6 +13,9 @@ use Modules\AddressMS\app\Models\City;
 use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\State;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Http\Traits\JobTrait;
+use Modules\HRMS\app\Models\Job;
+use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseCourseTrait;
@@ -41,7 +44,7 @@ use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
 {
-    use CourseTrait, CourseCourseTrait, CourseTargetTrait, CourseEmployeeFeatureTrait;
+    use CourseTrait, CourseCourseTrait, CourseTargetTrait, CourseEmployeeFeatureTrait , JobTrait;
 
     public function store(Request $request)
     {
@@ -78,19 +81,12 @@ class CourseController extends Controller
             $course = $this->updateCourseDatas($course, $data);
             //store preRequisites
             if (isset($data['preRequisiteCourseIDs'])) {
-                $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
+                $this->syncPreReqDatas($course, $data['preRequisiteCourseIDs']);
             }
             //Store Target Points
             if (isset($data['courseTargets'])) {
                 $this->storeCourseTarget($course->id, $data['courseTargets']);
             }
-
-            //Delete pre requisites
-            if (isset($data['preReqDeletedIDs'])) {
-                $reqIDs = json_decode($data['preReqDeletedIDs']);
-                $this->deletePreRequisite($course,$reqIDs);
-            }
-
 
             if (isset($data['courseTargetsIDs'])) {
                 $ctIDs = json_decode($data['courseTargetsIDs']);
@@ -296,8 +292,10 @@ class CourseController extends Controller
             ->get();
 
         $response = LiveOunitSearchForCourseResource::collection($results);
+        $jobs = Job::where('status_id' , $this->activeJobStatus()->id)->get();
 
-        return response()->json($response);
+
+        return response()->json(["category" => $response, "jobs" => $jobs]);
     }
 
     public function myEnrolledCourses(Request $request)
