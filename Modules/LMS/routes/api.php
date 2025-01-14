@@ -64,6 +64,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
+    Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
+    Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
     Route::get('/lms/pre-view/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'previewExam']);
     Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
@@ -79,4 +81,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
     Route::get('/lms/course/my-enrolled-courses' , [CourseController::class, 'myEnrolledCourses']);
+    Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
+
 });

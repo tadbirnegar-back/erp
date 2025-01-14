@@ -10,12 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('answers', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('answer_sheet_id');
-            $table->unsignedBigInteger('option_id');
-            $table->unsignedBigInteger('question_exam_id');
-            $table->float('value');
+        Schema::table('answers', function (Blueprint $table) {
+            $table->dropColumn('option_id');
         });
     }
 
@@ -24,6 +20,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('answers');
+        Schema::dropIfExists('drop_option_id_answers');
     }
 };

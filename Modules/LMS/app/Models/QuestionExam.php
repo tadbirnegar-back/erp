@@ -31,5 +31,26 @@ class QuestionExam extends Model
         return $this->belongsTo(Question::class, 'question_id', 'id');
     }
 
+    public function exam()
+    {
+        return $this->belongsTo(Exam::class, 'exam_id', 'id');
+    }
+
+
+    public function question()
+    {
+        return $this->belongsTo(Question::class, 'question_id', 'id');
+    }
+
+    public function options()
+    {
+        return $this->hasManyThrough(Option::class,
+            Question::class,
+            'id',
+            'question_id',
+            'question_id',
+            'id'
+        );
+    }
 
 }

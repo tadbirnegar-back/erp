@@ -29,7 +29,8 @@ class AnswerSheet extends Model
         'student_id',
         'finish_date_time',
         'start_date_time',
-        'score'
+        'score',
+        'status_id'
     ];
 
     public function exam()
@@ -53,7 +54,7 @@ class AnswerSheet extends Model
         return $this->belongsTo(Status::class, 'status_id', 'id');
     }
 
-    public function answer()
+    public function answers()
     {
         return $this->hasMany(Answers::class, 'answer_sheet_id', 'id');
     }
@@ -61,26 +62,13 @@ class AnswerSheet extends Model
     public function repository()
     {
         return $this->hasOneThrough(
-            Repository::class, // مدل نهایی
-            Exam::class,       // مدل واسطه
-            'id',              // کلید اصلی جدول Exams
-            'id',              // کلید اصلی جدول Repositories
-            'exam_id',         // کلید خارجی جدول AnswerSheets که به جدول Exams اشاره می‌کند
-            'repository_id'    // کلید خارجی جدول Exams که به جدول Repositories اشاره می‌کند
-        );
-    }
-
-    public function questionType()
-    {
-        return $this->hasOneThrough(
-            QuestionType::class,
+            Repository::class,
             Exam::class,
             'id',
             'id',
             'exam_id',
-            'questions_type_id'
+            'repository_id'
         );
-
     }
 
 

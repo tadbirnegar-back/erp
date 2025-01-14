@@ -23,7 +23,7 @@ class Answers extends Model
     protected $fillable = [
         'answer_sheet_id',
         'id',
-        'question_exam_id',
+        'question_id',
         'value',
     ];
 
@@ -40,6 +40,11 @@ class Answers extends Model
     public function questions()
     {
         return $this->belongsTo(Question::class, 'question_id', 'id');
+    }
+
+    public function options()
+    {
+        return $this->belongsTo(Option::class, 'value', 'id');
     }
 
 }

@@ -34,6 +34,8 @@ class testController extends Controller
 
 
         return response()->json($query);
+
+
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);

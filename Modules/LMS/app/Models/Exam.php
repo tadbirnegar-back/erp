@@ -47,6 +47,16 @@ class Exam extends Model
 //    {
 //        return $this->belongsToMany(Question::class, 'course_exams', 'exam_id', 'question_id');
 //    }
+//    public function questions()
+//    {
+//        return $this->belongsToMany(Question::class, 'course_exams', 'exam_id', 'question_id');
+//    }
+
+    public function questionExam()
+    {
+        return $this->hasMany(QuestionExam::class, 'exam_id', 'id');
+    }
+
     public function questions()
     {
         return $this->hasManyThrough(Question::class,
