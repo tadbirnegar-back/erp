@@ -28,7 +28,7 @@ trait AnswerSheetTrait
     }
 
 
-    public function storeAnswerSheet($examId, $student, $optionID, $data)
+    public function storeAnswerSheet($examId, $student, $optionID, $data, $usedTime)
     {
 
         $score = $this->score($examId, $optionID);
@@ -61,7 +61,7 @@ trait AnswerSheetTrait
             ]);
         }
         $final = $this->final($answerSheet);
-        $calculate = $this->calculatingAnswers($optionIDs, $answerSheet->id);
+        $calculate = $this->calculatingAnswers($optionIDs, $answerSheet->id, $usedTime);
         $studentInfo = $this->student($student);
 
         return [
@@ -131,7 +131,7 @@ trait AnswerSheetTrait
     }
 
 
-    public function calculatingAnswers($optionIDs, $answerSheet)
+    public function calculatingAnswers($optionIDs, $answerSheet, $usedTime)
     {
         $correctAnswers = $this->correctAnswers($optionIDs);
         $falseAnswers = $this->falseAnswers($optionIDs);
@@ -142,7 +142,8 @@ trait AnswerSheetTrait
             'correct' => $correctAnswers,
             'false' => $falseAnswers,
             'null' => $nullAnswers,
-            'allQuestions' => $questionCount
+            'allQuestions' => $questionCount,
+            'usedTime' => $usedTime
         ];
     }
 

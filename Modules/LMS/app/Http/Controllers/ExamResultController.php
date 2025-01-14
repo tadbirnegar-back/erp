@@ -25,7 +25,7 @@ class ExamResultController extends Controller
     {
         $jsonData = $request->input('data');
         $data = json_decode($jsonData, true);
-
+        $usedTime = $request->usedTime;
         if (!isset($data['questions'])) {
             return response()->json(['error' => 'Questions are missing.'], 400);
         }
@@ -39,7 +39,8 @@ class ExamResultController extends Controller
         $student = Auth::user()->load('student');
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
 
-        $answerSheet = $this->storeAnswerSheet($examId, $student, $optionID, $data);
+        $answerSheet = $this->storeAnswerSheet($examId, $student, $optionID, $data, $usedTime);
+
         $result = new ExamResultResource($answerSheet);
         return response()->json($result);
     }
