@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -30,52 +29,28 @@ class LiveOunitSearchForCourseResource extends JsonResource
         $villageValue = OunitCategoryEnum::VillageOfc->value;
 
         return [
-            'StateOfc' => $this->getComponentWithPositions($stateValue, [
-                ["value" => $stateValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::StateOfc->value)],
-                ["value" => $cityValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::CityOfc->value)],
-                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value)],
-                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value)],
-                ["value" => intval($stateValue . $cityValue . $districtValue . $villageValue), "label" => "همه دسته های سازمانی"]
-            ]),
-            'CityOfc' => $this->getComponentWithPositions($cityValue, [
-                ["value" => $cityValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::CityOfc->value)],
-                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value)],
-                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value)],
-                ["value" => intval($cityValue . $districtValue . $villageValue), "label" => "همه دسته های سازمانی"]
-            ]),
-            'DistrictOfc' => $this->getComponentWithPositions($districtValue, [
-                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value)],
-                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value)],
-                ["value" => intval($districtValue . $villageValue), "label" => "همه دسته های سازمانی"]
-            ]),
-            'VillageOfc' => $this->getComponentWithPositions($villageValue, [
-                ["value" => OunitCategoryEnum::VillageOfc->value, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value)],
-            ])
+            'StateOfc' => [
+                ["value" => $stateValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::StateOfc->value) , "position" => $this->positionFilteredCatShow($stateValue)],
+                ["value" => $cityValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::CityOfc->value) , "position" => $this->positionFilteredCatShow($cityValue)],
+                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value) , "position" => $this->positionFilteredCatShow($districtValue)],
+                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value) , "position" => $this->positionFilteredCatShow($villageValue)],
+                ["value"=> intval($stateValue.$cityValue.$districtValue.$villageValue), "label" => "همه دسته های سازمانی" , "position" => $this->positionFilteredCatForAllShow($stateValue.$cityValue.$districtValue.$villageValue)],
+            ],
+            'CityOfc' => [
+                ["value" => $cityValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::CityOfc->value) , "position" => $this->positionFilteredCatShow($cityValue)],
+                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value) , "position" => $this->positionFilteredCatShow($districtValue)],
+                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value) , "position" => $this->positionFilteredCatShow($villageValue)],
+                ["value"=> intval($cityValue.$districtValue.$villageValue), "label" => "همه دسته های سازمانی" , "position" => $this->positionFilteredCatForAllShow($cityValue.$districtValue.$villageValue)]
+            ],
+            'DistrictOfc' => [
+                ["value" => $districtValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::DistrictOfc->value) , "position" => $this->positionFilteredCatShow($districtValue)],
+                ["value" => $villageValue, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value) , "position" => $this->positionFilteredCatShow($villageValue)],
+                ["value"=> intval($districtValue.$villageValue), "label" => "همه دسته های سازمانی" , "position" => $this->positionFilteredCatForAllShow($districtValue.$villageValue)]
+            ],
+            'VillageOfc' => [
+                ["value" => OunitCategoryEnum::VillageOfc->value, "label" => OunitCategoryEnum::getLabelById(OunitCategoryEnum::VillageOfc->value) , "position" => $this->positionFilteredCatShow($villageValue)],
+            ]
         ];
-    }
-
-    private function getComponentWithPositions(int $catId, array $baseComponents): array
-    {
-        $positions = $this->positionFilteredCatShow($catId);
-
-        return array_map(function ($component) use ($positions) {
-            return [
-                'value' => $component['value'],
-                'label' => $component['label'],
-                'positions' => $positions ? $positions->map(function ($position) {
-                    return [
-                        'id' => $position->id,
-                        'name' => $position->name,
-                        'levels' => $position->levels->map(function ($level) {
-                            return [
-                                'id' => $level->id,
-                                'name' => $level->name,
-                            ];
-                        }),
-                    ];
-                })->toArray() : [], // Default to an empty array if no positions are found
-            ];
-        }, $baseComponents);
     }
 
     private function formatChilds(string $type): array
@@ -85,7 +60,8 @@ class LiveOunitSearchForCourseResource extends JsonResource
         return array_map(function ($component) {
             return [
                 'value' => $component['value'],
-                'label' => $component['label']
+                'label' => $component['label'],
+                'position' => $component['position'] ?? null,
             ];
         }, $components[$type] ?? []);
     }

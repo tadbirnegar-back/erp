@@ -113,6 +113,14 @@ trait PositionTrait
         }])->where('status_id' , $this->activePositionStatus()->id)->where('ounit_cat' , $catId )->get();
     }
 
+    public function positionFilteredCatForAllShow($catIds)
+    {
+        $categories = str_split($catIds);
+        return Position::with(['levels' => function ($query) {
+            $query->where('status_id' , $this->activeLevelStatus()->id);
+        }])->where('status_id' , $this->activePositionStatus()->id)->whereIn('ounit_cat' , $categories )->get();
+    }
+
     public function activePositionStatus()
     {
         return Position::GetAllStatuses()->firstWhere('name', '=', $this->activePositionStatus);

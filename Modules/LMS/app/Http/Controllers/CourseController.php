@@ -13,6 +13,7 @@ use Modules\AddressMS\app\Models\City;
 use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\State;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
@@ -43,7 +44,7 @@ use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
 {
-    use CourseTrait, CourseCourseTrait, CourseTargetTrait, CourseEmployeeFeatureTrait;
+    use CourseTrait, CourseCourseTrait, CourseTargetTrait, CourseEmployeeFeatureTrait , JobTrait;
 
     public function store(Request $request)
     {
@@ -291,8 +292,10 @@ class CourseController extends Controller
             ->get();
 
         $response = LiveOunitSearchForCourseResource::collection($results);
+        $jobs = Job::where('status_id' , $this->activeJobStatus()->id)->get();
 
-        return response()->json($response);
+
+        return response()->json(["category" => $response, "jobs" => $jobs]);
     }
 
     public function myEnrolledCourses(Request $request)
