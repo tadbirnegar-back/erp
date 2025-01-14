@@ -21,11 +21,7 @@ class CourseOunitFeatureController extends Controller
     public function listing(Request $request)
     {
 
-        $levels = Level::where('status_id' , $this->activeLevelStatus()->id)->get();
-        $positions = Position::with(['levels' => function ($query) {
-            $query->where('status_id' , $this->activeLevelStatus()->id);
-        }])->where('status_id' , $this->activePositionStatus()->id)->get();
-        $jobs = Job::where('status_id' , $this->activeJobStatus()->id)->get();
+
 
 
         $presentingCourse = $this->coursePresentingStatus()->id;
@@ -40,9 +36,6 @@ class CourseOunitFeatureController extends Controller
 
 
         $data = [
-            'levels' => $levels ,
-            'positions' => $positions,
-            'jobs' => $jobs,
             'courses' => $coursesResponse,
         ];
 

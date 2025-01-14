@@ -13,6 +13,8 @@ use Modules\AddressMS\app\Models\City;
 use Modules\AddressMS\app\Models\District;
 use Modules\AddressMS\app\Models\State;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Models\Job;
+use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseCourseTrait;
@@ -78,19 +80,12 @@ class CourseController extends Controller
             $course = $this->updateCourseDatas($course, $data);
             //store preRequisites
             if (isset($data['preRequisiteCourseIDs'])) {
-                $this->storePreRequisite($course->id, $data['preRequisiteCourseIDs']);
+                $this->syncPreReqDatas($course, $data['preRequisiteCourseIDs']);
             }
             //Store Target Points
             if (isset($data['courseTargets'])) {
                 $this->storeCourseTarget($course->id, $data['courseTargets']);
             }
-
-            //Delete pre requisites
-            if (isset($data['preReqDeletedIDs'])) {
-                $reqIDs = json_decode($data['preReqDeletedIDs']);
-                $this->deletePreRequisite($course,$reqIDs);
-            }
-
 
             if (isset($data['courseTargetsIDs'])) {
                 $ctIDs = json_decode($data['courseTargetsIDs']);

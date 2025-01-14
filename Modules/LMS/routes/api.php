@@ -84,3 +84,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
 
 });
+Route::post('/lms/ounit/live-search', [CourseController::class, 'liveSearchOunit']);
