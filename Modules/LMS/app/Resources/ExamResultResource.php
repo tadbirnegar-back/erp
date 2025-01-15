@@ -10,7 +10,6 @@ class ExamResultResource extends JsonResource
     public function toArray($request)
     {
         $usedTimeInSeconds = $this['calculated']['usedTime'] ?? 0;
-        \Log::info($usedTimeInSeconds);
         $finishedTime = Carbon::parse($this['calculated']['finishedDateTime'] ?? now());
         $startedTime = $finishedTime->subSeconds($usedTimeInSeconds);
         $finishedTimeForShow = now();
