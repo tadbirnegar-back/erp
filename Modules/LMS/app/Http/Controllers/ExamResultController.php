@@ -23,7 +23,7 @@ class ExamResultController extends Controller
 
     public function storeAnsS(Request $request, $examId)
     {
-        $jsonData = $request->input('data');
+        $jsonData = $request->data;
         $data = json_decode($jsonData, true);
 
         if (!isset($data['questions'])) {

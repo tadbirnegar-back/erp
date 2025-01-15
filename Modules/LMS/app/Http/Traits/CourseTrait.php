@@ -108,7 +108,7 @@ trait CourseTrait
             'description' => $data['description'],
             'privacy_id' => $data['privacyID'],
             'is_required' => $data['isRequired'],
-            'access_date' =>     isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
+            'access_date' => isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
             'expiration_date' => isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null,
             'cover_id' => $data['coverID'],
             'preview_video_id' => $data['previewVideoID'],
@@ -618,6 +618,7 @@ trait CourseTrait
         return $filteredResults;
 
     }
+
     public function ActiveAnswerSheetStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
@@ -710,7 +711,19 @@ trait CourseTrait
         $ids = array_column($ounit, 'id');
         $ounitCats = array_unique(array_column($ounit, 'category_id'));
         $course = Course::query()
-            ->join('course_targets as targets_alias', 'targets_alias.course_id', '=', 'courses.id')
+            ->join('status_course as status_course_alias', 'status_course_alias.course_id', '=', 'courses.id')
+            ->join('statuses as statuses_alias', function ($join) {
+                $join->on('statuses_alias.id', '=', 'status_course_alias.status_id')
+                    ->where('statuses_alias.name', '=', DB::raw("'" . addslashes($this::$presenting) . "'"));
+            })
+            ->leftJoin('chapters as chapters_alias', 'chapters_alias.course_id', '=', 'courses.id')
+            ->leftJoin('lessons as lessons_alias', 'lessons_alias.chapter_id', '=', 'chapters_alias.id')
+            ->leftJoin('contents as contents_alias' , 'contents_alias.lesson_id' , '=' , 'lessons_alias.id')
+            ->leftJoin('content_type as content_type_alias', 'content_type_alias.id', '=', 'contents_alias.content_type_id')
+            ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
+            ->join('course_targets as targets_alias', function ($join) use ($ids) {
+                $join->whereIn('targets_alias.parent_ounit_id', $ids);
+            })
             ->join('target_ounit_cat as target_ounit_cat_alias', 'target_ounit_cat_alias.course_target_id', '=', 'targets_alias.id')
             ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
             ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
@@ -749,18 +762,22 @@ trait CourseTrait
             })
             ->leftJoin('village_ofcs as village_ofc_alias', function ($join) {
                 $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id');
-                // Use whereRaw with a raw expression to handle dynamic column name
-                $join->whereRaw("village_ofc_alias.`" . DB::connection()->getDatabaseName() . ".ouc_prop_alias.column_name` = ouc_prop_value.value");
             })
             ->select([
-                'targets_alias.id as targets_alias_id',
-                'targets_alias.parent_ounit_id as parent_ounit_id',
-                'courses.id as course_alias_id',
-                'employee_feat_alias.propertyble_type as prop_type'
+                'courses.id as course_id',
+                'courses.title as course_title',
+                'courses.expiration_date as course_exp_date',
+                'statuses_alias.name as status_name',
+                'lessons_alias.id as lesson_id',
+                'content_type_alias.name as content_type_alias_name',
+                'targets_alias.id as target_id',
+                'village_ofc_alias.degree as village_degree',
+                'village_ofc_alias.isTourism as village_tourism',
+                'village_ofc_alias.isFarm as village_farm',
+                'village_ofc_alias.isAttached_to_city as village_attached_to_city',
+                'village_ofc_alias.hasLicense as village_license',
+                'ouc_prop_value.value as prop_value'
             ])
-            ->whereHas('courseTarget', function ($query) use ($ids) {
-                $query->whereIn('parent_ounit_id', $ids);
-            })
             ->get();
         return $course;
     }
