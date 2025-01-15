@@ -52,6 +52,7 @@ class ExamResultResource extends JsonResource
                 }),
 
             'calculated' => [
+                'score' => $this['calculated']['score'] ?? null,
                 'correct' => $this['calculated']['correct'] ?? null,
                 'false' => $this['calculated']['false'] ?? null,
                 'null' => $this['calculated']['null'] ?? null,

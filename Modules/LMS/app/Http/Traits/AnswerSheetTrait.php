@@ -76,7 +76,7 @@ trait AnswerSheetTrait
         }
 
         $final = $this->final($answerSheet);
-        $calculate = $this->calculatingAnswers($optionIDs, $answerSheet->id, $usedTime, $examId);
+        $calculate = $this->calculatingAnswers($optionID, $answerSheet->id, $usedTime, $examId);
         $studentInfo = $this->student($student);
 
         return [
@@ -87,16 +87,16 @@ trait AnswerSheetTrait
     }
 
 
-    public function correctAnswers($optionIDs)
+    public function correctAnswers($optionID)
     {
-        return Option::whereIn('id', $optionIDs)
+        return Option::whereIn('id', $optionID)
             ->where('is_correct', 1)
             ->count();
     }
 
-    public function falseAnswers($optionIDs)
+    public function falseAnswers($optionID)
     {
-        return Option::whereIn('id', $optionIDs)
+        return Option::whereIn('id', $optionID)
             ->where('is_correct', 0)
             ->count();
     }
@@ -144,14 +144,16 @@ trait AnswerSheetTrait
     }
 
 
-    public function calculatingAnswers($optionIDs, $answerSheet, $usedTime, $examId)
+    public function calculatingAnswers($optionID, $answerSheet, $usedTime, $examId)
     {
-        $correctAnswers = $this->correctAnswers($optionIDs);
-        $falseAnswers = $this->falseAnswers($optionIDs);
+        $correctAnswers = $this->correctAnswers($optionID);
+        $falseAnswers = $this->falseAnswers($optionID);
         $nullAnswers = $this->nullAnswers($answerSheet);
         $questionCount = $this->questionCount($examId);
+        $score = $this->score($examId, $optionID);
 
         return [
+            'score' => $score,
             'correct' => $correctAnswers,
             'false' => $falseAnswers,
             'null' => $nullAnswers,
