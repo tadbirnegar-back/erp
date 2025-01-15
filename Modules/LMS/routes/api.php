@@ -5,8 +5,6 @@ use Modules\LMS\app\Http\Controllers\ChapterController;
 use Modules\LMS\app\Http\Controllers\ContentController;
 use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\LessonController;
-use Modules\LMS\app\Http\Controllers\OptionController;
-use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 
 /*
@@ -56,3 +54,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
 });
+Route::get('/lms/store-question/{id}', [\Modules\LMS\app\Http\Controllers\QuestionsController::class, 'storeQuestion']);
