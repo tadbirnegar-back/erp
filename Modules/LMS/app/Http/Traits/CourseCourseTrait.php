@@ -27,9 +27,10 @@ trait CourseCourseTrait
         return $data;
     }
 
-    public function deletePreRequisite($course,$ids)
+    public function syncPreReqDatas($course,$ids)
     {
-        CourseCourse::where('main_course_id' , $course->id)->whereIn('prerequisite_course_id', $ids)->delete();
+        $courseIds = json_decode($ids, true);
+        $course->prerequisiteCourses()->sync($courseIds);
     }
 
 }

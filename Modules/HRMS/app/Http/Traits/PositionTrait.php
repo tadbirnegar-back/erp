@@ -8,6 +8,7 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 trait PositionTrait
 {
+    use LevelTrait;
     private string $activePositionStatus = 'فعال';
     private string $inactivePositionStatus = 'غیرفعال';
 
@@ -102,6 +103,22 @@ trait PositionTrait
     public function positionShow(int $id)
     {
         return Position::with('status', 'section.department.branch')->findOrFail($id);
+    }
+
+
+    public function positionFilteredCatShow($catId)
+    {
+        return Position::with(['levels' => function ($query) {
+            $query->where('status_id' , $this->activeLevelStatus()->id);
+        }])->where('status_id' , $this->activePositionStatus()->id)->where('ounit_cat' , $catId )->get();
+    }
+
+    public function positionFilteredCatForAllShow($catIds)
+    {
+        $categories = str_split($catIds);
+        return Position::with(['levels' => function ($query) {
+            $query->where('status_id' , $this->activeLevelStatus()->id);
+        }])->where('status_id' , $this->activePositionStatus()->id)->whereIn('ounit_cat' , $categories )->get();
     }
 
     public function activePositionStatus()

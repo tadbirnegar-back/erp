@@ -18,7 +18,7 @@ class CourseExam extends Model
 
     public $timestamps = false;
 
-    protected $table = 'course_exams';
+    protected $table = 'course_exam';
 
     protected $fillable = [
         'id',
