@@ -29,7 +29,8 @@ trait CourseCourseTrait
 
     public function syncPreReqDatas($course,$ids)
     {
-        $course->prerequisiteCourses()->sync($ids);
+        $courseIds = json_decode($ids, true);
+        $course->prerequisiteCourses()->sync($courseIds);
     }
 
 }
