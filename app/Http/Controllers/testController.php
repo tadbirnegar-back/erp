@@ -9,10 +9,7 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\LMS\app\Models\Content;
-use Modules\OUnitMS\app\Models\DistrictOfc;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\LMS\app\Models\Course;
 
 
 class testController extends Controller
@@ -22,8 +19,23 @@ class testController extends Controller
     public function run()
     {
 
-        $r = Content::with('consumeLog')->find(7);
-        return response() -> json($r);
+        $query = Course::query()->joinRelationship('chapters.lessons.questions.questionType')
+            ->joinRelationship('chapters.lessons.questions.difficulty')
+            ->joinRelationship('chapters.lessons.questions.repository');
+        $query->select([
+            'chapters.id as chapterID',
+            'chapters.title as chapterTitle',
+            'lessons.id as lessonID',
+            'lessons.title as lessonTitle',
+            'question_types.id as questionTypeID',
+            'question_types.name as questionTypeName',
+            'difficulties.id as difID',
+            'difficulties.name as difficultyName',
+            'repositories.name as repositoryName',
+            'repositories.id as repoID'
+        ]);
+        return $query->where('courses.id', 23)->get();
+//            ->where('courses.id', 23);
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
@@ -108,7 +120,6 @@ class testController extends Controller
 //
 //        // Print the table
 //        echo $html;
-
 
 
     }
