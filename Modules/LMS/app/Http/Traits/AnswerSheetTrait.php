@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Carbon\Carbon;
 use Modules\AAA\app\Models\User;
 use Modules\FormGMS\app\Models\Option;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
@@ -28,40 +29,54 @@ trait AnswerSheetTrait
     }
 
 
-    public function storeAnswerSheet($examId, $student, $optionID, $data)
+    public function storeAnswerSheet($examId, $student, $optionID, $data, $usedTime)
     {
-
         $score = $this->score($examId, $optionID);
         $status = $this->ScoreStatus($score);
+        $finishDateTime = Carbon::parse(now());
 
         $answerSheet = AnswerSheet::create([
             'exam_id' => $examId,
-            'finish_date_time',
-            'start_date_time',
+            'finish_date_time' => $finishDateTime,
+            'start_date_time' => now()->subSeconds($usedTime),
             'score' => $score,
             'student_id' => $student->student->id,
             'status_id' => $status->id,
         ]);
 
-        $qAs = $data['questions'];
-        foreach ($qAs as $qA) {
+        $allQuestions = QuestionExam::where('exam_id', $examId)->pluck('question_id')->toArray();
 
-            if (empty($qA['option_id'])) {
+        $sentQuestions = collect($data['questions'])->pluck('question_id')->toArray();
+
+        $missingQuestions = array_diff($allQuestions, $sentQuestions);
+
+        $optionIDs = [];
+        foreach ($data['questions'] as $qA) {
+            if (empty($qA['option_id']) || empty($qA['question_id'])) {
                 $value = null;
             } else {
                 $option = Option::where('id', $qA['option_id'])->first();
-                $value = $option->title;
+                $value = $option ? $option->title : null;
                 $optionIDs[] = $option->id;
             }
 
             Answers::create([
                 'answer_sheet_id' => $answerSheet->id,
-                'question_id' => $qA['question_id'],
+                'question_id' => $qA['question_id'] ?? null,
                 'value' => $value
             ]);
         }
+
+        foreach ($missingQuestions as $missingQuestion) {
+            Answers::create([
+                'answer_sheet_id' => $answerSheet->id,
+                'question_id' => $missingQuestion,
+                'value' => null
+            ]);
+        }
+
         $final = $this->final($answerSheet);
-        $calculate = $this->calculatingAnswers($optionIDs, $answerSheet->id);
+        $calculate = $this->calculatingAnswers($optionID, $answerSheet->id, $usedTime, $examId);
         $studentInfo = $this->student($student);
 
         return [
@@ -69,20 +84,19 @@ trait AnswerSheetTrait
             'calculated' => $calculate,
             'student' => $studentInfo,
         ];
-
     }
 
 
-    public function correctAnswers($optionIDs)
+    public function correctAnswers($optionID)
     {
-        return Option::whereIn('id', $optionIDs)
+        return Option::whereIn('id', $optionID)
             ->where('is_correct', 1)
             ->count();
     }
 
-    public function falseAnswers($optionIDs)
+    public function falseAnswers($optionID)
     {
-        return Option::whereIn('id', $optionIDs)
+        return Option::whereIn('id', $optionID)
             ->where('is_correct', 0)
             ->count();
     }
@@ -94,11 +108,10 @@ trait AnswerSheetTrait
             ->count();
     }
 
-    public function questionCount($answerSheet)
+    public function questionCount($examId)
     {
-        return Answers::where('answer_sheet_id', $answerSheet)
+        return QuestionExam::where('exam_id', $examId)
             ->count('question_id');
-
     }
 
 
@@ -131,18 +144,21 @@ trait AnswerSheetTrait
     }
 
 
-    public function calculatingAnswers($optionIDs, $answerSheet)
+    public function calculatingAnswers($optionID, $answerSheet, $usedTime, $examId)
     {
-        $correctAnswers = $this->correctAnswers($optionIDs);
-        $falseAnswers = $this->falseAnswers($optionIDs);
+        $correctAnswers = $this->correctAnswers($optionID);
+        $falseAnswers = $this->falseAnswers($optionID);
         $nullAnswers = $this->nullAnswers($answerSheet);
-        $questionCount = $this->questionCount($answerSheet);
+        $questionCount = $this->questionCount($examId);
+        $score = $this->score($examId, $optionID);
 
         return [
+            'score' => $score,
             'correct' => $correctAnswers,
             'false' => $falseAnswers,
             'null' => $nullAnswers,
-            'allQuestions' => $questionCount
+            'allQuestions' => $questionCount,
+            'usedTime' => $usedTime
         ];
     }
 

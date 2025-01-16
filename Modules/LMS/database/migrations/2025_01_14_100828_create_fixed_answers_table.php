@@ -10,9 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('Answer_sheets', function (Blueprint $table) {
-            $table->dateTime('finish_date_time')->nullable()->change();
-            $table->dateTime('start_date_time')->nullable()->change();
+        Schema::table('answers', function (Blueprint $table) {
+            $table->foreign('answer_sheet_id')
+                ->references('id')
+                ->on('answer_sheets')
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
         });
     }
 
@@ -21,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('new_Answer_sheet');
+        Schema::dropIfExists('fixed_answers');
     }
 };
