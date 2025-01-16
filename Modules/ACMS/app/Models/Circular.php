@@ -47,7 +47,8 @@ class Circular extends Model
 
     public function circularSubjects(): BelongsToMany
     {
-        return $this->belongsToMany(CircularSubject::class, 'bgt_circular_items', 'circular_id', 'subject_id');
+        return $this->belongsToMany(CircularSubject::class, 'bgt_circular_items', 'circular_id', 'subject_id')
+            ->withPivot('bgt_circular_items.percentage');
     }
 
     public function file(): BelongsTo

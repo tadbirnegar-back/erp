@@ -7,13 +7,15 @@ use Modules\ACC\app\Http\Enums\AccCategoryEnum;
 enum SubjectTypeEnum: int
 {
     case INCOME = 1;
-    case EXPENSE = 2;
+    case ECONOMIC_EXPENSE = 2;
+    case OPERATIONAL_EXPENSE = 3;
 
     public function getLabel()
     {
         return match ($this) {
-            self::INCOME => 'درآمد',
-            self::EXPENSE => 'هزینه',
+            self::INCOME => 'منابع درآمدی',
+            self::ECONOMIC_EXPENSE => 'طبقه بندی اقتصادی',
+            self::OPERATIONAL_EXPENSE => 'طبقه بندی عملیاتی',
         };
 
     }
@@ -31,7 +33,7 @@ enum SubjectTypeEnum: int
     {
         return match ($this) {
             self::INCOME => AccCategoryEnum::INCOME,
-            self::EXPENSE => AccCategoryEnum::EXPENSE,
+            self::ECONOMIC_EXPENSE, self::OPERATIONAL_EXPENSE => AccCategoryEnum::EXPENSE,
         };
 
     }

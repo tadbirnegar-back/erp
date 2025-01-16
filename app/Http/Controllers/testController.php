@@ -3,19 +3,13 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Bus\Batch;
-use Illuminate\Support\Facades\Bus;
-use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
 use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Http\Trait\CircularTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Http\Trait\OunitFiscalYearTrait;
-use Modules\ACMS\app\Jobs\DispatchCircularForOunitJob;
 use Modules\ACMS\app\Models\Circular;
-use Modules\ACMS\app\Models\FiscalYear;
-use Morilog\Jalali\Jalalian;
-use Throwable;
+use Modules\ACMS\app\Resources\CircularShowResource;
 
 
 class testController extends Controller
@@ -24,63 +18,32 @@ class testController extends Controller
 
     public function run()
     {
-        $finishDate = convertJalaliPersianCharactersToGregorian('۱۴۰۳/۱۰/۲۴');
-        dd($finishDate);
-//        Document::powerJoin
+        $a = Circular::joinRelationship('statuses', ['statuses' => function ($join) {
+            $join
+                ->whereRaw('bgtCircular_status.create_date = (SELECT MAX(create_date) FROM bgtCircular_status WHERE circular_id = bgt_circulars.id)');
+        }
+        ])
+            ->joinRelationship('file')
+            ->joinRelationship('fiscalYear')
+            ->with(['circularSubjects' => function ($query) {
+                $query->withoutGlobalScopes();
+            }])
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+                'files.id as file_id',
+                'files.name as file_name',
+                'files.slug as file_slug',
+                'files.size as file_size',
+                'fiscal_years.id as fiscal_year_id',
+                'fiscal_years.name as fiscal_year_name',
+            ])
+            ->find(11);
+//        dd($a->circularSubjects->groupBy('subject_type_id'));
+        dump($a);
+        return CircularShowResource::make($a);
 
-        $currentYear = Jalalian::now()->getYear();
-        $fiscalYear = FiscalYear::where('name', '1403')->first();
-        $circular = Circular::with('fiscalYear', 'circularItems')->find(13);
-        $user = User::find(1905);
-        \DB::beginTransaction();
-        $includedOunitsForBudget = $this->ounitsIncludingForAddingBudget($circular->fiscalYear->id, false)
-            ->chunk(150);
-        $fiscalYear = $circular->fiscalYear;
 
-        $jobs = [];
-        $includedOunitsForBudget->each(function ($chunkedUnits, $key) use ($fiscalYear, $user, $circular, &$jobs) {
-            $chunkedUnits = $chunkedUnits->values();
-
-            $jobs[] = new DispatchCircularForOunitJob($chunkedUnits->toArray(), $circular, $user);
-        });
-        $a = Bus::batch($jobs)
-            ->then(function (Batch $batch) {
-                // All jobs completed successfully
-                \Log::info("All jobs in the batch have completed successfully.");
-            })
-            ->catch(function (Batch $batch, Throwable $e) {
-                // Handle the exception
-                \Log::error("An error occurred in the batch: " . $e->getMessage());
-            })
-            ->finally(function (Batch $batch) {
-                // This block runs regardless of success or failure
-                \Log::info("Batch processing is complete.");
-            })
-            ->name('DispatchCircularForOunitJob')
-            ->onQueue('default')
-            ->dispatch();
-        $this->circularStatusAttach([
-            'userID' => $user->id,
-            'statusID' => $this->approvedCircularStatus()->id,
-
-        ], $circular);
-        \DB::commit();
-        dd($a);
-//        $budget = BudgetItem::joinRelationship('circularItem.subject')
-//            ->where('budget_id', 4774)
-//            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::EXPENSE->value)
-//            ->select([
-//                'bgt_budget_items.id as item_id',
-//                'bgt_budget_items.finalized_amount as approved_amount',
-//                'bgt_budget_items.percentage as percentage',
-//                'bgt_budget_items.proposed_amount as proposed_amount',
-//                'bgt_circular_subjects.id as id', 'bgt_circular_subjects.name as name',
-//                'bgt_circular_subjects.id as id', 'bgt_circular_subjects.parent_id as parent_id',
-//            ])
-//            ->get();
-//        $budget->statuses = $budget->statuses->sortBy('pivot.create_date');
-//        dump($budget->toHierarchy());
-//        dump($budgets);
         $output = "<!DOCTYPE html>
     <html>
     <head>

@@ -41,7 +41,9 @@ class SubjectController extends Controller
 
             $subject = $this->storeSubject($data);
             $circular = Circular::find($data['circularID']);
-            $circular->circularSubjects()->attach($subject->id);
+            $circular->circularSubjects()->attach($subject->id, [
+                'percentage' => $data['percentage'] ?? 0
+            ]);
 
             DB::commit();
             return response()->json(['data' => $subject], 200);

@@ -117,24 +117,27 @@ trait CircularTrait
         return Circular::GetAllStatuses()->firstWhere('name', CircularStatusEnum::DELETED->value);
     }
 
-    public function ounitsIncludingForAddingBudget(int $fiscalYearID, bool $count = false)
+    public function ounitsIncludingForAddingBudget(Circular $circular, bool $count = false, bool $isDispatch = false)
     {
         $vills = OrganizationUnit::where('unitable_type', VillageOfc::class)->joinRelationship('village', function ($join) {
             $join->where('hasLicense', true);
         })
             ->leftJoinRelationship('ounitFiscalYears.budget', [
-                'ounitFiscalYears' => function ($join) use ($fiscalYearID) {
-                    $join->where('ounit_fiscalYear.fiscal_year_id', $fiscalYearID);
+                'ounitFiscalYears' => function ($join) use ($circular) {
+                    $join->where('ounit_fiscalYear.fiscal_year_id', $circular->fiscal_year_id);
                 },
-                'budget' => function ($join) {
-                    $join->where('isSupplementary', false);
+                'budget' => function ($join) use ($circular) {
+                    $join->where('circular_id', $circular->id);
                 }
-            ])
-            ->where(function ($query) {
-                $query->whereNull('ounit_fiscalYear.fiscal_year_id')
-                    ->orWhereNull('bgt_budgets.ounitFiscalYear_id');
-            })
-            ->distinct();
+            ])->when($isDispatch, function ($query) use ($circular) {
+                $query->whereNotNull('ounit_fiscalYear.fiscal_year_id')
+                    ->orWhereNotNull('bgt_budgets.ounitFiscalYear_id');
+            }, function ($query) use ($circular) {
+                $query->where(function ($query) {
+                    $query->whereNull('ounit_fiscalYear.fiscal_year_id')
+                        ->orWhereNull('bgt_budgets.ounitFiscalYear_id');
+                });
+            });
 
         return $count ? $vills->count() : $vills->select([
             'organization_units.id as ounitID'])

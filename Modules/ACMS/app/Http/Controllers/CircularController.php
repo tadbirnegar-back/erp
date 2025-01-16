@@ -62,7 +62,19 @@ class CircularController extends Controller
 
     public function edit($id)
     {
-        $circular = Circular::with('fiscalYear:id,name', 'file:id,slug,name,size')->find($id);
+        $circular = Circular::
+        joinRelationship('file')
+            ->joinRelationship('fiscalYear')
+            ->addSelect([
+                'files.id as file_id',
+                'files.name as file_name',
+                'files.slug as file_slug',
+                'files.size as file_size',
+                'fiscal_years.id as fiscal_year_id',
+                'fiscal_years.name as fiscal_year_name',
+            ])
+            ->find($id);
+
 
         if (is_null($circular)) {
             return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);
@@ -142,9 +154,28 @@ class CircularController extends Controller
 
     public function show($id)
     {
-        $circular = Circular::with(['circularSubjects' => function ($query) {
-            $query->withoutGlobalScopes();
-        }, 'latestStatus:name,class_name', 'file:id,slug,name,size'])->find($id);
+        $circular = Circular::joinRelationship('statuses', ['statuses' => function ($join) {
+            $join
+                ->whereRaw('bgtCircular_status.create_date = (SELECT MAX(create_date) FROM bgtCircular_status WHERE circular_id = bgt_circulars.id)');
+        }
+        ])
+            ->joinRelationship('file')
+            ->joinRelationship('fiscalYear')
+            ->with(['circularSubjects' => function ($query) {
+                $query->withoutGlobalScopes();
+            }])
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+                'files.id as file_id',
+                'files.name as file_name',
+                'files.slug as file_slug',
+                'files.size as file_size',
+                'fiscal_years.id as fiscal_year_id',
+                'fiscal_years.name as fiscal_year_name',
+            ])
+            ->find($id);
+
 
         if (is_null($circular)) {
             return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);
