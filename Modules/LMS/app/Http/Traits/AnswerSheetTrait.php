@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Carbon\Carbon;
+use Exception;
 use Modules\AAA\app\Models\User;
 use Modules\FormGMS\app\Models\Option;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
@@ -29,7 +30,7 @@ trait AnswerSheetTrait
     }
 
 
-    public function storeAnswerSheet($examId, $student, $optionID, $data, $usedTime)
+    public function storeAnswerSheet($examId, $student, $optionID, $data, $usedTime,)
     {
         $score = $this->score($examId, $optionID);
         $status = $this->ScoreStatus($score);
@@ -80,6 +81,7 @@ trait AnswerSheetTrait
         $studentInfo = $this->student($student);
 
         return [
+            'answerSheet' => $answerSheet,
             'finalAns' => $final,
             'calculated' => $calculate,
             'student' => $studentInfo,
@@ -101,9 +103,9 @@ trait AnswerSheetTrait
             ->count();
     }
 
-    public function nullAnswers($answerSheet)
+    public function nullAnswers($answerSheetId)
     {
-        return Answers::where('answer_sheet_id', $answerSheet)
+        return Answers::where('answer_sheet_id', $answerSheetId)
             ->whereNull('value')
             ->count();
     }
@@ -144,11 +146,11 @@ trait AnswerSheetTrait
     }
 
 
-    public function calculatingAnswers($optionID, $answerSheet, $usedTime, $examId)
+    public function calculatingAnswers($optionID, $answerSheetId, $usedTime, $examId)
     {
         $correctAnswers = $this->correctAnswers($optionID);
         $falseAnswers = $this->falseAnswers($optionID);
-        $nullAnswers = $this->nullAnswers($answerSheet);
+        $nullAnswers = $this->nullAnswers($answerSheetId);
         $questionCount = $this->questionCount($examId);
         $score = $this->score($examId, $optionID);
 
@@ -184,15 +186,111 @@ trait AnswerSheetTrait
 
     public function student($student)
     {
-
-        $query = User::query()->joinRelationship('person.avatar')
+        $query = User::query()
+            ->joinRelationship('person.avatar')
             ->select([
                 'persons.display_name as name',
                 'files.slug as avatar'
             ])
             ->where('users.id', $student->id)
             ->first();
-        return [$query, $student];
+
+        return [
+            'name' => $query->name ?? null,
+            'avatar' => $query->avatar ?? null,
+        ];
+    }
+
+
+    public function Show($answerSheetId, $student, $data)
+    {
+        $answerSheets = AnswerSheet::joinRelationship('answers.questions.options', [
+            'answers' => fn($join) => $join->as('answers_alias'),
+            'questions' => fn($join) => $join->as('questions_alias'),
+            'options' => fn($join) => $join->as('options_alias')
+        ])
+            ->joinRelationship('status')
+            ->select([
+                'answer_sheets.id as answerSheetID',
+                'answer_sheets.exam_id as examID',
+                'answer_sheets.start_date_time as startTime',
+                'answer_sheets.finish_date_time as finishTime',
+                'answer_sheets.student_id as studentID',
+                'answer_sheets.status_id as statusID',
+//                'statuses.name as statusName',
+                'options_alias.id as optionID',
+                'options_alias.is_correct as isCorrect',
+                'questions_alias.id as questionID',
+                'questions_alias.title as questionTitle',
+                'options_alias.title as optionTitle',
+                'answer_sheets.score as score',
+            ])
+            ->where('answer_sheets.id', $answerSheetId)
+            ->get();
+
+        if ($answerSheets->isEmpty()) {
+            throw new Exception('Answer Sheets not found.');
+        }
+
+        $status = AnswerSheet::joinRelationship('answers.questions.options', [
+            'answers' => fn($join) => $join->as('answers_alias'),
+            'questions' => fn($join) => $join->as('questions_alias'),
+            'options' => fn($join) => $join->as('options_alias')
+        ])
+            ->joinRelationship('status')
+            ->select([
+                'statuses.name as statusName',
+            ])
+            ->where('answer_sheets.id', $answerSheetId)
+            ->first();
+
+        $studentInfo = $this->student($student);
+        $optionID = [];
+        foreach ($answerSheets as $sheet) {
+            $optionID[] = $sheet->optionID;
+            $usedTime = $this->calculateUsedTime($sheet);
+        }
+
+        $examID = $answerSheets->first()->examID;
+        $userAns = $this->getUserAnswers($data);
+
+        $calculate = $this->calculatingAnswers($optionID, $answerSheetId, $usedTime, $examID);
+
+        return [
+            'calculate' => $calculate,
+            'answerSheet' => $answerSheets,
+            'studentInfo' => $studentInfo,
+            'usedTime' => $usedTime,
+            'status' => $status,
+            'userAnswer' => $userAns,
+        ];
+    }
+
+
+    private function calculateUsedTime($answerSheet)
+    {
+        $startTime = $answerSheet->startTime;
+        $finishTime = $answerSheet->finishTime;
+
+        if ($startTime && $finishTime) {
+            return strtotime($finishTime) - strtotime($startTime);
+        }
+
+        return null;
+    }
+
+    public function getUserAnswers($data)
+    {
+        collect($data['questions'])
+            ->mapWithKeys(function ($question) {
+                return [$question['question_id'] => $question['option_id']];
+            })
+            ->filter(function ($optionID, $questionID) {
+                return $questionID !== null && $optionID !== null;
+            })
+            ->toArray();
+
+        return $data;
     }
 
 
