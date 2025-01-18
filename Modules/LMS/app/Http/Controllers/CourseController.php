@@ -367,7 +367,8 @@ class CourseController extends Controller
 
         $title = $request->title;
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
-        return RelatedCourseListResource::collection($courses);
+        return response() -> json($courses);
+        return new RelatedCourseListResource(collect($courses));
     }
 
 }

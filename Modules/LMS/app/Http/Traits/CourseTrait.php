@@ -754,8 +754,9 @@ trait CourseTrait
             })
             ->leftJoin('ouc_properties as ouc_prop_alias', function ($join) {
                 $join->on('ouc_prop_alias.id', '=', 'ouc_prop_value.ouc_property_id')
-                    ->on('target_ounit_cat_alias.ounit_cat_id', '=', 'ouc_prop_alias.ounit_cat_id');
+                    ->on('ouc_prop_alias.ounit_cat_id', '=', 'target_ounit_cat_alias.ounit_cat_id');
             })
+
             ->leftJoin('organization_units as organ_alias', function ($join) use ($ids) {
                 $join->whereIn('organ_alias.unitable_id', $ids)
                     ->where('organ_alias.unitable_type', VillageOfc::class);
@@ -776,7 +777,9 @@ trait CourseTrait
                 'village_ofc_alias.isFarm as village_farm',
                 'village_ofc_alias.isAttached_to_city as village_attached_to_city',
                 'village_ofc_alias.hasLicense as village_license',
-                'ouc_prop_value.value as prop_value'
+                'ouc_prop_value.value as prop_value',
+                'ouc_prop_alias.column_name as column_name',
+                'target_ounit_cat_alias.ounit_cat_id as ounit_name'
             ])
             ->get();
         return $course;

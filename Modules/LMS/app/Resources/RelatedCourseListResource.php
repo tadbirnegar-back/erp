@@ -6,29 +6,43 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class RelatedCourseListResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     */
     public function toArray($request): array
     {
-        $data = $this -> resource;
+        $data = collect($this->resource);
+
+        $filteredData = $data->filter(function ($item) {
+            return isset($item['course_id']);
+        });
+
+        // Group data by 'course_id'
+        $groupedData = $filteredData->groupBy(function ($item) {
+            return $item['course_id'];
+        })->values()->map(function ($group) {
+            $distinctContentTypes = $group->pluck('content_type_alias_name')->filter()->unique()->values();
+
+            // Filter out null lesson_id values and count distinct lesson_ids
+            $validLessonIds = $group->pluck('lesson_id')->filter()->unique();
+            $distinctLessonIds = $validLessonIds->count();
 
             return [
-                'course_id' => $data -> course_id,
-                'course_title' =>  $data -> course_title,
-                'course_exp_date' => $data -> course_exp_date,
-                'status_name' => $data -> status_name,
-                'lesson_id' => $data -> lesson_id,
-                'content_type_alias_name' => $data -> content_type_alias_name,
-                'target_id' => $data -> target_id,
-                'village_degree' => $data -> village_degree,
-                'village_tourism' => $data -> village_tourism,
-                'village_farm' => $data -> village_farm,
-                'village_attached_to_city' => $data -> village_attached_to_city,
-                'village_license' => $data -> village_license,
-                'prop_value' => $data -> prop_value,
-
+                'course_id' => $group->first()['course_id'],
+                'course_title' => $group->first()['course_title'],
+                'course_exp_date' => $group->first()['course_exp_date'],
+                'status_name' => $group->first()['status_name'],
+                'lesson_count' => $distinctLessonIds,
+                'distinct_content_types' => $distinctContentTypes,
+                'village_degree' => $group->first()['village_degree'] ?? null,
+                'village_tourism' => $group->first()['village_tourism'] ?? null,
+                'village_farm' => $group->first()['village_farm'] ?? null,
+                'village_attached_to_city' => $group->first()['village_attached_to_city'] ?? null,
+                'village_license' => $group->first()['village_license'] ?? null,
+                'prop_value' => $group->first()['prop_value'] ?? null,
+                'column_name' => $group->first()['column_name'] ?? null,
             ];
+        });
 
+        return $groupedData->values()->toArray();
     }
 }
+
+
