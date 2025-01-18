@@ -310,7 +310,7 @@ class CourseController extends Controller
 
     public function relatedCoursesList(Request $request)
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $user->load('activeRecruitmentScripts');
