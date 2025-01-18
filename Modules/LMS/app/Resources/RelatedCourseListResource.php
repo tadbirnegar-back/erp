@@ -8,7 +8,7 @@ class RelatedCourseListResource extends JsonResource
 {
     public function toArray($request): array
     {
-        $data = collect($this->resource);
+        $data = collect($this->resource->items()); // Access the items in the paginator
 
         // Filter data where course_id exists
         $filteredData = $data->filter(function ($item) {
@@ -75,6 +75,14 @@ class RelatedCourseListResource extends JsonResource
         });
 
         // Remove null entries caused by empty groups
-        return $groupedData->filter()->values()->toArray();
+        $groupedData = $groupedData->filter()->values();
+
+        // Pagination metadata
+        $pagination = $this->resource->toArray($request);
+
+        return [
+            'data' => $groupedData,
+            'pagination' => $pagination['links'],
+        ];
     }
 }
