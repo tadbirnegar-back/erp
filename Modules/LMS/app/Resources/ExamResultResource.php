@@ -21,12 +21,10 @@ class ExamResultResource extends JsonResource
         $status = $data['status'];
         $userAns = $data['userAnswer'];
 
-        // فیلتر کردن پاسخ‌های صحیح
         $filteredAnswers = collect($data['answerSheet'])->filter(function ($sheet) {
-            return $sheet->isCorrect ?? false; // فقط پاسخ‌های صحیح
+            return $sheet->isCorrect ?? false;
         });
 
-        // تبدیل داده‌های فیلتر شده
         $transformed = $filteredAnswers->map(function ($sheet) {
             return [
                 'id' => $sheet->answerSheetID ?? null,
@@ -43,7 +41,7 @@ class ExamResultResource extends JsonResource
         return [
             'status' => $status,
             'student' => $studentInfo,
-            'correctAnswers' => $transformed->values(), // نمایش پاسخ‌های صحیح
+            'correctAnswers' => $transformed->values(),
             'calculate' => $calculate,
             'userAnswer' => $userAns,
         ];
