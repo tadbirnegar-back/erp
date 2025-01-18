@@ -783,6 +783,7 @@ trait CourseTrait
                 'target_ounit_cat_alias.ounit_cat_id as ounit_name',
                 'targets_alias.id as target_id'
             ])
+            ->where('courses.title', 'like', '%' . $title . '%')
             ->get();
         return $course;
     }
