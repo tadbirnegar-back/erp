@@ -309,7 +309,7 @@ class CourseController extends Controller
 
     public function relatedCoursesList(Request $request)
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         $user->load('activeRecruitmentScripts');
         $ounits = $user->activeRecruitmentScripts
             ->pluck('organization_unit_id')
