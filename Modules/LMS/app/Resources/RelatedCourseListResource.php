@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class RelatedCourseListResource extends JsonResource
@@ -60,17 +61,12 @@ class RelatedCourseListResource extends JsonResource
             return [
                 'course_id' => $firstRecord['course_id'],
                 'course_title' => $firstRecord['course_title'],
-                'course_exp_date' => $firstRecord['course_exp_date'],
+                'course_exp_date' => $firstRecord['course_exp_date'] ?  Carbon::parse($firstRecord['course_exp_date'])->diffInDays(Carbon::now()) : null,
                 'status_name' => $firstRecord['status_name'],
+                'class_name' => $firstRecord['class_name'],
+                'cover_slug' => url($firstRecord['cover_slug']),
                 'lesson_count' => $distinctLessonIds,
                 'distinct_content_types' => $distinctContentTypes,
-                'village_degree' => $firstRecord['village_degree'] ?? null,
-                'village_tourism' => $firstRecord['village_tourism'] ?? null,
-                'village_farm' => $firstRecord['village_farm'] ?? null,
-                'village_attached_to_city' => $firstRecord['village_attached_to_city'] ?? null,
-                'village_license' => $firstRecord['village_license'] ?? null,
-                'prop_value' => $propValue,
-                'column_name' => $columnName,
             ];
         });
 

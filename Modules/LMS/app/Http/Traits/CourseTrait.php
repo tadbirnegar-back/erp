@@ -740,12 +740,16 @@ trait CourseTrait
                             ->where('employee_feat_alias.propertyble_type', Level::class);
                     });
                 }
+
                 if (!empty($job)) {
                     $query->orWhere(function ($subQuery) use ($job) {
                         $subQuery->whereIn('employee_feat_alias.propertyble_id', $job)
                             ->where('employee_feat_alias.propertyble_type', Job::class);
                     });
                 }
+
+                // Include rows with NULL `employee_feat_alias`
+                $query->orWhereNull('employee_feat_alias.id');
             })
             ->leftJoin('course_ounit_features as course_ounit_feat_alias', function ($join) {
                 $join->on('course_ounit_feat_alias.course_target_id', '=', 'targets_alias.id');
@@ -770,6 +774,8 @@ trait CourseTrait
                 'courses.title as course_title',
                 'courses.expiration_date as course_exp_date',
                 'statuses_alias.name as status_name',
+                'statuses_alias.class_name as class_name',
+                'cover_alias.slug as cover_slug',
                 'lessons_alias.id as lesson_id',
                 'content_type_alias.name as content_type_alias_name',
                 'targets_alias.id as target_id',

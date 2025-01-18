@@ -298,7 +298,7 @@ class User extends Authenticatable
                 'workforceable_id', // Local key on the workforces table...
                 'id' // Local key on the employees table...
             ]
-        );
+        )->where('workforceable_type', Employee::class);
     }
 
     public function latestRecruitmentScript()
