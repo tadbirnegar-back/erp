@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\LMS\app\Http\Controllers\ChapterController;
 use Modules\LMS\app\Http\Controllers\ContentController;
 use Modules\LMS\app\Http\Controllers\CourseController;
+use Modules\LMS\app\Http\Controllers\CourseCourseController;
 use Modules\LMS\app\Http\Controllers\CourseOunitFeatureController;
 use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OptionController;
@@ -12,7 +13,7 @@ use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
-use Modules\LMS\app\Http\Controllers\CourseCourseController;
+
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -82,4 +83,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
     Route::get('/lms/course/my-enrolled-courses', [CourseController::class, 'myEnrolledCourses']);
     Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
+    Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
+
 });
