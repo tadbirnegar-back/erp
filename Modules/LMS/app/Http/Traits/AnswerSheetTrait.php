@@ -75,9 +75,10 @@ trait AnswerSheetTrait
                 'value' => null
             ]);
         }
+        $answerSheetID = $answerSheet->id;
 
         $final = $this->final($answerSheet);
-        $calculate = $this->calculatingAnswers($optionID, $answerSheet->id, $usedTime, $examId);
+        $calculate = $this->calculatingAnswers($optionID, $answerSheetID, $usedTime, $examId);
         $studentInfo = $this->student($student);
 
         return [
@@ -103,9 +104,9 @@ trait AnswerSheetTrait
             ->count();
     }
 
-    public function nullAnswers($answerSheetId)
+    public function nullAnswers($answerSheet)
     {
-        return Answers::where('answer_sheet_id', $answerSheetId)
+        return Answers::where('answer_sheet_id', $answerSheet)
             ->whereNull('value')
             ->count();
     }
@@ -146,13 +147,13 @@ trait AnswerSheetTrait
     }
 
 
-    public function calculatingAnswers($optionID, $answerSheetId, $usedTime, $examId)
+    public function calculatingAnswers($optionID, $answerSheetID, $usedTime, $examId)
     {
         $correctAnswers = $this->correctAnswers($optionID);
         $falseAnswers = $this->falseAnswers($optionID);
-        $nullAnswers = $this->nullAnswers($answerSheetId);
-        $questionCount = $this->questionCount($examId);
+        $nullAnswers = $this->nullAnswers($answerSheetID);
         $score = $this->score($examId, $optionID);
+        $questionCount = $this->questionCount($examId);
 
         return [
             'score' => $score,
@@ -202,7 +203,7 @@ trait AnswerSheetTrait
     }
 
 
-    public function Show($answerSheetId, $student, $data)
+    public function Show($answerSheetID, $student, $data)
     {
         $answerSheets = AnswerSheet::joinRelationship('answers.questions.options', [
             'answers' => fn($join) => $join->as('answers_alias'),
@@ -217,7 +218,6 @@ trait AnswerSheetTrait
                 'answer_sheets.finish_date_time as finishTime',
                 'answer_sheets.student_id as studentID',
                 'answer_sheets.status_id as statusID',
-//                'statuses.name as statusName',
                 'options_alias.id as optionID',
                 'options_alias.is_correct as isCorrect',
                 'questions_alias.id as questionID',
@@ -225,7 +225,7 @@ trait AnswerSheetTrait
                 'options_alias.title as optionTitle',
                 'answer_sheets.score as score',
             ])
-            ->where('answer_sheets.id', $answerSheetId)
+            ->where('answer_sheets.id', $answerSheetID)
             ->get();
 
         if ($answerSheets->isEmpty()) {
@@ -241,20 +241,20 @@ trait AnswerSheetTrait
             ->select([
                 'statuses.name as statusName',
             ])
-            ->where('answer_sheets.id', $answerSheetId)
+            ->where('answer_sheets.id', $answerSheetID)
             ->first();
 
         $studentInfo = $this->student($student);
-        $optionID = [];
         foreach ($answerSheets as $sheet) {
-            $optionID[] = $sheet->optionID;
             $usedTime = $this->calculateUsedTime($sheet);
         }
 
-        $examID = $answerSheets->first()->examID;
+        $examId = $answerSheets->first()->examID;
         $userAns = $this->getUserAnswers($data);
+        $optionID = array_filter(array_column($data['questions'], 'option_id'));
 
-        $calculate = $this->calculatingAnswers($optionID, $answerSheetId, $usedTime, $examID);
+
+        $calculate = $this->calculatingAnswers($optionID, $answerSheetID, $usedTime, $examId);
 
         return [
             'calculate' => $calculate,

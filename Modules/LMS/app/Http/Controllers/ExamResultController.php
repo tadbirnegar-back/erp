@@ -3,9 +3,8 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Auth;
 use Illuminate\Http\Request;
-use Modules\AAA\app\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
 use Modules\LMS\app\Http\Traits\ExamResultTrait;
 use Modules\LMS\app\Models\Answers;
@@ -39,18 +38,19 @@ class ExamResultController extends Controller
             }
         }
 
-        $student = User::with('student')->find(68);
+        $student = Auth::user()->load('student');
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
 
         $answerSheet = $this->storeAnswerSheet($examId, $student, $optionID, $data, $usedTime);
         return response()->json(['answer_sheet_id' => $answerSheet['answerSheet']->id], 200);
     }
 
-    public function showAns($answerSheetId)
+    public function showAns($answerSheetID)
     {
         $student = Auth::user()->load('student');
+
         $data = [
-            'questions' => Answers::where('answer_sheet_id', $answerSheetId)
+            'questions' => Answers::where('answer_sheet_id', $answerSheetID)
                 ->get(['question_id', 'value as selected_option'])
                 ->map(function ($answer) {
                     return [
@@ -61,7 +61,7 @@ class ExamResultController extends Controller
                 ->toArray()
         ];
 
-        $result = $this->Show($answerSheetId, $student, $data);
+        $result = $this->Show($answerSheetID, $student, $data);
         $response = new ExamResultResource(collect($result));
         return $response;
     }
