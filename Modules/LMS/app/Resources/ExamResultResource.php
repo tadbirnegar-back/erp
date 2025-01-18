@@ -20,6 +20,9 @@ class ExamResultResource extends JsonResource
         $studentInfo = $data['studentInfo'] ?? [];
         $status = $data['status'];
         $userAns = $data['userAnswer'];
+        $startTime = $data['startDate'];
+        $jalaliStartDate = $startTime ? convertDateTimeGregorianToJalaliDateTime($startTime) : null;
+
 
         $filteredAnswers = collect($data['answerSheet'])->filter(function ($sheet) {
             return $sheet->isCorrect ?? false;
@@ -39,10 +42,12 @@ class ExamResultResource extends JsonResource
         });
 
         return [
+
             'status' => $status,
             'student' => $studentInfo,
             'correctAnswers' => $transformed->values(),
             'calculate' => $calculate,
+            'startDateTime' => $jalaliStartDate,
             'userAnswer' => $userAns,
         ];
     }

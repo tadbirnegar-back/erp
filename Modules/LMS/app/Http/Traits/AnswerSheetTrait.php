@@ -189,16 +189,21 @@ trait AnswerSheetTrait
     {
         $query = User::query()
             ->joinRelationship('person.avatar')
+            ->joinRelationship('roles.RolePosition.position')
             ->select([
                 'persons.display_name as name',
-                'files.slug as avatar'
+                'files.slug as avatar',
+                'positions.name as poseName'
             ])
             ->where('users.id', $student->id)
             ->first();
 
+        $baseURL = config('app.url');
+
         return [
             'name' => $query->name ?? null,
-            'avatar' => $query->avatar ?? null,
+            'avatar' => $query->avatar ? "{$baseURL}/{$query->avatar}" : null,
+            'poseName' => $query->poseName ?? null,
         ];
     }
 
@@ -252,6 +257,7 @@ trait AnswerSheetTrait
         $examId = $answerSheets->first()->examID;
         $userAns = $this->getUserAnswers($data);
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
+        $startDate = $answerSheets->first()->startTime;
 
 
         $calculate = $this->calculatingAnswers($optionID, $answerSheetID, $usedTime, $examId);
@@ -261,6 +267,7 @@ trait AnswerSheetTrait
             'answerSheet' => $answerSheets,
             'studentInfo' => $studentInfo,
             'usedTime' => $usedTime,
+            'startDate' => $startDate,
             'status' => $status,
             'userAnswer' => $userAns,
         ];
