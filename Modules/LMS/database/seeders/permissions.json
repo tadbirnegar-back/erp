@@ -100,5 +100,11 @@
         "slug": "/lms/course/update/{id}",
         "moduleName" : "LMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست دوره ها",
+        "slug": "/lms/course/related-courses-list",
+        "moduleName" : "LMS",
+        "permissionTypeName": "sidebar"
     }
 ]
