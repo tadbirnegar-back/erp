@@ -10,6 +10,7 @@ class RelatedCourseListResource extends JsonResource
     {
         $data = collect($this->resource);
 
+        // Filter data where course_id exists
         $filteredData = $data->filter(function ($item) {
             return isset($item['course_id']);
         });
@@ -24,25 +25,56 @@ class RelatedCourseListResource extends JsonResource
             $validLessonIds = $group->pluck('lesson_id')->filter()->unique();
             $distinctLessonIds = $validLessonIds->count();
 
+            // Extract the first record to access common properties
+            $firstRecord = $group->first();
+
+            // Dynamically determine the `village` property based on column_name
+            $columnName = $firstRecord['column_name'] ?? null;
+            $propValue = $firstRecord['prop_value'] ?? null;
+
+            if ($columnName && $propValue) {
+                // Map column names to their corresponding village properties
+                $villagePropertyMap = [
+                    'degree' => 'village_degree',
+                    'isTourism' => 'village_tourism',
+                    'isFarm' => 'village_farm',
+                    'isAttached_to_city' => 'village_attached_to_city',
+                    'hasLicense' => 'village_license',
+                ];
+
+                $villageProperty = $villagePropertyMap[$columnName] ?? null;
+
+                if ($villageProperty) {
+                    // Filter group based on the village property and prop_value
+                    $group = $group->filter(function ($item) use ($villageProperty, $propValue) {
+                        return isset($item[$villageProperty]) && $item[$villageProperty] == $propValue;
+                    });
+                }
+            }
+
+            // Return null if the group is empty after filtering
+            if ($group->isEmpty()) {
+                return null;
+            }
+
             return [
-                'course_id' => $group->first()['course_id'],
-                'course_title' => $group->first()['course_title'],
-                'course_exp_date' => $group->first()['course_exp_date'],
-                'status_name' => $group->first()['status_name'],
+                'course_id' => $firstRecord['course_id'],
+                'course_title' => $firstRecord['course_title'],
+                'course_exp_date' => $firstRecord['course_exp_date'],
+                'status_name' => $firstRecord['status_name'],
                 'lesson_count' => $distinctLessonIds,
                 'distinct_content_types' => $distinctContentTypes,
-                'village_degree' => $group->first()['village_degree'] ?? null,
-                'village_tourism' => $group->first()['village_tourism'] ?? null,
-                'village_farm' => $group->first()['village_farm'] ?? null,
-                'village_attached_to_city' => $group->first()['village_attached_to_city'] ?? null,
-                'village_license' => $group->first()['village_license'] ?? null,
-                'prop_value' => $group->first()['prop_value'] ?? null,
-                'column_name' => $group->first()['column_name'] ?? null,
+                'village_degree' => $firstRecord['village_degree'] ?? null,
+                'village_tourism' => $firstRecord['village_tourism'] ?? null,
+                'village_farm' => $firstRecord['village_farm'] ?? null,
+                'village_attached_to_city' => $firstRecord['village_attached_to_city'] ?? null,
+                'village_license' => $firstRecord['village_license'] ?? null,
+                'prop_value' => $propValue,
+                'column_name' => $columnName,
             ];
         });
 
-        return $groupedData->values()->toArray();
+        // Remove null entries caused by empty groups
+        return $groupedData->filter()->values()->toArray();
     }
 }
-
-

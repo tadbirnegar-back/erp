@@ -722,6 +722,7 @@ trait CourseTrait
             ->leftJoin('content_type as content_type_alias', 'content_type_alias.id', '=', 'contents_alias.content_type_id')
             ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
             ->join('course_targets as targets_alias', function ($join) use ($ids) {
+                $join->on('targets_alias.course_id', '=', 'courses.id');
                 $join->whereIn('targets_alias.parent_ounit_id', $ids);
             })
             ->join('target_ounit_cat as target_ounit_cat_alias', 'target_ounit_cat_alias.course_target_id', '=', 'targets_alias.id')
@@ -779,7 +780,8 @@ trait CourseTrait
                 'village_ofc_alias.hasLicense as village_license',
                 'ouc_prop_value.value as prop_value',
                 'ouc_prop_alias.column_name as column_name',
-                'target_ounit_cat_alias.ounit_cat_id as ounit_name'
+                'target_ounit_cat_alias.ounit_cat_id as ounit_name',
+                'targets_alias.id as target_id'
             ])
             ->get();
         return $course;
