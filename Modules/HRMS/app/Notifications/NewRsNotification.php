@@ -10,7 +10,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class NewRsNotification extends Notification implements ShouldQueue
+class NewRsNotification extends Notification
 {
     use Queueable;
 

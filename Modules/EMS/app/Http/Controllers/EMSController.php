@@ -256,7 +256,7 @@ class EMSController extends Controller
 
             $username = Person::find($user->person_id)->display_name;
 
-            $user->notify((new RegisterNotification($username))->onQueue('default'));
+            $user->notify(new RegisterNotification($username));
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);
         } catch (Exception $e) {

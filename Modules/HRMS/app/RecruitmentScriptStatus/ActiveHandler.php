@@ -103,7 +103,7 @@ class ActiveHandler implements StatusHandlerInterface
         $orderedNames = $filteredAndSorted->pluck('name')->reverse()->join('،');
         $position = $this->script->position;
         $person = $Notifibleuser->person;
-        $Notifibleuser->notify((new ApproveRsNotification($person->display_name, $position?->name, $orderedNames))->onQueue('default'));
+        $Notifibleuser->notify(new ApproveRsNotification($person->display_name, $position?->name, $orderedNames));
     }
 
     public function dispatchQueueForExpireScript()

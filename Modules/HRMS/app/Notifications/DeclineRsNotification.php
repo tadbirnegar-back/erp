@@ -10,7 +10,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class DeclineRsNotification extends Notification implements ShouldQueue
+class DeclineRsNotification extends Notification
 {
     use Queueable;
 

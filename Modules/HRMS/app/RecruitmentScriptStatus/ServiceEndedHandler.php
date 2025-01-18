@@ -37,7 +37,7 @@ class ServiceEndedHandler implements StatusHandlerInterface
 
         $ounit = $this->script->ounit;
 
-        $user->notify((new PayanKhedmatRsNotification($person->display_name, $ounit->name, $this->script->position->name))->onQueue('default'));
+        $user->notify(new PayanKhedmatRsNotification($person->display_name, $ounit->name, $this->script->position->name));
     }
 
     public function AddFinishDate($script): void

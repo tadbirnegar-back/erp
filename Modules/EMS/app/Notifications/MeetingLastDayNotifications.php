@@ -10,10 +10,8 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class MeetingLastDayNotifications extends Notification implements ShouldQueue
+class MeetingLastDayNotifications extends Notification
 {
-    use Queueable;
-
     /**
      * Create a new notification instance.
      */

@@ -10,7 +10,7 @@ use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
 
-class OtpNotification extends Notification implements ShouldQueue
+class OtpNotification extends Notification
 {
     use Queueable;
 

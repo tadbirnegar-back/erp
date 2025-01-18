@@ -92,7 +92,7 @@ class ApprovingListController extends Controller
 
             $person = Person::find($notifibleUser->person_id);
 
-            $notifibleUser->notify((new DeclineRsNotification($person->display_name))->onQueue('default'));
+            $notifibleUser->notify(new DeclineRsNotification($person->display_name));
 
             DB::commit();
 
