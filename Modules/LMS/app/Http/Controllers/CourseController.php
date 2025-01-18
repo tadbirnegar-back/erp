@@ -32,6 +32,7 @@ use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
 use Modules\LMS\app\Resources\LiveOunitSearchForCourseResource;
 use Modules\LMS\app\Resources\MyCoursesListResource;
+use Modules\LMS\app\Resources\RelatedCourseListResource;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
 use Modules\LMS\app\Resources\ViewCourseSideBarResource;
 use Modules\OUnitMS\app\Models\CityOfc;
@@ -308,7 +309,7 @@ class CourseController extends Controller
 
     public function relatedCoursesList(Request $request)
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         $user->load('activeRecruitmentScripts');
         $ounits = $user->activeRecruitmentScripts
             ->pluck('organization_unit_id')
@@ -366,8 +367,7 @@ class CourseController extends Controller
 
         $title = $request->title;
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
-
-        return response()->json($courses);
+        return new RelatedCourseListResource(collect($courses));
     }
 
 }
