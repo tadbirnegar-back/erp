@@ -7,8 +7,17 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ExamResultResource extends JsonResource
 {
+    protected string $baseUrl;
+
+    public function __construct($resource)
+    {
+        parent::__construct($resource);
+        $this->baseUrl = rtrim(url('/'), '/'); // Initialize base URL and ensure no trailing slash
+    }
+
     public function toArray($request)
     {
+
         $data = $this->resource;
 
         if (!isset($data['answerSheet'])) {
@@ -21,8 +30,13 @@ class ExamResultResource extends JsonResource
         $status = $data['status'];
         $userAns = $data['userAnswer'];
         $startTime = $data['startDate'];
+
         $jalaliStartDate = $startTime ? convertDateTimeGregorianToJalaliDateTime($startTime) : null;
 
+
+        $studentInfo['avatar'] = isset($studentInfo['avatar']) && $studentInfo['avatar']
+            ? $this->baseUrl . '/' . ltrim($studentInfo['avatar'], '/')
+            : "{$this->baseUrl}/default-avatar.png";
 
         $filteredAnswers = collect($data['answerSheet'])->filter(function ($sheet) {
             return $sheet->isCorrect ?? false;

@@ -198,11 +198,10 @@ trait AnswerSheetTrait
             ->where('users.id', $student->id)
             ->first();
 
-        $baseURL = config('app.url');
 
         return [
             'name' => $query->name ?? null,
-            'avatar' => $query->avatar ? "{$baseURL}/{$query->avatar}" : null,
+            'avatar' => $query->avatar ?? null,
             'poseName' => $query->poseName ?? null,
         ];
     }
@@ -261,6 +260,7 @@ trait AnswerSheetTrait
 
 
         $calculate = $this->calculatingAnswers($optionID, $answerSheetID, $usedTime, $examId);
+
 
         return [
             'calculate' => $calculate,
