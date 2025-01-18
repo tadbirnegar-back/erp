@@ -2,12 +2,18 @@
 
 namespace Modules\LMS\app\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ExamResultResource extends JsonResource
 {
     public function toArray($request)
     {
+        $usedTimeInSeconds = $this['calculated']['usedTime'] ?? 0;
+        $finishedTime = Carbon::parse($this['calculated']['finishedDateTime'] ?? now());
+        $startedTime = $finishedTime->subSeconds($usedTimeInSeconds);
+        $finishedTimeForShow = now();
+
         return [
             'finalAns' => collect($this['finalAns'])
                 ->groupBy('questionID')->values()
@@ -46,14 +52,14 @@ class ExamResultResource extends JsonResource
                 }),
 
             'calculated' => [
+                'score' => $this['calculated']['score'] ?? null,
                 'correct' => $this['calculated']['correct'] ?? null,
                 'false' => $this['calculated']['false'] ?? null,
                 'null' => $this['calculated']['null'] ?? null,
                 'allQuestions' => $this['calculated']['allQuestions'] ?? null,
-                'startedTime' => $this['calculated']['startedDateTime'] ?? null,
-                'finishedTime' => $this['calculated']['finishedDateTime'] ?? null,
-                'usedTime' => $this['calculated']['usedTime'] ?? null,
-
+                'startedTime' => convertDateTimeGregorianToJalaliDateTime($startedTime->toDateTimeString()),
+                'finishedTime' => convertDateTimeGregorianToJalaliDateTime($finishedTimeForShow->toDateTimeString()),
+                'usedTime' => $this['calculated']['usedTime'] ?? 0,
             ],
 
             'student' => [
