@@ -7,8 +7,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ExamResultResource extends JsonResource
 {
-
-
     public function toArray($request)
     {
         $data = $this->resource;
@@ -23,11 +21,13 @@ class ExamResultResource extends JsonResource
         $status = $data['status'];
         $userAns = $data['userAnswer'];
 
+        // فیلتر کردن پاسخ‌های صحیح
         $filteredAnswers = collect($data['answerSheet'])->filter(function ($sheet) {
-            return $sheet->isCorrect ?? false;
+            return $sheet->isCorrect ?? false; // فقط پاسخ‌های صحیح
         });
 
-        $transformed = $filteredAnswers->map(function ($sheet) use ($usedTime, $calculate) {
+        // تبدیل داده‌های فیلتر شده
+        $transformed = $filteredAnswers->map(function ($sheet) {
             return [
                 'id' => $sheet->answerSheetID ?? null,
                 'questionsAndOptions' => [
@@ -41,14 +41,11 @@ class ExamResultResource extends JsonResource
         });
 
         return [
-
             'status' => $status,
             'student' => $studentInfo,
-            'answerSheet' => $transformed->values(),
+            'correctAnswers' => $transformed->values(), // نمایش پاسخ‌های صحیح
             'calculate' => $calculate,
             'userAnswer' => $userAns,
         ];
     }
-
 }
-
