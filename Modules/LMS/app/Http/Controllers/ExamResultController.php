@@ -49,14 +49,6 @@ class ExamResultController extends Controller
     {
         $student = Auth::user()->load('student');
 
-        $answers = Answers::where('answer_sheet_id', $answerSheetID)->get(['question_id', 'value as selected_option']);
-        if ($answers->isEmpty()) {
-            return response()->json([
-                'error' => 'Invalid or non-existent answerSheetID.',
-                'message' => 'No answers found for the provided answerSheetID.'
-            ], 404);
-        }
-
         $data = [
             'questions' => Answers::where('answer_sheet_id', $answerSheetID)
                 ->get(['question_id', 'value as selected_option'])
