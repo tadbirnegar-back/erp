@@ -5,6 +5,7 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use http\Env\Response;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -310,6 +311,8 @@ class CourseController extends Controller
     public function relatedCoursesList(Request $request)
     {
         $user = Auth::user();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
         $user->load('activeRecruitmentScripts');
         $ounits = $user->activeRecruitmentScripts
             ->pluck('organization_unit_id')
@@ -367,7 +370,15 @@ class CourseController extends Controller
 
         $title = $request->title;
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
-        return new RelatedCourseListResource(collect($courses));
+        $paginatedCourses = new LengthAwarePaginator(
+            collect($courses)->forPage($pageNum, $perPage),
+            count($courses), // Total items in the collection (this should be the total count from your query)
+            $perPage, // Items per page
+            $pageNum, // Current page number
+            ['path' => url()->current()] // URL for pagination links
+        );
+
+        return new RelatedCourseListResource($paginatedCourses);
     }
 
 }
