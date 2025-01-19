@@ -55,3 +55,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
 });
 Route::get('/lms/store-question/{id}', [\Modules\LMS\app\Http\Controllers\QuestionsController::class, 'storeQuestion']);
+Route::post('/lms/show/{id}', [\Modules\LMS\app\Http\Controllers\QuestionsController::class, 'dropDowns']);

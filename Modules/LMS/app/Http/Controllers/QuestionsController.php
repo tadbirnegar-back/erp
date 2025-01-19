@@ -52,5 +52,17 @@ class QuestionsController extends Controller
         return response()->json(['message' => 'Failed to create question'], 500);
     }
 
+    public function showDropDowns($courseID)
+    {
+
+        $show = $this->dropDowns($courseID);
+        if (!$show) {
+            return response()->json([
+                'error' => 'Course not found.'
+            ], 404);
+        }
+        return response()->json($show);
+    }
+
 
 }

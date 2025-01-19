@@ -15,12 +15,18 @@ trait questionsTrait
 
     public function dropDowns($courseID)
     {
-        $query = Course::query()->joinRelationship('chapters.lessons');
+        $query = Course::query()->joinRelationship('chapters.lessons.difficulty.questionType.repository');
         $query->select([
             'chapters.id as chapterID',
             'chapters.title as chapterTitle',
             'lessons.id as lessonID',
             'lessons.title as lessonTitle',
+            'difficulties.name as difficultyName',
+            'difficulties.id as difficultyID',
+            'question_types.id as questionTypeID',
+            'question_types.name as questionTypeName',
+            'repositories.id as repoID',
+            'repositories.name as repoName'
         ]);
         return $query->where('courses.id', $courseID)->get();
     }
