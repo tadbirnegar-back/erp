@@ -61,6 +61,7 @@ class ExamResultResource extends JsonResource
                         return [
                             'option_id' => $answer->optionID ?? null,
                             'option_title' => $answer->optionTitle ?? null,
+
                         ];
                     })->values(),
                 ];
@@ -75,6 +76,7 @@ class ExamResultResource extends JsonResource
             'startDateTime' => $jalaliStartDate,
             'userAnswer' => $userAns,
             'exam_time' => $examTime,
+
         ];
     }
 }
