@@ -57,6 +57,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/update/{id}', [LessonController::class, 'update']);
     Route::post('/lms/course/add', [CourseController::class, 'store']);
     Route::post('/lms/course/update/{id}', [CourseController::class, 'update']);
+    Route::get('/lms/publish/course/{id}', [CourseController::class, 'publishCourseDataShow']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
@@ -86,4 +87,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
 
 });
-Route::get('/lms/publish/course/{id}', [CourseController::class, 'publishCourseDataShow']);
