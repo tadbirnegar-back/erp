@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\QuestionTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Http\Traits\CourseTrait;
@@ -93,8 +92,7 @@ class ExamsController extends Controller
 
     public function index(Request $request)
     {
-//        $auth = Auth::user()->load('student');
-        $auth = User::with('student')->find(68);
+        $auth = Auth::user()->load('student');
         $student = $auth->student;
         $data = $request->all();
 
