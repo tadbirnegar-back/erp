@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Resources;
 
 use Exception;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\SettingsMS\app\Models\Setting;
 
 class ExamResultResource extends JsonResource
 {
@@ -29,6 +30,12 @@ class ExamResultResource extends JsonResource
         $status = $data['status'];
         $userAns = $data['userAnswer'];
         $startTime = $data['startDate'];
+        $questionTimeSetting = Setting::where('key', 'time_per_questions')->first();
+        $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
+
+        $questionTime = $questionTimeSetting ? $questionTimeSetting->value : 0;
+        $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
+        $examTime = $questionTime * $examNumber;
 
         $jalaliStartDate = $startTime ? convertDateTimeGregorianToJalaliDateTime($startTime) : null;
 
@@ -67,6 +74,7 @@ class ExamResultResource extends JsonResource
             'calculate' => $calculate,
             'startDateTime' => $jalaliStartDate,
             'userAnswer' => $userAns,
+            'exam_time' => convertSecondToMinute($examTime),
         ];
     }
 }
