@@ -3,8 +3,10 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\QuestionTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Http\Traits\CourseTrait;
@@ -13,6 +15,7 @@ use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\QuestionType;
 use Modules\LMS\app\Models\Repository;
+use Modules\LMS\app\Resources\ExamListResource;
 use Modules\LMS\app\Resources\ShowExamQuestionResource;
 
 class ExamsController extends Controller
@@ -86,6 +89,19 @@ class ExamsController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function index(Request $request)
+    {
+//        $auth = Auth::user()->load('student');
+        $auth = User::with('student')->find(68);
+        $student = $auth->student;
+        $data = $request->all();
+
+        $result = $this->examsIndex($data, $student);
+        $response = ExamListResource::make($result);
+        return response()->json($response);
+
     }
 
 
