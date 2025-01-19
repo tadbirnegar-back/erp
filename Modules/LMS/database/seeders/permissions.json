@@ -106,5 +106,11 @@
         "slug": "/lms/course/related-courses-list",
         "moduleName" : "LMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مدیریت دروس دوره",
+        "slug": "/lms/publish/course/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "sidebar"
     }
 ]

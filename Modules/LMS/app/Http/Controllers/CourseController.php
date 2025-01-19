@@ -33,6 +33,7 @@ use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
 use Modules\LMS\app\Resources\LiveOunitSearchForCourseResource;
 use Modules\LMS\app\Resources\MyCoursesListResource;
+use Modules\LMS\app\Resources\PublishCoursePreviewResource;
 use Modules\LMS\app\Resources\RelatedCourseListResource;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
 use Modules\LMS\app\Resources\ViewCourseSideBarResource;
@@ -368,7 +369,7 @@ class CourseController extends Controller
             ->unique()
             ->toArray();
 
-        $title = $request->title;
+        $title = $request->name;
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
         $paginatedCourses = new LengthAwarePaginator(
             collect($courses)->forPage($pageNum, $perPage),
@@ -380,5 +381,13 @@ class CourseController extends Controller
 
         return new RelatedCourseListResource($paginatedCourses);
     }
+
+    public  function publishCourseDataShow($id)
+    {
+        $data = $this->showCourseDataForEnteshareDore($id);
+        return new PublishCoursePreviewResource($data);
+    }
+
+
 
 }
