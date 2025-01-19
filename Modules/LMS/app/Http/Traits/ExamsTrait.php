@@ -8,7 +8,7 @@ use Modules\LMS\app\Models\Student;
 trait ExamsTrait
 {
 
-    public function examsIndex(int $perPage = 10, int $pageNumber = 1, array $data = [], Student $auth)
+    public function examsIndex(array $data = [], Student $auth)
     {
 
         $query = AnswerSheet::joinRelationship('repository')
@@ -29,7 +29,8 @@ trait ExamsTrait
         ])->where('answer_sheets.student_id', $auth->id);
 
 
-        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
+        return $query->get();
+//            ->paginate($perPage, ['*'], 'page', $pageNumber);
 
 
     }

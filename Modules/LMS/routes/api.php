@@ -56,3 +56,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 });
 Route::get('/lms/store-question/{id}', [\Modules\LMS\app\Http\Controllers\QuestionsController::class, 'storeQuestion']);
 Route::post('/lms/show/{id}', [\Modules\LMS\app\Http\Controllers\QuestionsController::class, 'dropDowns']);
+Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
