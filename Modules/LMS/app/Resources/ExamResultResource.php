@@ -56,7 +56,7 @@ class ExamResultResource extends JsonResource
                             'option_id' => $answer->optionID ?? null,
                             'option_title' => $answer->optionTitle ?? null,
                         ];
-                    })->values(),
+                    })->first(),
                     'AllAnswers' => $answers->map(function ($answer) {
                         return [
                             'option_id' => $answer->optionID ?? null,
@@ -74,7 +74,7 @@ class ExamResultResource extends JsonResource
             'calculate' => $calculate,
             'startDateTime' => $jalaliStartDate,
             'userAnswer' => $userAns,
-            'exam_time' => convertSecondToMinute($examTime),
+            'exam_time' => $examTime,
         ];
     }
 }
