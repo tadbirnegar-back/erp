@@ -697,6 +697,7 @@ trait CourseTrait
                 'targetOunitCat.ounit_cat_id as ounit_category_id',
                 //status
                 'status_alias.name as status_alias_name',
+                'status_alias.class_name as status_alias_class_name',
                 //chapters and lessons
                 'chapters_alias.title as chapters_alias_title',
                 'chapters_alias.id as chapters_alias_id',

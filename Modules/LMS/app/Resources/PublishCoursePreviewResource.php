@@ -144,7 +144,7 @@ class PublishCoursePreviewResource extends JsonResource
                 'pre_req' => $preReqs,
                 'course_targets' => $courseTargets->values(),
                 'chapters' => $chapters->values(),
-                'status' => $courseInfo->status_alias_name,
+                'status' => ["name" => $courseInfo->status_alias_name ,  "class_name" => $courseInfo -> status_alias_class_name],
                 'buttons' => $this->ButtonsToRender()[$courseInfo->status_alias_name],
             ];
         });
