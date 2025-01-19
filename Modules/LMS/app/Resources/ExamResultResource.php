@@ -17,7 +17,6 @@ class ExamResultResource extends JsonResource
 
     public function toArray($request)
     {
-
         $data = $this->resource;
 
         if (!isset($data['answerSheet'])) {
@@ -33,33 +32,38 @@ class ExamResultResource extends JsonResource
 
         $jalaliStartDate = $startTime ? convertDateTimeGregorianToJalaliDateTime($startTime) : null;
 
-
         $studentInfo['avatar'] = isset($studentInfo['avatar']) && $studentInfo['avatar']
             ? $this->baseUrl . '/' . ltrim($studentInfo['avatar'], '/')
             : "{$this->baseUrl}/default-avatar.png";
 
-        $filteredAnswers = collect($data['answerSheet'])->filter(function ($sheet) {
-            return $sheet->isCorrect ?? false;
-        });
+        $groupedAnswers = collect($data['answerSheet'])
+            ->groupBy('questionID')
+            ->map(function ($answers, $questionID) {
+                return [
+                    'question_id' => $questionID,
+                    'question_title' => $answers->first()->questionTitle ?? null,
+                    'correctAnswers' => $answers->filter(function ($answer) {
+                        return ($answer->isCorrect ?? false) == 1;
+                    })->map(function ($answer) {
+                        return [
+                            'option_id' => $answer->optionID ?? null,
+                            'option_title' => $answer->optionTitle ?? null,
+                        ];
+                    })->values(),
+                    'AllAnswers' => $answers->map(function ($answer) {
+                        return [
+                            'option_id' => $answer->optionID ?? null,
+                            'option_title' => $answer->optionTitle ?? null,
+                        ];
+                    })->values(),
+                ];
+            })->values();
 
-        $transformed = $filteredAnswers->map(function ($sheet) {
-            return [
-                'id' => $sheet->answerSheetID ?? null,
-                'questionsAndOptions' => [
-                    'question_id' => $sheet->questionID ?? null,
-                    'question_title' => $sheet->questionTitle ?? null,
-                    'option_id' => $sheet->optionID ?? null,
-                    'option_title' => $sheet->optionTitle ?? null,
-                    'is_correct' => $sheet->isCorrect ?? null,
-                ],
-            ];
-        });
 
         return [
-
             'status' => $status,
             'student' => $studentInfo,
-            'correctAnswers' => $transformed->values(),
+            'answers' => $groupedAnswers,
             'calculate' => $calculate,
             'startDateTime' => $jalaliStartDate,
             'userAnswer' => $userAns,
