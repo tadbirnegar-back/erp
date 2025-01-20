@@ -2,20 +2,22 @@
 
 namespace Modules\LMS\app\Resources;
 
-use Exception;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 use Modules\SettingsMS\app\Models\Setting;
 
-class ExamResultResource extends JsonResource
+class ExamResultResource extends ResourceCollection
 {
     protected string $baseUrl;
 
     public function __construct($resource)
     {
         parent::__construct($resource);
-        $this->baseUrl = rtrim(url('/'), '/'); // Initialize base URL and ensure no trailing slash
+        $this->baseUrl = url('/'); // Initialize base URL
     }
 
+    /**
+     * Transform the resource collection into an array.
+     */
     public function toArray($request)
     {
         $data = $this->resource;
@@ -28,7 +30,7 @@ class ExamResultResource extends JsonResource
         $calculate = $data['calculate'] ?? [];
         $studentInfo = $data['studentInfo'] ?? [];
         $status = $data['status'];
-        $userAns = $data['userAnswer'];
+        $userAns = $data['userAnswer'] ?? [];
         $startTime = $data['startDate'];
         $courseID = $data['courseID'];
         $questionTimeSetting = Setting::where('key', 'time_per_questions')->first();
@@ -46,28 +48,39 @@ class ExamResultResource extends JsonResource
 
         $groupedAnswers = collect($data['answerSheet'])
             ->groupBy('questionID')
-            ->map(function ($answers, $questionID) {
+            ->map(function ($answers, $questionID) use ($userAns) {
+                $correctAnswers = $answers->filter(function ($answer) {
+                    return ($answer->isCorrect ?? false) == 1;
+                })->pluck('optionID')->toArray();
+
+                $userAnswer = collect($userAns['questions'])->firstWhere('question_id', $questionID);
+                $userOptionID = $userAnswer['option_id'] ?? null;
+
+                $allAnswers = $answers->map(function ($answer) use ($correctAnswers, $userOptionID) {
+                    $optionID = $answer->optionID ?? null;
+                    $status = 'empty';
+
+                    if ($optionID === $userOptionID && in_array($optionID, $correctAnswers)) {
+                        $status = 'correct';
+                    } elseif ($optionID === $userOptionID) {
+                        $status = 'incorrect';
+                    } elseif (in_array($optionID, $correctAnswers)) {
+                        $status = 'missed';
+                    }
+
+                    return [
+                        'option_id' => $optionID,
+                        'option_title' => $answer->optionTitle ?? null,
+                        'status' => $status,
+                    ];
+                })->values();
+
                 return [
                     'question_id' => $questionID,
                     'question_title' => $answers->first()->questionTitle ?? null,
-                    'correctAnswers' => $answers->filter(function ($answer) {
-                        return ($answer->isCorrect ?? false) == 1;
-                    })->map(function ($answer) {
-                        return [
-                            'option_id' => $answer->optionID ?? null,
-                            'option_title' => $answer->optionTitle ?? null,
-                        ];
-                    })->first(),
-                    'AllAnswers' => $answers->map(function ($answer) {
-                        return [
-                            'option_id' => $answer->optionID ?? null,
-                            'option_title' => $answer->optionTitle ?? null,
-
-                        ];
-                    })->values(),
+                    'all_answers' => $allAnswers,
                 ];
             })->values();
-
 
         return [
             'status' => $status,
@@ -77,7 +90,7 @@ class ExamResultResource extends JsonResource
             'startDateTime' => $jalaliStartDate,
             'userAnswer' => $userAns,
             'exam_time' => $examTime,
-            '$courseID' => $courseID
+            'courseID' => $courseID
         ];
     }
 }
