@@ -18,6 +18,7 @@ class CircularItem extends Model
     protected $fillable = [
         'circular_id',
         'subject_id',
+        'percentage',
     ];
 
     public $timestamps = false;

@@ -13,44 +13,28 @@ class MacroServiceProvider extends ServiceProvider
     public function register(): void
     {
         Collection::macro('toHierarchy', function ($parentId = null) {
-            // Index items by their ID for quick access
-            $items = $this->keyBy('id');
-            $roots = collect();
-
-            // Iterate through all items to build the hierarchy
-            foreach ($items as $item) {
-                // Check if the item is a root item
-                if ($item->parent_id === $parentId) {
-                    $roots->push($item);
-                }
-                // Assign the item to its parent's children collection
-                if ($item->parent_id !== null && $items->has($item->parent_id)) {
-                    $parent = $items->get($item->parent_id);
-                    // Initialize children collection if not exists
-                    if (!isset($parent->children)) {
-                        $parent->children = collect();
-                    }
-                    $parent->children->push($item);
-                }
+            // Group items by their parent_id
+            $grouped = [];
+            foreach ($this->all() as $item) {
+                $grouped[$item['parent_id']][] = $item;
             }
 
-            // Traverse the hierarchy and set 'children' to an empty collection if not present
-            $queue = clone $roots;
-
-            while (!$queue->isEmpty()) {
-                $item = $queue->shift();
-                // Set 'children' to an empty collection if it doesn't exist
-                if (!isset($item->children)) {
-                    $item->children = collect();
+            // Recursive function to build the tree
+            $buildTree = function ($parentId) use (&$buildTree, $grouped) {
+                $children = isset($grouped[$parentId]) ? $grouped[$parentId] : [];
+                $result = [];
+                foreach ($children as $child) {
+                    $child['children'] = collect($buildTree($child['id'])); // Recursive children
+                    $result[] = $child;
                 }
-                // Add children to the queue for processing
-                if ($item->children !== null) {
-                    $queue = $queue->concat($item->children);
-                }
-            }
+                return $result;
+            };
 
-            return $roots->values();
+            // Build the hierarchy and return as a collection
+            return collect($buildTree($parentId));
         });
+
+
     }
 
     /**

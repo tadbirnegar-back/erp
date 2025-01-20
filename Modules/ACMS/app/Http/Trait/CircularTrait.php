@@ -129,15 +129,18 @@ trait CircularTrait
                 'budget' => function ($join) use ($circular) {
                     $join->where('circular_id', $circular->id);
                 }
-            ])->when($isDispatch, function ($query) use ($circular) {
-                $query->whereNotNull('ounit_fiscalYear.fiscal_year_id')
-                    ->orWhereNotNull('bgt_budgets.ounitFiscalYear_id');
-            }, function ($query) use ($circular) {
-                $query->where(function ($query) {
-                    $query->whereNull('ounit_fiscalYear.fiscal_year_id')
-                        ->orWhereNull('bgt_budgets.ounitFiscalYear_id');
-                });
+            ]);
+
+        if ($isDispatch) {
+            $vills
+                ->where('bgt_budgets.circular_id', $circular->id);
+        } else {
+            $vills->where(function ($subQuery) use ($circular) {
+                $subQuery->whereNull('bgt_budgets.circular_id') // No budget with circular_id
+                ->orWhere('bgt_budgets.circular_id', '!=', $circular->id); // Exclude matching circular_id
             });
+        }
+
 
         return $count ? $vills->count() : $vills->select([
             'organization_units.id as ounitID'])

@@ -5,7 +5,7 @@
     },
     {
         "name": "ابلاغ شده",
-        "className": "primary"
+        "className": "success"
     },
     {
         "name": "حذف شده",

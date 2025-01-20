@@ -29,11 +29,12 @@ trait CircularSubjectsTrait
         $data = collect($data)->map(function ($item) {
 
             return [
-                'name' => $item['subjectName'],
+                'name' => convertToDbFriendly($item['subjectName']),
                 'isActive' => $item['isActive'] ?? true,
                 'code' => $item['code'] ?? null,
                 'old_item_id' => $item['oldItemID'] ?? null,
                 'parent_id' => $item['parentID'] ?? null,
+                'subject_type_id' => $item['subjectTypeID'],
                 'create_date' => $item['create_date'] ?? now(),
             ];
         });

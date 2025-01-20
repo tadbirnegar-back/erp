@@ -3,6 +3,7 @@
 namespace Modules\ACMS\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\ACMS\app\Scopes\ActiceOnlyScope;
 use Modules\ACMS\Database\factories\CircularSubjectFactory;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
@@ -32,4 +33,10 @@ class CircularSubject extends Model
 
     public $timestamps = false;
     protected $table = 'bgt_circular_subjects';
+
+    public function circulars(): BelongsToMany
+    {
+        return $this->belongsToMany(Circular::class, 'bgt_circular_items', 'subject_id', 'circular_id')
+            ->withPivot('bgt_circular_items.percentage');
+    }
 }

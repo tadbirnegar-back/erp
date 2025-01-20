@@ -10,12 +10,15 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
 use Mockery\Exception;
+use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
+use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
 use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Http\Trait\CircularTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Http\Trait\OunitFiscalYearTrait;
 use Modules\ACMS\app\Jobs\DispatchCircularForOunitJob;
+use Modules\ACMS\app\Models\Budget;
 use Modules\ACMS\app\Models\Circular;
 use Modules\ACMS\app\Models\CircularSubject;
 use Modules\ACMS\app\Resources\CircularListResource;
@@ -154,6 +157,9 @@ class CircularController extends Controller
 
     public function show($id)
     {
+        /**
+         * @var Circular $circular
+         */
         $circular = Circular::joinRelationship('statuses', ['statuses' => function ($join) {
             $join
                 ->whereRaw('bgtCircular_status.create_date = (SELECT MAX(create_date) FROM bgtCircular_status WHERE circular_id = bgt_circulars.id)');
@@ -161,9 +167,6 @@ class CircularController extends Controller
         ])
             ->joinRelationship('file')
             ->joinRelationship('fiscalYear')
-            ->with(['circularSubjects' => function ($query) {
-                $query->withoutGlobalScopes();
-            }])
             ->addSelect([
                 'statuses.name as status_name',
                 'statuses.class_name as status_class_name',
@@ -180,6 +183,40 @@ class CircularController extends Controller
         if (is_null($circular)) {
             return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);
         }
+
+        $budgetsCount = Budget::joinRelationship('statuses', [
+            'statuses' => function ($join) {
+                $join
+                    ->whereRaw('bgtBudget_status.create_date = (SELECT MAX(create_date) FROM bgtBudget_status WHERE budget_id = bgt_budgets.id)');
+            }
+        ])
+            ->where('bgt_budgets.circular_id', $id)
+            ->where('statuses.name', '!=', BudgetStatusEnum::CANCELED->value)
+            ->select([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+                DB::raw('COUNT(*) as count'),
+            ])
+            ->groupBy(['statuses.name', 'statuses.class_name'])
+            ->get();
+
+        $subjectsCount = Circular::joinRelationship('circularSubjects')
+            ->select([
+                'bgt_circular_subjects.subject_type_id',
+                DB::raw('COUNT(*) as count'),
+
+            ])
+            ->groupBy('bgt_circular_subjects.subject_type_id')
+            ->where('bgt_circulars.id', $id)
+            ->get();
+
+        $dispatchedOunits = $this->ounitsIncludingForAddingBudget($circular, true, true);
+        $unDispatchedOunits = $this->ounitsIncludingForAddingBudget($circular, true, false);
+
+        $circular->setAttribute('dispatchedOunits', $dispatchedOunits);
+        $circular->setAttribute('unDispatchedOunits', $unDispatchedOunits);
+        $circular->setAttribute('budgetCounts', $budgetsCount);
+        $circular->setAttribute('subjects', $subjectsCount);
 
         return CircularShowResource::make($circular);
 
@@ -216,11 +253,11 @@ class CircularController extends Controller
         if (is_null($circular)) {
             return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);
         }
-
+        return response()->json(['message' => $circular], 500);
         try {
             \DB::beginTransaction();
 
-            $includedOunitsForBudget = $this->ounitsIncludingForAddingBudget($circular->fiscalYear->id, false)
+            $includedOunitsForBudget = $this->ounitsIncludingForAddingBudget($circular, false)
                 ->chunk(150);
 
             $jobs = [];
@@ -258,6 +295,43 @@ class CircularController extends Controller
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    public function subjectsOfCircular(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'circularID' => ['required', 'exists:bgt_circulars,id'],
+            'subjectTypeID' => ['required'],
+        ]);
+        if ($validate->fails()) {
+            return response()->json(['message' => $validate->errors()], 422);
+        }
+        $subjectType = SubjectTypeEnum::tryFrom($request->subjectTypeID);
+
+        if (is_null($subjectType)) {
+            return response()->json(['message' => 'نوع موضوع مورد نظر یافت نشد'], 422);
+        }
+
+        $subjects = CircularSubject::withoutGlobalScopes()
+            ->joinRelationship('circulars')
+            ->where('bgt_circulars.id', $request->circularID)
+            ->where('bgt_circular_subjects.subject_type_id', $subjectType->value)
+            ->select([
+                'bgt_circular_items.percentage as percentage',
+                'bgt_circular_items.id as item_id',
+                'bgt_circular_subjects.code as code',
+                'bgt_circular_subjects.id as id',
+                'bgt_circular_subjects.parent_id as parent_id',
+                'bgt_circular_subjects.name as name',
+                'bgt_circular_subjects.subject_type_id as subject_type_id',
+
+            ])
+            ->get();
+
+
+        return response()->json(['data' => $subjects->toHierarchy()], 200);
+
     }
 
 }

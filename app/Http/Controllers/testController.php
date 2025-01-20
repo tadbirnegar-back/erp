@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Support\Facades\DB;
+use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
 use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Http\Trait\CircularTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Http\Trait\OunitFiscalYearTrait;
-use Modules\ACMS\app\Models\Circular;
-use Modules\ACMS\app\Resources\CircularShowResource;
+use Modules\ACMS\app\Models\CircularSubject;
 
 
 class testController extends Controller
@@ -18,32 +19,21 @@ class testController extends Controller
 
     public function run()
     {
-        $a = Circular::joinRelationship('statuses', ['statuses' => function ($join) {
-            $join
-                ->whereRaw('bgtCircular_status.create_date = (SELECT MAX(create_date) FROM bgtCircular_status WHERE circular_id = bgt_circulars.id)');
-        }
-        ])
-            ->joinRelationship('file')
-            ->joinRelationship('fiscalYear')
-            ->with(['circularSubjects' => function ($query) {
-                $query->withoutGlobalScopes();
-            }])
-            ->addSelect([
-                'statuses.name as status_name',
-                'statuses.class_name as status_class_name',
-                'files.id as file_id',
-                'files.name as file_name',
-                'files.slug as file_slug',
-                'files.size as file_size',
-                'fiscal_years.id as fiscal_year_id',
-                'fiscal_years.name as fiscal_year_name',
+        $a = CircularSubject::with('circulars')->get();
+        dd($a);
+        dd(SubjectTypeEnum::tryFrom(34456));
+        $a = CircularSubject::joinRelationship('circularSubjects')
+            ->select([
+                'bgt_circular_subjects.subject_type_id',
+                DB::raw('COUNT(*) as count'),
+
             ])
-            ->find(11);
-//        dd($a->circularSubjects->groupBy('subject_type_id'));
-        dump($a);
-        return CircularShowResource::make($a);
+            ->groupBy([
+                'bgt_circular_subjects.subject_type_id',])
+            ->where('bgt_circulars.id', 11)
+            ->get();
 
-
+        dd($a);
         $output = "<!DOCTYPE html>
     <html>
     <head>

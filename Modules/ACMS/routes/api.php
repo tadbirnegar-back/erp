@@ -39,6 +39,10 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/acms/circulars/dispatch', [CircularController::class, 'dispatchCircularToVillages']);
 
+    Route::post('/acms/circulars/subjects', [CircularController::class, 'subjectsOfCircular']);
+
+    Route::put('/acms/circulars/items/update', [SubjectController::class, 'updateCircularSubject']);
+
     Route::get('/acms/bgt/budgets/current-year/list', [BudgetController::class, 'index']);
 
     Route::get('/acms/bgt/budgets/my-villages/list', [ACMSController::class, 'dispatchedCircularsForMyVillage']);

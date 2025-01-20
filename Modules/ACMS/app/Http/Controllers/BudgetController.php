@@ -38,13 +38,8 @@ class BudgetController extends Controller
 
         $budgets = Budget::joinRelationship('statuses', [
             'statuses' => function ($join) {
-                $join->on('bgtBudget_status.id', '=', \DB::raw('(
-                                SELECT id
-                                FROM bgtBudget_status AS ps
-                                WHERE ps.budget_id = bgt_budgets.id
-                                ORDER BY ps.create_date DESC
-                                LIMIT 1
-                            )'));
+                $join
+                    ->whereRaw('bgtBudget_status.create_date = (SELECT MAX(create_date) FROM bgtBudget_status WHERE budget_id = bgt_budgets.id)');
             }
         ])
             ->joinRelationship('ounitFiscalYear.village')

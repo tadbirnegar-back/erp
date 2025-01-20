@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
 use Modules\ACMS\app\Models\Circular;
+use Modules\ACMS\app\Models\CircularItem;
 use Modules\ACMS\app\Models\CircularSubject;
 use Validator;
 
@@ -38,6 +39,10 @@ class SubjectController extends Controller
 
         try {
             DB::beginTransaction();
+            if (isset($data['parentID'])) {
+                $parent = CircularSubject::find($data['parentID']);
+                $data['subjectTypeID'] = $parent->subject_type_id;
+            }
 
             $subject = $this->storeSubject($data);
             $circular = Circular::find($data['circularID']);
@@ -84,6 +89,29 @@ class SubjectController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+
+    }
+
+    public function updateCircularSubject(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'itemID' => ['required', 'exists:bgt_circular_items,id'],
+            'percentage' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['message' => $validate->errors()], 422);
+        }
+
+        try {
+            $item = CircularItem::find($request->itemID);
+            $item->update(['percentage' => $request->percentage]);
+
+            return response()->json(['message' => 'باموفقیت بروزرسانی شد'], 200);
+        } catch (Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
 

@@ -201,14 +201,4 @@ function DateformatToHumanReadableJalali($date, $showClock = true)
     return $humanReadableDate;
 }
 
-function toHierarchy($records, $parentId = null)
-{
-    return $records
-        ->where('parent_id', $parentId)
-        ->map(function ($item) use ($records) {
-            $item['children'] = toHierarchy($records, $item['id']);
-            return $item;
-        })
-        ->values();
-}
 

@@ -82,5 +82,17 @@
         "slug": "/bgt/budgets/subjects",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "آیتم بودجه های بخسنامه بر اساس گروه",
+        "slug": "/acms/circulars/subjects",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی آیتم بخشنامه",
+        "slug": "/acms/circulars/items/update",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]
