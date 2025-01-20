@@ -33,9 +33,10 @@ trait questionsTrait
         return $query->where('courses.id', $courseID)->get();
     }
 
-    public function insertQuestionWithOptions($data, $options, $courseID)
+    public function insertQuestionWithOptions($data, $options, $courseID, $user)
     {
         $status = Status::whereIn('name', [$this::$active, $this::$inactive])->first();
+
 
         $question = Question::create([
             'title' => $data['title'],
@@ -45,6 +46,7 @@ trait questionsTrait
             'difficulty_id' => $data['difficultyID'],
             'create_date' => now(),
             'status_id' => $status->id,
+//            'creator_id' => $user->user->id
         ]);
 
         if ($question) {

@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\questionsTrait;
 
 class QuestionsController extends Controller
@@ -17,6 +18,7 @@ class QuestionsController extends Controller
      */
     public function storeQuestionAndOptions(Request $request, $courseID)
     {
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'questionTypeID' => 'required|integer|exists:question_types,id',
@@ -32,8 +34,9 @@ class QuestionsController extends Controller
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json(['message' => 'Invalid options format'], 400);
         }
+        $user = User::find(2203);
 
-        $question = $this->insertQuestionWithOptions($validated, $options, $courseID);
+        $question = $this->insertQuestionWithOptions($validated, $options, $courseID, $user);
 
         if ($question) {
             return response()->json([
