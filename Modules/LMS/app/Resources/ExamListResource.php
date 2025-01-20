@@ -23,6 +23,7 @@ class ExamListResource extends ResourceCollection
                     'exam' => $item->examTitle ? [
                         'title' => $item->examTitle,
                         'answer_sheet' => [
+                            'answerSheetID' => $item->answerSheetID,
                             'start_date_time' => $item->start_date_time
                                 ? convertGregorianToJalali($item->start_date_time)
                                 : 'تاریخ نامشخص',
