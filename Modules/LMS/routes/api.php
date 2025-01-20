@@ -93,4 +93,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
 
 });
-Route::get('/lms/lesson/delete/{id}', [LessonController::class, 'deleteLesson']);
