@@ -25,6 +25,7 @@ use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\CourseCourse;
+use Modules\LMS\app\Models\StatusCourse;
 use Modules\LMS\app\Resources\AllCoursesListResource;
 use Modules\LMS\app\Resources\CourseListResource;
 use Modules\LMS\app\Resources\CourseShowForUpdateResource;
@@ -33,6 +34,7 @@ use Modules\LMS\app\Resources\LessonDetailsResource;
 use Modules\LMS\app\Resources\LessonListResource;
 use Modules\LMS\app\Resources\LiveOunitSearchForCourseResource;
 use Modules\LMS\app\Resources\MyCoursesListResource;
+use Modules\LMS\app\Resources\PublishCoursePreviewResource;
 use Modules\LMS\app\Resources\RelatedCourseListResource;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
 use Modules\LMS\app\Resources\ViewCourseSideBarResource;
@@ -368,7 +370,7 @@ class CourseController extends Controller
             ->unique()
             ->toArray();
 
-        $title = $request->title;
+        $title = $request->name;
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
         $paginatedCourses = new LengthAwarePaginator(
             collect($courses)->forPage($pageNum, $perPage),
@@ -379,6 +381,65 @@ class CourseController extends Controller
         );
 
         return new RelatedCourseListResource($paginatedCourses);
+    }
+
+    public  function publishCourseDataShow($id)
+    {
+        $data = $this->showCourseDataForEnteshareDore($id);
+        return new PublishCoursePreviewResource($data);
+    }
+
+
+    public function makeCoursePublish($id)
+    {
+        try {
+            DB::beginTransaction();
+            StatusCourse::create([
+                'course_id' => $id,
+                'status_id' => $this->coursePresentingStatus()->id,
+                'create_date' => now()
+            ]);
+            DB::commit();
+            return response() -> json(['message' => "دوره با موفقیت منتشر شد"]);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json(["message"=>$exception->getMessage()], 400);
+        }
+
+    }
+
+    public function deleteCourse($id)
+    {
+        try {
+            DB::beginTransaction();
+            StatusCourse::create([
+                'course_id' => $id,
+                'status_id' => $this->courseDeletedStatus()->id,
+                'create_date' => now()
+            ]);
+            DB::commit();
+            return response() -> json(['message' => "دوره با موفقیت حذف شد"]);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json(["message"=>$exception->getMessage()], 400);
+        }
+    }
+
+    public function cancelCourse($id)
+    {
+        try {
+            DB::beginTransaction();
+            StatusCourse::create([
+                'course_id' => $id,
+                'status_id' => $this->courseCanceledStatus()->id,
+                'create_date' => now()
+            ]);
+            DB::commit();
+            return response() -> json(['message' => "دوره با موفقیت حذف شد"]);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json(["message"=>$exception->getMessage()], 400);
+        }
     }
 
 }

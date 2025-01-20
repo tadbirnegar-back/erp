@@ -189,16 +189,20 @@ trait AnswerSheetTrait
     {
         $query = User::query()
             ->joinRelationship('person.avatar')
+            ->joinRelationship('roles.RolePosition.position')
             ->select([
                 'persons.display_name as name',
-                'files.slug as avatar'
+                'files.slug as avatar',
+                'positions.name as poseName'
             ])
             ->where('users.id', $student->id)
             ->first();
 
+
         return [
             'name' => $query->name ?? null,
             'avatar' => $query->avatar ?? null,
+            'poseName' => $query->poseName ?? null,
         ];
     }
 
@@ -252,17 +256,21 @@ trait AnswerSheetTrait
         $examId = $answerSheets->first()->examID;
         $userAns = $this->getUserAnswers($data);
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
-
+        $startDate = $answerSheets->first()->startTime;
+        $courseID = $this->getCourseID($answerSheetID);
 
         $calculate = $this->calculatingAnswers($optionID, $answerSheetID, $usedTime, $examId);
+
 
         return [
             'calculate' => $calculate,
             'answerSheet' => $answerSheets,
             'studentInfo' => $studentInfo,
             'usedTime' => $usedTime,
+            'startDate' => $startDate,
             'status' => $status,
             'userAnswer' => $userAns,
+            'courseID' => $courseID
         ];
     }
 
@@ -291,6 +299,14 @@ trait AnswerSheetTrait
             ->toArray();
 
         return $data;
+    }
+
+    public function getCourseID($answerSheetID)
+    {
+        $query = AnswerSheet::joinRelationship('exam.courseExams.course');
+        $query->select('courses.id as courseID');
+        return $query->where('answer_sheets.id', $answerSheetID);
+
     }
 
 

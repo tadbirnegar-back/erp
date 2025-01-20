@@ -15,6 +15,7 @@ use Modules\LMS\app\Models\Comment;
 use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Lesson;
+use Modules\LMS\app\Models\StatusLesson;
 use Modules\LMS\app\Models\Teacher;
 use Modules\LMS\app\Resources\LessonDataForupdateResource;
 use Modules\LMS\app\Resources\LessonDatasWithLessonIDResource;
@@ -162,4 +163,26 @@ class LessonController extends Controller
             return response()->json(['message' => $exception->getMessage()], 400);
         }
     }
+
+
+    public function deleteLesson($id)
+    {
+        try {
+            DB::beginTransaction();
+            StatusLesson::create([
+                'lesson_id' => $id,
+                'status_id' => $this->lessonInActiveStatus()->id,
+                'created_date' => now()
+            ]);
+            DB::commit();
+            return response() -> json(['message' => "درس مورد نظر با موفقیت حذف گردید"]);
+        }catch (\Exception $exception)
+        {
+            DB::rollBack();
+            return response()->json(['message' => $exception->getMessage()], 400);
+        }
+
+
+    }
+
 }
