@@ -99,3 +99,4 @@ Route::middleware([])->prefix('v1')->group(function () {
 
 
 Route::post('/mes/add-enactment/free-zone' , [EnactmentController::class, 'addEnactmentFreeZone']);
+Route::post('mes/ounitNames/liveSearch-freezone', [EMSController::class, 'liveSearchFreeZone']);

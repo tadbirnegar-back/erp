@@ -850,4 +850,35 @@ class EMSController extends Controller
         ]);
     }
 
+    public function liveSearchFreeZone(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 422);
+        }
+
+        $user = Auth::user();
+        $searchTerm = $request->name;
+
+        $user->load(['activeDistrictRecruitmentScript.ounit']);
+
+        $ounits = $user->activeDistrictRecruitmentScript->pluck('ounit');
+
+// Ensure $ounits is a collection of Eloquent models
+        $DecendentsOunits = $ounits->map(function ($ounit) use ($searchTerm) {
+            return $ounit?->descendants()->where('unitable_type', VillageOfc::class)
+                ->where(
+                    function ($query) use ($searchTerm) {
+                        $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                            ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                    }
+                )->with('ancestors', 'unitable')->get();
+        })
+            ->flatten();
+
+        return response()->json($DecendentsOunits);
+    }
 }
