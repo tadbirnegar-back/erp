@@ -621,6 +621,7 @@ trait CourseTrait
     public function showCourseDataForEnteshareDore($id)
     {
         $query = Course::query()
+            ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
             ->leftJoinRelationship('preReqForJoin.preReqCourse', [
                 'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
@@ -679,6 +680,9 @@ trait CourseTrait
                 'course_cover_alias.slug as course_cover_slug',
                 'course_cover_alias.name as course_cover_title',
                 'course_cover_alias.size as course_cover_size',
+                'course_video_alias.slug as course_video_slug',
+                'course_video_alias.name as course_video_title',
+                'course_video_alias.size as course_video_size',
                 //pre req data
                 'pre_reg_alias.id as pre_reg_alias_id',
                 'pre_reg_alias.title as pre_reg_alias_title',
