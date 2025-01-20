@@ -15,14 +15,7 @@ class QuestionsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function getDropDowns($courseID)
-    {
-
-        $data = $this->dropDowns($courseID);
-        return response()->json($data);
-    }
-
-    public function storeQuestion(Request $request, $courseID)
+    public function storeQuestionAndOptions(Request $request, $courseID)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
