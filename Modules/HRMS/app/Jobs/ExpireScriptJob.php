@@ -53,7 +53,7 @@ class ExpireScriptJob implements ShouldQueue
             $ExpDateFarsi = \Morilog\Jalali\CalendarUtils::convertNumbers($ExpDateEng); // ۱۳۹۵-۰۲-۱۹
 
 
-            $user->notify(new ScriptExpireNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name));
+            $user->notify((new ScriptExpireNotification($person->display_name, $ExpDateFarsi, $scriptTypeName, $ounit->name))->onQueue('default'));
         } else {
             Log::warning('User not found for RecruitmentScript ID: ' . $this->rs);
         }

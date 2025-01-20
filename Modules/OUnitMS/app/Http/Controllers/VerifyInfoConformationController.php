@@ -23,9 +23,9 @@ use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
-use Modules\OUnitMS\app\Notifications\VerifyInfoNotification;
-use Modules\OUnitMS\app\Notifications\VerifyInfoSuccessNotification;
 use Modules\PersonMS\app\Http\Repositories\PersonRepository;
+use Modules\PersonMS\app\Notifications\VerifyInfoNotification;
+use Modules\PersonMS\app\Notifications\VerifyInfoSuccessNotification;
 
 class VerifyInfoConformationController extends Controller
 {
@@ -127,7 +127,7 @@ class VerifyInfoConformationController extends Controller
 
         }
         $hasConfirmed = true;
-        $user->notify(new VerifyInfoSuccessNotification());
+        $user->notify((new VerifyInfoSuccessNotification())->onQueue('default'));
 
         return response()->json(['hasConfirmed' => $hasConfirmed]);
     }
@@ -257,7 +257,7 @@ class VerifyInfoConformationController extends Controller
 
             if (!is_null($notif) && !$notif->read()) {
                 $notif->markAsRead();
-                $user->notify(new VerifyInfoSuccessNotification());
+                $user->notify((new VerifyInfoSuccessNotification())->onQueue('default'));
 
             }
             DB::commit();

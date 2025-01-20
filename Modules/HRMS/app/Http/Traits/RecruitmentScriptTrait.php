@@ -192,6 +192,7 @@ trait RecruitmentScriptTrait
 
     }
 
+
     public function rsBulkUpdate(array|collection $data, int $employeeID)
     {
         $dataToUpsert = $this->rsDataPreparation($data, $employeeID);

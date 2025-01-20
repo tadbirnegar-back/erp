@@ -26,7 +26,7 @@ class CourseOunitFeature extends Model
         return $this->belongsTo(CourseTarget::class, 'course_target_id', 'id');
     }
 
-    public function values()
+    public function value()
     {
         return $this->belongsTo(OucPropertyValue::class, 'ouc_property_value', 'id');
     }

@@ -10,6 +10,8 @@ use Modules\HRMS\app\Jobs\ExpireScriptJob;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Notifications\ApproveRsNotification;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\TownOfc;
 
 class ActiveHandler implements StatusHandlerInterface
 {
@@ -92,9 +94,16 @@ class ActiveHandler implements StatusHandlerInterface
     public function notifyNewUser()
     {
         $Notifibleuser = $this->script->user;
+        $ounit = $this->script->ounit->load([
+            'ancestorsAndSelf' => fn($query) => $query->whereNotIn('unitable_type', [StateOfc::class, TownOfc::class])
+        ]);
 
+        $filteredAndSorted = $ounit->ancestorsAndSelf;
+
+        $orderedNames = $filteredAndSorted->pluck('name')->reverse()->join('،');
+        $position = $this->script->position;
         $person = $Notifibleuser->person;
-        $Notifibleuser->notify(new ApproveRsNotification($person->display_name));
+        $Notifibleuser->notify((new ApproveRsNotification($person->display_name, $position?->name, $orderedNames))->onQueue('default'));
     }
 
     public function dispatchQueueForExpireScript()

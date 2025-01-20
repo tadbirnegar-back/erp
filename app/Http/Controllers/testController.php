@@ -3,39 +3,32 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\LMS\app\Http\Traits\ExamsTrait;
+use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Exam;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\LMS\app\Models\Course;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use ExamsTrait;
 
-    public function run()
+    public function run($courseId)
     {
 
-        $query = Course::query()->joinRelationship('chapters.lessons.questions.questionType')
-            ->joinRelationship('chapters.lessons.questions.difficulty')
-            ->joinRelationship('chapters.lessons.questions.repository');
-        $query->select([
-            'chapters.id as chapterID',
-            'chapters.title as chapterTitle',
-            'lessons.id as lessonID',
-            'lessons.title as lessonTitle',
-            'question_types.id as questionTypeID',
-            'question_types.name as questionTypeName',
-            'difficulties.id as difID',
-            'difficulties.name as difficultyName',
-            'repositories.name as repositoryName',
-            'repositories.id as repoID'
-        ]);
-        return $query->where('courses.id', 23)->get();
-//            ->where('courses.id', 23);
+        $r = Content::with('consumeLog')->find(7);
+        return response() -> json($r);
 
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);

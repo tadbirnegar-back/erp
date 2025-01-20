@@ -298,7 +298,7 @@ class User extends Authenticatable
                 'workforceable_id', // Local key on the workforces table...
                 'id' // Local key on the employees table...
             ]
-        );
+        )->where('workforceable_type', Employee::class);
     }
 
     public function latestRecruitmentScript()
@@ -396,4 +396,11 @@ class User extends Authenticatable
         )->where("customers.customerable_type", Student::class);
     }
 
+    public function customer()
+    {
+        return $this->hasOneDeep(Customer::class, [Person::class],
+            ['id', 'person_id'],
+            ['person_id', 'id']
+        );
+    }
 }

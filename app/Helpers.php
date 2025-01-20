@@ -73,11 +73,49 @@ function convertDateTimeJalaliPersianCharactersToGregorian(string $persianCharDa
 }
 
 
-function convertDateTimeGregorianToJalaliDateTime(string $value)
+function convertPersianToGregorianBothHaveTimeAndDont($persianCharDateTime)
 {
-    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19
-    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
+    Log::info($persianCharDateTime);
+    if ($persianCharDateTime == null || empty($persianCharDateTime)) {
+        return null;
+    }
+    // Convert Persian numbers to English numbers
+    $englishJalaliDateTimeString = \Morilog\Jalali\CalendarUtils::convertNumbers($persianCharDateTime, true);
+
+    // Check if the input string contains time information
+    $hasTime = strpos($englishJalaliDateTimeString, ':') !== false;
+
+    // Define the format based on the presence of time
+    $format = $hasTime ? 'Y/m/d H:i:s' : 'Y/m/d';
+
+    // Parse the date and time from the Jalali format and convert to Gregorian
+    $dateTime = \Morilog\Jalali\CalendarUtils::createCarbonFromFormat($format, $englishJalaliDateTimeString);
+
+    // Return the datetime string, including the time if it was provided
+    return $hasTime ? $dateTime->toDateTimeString() : $dateTime->toDateString();
+}
+
+function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali);
     return $jalaliPersianNumbers;
+}
+
+
+function convertDateTimeGregorianToJalaliDateTimeButWithoutTime(string $value)
+{
+    // Convert to Jalali with time (H:i:s)
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19 12:30:45
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹ ۱۲:۳۰:۴۵
+
+    $dateOnly = substr($jalaliPersianNumbers, 0, 10); // ۱۳۹۵-۰۲-۱۹
+
+    return $dateOnly;
 }
 
 function convertDateTimeHaveDashJalaliPersianCharactersToGregorian(string $persianCharDateTime)
@@ -111,6 +149,7 @@ function convertSecondToMinute($second)
 
     return "{$minutes}:{$remainingSeconds}";
 }
+
 function convertMinuteToSecondFormatted($time)
 {
     list($minutes, $seconds) = explode(':', $time);

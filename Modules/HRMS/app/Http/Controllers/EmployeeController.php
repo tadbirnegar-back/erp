@@ -281,7 +281,7 @@ class EmployeeController extends Controller
             $username = Person::find($user->person_id)->display_name;
 
 
-            $user->notify(new RegisterNotification($username));
+            $user->notify((new RegisterNotification($username))->onQueue('default'));
 
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);
@@ -409,7 +409,7 @@ class EmployeeController extends Controller
             $username = Person::find($user->person_id)->display_name;
 
 
-            $user->notify(new RegisterNotification($username));
+            $user->notify((new RegisterNotification($username))->onQueue('default'));
 
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد', 'data' => $employee]);

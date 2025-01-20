@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\EMS\app\Observers\MeetingDateObserver;
+use Modules\EMS\app\Observers\MeetingObserver;
 use Modules\EMS\app\Scopes\ActiveMeetingScope;
 use Modules\EMS\Database\factories\MeetingFactory;
 use Modules\HRMS\app\Models\Employee;
@@ -61,13 +62,13 @@ class Meeting extends Model
     }
 
 
-//    protected static function boot()
-//    {
-//        parent::boot();
-//
-//        // Register the observer
-//        static::observe(\Modules\EMS\app\Observers\MeetingObserver::class);
-//    }
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Register the observer
+        static::observe(MeetingObserver::class);
+    }
 
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection

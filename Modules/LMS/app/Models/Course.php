@@ -67,16 +67,6 @@ class Course extends Model
                 $jalali = convertDateTimeGregorianToJalaliDateTime($value);
 
                 return $jalali;
-            },
-
-            set: function ($value) {
-                if (is_null($value)) {
-                    return null;
-                }
-                // Convert to Gregorian
-                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
-
-                return $dateTimeString;
             }
         );
     }
@@ -91,16 +81,6 @@ class Course extends Model
                 $jalali = convertDateTimeGregorianToJalaliDateTime($value);
 
                 return $jalali;
-            },
-
-            set: function ($value) {
-                if (is_null($value)) {
-                    return null;
-                }
-                // Convert to Gregorian
-                $dateTimeString = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($value);
-
-                return $dateTimeString;
             }
         );
     }
@@ -136,6 +116,8 @@ class Course extends Model
         return $this->hasMany(Enroll::class, 'course_id', 'id');
     }
 
+
+
     public function chapters()
     {
         return $this->hasMany(Chapter::class, 'course_id');
@@ -154,6 +136,11 @@ class Course extends Model
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
+    }
+
+    public function preReqForJoin()
+    {
+        return $this->hasMany(CourseCourse::class , 'main_course_id', 'id');
     }
 
     public function prerequisiteCourses()
@@ -226,6 +213,11 @@ class Course extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'creator_id', 'id');
+    }
+
+    public function courseTarget()
+    {
+        return $this->hasOne(CourseTarget::class, 'course_id', 'id');
     }
 
 }

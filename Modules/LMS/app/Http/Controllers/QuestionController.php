@@ -1,0 +1,78 @@
+<?php
+
+namespace Modules\LMS\app\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\LMS\app\Http\Traits\QuestionsTrait;
+use Modules\LMS\app\Models\Question;
+use Modules\LMS\app\Resources\QuestionsResource;
+
+class QuestionController extends Controller
+{
+    use QuestionsTrait;
+
+    public function store(Request $request)
+    {
+        $user = auth()->user();
+
+        $data = $request->all();
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'difficultyID' => 'required|integer|exists:difficulties,id',
+            'lessonID' => 'required|integer|exists:lessons,id',
+            'questionTypeID' => 'required|integer|exists:question_types,id',
+            'repositoryID' => 'nullable|integer|exists:repositories,id',
+            'createDate' => 'nullable|date',
+            'chapterID' => 'nullable|integer|exists:chapters,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            DB::enableQueryLog();
+            $question = $this->storeQuestion([$data], $user);
+            $response = QuestionsResource::make($question);
+            DB::commit();
+
+            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در افزودن سوال', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function destroyQuestion($id)
+    {
+        $success = $this->deleteQuestionRecord($id);
+
+        if ($success) {
+            return response()->json(['message' => 'Question has been deactivated successfully.'], 200);
+        } else {
+            return response()->json(['message' => 'Question not found.'], 404);
+        }
+    }
+
+
+    public function editQuestion(Request $request, $id)
+    {
+        $question = Question::findOrFail($id);
+        if ($question == null) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        try {
+            DB::beginTransaction();
+            $question = $this->UpdateQuestion($request->all(), $question);
+            $response = new QuestionsResource($question);
+
+            DB::commit();
+            return response()->json(['message' => 'Success', 'data' => $question, $response], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ویرایش سوال', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+
+}
