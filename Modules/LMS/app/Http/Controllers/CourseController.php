@@ -25,6 +25,7 @@ use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\CourseCourse;
+use Modules\LMS\app\Models\StatusCourse;
 use Modules\LMS\app\Resources\AllCoursesListResource;
 use Modules\LMS\app\Resources\CourseListResource;
 use Modules\LMS\app\Resources\CourseShowForUpdateResource;
@@ -389,5 +390,56 @@ class CourseController extends Controller
     }
 
 
+    public function makeCoursePublish($id)
+    {
+        try {
+            DB::beginTransaction();
+            StatusCourse::create([
+                'course_id' => $id,
+                'status_id' => $this->coursePresentingStatus()->id,
+                'create_date' => now()
+            ]);
+            DB::commit();
+            return response() -> json(['message' => "دوره با موفقیت منتشر شد"]);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json(["message"=>$exception->getMessage()], 400);
+        }
+
+    }
+
+    public function deleteCourse($id)
+    {
+        try {
+            DB::beginTransaction();
+            StatusCourse::create([
+                'course_id' => $id,
+                'status_id' => $this->courseDeletedStatus()->id,
+                'create_date' => now()
+            ]);
+            DB::commit();
+            return response() -> json(['message' => "دوره با موفقیت حذف شد"]);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json(["message"=>$exception->getMessage()], 400);
+        }
+    }
+
+    public function cancelCourse($id)
+    {
+        try {
+            DB::beginTransaction();
+            StatusCourse::create([
+                'course_id' => $id,
+                'status_id' => $this->courseCanceledStatus()->id,
+                'create_date' => now()
+            ]);
+            DB::commit();
+            return response() -> json(['message' => "دوره با موفقیت حذف شد"]);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json(["message"=>$exception->getMessage()], 400);
+        }
+    }
 
 }

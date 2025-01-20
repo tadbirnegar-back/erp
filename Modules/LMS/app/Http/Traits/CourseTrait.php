@@ -914,6 +914,10 @@ trait CourseTrait
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
     }
+    public function courseDeletedStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::DELETED->value);
+    }
 
     public function coursePresentingStatus()
     {
