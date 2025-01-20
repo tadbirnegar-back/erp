@@ -257,7 +257,7 @@ trait AnswerSheetTrait
         $userAns = $this->getUserAnswers($data);
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
         $startDate = $answerSheets->first()->startTime;
-
+        $courseID = $this->getCourseID($answerSheetID);
 
         $calculate = $this->calculatingAnswers($optionID, $answerSheetID, $usedTime, $examId);
 
@@ -270,6 +270,7 @@ trait AnswerSheetTrait
             'startDate' => $startDate,
             'status' => $status,
             'userAnswer' => $userAns,
+            'courseID' => $courseID
         ];
     }
 
@@ -298,6 +299,14 @@ trait AnswerSheetTrait
             ->toArray();
 
         return $data;
+    }
+
+    public function getCourseID($answerSheetID)
+    {
+        $query = AnswerSheet::joinRelationship('exam.courseExams.course');
+        $query->select('courses.id as courseID');
+        return $query->where('answer_sheets.id', $answerSheetID);
+
     }
 
 

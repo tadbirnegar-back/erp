@@ -48,6 +48,7 @@ class ExamResultController extends Controller
     public function showAns($answerSheetID)
     {
         $student = Auth::user()->load('student');
+
         $data = [
             'questions' => Answers::where('answer_sheet_id', $answerSheetID)
                 ->get(['question_id', 'value as selected_option'])
