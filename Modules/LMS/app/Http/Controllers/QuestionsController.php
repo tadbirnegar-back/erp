@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\questionsTrait;
+use Modules\LMS\app\Resources\QuestionResource;
 
 class QuestionsController extends Controller
 {
@@ -41,7 +42,6 @@ class QuestionsController extends Controller
         if ($question) {
             return response()->json([
                 'message' => 'Question created successfully',
-                'question' => $question,
             ], 201);
         }
 
@@ -57,7 +57,7 @@ class QuestionsController extends Controller
                 'error' => 'Course not found.'
             ], 404);
         }
-        return response()->json($show);
+        return new QuestionResource(collect($show));
     }
 
 

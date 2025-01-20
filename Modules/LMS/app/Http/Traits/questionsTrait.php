@@ -15,28 +15,21 @@ trait questionsTrait
 
     public function dropDowns($courseID)
     {
-        $query = Course::query()->joinRelationship('chapters.lessons.questions.difficulty')
-            ->joinRelationship('chapters.lessons.questions.questionType')
-            ->joinRelationship('chapters.lessons.questions.repository');
+        $query = Course::query()->joinRelationship('chapters.lessons.questions');
         $query->select([
             'chapters.id as chapterID',
             'chapters.title as chapterTitle',
             'lessons.id as lessonID',
             'lessons.title as lessonTitle',
-            'difficulties.name as difficultyName',
-            'difficulties.id as difficultyID',
-            'question_types.id as questionTypeID',
-            'question_types.name as questionTypeName',
-            'repositories.id as repoID',
-            'repositories.name as repoName'
         ]);
         return $query->where('courses.id', $courseID)->get();
+
+
     }
 
     public function insertQuestionWithOptions($data, $options, $courseID, $user)
     {
         $status = Status::whereIn('name', [$this::$active, $this::$inactive])->first();
-
 
         $question = Question::create([
             'title' => $data['title'],
@@ -46,8 +39,9 @@ trait questionsTrait
             'difficulty_id' => $data['difficultyID'],
             'create_date' => now(),
             'status_id' => $status->id,
-//            'creator_id' => $user->user->id
+            'creator_id' => $user->id
         ]);
+
 
         if ($question) {
             $optionsToInsert = [];
@@ -61,9 +55,11 @@ trait questionsTrait
 
             Option::insert($optionsToInsert);
         }
+        $question->joinRelationship('lesson.chapter.course')
+            ->where('courses.id', $courseID)
+            ->get();
 
-        return $question->where('courses.id', $courseID)->get();
+        return $question;
     }
-
 
 }
