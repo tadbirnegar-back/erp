@@ -102,6 +102,8 @@ class PublishCoursePreviewResource extends JsonResource
                 return !is_null($item['id']); // Remove items with null IDs
             })->unique('id')->values();
 
+            $sizeWithUnitVideo = Number::fileSize($courseInfo->course_video_size, 2, 3);
+            $partsvideo = explode(' ', $sizeWithUnitVideo, 2);
 
             $sizeWithCover = Number::fileSize($courseInfo->course_cover_size, 2, 3);
             $partscover = explode(' ', $sizeWithCover, 2);
@@ -141,13 +143,19 @@ class PublishCoursePreviewResource extends JsonResource
                     'id' => $courseInfo->course_cover_id,
                     'size' => intval(Number::fileSize($courseInfo->course_cover_size, 2, 3)) . ' ' . $partscover[1],
                 ],
+                'video' => [
+                    'slug' => $courseInfo->course_video_slug,
+                    'title' => $courseInfo->course_video_title,
+                    'id' => $courseInfo->course_video_id,
+                    'size' => intval(Number::fileSize($courseInfo->course_video_size, 2, 3)) . ' ' . $partsvideo[1],
+                ],
                 'pre_req' => $preReqs,
                 'course_targets' => $courseTargets->values(),
                 'chapters' => $chapters->values(),
                 'status' => ["name" => $courseInfo->status_alias_name ,  "class_name" => $courseInfo -> status_alias_class_name],
                 'buttons' => $this->ButtonsToRender()[$courseInfo->status_alias_name],
             ];
-        });
+        })->first();
     }
     private function isForAllCats($ids)
     {
