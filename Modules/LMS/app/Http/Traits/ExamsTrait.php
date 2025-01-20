@@ -110,6 +110,7 @@ trait ExamsTrait
             ->joinRelationship('status');
 
         $query->addSelect([
+            'answer_sheets.id as answerSheetID',
             'answer_sheets.start_date_time as startDate',
             'answer_sheets.finish_date_time as finishDate',
             'repositories.name as repositoryName',
