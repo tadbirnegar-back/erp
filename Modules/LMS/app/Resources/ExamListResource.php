@@ -23,9 +23,14 @@ class ExamListResource extends ResourceCollection
                     'exam' => $item->examTitle ? [
                         'title' => $item->examTitle,
                         'answer_sheet' => [
-                            'start_date_time' => convertGregorianToJalali($item->start_date_time),
-                            'finish_date_time' => convertGregorianToJalali($item->finish_date_time),
+                            'start_date_time' => $item->start_date_time
+                                ? convertGregorianToJalali($item->start_date_time)
+                                : 'تاریخ نامشخص',
+                            'finish_date_time' => $item->finish_date_time
+                                ? convertGregorianToJalali($item->finish_date_time)
+                                : 'تاریخ نامشخص',
                         ],
+
                         'repository' => $item->repositoryID ? [
                             'name' => $item->repositoryName,
                         ] : null,

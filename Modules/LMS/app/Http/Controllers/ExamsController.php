@@ -93,6 +93,10 @@ class ExamsController extends Controller
     public function index(Request $request)
     {
         $auth = Auth::user()->load('student');
+        if (!$auth) {
+
+            return response()->json('list doesnt exist for this student', 404);
+        }
         $student = $auth->student;
         $data = $request->all();
 
