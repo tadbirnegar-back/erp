@@ -270,13 +270,14 @@ trait AnswerSheetTrait
             'startDate' => $startDate,
             'status' => $status,
             'userAnswer' => $userAns,
-            'courseID' => $courseID
+            'courseID' => $courseID->courseID
         ];
     }
 
 
     private function calculateUsedTime($answerSheet)
     {
+
         $startTime = $answerSheet->startTime;
         $finishTime = $answerSheet->finishTime;
 
@@ -308,7 +309,7 @@ trait AnswerSheetTrait
                 'course' => fn($join) => $join->as('course_alias'),
             ])
             ->select('course_alias.id as courseID')
-            ->where('answer_sheets.id', $answerSheetID)->get();
+            ->where('answer_sheets.id', $answerSheetID)->first();
 
     }
 
