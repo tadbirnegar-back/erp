@@ -154,4 +154,61 @@ class MeetingController extends Controller
 
         return response()->json($data, 200);
     }
+
+
+    public function getSelectionFreezone(Request $req)
+    {
+        $organ = OrganizationUnit::with(['ancestorsAndSelf' => function ($q) {
+            $q->where('unitable_type', DistrictOfc::class);
+            $q->with('firstFreeMeetingByNowForFreeZone');
+            $q->with('fullMeetingsByNowForFreeZone');
+        }])->find($req->ounitID);
+
+        return $organ;
+
+        $firstFreeMeeting = $organ->ancestorsAndSelf->first()?->firstFreeMeetingByNow;
+        $fullMeetings = $organ->ancestorsAndSelf->first()?->fullMeetingsByNow;
+
+        $data = [];
+        if (!empty($fullMeetings)) {
+            $data['fullMeetings'] = $fullMeetings;
+        }
+
+        if (empty($firstFreeMeeting)) {
+            $data['message'] = "هیچ جلسه ای خالی نیست";
+        } else {
+
+            $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+
+//            $EncInMeetingcount = EnactmentMeeting::where('meeting_id', $firstFreeMeeting->id)
+//                ->whereDoesntHave('enactment.status', function ($q) {
+//                    $q->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+//                })
+//                ->distinct('enactment_id')
+//                ->count('enactment_id');
+            /**
+             * @var Meeting $firstFreeMeeting
+             */
+            $EncInMeetingcount = $firstFreeMeeting->loadCount(['enactments' => function ($query) {
+                $query->whereDoesntHave('status', function ($query) {
+                    $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                });
+            }])->enactments_count;
+
+
+            if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
+                $data['message'] = "جلسه انتخاب شده تکمیل ظرفیت شده";
+            }
+//            $humanReadableJalaliDate = $this->DateformatToHumanReadbleJalali($firstFreeMeeting->meeting_date);
+//
+//            $firstFreeMeeting->setAttribute('humanReadableJalaliDate', $humanReadableJalaliDate);
+
+            $data['freeMeeting'] = $firstFreeMeeting;
+            $data['freeMeeting']['countOfEnactments'] = $EncInMeetingcount;
+            $data['freeMeeting']['encLimit'] = $enactmentLimitPerMeeting->value;
+
+        }
+
+        return response()->json($data, 200);
+    }
 }
