@@ -30,6 +30,7 @@ class ExamResultResource extends JsonResource
         $status = $data['status'];
         $userAns = $data['userAnswer'];
         $startTime = $data['startDate'];
+        $courseID = $data['courseID'];
         $questionTimeSetting = Setting::where('key', 'time_per_questions')->first();
         $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
 
@@ -76,7 +77,7 @@ class ExamResultResource extends JsonResource
             'startDateTime' => $jalaliStartDate,
             'userAnswer' => $userAns,
             'exam_time' => $examTime,
-
+            '$courseID' => $courseID
         ];
     }
 }

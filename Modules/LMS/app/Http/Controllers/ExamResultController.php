@@ -64,6 +64,7 @@ class ExamResultController extends Controller
         ];
 
         $result = $this->Show($answerSheetID, $student, $data);
+//        return $result;
         $response = new ExamResultResource(collect($result));
         return $response;
     }
