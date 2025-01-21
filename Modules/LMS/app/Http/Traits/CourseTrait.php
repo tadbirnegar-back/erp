@@ -3,8 +3,6 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\Position;
@@ -14,11 +12,7 @@ use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
-use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
-use Modules\LMS\app\Models\Student;
-use Modules\LMS\app\Models\Teacher;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
@@ -618,6 +612,7 @@ trait CourseTrait
         return $filteredResults;
 
     }
+
     public function showCourseDataForEnteshareDore($id)
     {
         $query = Course::query()
@@ -660,11 +655,11 @@ trait CourseTrait
             ->leftJoinRelationship('courseTarget.targetOunitCat', [
                 'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
             ])
-            ->leftJoinRelationship('chapters.lessons' , [
+            ->leftJoinRelationship('chapters.lessons', [
                 'lessons' => fn($join) => $join->as('lessons_alias'),
                 'chapters' => fn($join) => $join->as('chapters_alias'),
             ])
-            ->leftJoinRelationship('lastStatusForJoin.status' , [
+            ->leftJoinRelationship('lastStatusForJoin.status', [
                 "status" => fn($join) => $join->as('status_alias'),
             ])
             ->select([
@@ -750,10 +745,10 @@ trait CourseTrait
 
     public function hasAttemptedAndPassedExam($student, $courseId)
     {
-        $attempted = AnswerSheet::joinRelationship('exam.courseExams.course')
-            ->where('courses.id', $courseId)
-            ->where('answer_sheets.student_id', $student->id)
-            ->exists();
+//        $attempted = AnswerSheet::joinRelationship('exam.courseExams.course')
+//            ->where('courses.id', $courseId)
+//            ->where('answer_sheets.student_id', $student->id)
+//            ->exists();
 
         $status = $this->ActiveAnswerSheetStatus();
 
@@ -762,7 +757,7 @@ trait CourseTrait
         })
             ->exists();
 
-        if ($attempted && $passed) {
+        if ($passed) {
             return true;
         }
 
@@ -830,7 +825,7 @@ trait CourseTrait
             })
             ->leftJoin('chapters as chapters_alias', 'chapters_alias.course_id', '=', 'courses.id')
             ->leftJoin('lessons as lessons_alias', 'lessons_alias.chapter_id', '=', 'chapters_alias.id')
-            ->leftJoin('contents as contents_alias' , 'contents_alias.lesson_id' , '=' , 'lessons_alias.id')
+            ->leftJoin('contents as contents_alias', 'contents_alias.lesson_id', '=', 'lessons_alias.id')
             ->leftJoin('content_type as content_type_alias', 'content_type_alias.id', '=', 'contents_alias.content_type_id')
             ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
             ->join('course_targets as targets_alias', function ($join) use ($ids) {
@@ -873,7 +868,6 @@ trait CourseTrait
                 $join->on('ouc_prop_alias.id', '=', 'ouc_prop_value.ouc_property_id')
                     ->on('ouc_prop_alias.ounit_cat_id', '=', 'target_ounit_cat_alias.ounit_cat_id');
             })
-
             ->leftJoin('organization_units as organ_alias', function ($join) use ($ids) {
                 $join->whereIn('organ_alias.unitable_id', $ids)
                     ->where('organ_alias.unitable_type', VillageOfc::class);
@@ -921,6 +915,7 @@ trait CourseTrait
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
     }
+
     public function courseDeletedStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::DELETED->value);
