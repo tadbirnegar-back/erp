@@ -869,6 +869,7 @@ class EMSController extends Controller
 
         $freezoneIds = $user->activeFreeZoneRecruitmentScript->pluck('ounit.unitable_id');
 
+
         $ounits = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
             ->whereHas('organizationUnit', function ($query) use ($searchTerm) {
                 $query

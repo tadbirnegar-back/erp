@@ -102,3 +102,6 @@ Route::middleware([])->prefix('v1')->group(function () {
 
     Route::get('mes/board/register', [EMSController::class, 'registerHeyaatRequirement']);
 });
+
+
+Route::post('mes/all-enactments/list', [EnactmentController::class, 'indexArchiveForFreeZone']);
