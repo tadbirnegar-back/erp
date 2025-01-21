@@ -861,7 +861,7 @@ class EMSController extends Controller
             return response()->json(['message' => $validator->errors()], 422);
         }
 
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $user = Auth::user();
         $searchTerm = $request->name;
 
         $user->load('activeFreeZoneRecruitmentScript');
