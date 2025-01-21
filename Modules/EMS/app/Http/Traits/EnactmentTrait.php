@@ -15,6 +15,7 @@ use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\FreeZone;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -160,6 +161,14 @@ trait EnactmentTrait
             $ounits = [$data['ounitID']];
         }
 
+        if(isset($data['freeZoneID']))
+        {
+            $ounits = OrganizationUnit::with(['descendantsAndSelf' => function ($query) {
+                $query->where('unitable_type', VillageOfc::class);
+            }])->find($data['freeZoneID'])->descendantsAndSelf->flatten()
+                ->pluck('id')
+                ->toArray();
+        }
 
         if (isset($data['districtID'])) {
 

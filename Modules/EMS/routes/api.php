@@ -104,5 +104,4 @@ Route::middleware([])->prefix('v1')->group(function () {
 });
 
 
-
-Route::post('mes/ounitNames/liveSearch-freezone', [EMSController::class, 'liveSearchFreeZone']);
+Route::post('mes/all-enactments/list', [EnactmentController::class, 'indexArchiveForFreeZone']);
