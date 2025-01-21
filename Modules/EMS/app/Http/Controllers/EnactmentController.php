@@ -106,7 +106,7 @@ class EnactmentController extends Controller
     }
     public function indexArchiveForFreeZone(Request $request): JsonResponse
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         $user->load(['activeFreeZoneRecruitmentScript.organizationUnit']);
         $freezoneIds = $user->activeFreeZoneRecruitmentScript->pluck('organizationUnit.unitable_id');
 
@@ -117,8 +117,6 @@ class EnactmentController extends Controller
 
 
         try {
-
-
             $data = $request->all();
             $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounitsAzad->pluck('id')->toArray(), $user->id);
 
