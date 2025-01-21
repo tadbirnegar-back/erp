@@ -132,7 +132,7 @@ class PublishCoursePreviewResource extends JsonResource
                     'id' => $courseInfo->course_alias_id,
                     'title' => $courseInfo->course_alias_title,
                     'description' => $courseInfo->course_alias_description,
-                    'is_required' => $courseInfo->course_alias_is_required ? 'درون سازمانی' : 'برون سازمانی',
+                    'is_required' => ["name" => $courseInfo->course_alias_is_required ? 'اجباری' : 'اختیاری' , "class_name" => 'primary'],
                     'expiration_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_expiration_date),
                     'access_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_access_date),
                     'privacy' => [ 'id' => $courseInfo->privacy_alias_id , 'name' => $courseInfo->privacy_alias_name ],
