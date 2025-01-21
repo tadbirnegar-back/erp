@@ -12,6 +12,7 @@ use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
+use Modules\LMS\app\Http\Controllers\QuestionsController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 
 /*
@@ -90,5 +91,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
 
 });
-Route::post('/lms/store-question/{id}', [\Modules\LMS\app\Http\Controllers\QuestionsController::class, 'storeQuestionAndOptions']);
-Route::post('/lms/show/{id}', [\Modules\LMS\app\Http\Controllers\QuestionsController::class, 'showDropDowns']);
+Route::post('/lms/store-question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
+Route::post('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
+Route::post('/lms/question-list/{id}', [QuestionsController::class, 'questionsManagement']);
+Route::get('/lms/questions-delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);

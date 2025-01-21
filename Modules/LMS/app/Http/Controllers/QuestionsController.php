@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\questionsTrait;
+use Modules\LMS\app\Models\Question;
+use Modules\LMS\app\Resources\QuestionManagementResource;
 use Modules\LMS\app\Resources\QuestionResource;
 
 class QuestionsController extends Controller
@@ -58,6 +60,28 @@ class QuestionsController extends Controller
             ], 404);
         }
         return new QuestionResource(collect($show));
+    }
+
+    public function questionsManagement($id)
+    {
+        if (!$id) {
+            return response()->json([
+                'courseID not found.'
+            ], 404);
+        }
+        $question = $this->questionList($id);
+        return new QuestionManagementResource(collect($question));
+    }
+
+    public function deleteQuestionAndRelatedOptions($questionID)
+    {
+        $question = Question::findOrFail($questionID);
+
+        $question->options()->delete();
+
+        $question->delete();
+
+        return response()->json(['message' => 'Question deleted successfully.']);
     }
 
 
