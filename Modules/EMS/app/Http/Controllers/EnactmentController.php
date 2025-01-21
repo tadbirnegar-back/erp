@@ -391,7 +391,8 @@ class EnactmentController extends Controller
                     ], 422);
                 }
 
-                if ($data['meetingType'] == 5) {
+                $MeetingTypeFreeZoneId = MeetingType::where('title' , MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+                if ($data['meetingType'] == $MeetingTypeFreeZoneId) {
                     $meetingTypeEnum = MeetingTypeEnum::FREE_ZONE;
                 } else {
                     $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;

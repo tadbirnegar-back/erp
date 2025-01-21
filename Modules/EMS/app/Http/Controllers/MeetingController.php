@@ -164,10 +164,9 @@ class MeetingController extends Controller
             $q->with('fullMeetingsByNowForFreeZone');
         }])->find($req->ounitID);
 
-        return $organ;
 
-        $firstFreeMeeting = $organ->ancestorsAndSelf->first()?->firstFreeMeetingByNow;
-        $fullMeetings = $organ->ancestorsAndSelf->first()?->fullMeetingsByNow;
+        $firstFreeMeeting = $organ->ancestorsAndSelf->first()?->firstFreeMeetingByNowForFreeZone;
+        $fullMeetings = $organ->ancestorsAndSelf->first()?->fullMeetingsByNowForFreeZone;
 
         $data = [];
         if (!empty($fullMeetings)) {

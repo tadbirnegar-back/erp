@@ -861,7 +861,7 @@ class EMSController extends Controller
             return response()->json(['message' => $validator->errors()], 422);
         }
 
-        $user = User::find(2174);
+        $user = \Illuminate\Support\Facades\Auth::user();
         $searchTerm = $request->name;
 
         $user->load('activeFreeZoneRecruitmentScript');
@@ -874,7 +874,7 @@ class EMSController extends Controller
                     $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
                         ->orWhere('name', 'like', '%' . $searchTerm . '%');
                 })
-                ->with(['ancestorsAndSelf', 'villageWithFreeZone'])
+                ->with(['villageWithFreeZone.organizationUnit.ancestorsAndSelf'])
                 ->get();
         })->flatten()->unique();
 
