@@ -22,6 +22,7 @@ use Modules\EMS\app\Models\EnactmentTitle;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\EMS\app\Models\MR;
+use Modules\EMS\app\Resources\FreeZoneLiveSearchResource;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
@@ -878,6 +879,6 @@ class EMSController extends Controller
                 ->get();
         })->flatten()->unique();
 
-        return response()->json($DecendentsOunits);
+        return FreeZoneLiveSearchResource::collection($DecendentsOunits);
     }
 }
