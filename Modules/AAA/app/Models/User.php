@@ -29,6 +29,7 @@ use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Student;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\FreeZone;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\PayStream\app\Http\Enums\OrderStatusEnum;
@@ -262,6 +263,22 @@ class User extends Authenticatable
 //        })
 //            ->orderBy('recruitment_scripts.start_date', 'desc');
     }
+
+
+    public function activeFreeZoneRecruitmentScript()
+    {
+        return $this->activeRecruitmentScripts()
+            ->join('organization_units as ounit_alias', 'recruitment_scripts.organization_unit_id', '=', 'ounit_alias.id')
+            ->where('ounit_alias.unitable_type', FreeZone::class)
+            ->orderBy('recruitment_scripts.start_date', 'desc')//            ->select('recruitment_scripts.*')
+            ; // Add the necessary columns here
+
+//        return $this->activeRecruitmentScripts()->whereHas('ounit', function ($query) {
+//            $query->where('organization_units.unitable_type', DistrictOfc::class);
+//        })
+//            ->orderBy('recruitment_scripts.start_date', 'desc');
+    }
+
 
     public function activeCityRecruitmentScript()
     {
