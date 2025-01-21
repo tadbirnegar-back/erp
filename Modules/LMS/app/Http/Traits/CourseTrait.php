@@ -623,6 +623,7 @@ trait CourseTrait
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
+            ->leftJoinRelationshipUsingAlias('privacy' , 'privacy_alias')
             ->leftJoinRelationship('preReqForJoin.preReqCourse', [
                 'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
                     ->on('pre_req_pivot_alias.main_course_id', 'courses.id'),
@@ -675,7 +676,6 @@ trait CourseTrait
                 'courses.is_required as course_alias_is_required',
                 'courses.expiration_date as course_alias_expiration_date',
                 'courses.access_date as course_alias_access_date',
-                'courses.privacy_id as course_alias_privacy_id',
                 'course_cover_alias.id as course_video_id',
                 'course_cover_alias.slug as course_cover_slug',
                 'course_cover_alias.name as course_cover_title',
@@ -683,6 +683,9 @@ trait CourseTrait
                 'course_video_alias.slug as course_video_slug',
                 'course_video_alias.name as course_video_title',
                 'course_video_alias.size as course_video_size',
+                //Privacy
+                'privacy_alias.id as privacy_alias_id',
+                'privacy_alias.name as privacy_alias_name',
                 //pre req data
                 'pre_reg_alias.id as pre_reg_alias_id',
                 'pre_reg_alias.title as pre_reg_alias_title',
