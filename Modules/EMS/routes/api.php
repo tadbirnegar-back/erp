@@ -80,6 +80,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('/mes/add-enactment/free-zone' , [EnactmentController::class, 'addEnactmentFreeZone']);
 
+    Route::post('mes/all-enactments/list', [EnactmentController::class, 'indexArchiveForFreeZone']);
+
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -102,3 +104,5 @@ Route::middleware([])->prefix('v1')->group(function () {
 
     Route::get('mes/board/register', [EMSController::class, 'registerHeyaatRequirement']);
 });
+
+

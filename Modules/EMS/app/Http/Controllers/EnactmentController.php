@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -98,6 +99,30 @@ class EnactmentController extends Controller
             $statuses = Enactment::GetAllStatuses();
             $enactmentReviews = EnactmentReview::GetAllStatuses();
             return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'),
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
+        }
+    }
+    public function indexArchiveForFreeZone(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $user->load(['activeFreeZoneRecruitmentScript.organizationUnit']);
+        $freezoneIds = $user->activeFreeZoneRecruitmentScript->pluck('organizationUnit.unitable_id');
+
+        $ounitsAzad = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
+            ->with('organizationUnit')
+            ->get()
+            ->pluck('organizationUnit');
+
+
+        try {
+            $data = $request->all();
+            $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounitsAzad->pluck('id')->toArray(), $user->id);
+
+            $statuses = Enactment::GetAllStatuses();
+            $enactmentReviews = EnactmentReview::GetAllStatuses();
+            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $ounitsAzad,
             ]);
         } catch (Exception $e) {
             return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
