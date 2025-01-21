@@ -102,7 +102,3 @@ Route::middleware([])->prefix('v1')->group(function () {
 
     Route::get('mes/board/register', [EMSController::class, 'registerHeyaatRequirement']);
 });
-
-
-
-Route::post('mes/ounitNames/liveSearch-freezone', [EMSController::class, 'liveSearchFreeZone']);
