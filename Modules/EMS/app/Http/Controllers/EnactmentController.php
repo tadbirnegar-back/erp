@@ -330,6 +330,230 @@ class EnactmentController extends Controller
         }
     }
 
+    public function addEnactmentFreeZone(Request $request)
+    {
+        try {
+
+
+            DB::beginTransaction();
+            $data = $request->all();
+            $validate = Validator::make($data, ['ounitID' => [
+                'required',
+                'exists:organization_units,id'
+            ],
+            ]);
+
+            if ($validate->fails()) {
+                return response()->json($validate->errors(), 422);
+            }
+
+            $user = Auth::user();
+            $data['creatorID'] = $user->id;
+            $data['operatorID'] = $user->id;
+            //Validations
+
+            $heyatOunit = OrganizationUnit::with([
+                'ancestorsAndSelf' => function ($query) {
+                    $query->where('unitable_type', DistrictOfc::class)
+                        ->with(['meetingMembers' => function ($query) {
+                            $query->whereHas('roles', function ($query) {
+                                $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                            });
+                        }]);
+                },
+            ])->find($data['ounitID']);
+
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
+
+            if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
+                return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
+            }
+
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->load('meetingMembers');
+
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
+
+
+            if (isset($data['meetingID'])) {
+                $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+
+                $EncInMeetingcount = Meeting::withCount(['enactments' => function ($query) {
+                    $query->whereDoesntHave('status', function ($query) {
+                        $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                    });
+                }])
+                    ->first()
+                    ->enactments_count;
+
+                if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
+                    return response()->json([
+                        "message" => "جلسه انتخاب شده تکمیل ظرفیت شده است."
+                    ], 422);
+                }
+
+                $MeetingTypeFreeZoneId = MeetingType::where('title' , MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+                if ($data['meetingType'] == $MeetingTypeFreeZoneId) {
+                    $meetingTypeEnum = MeetingTypeEnum::FREE_ZONE;
+                } else {
+                    $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
+                }
+                //Shura Meeting
+                $data['meetingTypeID'] = MeetingType::where('title', '=', $meetingTypeEnum)->first()->id;
+
+
+                $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
+                $meetingShura = $this->storeMeeting($data);
+
+                $enactment = $this->storeEnactment($data, $meetingShura);
+
+                $enactment->meetings()->attach($meetingShura->id);
+
+                $files = json_decode($data['attachments'], true);
+
+                $this->attachFiles($enactment, $files);
+
+                $meeting = Meeting::find($data['meetingID']);
+
+
+                foreach ($meeting->meetingMembers as $mm) {
+                    $newMember = $mm->replicate(['laravel_through_key']);
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
+                }
+
+                $meeting->enactments()->attach($enactment->id);
+
+
+                //Add statuses To Enactment
+
+                $statuses = [
+                    $this->enactmentPendingSecretaryStatus()->id,
+                    $this->enactmentPendingForHeyaatDateStatus()->id,
+                ];
+
+                $commonData = [
+                    'enactment_id' => $enactment->id,
+                    'operator_id' => $data['creatorID'],
+                    'description' => $data['description'] ?? null,
+                    'attachment_id' => $data['attachmentID'] ?? null,
+                ];
+
+                // Build and save each status individually to trigger the observer
+                foreach ($statuses as $statusId) {
+                    $statusData = array_merge($commonData, ['status_id' => $statusId]);
+                    EnactmentStatus::create($statusData); // This triggers the `created` observer
+                }
+
+
+            } else if (isset($data['meetingDate'])) {
+
+                //Validations
+
+                $ancestor = "";
+// Ensure ancestors are loaded and not null before attempting to access the first ancestor
+                if ($heyatOunit && $heyatOunit->ancestorsAndSelf->isNotEmpty()) {
+                    $ancestor = $heyatOunit->ancestorsAndSelf->first();
+
+                    $ancestor->load('firstFreeMeetingByNow');
+
+                }
+
+                $firstFreeMeeting = $ancestor->firstFreeMeetingByNow;
+
+                if (!empty($firstFreeMeeting)) {
+                    return response()->json(['message' => "شما نمیتوانید با داشتن جلسه خالی جلسه دیگری ایجاد نمایید"], 404);
+                }
+
+
+                $currentDate = Carbon::now();
+                $newMeetingDate = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($data['meetingDate']);
+
+                // Make sure $newMeetingDate is a Carbon instance
+                $newMeetingDate = Carbon::parse($newMeetingDate);
+
+                $maxDays = \DB::table('settings')
+                    ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
+                    ->value('value');
+
+                if ($newMeetingDate->lt($currentDate) || $newMeetingDate->gt($currentDate->addDays($maxDays))) {
+                    return response()->json(["message" => "تاریخ انتخاب شده درست نیست"], 404);
+                }
+
+                //End Of Validations
+
+
+                $meetingDate = $data['meetingDate'];
+                $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
+                if ($data['meetingType'] == 2) {
+                    $meetingTypeEnum = MeetingTypeEnum::SHURA_DISTRICT_MEETING;
+                } else {
+                    $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
+                }
+                //Shura Meeting
+                $data['meetingTypeID'] = MeetingType::where('title', '=', $meetingTypeEnum)->first()->id;
+                $meetingShura = $this->storeMeeting($data);
+
+                $data['meetingDate'] = $meetingDate;
+
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING->value)->first()->id;
+
+
+                $data['ounitID'] = $ancestor->id;
+                $meetingHeyaat = $this->storeMeeting($data);
+
+                //Make Enactments
+
+                $enactment = $this->storeEnactment($data, $meetingShura);
+                $enactment->meetings()->attach($meetingShura->id);
+                $enactment->meetings()->attach($meetingHeyaat->id);
+
+                //Add statuses to enactment
+                $statuses = [
+                    $this->enactmentPendingSecretaryStatus()->id,
+                    $this->enactmentPendingForHeyaatDateStatus()->id,
+                ];
+
+                $commonData = [
+                    'enactment_id' => $enactment->id,
+                    'operator_id' => $data['creatorID'],
+                    'description' => $data['description'] ?? null,
+                    'attachment_id' => $data['attachmentID'] ?? null,
+                ];
+
+                // Build and save each status individually to trigger the observer
+                foreach ($statuses as $statusId) {
+                    $statusData = array_merge($commonData, ['status_id' => $statusId]);
+                    EnactmentStatus::create($statusData); // This triggers the `created` observer
+                }
+
+                $files = json_decode($data['attachments'], true);
+
+                $this->attachFiles($enactment, $files);
+
+
+                foreach ($heyaatTemplateMembers as $mm) {
+                    $newMember = $mm->replicate(['laravel_through_key']);
+                    $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
+                    $newMember->save();
+
+
+                    $newMember = $mm->replicate(['laravel_through_key']);
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
+                }
+
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
+
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => 'مصوبه جدید ثبت نشد', $exception->getMessage(), $exception->getTrace()], 500);
+
+        }
+    }
+
     /**
      * Show the specified resource.
      */

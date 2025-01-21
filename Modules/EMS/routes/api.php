@@ -76,6 +76,10 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('mes/meeting/selection', [MeetingController::class, 'getSelection']);
 
+    Route::post('mes/meeting/selection-freezone', [MeetingController::class, 'getSelectionFreezone']);
+
+    Route::post('/mes/add-enactment/free-zone' , [EnactmentController::class, 'addEnactmentFreeZone']);
+
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -85,6 +89,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/mes/ounit-villages/search', [EnactmentController::class, 'getMyVillagesToAddEnactment']);
 
     Route::post('mes/ounitNames/liveSearch', [EMSController::class, 'liveSearch']);
+
+    Route::post('mes/ounitNames/liveSearch-freezone', [EMSController::class, 'liveSearchFreeZone']);
 
 });
 
@@ -96,3 +102,6 @@ Route::middleware([])->prefix('v1')->group(function () {
 
     Route::get('mes/board/register', [EMSController::class, 'registerHeyaatRequirement']);
 });
+
+
+

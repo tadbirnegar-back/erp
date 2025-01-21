@@ -70,9 +70,32 @@ class StoreEnactmentStatusJob implements ShouldQueue
                         'status_id' => $takmilshodeStatus,
                         'enactment_id' => $this->encId,
                     ]);
-                    if ($enactment->members->count() > 1) {
-                        $enactment->final_status_id = $noMoghayeratAutoStatus->id;
-                        $enactment->save();
+
+                    $reviewStatuses = $enactment->enactmentReviews()
+                        ->whereHas('user.roles', function ($query) {
+                            $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                        })->with('status')->get();
+
+                    if ($reviewStatuses->count() > 1) {
+                        $result = $reviewStatuses->groupBy('status.id')
+                            ->map(fn($statusGroup) => [
+                                'status' => $statusGroup->first(),
+                                'count' => $statusGroup->count()
+                            ])
+                            ->sortByDesc('count')
+                            ->values();
+
+                        if ($result->count() == 2 && isset($result[0]) && isset($result[1]) && $result[0]['count'] == $result[1]['count']) {
+                            $finalStatus = null;
+                        } else {
+                            $finalStatus = $result[0]['status']->status;
+                        }
+
+                        if (!is_null($finalStatus)) {
+                            $enactment->final_status_id = $finalStatus->id;
+                            $enactment->save();
+                        }
+
                     }
 
                 }

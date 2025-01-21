@@ -40,6 +40,7 @@ use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\FreeZone;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
@@ -850,4 +851,33 @@ class EMSController extends Controller
         ]);
     }
 
+    public function liveSearchFreeZone(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 422);
+        }
+
+        $user = Auth::user();
+        $searchTerm = $request->name;
+
+        $user->load('activeFreeZoneRecruitmentScript');
+
+        $ounits = $user->activeFreeZoneRecruitmentScript->pluck('ounit');
+        $DecendentsOunits = $ounits->map(function ($ounit) use ($searchTerm) {
+            return $ounit
+                ->where('unitable_type' , FreeZone::class)
+                ->where(function ($query) use ($searchTerm) {
+                    $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                        ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                })
+                ->with(['villageWithFreeZone.organizationUnit.ancestorsAndSelf'])
+                ->get();
+        })->flatten()->unique();
+
+        return response()->json($DecendentsOunits);
+    }
 }
