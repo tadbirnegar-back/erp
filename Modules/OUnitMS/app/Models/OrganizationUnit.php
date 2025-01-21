@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Log;
 use Modules\AAA\app\Models\User;
+use Modules\AddressMS\app\Models\Village;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\SettingsEnum;
@@ -291,6 +292,12 @@ class OrganizationUnit extends Model
             ])
             ->where('isTemplate', '=', false)
             ->where('meeting_type_id', $meetingType->id);
+    }
+
+
+    public function villageWithFreeZone() : HasMany
+    {
+        return $this->hasMany(VillageOfc::class, 'free_zone_id' , 'unitable_id');
     }
 
     public function meetingMembers()

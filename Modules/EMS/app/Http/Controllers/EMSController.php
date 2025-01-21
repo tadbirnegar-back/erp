@@ -864,7 +864,7 @@ class EMSController extends Controller
         $user = User::find(2174);
         $searchTerm = $request->name;
 
-        $user->load('activeFreeZoneRecruitmentScript.ounit');
+        $user->load('activeFreeZoneRecruitmentScript');
 
         $ounits = $user->activeFreeZoneRecruitmentScript->pluck('ounit');
         $DecendentsOunits = $ounits->map(function ($ounit) use ($searchTerm) {
@@ -874,7 +874,7 @@ class EMSController extends Controller
                     $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
                         ->orWhere('name', 'like', '%' . $searchTerm . '%');
                 })
-                ->with('unitable.villages.organizationUnit.ancestorsAndSelf')
+                ->with(['ancestorsAndSelf', 'villageWithFreeZone'])
                 ->get();
         })->flatten()->unique();
 
