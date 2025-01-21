@@ -865,20 +865,23 @@ class EMSController extends Controller
         $user = Auth::user();
         $searchTerm = $request->name;
 
-        $user->load('activeFreeZoneRecruitmentScript');
+        $user->load(['activeFreeZoneRecruitmentScript.ounit']);
 
-        $ounits = $user->activeFreeZoneRecruitmentScript->pluck('ounit');
-        $DecendentsOunits = $ounits->map(function ($ounit) use ($searchTerm) {
-            return $ounit
-                ->where('unitable_type' , FreeZone::class)
-                ->where(function ($query) use ($searchTerm) {
-                    $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
-                        ->orWhere('name', 'like', '%' . $searchTerm . '%');
-                })
-                ->with(['villageWithFreeZone.organizationUnit.ancestorsAndSelf'])
-                ->get();
-        })->flatten()->unique();
+        $freezoneIds = $user->activeFreeZoneRecruitmentScript->pluck('ounit.unitable_id');
 
-        return FreeZoneLiveSearchResource::collection($DecendentsOunits);
+        $ounits = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
+            ->whereHas('organizationUnit', function ($query) use ($searchTerm) {
+                $query
+                    ->where(function ($query) use ($searchTerm) {
+                        $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                            ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                    });
+            })
+            ->with('organizationUnit.ancestors')
+            ->get()
+        ->pluck('organizationUnit');
+
+
+        return response()->json($ounits);
     }
 }
