@@ -12,10 +12,12 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 
 class Budget extends Model
 {
-    use HasRelationships;
+    use HasRelationships, HasRecursiveRelationships;
+
 
     /**
      * The attributes that are mass assignable.
@@ -36,7 +38,12 @@ class Budget extends Model
     public function statuses(): BelongsToMany
     {
         return $this->belongsToMany(Status::class, 'bgtBudget_status', 'budget_id', 'status_id')
-            ->withPivot(['create_date as status_create_date', 'creator_id'])
+            ->withPivot([
+                'create_date as status_create_date',
+                'file_id',
+                'creator_id',
+                'description'
+            ])
             ->using(BudgetStatus::class);
     }
 

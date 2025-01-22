@@ -3,14 +3,13 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Support\Facades\DB;
-use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
 use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Http\Trait\CircularTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Http\Trait\OunitFiscalYearTrait;
-use Modules\ACMS\app\Models\CircularSubject;
+use Modules\ACMS\app\Models\Budget;
+use Modules\OUnitMS\app\Models\StateOfc;
 
 
 class testController extends Controller
@@ -19,31 +18,66 @@ class testController extends Controller
 
     public function run()
     {
-        $a = CircularSubject::with('circulars')->get();
-        dd($a);
-        dd(SubjectTypeEnum::tryFrom(34456));
-        $a = CircularSubject::joinRelationship('circularSubjects')
-            ->select([
-                'bgt_circular_subjects.subject_type_id',
-                DB::raw('COUNT(*) as count'),
+//        $a = BudgetStatus::with(['file'])->find(7841);
+//        dd($a);
+        $budget = Budget::
+        with([
+            'fiscalYear',
+            'circularFile',
+            'ounit.ancestors' => function ($q) {
+                $q->where('unitable_type', '!=', StateOfc::class);
+            },
+            'statuses.pivot.person',
+            'statuses.pivot.file',
+            'village',
+            'statuses',
+            'latestStatus',
+            'ancestors.statuses' => function ($q) {
+                $q->with(['pivot.person', 'pivot.file']);
+            },
+        ])
+            ->find(7841);
+        dump($budget);
+//        dd($budget->statuses[0]->pivot->description);
+//        $a = BudgetTimelineStatusEnum::generateTimeline($budget);
 
-            ])
-            ->groupBy([
-                'bgt_circular_subjects.subject_type_id',])
-            ->where('bgt_circulars.id', 11)
-            ->get();
+//        $budgetItems = BudgetItem::joinRelationship('circularItem.subject')
+//            ->where('budget_id', 5774
+//            )
+//            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::INCOME->value)
+//            ->select([
+//                \DB::raw('SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS total'),
+//                \DB::raw('SUM(bgt_budget_items.proposed_amount) - SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS difference
+//')
+//            ])
+//            ->first();
 
-        dd($a);
+//        $budgetItems = BudgetItem::joinRelationship('circularItem.subject')
+//            ->where('budget_id', 5774
+//            )
+//            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::ECONOMIC_EXPENSE->value)
+//            ->select([
+//                \DB::raw('SUM(bgt_budget_items.proposed_amount) AS economic_total'),
+//            ])
+//            ->first();
+//        dump($budgetItems);
+
+//        $budgetItems = BudgetItem::joinRelationship('circularItem.subject')
+//            ->where('budget_id', 5774)
+//            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::OPERATIONAL_EXPENSE->value)
+//            ->select([
+//                \DB::raw('SUM(bgt_budget_items.proposed_amount) AS operational_total'),
+//            ])
+//            ->first();
+//        dump($budgetItems);
         $output = "<!DOCTYPE html>
     <html>
     <head>
         <title>Test Debugbar</title>
     </head>
     <body>
-        <h1>Testing Debugbar Rendering</h1>
-    </body>";
+    </body></html>";
 
-        $output .= "</html>";
 
         echo $output;
 //        return VillageBudgetListResource::collection($budgets);

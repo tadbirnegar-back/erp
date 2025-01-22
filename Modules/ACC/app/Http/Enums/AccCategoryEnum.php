@@ -2,6 +2,8 @@
 
 namespace Modules\ACC\app\Http\Enums;
 
+use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
+
 enum AccCategoryEnum: int
 {
     case CURRENT_ASSETS = 1;
@@ -31,6 +33,15 @@ enum AccCategoryEnum: int
             self::INCOME, self::EXPENSE => AccountCategoryTypeEnum::BUDGETARY,
 
             self::REGULATORY_ACCOUNTS => AccountCategoryTypeEnum::REGULATORY,
+        };
+
+    }
+
+    public function getSubjectType()
+    {
+        return match ($this) {
+            self::INCOME => [SubjectTypeEnum::INCOME],
+            self::EXPENSE => [SubjectTypeEnum::ECONOMIC_EXPENSE, SubjectTypeEnum::OPERATIONAL_EXPENSE],
         };
 
     }

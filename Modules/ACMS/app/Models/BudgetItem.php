@@ -20,6 +20,7 @@ class BudgetItem extends Model
         'finalized_amount',
         'budget_id',
         'circular_item_id',
+        'percentage',
     ];
 
     public $timestamps = false;

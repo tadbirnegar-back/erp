@@ -119,32 +119,39 @@ trait CircularTrait
 
     public function ounitsIncludingForAddingBudget(Circular $circular, bool $count = false, bool $isDispatch = false)
     {
-        $vills = OrganizationUnit::where('unitable_type', VillageOfc::class)->joinRelationship('village', function ($join) {
-            $join->where('hasLicense', true);
-        })
-            ->leftJoinRelationship('ounitFiscalYears.budget', [
+        $vills = OrganizationUnit::where('unitable_type', VillageOfc::class)
+            ->joinRelationship('village', function ($join) {
+                $join->where('hasLicense', true);
+            })
+            ->leftJoinRelationship('ounitFiscalYears.budgets', [
                 'ounitFiscalYears' => function ($join) use ($circular) {
                     $join->where('ounit_fiscalYear.fiscal_year_id', $circular->fiscal_year_id);
                 },
-                'budget' => function ($join) use ($circular) {
+                'budgets' => function ($join) use ($circular) {
                     $join->where('circular_id', $circular->id);
                 }
             ]);
 
         if ($isDispatch) {
             $vills
-                ->where('bgt_budgets.circular_id', $circular->id);
+                ->where('bgt_budgets.circular_id', $circular->id)
+                ->whereNotNull('bgt_budgets.id'); // Ensure budget is not null
         } else {
             $vills->where(function ($subQuery) use ($circular) {
-                $subQuery->whereNull('bgt_budgets.circular_id') // No budget with circular_id
-                ->orWhere('bgt_budgets.circular_id', '!=', $circular->id); // Exclude matching circular_id
+                $subQuery
+                    ->whereNull('bgt_budgets.id') // No budget
+                    ->orWhere('bgt_budgets.circular_id', '!=', $circular->id); // Different circular_id
             });
+//            $vills->where(function ($subQuery) use ($circular) {
+//                $subQuery
+//                    ->where('bgt_budgets.circular_id', '!=', $circular->id)
+//                    ->orWhereNull('bgt_budgets.id'); // Include records with no budget
+//            });
         }
 
-
         return $count ? $vills->count() : $vills->select([
-            'organization_units.id as ounitID'])
-            ->get();
+            'organization_units.id as ounitID'
+        ])->get();
     }
 
 

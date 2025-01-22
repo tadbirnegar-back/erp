@@ -16,7 +16,7 @@
         "className": "primary"
     },
     {
-        "name": "حذف شده",
+        "name": "رد شده",
         "className": "danger"
     }
 ]

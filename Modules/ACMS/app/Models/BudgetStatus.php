@@ -5,6 +5,7 @@ namespace Modules\ACMS\app\Models;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Modules\AAA\app\Models\User;
 use Modules\ACMS\Database\factories\BudgetStatusFactory;
+use Modules\FileMS\app\Models\File;
 use Modules\PersonMS\app\Models\Person;
 use Znck\Eloquent\Traits\BelongsToThrough;
 
@@ -20,6 +21,8 @@ class BudgetStatus extends Pivot
         'budget_id',
         'status_id',
         'creator_id',
+        'file_id',
+        'description',
         'create_date',
     ];
 
@@ -32,5 +35,10 @@ class BudgetStatus extends Pivot
             User::class => 'creator_id',
             Person::class => 'person_id',
         ]);
+    }
+
+    public function file()
+    {
+        return $this->belongsTo(File::class, 'file_id');
     }
 }

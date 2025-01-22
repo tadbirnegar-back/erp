@@ -36,12 +36,18 @@ class BudgetController extends Controller
 
         $ounits = $recruitmentScripts->pluck('organizationUnit.id');
 
-        $budgets = Budget::joinRelationship('statuses', [
-            'statuses' => function ($join) {
-                $join
-                    ->whereRaw('bgtBudget_status.create_date = (SELECT MAX(create_date) FROM bgtBudget_status WHERE budget_id = bgt_budgets.id)');
-            }
-        ])
+        $budgets = Budget::leftJoinRelationshipUsingAlias('children', function ($join) {
+            $join->as('budgets_alias')
+                ->on('budgets_alias.id', '=', 'bgt_budgets.parent_id')
+                ->whereNull('budgets_alias.id');
+        }
+        )
+            ->joinRelationship('statuses', [
+                'statuses' => function ($join) {
+                    $join
+                        ->whereRaw('bgtBudget_status.create_date = (SELECT MAX(create_date) FROM bgtBudget_status WHERE budget_id = bgt_budgets.id)');
+                }
+            ])
             ->joinRelationship('ounitFiscalYear.village')
             ->whereIntegerInRaw('ounit_fiscalYear.ounit_id', $ounits->toArray())
             ->whereIntegerInRaw('fiscal_year_id', $fiscalYears->toArray())
@@ -70,7 +76,12 @@ class BudgetController extends Controller
             return response()->json(['error' => $validation->errors()], 422);
         }
 
-        $budgets = Budget::joinRelationship('statuses', [
+        $budgets = Budget::leftJoinRelationshipUsingAlias('children', function ($join) {
+            $join->as('budgets_alias')
+                ->on('budgets_alias.id', '=', 'bgt_budgets.parent_id')
+                ->whereNull('budgets_alias.id');
+        }
+        )->joinRelationship('statuses', [
             'statuses' => function ($join) {
                 $join->on('bgtBudget_status.id', '=', \DB::raw('(
                                 SELECT id
@@ -98,22 +109,64 @@ class BudgetController extends Controller
 
     public function show($id)
     {
-        $budget = Budget::with([
+        $budget = Budget::
+        with([
             'fiscalYear',
             'circularFile',
             'ounit.ancestors' => function ($q) {
                 $q->where('unitable_type', '!=', StateOfc::class);
             },
             'statuses.pivot.person',
+            'statuses.pivot.file',
             'village',
             'statuses',
-            'latestStatus'
+            'latestStatus',
+            'ancestors.statuses' => function ($q) {
+                $q->with(['pivot.person', 'pivot.file']);
+            },
+            'ancestors.latestStatus'
         ])
             ->find($id);
 
         if (is_null($budget)) {
             return response()->json(['error' => 'بودجه مورئ نظر یافت نشد'], 404);
         }
+
+        $incomeResults = BudgetItem::joinRelationship('circularItem.subject')
+            ->where('budget_id', $id
+            )
+            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::INCOME->value)
+            ->select([
+                \DB::raw('SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS jari_income_total'),
+                \DB::raw('SUM(bgt_budget_items.proposed_amount) - SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS operational_income_total'),
+                \DB::raw('COUNT(*) as count'),
+
+            ])
+            ->first();
+
+        $economicResults = BudgetItem::joinRelationship('circularItem.subject')
+            ->where('budget_id', $id
+            )
+            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::ECONOMIC_EXPENSE->value)
+            ->select([
+                \DB::raw('COUNT(*) as count'),
+                \DB::raw('SUM(bgt_budget_items.proposed_amount) AS economic_total'),
+            ])
+            ->first();
+        $operationalResults = BudgetItem::joinRelationship('circularItem.subject')
+            ->where('budget_id', $id)
+            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::OPERATIONAL_EXPENSE->value)
+            ->select([
+                \DB::raw('SUM(bgt_budget_items.proposed_amount) AS operational_total'),
+                \DB::raw('COUNT(*) as count'),
+
+            ])
+            ->first();
+
+        $budget->setAttribute('income_sum', $incomeResults);
+        $budget->setAttribute('eco_sum', $economicResults);
+        $budget->setAttribute('operational_sum', $operationalResults);
+
 
         return BudgetSingleResource::make($budget);
     }

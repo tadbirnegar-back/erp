@@ -13,9 +13,12 @@ trait OunitFiscalYearTrait
     {
         $preparedData = $this->ounitFiscalYearDataPreparation($data, $fiscalYear, $user);
 
-        $ounitFiscalYear = OunitFiscalYear::insert($preparedData->toArray());
-        $ounitFiscalYearsResult = OunitFiscalYear::latest('id')
-            ->take($preparedData->count())
+//        $ounitFiscalYear = OunitFiscalYear::upsert($preparedData->toArray(), ['ounit_id', 'fiscal_year_id'], ['ounit_id', 'fiscal_year_id']);
+        foreach ($preparedData as $data) {
+            OunitFiscalYear::firstOrCreate(['ounit_id' => $data['ounit_id'], 'fiscal_year_id' => $data['fiscal_year_id']], $data,);
+        }
+        $ounitFiscalYearsResult = OunitFiscalYear::where('fiscal_year_id', $fiscalYear->id)
+            ->whereIntegerInRaw('ounit_id', $preparedData->pluck('ounit_id')->toArray())
             ->get(['id']);
 
         return $ounitFiscalYearsResult;
@@ -28,9 +31,7 @@ trait OunitFiscalYearTrait
         }
         $data = collect($data)->map(function ($item) use ($fiscalYear, $user) {
 
-            if (!isset($item['ounitID'])) {
-                \Log::info($item);
-            }
+
             return [
                 'ounit_id' => $item['ounitID'],
                 'fiscal_year_id' => $fiscalYear->id,

@@ -29,6 +29,7 @@ trait BudgetItemsTrait
                 'circular_item_id' => $item['id'],
                 'proposed_amount' => $item['proposed_amount'] ?? 0,
                 'finalized_amount' => $item['approved_amount'] ?? 0,
+                'percentage' => $item['percentage'] ?? 0,
             ];
         });
 

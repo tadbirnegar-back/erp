@@ -210,8 +210,11 @@ class CircularController extends Controller
             ->where('bgt_circulars.id', $id)
             ->get();
 
+        DB::enableQueryLog();
         $dispatchedOunits = $this->ounitsIncludingForAddingBudget($circular, true, true);
         $unDispatchedOunits = $this->ounitsIncludingForAddingBudget($circular, true, false);
+        $queries = DB::getQueryLog();
+//        return response()->json($queries);
 
         $circular->setAttribute('dispatchedOunits', $dispatchedOunits);
         $circular->setAttribute('unDispatchedOunits', $unDispatchedOunits);
@@ -233,7 +236,7 @@ class CircularController extends Controller
         }
 
         $circular = Circular::find($data['circularID']);
-        $includedOunitsForBudgetCount = $this->ounitsIncludingForAddingBudget($circular->fiscal_year_id, true);
+        $includedOunitsForBudgetCount = $this->ounitsIncludingForAddingBudget($circular, true);
 
         return response()->json(['data' => ['count' => $includedOunitsForBudgetCount]], 200);
     }
@@ -253,7 +256,6 @@ class CircularController extends Controller
         if (is_null($circular)) {
             return response()->json(['message' => 'بخشنامه مورد نظر یافت نشد'], 404);
         }
-        return response()->json(['message' => $circular], 500);
         try {
             \DB::beginTransaction();
 
