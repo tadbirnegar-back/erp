@@ -481,11 +481,11 @@ class EnactmentController extends Controller
                 if ($heyatOunit && $heyatOunit->ancestorsAndSelf->isNotEmpty()) {
                     $ancestor = $heyatOunit->ancestorsAndSelf->first();
 
-                    $ancestor->load('firstFreeMeetingByNow');
+                    $ancestor->load('firstFreeMeetingByNowForFreeZone');
 
                 }
 
-                $firstFreeMeeting = $ancestor->firstFreeMeetingByNow;
+                $firstFreeMeeting = $ancestor->firstFreeMeetingByNowForFreeZone;
 
                 if (!empty($firstFreeMeeting)) {
                     return response()->json(['message' => "شما نمیتوانید با داشتن جلسه خالی جلسه دیگری ایجاد نمایید"], 404);

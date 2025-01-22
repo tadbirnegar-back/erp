@@ -76,11 +76,11 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('mes/meeting/selection', [MeetingController::class, 'getSelection']);
 
-    Route::post('mes/meeting/selection-freezone', [MeetingController::class, 'getSelectionFreezone']);
+    Route::post('/mes/meeting/selection-freezone', [MeetingController::class, 'getSelectionFreezone']);
 
-    Route::post('/mes/add-enactment/free-zone' , [EnactmentController::class, 'addEnactmentFreeZone']);
+    Route::post('/mes/enactment/add-freezone' , [EnactmentController::class, 'addEnactmentFreeZone']);
 
-    Route::post('mes/all-enactments/list', [EnactmentController::class, 'indexArchiveForFreeZone']);
+    Route::post('/mes/freezone/list', [EnactmentController::class, 'indexArchiveForFreeZone']);
 
 });
 
