@@ -479,11 +479,11 @@ class EnactmentController extends Controller
                 if ($heyatOunit && $heyatOunit->ancestorsAndSelf->isNotEmpty()) {
                     $ancestor = $heyatOunit->ancestorsAndSelf->first();
 
-                    $ancestor->load('firstFreeMeetingByNow');
+                    $ancestor->load('firstFreeMeetingByNowForFreeZone');
 
                 }
 
-                $firstFreeMeeting = $ancestor->firstFreeMeetingByNow;
+                $firstFreeMeeting = $ancestor->firstFreeMeetingByNowForFreeZone;
 
                 if (!empty($firstFreeMeeting)) {
                     return response()->json(['message' => "شما نمیتوانید با داشتن جلسه خالی جلسه دیگری ایجاد نمایید"], 404);
@@ -509,7 +509,8 @@ class EnactmentController extends Controller
 
                 $meetingDate = $data['meetingDate'];
                 $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
-                if ($data['meetingType'] == 2) {
+                $meeting_id = Meeting::where('meeting_type_id' , MeetingTypeEnum::SHURA_DISTRICT_MEETING)->first()->id;
+                if ($data['meetingType'] == $meeting_id) {
                     $meetingTypeEnum = MeetingTypeEnum::SHURA_DISTRICT_MEETING;
                 } else {
                     $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
@@ -520,7 +521,7 @@ class EnactmentController extends Controller
 
                 $data['meetingDate'] = $meetingDate;
 
-                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING->value)->first()->id;
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::FREE_ZONE->value)->first()->id;
 
 
                 $data['ounitID'] = $ancestor->id;
