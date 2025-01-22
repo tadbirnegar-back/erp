@@ -509,7 +509,7 @@ class EnactmentController extends Controller
 
                 $meetingDate = $data['meetingDate'];
                 $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
-                $meeting_id = Meeting::where('meeting_type_id' , MeetingTypeEnum::SHURA_DISTRICT_MEETING)->first()->id;
+                $meeting_id = MeetingTypeEnum::where('meeting_type_id' , MeetingTypeEnum::SHURA_DISTRICT_MEETING)->first()->id;
                 if ($data['meetingType'] == $meeting_id) {
                     $meetingTypeEnum = MeetingTypeEnum::SHURA_DISTRICT_MEETING;
                 } else {
