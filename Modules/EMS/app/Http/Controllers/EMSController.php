@@ -878,7 +878,9 @@ class EMSController extends Controller
                             ->orWhere('name', 'like', '%' . $searchTerm . '%');
                     });
             })
-            ->with('organizationUnit.ancestors')
+            ->with(['organizationUnit.ancestors' => function ($query) {
+                $query->orderByDesc('id'); // Replace 'id' with the appropriate column for reverse ordering
+            }])
             ->get()
         ->pluck('organizationUnit');
 
