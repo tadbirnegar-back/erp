@@ -70,7 +70,7 @@ trait questionsTrait
             ->joinRelationship('chapters.lessons.questions.repository')
             ->joinRelationship('chapters.lessons.questions.questionType')
             ->select([
-                'questions.id as questionD',
+                'questions.id as questionID',
                 'questions.title as questionTitle',
                 'question_types.name as questionTypeName',
                 'difficulties.name as difficultyName',
@@ -83,7 +83,7 @@ trait questionsTrait
 
             ])
             ->where('courses.id', $id)
-//            ->where('status_id', self::$active)
+            ->orWhere('status_id', self::$active)
             ->get();
         $count = $this->count($id);
 
@@ -120,11 +120,9 @@ trait questionsTrait
         ];
     }
 
-
-    public function updateQuestionWithOptions($questionID, $data, $options, $user)
+    public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete)
     {
         $question = Question::find($questionID);
-
 
         $question->update([
             'title' => $data['title'],
@@ -136,27 +134,41 @@ trait questionsTrait
             'creator_id' => $user->id
         ]);
 
-        foreach ($options as $option) {
-            if (isset($option['id'])) {
-                Option::where('id', $option['id'])
-                    ->where('question_id', $questionID)
-                    ->update([
-                        'title' => $option['title'],
-                        'is_correct' => $option['is_correct'],
-                    ]);
-            } else {
-                Option::create([
-                    'title' => $option['title'],
-                    'is_correct' => $option['is_correct'],
-                    'question_id' => $question->id,
-                ]);
+        foreach ($delete as $optionToDelete) {
+            if (isset($optionToDelete['option_id'])) {
+                $this->deleteOption($optionToDelete['option_id']);
             }
         }
-        $question->save();
+
+        $optionsData = [];
+        foreach ($options as $option) {
+            $optionsData[] = [
+                'id' => $option['option_id'] ?? null,
+                'title' => $option['title'],
+                'is_correct' => $option['is_correct'],
+                'question_id' => $questionID,
+                'updated_at' => now(),
+                'created_at' => $question->create_date ? null : now(),
+            ];
+        }
+
+        Option::upsert(
+            $optionsData,
+            ['id'],
+            ['title', 'is_correct', 'updated_at']
+        );
 
         return $question;
-
     }
+
+    public function deleteOption($option_id)
+    {
+        $option = Option::find($option_id);
+        if ($option) {
+            $option->delete();
+        }
+    }
+
 
     public function showEditedQuestion($questionID)
     {
@@ -176,7 +188,9 @@ trait questionsTrait
                 'options.title as optionTitle',
                 'options.id as optionID',
                 'chapters.title as chapterTitle',
+                'chapters.id as chapterID',
                 'lessons.title as lessonTitle',
+                'lessons.id as lessonID',
                 'courses.title as courseTitle',
                 'options.is_correct as isCorrect'
 

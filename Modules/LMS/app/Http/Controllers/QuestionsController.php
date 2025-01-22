@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\questionsTrait;
+use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
 use Modules\LMS\app\Resources\QuestionManagementResource;
 use Modules\LMS\app\Resources\QuestionResource;
@@ -24,6 +25,8 @@ class QuestionsController extends Controller
     {
         try {
             DB::beginTransaction();
+
+            $data = $request->all();
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'questionTypeID' => 'required|integer|exists:question_types,id',
@@ -38,10 +41,15 @@ class QuestionsController extends Controller
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return response()->json(['message' => 'Invalid options format'], 400);
             }
+            $repositoryIDs = json_decode($validated['repositoryID'], true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || !isset($repositoryIDs['ids']) || !is_array($repositoryIDs['ids'])) {
+                return response()->json(['message' => 'Invalid repositoryID format'], 400);
+            }
 
             $user = User::find(2203);
-            $question = $this->insertQuestionWithOptions($validated, $options, $courseID, $user);
-
+            $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user);
+            DB::commit();
             if ($question) {
                 return response()->json([
                     'message' => 'Question created successfully',
@@ -50,6 +58,7 @@ class QuestionsController extends Controller
 
             return response()->json(['message' => 'Failed to create question'], 500);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'error' => 'An error occurred while processing your request.',
                 'message' => $e->getMessage(),
@@ -121,46 +130,49 @@ class QuestionsController extends Controller
     public function update(Request $request, $questionID)
     {
         try {
-
-            DB::beginTransaction();
-
             $data = $request->all();
 
             $options = json_decode($data['options'], true);
-
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return response()->json([
                     'message' => 'Invalid options format. Please provide a valid JSON string.'
                 ], 400);
             }
+            $delete = json_decode($data['delete'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json([
+                    'message' => 'Invalid delete format. Please provide a valid JSON string.'
+                ], 400);
+            }
 
-            if (!$questionID) {
+            $question = Question::find($questionID);
+            if (!$question) {
                 return response()->json([
                     'message' => 'Question not found'
                 ], 404);
             }
+
             $user = User::find(2203);
             if (!$user) {
                 return response()->json([
                     'message' => 'User not found'
                 ], 404);
             }
-            $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user);
 
-
+            $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete);
             if ($updateResult) {
                 return response()->json([
                     'message' => 'Question updated successfully'
                 ], 200);
             }
+
             return response()->json([
                 'message' => 'Failed to update question'
             ], 500);
-        } catch (\Exception $e) {
-            DB::rollBack();
 
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to update question',
+                'message' => 'An error occurred while updating the question.',
                 'error' => $e->getMessage(),
             ], 500);
         }

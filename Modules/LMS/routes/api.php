@@ -92,8 +92,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
 });
 Route::post('/lms/store/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
-Route::post('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
-Route::post('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
+Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
+Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
 Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
 Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
 Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);

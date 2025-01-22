@@ -11,10 +11,11 @@ class QuestionManagementResource extends JsonResource
      */
     public function toArray($request): array
     {
-        $groupedQuestions = collect($this->resource['questionList'])->groupBy('questionID');
 
+        $groupedQuestions = collect($this->resource['questionList'])->groupBy('questionID');
         return [
             'questionsList' => $groupedQuestions->map(function ($questions) {
+
                 $firstQuestion = $questions->first();
 
                 return [

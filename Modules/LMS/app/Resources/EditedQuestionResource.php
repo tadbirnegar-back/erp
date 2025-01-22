@@ -28,7 +28,9 @@ class EditedQuestionResource extends JsonResource
                     'questionTypeID' => $firstQuestion['questionTypeID'],
                     'sources' => [
                         'chapterTitle' => $firstQuestion['chapterTitle'],
+                        'chapterID' => $firstQuestion['chapterID'],
                         'lessonTitle' => $firstQuestion['lessonTitle'],
+                        'lessonID' => $firstQuestion['lessonID']
                     ],
 
                     'options' => $questions->map(function ($question) {
