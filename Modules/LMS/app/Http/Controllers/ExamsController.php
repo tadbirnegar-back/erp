@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\QuestionTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Http\Traits\CourseTrait;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Exam;
@@ -65,6 +65,8 @@ class ExamsController extends Controller
     public function showExamQuestions($id)
     {
         try {
+            DB::beginTransaction();
+
             $student = Auth::user()->load('student');
             $examID = Exam::with('courses')->find($id);
 
@@ -84,6 +86,8 @@ class ExamsController extends Controller
                 return response()->json(['message' => 'شما اجازه دسترسی به سوالات این آزمون را ندارید'], 403);
             }
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return response()->json([
                 'message' => 'خطا در دریافت سوالات و گزینه‌ها.',
                 'error' => $e->getMessage()

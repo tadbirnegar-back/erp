@@ -29,19 +29,18 @@ class QuestionResource extends JsonResource
     private function makeCourseDatas($data)
     {
         return collect($data)
-            ->groupBy('chapterID')
-            ->map(function ($lessons, $chapterID) {
+            ->groupBy('lessonID')
+            ->map(function ($lessons, $lessonID) {
                 return [
-                    'chapter_id' => $chapterID,
-                    'chapter_title' => $lessons->first()['chapterTitle'],
-                    'lessons' => $lessons->map(function ($lesson) {
-                        return [
-                            'id' => $lesson['lessonID'],
-                            'title' => $lesson['lessonTitle'],
-                        ];
-                    })->values()->unique()
+                    'lesson_id' => $lessonID,
+                    'lesson_title' => $lessons->first()['lessonTitle'],
+                    'chapter' => [
+                        'chapter_id' => $lessons->first()['chapterID'],
+                        'chapter_title' => $lessons->first()['chapterTitle'],
+                    ],
                 ];
             })->values();
     }
+
 
 }

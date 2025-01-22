@@ -82,7 +82,9 @@ trait questionsTrait
                 'options.is_correct as isCorrect'
 
             ])
-            ->where('courses.id', $id)->get();
+            ->where('courses.id', $id)
+//            ->where('status_id', self::$active)
+            ->get();
         $count = $this->count($id);
 
         return [
@@ -121,7 +123,8 @@ trait questionsTrait
 
     public function updateQuestionWithOptions($questionID, $data, $options, $user)
     {
-        $question = Question::findOrFail($questionID);
+        $question = Question::find($questionID);
+
 
         $question->update([
             'title' => $data['title'],
@@ -129,32 +132,72 @@ trait questionsTrait
             'repository_id' => $data['repositoryID'],
             'lesson_id' => $data['lessonID'],
             'difficulty_id' => $data['difficultyID'],
-            'update_date' => now(),
-            'updater_id' => $user->id
+            'create_date' => now(),
+            'creator_id' => $user->id
         ]);
-
-        $existingOptions = $question->options()->pluck('id')->toArray();
-        $newOptionIDs = array_column($options, 'id');
-
-        $optionsToDelete = array_diff($existingOptions, $newOptionIDs);
-        Option::whereIn('id', $optionsToDelete)->delete();
 
         foreach ($options as $option) {
             if (isset($option['id'])) {
-                Option::where('id', $option['id'])->update([
-                    'title' => $option['title'],
-                    'is_correct' => $option['is_correct']
-                ]);
+                Option::where('id', $option['id'])
+                    ->where('question_id', $questionID)
+                    ->update([
+                        'title' => $option['title'],
+                        'is_correct' => $option['is_correct'],
+                    ]);
             } else {
                 Option::create([
                     'title' => $option['title'],
                     'is_correct' => $option['is_correct'],
-                    'question_id' => $question->id
+                    'question_id' => $question->id,
                 ]);
             }
         }
+        $question->save();
 
-        return $question->load('options');
+        return $question;
+
+    }
+
+    public function showEditedQuestion($questionID)
+    {
+        $question = Course::joinRelationship('chapters.lessons.questions.difficulty')
+            ->joinRelationship('chapters.lessons.questions.options')
+            ->joinRelationship('chapters.lessons.questions.repository')
+            ->joinRelationship('chapters.lessons.questions.questionType')
+            ->select([
+                'questions.id as questionID',
+                'questions.title as questionTitle',
+                'question_types.name as questionTypeName',
+                'question_types.id as questionTypeID',
+                'difficulties.name as difficultyName',
+                'difficulties.id as difficultyID',
+                'repositories.name as repositoryName',
+                'repositories.id as repositoryID',
+                'options.title as optionTitle',
+                'options.id as optionID',
+                'chapters.title as chapterTitle',
+                'lessons.title as lessonTitle',
+                'courses.title as courseTitle',
+                'options.is_correct as isCorrect'
+
+            ])
+            ->where('questions.id', $questionID)->get();
+        return ['questionForEdit' => $question];
+    }
+
+    /**
+     * @return string
+     */
+    public static function questionDelete($questionID): string
+    {
+        $status = Status::where('name', self::$inactive)->firstOrFail();
+
+        $question = Question::findOrFail($questionID);
+
+        $question->status_id = $status->id;
+
+        $question->save();
+        return $question;
     }
 
 
