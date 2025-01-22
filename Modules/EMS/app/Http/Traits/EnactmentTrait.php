@@ -39,7 +39,9 @@ trait EnactmentTrait
     private static string $karshenasMashvarati = RolesEnum::KARSHENAS_MASHVARATI->value;
     private static string $ozvHeyaat = RolesEnum::OZV_HEYAAT->value;
     private static string $ozvShouraRusta = RolesEnum::OZV_SHOURA_RUSTA->value;
-
+    private static string $dabirFreeZone = RolesEnum::DABIR_FREEZONE->value;
+    private static string $karshenasMashveratiFZ = RolesEnum::KARSHENAS_MASHVERATI_FREEZONE->value;
+    private static string $ozvHeyatFZ = RolesEnum::OZV_HEYAT_FREEZONE->value;
 
     public function indexPendingForSecretaryStatusEnactment(array $data, array $ounits)
     {
@@ -161,8 +163,7 @@ trait EnactmentTrait
             $ounits = [$data['ounitID']];
         }
 
-        if(isset($data['freeZoneID']))
-        {
+        if (isset($data['freeZoneID'])) {
             $ounits = OrganizationUnit::with(['descendantsAndSelf' => function ($query) {
                 $query->where('unitable_type', VillageOfc::class);
             }])->find($data['freeZoneID'])->descendantsAndSelf->flatten()
@@ -321,7 +322,10 @@ trait EnactmentTrait
                     self::$dabirHeyaat,
                     self::$karshenasMashvarati,
                     self::$ozvHeyaat,
-                    self::$ozvShouraRusta
+                    self::$ozvShouraRusta,
+                    self::$dabirFreeZone,
+                    self::$karshenasMashveratiFZ,
+                    self::$ozvHeyatFZ,
                 ],
 
                 //roles with components
@@ -350,6 +354,20 @@ trait EnactmentTrait
                 self::$ozvShouraRusta => [
                     'MainEnactment',
                 ],
+
+                self::$dabirFreeZone => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'AcceptDenyBtns',
+                ],
+                self::$karshenasMashveratiFZ => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                ],
+                self::$ozvHeyatFZ => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                ]
             ],
             self::$enactmentPendingForHeyaatDateStatus => [
                 'priorities' => [
@@ -358,8 +376,10 @@ trait EnactmentTrait
                     self::$ozvHeyaat,
                     self::$karshenasOstandari,
                     self::$bakhshdar,
-                    self::$ozvShouraRusta
-
+                    self::$ozvShouraRusta,
+                    self::$dabirFreeZone,
+                    self::$karshenasMashveratiFZ,
+                    self::$ozvHeyatFZ,
                 ],
 
                 //roles with components
@@ -391,6 +411,23 @@ trait EnactmentTrait
                     'MainEnactment',
                 ],
 
+                self::$dabirFreeZone => [
+                    'MainEnactment',
+                    'RevokeBtn',
+                    'CurrentReviewCard',
+                ],
+
+                self::$karshenasMashveratiFZ => [
+                    'MainEnactment',
+                    'ReviewBtn',
+                    'CurrentReviewCard',
+                ],
+                self::$ozvHeyatFZ => [
+                    'MainEnactment',
+                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
+                ]
+
             ],
             self::$enactmentHeyaatStatus => [
                 'priorities' => [
@@ -399,8 +436,10 @@ trait EnactmentTrait
                     self::$karshenasOstandari,
                     self::$bakhshdar,
                     self::$dabirHeyaat,
-                    self::$ozvShouraRusta
-
+                    self::$ozvShouraRusta,
+                    self::$dabirFreeZone,
+                    self::$karshenasMashveratiFZ,
+                    self::$ozvHeyatFZ
                 ],
 
                 //roles with components
@@ -430,6 +469,20 @@ trait EnactmentTrait
                 self::$ozvShouraRusta => [
                     'MainEnactment',
                 ],
+                self::$dabirFreeZone => [
+                    'MainEnactment',
+                ],
+                self::$karshenasMashveratiFZ => [
+                    'MainEnactment',
+                    'ReviewBtn',
+                    'CurrentReviewCard',
+                ],
+                self::$ozvHeyatFZ => [
+                    'MainEnactment',
+                    'ReviewBtn',
+                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
+                ]
 
             ],
             self::$enactmentCompleteStatus => [
@@ -439,7 +492,10 @@ trait EnactmentTrait
                     self::$dabirHeyaat,
                     self::$karshenasMashvarati,
                     self::$ozvHeyaat,
-                    self::$ozvShouraRusta
+                    self::$ozvShouraRusta,
+                    self::$dabirFreeZone,
+                    self::$karshenasMashveratiFZ,
+                    self::$ozvHeyatFZ
                 ],
 
                 //roles with components
@@ -472,6 +528,20 @@ trait EnactmentTrait
                     'MainEnactment',
                     'ConsultingReviewCards',
                 ],
+                self::$dabirFreeZone => [
+                    'MainEnactment',
+                    'CurrentReviewCard',
+                    'FormNumThree',
+                ],
+                self::$karshenasMashveratiFZ => [
+                    'MainEnactment',
+                    'CurrentReviewCard',
+                ],
+                self::$ozvHeyatFZ => [
+                    'MainEnactment',
+                    'ConsultingReviewCards',
+                    'CurrentReviewCard',
+                ]
             ],
             self::$enactmentCancelStatus => [
                 'priorities' => [
@@ -480,7 +550,10 @@ trait EnactmentTrait
                     self::$dabirHeyaat,
                     self::$karshenasMashvarati,
                     self::$ozvHeyaat,
-                    self::$ozvShouraRusta
+                    self::$ozvShouraRusta,
+                    self::$dabirFreeZone,
+                    self::$karshenasMashveratiFZ,
+                    self::$ozvHeyatFZ
                 ],
 
                 //roles with components
@@ -513,6 +586,18 @@ trait EnactmentTrait
                     'MainEnactment',
 
                 ],
+                self::$dabirFreeZone => [
+                    'MainEnactment',
+                    'DenyCard',
+                ],
+                self::$karshenasMashveratiFZ => [
+                    'MainEnactment',
+                    'DenyCard',
+                ],
+                self::$ozvHeyatFZ => [
+                    'MainEnactment',
+                    'DenyCard',
+                ]
             ],
             self::$enactmentDeclinedStatus => [
                 'priorities' => [
@@ -521,7 +606,10 @@ trait EnactmentTrait
                     self::$dabirHeyaat,
                     self::$karshenasMashvarati,
                     self::$ozvHeyaat,
-                    self::$ozvShouraRusta
+                    self::$ozvShouraRusta,
+                    self::$dabirFreeZone,
+                    self::$karshenasMashveratiFZ,
+                    self::$ozvHeyatFZ
                 ],
 
                 //roles with components
@@ -554,6 +642,21 @@ trait EnactmentTrait
                     'MainEnactment',
                     'DenyCard',
                 ],
+                self::$dabirFreeZone => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$karshenasMashveratiFZ => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ],
+                self::$ozvHeyatFZ => [
+                    'MainEnactment',
+                    'MembersBeforeReview',
+                    'DenyCard',
+                ]
             ],
 
         ];
@@ -602,7 +705,7 @@ trait EnactmentTrait
                 $query
                     ->with(['meetings' => function ($query) {
                         $query->whereHas('meetingType', function ($query) {
-                            $query->where('title', '=', 'جلسه هیئت تطبیق');
+                            $query->whereIn('title', ['جلسه هیئت تطبیق', MeetingTypeEnum::FREE_ZONE->value]);
                         })->where('meetings.meeting_date', '>', now())->where('meetings.isTemplate', false)
                             ->withCount('enactments');
 
@@ -642,7 +745,7 @@ trait EnactmentTrait
                 $query
                     ->with(['meetings' => function ($query) {
                         $query->whereHas('meetingType', function ($query) {
-                            $query->where('title', '=', 'جلسه هیئت تطبیق');
+                            $query->whereIn('title', ['جلسه هیئت تطبیق', MeetingTypeEnum::FREE_ZONE->value]);
                         })->where('meetings.meeting_date', '>', now())->where('meetings.isTemplate', false)
                             ->withCount('enactments');
 

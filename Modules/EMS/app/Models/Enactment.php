@@ -295,7 +295,7 @@ class Enactment extends Model
     {
         $meetingType = \DB::table('meeting_types')
             ->select('id')
-            ->where('title', MeetingTypeEnum::HEYAAT_MEETING)
+            ->whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING , MeetingTypeEnum::FREE_ZONE])
             ->first();
         return $this->hasManyDeep(MeetingMember::class, [
             EnactmentMeeting::class,
@@ -320,7 +320,7 @@ class Enactment extends Model
     public function consultingMembers()
     {
         return $this->members()->whereHas('roles', function ($query) {
-            $query->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
+            $query->whereIn('name', [RolesEnum::KARSHENAS_MASHVARATI->value , RolesEnum::KARSHENAS_MASHVERATI_FREEZONE->value]);
         })->with('person.avatar');
 //        return $this->members()->whereHas('roles', function ($query) {
 //            $query->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
@@ -330,7 +330,7 @@ class Enactment extends Model
     public function boardMembers()
     {
         return $this->members()->whereHas('roles', function ($query) {
-            $query->where('name', RolesEnum::OZV_HEYAAT->value);
+            $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
         })->with('person.avatar');
     }
 
@@ -382,6 +382,19 @@ class Enactment extends Model
     {
         $meetingtypeId = \DB::table('meeting_types')
             ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->value('id');
+
+        $freeZoneMeetingtypeId = \DB::table('meeting_types')
+            ->where('title', MeetingTypeEnum::FREE_ZONE->value)
+            ->value('id');
+        return $this->latestMeeting()
+            ->whereIn('meeting_type_id', [$freeZoneMeetingtypeId, $meetingtypeId]);
+    }
+
+    public function latestFreeZoneMeeting(): HasOneThrough
+    {
+        $meetingtypeId = \DB::table('meeting_types')
+            ->where('title', MeetingTypeEnum::FREE_ZONE->value)
             ->value('id');
 
         return $this->latestMeeting()
