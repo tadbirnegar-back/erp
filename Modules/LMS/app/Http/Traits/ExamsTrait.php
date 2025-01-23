@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\CourseExam;
 use Modules\LMS\app\Models\Exam;
@@ -13,6 +14,7 @@ use Modules\SettingsMS\app\Models\Setting;
 
 trait ExamsTrait
 {
+    private static string $active = QuestionsEnum::ACTIVE->value;
 
 
     public function examPreview($id)
@@ -53,11 +55,25 @@ trait ExamsTrait
 
     public function DataPreparation($exam)
     {
+        $status = $this->activeStatus()->id;
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
 
+        $difficultySetting = Setting::where('key', 'Difficulty_for_exam')->first();
+        $difficultyLevel = $difficultySetting ? $difficultySetting->value : null;
+
+        $questionTypeSetting = Setting::where('key', 'question_type_for_exam')->first();
+        $questionTypeLevel = $questionTypeSetting ? (int)$questionTypeSetting->value : null;
+
         $randomQuestions = Question::inRandomOrder()
+            ->where('status_id', $status)
+            ->when($difficultyLevel, function ($query) use ($difficultyLevel) {
+                $query->where('difficulty_id', $difficultyLevel);
+            })
+            ->when($questionTypeLevel, function ($query) use ($questionTypeLevel) {
+                $query->where('question_type_id', $questionTypeLevel);
+            })
             ->limit($questionCount)
             ->get();
         $data = $randomQuestions->map(function ($question) use ($exam) {
@@ -66,9 +82,10 @@ trait ExamsTrait
                 'question_id' => $question->id,
             ];
         })->toArray();
-        return $data;
 
+        return $data;
     }
+
 
     public function showExam($id)
     {
@@ -125,6 +142,13 @@ trait ExamsTrait
 
         return $query->get();
 
+
+    }
+
+    public function activeStatus()
+    {
+        return Question::GetAllStatuses()
+            ->firstWhere('name', '=', self::$active);
 
     }
 

@@ -58,9 +58,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/course/add', [CourseController::class, 'store']);
     Route::post('/lms/course/update/{id}', [CourseController::class, 'update']);
     Route::get('/lms/publish/course/{id}', [CourseController::class, 'publishCourseDataShow']);
-    Route::get('/lms/course/make-publish/{id}' , [CourseController::class, 'makeCoursePublish']);
+    Route::get('/lms/course/make-publish/{id}', [CourseController::class, 'makeCoursePublish']);
     Route::get('/lms/course/delete/{id}', [CourseController::class, 'deleteCourse']);
-    Route::get('/lms/course/cancel/{id}' , [CourseController::class, 'cancelCourse']);
+    Route::get('/lms/course/cancel/{id}', [CourseController::class, 'cancelCourse']);
     Route::get('/lms/lesson/delete/{id}', [LessonController::class, 'deleteLesson']);
 
 });
@@ -74,7 +74,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
-    Route::get('/lms/pre-view/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'previewExam']);
     Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
     Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
     Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
