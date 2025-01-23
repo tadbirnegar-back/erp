@@ -26,8 +26,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('mes/pbc-enactments/list', [EnactmentController::class, 'indexHeyaat']);
 
-    Route::post('mes/pbm-enactments/list', [EnactmentController::class, 'indexPendingForMeeting']);
-
     Route::post('mes/all-enactments/list', [EnactmentController::class, 'indexArchive']);
 
     Route::post('mes/enactments/{id}', [EnactmentController::class, 'show']);
