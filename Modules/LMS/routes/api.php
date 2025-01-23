@@ -63,6 +63,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/course/delete/{id}', [CourseController::class, 'deleteCourse']);
     Route::get('/lms/course/cancel/{id}', [CourseController::class, 'cancelCourse']);
     Route::get('/lms/lesson/delete/{id}', [LessonController::class, 'deleteLesson']);
+    Route::post('/lms/show/setting', [SettingController::class, 'index']);
+    Route::post('/lms/store/setting', [SettingController::class, 'store']);
 
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -94,5 +96,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/exam-result/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
 
 });
-Route::post('/lms/show/setting', [SettingController::class, 'index']);
-Route::post('/lms/store/setting', [SettingController::class, 'store']);
