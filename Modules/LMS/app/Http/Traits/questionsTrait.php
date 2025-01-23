@@ -27,33 +27,36 @@ trait questionsTrait
 
     }
 
-    public function insertQuestionWithOptions($data, $options, $courseID, $user)
+    public function insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs)
     {
         $status = Status::whereIn('name', [$this::$active, $this::$inactive])->first();
+        $questions = [];
+        foreach ($repositoryIDs as $repositoryID) {
+            $question = Question::create([
+                'title' => $data['title'],
+                'question_type_id' => $data['questionTypeID'],
+                'repository_id' => $repositoryID,
+                'lesson_id' => $data['lessonID'],
+                'difficulty_id' => $data['difficultyID'],
+                'create_date' => now(),
+                'status_id' => $status->id,
+                'creator_id' => $user->id,
+            ]);
 
-        $question = Question::create([
-            'title' => $data['title'],
-            'question_type_id' => $data['questionTypeID'],
-            'repository_id' => $data['repositoryID'],
-            'lesson_id' => $data['lessonID'],
-            'difficulty_id' => $data['difficultyID'],
-            'create_date' => now(),
-            'status_id' => $status->id,
-            'creator_id' => $user->id
-        ]);
 
+            if ($question) {
+                $optionsToInsert = [];
+                foreach ($options as $option) {
+                    $optionsToInsert[] = [
+                        'title' => $option['title'],
+                        'is_correct' => $option['is_correct'],
+                        'question_id' => $question->id,
+                    ];
+                }
 
-        if ($question) {
-            $optionsToInsert = [];
-            foreach ($options as $option) {
-                $optionsToInsert[] = [
-                    'title' => $option['title'],
-                    'is_correct' => $option['is_correct'],
-                    'question_id' => $question->id,
-                ];
+                Option::insert($optionsToInsert);
+                $questions[] = $question;
             }
-
-            Option::insert($optionsToInsert);
         }
         $question->joinRelationship('lesson.chapter.course')
             ->where('courses.id', $courseID)

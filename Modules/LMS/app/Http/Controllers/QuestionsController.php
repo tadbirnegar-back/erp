@@ -4,8 +4,8 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\questionsTrait;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
@@ -30,11 +30,12 @@ class QuestionsController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'questionTypeID' => 'required|integer|exists:question_types,id',
-                'repositoryID' => 'required|integer|exists:repositories,id',
+                'repositoryID' => 'required|string',
                 'lessonID' => 'required|integer|exists:lessons,id',
                 'difficultyID' => 'required|integer|exists:difficulties,id',
                 'options' => 'required|string',
             ]);
+
 
             $options = json_decode($validated['options'], true);
 
@@ -43,12 +44,15 @@ class QuestionsController extends Controller
             }
             $repositoryIDs = json_decode($validated['repositoryID'], true);
 
-            if (json_last_error() !== JSON_ERROR_NONE || !isset($repositoryIDs['ids']) || !is_array($repositoryIDs['ids'])) {
+            if (json_last_error() !== JSON_ERROR_NONE) {
                 return response()->json(['message' => 'Invalid repositoryID format'], 400);
             }
 
-            $user = User::find(2203);
-            $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user);
+            $repositoryIDs = $repositoryIDs['ids'];
+
+
+            $user = Auth::user();
+            $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs);
             DB::commit();
             if ($question) {
                 return response()->json([
@@ -152,7 +156,7 @@ class QuestionsController extends Controller
                 ], 404);
             }
 
-            $user = User::find(2203);
+            $user = Auth::user();
             if (!$user) {
                 return response()->json([
                     'message' => 'User not found'
