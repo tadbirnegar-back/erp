@@ -20,7 +20,7 @@ class SettingController extends Controller
     {
         $dropDowns = $this->showDropDowns();
 
-        return response()->json($this->data);
+        return response()->json($dropDowns);
     }
 
     /**
@@ -28,9 +28,16 @@ class SettingController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        //
+        $data = $request->all();
+        dd($data);
+        $validatedData = $request->validate([
+            'Difficulty' => 'required',
+            'question_type' => 'required',
+            'question_numbers_perExam' => 'required',
+        ]);
+        $insert = $this->dataToInsert($data);
 
-        return response()->json($this->data);
+        return response()->json($insert);
     }
 
     /**

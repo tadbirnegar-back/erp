@@ -95,3 +95,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
 });
 Route::post('/lms/show/setting', [SettingController::class, 'index']);
+Route::post('/lms/store/setting', [SettingController::class, 'store']);
