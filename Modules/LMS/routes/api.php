@@ -12,6 +12,7 @@ use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
 use Modules\LMS\app\Http\Controllers\QuestionController;
+use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 
 /*
@@ -58,10 +59,12 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/course/add', [CourseController::class, 'store']);
     Route::post('/lms/course/update/{id}', [CourseController::class, 'update']);
     Route::get('/lms/publish/course/{id}', [CourseController::class, 'publishCourseDataShow']);
-    Route::get('/lms/course/make-publish/{id}' , [CourseController::class, 'makeCoursePublish']);
+    Route::get('/lms/course/make-publish/{id}', [CourseController::class, 'makeCoursePublish']);
     Route::get('/lms/course/delete/{id}', [CourseController::class, 'deleteCourse']);
-    Route::get('/lms/course/cancel/{id}' , [CourseController::class, 'cancelCourse']);
+    Route::get('/lms/course/cancel/{id}', [CourseController::class, 'cancelCourse']);
     Route::get('/lms/lesson/delete/{id}', [LessonController::class, 'deleteLesson']);
+    Route::post('/lms/show/setting', [SettingController::class, 'index']);
+    Route::post('/lms/store/setting', [SettingController::class, 'store']);
 
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
