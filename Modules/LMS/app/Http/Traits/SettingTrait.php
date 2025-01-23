@@ -27,11 +27,20 @@ trait SettingTrait
 
     public function dataToInsert($data)
     {
-        return Setting::updateOrCreate([
-            'Difficulty' => $data['Difficulty'],
-            'questionType' => $data['question_type'],
-            'question_numbers_perExam' => $data['question_numbers_perExam'],
-        ]);
+        $settings = [
+            ['key' => 'Difficulty_for_exam', 'value' => $data['Difficulty']],
+            ['key' => 'question_type_for_exam', 'value' => $data['questionType']],
+            ['key' => 'question_numbers_perExam', 'value' => $data['questionNumber']],
+            ['key' => 'time_per_questions', 'value' => $data['timePerQuestion']],
+        ];
 
+        foreach ($settings as $setting) {
+            Setting::updateOrCreate(
+                ['key' => $setting['key']],
+                ['value' => $setting['value']]
+            );
+        }
+
+        return true;
     }
 }

@@ -28,16 +28,26 @@ class SettingController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $data = $request->all();
-        dd($data);
         $validatedData = $request->validate([
-            'Difficulty' => 'required',
-            'question_type' => 'required',
-            'question_numbers_perExam' => 'required',
+            'Difficulty' => 'required|integer',
+            'questionType' => 'required|integer',
+            'questionNumber' => 'required|integer',
+            'timePerQuestion' => 'required|integer'
         ]);
-        $insert = $this->dataToInsert($data);
 
-        return response()->json($insert);
+        try {
+            $insert = $this->dataToInsert($validatedData);
+
+            return response()->json([
+                'message' => 'Settings saved successfully!',
+                'data' => $insert,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to save settings.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
