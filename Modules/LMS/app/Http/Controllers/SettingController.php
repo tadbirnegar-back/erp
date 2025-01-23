@@ -5,6 +5,7 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\SettingTrait;
 
 class SettingController extends Controller
@@ -36,13 +37,16 @@ class SettingController extends Controller
         ]);
 
         try {
-            $insert = $this->dataToInsert($validatedData);
+            DB::beginTransaction();
 
+            $insert = $this->dataToInsert($validatedData);
+            DB::commit();
             return response()->json([
                 'message' => 'Settings saved successfully!',
                 'data' => $insert,
             ], 200);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'Failed to save settings.',
                 'error' => $e->getMessage()
