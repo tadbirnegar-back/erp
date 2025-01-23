@@ -80,6 +80,33 @@ class EnactmentController extends Controller
         return response()->json(['data' => $enactments, 'statusList' => $statuses, 'ounits' => $user->activeDistrictRecruitmentScript]);
     }
 
+    public function indexPendingForMeeting(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
+
+
+        try {
+            $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
+                $q->with('organizationUnit.descendantsAndSelf');
+            }])?->activeRecruitmentScript?->pluck('organizationUnit.descendantsAndSelf')
+                ->flatten()
+                ->pluck('id')
+                ->toArray();
+
+            $data = $request->all();
+            $enactments = $this->indexPendingWaitForMeeting($data, $ounits, $user->id);
+
+            $statuses = Enactment::GetAllStatuses();
+            $enactmentReviews = EnactmentReview::GetAllStatuses();
+            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'),
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
+        }
+    }
+
+
     public function indexArchive(Request $request): JsonResponse
     {
         $user = Auth::user();

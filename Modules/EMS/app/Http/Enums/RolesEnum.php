@@ -11,9 +11,9 @@ enum RolesEnum: string
     case OZV_HEYAAT = 'عضو هیئت';
     case OZV_SHOURA_RUSTA = 'شورای روستا';
     case DABIR_FREEZONE = 'مسئول دبیرخانه منطقه آزاد';
-
     case KARSHENAS_MASHVERATI_FREEZONE = 'کارشناس مشورتی منطقه آزاد';
     case OZV_HEYAT_FREEZONE = 'عضو هیئت منطقه آزاد';
+    case RAIES_MANTAGHE_AZAD = 'رئیس منطقه آزاد';
 
 }
 

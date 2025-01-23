@@ -269,7 +269,7 @@ class Enactment extends Model
     {
         $meetingType = \DB::table('meeting_types')
             ->select('id')
-            ->where('title', MeetingTypeEnum::HEYAAT_MEETING)
+            ->whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING , MeetingTypeEnum::FREE_ZONE])
             ->first();
 
         return $this->hasManyDeep(MeetingMember::class, [
