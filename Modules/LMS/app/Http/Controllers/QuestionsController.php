@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\questionsTrait;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
-use Modules\LMS\app\Resources\QuestionManagementResource;
 use Modules\LMS\app\Resources\QuestionResource;
 
 class QuestionsController extends Controller

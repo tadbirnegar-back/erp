@@ -2,7 +2,6 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Option;
@@ -69,16 +68,12 @@ trait questionsTrait
 
     public function questionList($id)
     {
-        DB::enableQueryLog();
+        $status = Status::where('name', self::$active)->firstOrFail();
         $query = Course::joinRelationship('chapters.lessons.questions.difficulty')
             ->joinRelationship('chapters.lessons.questions.options')
             ->joinRelationship('chapters.lessons.questions.repository')
-            ->joinRelationship('chapters.lessons.questions.questionType' , [
-                'chapters' => fn($join) => $join -> as('chapters_alias'),
-                'lessons' => fn($join) => $join -> as('lessons_alias'),
-                'questionType' => fn($join) => $join -> as('questions_alias'),
-            ])
-            ->leftJoinRelationship('chapters.lessons.questions.answers.answerSheet')
+            ->joinRelationship('chapters.lessons.questions.questionType')
+            ->joinRelationship('chapters.lessons.questions.answers.answerSheet')
             ->select([
                 'questions.id as questionID',
                 'questions.title as questionTitle',
@@ -91,10 +86,9 @@ trait questionsTrait
                 'courses.title as courseTitle',
                 'options.is_correct as isCorrect',
                 'answer_sheets.id as answerSheetID'
-
             ])
             ->where('courses.id', $id)
-            ->orWhere('status_id', self::$active)
+            ->where('questions.status_id', $status->id)
             ->get();
         $count = $this->count($id);
         return [
