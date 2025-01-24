@@ -30,14 +30,18 @@ class QuestionResource extends JsonResource
     {
         return collect($data)
             ->groupBy('lessonID')
-            ->map(function ($lessons, $lessonID) {
+            ->groupBy(fn($lessons) => $lessons->first()['chapterID'])
+            ->map(function ($lessons, $chapterID) {
                 return [
-                    'lesson_id' => $lessonID,
-                    'lesson_title' => $lessons->first()['lessonTitle'],
-                    'chapter' => [
-                        'chapter_id' => $lessons->first()['chapterID'],
-                        'chapter_title' => $lessons->first()['chapterTitle'],
-                    ],
+                    'chapter_id' => $chapterID,
+                    'chapter_title' => $lessons->first()->first()['chapterTitle'],
+                    'lessons' => $lessons->map(function ($lessonGroup) {
+                        $lesson = $lessonGroup->first();
+                        return [
+                            'lesson_id' => $lesson['lessonID'],
+                            'lesson_title' => $lesson['lessonTitle'],
+                        ];
+                    })->values()->toArray(),
                 ];
             })->values();
     }
