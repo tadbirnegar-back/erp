@@ -39,6 +39,7 @@ class PurchaseCourse extends RegisteringAbstract
             "type" => "free",
             "info" => "Registered"
         ];
+        $this->StudentRole($this->user->id);
 
         return $data;
     }
@@ -77,9 +78,9 @@ class PurchaseCourse extends RegisteringAbstract
         ];
     }
 
-    public function StudentRole($student)
+    private function StudentRole($userID)
     {
-        event(new StudentRoleCreatedEvent($student));
+        event(new StudentRoleCreatedEvent($userID));
 
     }
 

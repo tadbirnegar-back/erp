@@ -3,20 +3,15 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Models\User;
-use Modules\AddressMS\app\Models\City;
-use Modules\AddressMS\app\Models\District;
-use Modules\AddressMS\app\Models\State;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Models\Job;
-use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseCourseTrait;
@@ -24,7 +19,6 @@ use Modules\LMS\app\Http\Traits\CourseEmployeeFeatureTrait;
 use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\CourseCourse;
 use Modules\LMS\app\Models\StatusCourse;
 use Modules\LMS\app\Resources\AllCoursesListResource;
 use Modules\LMS\app\Resources\CourseListResource;
@@ -48,7 +42,7 @@ use Modules\PayStream\app\Models\Online;
 
 class CourseController extends Controller
 {
-    use CourseTrait, CourseCourseTrait, CourseTargetTrait, CourseEmployeeFeatureTrait , JobTrait;
+    use CourseTrait, CourseCourseTrait, CourseTargetTrait, CourseEmployeeFeatureTrait, JobTrait;
 
     public function store(Request $request)
     {
@@ -97,10 +91,10 @@ class CourseController extends Controller
                 $this->deleteCourseTarget($ctIDs);
             }
             DB::commit();
-            return response() -> json(['message' => 'دوره شما با موفقیت به روز رسانی شد'] , 200);
+            return response()->json(['message' => 'دوره شما با موفقیت به روز رسانی شد'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response() -> json(['message' => $e->getMessage()] , 200);
+            return response()->json(['message' => $e->getMessage()], 200);
         }
 
 
@@ -158,7 +152,10 @@ class CourseController extends Controller
 
             $course = Course::with('prerequisiteCourses')->find($id);
 
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = User::find(67);
+
+
             // Check if the user has completed prerequisite courses.
             // This is currently implemented in the simplest possible way and might be updated in the future.
             if (empty($course->prerequisiteCourses[0])) {
@@ -296,7 +293,7 @@ class CourseController extends Controller
             ->get();
 
         $response = LiveOunitSearchForCourseResource::collection($results);
-        $jobs = Job::where('status_id' , $this->activeJobStatus()->id)->get();
+        $jobs = Job::where('status_id', $this->activeJobStatus()->id)->get();
 
 
         return response()->json(["category" => $response, "jobs" => $jobs]);
@@ -383,7 +380,7 @@ class CourseController extends Controller
         return new RelatedCourseListResource($paginatedCourses);
     }
 
-    public  function publishCourseDataShow($id)
+    public function publishCourseDataShow($id)
     {
         $data = $this->showCourseDataForEnteshareDore($id);
         return new PublishCoursePreviewResource($data);
@@ -400,10 +397,10 @@ class CourseController extends Controller
                 'create_date' => now()
             ]);
             DB::commit();
-            return response() -> json(['message' => "دوره با موفقیت منتشر شد"]);
-        }catch (\Exception $exception){
+            return response()->json(['message' => "دوره با موفقیت منتشر شد"]);
+        } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(["message"=>$exception->getMessage()], 400);
+            return response()->json(["message" => $exception->getMessage()], 400);
         }
 
     }
@@ -418,10 +415,10 @@ class CourseController extends Controller
                 'create_date' => now()
             ]);
             DB::commit();
-            return response() -> json(['message' => "دوره با موفقیت حذف شد"]);
-        }catch (\Exception $exception){
+            return response()->json(['message' => "دوره با موفقیت حذف شد"]);
+        } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(["message"=>$exception->getMessage()], 400);
+            return response()->json(["message" => $exception->getMessage()], 400);
         }
     }
 
@@ -435,10 +432,10 @@ class CourseController extends Controller
                 'create_date' => now()
             ]);
             DB::commit();
-            return response() -> json(['message' => "دوره با موفقیت حذف شد"]);
-        }catch (\Exception $exception){
+            return response()->json(['message' => "دوره با موفقیت حذف شد"]);
+        } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(["message"=>$exception->getMessage()], 400);
+            return response()->json(["message" => $exception->getMessage()], 400);
         }
     }
 
