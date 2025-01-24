@@ -4,7 +4,6 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\questionsTrait;
 use Modules\LMS\app\Models\Question;
@@ -51,7 +50,9 @@ class QuestionsController extends Controller
             $repositoryIDs = $repositoryIDs['ids'];
 
 
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = \Modules\AAA\app\Models\User::find(68);
+
             $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs);
             DB::commit();
             if ($question) {
@@ -97,6 +98,7 @@ class QuestionsController extends Controller
                 ], 404);
             }
             $question = $this->questionList($id);
+            return $question;
             return new QuestionManagementResource(collect($question));
         } catch (\Exception $e) {
             return response()->json([
@@ -142,6 +144,14 @@ class QuestionsController extends Controller
                     'message' => 'Invalid options format. Please provide a valid JSON string.'
                 ], 400);
             }
+            $repositoryIDs = json_decode($data['repositoryID'], true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json(['message' => 'Invalid repositoryID format'], 400);
+            }
+
+            $repositoryIDs = $repositoryIDs['ids'];
+
             $delete = json_decode($data['delete'], true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return response()->json([
@@ -156,14 +166,15 @@ class QuestionsController extends Controller
                 ], 404);
             }
 
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = \Modules\AAA\app\Models\User::find(68);
             if (!$user) {
                 return response()->json([
                     'message' => 'User not found'
                 ], 404);
             }
 
-            $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete);
+            $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs);
             if ($updateResult) {
                 return response()->json([
                     'message' => 'Question updated successfully'

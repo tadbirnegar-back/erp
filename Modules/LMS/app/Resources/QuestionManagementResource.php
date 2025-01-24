@@ -13,7 +13,11 @@ class QuestionManagementResource extends JsonResource
     {
 
         $groupedQuestions = collect($this->resource['questionList'])->groupBy('questionID');
+        $uniqueCourseTitles = collect($this->resource['questionList'])->pluck('courseTitle')->first();
+
         return [
+            'courseTitle' => $uniqueCourseTitles,
+
             'questionsList' => $groupedQuestions->map(function ($questions) {
 
                 $firstQuestion = $questions->first();
@@ -22,13 +26,14 @@ class QuestionManagementResource extends JsonResource
                     'title' => $firstQuestion['questionTitle'],
                     'difficulty' => $firstQuestion['difficultyName'],
                     'repository' => $firstQuestion['repositoryName'],
+                    'questionTypeName' => $firstQuestion['questionTypeName'],
+                    'readOnly' => $firstQuestion['answerSheetID'] ? true : false,
                     'sources' => [
                         'chapterTitle' => $firstQuestion['chapterTitle'],
                         'lessonTitle' => $firstQuestion['lessonTitle'],
                     ],
-                    'course' => [
-                        'title' => 'دوره آموزش' . ' ' . $firstQuestion['courseTitle']
-                    ],
+
+
                     'options' => $questions->map(function ($question) {
                         return [
                             'titleOfOptions' => $question['optionTitle'],

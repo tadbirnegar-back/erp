@@ -89,7 +89,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
     Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
-    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
+//    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
 //    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
 //    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
 //    Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
@@ -102,3 +102,4 @@ Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'show
 Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
 Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
 Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
+Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);

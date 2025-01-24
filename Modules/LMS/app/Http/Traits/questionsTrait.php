@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Option;
@@ -68,10 +69,16 @@ trait questionsTrait
 
     public function questionList($id)
     {
+        DB::enableQueryLog();
         $query = Course::joinRelationship('chapters.lessons.questions.difficulty')
             ->joinRelationship('chapters.lessons.questions.options')
             ->joinRelationship('chapters.lessons.questions.repository')
-            ->joinRelationship('chapters.lessons.questions.questionType')
+            ->joinRelationship('chapters.lessons.questions.questionType' , [
+                'chapters' => fn($join) => $join -> as('chapters_alias'),
+                'lessons' => fn($join) => $join -> as('lessons_alias'),
+                'questionType' => fn($join) => $join -> as('questions_alias'),
+            ])
+            ->leftJoinRelationship('chapters.lessons.questions.answers.answerSheet')
             ->select([
                 'questions.id as questionID',
                 'questions.title as questionTitle',
@@ -82,14 +89,14 @@ trait questionsTrait
                 'chapters.title as chapterTitle',
                 'lessons.title as lessonTitle',
                 'courses.title as courseTitle',
-                'options.is_correct as isCorrect'
+                'options.is_correct as isCorrect',
+                'answer_sheets.id as answerSheetID'
 
             ])
             ->where('courses.id', $id)
             ->orWhere('status_id', self::$active)
             ->get();
         $count = $this->count($id);
-
         return [
             'questionList' => $query,
             'count' => $count
@@ -123,44 +130,42 @@ trait questionsTrait
         ];
     }
 
-    public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete)
+    public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs)
     {
         $question = Question::find($questionID);
+        foreach ($repositoryIDs as $repositoryID) {
 
-        $question->update([
-            'title' => $data['title'],
-            'question_type_id' => $data['questionTypeID'],
-            'repository_id' => $data['repositoryID'],
-            'lesson_id' => $data['lessonID'],
-            'difficulty_id' => $data['difficultyID'],
-            'create_date' => now(),
-            'creator_id' => $user->id
-        ]);
-
-        foreach ($delete as $optionToDelete) {
-            if (isset($optionToDelete['option_id'])) {
-                $this->deleteOption($optionToDelete['option_id']);
+            $question->update([
+                'title' => $data['title'],
+                'question_type_id' => $data['questionTypeID'],
+                'repository_id' => $repositoryID,
+                'lesson_id' => $data['lessonID'],
+                'difficulty_id' => $data['difficultyID'],
+                'create_date' => now(),
+                'creator_id' => $user->id
+            ]);
+            foreach ($delete as $optionToDelete) {
+                $this->deleteOption($optionToDelete);
             }
+
+            $optionsData = [];
+            foreach ($options as $option) {
+                $optionsData[] = [
+                    'id' => $option['option_id'] ?? null,
+                    'title' => $option['title'],
+                    'is_correct' => $option['is_correct'],
+                    'question_id' => $questionID,
+                    'updated_at' => now(),
+                    'created_at' => $question->create_date ? null : now(),
+                ];
+            }
+
+            Option::upsert(
+                $optionsData,
+                ['id'],
+                ['title', 'is_correct', 'updated_at']
+            );
         }
-
-        $optionsData = [];
-        foreach ($options as $option) {
-            $optionsData[] = [
-                'id' => $option['option_id'] ?? null,
-                'title' => $option['title'],
-                'is_correct' => $option['is_correct'],
-                'question_id' => $questionID,
-                'updated_at' => now(),
-                'created_at' => $question->create_date ? null : now(),
-            ];
-        }
-
-        Option::upsert(
-            $optionsData,
-            ['id'],
-            ['title', 'is_correct', 'updated_at']
-        );
-
         return $question;
     }
 
