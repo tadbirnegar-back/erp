@@ -77,7 +77,7 @@ class QuestionsController extends Controller
             if (!$show) {
                 return response()->json([
                     'error' => 'Course not found.'
-                ], 404);
+                ], 403);
             }
             return new QuestionResource(collect($show));
         } catch (\Exception $e) {
