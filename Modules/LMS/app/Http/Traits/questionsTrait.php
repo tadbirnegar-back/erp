@@ -15,7 +15,7 @@ trait questionsTrait
 
     public function dropDowns($courseID)
     {
-        $query = Course::query()->joinRelationship('chapters.lessons.questions');
+        $query = Course::query()->joinRelationship('chapters.lessons');
         $query->select([
             'chapters.id as chapterID',
             'chapters.title as chapterTitle',
@@ -195,11 +195,29 @@ trait questionsTrait
                 'lessons.title as lessonTitle',
                 'lessons.id as lessonID',
                 'courses.title as courseTitle',
+                'courses.id as courseID',
                 'options.is_correct as isCorrect'
 
             ])
             ->where('questions.id', $questionID)->get();
-        return ['questionForEdit' => $question];
+
+        $questions = Course::joinRelationship('chapters.lessons')
+            ->select([
+
+                'chapters.title as chapterTitle',
+                'chapters.id as chapterID',
+                'lessons.title as lessonTitle',
+                'lessons.id as lessonID',
+                'courses.id as courseID',
+
+
+            ])->first();
+
+        $id = $questions->courseID;
+        $all = $this->showAll($id);
+        return ['questionForEdit' => $question,
+            'allListToShow' => $all,
+        ];
     }
 
     /**
@@ -217,5 +235,21 @@ trait questionsTrait
         return $question;
     }
 
+    public function showAll($id)
+    {
+        $questions = Course::joinRelationship('chapters.lessons')
+            ->select([
+
+                'chapters.title as chapterTitle',
+                'chapters.id as chapterID',
+                'lessons.title as lessonTitle',
+                'lessons.id as lessonID',
+                'courses.id as courseID',
+
+
+            ])->where('courses.id', $id)->get();
+
+        return $questions;
+    }
 
 }

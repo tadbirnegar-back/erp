@@ -3,14 +3,29 @@
 namespace App\Http\Controllers;
 
 
+use Modules\LMS\app\Models\Course;
+
 class testController extends Controller
 {
 
 //    use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
 //    use ExamsTrait;
 
-    public function run()
+    public function run($id)
     {
+        $question = Course::joinRelationship('chapters.lessons')
+            ->select([
+
+                'chapters.title as chapterTitle',
+                'chapters.id as chapterID',
+                'lessons.title as lessonTitle',
+                'lessons.id as lessonID',
+                'courses.id as courseID',
+
+
+            ])->where('courses.id', $id)->get();
+
+        return $question;
 //        dd(111111);
     }
 //
