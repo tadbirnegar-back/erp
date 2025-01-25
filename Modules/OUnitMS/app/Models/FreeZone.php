@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Modules\AddressMS\app\Models\Village;
+use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingMember;
 use Modules\OUnitMS\Database\factories\FreeZoneFactory;
 
 class FreeZone extends Model
