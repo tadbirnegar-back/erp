@@ -102,6 +102,8 @@ class PublishCoursePreviewResource extends JsonResource
                 return !is_null($item['id']); // Remove items with null IDs
             })->unique('id')->values();
 
+            $sizeWithUnitVideo = Number::fileSize($courseInfo->course_video_size, 2, 3);
+            $partsvideo = explode(' ', $sizeWithUnitVideo, 2);
 
             $sizeWithCover = Number::fileSize($courseInfo->course_cover_size, 2, 3);
             $partscover = explode(' ', $sizeWithCover, 2);
@@ -130,16 +132,23 @@ class PublishCoursePreviewResource extends JsonResource
                     'id' => $courseInfo->course_alias_id,
                     'title' => $courseInfo->course_alias_title,
                     'description' => $courseInfo->course_alias_description,
-                    'is_required' => $courseInfo->course_alias_is_required,
+                    'is_required' => ["name" => $courseInfo->course_alias_is_required ? 'اجباری' : 'اختیاری' , "class_name" => 'primary'],
                     'expiration_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_expiration_date),
                     'access_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_access_date),
-                    'privacy_id' => $courseInfo->course_alias_privacy_id,
+                    'privacy' => [ 'id' => $courseInfo->privacy_alias_id , 'name' => $courseInfo->privacy_alias_name  , 'class_name' => 'primary'],
+                    'price' => $courseInfo->course_alias_price
                 ],
                 'cover' => [
-                    'slug' => $courseInfo->course_cover_slug,
+                    'slug' => url($courseInfo->course_cover_slug),
                     'title' => $courseInfo->course_cover_title,
                     'id' => $courseInfo->course_cover_id,
                     'size' => intval(Number::fileSize($courseInfo->course_cover_size, 2, 3)) . ' ' . $partscover[1],
+                ],
+                'video' => [
+                    'slug' => url($courseInfo->course_video_slug),
+                    'title' => $courseInfo->course_video_title,
+                    'id' => $courseInfo->course_video_id,
+                    'size' => intval(Number::fileSize($courseInfo->course_video_size, 2, 3)) . ' ' . $partsvideo[1],
                 ],
                 'pre_req' => $preReqs,
                 'course_targets' => $courseTargets->values(),
@@ -147,7 +156,7 @@ class PublishCoursePreviewResource extends JsonResource
                 'status' => ["name" => $courseInfo->status_alias_name ,  "class_name" => $courseInfo -> status_alias_class_name],
                 'buttons' => $this->ButtonsToRender()[$courseInfo->status_alias_name],
             ];
-        });
+        })->first();
     }
     private function isForAllCats($ids)
     {

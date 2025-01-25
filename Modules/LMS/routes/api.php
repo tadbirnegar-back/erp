@@ -11,6 +11,7 @@ use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
 use Modules\LMS\app\Http\Controllers\QuestionsController;
+use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 
 /*
@@ -56,6 +57,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/course/delete/{id}', [CourseController::class, 'deleteCourse']);
     Route::get('/lms/course/cancel/{id}', [CourseController::class, 'cancelCourse']);
     Route::get('/lms/lesson/delete/{id}', [LessonController::class, 'deleteLesson']);
+    Route::post('/lms/show/setting', [SettingController::class, 'index']);
+    Route::post('/lms/store/setting', [SettingController::class, 'store']);
 
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -91,5 +94,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
     Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
     Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
+    Route::get('/lms/exam-result/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
 
 });

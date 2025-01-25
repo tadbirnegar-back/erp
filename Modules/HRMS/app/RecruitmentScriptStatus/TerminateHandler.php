@@ -26,7 +26,7 @@ class TerminateHandler implements StatusHandlerInterface
     {
         $this->detachRolesByPosition($this->script->user, $this->script->position_id);
 //        $this->notifyScriptUser();
-        $this -> AddFinishDate($this->script);
+//        $this -> AddFinishDate($this->script);
 
     }
 

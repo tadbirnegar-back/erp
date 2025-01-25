@@ -22,6 +22,7 @@ use Modules\EMS\app\Models\EnactmentTitle;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\EMS\app\Models\MR;
+use Modules\EMS\app\Resources\FreeZoneLiveSearchResource;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
@@ -40,6 +41,7 @@ use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\FreeZone;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
@@ -850,4 +852,39 @@ class EMSController extends Controller
         ]);
     }
 
+    public function liveSearchFreeZone(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 422);
+        }
+
+        $user = Auth::user();
+        $searchTerm = $request->name;
+
+        $user->load(['activeFreeZoneRecruitmentScript.ounit']);
+
+        $freezoneIds = $user->activeFreeZoneRecruitmentScript->pluck('ounit.unitable_id');
+
+
+        $ounits = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
+            ->whereHas('organizationUnit', function ($query) use ($searchTerm) {
+                $query
+                    ->where(function ($query) use ($searchTerm) {
+                        $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                            ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                    });
+            })
+            ->with(['organizationUnit.ancestors' => function ($query) {
+                $query->orderByDesc('id'); // Replace 'id' with the appropriate column for reverse ordering
+            }])
+            ->get()
+        ->pluck('organizationUnit');
+
+
+        return response()->json($ounits);
+    }
 }

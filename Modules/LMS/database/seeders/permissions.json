@@ -80,31 +80,31 @@
     {
         "name": "ویرایش درس",
         "slug": "/lms/lesson/update/{id}",
-        "moduleName": "LMS",
+        "moduleName" : "LMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "اطلاعات ویرایش درس",
         "slug": "/lms/lesson/update/{id}",
-        "moduleName": "LMS",
+        "moduleName" : "LMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "افزودن دوره آموزشی",
         "slug": "/lms/course/add",
-        "moduleName": "LMS",
+        "moduleName" : "LMS",
         "permissionTypeName": "sidebar"
     },
     {
         "name": "بروزرسانی دوره آموزشی",
         "slug": "/lms/course/update/{id}",
-        "moduleName": "LMS",
+        "moduleName" : "LMS",
         "permissionTypeName": "operational"
     },
     {
         "name": "لیست دوره ها",
         "slug": "/lms/course/related-courses-list",
-        "moduleName": "LMS",
+        "moduleName" : "LMS",
         "permissionTypeName": "sidebar"
     },
     {
@@ -137,6 +137,12 @@
         "slug": "/lms/lesson/delete/{id}",
         "moduleName": "LMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست آزمون های من",
+        "slug": "/lms/exam-result/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
     },
     {
         "name": "افزودن سوال",

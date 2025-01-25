@@ -56,7 +56,9 @@ class ExamResultResource extends ResourceCollection
                 $userAnswer = collect($userAns['questions'])->firstWhere('question_id', $questionID);
                 $userOptionID = $userAnswer['option_id'] ?? null;
 
-                $allAnswers = $answers->map(function ($answer) use ($correctAnswers, $userOptionID) {
+                $hasIncorrect = false;
+
+                $allAnswers = $answers->map(function ($answer) use ($correctAnswers, $userOptionID, &$hasIncorrect) {
                     $optionID = $answer->optionID ?? null;
                     $status = 'empty';
 
@@ -64,6 +66,7 @@ class ExamResultResource extends ResourceCollection
                         $status = 'correct';
                     } elseif ($optionID === $userOptionID) {
                         $status = 'incorrect';
+                        $hasIncorrect = true;
                     } elseif (in_array($optionID, $correctAnswers)) {
                         $status = 'missed';
                     }
@@ -74,6 +77,15 @@ class ExamResultResource extends ResourceCollection
                         'status' => $status,
                     ];
                 })->values();
+
+                if ($hasIncorrect) {
+                    $allAnswers = $allAnswers->map(function ($answer) {
+                        if ($answer['status'] === 'missed') {
+                            $answer['status'] = 'correct';
+                        }
+                        return $answer;
+                    });
+                }
 
                 return [
                     'question_id' => $questionID,

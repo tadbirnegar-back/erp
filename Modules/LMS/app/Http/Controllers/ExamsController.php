@@ -100,6 +100,10 @@ class ExamsController extends Controller
 //        $auth = Auth::user();
         $auth = User::with('student')->find(68);
         $auth = Auth::user()->load('student');
+        if (!$auth) {
+
+            return response()->json('list doesnt exist for this student', 404);
+        }
         $student = $auth->student;
         $data = $request->all();
 

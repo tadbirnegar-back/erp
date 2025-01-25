@@ -154,5 +154,23 @@
         "slug": "/mes/meeting/selection",
         "moduleName": "EMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "انتخاب جلسات منطقه آزاد",
+        "slug": "mes/meeting/selection-freezone",
+        "moduleName": "EMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن مصوبه منطقه آزاد",
+        "slug": "/mes/enactment/add-freezone",
+        "moduleName": "EMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست مصوبات منطقه آزاد",
+        "slug": "/mes/freezone/list",
+        "moduleName": "EMS",
+        "permissionTypeName": "sidebar"
     }
 ]
