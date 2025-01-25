@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 
+use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
+use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
 use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
 use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Http\Trait\CircularTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Http\Trait\OunitFiscalYearTrait;
 use Modules\ACMS\app\Models\Budget;
-use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\ACMS\app\Models\CircularSubject;
+use Modules\ACMS\app\Models\FiscalYear;
+use Morilog\Jalali\Jalalian;
 
 
 class testController extends Controller
@@ -18,58 +22,119 @@ class testController extends Controller
 
     public function run()
     {
-//        $a = BudgetStatus::with(['file'])->find(7841);
-//        dd($a);
-        $budget = Budget::
-        with([
-            'fiscalYear',
-            'circularFile',
-            'ounit.ancestors' => function ($q) {
-                $q->where('unitable_type', '!=', StateOfc::class);
-            },
-            'statuses.pivot.person',
-            'statuses.pivot.file',
-            'village',
-            'statuses',
-            'latestStatus',
-            'ancestors.statuses' => function ($q) {
-                $q->with(['pivot.person', 'pivot.file']);
-            },
-        ])
-            ->find(7841);
-        dump($budget);
-//        dd($budget->statuses[0]->pivot->description);
-//        $a = BudgetTimelineStatusEnum::generateTimeline($budget);
+//        dd('1404' - 1, '1404' - 2,);
+        $a = Jalalian::fromFormat('Y/m/d', '1403/10/01');
+        $startOfQuarter = $a->getEndDayOfQuarter()->toCarbon()->startOfDay()->toDateTimeString();
 
-//        $budgetItems = BudgetItem::joinRelationship('circularItem.subject')
-//            ->where('budget_id', 5774
-//            )
-//            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::INCOME->value)
-//            ->select([
-//                \DB::raw('SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS total'),
-//                \DB::raw('SUM(bgt_budget_items.proposed_amount) - SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS difference
-//')
-//            ])
-//            ->first();
+        $endOfQuarter = $a->getEndDayOfQuarter()->toCarbon()->endOfDay()->toDateTimeString();
+//        dd($a->getEndDayOfQuarter());
 
-//        $budgetItems = BudgetItem::joinRelationship('circularItem.subject')
-//            ->where('budget_id', 5774
-//            )
-//            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::ECONOMIC_EXPENSE->value)
-//            ->select([
-//                \DB::raw('SUM(bgt_budget_items.proposed_amount) AS economic_total'),
-//            ])
-//            ->first();
-//        dump($budgetItems);
+        $startOfYear = $a->getFirstDayOfYear()->toCarbon()->startOfDay()->toDateTimeString();
+        $endOfTheYear = $a->getEndDayOfYear()->toCarbon()->endOfDay()->toDateTimeString();
 
-//        $budgetItems = BudgetItem::joinRelationship('circularItem.subject')
-//            ->where('budget_id', 5774)
-//            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::OPERATIONAL_EXPENSE->value)
-//            ->select([
-//                \DB::raw('SUM(bgt_budget_items.proposed_amount) AS operational_total'),
-//            ])
-//            ->first();
-//        dump($budgetItems);
+        $fiscalYear = FiscalYear::where('name', '1402')->first();
+
+        $fiscalYear2 = FiscalYear::where('name', '1403')->first();
+        $b = Budget::
+        joinRelationship('ounitFiscalYear.fiscalYear')
+            ->where('fiscal_years.name', '1403')
+            ->where('ounit_fiscalYear.ounit_id', 5)
+            ->joinRelationship('statuses', [
+                'statuses' => function ($join) {
+                    $join
+                        ->whereRaw('bgtBudget_status.create_date = (SELECT MAX(create_date) FROM bgtBudget_status WHERE budget_id = bgt_budgets.id)');
+                }
+            ])
+            ->where('statuses.name', BudgetStatusEnum::FINALIZED->value)
+            ->whereNotIn('bgt_budgets.id', function ($query) {
+                $query->select('bgt_budgets.parent_id')
+                    ->from('bgt_budgets')
+                    ->whereNotNull('bgt_budgets.parent_id');
+            })
+            ->first();
+
+
+        $a = CircularSubject::withoutGlobalScopes()
+            ->with(['ancestors' => function ($query) {
+                $query->withoutGlobalScopes();
+            }])
+            ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::OPERATIONAL_EXPENSE->value)
+            ->leftJoinRelationship('accounts.articles.document', [
+                'accounts' => function ($join) {
+                    $join->where('ounit_id', 5);
+                },
+                'document' => function ($join) use ($fiscalYear) {
+                    $join->where('fiscal_year_id', $fiscalYear->id);
+                },
+            ])
+            ->leftJoinRelationshipUsingAlias('accounts.articles.document', [
+                'accounts' => function ($join) {
+                    $join->as('3_months_last_year_acc')
+                        ->where('ounit_id', 5);
+                },
+                'document' => function ($join) use ($fiscalYear) {
+                    $join->as('3_months_last_year_doc')
+                        ->where('fiscal_year_id', $fiscalYear->id);
+                },
+            ])
+            ->leftJoinRelationshipUsingAlias('accounts.articles.document', [
+                'accounts' => function ($join) {
+                    $join->as('3_months_last_year_acc')
+                        ->where('ounit_id', 5);
+                },
+                'document' => function ($join) use ($startOfQuarter, $endOfQuarter) {
+                    $join->as('3_months_last_year_doc')
+                        ->whereBetween('3_months_last_year_doc.document_date', [$startOfQuarter, $endOfQuarter]);
+                },
+            ])
+            ->leftJoinRelationshipUsingAlias('accounts.articles.document', [
+                'accounts' => function ($join) {
+                    $join->as('9_months_current_year_acc')
+                        ->where('ounit_id', 5);
+                },
+                'document' => function ($join) use ($startOfQuarter, $endOfQuarter) {
+                    $join->as('9_months_current_year_doc')
+                        ->whereBetween('9_months_current_year_doc.document_date', [$startOfQuarter, $endOfQuarter]);
+                },
+            ])
+            ->whereNotIn('bgt_circular_subjects.id', function ($query) {
+                $query->select('bgt_circular_subjects.parent_id')
+                    ->from('bgt_circular_subjects')
+                    ->whereNotNull('bgt_circular_subjects.parent_id');
+            })
+            ->leftJoinRelationship('circularItem.budgetItem', [
+//                'circularItem' => function ($join) {
+//                    $join->where('bgt_circular_items.circular_id', 13);
+//                },
+                'budgetItem' => function ($join) use ($b) {
+                    $join->as('current_year_budget_item')
+                        ->where('budget_id', $b->id);
+                },
+            ])
+            ->joinRelationshipUsingAlias('circularItem.budgetItem', [
+//                'circularItem' => function ($join) {
+////                $join->as('next_year')
+////                    $join->where('bgt_circular_items.circular_id', 5);
+//                },
+                'budgetItem' => function ($join) use ($fiscalYear) {
+                    $join->as('next_year_budget_item')
+                        ->where('budget_id', 4101);
+                },
+            ])
+            ->select([
+                \DB::raw('SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount'),
+                'bgt_circular_subjects.code as code',
+                'bgt_circular_subjects.name as name',
+
+                \DB::raw('SUM(COALESCE(current_year_budget_item.proposed_amount,0)) as current_year_proposed_amount'),
+                'next_year_budget_item.id as next_year_budget_item_id',
+                'next_year_budget_item.proposed_amount as next_year_proposed_amount',
+
+            ])
+            ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name', 'next_year_budget_item.id', 'next_year_budget_item.proposed_amount')
+            ->get();
+        dump($a);
+
         $output = "<!DOCTYPE html>
     <html>
     <head>
@@ -80,94 +145,6 @@ class testController extends Controller
 
 
         echo $output;
-//        return VillageBudgetListResource::collection($budgets);
-//        dd($a);
-//        Debugbar::stopMeasure('render');
-//        dd($a, DB::getQueryLog());
-//        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
-//            $q->where('unitable_type', DistrictOfc::class);
-//
-//        }, 'evaluators',
-//            'payments' => function ($query) {
-//                $query->where('status_id', '=', '46');
-//            }])->get();
-//
-//
-////
-////        // Start the table
-//        $html = '<table>';
-////        $html .= '<tr><th>دهیاری</th><th>نام دهیار</th><th>شهرستان</th><th>کد آبادی</th></tr>';
-//
-//        // Loop through the data and add it to the table
-//        foreach ($organizationUnitIds as $organizationUnit) {
-//            $payCalculate = collect($this->calculatePrice(collect([$organizationUnit]))['ounits']);
-//            $c = $payCalculate->map(function ($item) {
-//                $phase1 = ($item['alreadyPayed'] > 0);
-//                $phase2 = ($item['price'] <= 0 && $item['alreadyPayed'] > 0);
-//
-//                /**
-//                 * @var OrganizationUnit $ou
-//                 */
-//                $ou = $item['ounitObject'];
-//                $ou->setAttribute('payStat', [
-//                    'phase_1' => $phase1,
-//                    'phase_2' => $phase2,
-//                ]);
-//                return $ou;
-//            });
-//            $c = $c->first();
-//            foreach ($organizationUnit->evaluators as $evaluator) {
-//                $districteval = $evaluator->user_id == $organizationUnit->ancestors[0]->head_id ? $evaluator->sum : null;
-//                $villageeval = $evaluator->user_id == $organizationUnit->head_id ? $evaluator->sum : null;
-//            }
-//            if (isset($organizationUnit->head?->person->personable->birth_date)) {
-//
-//                $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d', strtotime($organizationUnit->head?->person->personable->birth_date));
-//            } else {
-//                $jalali = null;
-//            }
-//
-//            $html .= '<tr>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[0]->name) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[1]->name) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[2]->name) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->ancestorsAndSelf[3]->name) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->abadi_code) . '</td>';
-//
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->personable->first_name) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->personable->last_name) . '</td>';
-//
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->national_code) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->personable->bc_code) . '</td>';
-//
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->personable->father_name) . '</td>';
-//            $html .= '<td>' . htmlspecialchars(isset($organizationUnit->head) ? ($organizationUnit->head?->person->personable->gender_id == 1 ? 'مرد' : 'زن') : null) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->mobile) . '</td>';
-//
-//
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->workForce->educationalRecords[0]?->field_of_study ?? null) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->head?->person->workForce->educationalRecords[0]?->levelOfEducation->name ?? null) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($jalali) . '</td>';
-//
-//            $html .= '<td>' . htmlspecialchars($villageeval) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($districteval) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->abadi_code) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->national_uid) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->hierarchy_code) . '</td>';
-//            $html .= '<td>' . htmlspecialchars($organizationUnit->unitable->ofc_code) . '</td>';
-//
-//            $html .= '<td>' . htmlspecialchars($c->payStat['phase_1'] ? 'پرداخت شده' : 'پرداخت نشده') . '</td>';
-//            $html .= '<td>' . htmlspecialchars($c->payStat['phase_2'] ? 'پرداخت شده' : 'پرداخت نشده') . '</td>';
-//
-//            $html .= '</tr>';
-//        }
-//
-//        // End the table
-//        $html .= '</table>';
-//
-//        // Print the table
-//        echo $html;
-
 
     }
 }

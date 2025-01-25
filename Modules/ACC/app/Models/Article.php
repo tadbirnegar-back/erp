@@ -32,5 +32,10 @@ class Article extends Model
         return $this->belongsTo(Account::class, 'account_id');
     }
 
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(Document::class, 'document_id');
+    }
+
 
 }

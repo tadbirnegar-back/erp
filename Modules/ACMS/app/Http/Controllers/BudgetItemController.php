@@ -1,0 +1,207 @@
+<?php
+
+namespace Modules\ACMS\app\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
+use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
+use Modules\ACMS\app\Models\Budget;
+use Modules\ACMS\app\Models\CircularSubject;
+use Modules\ACMS\app\Models\FiscalYear;
+use Modules\ACMS\app\Resources\BudgetItemsForMain;
+use Modules\ACMS\app\Resources\BudgetItemsForSupplementary;
+use Morilog\Jalali\Jalalian;
+
+class BudgetItemController extends Controller
+{
+    public function index(Request $request)
+    {
+        $data = $request->all();
+
+        $validator = \Validator::make($data, [
+            'budgetID' => 'required',
+            'subjectTypeID' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        $budget = Budget::joinRelationship('ounitFiscalYear.fiscalYear')
+            ->addSelect([
+                'fiscal_years.id as fiscal_year_id',
+                'fiscal_years.name as fiscal_year_name',
+                'ounit_fiscalYear.ounit_id as ounit_id',
+            ])
+            ->find($data['budgetID']);
+
+        if (is_null($budget)) {
+            return response()->json(['error' => 'بودجه یافت نشد'], 404);
+        }
+        $nextYear = $budget->fiscal_year_name;
+        $currentYear = $budget->fiscal_year_name - 1;
+        $lastYear = $budget->fiscal_year_name - 2;
+
+        $nextYearFiscal = FiscalYear::where('name', $nextYear)->first();
+        $lastYearFiscal = FiscalYear::where('name', $lastYear)->first();
+
+        $a = Jalalian::fromFormat('Y/m/d', $lastYear . '/10/01');
+        $lastYearStartOfQuarter = $a->getEndDayOfQuarter()->toCarbon()->startOfDay()->toDateTimeString();
+
+        $lastYearEndOfQuarter = $a->getEndDayOfQuarter()->toCarbon()->endOfDay()->toDateTimeString();
+        $startOfCurrentYear = Jalalian::fromFormat('Y/m/d', $currentYear . '/01/01')->toCarbon()->startOfDay()->toDateTimeString();
+        $endOf9thMonthOfCurrentYear = Jalalian::fromFormat('Y/m/d', $currentYear . '/09/30')->toCarbon()->endOfDay()->toDateTimeString();
+        if ($budget->isSupplementary) {
+            $currentYearBudget = $budget->parent;
+        } else {
+            $currentYearBudget = Budget::
+            joinRelationship('ounitFiscalYear.fiscalYear')
+                ->where('fiscal_years.name', $currentYear)
+                ->where('ounit_fiscalYear.ounit_id', $budget->ounit_id)
+                ->joinRelationship('statuses', [
+                    'statuses' => function ($join) {
+                        $join
+                            ->whereRaw('bgtBudget_status.create_date = (SELECT MAX(create_date) FROM bgtBudget_status WHERE budget_id = bgt_budgets.id)');
+                    }
+                ])
+                ->where('statuses.name', BudgetStatusEnum::FINALIZED->value)
+                ->whereNotIn('bgt_budgets.id', function ($query) {
+                    $query->select('bgt_budgets.parent_id')
+                        ->from('bgt_budgets')
+                        ->whereNotNull('bgt_budgets.parent_id');
+                })
+                ->first();
+
+        }
+
+        if ($budget->isSupplementary) {
+            $subjectsWithLog = CircularSubject::withoutGlobalScopes()
+                ->with(['ancestors' => function ($query) {
+                    $query->withoutGlobalScopes();
+                }])
+                ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
+                ->leftJoinRelationship('accounts.articles.document', [
+                    'accounts' => function ($join) use ($budget) {
+                        $join->where('ounit_id', $budget->ounit_id);
+                    },
+                    'document' => function ($join) use ($nextYearFiscal) {
+                        $join->where('fiscal_year_id', $nextYearFiscal->id);
+                    },
+                ])
+                ->joinRelationshipUsingAlias('circularItem.budgetItem', [
+//                'circularItem' => function ($join) {
+////                $join->as('next_year')
+////                    $join->where('bgt_circular_items.circular_id', 5);
+//                },
+                    'budgetItem' => function ($join) use ($currentYearBudget) {
+                        $join->as('next_year_budget_item')
+                            ->where('budget_id', $currentYearBudget->id);
+                    },
+                ])
+                ->whereNotIn('bgt_circular_subjects.id', function ($query) {
+                    $query->select('bgt_circular_subjects.parent_id')
+                        ->from('bgt_circular_subjects')
+                        ->whereNotNull('bgt_circular_subjects.parent_id');
+                })
+                ->select([
+                    'bgt_circular_subjects.code as code',
+                    'bgt_circular_subjects.name as name',
+
+                    \DB::raw('SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount'),
+
+                    \DB::raw('SUM(COALESCE(current_year_budget_item.proposed_amount,0)) as current_year_proposed_amount'),
+
+                    'next_year_budget_item.id as next_year_budget_item_id',
+                    'next_year_budget_item.proposed_amount as next_year_proposed_amount',
+                    'next_year_budget_item.percentage as next_year_percentage',
+
+                ])
+                ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name', 'next_year_budget_item.id', 'next_year_budget_item.proposed_amount')
+                ->get();
+        } else {
+            $subjectsWithLog = CircularSubject::withoutGlobalScopes()
+                ->with(['ancestors' => function ($query) {
+                    $query->withoutGlobalScopes();
+                }])
+                ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
+                ->leftJoinRelationship('accounts.articles.document', [
+                    'accounts' => function ($join) use ($budget) {
+                        $join->where('ounit_id', $budget->ounit_id);
+                    },
+                    'document' => function ($join) use ($lastYearFiscal) {
+                        $join->where('fiscal_year_id', $lastYearFiscal->id);
+                    },
+                ])
+                ->leftJoinRelationshipUsingAlias('accounts.articles.document', [
+                    'accounts' => function ($join) use ($budget) {
+                        $join->as('3_months_last_year_acc')
+                            ->where('ounit_id', $budget->ounit_id);
+                    },
+                    'document' => function ($join) use ($lastYearStartOfQuarter, $lastYearEndOfQuarter) {
+                        $join->as('3_months_last_year_doc')
+                            ->whereBetween('3_months_last_year_doc.document_date', [$lastYearStartOfQuarter, $lastYearEndOfQuarter]);
+                    },
+                ])
+                ->leftJoinRelationshipUsingAlias('accounts.articles.document', [
+                    'accounts' => function ($join) use ($budget) {
+                        $join->as('9_months_current_year_acc')
+                            ->where('ounit_id', $budget->ounit_id);
+                    },
+                    'document' => function ($join) use ($startOfCurrentYear, $endOf9thMonthOfCurrentYear) {
+                        $join->as('9_months_current_year_doc')
+                            ->whereBetween('9_months_current_year_doc.document_date', [$startOfCurrentYear, $endOf9thMonthOfCurrentYear]);
+                    },
+                ])
+                ->whereNotIn('bgt_circular_subjects.id', function ($query) {
+                    $query->select('bgt_circular_subjects.parent_id')
+                        ->from('bgt_circular_subjects')
+                        ->whereNotNull('bgt_circular_subjects.parent_id');
+                })
+                ->leftJoinRelationship('circularItem.budgetItem', [
+//                'circularItem' => function ($join) {
+//                    $join->where('bgt_circular_items.circular_id', 13);
+//                },
+                    'budgetItem' => function ($join) use ($currentYearBudget) {
+                        $join->as('current_year_budget_item')
+                            ->where('budget_id', $currentYearBudget->id);
+                    },
+                ])
+                ->joinRelationshipUsingAlias('circularItem.budgetItem', [
+//                'circularItem' => function ($join) {
+////                $join->as('next_year')
+////                    $join->where('bgt_circular_items.circular_id', 5);
+//                },
+                    'budgetItem' => function ($join) use ($budget) {
+                        $join->as('next_year_budget_item')
+                            ->where('budget_id', $budget->id);
+                    },
+                ])
+                ->select([
+                    'bgt_circular_subjects.code as code',
+                    'bgt_circular_subjects.name as name',
+
+                    \DB::raw('SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount'),
+
+                    \DB::raw('SUM(COALESCE(current_year_budget_item.proposed_amount,0)) as current_year_proposed_amount'),
+
+                    \DB::raw('SUM(COALESCE(3_months_last_year_doc.proposed_amount,0)) as 3_months_last_year_proposed_amount'),
+
+                    \DB::raw('SUM(COALESCE(9_months_current_year_doc.proposed_amount,0)) as 9_months_current_year_proposed_amount'),
+
+                    'next_year_budget_item.id as next_year_budget_item_id',
+                    'next_year_budget_item.proposed_amount as next_year_proposed_amount',
+                    'next_year_budget_item.percentage as next_year_percentage',
+
+                ])
+                ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name', 'next_year_budget_item.id', 'next_year_budget_item.proposed_amount')
+                ->get();
+        }
+        if ($budget->isSupplementary) {
+            return BudgetItemsForSupplementary::collection($subjectsWithLog);
+        }
+        return BudgetItemsForMain::collection($subjectsWithLog);
+
+    }
+
+}

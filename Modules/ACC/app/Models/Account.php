@@ -4,6 +4,7 @@ namespace Modules\ACC\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\ACC\app\Scopes\ActiveAccountOnlyScope;
 use Modules\ACC\Database\factories\AccountFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -41,6 +42,11 @@ class Account extends Model
     public function accountCategory(): BelongsTo
     {
         return $this->belongsTo(AccountCategory::class, 'category_id');
+    }
+
+    public function articles(): HasMany
+    {
+        return $this->hasMany(Article::class, 'account_id');
     }
 
     public static function GetAllStatuses()
