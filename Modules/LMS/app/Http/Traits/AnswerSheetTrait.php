@@ -8,6 +8,7 @@ use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\QuestionExam;
+use Modules\SettingsMS\app\Models\Setting;
 
 
 trait AnswerSheetTrait
@@ -120,11 +121,9 @@ trait AnswerSheetTrait
         $declinedStatus = $this->answerSheetDeclinedStatus();
 
         if ($approvedStatus && $declinedStatus) {
-            if ($score >= 50) {
-                return $approvedStatus;
-            } else {
-                return $declinedStatus;
-            }
+            $isPassingScore = Setting::where('pass_score', '<=', $score)->exists();
+
+            return $isPassingScore ? $approvedStatus : $declinedStatus;
         }
 
         return null;
