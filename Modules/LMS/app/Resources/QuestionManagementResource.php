@@ -27,7 +27,9 @@ class QuestionManagementResource extends JsonResource
                     'difficulty' => $firstQuestion['difficultyName'],
                     'repository' => $firstQuestion['repositoryName'],
                     'questionTypeName' => $firstQuestion['questionTypeName'],
-                    'readOnly' => $firstQuestion['answerSheetID'] ? true : false,
+                    'deleteAble' => $firstQuestion['questionID'] === $firstQuestion['answerQuestionID'],
+                    'editable' => $firstQuestion['questionID'] === $firstQuestion['answerQuestionID'],
+
                     'sources' => [
                         'chapterTitle' => $firstQuestion['chapterTitle'],
                         'lessonTitle' => $firstQuestion['lessonTitle'],

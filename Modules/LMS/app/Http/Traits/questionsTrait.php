@@ -69,11 +69,18 @@ trait questionsTrait
     public function questionList($id)
     {
         $status = Status::where('name', self::$active)->firstOrFail();
+
         $query = Course::joinRelationship('chapters.lessons.questions.difficulty')
             ->joinRelationship('chapters.lessons.questions.options')
             ->joinRelationship('chapters.lessons.questions.repository')
             ->joinRelationship('chapters.lessons.questions.questionType')
-            ->joinRelationship('chapters.lessons.questions.answers.answerSheet')
+            ->joinRelationship('chapters.lessons.questions.answers.answerSheet', [
+                'chapters' => fn($join) => $join->as('chapters_alias'),
+                'lessons' => fn($join) => $join->as('lessons_alias'),
+                'answers' => fn($join) => $join->as('answers_alias'),
+                'answerSheet' => fn($join) => $join->as('answer_sheet_alias')
+
+            ])
             ->select([
                 'questions.id as questionID',
                 'questions.title as questionTitle',
@@ -82,10 +89,10 @@ trait questionsTrait
                 'repositories.name as repositoryName',
                 'options.title as optionTitle',
                 'chapters.title as chapterTitle',
-                'lessons.title as lessonTitle',
+                'lessons_alias.title as lessonTitle',
                 'courses.title as courseTitle',
                 'options.is_correct as isCorrect',
-                'answer_sheets.id as answerSheetID'
+                'answers_alias.question_id as answerQuestionID',
             ])
             ->where('courses.id', $id)
             ->where('questions.status_id', $status->id)
@@ -127,6 +134,11 @@ trait questionsTrait
     public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs)
     {
         $question = Question::find($questionID);
+        $query = Course::joinRelationship('chapters.lessons.questions.answers.answerSheet')->select([
+            'questions.id as question_id',
+            'answers.question_id as answerQuestionID'
+        ]);
+
         foreach ($repositoryIDs as $repositoryID) {
 
             $question->update([

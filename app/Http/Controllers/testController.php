@@ -13,19 +13,13 @@ class testController extends Controller
 
     public function run($id)
     {
-        $question = Course::joinRelationship('chapters.lessons')
-            ->select([
+        $question = Course::joinRelationship('chapters.lessons.questions.answers.answerSheet')
+            ->select(['answers.id'])
+            ->where('courses.id', $id)
+            ->get(); // فقط یک رکورد بازیابی می‌شود
 
-                'chapters.title as chapterTitle',
-                'chapters.id as chapterID',
-                'lessons.title as lessonTitle',
-                'lessons.id as lessonID',
-                'courses.id as courseID',
+        return response()->json($question); // بازگرداندن رکورد
 
-
-            ])->where('courses.id', $id)->get();
-
-        return $question;
 //        dd(111111);
     }
 //

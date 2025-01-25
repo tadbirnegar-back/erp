@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\questionsTrait;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
+use Modules\LMS\app\Resources\QuestionManagementResource;
 use Modules\LMS\app\Resources\QuestionResource;
 
 class QuestionsController extends Controller
@@ -97,7 +98,7 @@ class QuestionsController extends Controller
                 ], 404);
             }
             $question = $this->questionList($id);
-            return $question;
+//            return $question;
             return new QuestionManagementResource(collect($question));
         } catch (\Exception $e) {
             return response()->json([
