@@ -32,6 +32,8 @@ trait SettingTrait
             ['key' => 'question_type_for_exam', 'value' => $data['questionType']],
             ['key' => 'question_numbers_perExam', 'value' => $data['questionNumber']],
             ['key' => 'time_per_questions', 'value' => $data['timePerQuestion']],
+            ['key' => 'pass_score', 'value' => $data['passScore']],
+
         ];
 
         foreach ($settings as $setting) {

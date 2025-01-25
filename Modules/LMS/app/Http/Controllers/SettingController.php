@@ -33,7 +33,8 @@ class SettingController extends Controller
             'Difficulty' => 'required|integer',
             'questionType' => 'required|integer',
             'questionNumber' => 'required|integer',
-            'timePerQuestion' => 'required|integer'
+            'timePerQuestion' => 'required|integer',
+            'passScore' => 'required|integer',
         ]);
 
         try {
