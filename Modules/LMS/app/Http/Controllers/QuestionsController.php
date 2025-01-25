@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\questionsTrait;
@@ -50,8 +51,7 @@ class QuestionsController extends Controller
             $repositoryIDs = $repositoryIDs['ids'];
 
 
-//            $user = Auth::user();
-            $user = \Modules\AAA\app\Models\User::find(68);
+            $user = Auth::user();
 
             $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs);
             DB::commit();
@@ -98,7 +98,6 @@ class QuestionsController extends Controller
                 ], 404);
             }
             $question = $this->questionList($id);
-//            return $question;
             return new QuestionManagementResource(collect($question));
         } catch (\Exception $e) {
             return response()->json([
@@ -166,8 +165,7 @@ class QuestionsController extends Controller
                 ], 404);
             }
 
-//            $user = Auth::user();
-            $user = \Modules\AAA\app\Models\User::find(68);
+            $user = Auth::user();
             if (!$user) {
                 return response()->json([
                     'message' => 'User not found'

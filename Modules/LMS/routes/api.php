@@ -7,11 +7,9 @@ use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\CourseCourseController;
 use Modules\LMS\app\Http\Controllers\CourseOunitFeatureController;
 use Modules\LMS\app\Http\Controllers\LessonController;
-use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
-use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\QuestionsController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 
@@ -40,14 +38,12 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'show']);
     Route::put('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'update']);
     Route::delete('/students/delete/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'destroy']);
-    Route::post('/lms/edit/questions/{id}', [QuestionController::class, 'editQuestion']);
-    Route::post('/lms/delete/questions/{id}', [QuestionController::class, 'destroyQuestion']);
+
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
     Route::post('/lms/courses/questions/list', [\Modules\LMS\app\Http\Controllers\CourseController::class, 'courseList']);
     Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
-    Route::post('/lms/add/questions', [QuestionController::class, 'store']);
     Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
     Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
     Route::get('/lms/chapter/delete/{id}', [ChapterController::class, 'delete']);
@@ -89,17 +85,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
     Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
-//    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
-//    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
-//    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
-//    Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
-//    Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
-//    Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
+    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
+    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
+    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
+    Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
+    Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
+    Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
 
 });
-Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
-Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
-Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
-Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
-Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
-Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
