@@ -9,6 +9,7 @@ use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
@@ -17,6 +18,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
 use Modules\PayStream\app\Models\ProcessStatus;
+use Modules\StatusMS\app\Models\Status;
 
 
 trait CourseTrait
@@ -30,10 +32,13 @@ trait CourseTrait
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
+    private static string $active = QuestionsEnum::ACTIVE->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
+        $status = Status::where('name', self::$active)->firstOrFail();
+
         $searchTerm = $data['name'] ?? null;
 
         $query = Course::joinRelationship('cover')
@@ -52,7 +57,13 @@ trait CourseTrait
             })
             ->with(['statusCourse.status']);
 
-        $query->withCount(['chapters', 'lessons', 'questions']);
+        $query->withCount([
+            'chapters',
+            'lessons',
+            'questions as active_questions_count' => function ($query) use ($status) {
+                $query->where('status_id', $status->id);
+            },
+        ]);
 
 
         $query
@@ -618,7 +629,7 @@ trait CourseTrait
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
-            ->leftJoinRelationshipUsingAlias('privacy' , 'privacy_alias')
+            ->leftJoinRelationshipUsingAlias('privacy', 'privacy_alias')
             ->leftJoinRelationship('preReqForJoin.preReqCourse', [
                 'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
                     ->on('pre_req_pivot_alias.main_course_id', 'courses.id'),

@@ -51,7 +51,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/course/add', [CourseController::class, 'store']);
     Route::post('/lms/course/update/{id}', [CourseController::class, 'update']);
     Route::get('/lms/publish/course/{id}', [CourseController::class, 'publishCourseDataShow']);
-    Route::get('/lms/course/make-publish/{id}', [CourseController::class, 'makeCoursePublish']);
+//    Route::get('/lms/course/make-publish/{id}', [CourseController::class, 'makeCoursePublish']);
     Route::get('/lms/course/delete/{id}', [CourseController::class, 'deleteCourse']);
     Route::get('/lms/course/cancel/{id}', [CourseController::class, 'cancelCourse']);
     Route::get('/lms/lesson/delete/{id}', [LessonController::class, 'deleteLesson']);
@@ -85,10 +85,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
     Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
-    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
-    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
+//    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
+//    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
     Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
     Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
-    Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
+//    Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
 
 });
+Route::get('/lms/course/make-publish/{id}', [CourseController::class, 'makeCoursePublish']);
+Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
+Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
+Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);

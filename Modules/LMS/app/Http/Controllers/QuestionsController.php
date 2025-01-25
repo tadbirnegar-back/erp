@@ -75,11 +75,13 @@ class QuestionsController extends Controller
     {
         try {
             $show = $this->dropDowns($courseID);
+            return $show;
             if (!$show) {
                 return response()->json([
                     'error' => 'Course not found.'
                 ], 403);
             }
+//            return $show;
             return new QuestionResource(collect($show));
         } catch (\Exception $e) {
             return response()->json([
@@ -98,6 +100,7 @@ class QuestionsController extends Controller
                 ], 404);
             }
             $question = $this->questionList($id);
+            return $question;
             return new QuestionManagementResource(collect($question));
         } catch (\Exception $e) {
             return response()->json([
@@ -115,7 +118,7 @@ class QuestionsController extends Controller
             $question = $this->questionDelete($questionID);
             DB::commit();
 
-            return response()->json(['message' => 'Question status updated to inactive successfully.'], 200);
+            return response()->json(['message' => 'Question status updated to inactive successfully.',], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([

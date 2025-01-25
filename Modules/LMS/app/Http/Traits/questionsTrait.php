@@ -15,16 +15,21 @@ trait questionsTrait
 
     public function dropDowns($courseID)
     {
-        $query = Course::query()->joinRelationship('chapters.lessons');
+        $status = Status::where('name', $this::$active)->firstOrFail();
+
+        $query = Course::leftJoinRelationship('chapters.lessons.lessonStatus');
+        $query->where('status_lesson.status_id', $status->id);
         $query->select([
             'chapters.id as chapterID',
-            'chapters.title as chapterTitle',
+            // 'chapters.title as chapterTitle',
             'lessons.id as lessonID',
-            'lessons.title as lessonTitle',
+            // 'lessons.title as lessonTitle',
+//            'status_lesson.status_id',
+            'status_lesson.status_id as stu_id'
         ]);
-        return $query->where('courses.id', $courseID)->get();
-
-
+        return $query->where('courses.id', $courseID)
+//            ->where('status_lesson.status_id', $status->id)
+            ->get();
     }
 
     public function insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs)
@@ -109,19 +114,18 @@ trait questionsTrait
     public function count($id)
     {
 
+        $status = Status::where('name', self::$active)->firstOrFail();
 
-//        return Course::withCount('chapters.lessons.questions')->where($id);
 
+        $course = Course::with(['chapters.lessons.questions' => function ($query) use ($status) {
+            $query->where('status_id', $status->id);
+        }])->find($id);
 
-        $course = Course::joinRelationship('chapters.lessons.questions')->find($id);
-
-        if (!$course) {
-            return ['error' => 'Course not found'];
-        }
 
         $chaptersCount = $course->chapters->count();
         $lessonsCount = $course->chapters->sum(fn($chapter) => $chapter->lessons->count());
         $questionsCount = $course->chapters->sum(fn($chapter) => $chapter->lessons->sum(fn($lesson) => $lesson->questions->count())
+
         );
 
         return [
@@ -134,10 +138,11 @@ trait questionsTrait
     public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs)
     {
         $question = Question::find($questionID);
-        $query = Course::joinRelationship('chapters.lessons.questions.answers.answerSheet')->select([
-            'questions.id as question_id',
-            'answers.question_id as answerQuestionID'
-        ]);
+//        $query = Course::joinRelationship('chapters.lessons.questions.answers.answerSheet')->select([
+//            'questions.id as question_id',
+//            'answers.question_id as answerQuestionID',
+//            'courses.id as courseID',
+//        ]);
 
         foreach ($repositoryIDs as $repositoryID) {
 
@@ -239,7 +244,6 @@ trait questionsTrait
         $status = Status::where('name', self::$inactive)->firstOrFail();
 
         $question = Question::findOrFail($questionID);
-
         $question->status_id = $status->id;
 
         $question->save();

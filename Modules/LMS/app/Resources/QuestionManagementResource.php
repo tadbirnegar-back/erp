@@ -36,13 +36,12 @@ class QuestionManagementResource extends JsonResource
                         'lessonTitle' => $firstQuestion['lessonTitle'],
                     ],
 
-
                     'options' => $questions->map(function ($question) {
                         return [
                             'titleOfOptions' => $question['optionTitle'],
                             'isCorrect' => $question['isCorrect'] == 1 ? 'correct' : 'incorrect',
                         ];
-                    }),
+                    })->unique('titleOfOptions')->values(),
                 ];
             })->values(),
             'count' => $this->resource['count'],
