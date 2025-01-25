@@ -24,6 +24,7 @@ class QuestionManagementResource extends JsonResource
 
                 return [
                     'title' => $firstQuestion['questionTitle'],
+                    'questionID' => $firstQuestion['questionID'],
                     'difficulty' => $firstQuestion['difficultyName'],
                     'repository' => $firstQuestion['repositoryName'],
                     'questionTypeName' => $firstQuestion['questionTypeName'],
