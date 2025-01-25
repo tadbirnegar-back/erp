@@ -139,6 +139,7 @@ class CourseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
+        return $result;
         $response = new CourseListResource($result);
 
         return $response;

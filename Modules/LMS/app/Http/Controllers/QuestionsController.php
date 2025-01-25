@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\questionsTrait;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
@@ -75,7 +76,7 @@ class QuestionsController extends Controller
     {
         try {
             $show = $this->dropDowns($courseID);
-            return $show;
+//            return $show;
             if (!$show) {
                 return response()->json([
                     'error' => 'Course not found.'
@@ -100,7 +101,7 @@ class QuestionsController extends Controller
                 ], 404);
             }
             $question = $this->questionList($id);
-            return $question;
+//
             return new QuestionManagementResource(collect($question));
         } catch (\Exception $e) {
             return response()->json([
@@ -168,7 +169,8 @@ class QuestionsController extends Controller
                 ], 404);
             }
 
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = User::find(68);
             if (!$user) {
                 return response()->json([
                     'message' => 'User not found'

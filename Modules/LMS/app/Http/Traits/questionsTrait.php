@@ -21,9 +21,9 @@ trait questionsTrait
         $query->where('status_lesson.status_id', $status->id);
         $query->select([
             'chapters.id as chapterID',
-            // 'chapters.title as chapterTitle',
+            'chapters.title as chapterTitle',
             'lessons.id as lessonID',
-            // 'lessons.title as lessonTitle',
+            'lessons.title as lessonTitle',
 //            'status_lesson.status_id',
             'status_lesson.status_id as stu_id'
         ]);
@@ -113,26 +113,30 @@ trait questionsTrait
 
     public function count($id)
     {
-
-        $status = Status::where('name', self::$active)->firstOrFail();
-
+        $status = Status::where('name', $this::$active)->firstOrFail();
 
         $course = Course::with(['chapters.lessons.questions' => function ($query) use ($status) {
             $query->where('status_id', $status->id);
         }])->find($id);
 
+        $activeLessons = \DB::table('lessons')
+            ->join('status_lesson', 'lessons.id', '=', 'status_lesson.lesson_id')
+            ->where('status_lesson.status_id', $status->id)
+            ->pluck('lessons.id');
 
         $chaptersCount = $course->chapters->count();
-        $lessonsCount = $course->chapters->sum(fn($chapter) => $chapter->lessons->count());
-        $questionsCount = $course->chapters->sum(fn($chapter) => $chapter->lessons->sum(fn($lesson) => $lesson->questions->count())
 
-        );
+        $lessonsCount = $course->chapters->sum(function ($chapter) use ($activeLessons) {
+            return $chapter->lessons->whereIn('id', $activeLessons)->count();
+        });
+
+        $questionsCount = $course->chapters->sum(fn($chapter) => $chapter->lessons->sum(fn($lesson) => $lesson->questions->where('status_id', $status->id)->count()));
+
 
         return [
             'chapters' => $chaptersCount,
             'lessons' => $lessonsCount,
-            'questions' => $questionsCount,
-        ];
+            'questions' => $questionsCount];
     }
 
     public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs)

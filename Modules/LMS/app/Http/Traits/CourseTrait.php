@@ -60,6 +60,7 @@ trait CourseTrait
         $query->withCount([
             'chapters',
             'lessons',
+            'status_lesson',
             'questions as active_questions_count' => function ($query) use ($status) {
                 $query->where('status_id', $status->id);
             },
