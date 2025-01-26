@@ -895,9 +895,19 @@ trait EnactmentTrait
                     }]);
 
             }],
-            'ConsultingReviewCards' => ['consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
-                $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
-            },
+            'ConsultingReviewCards' => [
+                'members' => function ($query) use ($user) {
+                    $query->where('employee_id', $user->id)
+                        ->with([
+                            'roles' => function ($q) {
+                                $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value, RolesEnum::OZV_HEYAT_FREEZONE])
+                                    ->orWhereIn('name', [RolesEnum::KARSHENAS_MASHVARATI->value, RolesEnum::KARSHENAS_MASHVERATI_FREEZONE])
+                                    ->distinct();
+                            }]);
+                },
+                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+                },
             ],
             'BoardReviewCards' => ['boardMembers.enactmentReviews' => function ($query) use ($enactment) {
                 $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
