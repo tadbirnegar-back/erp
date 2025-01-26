@@ -1,0 +1,82 @@
+<?php
+
+namespace Modules\LMS\app\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Modules\LMS\app\Http\Traits\SettingTrait;
+
+class SettingController extends Controller
+{
+    use SettingTrait;
+
+    public array $data = [];
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): JsonResponse
+    {
+        $dropDowns = $this->showDropDowns();
+
+        return response()->json($dropDowns);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validatedData = $request->validate([
+            'Difficulty' => 'required|integer',
+            'questionType' => 'required|integer',
+            'questionNumber' => 'required|integer',
+            'timePerQuestion' => 'required|integer'
+        ]);
+
+        try {
+            $insert = $this->dataToInsert($validatedData);
+
+            return response()->json([
+                'message' => 'Settings saved successfully!',
+                'data' => $insert,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to save settings.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Show the specified resource.
+     */
+    public function show($id): JsonResponse
+    {
+        //
+
+        return response()->json($this->data);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        //
+
+        return response()->json($this->data);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id): JsonResponse
+    {
+        //
+
+        return response()->json($this->data);
+    }
+}

@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\Log;
 use Modules\AAA\app\Models\User;
+use Modules\AddressMS\app\Models\Village;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\SettingsEnum;
@@ -130,7 +132,7 @@ class OrganizationUnit extends Model
 
 
         $meetingtypeId = \DB::table('meeting_types')
-            ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->whereIn('title', MeetingTypeEnum::HEYAAT_MEETING->value)
             ->value('id');
 
         return $this->hasOne(Meeting::class, 'ounit_id')
@@ -155,6 +157,44 @@ class OrganizationUnit extends Model
 
     }
 
+    public function firstFreeMeetingByNowForFreeZone(): HasOne
+    {
+        // Fetch the max days for reception from settings
+        $maxDays = \DB::table('settings')
+            ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
+            ->value('value');
+
+        // Fetch the enactment limit per meeting from settings
+        $enactmentLimitPerMeeting = \DB::table('settings')
+            ->where('key', SettingsEnum::ENACTMENT_LIMIT_PER_MEETING->value)
+            ->value('value');
+
+
+        $meetingtypeId = \DB::table('meeting_types')
+            ->where('title', MeetingTypeEnum::FREE_ZONE->value)
+            ->value('id');
+
+        return $this->hasOne(Meeting::class, 'ounit_id')
+            ->where('meeting_type_id', $meetingtypeId)
+            ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)])
+            ->whereNotExists(function ($query) use ($enactmentLimitPerMeeting) {
+                $query->selectRaw('1')
+                    ->from('enactment_meeting')
+                    ->join('enactments', 'enactments.id', '=', 'enactment_meeting.enactment_id')
+                    ->whereColumn('enactment_meeting.meeting_id', 'meetings.id')
+                    ->whereNotExists(function ($subQuery) {
+                        $subQuery->selectRaw('1')
+                            ->from('enactment_status')
+                            ->join('statuses', 'statuses.id', '=', 'enactment_status.status_id')
+                            ->whereColumn('enactment_status.enactment_id', 'enactments.id')
+                            ->where('statuses.name', '=', EnactmentStatusEnum::CANCELED->value); // Exclude enactments with "باطل شده"
+                    })
+                    ->groupBy('enactment_meeting.meeting_id')
+                    ->havingRaw('COUNT(DISTINCT enactment_meeting.enactment_id) >= ?', [$enactmentLimitPerMeeting]);
+            })
+            ->orderBy('meeting_date', 'asc');
+
+    }
 
     public function fullMeetingsByNow(): HasMany
     {
@@ -171,6 +211,44 @@ class OrganizationUnit extends Model
 
         $meetingtypeId = \DB::table('meeting_types')
             ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->value('id');
+        // Fetch all the meetings that have reached or exceeded the enactment limit
+        return $this->hasMany(Meeting::class, 'ounit_id')
+            ->where('meeting_type_id', $meetingtypeId)
+            ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)]) // Filter by meeting date range
+            ->whereExists(function ($query) use ($enactmentLimitPerMeeting) {
+                $query->selectRaw('1')
+                    ->from('enactment_meeting')
+                    ->join('enactments', 'enactments.id', '=', 'enactment_meeting.enactment_id') // Join enactments table
+                    ->whereColumn('enactment_meeting.meeting_id', 'meetings.id') // Match meeting IDs
+                    ->whereNotExists(function ($subQuery) {
+                        $subQuery->selectRaw('1')
+                            ->from('enactment_status')
+                            ->join('statuses', 'statuses.id', '=', 'enactment_status.status_id') // Join statuses table
+                            ->whereColumn('enactment_status.enactment_id', 'enactments.id') // Match enactment IDs
+                            ->where('statuses.name', '=', EnactmentStatusEnum::CANCELED->value); // Exclude enactments with this status
+                    })
+                    ->groupBy('enactment_meeting.meeting_id') // Group by meeting
+                    ->havingRaw('COUNT(DISTINCT enactment_meeting.enactment_id) >= ?', [$enactmentLimitPerMeeting]); // Check enactment count
+            })
+            ->orderBy('meeting_date', 'asc'); // Order by meeting date
+
+    }
+    public function fullMeetingsByNowForFreeZone(): HasMany
+    {
+        // Fetch the max days for reception from settings
+        $maxDays = \DB::table('settings')
+            ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
+            ->value('value');
+
+        // Fetch the enactment limit per meeting from settings
+        $enactmentLimitPerMeeting = \DB::table('settings')
+            ->where('key', SettingsEnum::ENACTMENT_LIMIT_PER_MEETING->value)
+            ->value('value');
+
+
+        $meetingtypeId = \DB::table('meeting_types')
+            ->where('title', MeetingTypeEnum::FREE_ZONE->value)
             ->value('id');
         // Fetch all the meetings that have reached or exceeded the enactment limit
         return $this->hasMany(Meeting::class, 'ounit_id')
@@ -217,6 +295,12 @@ class OrganizationUnit extends Model
             ])
             ->where('isTemplate', '=', false)
             ->where('meeting_type_id', $meetingType->id);
+    }
+
+
+    public function villageWithFreeZone() : HasMany
+    {
+        return $this->hasMany(VillageOfc::class, 'free_zone_id' , 'unitable_id');
     }
 
     public function meetingMembers()

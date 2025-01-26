@@ -71,5 +71,18 @@ class AnswerSheet extends Model
         );
     }
 
+    public function questionType()
+    {
+        return $this->hasOneThrough(
+            QuestionType::class,
+            Exam::class,
+            'id',
+            'id',
+            'exam_id',
+            'questions_type_id'
+        );
+
+    }
+
 
 }

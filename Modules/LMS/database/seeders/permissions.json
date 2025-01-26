@@ -106,5 +106,42 @@
         "slug": "/lms/course/related-courses-list",
         "moduleName" : "LMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مدیریت دروس دوره",
+        "slug": "/lms/publish/course/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+
+    {
+        "name": "انتشار دوره",
+        "slug": "/lms/course/make-publish/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف دوره",
+        "slug": "/lms/course/delete/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لغو دوره",
+        "slug": "/lms/course/cancel/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف درس",
+        "slug": "/lms/lesson/delete/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست آزمون های من",
+        "slug": "/lms/exam-result/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
     }
 ]
