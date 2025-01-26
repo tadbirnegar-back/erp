@@ -78,7 +78,7 @@ trait questionsTrait
             ->joinRelationship('chapters.lessons.questions.options')
             ->joinRelationship('chapters.lessons.questions.repository')
             ->joinRelationship('chapters.lessons.questions.questionType')
-            ->joinRelationship('chapters.lessons.questions.answers.answerSheet', [
+            ->leftJoinRelationship('chapters.lessons.questions.answers.answerSheet', [
                 'chapters' => fn($join) => $join->as('chapters_alias'),
                 'lessons' => fn($join) => $join->as('lessons_alias'),
                 'answers' => fn($join) => $join->as('answers_alias'),
