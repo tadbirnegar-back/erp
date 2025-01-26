@@ -163,7 +163,7 @@ class QuestionsController extends Controller
             $question = Question::find($questionID);
             if (!$question) {
                 return response()->json([
-                    'message' => 'Question not found'
+                    'message' => 'سوال یافت نشد'
                 ], 404);
             }
 
