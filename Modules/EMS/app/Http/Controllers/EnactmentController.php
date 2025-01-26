@@ -85,7 +85,6 @@ class EnactmentController extends Controller
         $user = Auth::user();
         $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
 
-
         try {
             $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
                 $q->with('organizationUnit.descendantsAndSelf');
@@ -110,27 +109,49 @@ class EnactmentController extends Controller
     {
         $user = Auth::user();
         $user->load(['activeFreeZoneRecruitmentScript.organizationUnit']);
+        $user->load('employee');
         $freezoneIds = $user->activeFreeZoneRecruitmentScript->pluck('organizationUnit.unitable_id');
 
-        $ounitsAzad = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
-            ->with('organizationUnit')
-            ->get()
-            ->pluck('organizationUnit');
+        if(!empty($freezoneIds[0])){
 
+            $ounitsAzad = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
+                ->with('organizationUnit')
+                ->get()
+                ->pluck('organizationUnit');
+            try {
+                $data = $request->all();
+                $enactments = $this->indexPendingForFreeZoneEnactment($data, $ounitsAzad->pluck('id')->toArray(), $user->id);
 
-        try {
+                $statuses = Enactment::GetAllStatuses();
+                $enactmentReviews = EnactmentReview::GetAllStatuses();
+                return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $ounitsAzad->pluck('id')->toArray(),
+                ]);
+            } catch (Exception $e) {
+                return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
+            }
+        }else{
+            $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
 
+            try {
+                $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
+                    $q->with('organizationUnit.descendantsAndSelf');
+                }])?->activeRecruitmentScript?->pluck('organizationUnit.descendantsAndSelf')
+                    ->flatten()
+                    ->pluck('id')
+                    ->toArray();
 
-            $data = $request->all();
-            $enactments = $this->indexPendingForArchiveStatusEnactment($data, $ounitsAzad->pluck('id')->toArray(), $user->id);
+                $data = $request->all();
+                $enactments = $this->indexPendingForFreeZoneByDistricStatusEnactment($data, $ounits, $user->id);
 
-            $statuses = Enactment::GetAllStatuses();
-            $enactmentReviews = EnactmentReview::GetAllStatuses();
-            return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $ounitsAzad->pluck('id')->toArray(),
-            ]);
-        } catch (Exception $e) {
-            return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
+                $statuses = Enactment::GetAllStatuses();
+                $enactmentReviews = EnactmentReview::GetAllStatuses();
+                return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'),
+                ]);
+            } catch (Exception $e) {
+                return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
+            }
         }
+
     }
 
     /**
@@ -161,7 +182,7 @@ class EnactmentController extends Controller
             $heyatOunit = OrganizationUnit::with([
                 'ancestorsAndSelf' => function ($query) {
                     $query->where('unitable_type', DistrictOfc::class)
-                        ->with(['meetingMembers' => function ($query) {
+                        ->with(['meetingMembersHeyat' => function ($query) {
                             $query->whereHas('roles', function ($query) {
                                 $query->where('name', RolesEnum::OZV_HEYAAT->value);
                             });
@@ -169,15 +190,16 @@ class EnactmentController extends Controller
                 },
             ])->find($data['ounitID']);
 
-            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembersHeyat;
+
 
             if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 
-            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->load('meetingMembers');
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->load('meetingMembersHeyat');
 
-            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembersHeyat;
 
 
             if (isset($data['meetingID'])) {
@@ -358,7 +380,6 @@ class EnactmentController extends Controller
 
         }
     }
-
     public function addEnactmentFreeZone(Request $request)
     {
         try {
@@ -385,12 +406,6 @@ class EnactmentController extends Controller
             $free_zone_id = VillageOfc::find($village_id)->free_zone_id;
 
 
-
-            $freeZoneOunit = OrganizationUnit::with('meetingMembers')
-                ->where('unitable_type', FreeZone::class)
-                ->where('unitable_id', $free_zone_id)
-                ->first();
-
             $heyatOunit = OrganizationUnit::with([
                 'ancestorsAndSelf' => function ($query) {
                     $query->where('unitable_type', DistrictOfc::class)
@@ -402,16 +417,28 @@ class EnactmentController extends Controller
                 },
             ])->find($data['ounitID']);
 
-            $heyaatTemplateMembers = $freeZoneOunit->meetingMembers;
+            $heyatOunitForMember = OrganizationUnit::with([
+                'ancestorsAndSelf' => function ($query) {
+                    $query->where('unitable_type', DistrictOfc::class)
+                        ->with(['meetingMembersAzad' => function ($query) {
+                            $query->whereHas('roles', function ($query) {
+                                $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                            });
+                        }]);
+                },
+            ])->find($data['ounitID']);
+
+
+            $heyaatTemplateMembers = $heyatOunitForMember->ancestorsAndSelf[0]?->meetingMembersAzad;
 
 
             if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 
-//            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->load('meetingMembers');
-//
-//            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
+            $heyaatTemplateMembers = $heyatOunitForMember->ancestorsAndSelf[0]?->load('meetingMembersAzad');
+
+            $heyaatTemplateMembers = $heyatOunitForMember->ancestorsAndSelf[0]?->meetingMembersAzad;
 
 
             if (isset($data['meetingID'])) {
@@ -431,12 +458,9 @@ class EnactmentController extends Controller
                     ], 422);
                 }
 
-                $MeetingTypeFreeZoneId = MeetingType::where('title', MeetingTypeEnum::FREE_ZONE->value)->first()->id;
-                if ($data['meetingType'] == $MeetingTypeFreeZoneId) {
-                    $meetingTypeEnum = MeetingTypeEnum::FREE_ZONE;
-                } else {
-                    $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
-                }
+
+                $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
+
                 //Shura Meeting
                 $data['meetingTypeID'] = MeetingType::where('title', '=', $meetingTypeEnum)->first()->id;
 
@@ -853,7 +877,7 @@ class EnactmentController extends Controller
 
     }
 
-    public function enactmentNoInconsistency(Request $request , $id)
+    public function enactmentNoInconsistency(Request $request, $id)
     {
         try {
             DB::beginTransaction();
@@ -872,7 +896,7 @@ class EnactmentController extends Controller
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {
-                    $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                    $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
                 })->with('status')->get();
 
             if ($reviewStatuses->count() > 1) {

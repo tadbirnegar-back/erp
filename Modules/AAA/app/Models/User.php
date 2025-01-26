@@ -18,9 +18,11 @@ use Modules\EMS\app\Models\MR;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
+use Modules\HRMS\app\Http\Enums\FreezoneScriptTypeEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -236,9 +238,36 @@ class User extends Authenticatable
 //        });
     }
 
+
+    public function activeRecruitmentScriptsFreeZone()
+    {
+
+        return $this->recruitmentScriptsFreeZon()
+//            ->whereHas('latestStatus', function ($query) {
+//            $query
+            ->join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
+            ->join('statuses as s', 'rss.status_id', '=', 's.id')
+            ->where('s.name', 'فعال')
+            ->where('rss.create_date', function ($subQuery) {
+                $subQuery->selectRaw('MAX(create_date)')
+                    ->from('recruitment_script_status as sub_rss')
+                    ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
+            }
+            );
+//        });
+    }
+
+
     public function activeRecruitmentScript()
     {
         return $this->activeRecruitmentScripts()->whereHas('scriptType', function ($query) {
+            $query->where('origin_id', ScriptTypeOriginEnum::Main->value);
+        });
+    }
+
+    public function activeRecruitmentScriptFz()
+    {
+        return $this->activeRecruitmentScriptsFreeZone()->whereHas('scriptType', function ($query) {
             $query->where('origin_id', ScriptTypeOriginEnum::Main->value);
         });
     }
@@ -257,10 +286,24 @@ class User extends Authenticatable
 //            ->orderBy('recruitment_scripts.start_date', 'desc');
     }
 
+    public function activeRsForSearchFz()
+    {
+        return $this->activeRecruitmentScripts()
+            ->join('organization_units', 'recruitment_scripts.organization_unit_id', '=', 'organization_units.id')
+            ->where('organization_units.unitable_type', FreeZone::class)
+            ->orderBy('recruitment_scripts.start_date', 'desc')//            ->select('recruitment_scripts.*')
+            ; // Add the necessary columns here
+
+//        return $this->activeRecruitmentScripts()->whereHas('ounit', function ($query) {
+//            $query->where('organization_units.unitable_type', DistrictOfc::class);
+//        })
+//            ->orderBy('recruitment_scripts.start_date', 'desc');
+    }
+
 
     public function activeFreeZoneRecruitmentScript()
     {
-        return $this->activeRecruitmentScripts()
+        return $this->activeRecruitmentScriptFz()
             ->join('organization_units as ounit_alias', 'recruitment_scripts.organization_unit_id', '=', 'ounit_alias.id')
             ->where('ounit_alias.unitable_type', FreeZone::class)
             ->orderBy('recruitment_scripts.start_date', 'desc')//            ->select('recruitment_scripts.*')
@@ -271,6 +314,8 @@ class User extends Authenticatable
 //        })
 //            ->orderBy('recruitment_scripts.start_date', 'desc');
     }
+
+
 
 
     public function activeCityRecruitmentScript()
@@ -309,6 +354,30 @@ class User extends Authenticatable
                 'id' // Local key on the employees table...
             ]
         );
+    }
+
+    public function recruitmentScriptsFreeZon()
+    {
+        $scriptTypeHeyaat = FreezoneScriptTypeEnum::ADD_RC_OZV_HEYAAT;
+        $scriptTypeDabir = FreezoneScriptTypeEnum::ADD_RC_DABIR;
+        $scriptTypeBoss = FreezoneScriptTypeEnum::ADD_RC_RAIES;
+        $scriptId = ScriptType::whereIn('title' , [$scriptTypeHeyaat , $scriptTypeDabir , $scriptTypeBoss])->get()->pluck('id')->toArray();
+        return $this->hasManyDeep(
+            RecruitmentScript::class,
+            [Person::class, WorkForce::class, Employee::class],
+            [
+                'id', // Foreign key on the persons table...
+                'person_id', // Foreign key on the workforces table...
+                'id', // Foreign key on the employees table...
+                'employee_id' // Foreign key on the recruitment_scripts table...
+            ],
+            [
+                'person_id', // Local key on the users table...
+                'id', // Local key on the persons table...
+                'workforceable_id', // Local key on the workforces table...
+                'id' // Local key on the employees table...
+            ]
+        )->whereIn('script_type_id', $scriptId);
     }
 
     public function latestRecruitmentScript()

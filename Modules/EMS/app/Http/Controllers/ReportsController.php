@@ -51,7 +51,7 @@ class ReportsController extends Controller
 
         $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
 
-        $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten();
+        $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten()->unique('name');
 
         if ($request->ounitID) {
             $ounit = OrganizationUnit::with('ancestorsAndSelf')->find($request->ounitID);
@@ -273,7 +273,7 @@ class ReportsController extends Controller
 
             }])->find($request->ounitID);
 
-            $meetingType = MeetingType::where('title', 'جلسه هیئت تطبیق')->first();
+            $meetingType = MeetingType::whereIn('title', ['جلسه هیئت تطبیق' , MeetingTypeEnum::FREE_ZONE->value])->first();
 
             $ounit = $childOunits->load(['children.meetings' => function ($query) use ($meetingType, $startDate, $endDate) {
                 $query->whereBelongsTo($meetingType, 'meetingType')
