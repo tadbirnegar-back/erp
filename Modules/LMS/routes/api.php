@@ -7,11 +7,9 @@ use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\CourseCourseController;
 use Modules\LMS\app\Http\Controllers\CourseOunitFeatureController;
 use Modules\LMS\app\Http\Controllers\LessonController;
-use Modules\LMS\app\Http\Controllers\OptionController;
 use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
-use Modules\LMS\app\Http\Controllers\QuestionController;
 use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 
@@ -45,8 +43,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
     Route::post('/lms/courses/questions/list', [\Modules\LMS\app\Http\Controllers\CourseController::class, 'courseList']);
     Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
-    Route::post('/lms/add/questions', [QuestionController::class, 'store']);
-    Route::post('/lms/add/options', [OptionController::class, 'store']);
+
     Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
     Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
     Route::get('/lms/chapter/delete/{id}', [ChapterController::class, 'delete']);
@@ -68,11 +65,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
     Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
-
-    Route::post('/lms/edit/questions/{id}', [QuestionController::class, 'editQuestion']);
-    Route::post('/lms/delete/questions/{id}', [QuestionController::class, 'destroyQuestion']);
-    Route::post('/lms/edit/options/{id}', [OptionController::class, 'editOption']);
-    Route::post('/lms/delete/options/{id}', [OptionController::class, 'destroyOption']);
 
 
 });
