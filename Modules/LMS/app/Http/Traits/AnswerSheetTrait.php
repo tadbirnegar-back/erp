@@ -50,7 +50,9 @@ trait AnswerSheetTrait
             if (empty($qA['option_id'])) {
                 $value = null;
             } else {
+
                 $option = Option::where('id', $qA['option_id'])->first();
+
                 $value = $option->title;
                 $optionIDs[] = $option->id;
             }
@@ -121,7 +123,7 @@ trait AnswerSheetTrait
         $declinedStatus = $this->answerSheetDeclinedStatus();
 
         if ($approvedStatus && $declinedStatus) {
-            $isPassingScore = Setting::where('pass_score', '<=', $score)->exists();
+            $isPassingScore = Setting::where('pass_score', '<=', $score);
 
             return $isPassingScore ? $approvedStatus : $declinedStatus;
         }
