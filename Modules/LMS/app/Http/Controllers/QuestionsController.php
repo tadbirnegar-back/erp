@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\questionsTrait;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
 use Modules\LMS\app\Resources\QuestionManagementResource;
@@ -76,13 +76,11 @@ class QuestionsController extends Controller
     {
         try {
             $show = $this->dropDowns($courseID);
-//            return $show;
             if (!$show) {
                 return response()->json([
                     'error' => 'Course not found.'
                 ], 403);
             }
-//            return $show;
             return new QuestionResource(collect($show));
         } catch (\Exception $e) {
             return response()->json([
@@ -101,7 +99,7 @@ class QuestionsController extends Controller
                 ], 404);
             }
             $question = $this->questionList($id);
-//
+
             return new QuestionManagementResource(collect($question));
         } catch (\Exception $e) {
             return response()->json([
@@ -169,18 +167,22 @@ class QuestionsController extends Controller
                 ], 404);
             }
 
-//            $user = Auth::user();
-            $user = User::find(68);
+            $user = Auth::user();
             if (!$user) {
                 return response()->json([
                     'message' => 'User not found'
                 ], 404);
             }
+            $courseID = Course::joinRelationship('chapters.lessons.questions.answers.answerSheet')->select([
+                'courses.id as courseID',
+            ])->get();
+
 
             $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs);
             if ($updateResult) {
                 return response()->json([
-                    'message' => 'Question updated successfully'
+                    'message' => 'Question updated successfully',
+                    'course_id' => $courseID->unique()
                 ], 200);
             }
 

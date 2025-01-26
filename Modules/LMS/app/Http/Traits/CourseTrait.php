@@ -37,16 +37,25 @@ trait CourseTrait
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $status = Status::where('name', self::$active)->firstOrFail();
-
         $searchTerm = $data['name'] ?? null;
+        $status = Status::where('name', $this::$active)->firstOrFail();
 
-        $query = Course::joinRelationship('cover')
+        $query = Course::query()
+            ->joinRelationship('cover')
+            ->leftJoinRelationship('chapters.lessons.lessonStatus', [
+                'lessonStatus' => fn($join) => $join->on('status_lesson.status_id', DB::raw($status->id))
+            ])
+            ->leftJoinRelationship('chapters.lessons.questions', [
+                'questions' => fn($join) => $join->on('questions.status_id', DB::raw($status->id))
+            ])
             ->addSelect([
-                'courses.id',
+                'courses.id as course_id',
                 'courses.title',
                 'courses.cover_id',
                 'files.slug as cover_slug',
+                'chapters.id as chapter_id',
+                'lessons.id as lesson_id',
+                'questions.id as question_id'
             ])
             ->whereHas('statusCourse.status', function ($query) {
                 $query->whereIn('name', [
@@ -54,31 +63,16 @@ trait CourseTrait
                     $this::$pishnevis,
                     $this::$waitToPresent,
                 ]);
-            })
-            ->with(['statusCourse.status']);
-
-        $query->withCount([
-            'chapters',
-            'lessons',
-            'status_lesson',
-            'questions as active_questions_count' => function ($query) use ($status) {
-                $query->where('status_id', $status->id);
-            },
-        ]);
-
-
-        $query
-            ->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
             });
 
-        $query->when($searchTerm, function ($query, $searchTerm) {
-            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        $query->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
         });
+
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
+
 
     public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {

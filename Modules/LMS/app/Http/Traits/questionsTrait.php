@@ -24,11 +24,10 @@ trait questionsTrait
             'chapters.title as chapterTitle',
             'lessons.id as lessonID',
             'lessons.title as lessonTitle',
-//            'status_lesson.status_id',
             'status_lesson.status_id as stu_id'
         ]);
         return $query->where('courses.id', $courseID)
-//            ->where('status_lesson.status_id', $status->id)
+            ->where('status_lesson.status_id', $status->id)
             ->get();
     }
 
@@ -142,11 +141,6 @@ trait questionsTrait
     public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs)
     {
         $question = Question::find($questionID);
-//        $query = Course::joinRelationship('chapters.lessons.questions.answers.answerSheet')->select([
-//            'questions.id as question_id',
-//            'answers.question_id as answerQuestionID',
-//            'courses.id as courseID',
-//        ]);
 
         foreach ($repositoryIDs as $repositoryID) {
 
@@ -160,7 +154,7 @@ trait questionsTrait
                 'creator_id' => $user->id
             ]);
             foreach ($delete as $optionToDelete) {
-                $this->deleteOption($optionToDelete);
+                $this->deleteOptions($optionToDelete);
             }
 
             $optionsData = [];
@@ -184,12 +178,11 @@ trait questionsTrait
         return $question;
     }
 
-    public function deleteOption($option_id)
+    public function deleteOptions(array $option_ids)
     {
-        $option = Option::find($option_id);
-        if ($option) {
-            $option->delete();
-        }
+        Option::whereIn('id', $option_ids)->delete();
+        return response()->json(['message' => 'Options deleted successfully.'], 200);
+
     }
 
 

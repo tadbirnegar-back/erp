@@ -11,37 +11,43 @@ class CourseListResource extends ResourceCollection
     public function __construct($resource)
     {
         parent::__construct($resource);
-        $this->baseUrl = url('/'); // Initialize base URL
+        $this->baseUrl = url('/');
     }
 
-    /**
-     * Transform the resource collection into an array.
-     */
+
     public function toArray($request): array
     {
-        //null check
-
         return [
             'data' => $this->collection->transform(function ($item) {
+                $distinctChaptersCount = $item->chapters->filter()->unique()->count();
+                $distinctLessonsCount = $item->chapters->flatMap->lessons->filter()->unique()->count();
+                $distinctQuestionsCount = $item->chapters->flatMap->lessons->flatMap->questions
+                    ->filter(function ($question) {
+                        return $question->status->name == 'فعال';
+                    })->filter()->unique()->count();
+
+
+                $statuses = $item->statusCourse->map(function ($statusCourse) {
+                    return [
+                        'name' => $statusCourse->status->name ?? null,
+                        'className' => $statusCourse->status->class_name ?? null,
+                    ];
+                })->filter()->values()->toArray();
+
                 return [
-                    'id' => $item->id,
-                    'title' => $item->title,
-
-                    'cover' => $item->cover_slug ? [
-                        'slug' => url($item->cover_slug),
+                    'id' => $item['course_id'],
+                    'title' => $item['title'],
+                    'cover' => $item['cover_slug'] ? [
+                        'slug' => url($item['cover_slug']),
                     ] : null,
-                    'statuses' => [
-                        'name' => $item->latestStatus->name,
-                        'className' => $item->latestStatus->class_name,
-                    ],
+                    'statuses' => $statuses,
                     'counts' => [
-                        'chapters' => $item->chapters_count ?? 0,
-                        'lessons' => $item->lessons_count ?? 0,
-                        'questions' => $item->questions_count ?? 0,
+                        'questions' => $distinctQuestionsCount,
+                        'chapters' => $distinctChaptersCount,
+                        'lessons' => $distinctLessonsCount,
                     ],
-
                 ];
-            }),
+            })->unique()->all(),
         ];
     }
 }
