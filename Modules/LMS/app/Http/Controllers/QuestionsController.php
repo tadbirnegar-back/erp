@@ -96,7 +96,7 @@ class QuestionsController extends Controller
             if (!$id) {
                 return response()->json([
                     'error' => 'CourseID not found.'
-                ], 404);
+                ], 403);
             }
             $question = $this->questionList($id);
 
