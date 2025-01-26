@@ -5,6 +5,7 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
 use Modules\LMS\app\Http\Traits\ExamResultTrait;
 use Modules\LMS\app\Models\Answers;
@@ -47,7 +48,8 @@ class ExamResultController extends Controller
 
     public function showAns($answerSheetID)
     {
-        $student = Auth::user()->load('student');
+//        $student = Auth::user()->load('student');
+        $student = User::with('student')->find(68);
 
         $data = [
             'questions' => Answers::where('answer_sheet_id', $answerSheetID)
