@@ -53,6 +53,8 @@ class ReportsController extends Controller
 
         $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten()->unique('name');
 
+
+
         if ($request->ounitID) {
             $ounit = OrganizationUnit::with('ancestorsAndSelf')->find($request->ounitID);
         } else {
@@ -61,7 +63,7 @@ class ReportsController extends Controller
 
         $user->load('person.avatar', 'mr');
 
-        $meetingType = MeetingType::whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING->value , MeetingTypeEnum::FREE_ZONE->value])->first();
+        $meetingType = MeetingType::whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING->value , MeetingTypeEnum::FREE_ZONE->value])->get();
 
         $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
             $query->where('employee_id', $employeeId);
