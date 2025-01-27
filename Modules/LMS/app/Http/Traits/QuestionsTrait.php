@@ -2,7 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Modules\LMS\app\Http\Enums\QuestionsEnum;
+use Modules\LMS\App\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Question;
 use Nwidart\Modules\Collection;
 

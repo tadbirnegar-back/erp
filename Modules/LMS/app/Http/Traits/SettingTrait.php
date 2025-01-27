@@ -2,7 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Modules\LMS\app\Http\Enums\SettingEnum;
+use Modules\LMS\App\Http\Enums\SettingEnum;
 use Modules\LMS\app\Models\Difficulty;
 use Modules\LMS\app\Models\QuestionType;
 use Modules\SettingsMS\app\Models\Setting;

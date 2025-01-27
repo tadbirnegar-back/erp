@@ -7,6 +7,7 @@ use Modules\HRMS\app\Http\Controllers\HireTypeController;
 use Modules\HRMS\app\Http\Controllers\HRMConfigController;
 use Modules\HRMS\app\Http\Controllers\JobController;
 use Modules\HRMS\app\Http\Controllers\LevelController;
+use Modules\HRMS\app\Http\Controllers\NewScriptController;
 use Modules\HRMS\app\Http\Controllers\PositionController;
 use Modules\HRMS\app\Http\Controllers\RecruitmentScriptController;
 use Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController;
@@ -145,7 +146,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/hrm/rc/insert/add', [RecruitmentScriptController::class, 'store']);
 
 
-
     Route::post('/hrm/isar-types/list', [EmployeeController::class, 'isarsStatusesIndex']);
 
     Route::post('/hrm/relative-types/list', [EmployeeController::class, 'relativeTypesIndex']);
@@ -168,8 +168,11 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::get('/hrm/ptprc/list', [RecruitmentScriptController::class, 'ptpIndex']);
 
-//    Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
+    Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
 
     Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
 
 });
+Route::post('/hrm/new/req/script', [NewScriptController::class, 'indexVillage']);
+Route::post('/hrm/request-new-Supervisor', [NewScriptController::class, 'storeSarParast']);
+Route::post('/hrm/district/show', [NewScriptController::class, 'districtsDropDown']);

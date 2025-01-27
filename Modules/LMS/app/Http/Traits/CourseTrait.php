@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\DB;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\Position;
-use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
-use Modules\LMS\app\Http\Enums\CourseStatusEnum;
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\App\Http\Enums\AnswerSheetStatusEnum;
+use Modules\LMS\App\Http\Enums\CourseStatusEnum;
+use Modules\LMS\App\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
@@ -618,7 +618,7 @@ trait CourseTrait
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
-            ->leftJoinRelationshipUsingAlias('privacy' , 'privacy_alias')
+            ->leftJoinRelationshipUsingAlias('privacy', 'privacy_alias')
             ->leftJoinRelationship('preReqForJoin.preReqCourse', [
                 'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
                     ->on('pre_req_pivot_alias.main_course_id', 'courses.id'),
