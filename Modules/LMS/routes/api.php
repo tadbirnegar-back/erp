@@ -11,6 +11,7 @@ use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
 use Modules\LMS\app\Http\Controllers\SettingController;
+use Modules\LMS\app\Http\Controllers\QuestionsController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 
 /*
@@ -66,15 +67,21 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
 
 
+
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
+    Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
     Route::post('/lms/register/course/{id}', [CourseController::class, 'registerCourse']);
     Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
+    Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
+    Route::get('/lms/pre-view/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'previewExam']);
+    Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
+    Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
     Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
     Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
     Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
@@ -86,6 +93,17 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/ouc-property-values/list', [OucPropertyValueController::class, 'listing']);
     Route::get('/lms/course-course/list/{id}', [CourseCourseController::class, 'listing']);
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
+    Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
+    Route::get('/lms/course/my-enrolled-courses', [CourseController::class, 'myEnrolledCourses']);
+    Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
+    Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
+    Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
+    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
+    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
+    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
+    Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
+    Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
+    Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
     Route::post('/lms/show/setting', [SettingController::class, 'index']);
     Route::post('/lms/store/setting', [SettingController::class, 'store']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);

@@ -9,6 +9,7 @@ use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
@@ -17,6 +18,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
 use Modules\PayStream\app\Models\ProcessStatus;
+use Modules\StatusMS\app\Models\Status;
 
 
 trait CourseTrait
@@ -30,18 +32,30 @@ trait CourseTrait
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
+    private static string $active = QuestionsEnum::ACTIVE->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
+        $status = Status::where('name', $this::$active)->firstOrFail();
 
-        $query = Course::joinRelationship('cover')
+        $query = Course::query()
+            ->joinRelationship('cover')
+            ->leftJoinRelationship('chapters.lessons.lessonStatus', [
+                'lessonStatus' => fn($join) => $join->on('status_lesson.status_id', DB::raw($status->id))
+            ])
+            ->leftJoinRelationship('chapters.lessons.questions', [
+                'questions' => fn($join) => $join->on('questions.status_id', DB::raw($status->id))
+            ])
             ->addSelect([
-                'courses.id',
+                'courses.id as course_id',
                 'courses.title',
                 'courses.cover_id',
                 'files.slug as cover_slug',
+                'chapters.id as chapter_id',
+                'lessons.id as lesson_id',
+                'questions.id as question_id'
             ])
             ->whereHas('statusCourse.status', function ($query) {
                 $query->whereIn('name', [
@@ -49,24 +63,16 @@ trait CourseTrait
                     $this::$pishnevis,
                     $this::$waitToPresent,
                 ]);
-            })
-            ->with(['statusCourse.status']);
-
-        $query->withCount(['chapters', 'lessons', 'questions']);
-
-
-        $query
-            ->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
             });
 
-        $query->when($searchTerm, function ($query, $searchTerm) {
-            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        $query->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
         });
+
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
+
 
     public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
@@ -618,7 +624,7 @@ trait CourseTrait
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
-            ->leftJoinRelationshipUsingAlias('privacy' , 'privacy_alias')
+            ->leftJoinRelationshipUsingAlias('privacy', 'privacy_alias')
             ->leftJoinRelationship('preReqForJoin.preReqCourse', [
                 'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
                     ->on('pre_req_pivot_alias.main_course_id', 'courses.id'),

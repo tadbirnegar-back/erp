@@ -18,11 +18,17 @@ class testController extends Controller
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
     use ExamsTrait;
 
-    public function run()
+    public function run($courseId)
     {
+        $student = User::with('student')->find(60);
 
-//        return Question::GetAllStatuses()
-//            ->firstWhere('name', '=', self::$active);
+        $query = AnswerSheet::joinRelationship('exam.courseExams.course')
+            ->where('courses.id', $courseId)
+            ->where('answer_sheets.student_id', $student->id)
+            ->exists();
+
+
+        return response()->json($query);
 
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
