@@ -17,7 +17,6 @@ class ShowExamQuestionResource extends ResourceCollection
 
         $questionTime = $questionTimeSetting ? $questionTimeSetting->value : 0;
         $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
-
         $totalTime = $questionTime * $examNumber;
 
         $grouped = $this->collection->groupBy('questionID');
@@ -40,7 +39,7 @@ class ShowExamQuestionResource extends ResourceCollection
 
         return [
             'totalTime' => $totalTime,
-            'time_per_question' => $questionTime,
+            'time_per_question' => $questionTime * 60,
             'examQuestions' => $questions,
         ];
     }
