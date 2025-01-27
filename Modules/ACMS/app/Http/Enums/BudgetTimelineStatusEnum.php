@@ -79,6 +79,7 @@ enum BudgetTimelineStatusEnum: string
             $keys = array_keys($statuses);
             $lastGreenIndex = null;
 
+            // Find the most recent valid status in the timeline
             foreach ($keys as $index => $statusKey) {
                 if (in_array($statusKey, $currentStatuses)) {
                     $lastGreenIndex = $index;
@@ -86,11 +87,19 @@ enum BudgetTimelineStatusEnum: string
             }
 
             if ($lastGreenIndex !== null) {
-                // Set the current status as primary
-                $statuses[$keys[$lastGreenIndex]]['class_name'] = 'primary';
+                // Set the next valid status as primary
+                if (isset($keys[$lastGreenIndex + 1])) {
+                    $statuses[$keys[$lastGreenIndex + 1]]['class_name'] = 'primary';
+                }
 
-                // Set upcoming statuses to mute
-                for ($i = $lastGreenIndex + 1; $i < count($keys); $i++) {
+                // Set all future statuses beyond the next valid one to mute
+                for ($i = $lastGreenIndex + 2; $i < count($keys); $i++) {
+                    $statuses[$keys[$i]]['class_name'] = 'mute';
+                }
+            } else {
+                // If the current status is not in the timeline, set the first timeline status as primary
+                $statuses[$keys[0]]['class_name'] = 'primary';
+                for ($i = 1; $i < count($keys); $i++) {
                     $statuses[$keys[$i]]['class_name'] = 'mute';
                 }
             }
@@ -98,6 +107,5 @@ enum BudgetTimelineStatusEnum: string
 
         return collect($statuses)->values();
     }
-
 
 }

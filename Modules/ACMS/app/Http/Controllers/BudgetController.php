@@ -4,8 +4,11 @@ namespace Modules\ACMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
+use DB;
 use Illuminate\Http\Request;
+use Mockery\Exception;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
+use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
 use Modules\ACMS\app\Models\Budget;
 use Modules\ACMS\app\Models\BudgetItem;
@@ -83,7 +86,7 @@ class BudgetController extends Controller
         }
         )->joinRelationship('statuses', [
             'statuses' => function ($join) {
-                $join->on('bgtBudget_status.id', '=', \DB::raw('(
+                $join->on('bgtBudget_status.id', '=', DB::raw('(
                                 SELECT id
                                 FROM bgtBudget_status AS ps
                                 WHERE ps.budget_id = bgt_budgets.id
@@ -137,9 +140,9 @@ class BudgetController extends Controller
             )
             ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::INCOME->value)
             ->select([
-                \DB::raw('SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS jari_income_total'),
-                \DB::raw('SUM(bgt_budget_items.proposed_amount) - SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS operational_income_total'),
-                \DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS jari_income_total'),
+                DB::raw('SUM(bgt_budget_items.proposed_amount) - SUM(bgt_budget_items.proposed_amount * COALESCE(bgt_budget_items.percentage, 0) / 100) AS operational_income_total'),
+                DB::raw('COUNT(*) as count'),
 
             ])
             ->first();
@@ -149,16 +152,16 @@ class BudgetController extends Controller
             )
             ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::ECONOMIC_EXPENSE->value)
             ->select([
-                \DB::raw('COUNT(*) as count'),
-                \DB::raw('SUM(bgt_budget_items.proposed_amount) AS economic_total'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(bgt_budget_items.proposed_amount) AS economic_total'),
             ])
             ->first();
         $operationalResults = BudgetItem::joinRelationship('circularItem.subject')
             ->where('budget_id', $id)
             ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::OPERATIONAL_EXPENSE->value)
             ->select([
-                \DB::raw('SUM(bgt_budget_items.proposed_amount) AS operational_total'),
-                \DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(bgt_budget_items.proposed_amount) AS operational_total'),
+                DB::raw('COUNT(*) as count'),
 
             ])
             ->first();
@@ -201,5 +204,54 @@ class BudgetController extends Controller
             ->get();
 
         return response()->json(['data' => $budget->toHierarchy()], 200);
+    }
+
+    public function changeBudgetStatus(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'budgetID' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            $budget = Budget::
+            with([
+                'latestStatus',
+            ])
+                ->find($request->budgetID);
+
+            if (is_null($budget)) {
+                return response()->json(['error' => 'بودجه مورد نظر یافت نشد'], 404);
+            }
+
+            $status = $budget->latestStatus->name;
+
+            $nextStatus = match ($status) {
+                BudgetStatusEnum::PROPOSED->value => BudgetStatusEnum::PENDING_FOR_APPROVAL->value,
+                BudgetStatusEnum::PENDING_FOR_APPROVAL->value => BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value,
+                BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value => BudgetStatusEnum::FINALIZED->value,
+                default => null,
+            };
+
+            if (is_null($nextStatus)) {
+                return response()->json(['error' => 'امکان تغییر وضعیت بودجه وجود ندارد'], 400);
+            }
+            $status = Budget::GetAllStatuses()->where('name', $nextStatus)->first();
+            $budget->statuses()->attach($status->id, [
+                'creator_id' => Auth::user()->id,
+                'create_date' => now(),
+            ]);
+            DB::commit();
+            return response()->json(['message' => 'وضعیت بودجه با موفقیت تغییر یافت'], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
     }
 }

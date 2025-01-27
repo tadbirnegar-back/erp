@@ -21,5 +21,6 @@
     "Controller": true,
     "CourseController": true,
     "ACMS": true,
-    "ACC": true
+    "ACC": true,
+    "BNK": true
 }

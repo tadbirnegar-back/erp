@@ -3,10 +3,12 @@
 namespace Modules\ACMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DB;
 use Illuminate\Http\Request;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
 use Modules\ACMS\app\Models\Budget;
+use Modules\ACMS\app\Models\BudgetItem;
 use Modules\ACMS\app\Models\CircularSubject;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\ACMS\app\Resources\BudgetItemsForMain;
@@ -29,7 +31,14 @@ class BudgetItemController extends Controller
         }
 
         $budget = Budget::joinRelationship('ounitFiscalYear.fiscalYear')
+            ->joinRelationship('statuses', [
+                'statuses' => function ($join) {
+                    $join
+                        ->whereRaw('bgtBudget_status.create_date = (SELECT MAX(create_date) FROM bgtBudget_status WHERE budget_id = bgt_budgets.id)');
+                }
+            ])
             ->addSelect([
+                'statuses.name as status_name',
                 'fiscal_years.id as fiscal_year_id',
                 'fiscal_years.name as fiscal_year_name',
                 'ounit_fiscalYear.ounit_id as ounit_id',
@@ -130,13 +139,16 @@ class BudgetItemController extends Controller
                         $join->where('ounit_id', $budget->ounit_id);
                     },
                     'document' => function ($join) use ($lastYearFiscal) {
-                        $join->where('fiscal_year_id', $lastYearFiscal->id);
+                        $join->where('fiscal_year_id', $lastYearFiscal?->id);
                     },
                 ])
                 ->leftJoinRelationshipUsingAlias('accounts.articles.document', [
                     'accounts' => function ($join) use ($budget) {
                         $join->as('3_months_last_year_acc')
                             ->where('ounit_id', $budget->ounit_id);
+                    },
+                    'articles' => function ($join) {
+                        $join->as('3_months_last_year_art');
                     },
                     'document' => function ($join) use ($lastYearStartOfQuarter, $lastYearEndOfQuarter) {
                         $join->as('3_months_last_year_doc')
@@ -147,6 +159,9 @@ class BudgetItemController extends Controller
                     'accounts' => function ($join) use ($budget) {
                         $join->as('9_months_current_year_acc')
                             ->where('ounit_id', $budget->ounit_id);
+                    },
+                    'articles' => function ($join) {
+                        $join->as('9_months_last_year_art');
                     },
                     'document' => function ($join) use ($startOfCurrentYear, $endOf9thMonthOfCurrentYear) {
                         $join->as('9_months_current_year_doc')
@@ -164,7 +179,7 @@ class BudgetItemController extends Controller
 //                },
                     'budgetItem' => function ($join) use ($currentYearBudget) {
                         $join->as('current_year_budget_item')
-                            ->where('budget_id', $currentYearBudget->id);
+                            ->where('budget_id', $currentYearBudget?->id);
                     },
                 ])
                 ->joinRelationshipUsingAlias('circularItem.budgetItem', [
@@ -180,27 +195,63 @@ class BudgetItemController extends Controller
                 ->select([
                     'bgt_circular_subjects.code as code',
                     'bgt_circular_subjects.name as name',
+                    'bgt_circular_subjects.id',
+                    'bgt_circular_subjects.parent_id',
 
                     \DB::raw('SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount'),
 
                     \DB::raw('SUM(COALESCE(current_year_budget_item.proposed_amount,0)) as current_year_proposed_amount'),
 
-                    \DB::raw('SUM(COALESCE(3_months_last_year_doc.proposed_amount,0)) as 3_months_last_year_proposed_amount'),
+                    \DB::raw('SUM(COALESCE(3_months_last_year_art.credit_amount,0)) - SUM(COALESCE(3_months_last_year_art.debt_amount,0)) as three_months_last_year_proposed_amount'),
 
-                    \DB::raw('SUM(COALESCE(9_months_current_year_doc.proposed_amount,0)) as 9_months_current_year_proposed_amount'),
+                    \DB::raw('SUM(COALESCE(9_months_last_year_art.credit_amount,0)) - SUM(COALESCE(9_months_last_year_art.debt_amount,0)) as nine_months_current_year_proposed_amount'),
 
                     'next_year_budget_item.id as next_year_budget_item_id',
                     'next_year_budget_item.proposed_amount as next_year_proposed_amount',
                     'next_year_budget_item.percentage as next_year_percentage',
 
                 ])
-                ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name', 'next_year_budget_item.id', 'next_year_budget_item.proposed_amount')
+                ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name',
+                    'bgt_circular_subjects.id',
+                    'bgt_circular_subjects.parent_id',
+                    'next_year_budget_item.id', 'next_year_budget_item.proposed_amount', 'next_year_budget_item.percentage')
                 ->get();
         }
         if ($budget->isSupplementary) {
             return BudgetItemsForSupplementary::collection($subjectsWithLog);
         }
-        return BudgetItemsForMain::collection($subjectsWithLog);
+        return BudgetItemsForMain::collection($subjectsWithLog)
+            ->additional(['fiscal_year' => $budget->fiscal_year_name, 'status' => $budget->status_name]);
+
+    }
+
+    public function update(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $data = $request->all();
+            $validator = \Validator::make($data, [
+                'budgetItems' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 422);
+            }
+            $decodedItems = json_decode($data['budgetItems'], true);
+
+            foreach ($decodedItems as $decodedItem) {
+                $budgetItem = BudgetItem::find($decodedItem['id']);
+                $budgetItem->proposed_amount = $decodedItem['proposed_amount'];
+                $budgetItem->save();
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت ویرایش شد'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
 
     }
 

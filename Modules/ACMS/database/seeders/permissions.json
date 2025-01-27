@@ -94,5 +94,23 @@
         "slug": "/acms/circulars/items/update",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "آیتم های بودجه",
+        "slug": "/bgt/budgets/items",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "پیشنهاد مبلغ برای آیتم بودجه",
+        "slug": "/bgt/budgets/items/update",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تغییر وضعیت بودجه",
+        "slug": "/bgt/budgets/change-Status",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]
