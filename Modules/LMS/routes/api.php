@@ -75,6 +75,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
+    Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
+    Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
     Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
     Route::get('/lms/ounit/list/course-all', [CourseController::class, 'courseListAll']);
