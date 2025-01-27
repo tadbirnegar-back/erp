@@ -640,6 +640,9 @@ class RecruitmentScriptController extends Controller
 
             $this->attachStatusToRs($script, $terminateStatus, $request->description ?? null, $user, $request->fileID);
 
+            $this->UpdateFinishDate($script, $request->date);
+
+
             DB::commit();
             return response()->json([
                 'message' => "عزل با موفقیت انجام شد",

@@ -2,65 +2,107 @@
 
 namespace Modules\LMS\app\Resources;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\ResourceCollection;
+use Modules\SettingsMS\app\Models\Setting;
 
-class ExamResultResource extends JsonResource
+class ExamResultResource extends ResourceCollection
 {
+    protected string $baseUrl;
+
+    public function __construct($resource)
+    {
+        parent::__construct($resource);
+        $this->baseUrl = url('/'); // Initialize base URL
+    }
+
+    /**
+     * Transform the resource collection into an array.
+     */
     public function toArray($request)
     {
-        return [
-            'finalAns' => collect($this['finalAns'])
-                ->groupBy('questionID')->values()
-                ->map(function ($group) {
-                    $correctAnswers = $group->filter(function ($item) {
-                        return $item['isCorrect'] == 1;
-                    })->values();
+        $data = $this->resource;
 
-                    $incorrectAnswers = $group->filter(function ($item) {
-                        return $item['isCorrect'] == 0;
-                    })->values();
+        if (!isset($data['answerSheet'])) {
+            throw new Exception('Invalid data structure: "answerSheet" key is missing.');
+        }
+
+        $usedTime = $data['usedTime'] ?? null;
+        $calculate = $data['calculate'] ?? [];
+        $studentInfo = $data['studentInfo'] ?? [];
+        $status = $data['status'];
+        $userAns = $data['userAnswer'] ?? [];
+        $startTime = $data['startDate'];
+        $courseID = $data['courseID'];
+        $questionTimeSetting = Setting::where('key', 'time_per_questions')->first();
+        $examNumberSetting = Setting::where('key', 'question_numbers_perExam')->first();
+
+        $questionTime = $questionTimeSetting ? $questionTimeSetting->value : 0;
+        $examNumber = $examNumberSetting ? $examNumberSetting->value : 0;
+        $examTime = $questionTime * $examNumber;
+
+        $jalaliStartDate = $startTime ? convertDateTimeGregorianToJalaliDateTime($startTime) : null;
+
+        $studentInfo['avatar'] = isset($studentInfo['avatar']) && $studentInfo['avatar']
+            ? $this->baseUrl . '/' . ltrim($studentInfo['avatar'], '/')
+            : "{$this->baseUrl}/default-avatar.png";
+
+        $groupedAnswers = collect($data['answerSheet'])
+            ->groupBy('questionID')
+            ->map(function ($answers, $questionID) use ($userAns) {
+                $correctAnswers = $answers->filter(function ($answer) {
+                    return ($answer->isCorrect ?? false) == 1;
+                })->pluck('optionID')->toArray();
+
+                $userAnswer = collect($userAns['questions'])->firstWhere('question_id', $questionID);
+                $userOptionID = $userAnswer['option_id'] ?? null;
+
+                $hasIncorrect = false;
+
+                $allAnswers = $answers->map(function ($answer) use ($correctAnswers, $userOptionID, &$hasIncorrect) {
+                    $optionID = $answer->optionID ?? null;
+                    $status = 'empty';
+
+                    if ($optionID === $userOptionID && in_array($optionID, $correctAnswers)) {
+                        $status = 'correct';
+                    } elseif ($optionID === $userOptionID) {
+                        $status = 'incorrect';
+                        $hasIncorrect = true;
+                    } elseif (in_array($optionID, $correctAnswers)) {
+                        $status = 'missed';
+                    }
 
                     return [
-                        'correct' => $correctAnswers->map(function ($item) {
-                            return [
-                                'details' => [
-                                    'optionID' => $item['optionID'] ?? null,
-                                    'isCorrect' => $item['isCorrect'] ?? null,
-                                    'questionTitle' => $item['questionTitle'] ?? null,
-                                    'optionTitle' => $item['optionTitle'] ?? null,
-                                ],
-                            ];
-                        }),
-
-                        'incorrect' => $incorrectAnswers->map(function ($item) {
-                            return [
-                                'details' => [
-                                    'optionID' => $item['optionID'] ?? null,
-                                    'isCorrect' => $item['isCorrect'] ?? null,
-                                    'questionTitle' => $item['questionTitle'] ?? null,
-                                    'optionTitle' => $item['optionTitle'] ?? null,
-                                ],
-                            ];
-                        }),
+                        'option_id' => $optionID,
+                        'option_title' => $answer->optionTitle ?? null,
+                        'status' => $status,
                     ];
-                }),
+                })->values();
 
-            'calculated' => [
-                'correct' => $this['calculated']['correct'] ?? null,
-                'false' => $this['calculated']['false'] ?? null,
-                'null' => $this['calculated']['null'] ?? null,
-                'allQuestions' => $this['calculated']['allQuestions'] ?? null,
-                'startedTime' => $this['calculated']['startedDateTime'] ?? null,
-                'finishedTime' => $this['calculated']['finishedDateTime'] ?? null,
-                'usedTime' => $this['calculated']['usedTime'] ?? null,
+                if ($hasIncorrect) {
+                    $allAnswers = $allAnswers->map(function ($answer) {
+                        if ($answer['status'] === 'missed') {
+                            $answer['status'] = 'correct';
+                        }
+                        return $answer;
+                    });
+                }
 
-            ],
+                return [
+                    'question_id' => $questionID,
+                    'question_title' => $answers->first()->questionTitle ?? null,
+                    'all_answers' => $allAnswers,
+                ];
+            })->values();
 
-            'student' => [
-                'name' => $this['student'][0]['name'] ?? null,
-                'avatar' => isset($this['student'][0]['avatar']) ? url($this['student'][0]['avatar']) : null,
-            ],
-
+        return [
+            'status' => $status,
+            'student' => $studentInfo,
+            'answers' => $groupedAnswers,
+            'calculate' => $calculate,
+            'startDateTime' => $jalaliStartDate,
+            'userAnswer' => $userAns,
+            'exam_time' => $examTime,
+            'courseID' => $courseID
         ];
     }
 }

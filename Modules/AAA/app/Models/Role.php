@@ -2,13 +2,15 @@
 
 namespace Modules\AAA\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-//use Modules\AAA\Database\factories\RoleFactory;
 use Modules\BranchMS\app\Models\Section;
+use Modules\HRMS\app\Models\PositionRole;
 use Modules\StatusMS\app\Models\Status;
+
+//use Modules\AAA\Database\factories\RoleFactory;
 
 class Role extends Model
 {
@@ -19,6 +21,7 @@ class Role extends Model
      */
     protected $fillable = [];
     public $timestamps = false;
+
     protected static function newFactory(): RoleFactory
     {
         //return RoleFactory::new();
@@ -26,7 +29,7 @@ class Role extends Model
 
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(Permission::class,table: 'role_permission');
+        return $this->belongsToMany(Permission::class, table: 'role_permission');
     }
 
     public function users(): BelongsToMany
@@ -41,16 +44,22 @@ class Role extends Model
 
     public function status(): BelongsTo
     {
-        return $this->belongsTo(Status::class,'status_id');
+        return $this->belongsTo(Status::class, 'status_id');
     }
 
     public function section(): BelongsTo
     {
-        return $this->belongsTo(Section::class,'section_id');
+        return $this->belongsTo(Section::class, 'section_id');
     }
 
     public function permissionsWithModuleCategory()
     {
         return $this->permissions()->with(['moduleCategory']);
+    }
+
+    public function RolePosition()
+    {
+        return $this->hasMany(PositionRole::class, 'role_id');
+
     }
 }

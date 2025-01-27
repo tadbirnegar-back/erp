@@ -2,15 +2,19 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\LMS\app\Http\Enums\QuestionsEnum;
+use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\CourseExam;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\QuestionExam;
+use Modules\LMS\app\Models\Student;
 use Modules\LMS\app\Resources\ExamPreviewResource;
 use Modules\SettingsMS\app\Models\Setting;
 
 trait ExamsTrait
 {
+    private static string $active = QuestionsEnum::ACTIVE->value;
 
 
     public function examPreview($id)
@@ -51,11 +55,25 @@ trait ExamsTrait
 
     public function DataPreparation($exam)
     {
+        $status = $this->activeStatus()->id;
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
 
+        $difficultySetting = Setting::where('key', 'Difficulty_for_exam')->first();
+        $difficultyLevel = $difficultySetting ? $difficultySetting->value : null;
+
+        $questionTypeSetting = Setting::where('key', 'question_type_for_exam')->first();
+        $questionTypeLevel = $questionTypeSetting ? (int)$questionTypeSetting->value : null;
+
         $randomQuestions = Question::inRandomOrder()
+            ->where('status_id', $status)
+            ->when($difficultyLevel, function ($query) use ($difficultyLevel) {
+                $query->where('difficulty_id', $difficultyLevel);
+            })
+            ->when($questionTypeLevel, function ($query) use ($questionTypeLevel) {
+                $query->where('question_type_id', $questionTypeLevel);
+            })
             ->limit($questionCount)
             ->get();
         $data = $randomQuestions->map(function ($question) use ($exam) {
@@ -64,9 +82,10 @@ trait ExamsTrait
                 'question_id' => $question->id,
             ];
         })->toArray();
-        return $data;
 
+        return $data;
     }
+
 
     public function showExam($id)
     {
@@ -95,6 +114,41 @@ trait ExamsTrait
         } else {
             return null;
         }
+
+    }
+
+
+    public function examsIndex(array $data = [], Student $auth)
+    {
+
+        $query = AnswerSheet::joinRelationship('repository')
+            ->joinRelationship('questionType', 'question_type_alias')
+            ->joinRelationship('exam', 'exam_alias')
+            ->joinRelationship('status');
+
+        $query->addSelect([
+            'answer_sheets.id as answerSheetID',
+            'answer_sheets.start_date_time as startDate',
+            'answer_sheets.finish_date_time as finishDate',
+            'repositories.name as repositoryName',
+            'repositories.id as repositoryID',
+            'exams.id as examID',
+            'exams.title as examTitle',
+            'question_types.id as questionTypeID',
+            'statuses.name as statusName',
+            'statuses.id as statusID'
+        ])->where('answer_sheets.student_id', $auth->id);
+
+
+        return $query->get();
+
+
+    }
+
+    public function activeStatus()
+    {
+        return Question::GetAllStatuses()
+            ->firstWhere('name', '=', self::$active);
 
     }
 

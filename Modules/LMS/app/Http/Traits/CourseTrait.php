@@ -3,8 +3,6 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\Position;
@@ -14,11 +12,7 @@ use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
-use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
-use Modules\LMS\app\Models\Student;
-use Modules\LMS\app\Models\Teacher;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
@@ -108,7 +102,7 @@ trait CourseTrait
             'description' => $data['description'],
             'privacy_id' => $data['privacyID'],
             'is_required' => $data['isRequired'],
-            'access_date' =>     isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
+            'access_date' => isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
             'expiration_date' => isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null,
             'cover_id' => $data['coverID'],
             'preview_video_id' => $data['previewVideoID'],
@@ -618,6 +612,120 @@ trait CourseTrait
         return $filteredResults;
 
     }
+
+    public function showCourseDataForEnteshareDore($id)
+    {
+        $query = Course::query()
+            ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
+            ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
+            ->leftJoinRelationshipUsingAlias('privacy' , 'privacy_alias')
+            ->leftJoinRelationship('preReqForJoin.preReqCourse', [
+                'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
+                    ->on('pre_req_pivot_alias.main_course_id', 'courses.id'),
+                'preReqCourse' => fn($join) => $join->as('pre_reg_alias')
+                    ->on('pre_reg_alias.id', 'pre_req_pivot_alias.prerequisite_course_id'),
+            ])
+            ->leftJoin('course_targets as course_target_alias', 'course_target_alias.course_id', 'courses.id')
+            ->leftJoin('course_employees_features as course_employee_alias', 'course_employee_alias.course_target_id', 'course_target_alias.id')
+            ->leftJoin('organization_units as ounit_alias', 'course_target_alias.parent_ounit_id', 'ounit_alias.id')
+            // Join Levels
+            ->leftJoin('levels as level_alias', function ($join) {
+                $join->on('course_employee_alias.propertyble_id', '=', 'level_alias.id')
+                    ->where('course_employee_alias.propertyble_type', '=', DB::raw("'" . addslashes(Level::class) . "'"));
+            })
+
+            // Join Jobs
+            ->leftJoin('jobs as job_alias', function ($join) {
+                $join->on('course_employee_alias.propertyble_id', '=', 'job_alias.id')
+                    ->where('course_employee_alias.propertyble_type', '=', DB::raw("'" . addslashes(Job::class) . "'"));
+            })
+
+            // Join Positions
+            ->leftJoin('positions as position_alias', function ($join) {
+                $join->on('course_employee_alias.propertyble_id', '=', 'position_alias.id')
+                    ->where('course_employee_alias.propertyble_type', '=', DB::raw("'" . addslashes(Position::class) . "'"));
+            })
+            ->leftJoinRelationship('courseTarget.ounitFeatures.value.oucProperty', [
+                'ounitFeatures' => fn($join) => $join->as('ounit_feature_alias')
+                    ->on('ounit_feature_alias.course_target_id', '=', 'course_target_alias.id'),
+                'value' => fn($join) => $join->as('value_alias')
+                    ->on('value_alias.id', '=', 'ounit_feature_alias.ouc_property_value'),
+                'oucProperty' => fn($join) => $join->as('oucProperty'),
+            ])
+            ->leftJoinRelationship('courseTarget.targetOunitCat', [
+                'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
+            ])
+            ->leftJoinRelationship('chapters.lessons', [
+                'lessons' => fn($join) => $join->as('lessons_alias'),
+                'chapters' => fn($join) => $join->as('chapters_alias'),
+            ])
+            ->leftJoinRelationship('lastStatusForJoin.status', [
+                "status" => fn($join) => $join->as('status_alias'),
+            ])
+            ->select([
+                //course datas
+                'courses.id as course_alias_id',
+                'courses.title as course_alias_title',
+                'courses.price as course_alias_price',
+                'courses.description as course_alias_description',
+                'courses.is_required as course_alias_is_required',
+                'courses.expiration_date as course_alias_expiration_date',
+                'courses.access_date as course_alias_access_date',
+                'course_cover_alias.id as course_video_id',
+                'course_cover_alias.slug as course_cover_slug',
+                'course_cover_alias.name as course_cover_title',
+                'course_cover_alias.size as course_cover_size',
+                'course_video_alias.slug as course_video_slug',
+                'course_video_alias.name as course_video_title',
+                'course_video_alias.size as course_video_size',
+                //Privacy
+                'privacy_alias.id as privacy_alias_id',
+                'privacy_alias.name as privacy_alias_name',
+                //pre req data
+                'pre_reg_alias.id as pre_reg_alias_id',
+                'pre_reg_alias.title as pre_reg_alias_title',
+                //targets
+                'course_target_alias.id as course_target_id',
+                'ounit_alias.name as ounit_alias_name',
+                'course_employee_alias.propertyble_type as course_employee_alias_propertyble_type',
+                'ounit_feature_alias.id as ounit_feature_alias_id',
+                'level_alias.name as level_alias_name',
+                'job_alias.title as job_alias_title',
+                'position_alias.name as position_alias_name',
+                'value_alias.value as value_alias_value',
+                'value_alias.operator as value_alias_operator',
+                'oucProperty.name as oucProperty_name',
+                'oucProperty.id as oucProperty_id',
+                'targetOunitCat.ounit_cat_id as ounit_category_id',
+                //status
+                'status_alias.name as status_alias_name',
+                'status_alias.class_name as status_alias_class_name',
+                //chapters and lessons
+                'chapters_alias.title as chapters_alias_title',
+                'chapters_alias.id as chapters_alias_id',
+                'lessons_alias.title as lessons_alias_title',
+                'lessons_alias.id as lessons_alias_id',
+            ])
+            ->where('courses.id', $id)
+            ->get();
+
+        $filteredResults = $query->groupBy('course_target_id')->map(function ($group) {
+            // Check if there are any items in the group with different value_alias_value or oucProperty_name
+            if ($group->pluck('value_alias_value')->unique()->count() > 1 ||
+                $group->pluck('oucProperty_name')->unique()->count() > 1) {
+                // Keep only the item where both are not null, remove the one that is null
+                return $group->filter(function ($item) {
+                    return !(is_null($item->value_alias_value) && is_null($item->oucProperty_name));
+                });
+            }
+            // Otherwise, return the group as is
+            return $group;
+        })->flatten(1); // Flatten to get the final list of results
+
+        return $filteredResults;
+
+    }
+
     public function ActiveAnswerSheetStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
@@ -637,10 +745,10 @@ trait CourseTrait
 
     public function hasAttemptedAndPassedExam($student, $courseId)
     {
-        $attempted = AnswerSheet::joinRelationship('exam.courseExams.course')
-            ->where('courses.id', $courseId)
-            ->where('answer_sheets.student_id', $student->id)
-            ->exists();
+//        $attempted = AnswerSheet::joinRelationship('exam.courseExams.course')
+//            ->where('courses.id', $courseId)
+//            ->where('answer_sheets.student_id', $student->id)
+//            ->exists();
 
         $status = $this->ActiveAnswerSheetStatus();
 
@@ -649,7 +757,7 @@ trait CourseTrait
         })
             ->exists();
 
-        if ($attempted && $passed) {
+        if ($passed) {
             return true;
         }
 
@@ -710,7 +818,20 @@ trait CourseTrait
         $ids = array_column($ounit, 'id');
         $ounitCats = array_unique(array_column($ounit, 'category_id'));
         $course = Course::query()
-            ->join('course_targets as targets_alias', 'targets_alias.course_id', '=', 'courses.id')
+            ->join('status_course as status_course_alias', 'status_course_alias.course_id', '=', 'courses.id')
+            ->join('statuses as statuses_alias', function ($join) {
+                $join->on('statuses_alias.id', '=', 'status_course_alias.status_id')
+                    ->where('statuses_alias.name', '=', DB::raw("'" . addslashes($this::$presenting) . "'"));
+            })
+            ->leftJoin('chapters as chapters_alias', 'chapters_alias.course_id', '=', 'courses.id')
+            ->leftJoin('lessons as lessons_alias', 'lessons_alias.chapter_id', '=', 'chapters_alias.id')
+            ->leftJoin('contents as contents_alias', 'contents_alias.lesson_id', '=', 'lessons_alias.id')
+            ->leftJoin('content_type as content_type_alias', 'content_type_alias.id', '=', 'contents_alias.content_type_id')
+            ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
+            ->join('course_targets as targets_alias', function ($join) use ($ids) {
+                $join->on('targets_alias.course_id', '=', 'courses.id');
+                $join->whereIn('targets_alias.parent_ounit_id', $ids);
+            })
             ->join('target_ounit_cat as target_ounit_cat_alias', 'target_ounit_cat_alias.course_target_id', '=', 'targets_alias.id')
             ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
             ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
@@ -726,12 +847,16 @@ trait CourseTrait
                             ->where('employee_feat_alias.propertyble_type', Level::class);
                     });
                 }
+
                 if (!empty($job)) {
                     $query->orWhere(function ($subQuery) use ($job) {
                         $subQuery->whereIn('employee_feat_alias.propertyble_id', $job)
                             ->where('employee_feat_alias.propertyble_type', Job::class);
                     });
                 }
+
+                // Include rows with NULL `employee_feat_alias`
+                $query->orWhereNull('employee_feat_alias.id');
             })
             ->leftJoin('course_ounit_features as course_ounit_feat_alias', function ($join) {
                 $join->on('course_ounit_feat_alias.course_target_id', '=', 'targets_alias.id');
@@ -741,7 +866,7 @@ trait CourseTrait
             })
             ->leftJoin('ouc_properties as ouc_prop_alias', function ($join) {
                 $join->on('ouc_prop_alias.id', '=', 'ouc_prop_value.ouc_property_id')
-                    ->on('target_ounit_cat_alias.ounit_cat_id', '=', 'ouc_prop_alias.ounit_cat_id');
+                    ->on('ouc_prop_alias.ounit_cat_id', '=', 'target_ounit_cat_alias.ounit_cat_id');
             })
             ->leftJoin('organization_units as organ_alias', function ($join) use ($ids) {
                 $join->whereIn('organ_alias.unitable_id', $ids)
@@ -749,18 +874,28 @@ trait CourseTrait
             })
             ->leftJoin('village_ofcs as village_ofc_alias', function ($join) {
                 $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id');
-                // Use whereRaw with a raw expression to handle dynamic column name
-                $join->whereRaw("village_ofc_alias.`" . DB::connection()->getDatabaseName() . ".ouc_prop_alias.column_name` = ouc_prop_value.value");
             })
             ->select([
-                'targets_alias.id as targets_alias_id',
-                'targets_alias.parent_ounit_id as parent_ounit_id',
-                'courses.id as course_alias_id',
-                'employee_feat_alias.propertyble_type as prop_type'
+                'courses.id as course_id',
+                'courses.title as course_title',
+                'courses.expiration_date as course_exp_date',
+                'statuses_alias.name as status_name',
+                'statuses_alias.class_name as class_name',
+                'cover_alias.slug as cover_slug',
+                'lessons_alias.id as lesson_id',
+                'content_type_alias.name as content_type_alias_name',
+                'targets_alias.id as target_id',
+                'village_ofc_alias.degree as village_degree',
+                'village_ofc_alias.isTourism as village_tourism',
+                'village_ofc_alias.isFarm as village_farm',
+                'village_ofc_alias.isAttached_to_city as village_attached_to_city',
+                'village_ofc_alias.hasLicense as village_license',
+                'ouc_prop_value.value as prop_value',
+                'ouc_prop_alias.column_name as column_name',
+                'target_ounit_cat_alias.ounit_cat_id as ounit_name',
+                'targets_alias.id as target_id'
             ])
-            ->whereHas('courseTarget', function ($query) use ($ids) {
-                $query->whereIn('parent_ounit_id', $ids);
-            })
+            ->where('courses.title', 'like', '%' . $title . '%')
             ->get();
         return $course;
     }
@@ -779,6 +914,11 @@ trait CourseTrait
     public function coursePishnevisStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
+    }
+
+    public function courseDeletedStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::DELETED->value);
     }
 
     public function coursePresentingStatus()
