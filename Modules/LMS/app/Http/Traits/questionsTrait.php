@@ -146,37 +146,41 @@ trait questionsTrait
 
             $question->update([
                 'title' => $data['title'],
-                'question_type_id' => $data['questionTypeID'],
+                'question_type_id' => $data['questionTypeID'] ?? $question->question_type_id,
                 'repository_id' => $repositoryID,
-                'lesson_id' => $data['lessonID'],
-                'difficulty_id' => $data['difficultyID'],
+                'lesson_id' => $data['lessonID'] ?? $question->lesson_id,
+                'difficulty_id' => $data['difficultyID'] ?? $question->difficulty_id,
                 'create_date' => now(),
                 'creator_id' => $user->id
             ]);
+
             foreach ($delete as $optionToDelete) {
                 $this->deleteOptions($optionToDelete);
             }
 
-            $optionsData = [];
-            foreach ($options as $option) {
-                $optionsData[] = [
-                    'id' => $option['option_id'] ?? null,
-                    'title' => $option['title'],
-                    'is_correct' => $option['is_correct'],
-                    'question_id' => $questionID,
-                    'updated_at' => now(),
-                    'created_at' => $question->create_date ? null : now(),
-                ];
-            }
+            if (!empty($options)) {
+                Option::where('question_id', $questionID)->update(['is_correct' => 0]);
 
-            Option::upsert(
-                $optionsData,
-                ['id'],
-                ['title', 'is_correct', 'updated_at']
-            );
+                foreach ($options as $option) {
+                    if (isset($option['option_id'])) {
+                        Option::where('id', $option['option_id'])
+                            ->update(['is_correct' => $option['is_correct']]);
+                    } else {
+                        Option::create([
+                            'title' => $option['title'] ?? 'Default Title',
+                            'is_correct' => $option['is_correct'],
+                            'question_id' => $questionID,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
         }
+
         return $question;
     }
+
 
     public function deleteOptions(array $option_ids)
     {

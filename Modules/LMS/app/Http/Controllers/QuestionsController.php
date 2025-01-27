@@ -173,16 +173,16 @@ class QuestionsController extends Controller
                     'message' => 'User not found'
                 ], 404);
             }
-            $courseID = Course::joinRelationship('chapters.lessons.questions.answers.answerSheet')->select([
+            $courseID = Course::with('chapters.lessons.questions.answers.answerSheet')->select([
                 'courses.id as courseID',
-            ])->get();
+            ])->first();
 
 
             $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs);
             if ($updateResult) {
                 return response()->json([
                     'message' => 'Question updated successfully',
-                    'course_id' => $courseID->unique()
+                    'course_id' => $courseID
                 ], 200);
             }
 
