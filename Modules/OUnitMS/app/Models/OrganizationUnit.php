@@ -132,7 +132,7 @@ class OrganizationUnit extends Model
 
 
         $meetingtypeId = \DB::table('meeting_types')
-            ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->whereIn('title', MeetingTypeEnum::HEYAAT_MEETING->value)
             ->value('id');
 
         return $this->hasOne(Meeting::class, 'ounit_id')

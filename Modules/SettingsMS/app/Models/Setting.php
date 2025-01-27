@@ -16,7 +16,12 @@ class Setting extends Model
     protected $fillable = [
         'key',
         'value',
+        'Difficulty_for_exam',
+        'question_type_for_exam',
+        'question_numbers_perExam',
+        'time_per_questions',
     ];
+
     public $timestamps = false;
 
     protected static function newFactory(): SettingFactory
