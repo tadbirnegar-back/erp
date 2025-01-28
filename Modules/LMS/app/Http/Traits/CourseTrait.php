@@ -91,7 +91,7 @@ trait CourseTrait
                 'files.slug',
 
             ])
-            ->with(['latestStatus'])
+            ->with(['status'])
             ->withCount([
                 'chapters',
                 'lessons',

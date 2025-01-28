@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
+use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
@@ -108,6 +109,19 @@ class Course extends Model
     public function latestStatus()
     {
         return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->orderByDesc('status_course.id')->take(1);
+    }
+
+    public function status()
+    {
+        return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->orderByDesc('status_course.id');
+    }
+
+    public function ActiveLesson()
+    {
+        return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->whereNotIn('name', [CourseStatusEnum::DELETED->value])
             ->orderByDesc('status_course.id');
     }
 
@@ -115,7 +129,6 @@ class Course extends Model
     {
         return $this->hasMany(Enroll::class, 'course_id', 'id');
     }
-
 
 
     public function chapters()
@@ -140,7 +153,7 @@ class Course extends Model
 
     public function preReqForJoin()
     {
-        return $this->hasMany(CourseCourse::class , 'main_course_id', 'id');
+        return $this->hasMany(CourseCourse::class, 'main_course_id', 'id');
     }
 
     public function prerequisiteCourses()
@@ -152,6 +165,7 @@ class Course extends Model
             'prerequisite_course_id'
         );
     }
+
 
     /**
      * Get the courses that depend on this course as a prerequisite.
@@ -202,12 +216,17 @@ class Course extends Model
 
     public function lastStatusForJoin()
     {
-        return $this->hasOne(StatusCourse::class, 'course_id', 'id');
+        return $this->hasOne(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);
     }
 
     public function statusCourse()
     {
         return $this->hasMany(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);
+    }
+
+    public function statusCourseDesc()
+    {
+        return $this->hasMany(StatusCourse::class, 'course_id', 'id')->orderByDesc('id')->take(1);
     }
 
     public function creator()

@@ -32,8 +32,8 @@ class LessonListResource extends ResourceCollection
                         'slug' => $this->baseUrl . $item->cover_slug,
                     ] : null,
                     'status' => [
-                        'name' => $item->latestStatus->name,
-                        'className' => $item->latestStatus->class_name,
+                        'name' => $item->status->name,
+                        'className' => $item->status->class_name,
                     ],
                     'counts' => [
                         'chapters' => $item->chapters_count ?? 0,
