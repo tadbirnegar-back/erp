@@ -8,6 +8,7 @@ use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Illuminate\Support\Number;
+use Modules\LMS\app\Models\Lesson;
 
 class PublishCoursePreviewResource extends JsonResource
 {
@@ -199,6 +200,11 @@ class PublishCoursePreviewResource extends JsonResource
             CourseStatusEnum::DELETED->value => ['noBtn'],
             CourseStatusEnum::CANCELED->value => ['noBtn'],
         ];
+    }
+
+    private function checkStatusOfLesson($lessonId)
+    {
+        return Lesson::with('latestStatus')->find($lessonId);
     }
 
 }
