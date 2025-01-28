@@ -661,8 +661,8 @@ trait CourseTrait
             ->leftJoinRelationship('courseTarget.targetOunitCat', [
                 'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
             ])
-            ->leftJoinRelationship('chapters.lessons', [
-                'lessons' => fn($join) => $join->as('lessons_alias'),
+            ->leftJoinRelationship('chapters.activeLessons', [
+                'activeLessons' => fn($join) => $join->as('lessons_alias'),
                 'chapters' => fn($join) => $join->as('chapters_alias'),
             ])
             ->leftJoinRelationship('lastStatusForJoin.status', [
@@ -718,19 +718,16 @@ trait CourseTrait
             ->get();
 
         $filteredResults = $query->groupBy('course_target_id')->map(function ($group) {
-            // Apply the first filter: remove items with both value_alias_value and oucProperty_name as null if there are conflicts
+            // Check if there are any items in the group with different value_alias_value or oucProperty_name
             if ($group->pluck('value_alias_value')->unique()->count() > 1 ||
                 $group->pluck('oucProperty_name')->unique()->count() > 1) {
-                $group = $group->filter(function ($item) {
+                // Keep only the item where both are not null, remove the one that is null
+                return $group->filter(function ($item) {
                     return !(is_null($item->value_alias_value) && is_null($item->oucProperty_name));
                 });
             }
-
-            // Sort the filtered group by course_status_alias_id in descending order
-            $sortedGroup = $group->sortByDesc('course_status_alias_id');
-
-            // Return only the first item (highest course_status_alias_id) for each group
-            return $sortedGroup->first();
+            // Otherwise, return the group as is
+            return $group;
         })->flatten(1); // Flatten to get the final list of results
 
         return $filteredResults;

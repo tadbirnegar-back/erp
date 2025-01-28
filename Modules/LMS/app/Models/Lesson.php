@@ -46,7 +46,8 @@ class Lesson extends Model
     public function latestStatus()
     {
         return $this->belongsToMany(Status::class, 'status_lesson', 'lesson_id', 'status_id')
-            ->latest();
+            ->orderByDesc('id') // Order by ID in descending order
+            ->take(1); // Take the latest record
     }
 
     public function contents()
