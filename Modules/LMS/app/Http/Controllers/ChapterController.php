@@ -47,11 +47,6 @@ class ChapterController extends Controller
             }
             $chapter->load('course', 'lessons');
 
-            $HasNoneChapter = $this->isCourseHasNoneChapter($chapter->course->id);
-
-
-            $chapter->lessons()->update(['chapter_id' => $HasNoneChapter->id]);
-
             $chapter->delete();
             DB::commit();
             return response()->json(["message" => "فصل با موفقیت حفظ شد"]);
