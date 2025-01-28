@@ -6,6 +6,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Log;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Illuminate\Support\Number;
 use Modules\LMS\app\Models\Lesson;
@@ -112,13 +113,18 @@ class PublishCoursePreviewResource extends JsonResource
             $chapters = $group->groupBy('chapters_alias_id')->map(function ($chapterGroup, $chapterId) {
                 $chapterName = $chapterGroup->first()->chapters_alias_title;
                 $lessons = $chapterGroup->map(function ($lesson) {
+                    $lessonStatusData = $this->checkStatusOfLesson($lesson->lessons_alias_id);
                     return [
                         'lesson_id' => $lesson->lessons_alias_id,
                         'lesson_title' => $lesson->lessons_alias_title,
+                        'status_name' => $lessonStatusData?->latestStatus[0]?->name,
                     ];
                 })->filter(function ($lesson) {
-                    return !is_null($lesson['lesson_id']);
-                })->values()->unique();
+                    if($lesson['status_name'] == LessonStatusEnum::ACTIVE->value)
+                    {
+                        return !is_null($lesson['lesson_id']);
+                    }
+                })->unique()->values()->toArray();
 
                 return [
                     'chapter_id' => $chapterId,
