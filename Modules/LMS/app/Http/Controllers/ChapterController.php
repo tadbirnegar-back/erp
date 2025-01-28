@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\ChapterTrait;
+use Modules\LMS\app\Http\Traits\LessonTrait;
 use Modules\LMS\app\Models\Chapter;
 use Modules\LMS\app\Models\StatusLesson;
 
 class ChapterController extends Controller
 {
-    use ChapterTrait;
+    use ChapterTrait , LessonTrait;
 
     public function update(Request $request, $id)
     {
@@ -57,7 +58,7 @@ class ChapterController extends Controller
             return response()->json(["message" => "فصل با موفقیت حفظ شد"]);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(["message" => "فصل حذف نشد"]);
+            return response()->json(["message" => "متاسفانه عملیات حذف فصل موفقیت آمیز نبود"] , 400);
         }
 
     }

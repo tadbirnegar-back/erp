@@ -384,7 +384,6 @@ class CourseController extends Controller
     public function publishCourseDataShow($id)
     {
         $data = $this->showCourseDataForEnteshareDore($id);
-        return response() -> json($data);
         return new PublishCoursePreviewResource($data);
     }
 
