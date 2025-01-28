@@ -394,6 +394,11 @@ class CourseController extends Controller
             DB::beginTransaction();
             StatusCourse::create([
                 'course_id' => $id,
+                'status_id' => $this->courseWaitPresentingStatus()->id,
+                'create_date' => now()
+            ]);
+            StatusCourse::create([
+                'course_id' => $id,
                 'status_id' => $this->coursePresentingStatus()->id,
                 'create_date' => now()
             ]);
@@ -423,7 +428,7 @@ class CourseController extends Controller
         }
     }
 
-    public function cancelCourse(Request $request ,  $id)
+    public function cancelCourse(Request $request, $id)
     {
         try {
             DB::beginTransaction();

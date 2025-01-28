@@ -111,6 +111,10 @@ class Course extends Model
             ->orderByDesc('status_course.id');
     }
 
+    public function lastStatus()
+    {
+        return $this->statuses()->orderByDesc('status_course.id')->take(1);
+    }
     public function enrolls()
     {
         return $this->hasMany(Enroll::class, 'course_id', 'id');
