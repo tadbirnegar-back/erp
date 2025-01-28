@@ -423,14 +423,15 @@ class CourseController extends Controller
         }
     }
 
-    public function cancelCourse($id)
+    public function cancelCourse(Request $request ,  $id)
     {
         try {
             DB::beginTransaction();
             StatusCourse::create([
                 'course_id' => $id,
                 'status_id' => $this->courseCanceledStatus()->id,
-                'create_date' => now()
+                'create_date' => now(),
+                'description' => $request->description
             ]);
             DB::commit();
             return response()->json(['message' => "دوره با موفقیت حذف شد"]);

@@ -661,8 +661,8 @@ trait CourseTrait
             ->leftJoinRelationship('courseTarget.targetOunitCat', [
                 'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
             ])
-            ->leftJoinRelationship('chapters.lessons', [
-                'lessons' => fn($join) => $join->as('lessons_alias'),
+            ->leftJoinRelationship('chapters.activeLessons', [
+                'activeLessons' => fn($join) => $join->as('lessons_alias'),
                 'chapters' => fn($join) => $join->as('chapters_alias'),
             ])
             ->leftJoinRelationship('lastStatusForJoin.status', [
