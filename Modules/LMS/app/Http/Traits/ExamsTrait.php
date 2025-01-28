@@ -56,7 +56,9 @@ trait ExamsTrait
 
     public function DataPreparation($exam)
     {
-        $status = $this->activeStatus()->id;
+        $status = $this->questionActiveStatus()->id;
+        dd($status);
+
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
@@ -145,11 +147,9 @@ trait ExamsTrait
 
     }
 
-    public function activeStatus()
+    public function questionActiveStatus()
     {
-        return Question::GetAllStatuses()
-            ->firstWhere('name', '=', self::$active);
-
+        return Question::GetAllStatuses()->first('name', QuestionsEnum::ACTIVE->value);
     }
 
 
