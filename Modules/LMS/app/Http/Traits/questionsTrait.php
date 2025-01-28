@@ -34,7 +34,7 @@ trait questionsTrait
 
     public function insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs)
     {
-        $status = Status::whereIn('name', [$this::$active, $this::$inactive])->first();
+        $status = $this->questionActiveStatus();
         $questions = [];
         foreach ($repositoryIDs as $repositoryID) {
             $question = Question::create([
@@ -73,7 +73,7 @@ trait questionsTrait
 
     public function questionList($id)
     {
-        $status = Status::where('name', self::$active)->firstOrFail();
+        $status = $this->questionActiveStatus();
 
         $query = Course::joinRelationship('chapters.lessons.questions.difficulty')
             ->joinRelationship('chapters.lessons.questions.options')
