@@ -46,8 +46,9 @@ trait ExamsTrait
         ]);
 
         $questionExamData = $this->DataPreparation($exam);
-
+        dd($questionExamData);
         QuestionExam::insert($questionExamData);
+
 
         return $exam;
     }
@@ -59,7 +60,6 @@ trait ExamsTrait
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
-
         $difficultySetting = Setting::where('key', 'Difficulty_for_exam')->first();
         $difficultyLevel = $difficultySetting ? $difficultySetting->value : null;
 
