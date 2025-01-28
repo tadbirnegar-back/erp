@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\QuestionTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Http\Traits\CourseTrait;
@@ -35,7 +36,8 @@ class ExamsController extends Controller
             }
 
 
-            $student = Auth::user()->load('student');
+//            $student = Auth::user()->load('student');
+            $student = User::with('student')->find(68);
             $enrolled = $this->isEnrolledToDefinedCourse($courseId, $student);
             $completed = $this->isCourseCompleted($student);
             $attempted = $this->hasAttemptedAndPassedExam($student, $courseId);

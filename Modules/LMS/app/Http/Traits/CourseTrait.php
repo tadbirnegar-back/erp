@@ -618,7 +618,7 @@ trait CourseTrait
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
-            ->leftJoinRelationshipUsingAlias('privacy' , 'privacy_alias')
+            ->leftJoinRelationshipUsingAlias('privacy', 'privacy_alias')
             ->leftJoinRelationship('preReqForJoin.preReqCourse', [
                 'preReqForJoin' => fn($join) => $join->as('pre_req_pivot_alias')
                     ->on('pre_req_pivot_alias.main_course_id', 'courses.id'),
@@ -745,24 +745,17 @@ trait CourseTrait
 
     public function hasAttemptedAndPassedExam($student, $courseId)
     {
-//        $attempted = AnswerSheet::joinRelationship('exam.courseExams.course')
-//            ->where('courses.id', $courseId)
-//            ->where('answer_sheets.student_id', $student->id)
-//            ->exists();
-
         $status = $this->ActiveAnswerSheetStatus();
 
         $passed = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
             $query->where('status_id', $status->id);
         })
+            ->where('student_id', $student->id) // Specify the column to match the student's ID
             ->exists();
 
-        if ($passed) {
-            return true;
-        }
-
-        return false;
+        return $passed;
     }
+
 
     public function enrolledCourses($user)
     {
