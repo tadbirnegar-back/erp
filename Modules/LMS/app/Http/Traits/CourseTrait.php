@@ -667,6 +667,7 @@ trait CourseTrait
             ])
             ->leftJoinRelationship('lastStatusForJoin.status', [
                 "status" => fn($join) => $join->as('status_alias'),
+                "lastStatusForJoin" => fn($join) => $join->as('course_status_alias')
             ])
             ->select([
                 //course datas
@@ -706,6 +707,7 @@ trait CourseTrait
                 //status
                 'status_alias.name as status_alias_name',
                 'status_alias.class_name as status_alias_class_name',
+                'course_status_alias.id as course_status_alias_id',
                 //chapters and lessons
                 'chapters_alias.title as chapters_alias_title',
                 'chapters_alias.id as chapters_alias_id',
@@ -716,19 +718,23 @@ trait CourseTrait
             ->get();
 
         $filteredResults = $query->groupBy('course_target_id')->map(function ($group) {
-            // Check if there are any items in the group with different value_alias_value or oucProperty_name
+            // Apply the first filter: remove items with both value_alias_value and oucProperty_name as null if there are conflicts
             if ($group->pluck('value_alias_value')->unique()->count() > 1 ||
                 $group->pluck('oucProperty_name')->unique()->count() > 1) {
-                // Keep only the item where both are not null, remove the one that is null
-                return $group->filter(function ($item) {
+                $group = $group->filter(function ($item) {
                     return !(is_null($item->value_alias_value) && is_null($item->oucProperty_name));
                 });
             }
-            // Otherwise, return the group as is
-            return $group;
+
+            // Sort the filtered group by course_status_alias_id in descending order
+            $sortedGroup = $group->sortByDesc('course_status_alias_id');
+
+            // Return only the first item (highest course_status_alias_id) for each group
+            return $sortedGroup->first();
         })->flatten(1); // Flatten to get the final list of results
 
         return $filteredResults;
+// Flatten to get the final list of results
 
     }
 

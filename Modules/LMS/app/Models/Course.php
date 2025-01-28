@@ -202,7 +202,7 @@ class Course extends Model
 
     public function lastStatusForJoin()
     {
-        return $this->hasOne(StatusCourse::class, 'course_id', 'id');
+        return $this->hasOne(StatusCourse::class, 'course_id', 'id')->orderBy('id')->take(1);
     }
 
     public function statusCourse()
