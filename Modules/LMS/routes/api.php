@@ -10,8 +10,8 @@ use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
-use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\QuestionsController;
+use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 
 /*
@@ -67,7 +67,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
 
 
-
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
@@ -98,8 +97,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
     Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
-    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
-    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
+//    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
+//    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
     Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
     Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
     Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
@@ -111,3 +110,5 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
 
 });
+Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
+Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);

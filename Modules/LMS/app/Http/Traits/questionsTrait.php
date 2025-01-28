@@ -15,10 +15,9 @@ trait questionsTrait
 
     public function dropDowns($courseID)
     {
-        $status = Status::where('name', $this::$active)->firstOrFail();
+        $status = Status::where('name', $this::$active, Question::class)->first();
 
         $query = Course::leftJoinRelationship('chapters.lessons.lessonStatus');
-        $query->where('status_lesson.status_id', $status->id);
         $query->select([
             'chapters.id as chapterID',
             'chapters.title as chapterTitle',
