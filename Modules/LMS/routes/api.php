@@ -14,6 +14,7 @@ use Modules\LMS\app\Http\Controllers\QuestionsController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
 use Modules\LMS\app\Http\Controllers\ExamResultController;
 use Modules\LMS\app\Http\Controllers\ExamsController;
+use Modules\LMS\app\Http\Controllers\StudentController;
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -32,13 +33,13 @@ use Modules\LMS\app\Http\Controllers\ExamsController;
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/teachers/list', [TeacherController::class, 'index']);
     Route::post('/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
-    Route::post('/students/search', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'isPersonStudent']);
-    Route::post('/dehyari/add', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'store']);
-    Route::post('/students/list', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'index']);
-    Route::post('/students/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'show']);
-    Route::post('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'show']);
-    Route::put('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'update']);
-    Route::delete('/students/delete/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'destroy']);
+    Route::post('/students/search', [StudentController::class, 'isPersonStudent']);
+    Route::post('/dehyari/add', [StudentController::class, 'store']);
+    Route::post('/students/list', [StudentController::class, 'index']);
+    Route::post('/students/{id}', [StudentController::class, 'show']);
+    Route::post('/students/update/{id}', [StudentController::class, 'show']);
+    Route::put('/students/update/{id}', [StudentController::class, 'update']);
+    Route::delete('/students/delete/{id}', [StudentController::class, 'destroy']);
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
