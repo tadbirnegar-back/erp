@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\ChapterTrait;
 use Modules\LMS\app\Models\Chapter;
+use Modules\LMS\app\Models\StatusLesson;
 
 class ChapterController extends Controller
 {
@@ -42,10 +43,14 @@ class ChapterController extends Controller
         try {
             DB::beginTransaction();
             $chapter = Chapter::find($id);
-            if ($chapter->read_only) {
-                return response()->json(['message' => 'شما مجوز پاک کردن این فصل را ندارید'], 403);
-            }
             $chapter->load('course', 'lessons');
+            $statusLesson = $this->lessonInActiveStatus()->id;
+            $chapter->lessons->each(function ($lesson) use ($statusLesson) {
+                StatusLesson::create([
+                    'lesson_id' => $lesson->id,
+                    'status_id' => $statusLesson,
+                ]);
+            });
 
             $chapter->delete();
             DB::commit();
