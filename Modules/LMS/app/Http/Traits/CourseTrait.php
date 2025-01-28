@@ -661,8 +661,8 @@ trait CourseTrait
             ->leftJoinRelationship('courseTarget.targetOunitCat', [
                 'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
             ])
-            ->leftJoinRelationship('chapters.activeLessons', [
-                'activeLessons' => fn($join) => $join->as('lessons_alias'),
+            ->leftJoinRelationship('chapters.lessons', [
+                'lessons' => fn($join) => $join->as('lessons_alias'),
                 'chapters' => fn($join) => $join->as('chapters_alias'),
             ])
             ->leftJoinRelationship('lastStatusForJoin.status', [
@@ -933,6 +933,11 @@ trait CourseTrait
     public function coursePresentingStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+    }
+
+    public function courseWaitPresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::WAITING_TO_PRESENT->value);
     }
 
 }
