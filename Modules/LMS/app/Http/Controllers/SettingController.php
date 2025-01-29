@@ -7,7 +7,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\SettingTrait;
-use Modules\LMS\app\Resources\SettingResource;
 
 class SettingController extends Controller
 {
@@ -62,7 +61,7 @@ class SettingController extends Controller
     public function LastShow(): JsonResponse
     {
         $trait = $this->LastSettingShow();
-        return response()->json(SettingResource::collection($trait));
+        return response()->json($trait);
     }
 
 

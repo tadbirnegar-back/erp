@@ -46,6 +46,7 @@ trait SettingTrait
         return true;
     }
 
+
     public function LastSettingShow()
     {
         $settings = Setting::select(['key', 'value'])
@@ -56,25 +57,34 @@ trait SettingTrait
                 'Difficulty_for_exam',
                 'question_type_for_exam'
             ])
-            ->get();
+            ->get()
+            ->keyBy('key');;
 
         $Q_type = QuestionType::all();
         $difficulty = Difficulty::all();
 
-        $questionTypeForExamValue = optional($settings->where('key', 'question_type_for_exam')->first())->value;
-        $difficultyForExamValue = optional($settings->where('key', 'Difficulty_for_exam')->first())->value;
+        $questionTypeForExam = $settings->where('key', 'question_type_for_exam')->first();
+        $difficultyForExam = $settings->where('key', 'Difficulty_for_exam')->first();
 
-        return $settings->map(function ($setting) use ($Q_type, $difficulty, $questionTypeForExamValue, $difficultyForExamValue) {
-            $filteredQuestionType = $Q_type->where('id', $questionTypeForExamValue)->pluck('name')->first();
-            $filteredDifficulty = $difficulty->where('id', $difficultyForExamValue)->pluck('name')->first();
+        $questionTypeForExamValue = optional($questionTypeForExam)->value;
+        $difficultyForExamValue = optional($difficultyForExam)->value;
 
-            return (object)[
-                'key' => $setting->key,
-                'value' => $setting->value,
-                'questionType' => $setting->key === 'question_type_for_exam' ? $filteredQuestionType : null,
-                'difficulty' => $setting->key === 'Difficulty_for_exam' ? $filteredDifficulty : null,
-            ];
-        });
+        $questionTypeName = $Q_type->where('id', $questionTypeForExamValue)->pluck('name')->first();
+        $difficultyName = $difficulty->where('id', $difficultyForExamValue)->pluck('name')->first();
+
+        return [
+            'questionType' => [
+                'id' => $questionTypeForExamValue,
+                'name' => $questionTypeName,
+            ],
+            'questionDifficulty' => [
+                'id' => $difficultyForExamValue,
+                'name' => $difficultyName,
+            ],
+            'pass_score' => optional($settings->get('pass_score'))->value,
+            'question_numbers_perExam' => optional($settings->get('question_numbers_perExam'))->value,
+            'time_per_questions' => optional($settings->get('time_per_questions'))->value,
+        ];
     }
 
 
