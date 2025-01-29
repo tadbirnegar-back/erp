@@ -1,0 +1,11 @@
+{
+    "name": "VCM",
+    "alias": "vcm",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\VCM\\app\\Providers\\VCMServiceProvider"
+    ],
+    "files": []
+}
