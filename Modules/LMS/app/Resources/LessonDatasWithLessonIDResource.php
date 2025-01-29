@@ -8,7 +8,6 @@ class LessonDatasWithLessonIDResource extends JsonResource
 {
     public function toArray($request)
     {
-        $user = \Auth::user();
         $lessonDetailsData = collect($this->resource['lessonDetails'])->groupBy('lessonData')->map(function ($lesson) {
             return [
                 'id' => $lesson->first()->activeLesson,
@@ -52,13 +51,16 @@ class LessonDatasWithLessonIDResource extends JsonResource
                             'avatar' => url($validComment->commented_person_avatar),
                         ];
                     });
-                })->filter()->values()->flatten(1)->all(),
+                })->filter()->values()->flatten(1)->first(),
 
                 'files' => $lesson->map(function ($file) {
                     return [
                         'id' => $file->lesson_file_id,
-                        'file_title' => $file->lesson_file_slug,
+                        'file_url' => $file->lesson_file_slug,
+                        'file_title' => 'ضمیمه',
                         'url' => url($file->lesson_file_slug),
+                        'size' => 12 ,
+                        'Measurement_criteria' => 'MB',
                     ];
                 })->filter()->unique('id')->values(),
             ];
@@ -74,9 +76,15 @@ class LessonDatasWithLessonIDResource extends JsonResource
             ->first();
 
         return [
-            'lesson_details' => count($lessonDetailsData) > 0 ? $lessonDetailsData : null,
+            'lesson_details' => $lessonDetailsData->first(),
             'activeContent' => $activeContent ? $activeContent->content_id : null,
-            'user' => $user->load('person.avatar')
+            'user' => $this -> getUserData()
         ];
+    }
+
+    private function getUserData()
+    {
+        $user = \Auth::user();
+        return $user->load('person.avatar');
     }
 }
