@@ -56,6 +56,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/bgt/budgets/subjects', [BudgetController::class, 'budgetSubjects']);
 
+    Route::delete('/bgt/budgets/decline', [BudgetController::class, 'declineBudget']);
+
     Route::post('/bgt/budgets/items', [BudgetItemController::class, 'index']);
 
     Route::put('/bgt/budgets/items/update', [BudgetItemController::class, 'update']);

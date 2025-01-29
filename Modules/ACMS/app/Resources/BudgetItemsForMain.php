@@ -21,6 +21,7 @@ class BudgetItemsForMain extends JsonResource
             'current_year_enacted' => $this->current_year_proposed_amount,
             '3_month_last_year' => $this->three_months_last_year_proposed_amount,
             '9_month_current_year' => $this->nine_months_current_year_proposed_amount,
+            'total_estimated' => $this->three_months_last_year_proposed_amount + $this->nine_months_current_year_proposed_amount,
             'budget_item_id' => $this->next_year_budget_item_id,
 
         ];

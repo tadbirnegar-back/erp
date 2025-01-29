@@ -15,6 +15,8 @@ use Modules\ACMS\app\Models\BudgetItem;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\ACMS\app\Resources\BudgetSingleResource;
 use Modules\ACMS\app\Resources\VillageBudgetListResource;
+use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Morilog\Jalali\Jalalian;
 use Validator;
@@ -127,13 +129,29 @@ class BudgetController extends Controller
             'ancestors.statuses' => function ($q) {
                 $q->with(['pivot.person', 'pivot.file']);
             },
-            'ancestors.latestStatus'
+            'ancestors.latestStatus',
+            'ounit.person',
         ])
             ->find($id);
 
         if (is_null($budget)) {
-            return response()->json(['error' => 'بودجه مورئ نظر یافت نشد'], 404);
+            return response()->json(['error' => 'بودجه مورد نظر یافت نشد'], 404);
         }
+        $scriptType = ScriptType::where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value)->first();
+
+        $financialManager = RecruitmentScript::join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
+            ->join('statuses as s', 'rss.status_id', '=', 's.id')
+            ->where('s.name', 'فعال')
+            ->where('rss.create_date', function ($subQuery) {
+
+                $subQuery->selectRaw('MAX(create_date)')
+                    ->from('recruitment_script_status as sub_rss')
+                    ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
+            })
+            ->where('script_type_id', $scriptType->id)
+            ->where('organization_unit_id', $budget->ounit->id)
+            ->with(['user.person'])
+            ->first();
 
         $incomeResults = BudgetItem::joinRelationship('circularItem.subject')
             ->where('budget_id', $id
@@ -169,6 +187,7 @@ class BudgetController extends Controller
         $budget->setAttribute('income_sum', $incomeResults);
         $budget->setAttribute('eco_sum', $economicResults);
         $budget->setAttribute('operational_sum', $operationalResults);
+        $budget->setAttribute('financialManager', $financialManager?->user->person);
 
 
         return BudgetSingleResource::make($budget);
@@ -249,6 +268,41 @@ class BudgetController extends Controller
             DB::commit();
             return response()->json(['message' => 'وضعیت بودجه با موفقیت تغییر یافت'], 200);
         } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
+    }
+
+    public function declineBudget(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'budgetID' => 'required',
+            'description' => 'required',
+            'fileID' => 'sometimes',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+        try {
+            $budget = Budget::find($request->budgetID);
+            if (is_null($budget)) {
+                return response()->json(['error' => 'بودجه مورد نظر یافت نشد'], 404);
+            }
+            DB::beginTransaction();
+            $canceledStatus = BudgetStatusEnum::CANCELED->value;
+            $status = Budget::GetAllStatuses()->where('name', $canceledStatus)->first();
+            $budget->statuses()->attach($status->id, [
+                'creator_id' => Auth::user()->id,
+                'create_date' => now(),
+                'description' => $request->description,
+                'file_id' => $request->fileID,
+            ]);
+            DB::commit();
+            return response()->json(['message' => 'بودجه با موفقیت لغو شد'], 200);
+
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }

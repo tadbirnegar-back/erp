@@ -284,7 +284,7 @@ class CircularController extends Controller
                 })
                 ->name('DispatchCircularForOunitJob')
                 ->onQueue('default')
-                ->dispatch();
+                ->dispatchAfterResponse();
             $this->circularStatusAttach([
                 'userID' => $user->id,
                 'statusID' => $this->approvedCircularStatus()->id,

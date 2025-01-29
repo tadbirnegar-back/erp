@@ -58,6 +58,8 @@ class BudgetSingleResource extends JsonResource
                     'history' => BudgetTimelineStatusEnum::generateTimeline($ancestor)
                 ];
             }),
+            'head' => $this->ounit->person->display_name,
+            'financialManager' => $this->financialManager->display_name,
         ];
     }
 }
