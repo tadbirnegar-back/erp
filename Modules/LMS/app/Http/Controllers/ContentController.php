@@ -19,7 +19,7 @@ class ContentController extends Controller
         $user = Auth::user();
         $user->load('student');
         $log = $this->contentLogUpsert($data , $user);
-        $round = $this->calculateRounds($log , $user);
+//        $round = $this->calculateRounds($log , $user);
         return response()->json($round);
     }
 }

@@ -199,7 +199,7 @@ trait CourseTrait
                 'chapters' => function ($query) {
                     $query->with([
                         'lessons' => function ($query) {
-                            $query->whereHas('latestStatus', function ($q) {
+                            $query->whereHas('lastStatus', function ($q) {
                                 $q->where('name', LessonStatusEnum::ACTIVE->value);
                             });
                         },

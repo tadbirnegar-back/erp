@@ -50,6 +50,11 @@ class Lesson extends Model
             ->take(1); // Take the latest record
     }
 
+    public function lastStatus()
+    {
+        return $this->hasManyThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')->orderByDesc('status_lesson.id')->take(1);
+    }
+
     public function contents()
     {
         return $this->hasMany(Content::class, 'lesson_id', 'id');

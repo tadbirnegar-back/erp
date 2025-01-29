@@ -8,6 +8,7 @@ class LessonDatasWithLessonIDResource extends JsonResource
 {
     public function toArray($request)
     {
+        $user = \Auth::user();
         $lessonDetailsData = collect($this->resource['lessonDetails'])->groupBy('lessonData')->map(function ($lesson) {
             return [
                 'id' => $lesson->first()->activeLesson,
@@ -73,8 +74,9 @@ class LessonDatasWithLessonIDResource extends JsonResource
             ->first();
 
         return [
-            'lesson_details' => $lessonDetailsData,
+            'lesson_details' => count($lessonDetailsData) > 0 ? $lessonDetailsData : null,
             'activeContent' => $activeContent ? $activeContent->content_id : null,
+            'user' => $user->load('person.avatar')
         ];
     }
 }
