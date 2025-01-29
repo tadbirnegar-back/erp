@@ -45,4 +45,26 @@ trait SettingTrait
 
         return true;
     }
+
+    public function LastSettingShow()
+    {
+        $setting = Setting::select(['key', 'value'])
+            ->whereIn('key', [
+                'pass_score',
+                'question_numbers_perExam',
+                'time_per_questions',
+                'Difficulty_for_exam',
+                'question_type_for_exam'
+            ])
+            ->get();
+
+        return $setting->map(function ($setting) {
+            return [
+                'key' => $setting->key,
+                'value' => $setting->value
+            ];
+        });
+    }
+
+
 }

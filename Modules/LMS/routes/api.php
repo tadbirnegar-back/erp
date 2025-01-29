@@ -97,5 +97,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/show/setting', [SettingController::class, 'index']);
     Route::post('/lms/store/setting', [SettingController::class, 'store']);
+    Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
 
 });
