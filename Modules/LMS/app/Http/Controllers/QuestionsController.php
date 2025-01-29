@@ -7,7 +7,6 @@ use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\questionsTrait;
-use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
 use Modules\LMS\app\Resources\QuestionManagementResource;
@@ -173,10 +172,18 @@ class QuestionsController extends Controller
                     'message' => 'User not found'
                 ], 404);
             }
-            $courseID = Course::with('chapters.lessons.questions.answers.answerSheet')->select([
-                'courses.id as courseID',
-            ])->first();
+            $question = Question::joinRelationship('lesson.chapter.course')
+                ->select('courses.id as courseID')
+                ->find($questionID);
 
+
+            if (!$question) {
+                return response()->json([
+                    'message' => 'سوال یافت نشد'
+                ], 404);
+            }
+
+            $courseID = $question->courseID;
 
             $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs);
             if ($updateResult) {
