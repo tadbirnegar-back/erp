@@ -12,10 +12,12 @@ use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Exam;
+use Modules\LMS\app\Models\QuestionExam;
 use Modules\LMS\app\Models\QuestionType;
 use Modules\LMS\app\Models\Repository;
 use Modules\LMS\app\Resources\ExamListResource;
 use Modules\LMS\app\Resources\ShowExamQuestionResource;
+use Modules\SettingsMS\app\Models\Setting;
 
 class ExamsController extends Controller
 {
@@ -67,9 +69,27 @@ class ExamsController extends Controller
             DB::beginTransaction();
 
             $student = Auth::user()->load('student');
-            $examID = Exam::with('courses')->find($id);
+            if (!$student) {
+                return response()->json(['error' => 'کاربر یافت نشد.'], 404);
+            }
 
-            $courseID = $examID->courses->first()->id;
+            $exam = Exam::with('courses')->find($id);
+            if (!$exam) {
+                return response()->json(['error' => 'آزمون یافت نشد.'], 404);
+            }
+
+            $courseID = $exam->courses->first()->id ?? null;
+            if (!$courseID) {
+                return response()->json(['error' => 'دوره‌ای برای این آزمون یافت نشد.'], 404);
+            }
+
+            $questionCount = QuestionExam::where('exam_id', $exam->id)->count();
+            $questionLimit = (int)Setting::where('key', 'question_numbers_perExam')->value('value');
+            if ($questionCount < $questionLimit) {
+                return response()->json([
+                    'error' => 'تعداد سوالات آزمون با مقدار تعیین شده در تنظیمات همخوانی ندارد.'
+                ], 422);
+            }
 
             $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
             $completed = $this->isCourseCompleted($student);
@@ -78,15 +98,18 @@ class ExamsController extends Controller
             if ($enrolled && !$attempted && !$completed) {
                 $examQuestions = $this->showExam($id);
                 $response = new ShowExamQuestionResource($examQuestions);
+
+                DB::commit();
+
                 return response()->json([
                     'examQuestions' => $response
                 ]);
             } else {
+                DB::rollBack();
                 return response()->json(['message' => 'شما اجازه دسترسی به سوالات این آزمون را ندارید'], 403);
             }
         } catch (\Exception $e) {
             DB::rollBack();
-
             return response()->json([
                 'message' => 'خطا در دریافت سوالات و گزینه‌ها.',
                 'error' => $e->getMessage()
@@ -96,7 +119,6 @@ class ExamsController extends Controller
 
     public function index(Request $request)
     {
-
         $auth = Auth::user()->load('student');
         if (!$auth) {
 

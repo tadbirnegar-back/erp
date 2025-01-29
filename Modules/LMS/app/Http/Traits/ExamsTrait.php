@@ -23,11 +23,13 @@ trait ExamsTrait
         $query->leftJoinRelationship('questions');
         $query->addSelect([
             'exams.title as examTitle',
+            'exams.id as examID',
             'courses.title as courseTitle',
             'questions.title as questionTitle',
             'question_exams.exam_id as qExamID'
         ]);
         $query->withCount(['questions as totalQuestions']);
+
 
         return $query->where('exams.id', $id)->get();
 
@@ -145,8 +147,6 @@ trait ExamsTrait
         ])->where('answer_sheets.student_id', $auth->id);
 
 
-        return $query->get();
-//            ->paginate($perPage, ['*'], 'page', $pageNumber);
         return $query->get();
 
 
