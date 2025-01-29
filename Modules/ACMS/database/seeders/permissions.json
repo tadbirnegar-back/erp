@@ -112,5 +112,11 @@
         "slug": "/bgt/budgets/change-Status",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "لغو بودجه",
+        "slug": "/bgt/budgets/decline",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]
