@@ -107,6 +107,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/store/setting', [SettingController::class, 'store']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
     Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
-
-
 });
