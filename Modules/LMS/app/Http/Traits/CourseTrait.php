@@ -198,9 +198,15 @@ trait CourseTrait
                 },
                 'chapters' => function ($query) {
                     $query->with([
-                        'lessons.latestStatus'
+                        'lessons' => function ($query) {
+                            $query->whereHas('latestStatus', function ($q) {
+                                $q->where('name', LessonStatusEnum::ACTIVE->value);
+                            });
+                        },
                     ]);
                 },
+
+
             ],
             'StudyLog' => ['lessonStudyLog' => function ($query) use ($user, $isEnrolled) {
                 $query->where('student_id', $user->student->id)

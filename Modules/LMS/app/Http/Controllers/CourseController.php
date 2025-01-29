@@ -120,6 +120,7 @@ class CourseController extends Controller
                     $this->courseCanceledStatus()->id
                 ]);
             })->with('latestStatus')->find($id);
+
             $user = Auth::user();
             if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
@@ -128,7 +129,7 @@ class CourseController extends Controller
             $componentsToRenderWithData = $this->courseShow($course, $user);
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
+            return response()->json(['message' => $e->getMessage()], 403);
         }
     }
 
