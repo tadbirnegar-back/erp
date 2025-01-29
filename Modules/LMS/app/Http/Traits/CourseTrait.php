@@ -667,6 +667,7 @@ trait CourseTrait
             ])
             ->leftJoinRelationship('lastStatusForJoin.status', [
                 "status" => fn($join) => $join->as('status_alias'),
+                "lastStatusForJoin" => fn($join) => $join->as('course_status_alias')
             ])
             ->select([
                 //course datas
@@ -706,6 +707,7 @@ trait CourseTrait
                 //status
                 'status_alias.name as status_alias_name',
                 'status_alias.class_name as status_alias_class_name',
+                'course_status_alias.id as course_status_alias_id',
                 //chapters and lessons
                 'chapters_alias.title as chapters_alias_title',
                 'chapters_alias.id as chapters_alias_id',
@@ -729,6 +731,7 @@ trait CourseTrait
         })->flatten(1); // Flatten to get the final list of results
 
         return $filteredResults;
+// Flatten to get the final list of results
 
     }
 
@@ -930,6 +933,11 @@ trait CourseTrait
     public function coursePresentingStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+    }
+
+    public function courseWaitPresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::WAITING_TO_PRESENT->value);
     }
 
 }
