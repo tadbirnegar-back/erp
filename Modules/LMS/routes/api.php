@@ -1,17 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\LMS\app\Http\Controllers\ChapterController;
-use Modules\LMS\app\Http\Controllers\ContentController;
-use Modules\LMS\app\Http\Controllers\CourseController;
-use Modules\LMS\app\Http\Controllers\CourseCourseController;
-use Modules\LMS\app\Http\Controllers\LessonController;
-use Modules\LMS\app\Http\Controllers\OucPropertyController;
-use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
-use Modules\LMS\app\Http\Controllers\PriviciesController;
-use Modules\LMS\app\Http\Controllers\QuestionsController;
-use Modules\LMS\app\Http\Controllers\SettingController;
-use Modules\LMS\app\Http\Controllers\TeacherController;
+use Modules\HRMS\app\Http\Controllers\ApprovingListController;
+use Modules\HRMS\app\Http\Controllers\EmployeeController;
+use Modules\HRMS\app\Http\Controllers\HireTypeController;
+use Modules\HRMS\app\Http\Controllers\HRMConfigController;
+use Modules\HRMS\app\Http\Controllers\JobController;
+use Modules\HRMS\app\Http\Controllers\LevelController;
+use Modules\HRMS\app\Http\Controllers\PositionController;
+use Modules\HRMS\app\Http\Controllers\RecruitmentScriptController;
+use Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController;
+use Modules\HRMS\app\Http\Controllers\SkillController;
 
 /*
     |--------------------------------------------------------------------------
@@ -24,87 +23,152 @@ use Modules\LMS\app\Http\Controllers\TeacherController;
     |
 */
 
-//Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-//    Route::get('lms', fn (Request $request) => $request->user())->name('lms');
-//});
+
+Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/hrm/employee/add', [EmployeeController::class, 'store']);
+    Route::post('/hrm/employee/list', [EmployeeController::class, 'index']);
+    Route::get('/hrm/employee/list/filter', [EmployeeController::class, 'employeeListFilter']);
+    Route::get('/hrm/setting', [HRMConfigController::class, 'configList']);
+    Route::post('/hrm/erc/list', [RecruitmentScriptController::class, 'indexExpiredScripts']);
+
+});
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/teachers/list', [TeacherController::class, 'index']);
-    Route::post('/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
-    Route::post('/students/search', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'isPersonStudent']);
-    Route::post('/dehyari/add', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'store']);
-    Route::post('/students/list', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'index']);
-    Route::post('/students/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'show']);
-    Route::post('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'show']);
-    Route::put('/students/update/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'update']);
-    Route::delete('/students/delete/{id}', [\Modules\LMS\app\Http\Controllers\StudentController::class, 'destroy']);
-});
-Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
-    Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
-    Route::post('/lms/courses/questions/list', [\Modules\LMS\app\Http\Controllers\CourseController::class, 'courseList']);
-    Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
-    Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
-    Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
-    Route::get('/lms/chapter/delete/{id}', [ChapterController::class, 'delete']);
-    Route::get('/lms/lesson/show/{id}', [LessonController::class, 'show']);
-    Route::post('/lms/lesson/update/{id}', [LessonController::class, 'update']);
-    Route::post('/lms/course/add', [CourseController::class, 'store']);
-    Route::post('/lms/course/update/{id}', [CourseController::class, 'update']);
-    Route::get('/lms/publish/course/{id}', [CourseController::class, 'publishCourseDataShow']);
-    Route::get('/lms/course/make-publish/{id}', [CourseController::class, 'makeCoursePublish']);
-    Route::get('/lms/course/delete/{id}', [CourseController::class, 'deleteCourse']);
-    Route::get('/lms/course/cancel/{id}', [CourseController::class, 'cancelCourse']);
-    Route::get('/lms/lesson/delete/{id}', [LessonController::class, 'deleteLesson']);
-    Route::get('/lms/course/my-enrolled-courses', [CourseController::class, 'myEnrolledCourses']);
-    Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
-    Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
-    Route::get('/lms/exam-result/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
-    Route::get('/lms/pre-view/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'previewExam']);
-    Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
-    Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
-    Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
-
+    Route::post('/employee/natural/search', [EmployeeController::class, 'findPersonToInsertAsEmployee'])->middleware('auth:api');
+    Route::post('/employee/national-code/search', [EmployeeController::class, 'findPersonToInsertAsEmployee']);
+    Route::post('/recruitment/list/state_ofc', [RecruitmentScriptController::class, 'stateOfcs']);
+    Route::post('/recruitment/list/city_ofc', [RecruitmentScriptController::class, 'cityOfcs']);
+    Route::post('/recruitment/list/district_ofc', [RecruitmentScriptController::class, 'districtOfcs']);
+    Route::post('/recruitment/list/town_ofc', [RecruitmentScriptController::class, 'townOfcs']);
+    Route::post('/recruitment/list/village_ofc', [RecruitmentScriptController::class, 'villageOfcs']);
+    Route::post('/hrm/ounit/positions/list', [PositionController::class, 'getByOrganizationUnit']);
+    Route::get('/hrm/employee/add', [EmployeeController::class, 'addEmployeeBaseInfo'])->middleware('auth:api');
+    Route::post('/hrm/education-levels/list', [\Modules\HRMS\app\Http\Controllers\LevelsOfEducationController::class, 'index']);
+    Route::post('/hrm/register/dehyar', [EmployeeController::class, 'registerDehyar']);
+    Route::post('/hrm/register/sarparast', [EmployeeController::class, 'registerSarparast']);
 
 });
-Route::middleware(['auth:api'])->prefix('v1')->group(function () {
-    Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
-    Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
-    Route::post('/lms/register/course/{id}', [CourseController::class, 'registerCourse']);
-    Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
-    Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
-    Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
-    Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
-    Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
-    Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
-    Route::get('/lms/pre-view/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'previewExam']);
-    Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
-    Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
-    Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
-    Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
-    Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
-    Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
-    Route::get('/lms/ounit/list/course-all', [CourseController::class, 'courseListAll']);
-    Route::get('/lms/privicies/index', [PriviciesController::class, 'index']);
-    Route::post('/lms/ounit/live-search', [CourseController::class, 'liveSearchOunit']);
-    Route::post('/lms/ouc-properties/list', [OucPropertyController::class, 'listing']);
-    Route::post('/lms/ouc-property-values/list', [OucPropertyValueController::class, 'listing']);
-    Route::get('/lms/course-course/list/{id}', [CourseCourseController::class, 'listing']);
-    Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
-    Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
-    Route::get('/lms/course/my-enrolled-courses', [CourseController::class, 'myEnrolledCourses']);
-    Route::post('/lms/exam/store-ansSheet/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'storeAnsS']);
-    Route::post('/lms/exam/show/{id}', [\Modules\LMS\app\Http\Controllers\ExamResultController::class, 'showAns']);
-    Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
-    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
-    Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
-    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
-    Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
-    Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
-    Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
-    Route::post('/lms/show/setting', [SettingController::class, 'index']);
-    Route::post('/lms/store/setting', [SettingController::class, 'store']);
-    Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
-    Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
-    Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
+
+Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/hrm/levels/add', [LevelController::class, 'store']);
+    Route::post('/hrm/levels/list', [LevelController::class, 'index']);
+    Route::post('/hrm/levels/{id}', [LevelController::class, 'show']);
+    Route::post('/hrm/levels/update/{id}', [LevelController::class, 'show']);
+    Route::put('/hrm/levels/update/{id}', [LevelController::class, 'update']);
+    Route::delete('/hrm/levels/delete/{id}', [LevelController::class, 'destroy']);
+
+
+    Route::post('/hrm/positions/add', [PositionController::class, 'store']);
+    Route::post('/hrm/positions/list', [PositionController::class, 'index']);
+    Route::post('/hrm/positions/{id}', [PositionController::class, 'show']);
+    Route::post('/hrm/positions/update/{id}', [PositionController::class, 'show']);
+    Route::put('/hrm/positions/update/{id}', [PositionController::class, 'update']);
+    Route::delete('/hrm/positions/delete/{id}', [PositionController::class, 'destroy']);
+
+
+    Route::post('/hrm/skills/add', [SkillController::class, 'store']);
+    Route::post('/hrm/skills/list', [SkillController::class, 'index']);
+    Route::post('/hrm/skills/{id}', [SkillController::class, 'show']);
+    Route::post('/hrm/skills/update/{id}', [SkillController::class, 'show']);
+    Route::put('/hrm/skills/update/{id}', [SkillController::class, 'update']);
+    Route::delete('/hrm/skills/delete/{id}', [SkillController::class, 'destroy']);
+
+    Route::get('/hrm/rc/add', [EmployeeController::class, 'addEmployeeBaseInfo']);
+});
+
+Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
+
+    Route::post('/hrm/script-agent-type/add', [ScriptAgentTypeController::class, 'store']);
+    Route::put('/hrm/script-agent-type/update/{id}', [ScriptAgentTypeController::class, 'update']);
+
+    Route::delete('/hrm/script-agent-type/delete/{id}', [ScriptAgentTypeController::class, 'destroy']);
+
+
+    Route::post('/hrm/jobs/add', [JobController::class, 'store']);
+    Route::put('/hrm/jobs/update/{id}', [JobController::class, 'update']);
+
+    Route::delete('/hrm/jobs/delete/{id}', [JobController::class, 'destroy']);
+
+
+    Route::post('/hrm/hire-types/add', [HireTypeController::class, 'store']);
+
+    Route::put('/hrm/hire-types/update/{id}', [HireTypeController::class, 'update']);
+
+    Route::delete('/hrm/hire-types/delete/{id}', [HireTypeController::class, 'destroy']);
+
+
+    Route::post('/hrm/script-types/add', [\Modules\HRMS\app\Http\Controllers\ScriptTypeController::class, 'store']);
+    Route::put('/hrm/script-types/update/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptTypeController::class, 'update']);
+
+    Route::delete('/hrm/script-types/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptTypeController::class, 'destroy']);
+
+
+    Route::post('/hrm/script-agents/add', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'store']);
+    Route::put('/hrm/script-agents/update/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'update']);
+
+    Route::delete('/hrm/script-agents/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'destroy']);
+
+
+    Route::post('/hrm/employee/script-combos/', [EmployeeController::class, 'agentCombos']);
+
+    Route::post('/hrm/employee/script-types/', [EmployeeController::class, 'employeeScriptTypes']);
+
+    Route::post('/hrm/rc/list', [RecruitmentScriptController::class, 'index'])->middleware(['auth:api']);
+
+    Route::post('/hrm/prc/list', [RecruitmentScriptController::class, 'pendingApprovingIndex'])->middleware(['auth:api']);
+
+    Route::post('/hrm/prc/{id}', [ApprovingListController::class, 'showScriptWithApproves'])->middleware(['auth:api']);
+
+    Route::post('/hrm/rc/{id}', [RecruitmentScriptController::class, 'recruitmentScriptShow'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/grant/{id}', [ApprovingListController::class, 'approveScriptByUser'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/decline/{id}', [ApprovingListController::class, 'declineScriptByUser'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/cancel/{id}', [RecruitmentScriptController::class, 'cancelRscript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/renew/{id}', [RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
+
+//    Route::put('/hrm/rc/terminate/{id}', [RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/service-end/{id}', [RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
+
+//    Route::put('/hrm/rc/cancel/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'cancelRscript'])->middleware(['auth:api']);
+
+//    Route::put('/hrm/rc/renew/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'renewScript'])->middleware(['auth:api']);
+
+//    Route::put('/hrm/rc/terminate/{id}', [\Modules\HRMS\app\Http\Controllers\RecruitmentScriptController::class, 'terminateRscript'])->middleware(['auth:api']);
+
+    Route::put('/hrm/rc/service-end/{id}', [RecruitmentScriptController::class, 'endOfServiceRscript'])->middleware(['auth:api']);
+
+
+    Route::post('/hrm/rc/insert/add', [RecruitmentScriptController::class, 'store']);
+
+
+    Route::post('/hrm/isar-types/list', [EmployeeController::class, 'isarsStatusesIndex']);
+
+    Route::post('/hrm/relative-types/list', [EmployeeController::class, 'relativeTypesIndex']);
+
+
+    Route::post('/hrm/employee/verify', [EmployeeController::class, 'verifyEmployeeForScript']);
+
+
+    Route::post('/hrm/rc/reissue/{id}', [RecruitmentScriptController::class, 'RenewRecruitmentScript']);
+
+    Route::post('/hrm/rc/manager-reject/{id}', [RecruitmentScriptController::class, 'RejectRecruitmentScript']);
+
+    Route::post('/hrm/rc/manager-approve/{id}', [RecruitmentScriptController::class, 'approveRecruitmentScript']);
+
+    Route::post('/hrm/dehyar/request', [RecruitmentScriptController::class, 'getMyVillageScripts']);
+
+    Route::post('/hrm/village/search-by-abadi-code', [RecruitmentScriptController::class, 'getVillageOfcByAbadiCode']);
+
+    Route::post('/hrm/request-new-village', [RecruitmentScriptController::class, 'addNewScriptForDehyar']);
+
+    Route::get('/hrm/ptprc/list', [RecruitmentScriptController::class, 'ptpIndex']);
+
+//    Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
+
+    Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
 
 });
