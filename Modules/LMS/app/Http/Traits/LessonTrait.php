@@ -70,8 +70,7 @@ trait LessonTrait
     {
         $query = Lesson::query()
             ->leftJoinRelationship('contents.teacher.workForceForJoin.person.avatar', [
-                'contents' => fn($join) => $join->as('contents_alias')
-                    ->withGlobalScopes(),
+                'contents' => fn($join) => $join->as('contents_alias'),
                 'teacher' => fn($join) => $join->as('teacher_alias'),
                 'workForceForJoin' => fn($join) => $join->as('workForce_alias')
                     ->on('workForce_alias.workforceable_type', '=', DB::raw("'" . addslashes(Teacher::class) . "'")),
@@ -79,13 +78,11 @@ trait LessonTrait
                 'avatar' => fn($join) => $join->as('teacher_avatar_alias'),
             ])
             ->leftJoinRelationship('contents.contentType', [
-                'contents' => fn($join) => $join->withGlobalScopes()
-                    ->on('contents.id', '=', 'contents_alias.id'),
+                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'contentType' => fn($join) => $join->as('content_type_alias'),
             ])
             ->leftJoinRelationship('contents.file', [
-                'contents' => fn($join) => $join->withGlobalScopes()
-                    ->on('contents.id', '=', 'contents_alias.id'),
+                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'file' => fn($join) => $join->as('content_file_alias'),
             ])
             ->leftJoinRelationship('files.file', [
@@ -102,8 +99,7 @@ trait LessonTrait
                 'user' => fn($join) => $join->on('users.id', '=', 'comments_alias.creator_id'),
             ])
             ->leftJoinRelationship('contents.consumeLog', [
-                'contents' => fn($join) => $join->withGlobalScopes()
-                    ->on('contents.id', '=', 'contents_alias.id'),
+                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'consumeLog' => fn($join) => $join->as('content_consume_alias')
                     ->on('content_id', 'contents_alias.id')
                     ->on('content_consume_alias.student_id', '=', DB::raw($user->student->id)),
