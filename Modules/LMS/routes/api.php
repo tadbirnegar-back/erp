@@ -5,7 +5,6 @@ use Modules\LMS\app\Http\Controllers\ChapterController;
 use Modules\LMS\app\Http\Controllers\ContentController;
 use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\CourseCourseController;
-use Modules\LMS\app\Http\Controllers\CourseOunitFeatureController;
 use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
@@ -44,7 +43,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
     Route::post('/lms/courses/questions/list', [\Modules\LMS\app\Http\Controllers\CourseController::class, 'courseList']);
     Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
-
     Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
     Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
     Route::get('/lms/chapter/delete/{id}', [ChapterController::class, 'delete']);
@@ -107,4 +105,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/store/setting', [SettingController::class, 'store']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
     Route::get('/lms/my-courses/{id}', [CourseController::class, 'show']);
+    Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
+
 });
