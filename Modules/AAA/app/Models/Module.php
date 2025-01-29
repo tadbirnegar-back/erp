@@ -26,4 +26,9 @@ class Module extends Model
     {
         return $this->hasMany(Permission::class, 'module_id');
     }
+
+    public function category()
+    {
+        return $this->hasOne(ModuleCategory::class , 'id' , 'module_category_id');
+    }
 }

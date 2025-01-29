@@ -4,9 +4,12 @@ namespace Modules\LMS\app\Resources;
 
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\LMS\app\Http\Traits\CourseTrait;
+use Modules\LMS\app\Models\Course;
 
 class RelatedCourseListResource extends JsonResource
 {
+    use CourseTrait;
     public function toArray($request): array
     {
         $data = collect($this->resource->items()); // Access the items in the paginator
@@ -58,10 +61,16 @@ class RelatedCourseListResource extends JsonResource
                 return null;
             }
 
+            // Check if the course is presenting, if not, filter it out
+            $courseId = $firstRecord['course_id'];
+            if (!$this->coursePresentingChecker($courseId)) {
+                return null;
+            }
+
             return [
                 'course_id' => $firstRecord['course_id'],
                 'course_title' => $firstRecord['course_title'],
-                'course_exp_date' => $firstRecord['course_exp_date'] ?  Carbon::parse($firstRecord['course_exp_date'])->diffInDays(Carbon::now()) : null,
+                'course_exp_date' => $firstRecord['course_exp_date'] ? Carbon::parse($firstRecord['course_exp_date'])->diffInDays(Carbon::now()) : null,
                 'status_name' => $firstRecord['status_name'],
                 'class_name' => $firstRecord['class_name'],
                 'cover_slug' => url($firstRecord['cover_slug']),
@@ -70,7 +79,7 @@ class RelatedCourseListResource extends JsonResource
             ];
         });
 
-        // Remove null entries caused by empty groups
+        // Remove null entries caused by empty groups or non-presenting courses
         $groupedData = $groupedData->filter()->values();
 
         // Pagination metadata
@@ -80,5 +89,12 @@ class RelatedCourseListResource extends JsonResource
             'data' => $groupedData,
             'pagination' => $pagination['links'],
         ];
+    }
+
+    private function coursePresentingChecker($id)
+    {
+        $course = Course::with('lastStatus')->find($id);
+        $statusName = $course->lastStatus[0]->name;
+        return $statusName == $this->coursePresentingStatus()->name;
     }
 }
