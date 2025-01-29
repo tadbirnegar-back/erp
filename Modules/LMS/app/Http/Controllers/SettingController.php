@@ -61,7 +61,6 @@ class SettingController extends Controller
     public function LastShow(): JsonResponse
     {
         $trait = $this->LastSettingShow();
-
         return response()->json($trait);
     }
 
