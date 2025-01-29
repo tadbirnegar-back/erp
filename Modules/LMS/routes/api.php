@@ -79,10 +79,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
     Route::get('/lms/pre-view/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'previewExam']);
-//    Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
+    Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
     Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
-//    Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
-//    Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
     Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
     Route::get('/lms/ounit/list/course-all', [CourseController::class, 'courseListAll']);
@@ -99,9 +97,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/exams/list', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'index']);
     Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
     Route::get('/lms/show/{id}', [QuestionsController::class, 'showDropDowns']);
-//    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
+    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
     Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
-//    Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
+    Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
     Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
     Route::post('/lms/show/setting', [SettingController::class, 'index']);
     Route::post('/lms/store/setting', [SettingController::class, 'store']);
@@ -110,7 +108,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
 
 });
-Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
-Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
-Route::get('/lms/generated-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'generateExam']);
-Route::get('/lms/show-exam/{id}', [\Modules\LMS\app\Http\Controllers\ExamsController::class, 'showExamQuestions']);
