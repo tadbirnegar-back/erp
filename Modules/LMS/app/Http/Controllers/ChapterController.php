@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\ChapterTrait;
+use Modules\LMS\app\Http\Traits\LessonTrait;
 use Modules\LMS\app\Models\Chapter;
+use Modules\LMS\app\Models\StatusLesson;
 
 class ChapterController extends Controller
 {
-    use ChapterTrait;
+    use ChapterTrait , LessonTrait;
 
     public function update(Request $request, $id)
     {
@@ -42,22 +44,21 @@ class ChapterController extends Controller
         try {
             DB::beginTransaction();
             $chapter = Chapter::find($id);
-            if ($chapter->read_only) {
-                return response()->json(['message' => 'شما مجوز پاک کردن این فصل را ندارید'], 403);
-            }
             $chapter->load('course', 'lessons');
-
-            $HasNoneChapter = $this->isCourseHasNoneChapter($chapter->course->id);
-
-
-            $chapter->lessons()->update(['chapter_id' => $HasNoneChapter->id]);
+            $statusLesson = $this->lessonInActiveStatus()->id;
+            $chapter->lessons->each(function ($lesson) use ($statusLesson) {
+                StatusLesson::create([
+                    'lesson_id' => $lesson->id,
+                    'status_id' => $statusLesson,
+                ]);
+            });
 
             $chapter->delete();
             DB::commit();
             return response()->json(["message" => "فصل با موفقیت حفظ شد"]);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(["message" => "فصل حذف نشد"]);
+            return response()->json(["message" => "متاسفانه عملیات حذف فصل موفقیت آمیز نبود"] , 400);
         }
 
     }

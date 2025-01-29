@@ -20,39 +20,8 @@ class testController extends Controller
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
     use ExamsTrait;
 
-    public function run($exam)
+    public function run()
     {
-
-        $status = $this->activeStatus()->id;
-
-        $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
-        $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
-
-        $difficultySetting = Setting::where('key', 'Difficulty_for_exam')->first();
-        $difficultyLevel = $difficultySetting ? $difficultySetting->value : null;
-
-        $questionTypeSetting = Setting::where('key', 'question_type_for_exam')->first();
-        $questionTypeLevel = $questionTypeSetting ? (int)$questionTypeSetting->value : null;
-
-        $randomQuestions = Question::inRandomOrder()
-            ->where('status_id', $status)
-            ->when($difficultyLevel, function ($query) use ($difficultyLevel) {
-                $query->where('difficulty_id', $difficultyLevel);
-            })
-            ->when($questionTypeLevel, function ($query) use ($questionTypeLevel) {
-                $query->where('question_type_id', $questionTypeLevel);
-            })
-            ->limit($questionCount)
-            ->get();
-        $data = $randomQuestions->map(function ($question) use ($exam) {
-            return [
-                'exam_id' => $exam->id,
-                'question_id' => $question->id,
-            ];
-        })->toArray();
-
-        return $data;
-
 
 //        return Question::GetAllStatuses()
 //            ->firstWhere('name', '=', self::$active);

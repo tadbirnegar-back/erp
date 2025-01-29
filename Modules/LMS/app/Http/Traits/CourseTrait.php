@@ -9,6 +9,7 @@ use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
@@ -17,6 +18,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
 use Modules\PayStream\app\Models\ProcessStatus;
+use Modules\StatusMS\app\Models\Status;
 
 
 trait CourseTrait
@@ -30,18 +32,30 @@ trait CourseTrait
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
+    private static string $active = QuestionsEnum::ACTIVE->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
+        $status = Status::where('name', $this::$active)->firstOrFail();
 
-        $query = Course::joinRelationship('cover')
+        $query = Course::query()
+            ->joinRelationship('cover')
+            ->leftJoinRelationship('chapters.lessons.lessonStatus', [
+                'lessonStatus' => fn($join) => $join->on('status_lesson.status_id', DB::raw($status->id))
+            ])
+            ->leftJoinRelationship('chapters.lessons.questions', [
+                'questions' => fn($join) => $join->on('questions.status_id', DB::raw($status->id))
+            ])
             ->addSelect([
-                'courses.id',
+                'courses.id as course_id',
                 'courses.title',
                 'courses.cover_id',
                 'files.slug as cover_slug',
+                'chapters.id as chapter_id',
+                'lessons.id as lesson_id',
+                'questions.id as question_id'
             ])
             ->whereHas('statusCourse.status', function ($query) {
                 $query->whereIn('name', [
@@ -49,24 +63,16 @@ trait CourseTrait
                     $this::$pishnevis,
                     $this::$waitToPresent,
                 ]);
-            })
-            ->with(['statusCourse.status']);
-
-        $query->withCount(['chapters', 'lessons', 'questions']);
-
-
-        $query
-            ->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
-                    ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
             });
 
-        $query->when($searchTerm, function ($query, $searchTerm) {
-            $query->where('courses.title', 'like', '%' . $searchTerm . '%')
-                ->whereRaw("MATCH (title) AGAINST (? IN BOOLEAN MODE)", [$searchTerm]);
+        $query->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
+                ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
         });
+
         return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
+
 
     public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
@@ -661,6 +667,7 @@ trait CourseTrait
             ])
             ->leftJoinRelationship('lastStatusForJoin.status', [
                 "status" => fn($join) => $join->as('status_alias'),
+                "lastStatusForJoin" => fn($join) => $join->as('course_status_alias')
             ])
             ->select([
                 //course datas
@@ -700,6 +707,7 @@ trait CourseTrait
                 //status
                 'status_alias.name as status_alias_name',
                 'status_alias.class_name as status_alias_class_name',
+                'course_status_alias.id as course_status_alias_id',
                 //chapters and lessons
                 'chapters_alias.title as chapters_alias_title',
                 'chapters_alias.id as chapters_alias_id',
@@ -723,6 +731,7 @@ trait CourseTrait
         })->flatten(1); // Flatten to get the final list of results
 
         return $filteredResults;
+// Flatten to get the final list of results
 
     }
 
@@ -917,6 +926,11 @@ trait CourseTrait
     public function coursePresentingStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+    }
+
+    public function courseWaitPresentingStatus()
+    {
+        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::WAITING_TO_PRESENT->value);
     }
 
 }

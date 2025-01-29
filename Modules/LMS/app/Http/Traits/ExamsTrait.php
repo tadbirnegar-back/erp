@@ -141,6 +141,8 @@ trait ExamsTrait
 
 
         return $query->get();
+//            ->paginate($perPage, ['*'], 'page', $pageNumber);
+        return $query->get();
 
 
     }
