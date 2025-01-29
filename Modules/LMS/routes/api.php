@@ -5,16 +5,17 @@ use Modules\LMS\app\Http\Controllers\ChapterController;
 use Modules\LMS\app\Http\Controllers\ContentController;
 use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\CourseCourseController;
+use Modules\LMS\app\Http\Controllers\ExamResultController;
+use Modules\LMS\app\Http\Controllers\ExamsController;
 use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
-use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\QuestionsController;
-use Modules\LMS\app\Http\Controllers\TeacherController;
-use Modules\LMS\app\Http\Controllers\ExamResultController;
-use Modules\LMS\app\Http\Controllers\ExamsController;
+use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\StudentController;
+use Modules\LMS\app\Http\Controllers\TeacherController;
+
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -62,7 +63,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/exam/show/{id}', [ExamResultController::class, 'showAns']);
     Route::get('/lms/exam-result/list', [ExamsController::class, 'index']);
     Route::get('/lms/pre-view/{id}', [ExamsController::class, 'previewExam']);
-    Route::get('/lms/generated-exam/{id}', [ExamsController::class, 'generateExam']);
+//    Route::get('/lms/generated-exam/{id}', [ExamsController::class, 'generateExam']);
     Route::get('/lms/show-exam/{id}', [ExamsController::class, 'showExamQuestions']);
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
 });
@@ -93,3 +94,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/show/setting', [SettingController::class, 'index']);
     Route::post('/lms/store/setting', [SettingController::class, 'store']);
 });
+Route::get('/lms/generated-exam/{id}', [ExamsController::class, 'generateExam']);

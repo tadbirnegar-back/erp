@@ -23,10 +23,12 @@ trait ExamsTrait
         $query->leftJoinRelationship('questions');
         $query->addSelect([
             'exams.title as examTitle',
+            'exams.id as examID',
             'courses.title as courseTitle',
             'questions.title as questionTitle',
         ]);
         $query->withCount(['questions as totalQuestions']);
+        $query->joinRelationship('questionExam')->where(Setting::)
 
         return $query->where('exams.id', $id)->get();
 
