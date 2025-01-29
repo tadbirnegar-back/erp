@@ -56,7 +56,6 @@ class LessonDatasWithLessonIDResource extends JsonResource
                 'files' => $lesson->map(function ($file) {
                     return [
                         'id' => $file->lesson_file_id,
-                        'file_url' => $file->lesson_file_slug,
                         'file_title' => 'ضمیمه',
                         'url' => url($file->lesson_file_slug),
                         'size' => 12 ,
