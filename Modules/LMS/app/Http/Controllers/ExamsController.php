@@ -46,7 +46,7 @@ class ExamsController extends Controller
                 $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
                 $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
                 $data = $this->createExam($course, $questionType, $repository);
-                $previewData = $this->previewExam($data->id, $courseId, $student);
+                $previewData = $this->PExam($data->id, $courseId, $student);
                 DB::commit();
                 return response()->json($previewData);
             } else {

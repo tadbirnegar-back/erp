@@ -26,6 +26,7 @@ trait ExamsTrait
             'exams.id as examID',
             'courses.title as courseTitle',
             'questions.title as questionTitle',
+            'question_exams.exam_id as qExamID'
         ]);
         $query->withCount(['questions as totalQuestions']);
 
@@ -47,7 +48,7 @@ trait ExamsTrait
             'course_id' => $course->id,
         ]);
 
-        $questionExamData = $this->DataPreparation($exam);
+        $questionExamData = $this->DataPreparation($exam, $course->id);
 
         QuestionExam::insert($questionExamData);
 
@@ -55,7 +56,7 @@ trait ExamsTrait
     }
 
 
-    public function DataPreparation($exam)
+    public function DataPreparation($exam, $id)
     {
         $status = $this->activeStatus()->id;
 
@@ -76,8 +77,12 @@ trait ExamsTrait
             ->when($questionTypeLevel, function ($query) use ($questionTypeLevel) {
                 $query->where('question_type_id', $questionTypeLevel);
             })
+            ->joinRelationship('questionExams.exam.courseExams.course')
+            ->where('courses.id', $id)
             ->limit($questionCount)
             ->get();
+
+
         $data = $randomQuestions->map(function ($question) use ($exam) {
             return [
                 'exam_id' => $exam->id,
@@ -104,18 +109,18 @@ trait ExamsTrait
 
     }
 
-    public function previewExam($examID, $courseID, $student)
+    public function PExam($examID, $courseID, $student)
     {
-        $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
-        $completed = $this->isCourseCompleted($student);
-        $attempted = $this->hasAttemptedAndPassedExam($student, $courseID);
-        if ($enrolled && !$attempted && !$completed) {
-            $exam = $this->examPreview($examID);
-            $response = new ExamPreviewResource($exam);
-            return $response;
-        } else {
-            return null;
-        }
+//        $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
+//        $completed = $this->isCourseCompleted($student);
+//        $attempted = $this->hasAttemptedAndPassedExam($student, $courseID);
+//        if ($enrolled && !$attempted && !$completed) {
+        $exam = $this->examPreview($examID);
+        $response = new ExamPreviewResource($exam);
+        return $response;
+//        } else {
+//            return null;
+//        }
 
     }
 
