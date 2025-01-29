@@ -25,6 +25,7 @@ trait ExamsTrait
             'exams.title as examTitle',
             'courses.title as courseTitle',
             'questions.title as questionTitle',
+            'question_exams.exam_id as qExamID'
         ]);
         $query->withCount(['questions as totalQuestions']);
 
@@ -102,18 +103,18 @@ trait ExamsTrait
 
     }
 
-    public function previewExam($examID, $courseID, $student)
+    public function PExam($examID, $courseID, $student)
     {
-        $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
-        $completed = $this->isCourseCompleted($student);
-        $attempted = $this->hasAttemptedAndPassedExam($student, $courseID);
-        if ($enrolled && !$attempted && !$completed) {
-            $exam = $this->examPreview($examID);
-            $response = new ExamPreviewResource($exam);
-            return $response;
-        } else {
-            return null;
-        }
+//        $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
+//        $completed = $this->isCourseCompleted($student);
+//        $attempted = $this->hasAttemptedAndPassedExam($student, $courseID);
+//        if ($enrolled && !$attempted && !$completed) {
+        $exam = $this->examPreview($examID);
+        $response = new ExamPreviewResource($exam);
+        return $response;
+//        } else {
+//            return null;
+//        }
 
     }
 

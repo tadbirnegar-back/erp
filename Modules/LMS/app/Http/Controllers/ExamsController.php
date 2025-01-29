@@ -36,7 +36,8 @@ class ExamsController extends Controller
             }
 
 
-            $student = Auth::user()->load('student');
+//            $student = Auth::user()->load('student');
+            $student = User::with('student')->find(68);
             $enrolled = $this->isEnrolledToDefinedCourse($courseId, $student);
             $completed = $this->isCourseCompleted($student);
             $attempted = $this->hasAttemptedAndPassedExam($student, $courseId);
@@ -45,7 +46,7 @@ class ExamsController extends Controller
                 $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
                 $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
                 $data = $this->createExam($course, $questionType, $repository);
-                $previewData = $this->previewExam($data->id, $courseId, $student);
+                $previewData = $this->PExam($data->id, $courseId, $student);
                 DB::commit();
                 return response()->json($previewData);
             } else {
@@ -67,7 +68,8 @@ class ExamsController extends Controller
         try {
             DB::beginTransaction();
 
-            $student = Auth::user()->load('student');
+//            $student = Auth::user()->load('student');
+            $student = User::with('student')->find(68);
             $examID = Exam::with('courses')->find($id);
 
             $courseID = $examID->courses->first()->id;

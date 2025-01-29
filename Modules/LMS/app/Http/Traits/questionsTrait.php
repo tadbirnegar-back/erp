@@ -113,8 +113,8 @@ trait questionsTrait
 
     public function count($id)
     {
-        $status = Status::where('name', $this::$active)->firstOrFail();
-        $lessonStatus = $this->questionActiveStatus()->id;
+        $status = $this->questionActiveStatus();
+        $lessonStatus = $this->lessonActiveStatus()->id;
 
         $course = Course::with(['chapters.lessons.questions' => function ($query) use ($status) {
             $query->where('status_id', $status->id);
@@ -137,7 +137,8 @@ trait questionsTrait
         return [
             'chapters' => $chaptersCount,
             'lessons' => $lessonsCount,
-            'questions' => $questionsCount];
+            'questions' => $questionsCount
+        ];
     }
 
     public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs)
@@ -156,9 +157,10 @@ trait questionsTrait
                 'creator_id' => $user->id
             ]);
 
-            foreach ($delete as $optionToDelete) {
-                $this->deleteOptions($optionToDelete);
+            if (!empty($delete)) {
+                $this->deleteOptions($delete);
             }
+
 
             if (!empty($options)) {
                 Option::where('question_id', $questionID)->update(['is_correct' => 0]);
@@ -186,8 +188,8 @@ trait questionsTrait
 
     public function deleteOptions(array $option_ids)
     {
-        Option::whereIn('id', $option_ids)->delete();
-        return response()->json(['message' => 'Options deleted successfully.'], 200);
+        return Option::whereIn('id', $option_ids)->delete();
+
 
     }
 
