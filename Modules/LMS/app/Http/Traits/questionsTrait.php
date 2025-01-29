@@ -2,8 +2,10 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\Option;
 use Modules\LMS\app\Models\Question;
 use Modules\StatusMS\app\Models\Status;
@@ -15,10 +17,9 @@ trait questionsTrait
 
     public function dropDowns($courseID)
     {
-        $status = Status::where('name', $this::$active)->firstOrFail();
+        $status = $this->lessonActiveStatus()->id;
 
         $query = Course::leftJoinRelationship('chapters.lessons.lessonStatus');
-        $query->where('status_lesson.status_id', $status->id);
         $query->select([
             'chapters.id as chapterID',
             'chapters.title as chapterTitle',
@@ -27,13 +28,13 @@ trait questionsTrait
             'status_lesson.status_id as stu_id'
         ]);
         return $query->where('courses.id', $courseID)
-            ->where('status_lesson.status_id', $status->id)
+            ->where('status_lesson.status_id', $status)
             ->get();
     }
 
     public function insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs)
     {
-        $status = Status::whereIn('name', [$this::$active, $this::$inactive])->first();
+        $status = $this->questionActiveStatus();
         $questions = [];
         foreach ($repositoryIDs as $repositoryID) {
             $question = Question::create([
@@ -72,7 +73,7 @@ trait questionsTrait
 
     public function questionList($id)
     {
-        $status = Status::where('name', self::$active)->firstOrFail();
+        $status = $this->questionActiveStatus();
 
         $query = Course::joinRelationship('chapters.lessons.questions.difficulty')
             ->joinRelationship('chapters.lessons.questions.options')
@@ -112,7 +113,8 @@ trait questionsTrait
 
     public function count($id)
     {
-        $status = Status::where('name', $this::$active)->firstOrFail();
+        $status = $this->questionActiveStatus();
+        $lessonStatus = $this->lessonActiveStatus()->id;
 
         $course = Course::with(['chapters.lessons.questions' => function ($query) use ($status) {
             $query->where('status_id', $status->id);
@@ -120,7 +122,7 @@ trait questionsTrait
 
         $activeLessons = \DB::table('lessons')
             ->join('status_lesson', 'lessons.id', '=', 'status_lesson.lesson_id')
-            ->where('status_lesson.status_id', $status->id)
+            ->where('status_lesson.status_id', $lessonStatus)
             ->pluck('lessons.id');
 
         $chaptersCount = $course->chapters->count();
@@ -135,7 +137,8 @@ trait questionsTrait
         return [
             'chapters' => $chaptersCount,
             'lessons' => $lessonsCount,
-            'questions' => $questionsCount];
+            'questions' => $questionsCount
+        ];
     }
 
     public function updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs)
@@ -154,9 +157,10 @@ trait questionsTrait
                 'creator_id' => $user->id
             ]);
 
-            foreach ($delete as $optionToDelete) {
-                $this->deleteOptions($optionToDelete);
+            if (!empty($delete)) {
+                $this->deleteOptions($delete);
             }
+
 
             if (!empty($options)) {
                 Option::where('question_id', $questionID)->update(['is_correct' => 0]);
@@ -184,8 +188,8 @@ trait questionsTrait
 
     public function deleteOptions(array $option_ids)
     {
-        Option::whereIn('id', $option_ids)->delete();
-        return response()->json(['message' => 'Options deleted successfully.'], 200);
+        return Option::whereIn('id', $option_ids)->delete();
+
 
     }
 
@@ -266,6 +270,27 @@ trait questionsTrait
             ])->where('courses.id', $id)->get();
 
         return $questions;
+    }
+
+
+    public function questionActiveStatus()
+    {
+        return Question::GetAllStatuses()->firstWhere('name', QuestionsEnum::ACTIVE->value);
+    }
+
+    public function questionInActiveStatus()
+    {
+        return Question::GetAllStatuses()->firstWhere('name', QuestionsEnum::EXPIRED->value);
+    }
+
+    public function lessonActiveStatus()
+    {
+        return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::ACTIVE->value);
+    }
+
+    public function lessonInActiveStatus()
+    {
+        return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
     }
 
 }
