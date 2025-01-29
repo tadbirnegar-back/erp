@@ -46,7 +46,6 @@ trait ExamsTrait
         ]);
 
         $questionExamData = $this->DataPreparation($exam);
-        dd($questionExamData);
         QuestionExam::insert($questionExamData);
 
 
@@ -57,7 +56,6 @@ trait ExamsTrait
     public function DataPreparation($exam)
     {
         $status = $this->questionActiveStatus()->id;
-        dd($status);
 
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
@@ -149,7 +147,7 @@ trait ExamsTrait
 
     public function questionActiveStatus()
     {
-        return Question::GetAllStatuses()->first('name', QuestionsEnum::ACTIVE->value);
+        return Question::GetAllStatuses()->firstWhere('name', QuestionsEnum::ACTIVE->value);
     }
 
 
