@@ -48,7 +48,7 @@ trait SettingTrait
 
     public function LastSettingShow()
     {
-        $setting = Setting::select(['key', 'value'])
+        $settings = Setting::select(['key', 'value'])
             ->whereIn('key', [
                 'pass_score',
                 'question_numbers_perExam',
@@ -58,10 +58,21 @@ trait SettingTrait
             ])
             ->get();
 
-        return $setting->map(function ($setting) {
-            return [
+        $Q_type = QuestionType::all();
+        $difficulty = Difficulty::all();
+
+        $questionTypeForExamValue = optional($settings->where('key', 'question_type_for_exam')->first())->value;
+        $difficultyForExamValue = optional($settings->where('key', 'Difficulty_for_exam')->first())->value;
+
+        return $settings->map(function ($setting) use ($Q_type, $difficulty, $questionTypeForExamValue, $difficultyForExamValue) {
+            $filteredQuestionType = $Q_type->where('id', $questionTypeForExamValue)->pluck('name')->first();
+            $filteredDifficulty = $difficulty->where('id', $difficultyForExamValue)->pluck('name')->first();
+
+            return (object)[
                 'key' => $setting->key,
-                'value' => $setting->value
+                'value' => $setting->value,
+                'questionType' => $setting->key === 'question_type_for_exam' ? $filteredQuestionType : null,
+                'difficulty' => $setting->key === 'Difficulty_for_exam' ? $filteredDifficulty : null,
             ];
         });
     }
