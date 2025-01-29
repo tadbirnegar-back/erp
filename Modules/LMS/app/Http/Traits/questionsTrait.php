@@ -17,7 +17,7 @@ trait questionsTrait
 
     public function dropDowns($courseID)
     {
-        $status = $this->questionActiveStatus()->id;
+        $status = $this->lessonActiveStatus()->id;
 
         $query = Course::leftJoinRelationship('chapters.lessons.lessonStatus');
         $query->select([
