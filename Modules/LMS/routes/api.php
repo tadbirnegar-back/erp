@@ -5,16 +5,17 @@ use Modules\LMS\app\Http\Controllers\ChapterController;
 use Modules\LMS\app\Http\Controllers\ContentController;
 use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\CourseCourseController;
+use Modules\LMS\app\Http\Controllers\ExamResultController;
+use Modules\LMS\app\Http\Controllers\ExamsController;
 use Modules\LMS\app\Http\Controllers\LessonController;
 use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
-use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\QuestionsController;
-use Modules\LMS\app\Http\Controllers\TeacherController;
-use Modules\LMS\app\Http\Controllers\ExamResultController;
-use Modules\LMS\app\Http\Controllers\ExamsController;
+use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\StudentController;
+use Modules\LMS\app\Http\Controllers\TeacherController;
+
 /*
     |--------------------------------------------------------------------------
     | API Routes
