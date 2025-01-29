@@ -66,6 +66,10 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/generated-exam/{id}', [ExamsController::class, 'generateExam']);
     Route::get('/lms/show-exam/{id}', [ExamsController::class, 'showExamQuestions']);
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
+    Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
+    Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
+
+
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
@@ -74,8 +78,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/course/check-payment', [CourseController::class, 'checkPayment']);
     Route::post('/lms/lesson/comment', [LessonController::class, 'storeComment']);
     Route::get('/lms/lesson/adding-requirements/{id}', [LessonController::class, 'addLessonRequirements']);
-    Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
-    Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
     Route::get('/lms/ounit/list/course-all', [CourseController::class, 'courseListAll']);
     Route::get('/lms/privicies/index', [PriviciesController::class, 'index']);
     Route::post('/lms/ounit/live-search', [CourseController::class, 'liveSearchOunit']);
@@ -93,4 +95,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
     Route::post('/lms/show/setting', [SettingController::class, 'index']);
     Route::post('/lms/store/setting', [SettingController::class, 'store']);
+    Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
+
 });
