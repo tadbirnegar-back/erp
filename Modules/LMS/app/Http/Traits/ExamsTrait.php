@@ -46,7 +46,7 @@ trait ExamsTrait
             'course_id' => $course->id,
         ]);
 
-        $questionExamData = $this->DataPreparation($exam);
+        $questionExamData = $this->DataPreparation($exam, $course->id);
 
         QuestionExam::insert($questionExamData);
 
@@ -54,7 +54,7 @@ trait ExamsTrait
     }
 
 
-    public function DataPreparation($exam)
+    public function DataPreparation($exam, $id)
     {
         $status = $this->activeStatus()->id;
 
@@ -75,8 +75,12 @@ trait ExamsTrait
             ->when($questionTypeLevel, function ($query) use ($questionTypeLevel) {
                 $query->where('question_type_id', $questionTypeLevel);
             })
+            ->joinRelationship('questionExams.exam.courseExams.course')
+            ->where('courses.id', $id)
             ->limit($questionCount)
             ->get();
+
+
         $data = $randomQuestions->map(function ($question) use ($exam) {
             return [
                 'exam_id' => $exam->id,
