@@ -260,6 +260,7 @@ class CourseController extends Controller
 
         $data = $this->dataShowViewCourseSideBar($course, $user);
 
+
         $sidebar = new SideBarCourseShowResource($data);
         return response()->json($sidebar);
 

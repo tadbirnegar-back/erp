@@ -22,18 +22,17 @@ class LessonListResource extends ResourceCollection
      */
     public function toArray($request): array
     {
-
         return [
             'data' => $this->collection->transform(function ($item) {
                 return [
                     'id' => $item->id,
                     'title' => $item->title,
-                    'cover' => $item->cover_slug ? [
-                        'slug' => $this->baseUrl . $item->cover_slug,
+                    'cover' => $item->slug ? [
+                        'slug' => $this->baseUrl . $item->slug,
                     ] : null,
                     'status' => [
-                        'name' => $item->status->name,
-                        'className' => $item->status->class_name,
+                        'name' => $item->latestStatus->name,
+                        'className' => $item->latestStatus->class_name,
                     ],
                     'counts' => [
                         'chapters' => $item->chapters_count ?? 0,
