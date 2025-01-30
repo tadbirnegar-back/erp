@@ -3,9 +3,12 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\ContentStatusEnum;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\GlobalScope\ContentScope;
+use Modules\LMS\app\Models\Chapter;
 use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\ContentConsumeLog;
+use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\LessonStudyLog;
 
 trait ContentTrait
@@ -65,13 +68,15 @@ trait ContentTrait
          ->select([
             'file_alias.duration as duration',
         ])->where('contents.id' , $data['content_id'])->first();
-        return $this->increseContentlogRound(convertMinuteToSecondFormatted($data['consume_data']), $content->duration , $data['id'] , $user);
+        return $this->increseContentlogRound($data['consume_data'], $content->duration , $data['id'] , $user);
     }
 
     public function increseContentlogRound($consume_secounds , $file_secounds , $logID , $user)
     {
-        $log = ContentConsumeLog::find($logID);
-        if($consume_secounds > $file_secounds){
+        $log = ContentConsumeLog::where('student_id', $user->student->id)->find($logID);
+
+        if($consume_secounds + 1 > $file_secounds*70/100){
+
             $log->consume_round = $log -> consume_round + 1 ;
             $log -> consume_data = null;
             $log -> is_complete = true;
@@ -98,6 +103,40 @@ trait ContentTrait
                 $lessonLog -> save();
             }else{
                 $this -> lessonLogCreate($content->lesson_alias_id , $user);
+            }
+
+
+            //mohasebeye afzudane +1 be enroll az injas
+            $chapter = ContentConsumeLog::with('content.lesson.chapter.course')->find($logID);
+            $chapterId = $chapter->content->lesson->chapter->id;
+            $allContentsOfChapter = Chapter::with('lessons')->find($chapterId);
+
+            $lessons = $allContentsOfChapter->lessons->pluck('id')->toArray();
+
+            $activeLessons = collect();
+            $allLessonsCompleted = true;
+
+            foreach ($lessons as $lesson) {
+                $lessonStatus = Lesson::with(['latestStatus', 'contents.consumeLog'])->find($lesson);
+                if (!empty($lessonStatus->latestStatus) && $lessonStatus->latestStatus[0]->name === LessonStatusEnum::ACTIVE->value) {
+                    $activeLessons->push($lessonStatus);
+                }
+
+                if (!$lessonStatus->contents->contains(fn($content) => $content->consumeLog && $content->consumeLog->is_complete)) {
+                    $allLessonsCompleted = false;
+                }
+            }
+
+            if($allLessonsCompleted) {
+                $enroll = $user->enrolls->where('course_id', $chapter->content->lesson->chapter->course->id)->first();
+                $enroll->study_completed = true;
+                $enroll->study_count = $enroll->study_count + 1;
+                if(is_null($enroll->first_completed_date))
+                {
+                    $enroll->first_completed_date = now();
+                }
+                $enroll->last_completed_date = now();
+                $enroll->save();
             }
         }
         return $log;

@@ -45,4 +45,9 @@ class Chapter extends Model
         return $this->hasMany(Lesson::class, 'chapter_id', 'id');
     }
 
+
+    public function activeLessons()
+    {
+        return $this->hasMany(Lesson::class, 'chapter_id', 'id');
+    }
 }

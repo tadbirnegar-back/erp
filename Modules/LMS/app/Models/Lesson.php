@@ -56,6 +56,15 @@ class Lesson extends Model
             ->orderByDesc('id') // Order by ID in descending order
             ->take(1); // Take the latest record
     }
+
+    public function lastStatus()
+    {
+        return $this->belongsToMany(Status::class, 'status_lesson')
+            ->withPivot('id')
+            ->orderBy('status_lesson.id', 'desc')
+            ->limit(1); // Get the latest one
+    }
+
     public function contents()
     {
         return $this->hasMany(Content::class, 'lesson_id', 'id');

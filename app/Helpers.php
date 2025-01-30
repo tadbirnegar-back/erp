@@ -107,8 +107,11 @@ function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
 }
 
 
-function convertDateTimeGregorianToJalaliDateTimeButWithoutTime(string $value)
+function convertDateTimeGregorianToJalaliDateTimeButWithoutTime(?string $value)
 {
+    if ($value === null) {
+        return null;
+    }
     // Convert to Jalali with time (H:i:s)
     $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19 12:30:45
     $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹ ۱۲:۳۰:۴۵
