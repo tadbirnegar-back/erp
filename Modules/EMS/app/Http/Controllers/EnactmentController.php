@@ -422,14 +422,14 @@ class EnactmentController extends Controller
                     $query->where('unitable_type', DistrictOfc::class)
                         ->with(['meetingMembersAzad' => function ($query) {
                             $query->whereHas('roles', function ($query) {
-                                $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                                $query->where('name', RolesEnum::OZV_HEYAT_FREEZONE->value);
                             });
                         }]);
                 },
             ])->find($data['ounitID']);
 
-
             $heyaatTemplateMembers = $heyatOunitForMember->ancestorsAndSelf[0]?->meetingMembersAzad;
+
 
 
             if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
