@@ -57,12 +57,12 @@ class Lesson extends Model
             ->take(1); // Take the latest record
     }
 
-
-
-
     public function lastStatus()
     {
-        return $this->hasManyThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')->orderByDesc('status_lesson.id')->take(1);
+        return $this->belongsToMany(Status::class, 'status_lesson')
+            ->withPivot('id')
+            ->orderBy('status_lesson.id', 'desc')
+            ->limit(1); // Get the latest one
     }
 
     public function contents()

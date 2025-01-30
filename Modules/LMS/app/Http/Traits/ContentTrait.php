@@ -65,13 +65,18 @@ trait ContentTrait
          ->select([
             'file_alias.duration as duration',
         ])->where('contents.id' , $data['content_id'])->first();
-        return $this->increseContentlogRound(convertMinuteToSecondFormatted($data['consume_data']), $content->duration , $data['id'] , $user);
+        return $this->increseContentlogRound($data['consume_data'], $content->duration , $data['id'] , $user);
     }
 
     public function increseContentlogRound($consume_secounds , $file_secounds , $logID , $user)
     {
         $log = ContentConsumeLog::find($logID);
-        if($consume_secounds > $file_secounds){
+        $chapter = ContentConsumeLog::with('content.lesson.chapter')->find($logID);
+        $chapterId = $chapter->content->lesson->chapter->id;
+        return $chapterId;
+
+        if($consume_secounds + 1 > $file_secounds*70/100){
+
             $log->consume_round = $log -> consume_round + 1 ;
             $log -> consume_data = null;
             $log -> is_complete = true;
@@ -99,6 +104,9 @@ trait ContentTrait
             }else{
                 $this -> lessonLogCreate($content->lesson_alias_id , $user);
             }
+
+
+
         }
         return $log;
     }
