@@ -104,8 +104,6 @@ trait ContentTrait
                 $this -> lessonLogCreate($content->lesson_alias_id , $user);
             }
 
-            return $content;
-
             //mohasebeye afzudane +1 be enroll az injas
             $chapter = ContentConsumeLog::with('content.lesson.chapter.course')->find($logID);
             $chapterId = $chapter->content->lesson->chapter->id;

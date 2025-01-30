@@ -510,7 +510,7 @@ trait CourseTrait
         //Get those with is complete of 0
         $lessonsWithIncomplete = collect($groupedData)
             ->flatMap(fn($chapter) => $chapter['lessons'])
-            ->filter(fn($lesson) => $lesson['isComplete'] === 0)
+            ->filter(fn($lesson) => $lesson['isComplete'] === null)
             ->pluck('id');
 
         if ($lessonsWithIncomplete->isNotEmpty()) {
