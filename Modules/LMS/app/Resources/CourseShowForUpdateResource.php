@@ -118,13 +118,13 @@ class CourseShowForUpdateResource extends JsonResource
                     'access_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_access_date),
                     'privacy_id' => $courseInfo->course_alias_privacy_id,
                 ],
-                'video' => [
+                'cover' => [
                     'slug' => $courseInfo->course_video_slug,
                     'title' => $courseInfo->course_video_title,
                     'id' => $courseInfo->course_video_id,
                     'size' => intval(Number::fileSize($courseInfo->course_video_size, 2, 3)) . ' ' . $partsvideo[1],
                 ],
-                'cover' => [
+                'video' => [
                     'slug' => $courseInfo->course_cover_slug,
                     'title' => $courseInfo->course_cover_title,
                     'id' => $courseInfo->course_cover_id,
