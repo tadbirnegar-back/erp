@@ -12,13 +12,13 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = json_decode(file_get_contents(realpath(__DIR__.'/permissions.json')), true);
+        $permissions = json_decode(file_get_contents(realpath(__DIR__ . '/permissions.json')), true);
 
         foreach ($permissions as $permission) {
-            $module=\DB::table('modules')->where('name','=',$permission['moduleName'])->get('id')->first();
-            $permissionType=\DB::table('permission_types')->where('name','=',$permission['permissionTypeName'])->get('id')->first();
+            $module = \DB::table('modules')->where('name', '=', $permission['moduleName'])->get('id')->first();
+            $permissionType = \DB::table('permission_types')->where('name', '=', $permission['permissionTypeName'])->get('id')->first();
 
-            DB::table('permissions')->insertGetId([
+            DB::table('permissions')->updateOrInsert([
                 'name' => $permission['name'],
                 'slug' => $permission['slug'],
                 'module_id' => $module->id,

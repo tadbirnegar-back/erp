@@ -51,13 +51,15 @@ class LessonDatasWithLessonIDResource extends JsonResource
                             'avatar' => url($validComment->commented_person_avatar),
                         ];
                     });
-                })->filter()->values()->flatten(1)->all(),
+                })->filter()->values()->flatten(1)->first(),
 
                 'files' => $lesson->map(function ($file) {
                     return [
                         'id' => $file->lesson_file_id,
-                        'file_title' => $file->lesson_file_slug,
+                        'file_title' => 'ضمیمه',
                         'url' => url($file->lesson_file_slug),
+                        'size' => 12 ,
+                        'Measurement_criteria' => 'MB',
                     ];
                 })->filter()->unique('id')->values(),
             ];
@@ -73,8 +75,15 @@ class LessonDatasWithLessonIDResource extends JsonResource
             ->first();
 
         return [
-            'lesson_details' => $lessonDetailsData,
+            'lesson_details' => $lessonDetailsData->first(),
             'activeContent' => $activeContent ? $activeContent->content_id : null,
+            'user' => $this -> getUserData()
         ];
+    }
+
+    private function getUserData()
+    {
+        $user = \Auth::user();
+        return $user->load('person.avatar');
     }
 }

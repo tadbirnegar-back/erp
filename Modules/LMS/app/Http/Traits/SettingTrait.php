@@ -45,4 +45,47 @@ trait SettingTrait
 
         return true;
     }
+
+
+    public function LastSettingShow()
+    {
+        $settings = Setting::select(['key', 'value'])
+            ->whereIn('key', [
+                'pass_score',
+                'question_numbers_perExam',
+                'time_per_questions',
+                'Difficulty_for_exam',
+                'question_type_for_exam'
+            ])
+            ->get()
+            ->keyBy('key');;
+
+        $Q_type = QuestionType::all();
+        $difficulty = Difficulty::all();
+
+        $questionTypeForExam = $settings->where('key', 'question_type_for_exam')->first();
+        $difficultyForExam = $settings->where('key', 'Difficulty_for_exam')->first();
+
+        $questionTypeForExamValue = optional($questionTypeForExam)->value;
+        $difficultyForExamValue = optional($difficultyForExam)->value;
+
+        $questionTypeName = $Q_type->where('id', $questionTypeForExamValue)->pluck('name')->first();
+        $difficultyName = $difficulty->where('id', $difficultyForExamValue)->pluck('name')->first();
+
+        return [
+            'questionType' => [
+                'id' => $questionTypeForExamValue,
+                'name' => $questionTypeName,
+            ],
+            'questionDifficulty' => [
+                'id' => $difficultyForExamValue,
+                'name' => $difficultyName,
+            ],
+            'pass_score' => optional($settings->get('pass_score'))->value,
+            'question_numbers_perExam' => optional($settings->get('question_numbers_perExam'))->value,
+            'time_per_questions' => optional($settings->get('time_per_questions'))->value,
+        ];
+    }
+
+
 }

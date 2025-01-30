@@ -24,7 +24,8 @@ class StatusCourse extends Model
         "id",
         "course_id",
         "status_id",
-        "create_date"
+        "create_date",
+        "description"
     ];
 
     public $timestamps = false;

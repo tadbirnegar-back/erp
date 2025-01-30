@@ -58,12 +58,12 @@ class SettingController extends Controller
     /**
      * Show the specified resource.
      */
-    public function show($id): JsonResponse
+    public function LastShow(): JsonResponse
     {
-        //
-
-        return response()->json($this->data);
+        $trait = $this->LastSettingShow();
+        return response()->json($trait);
     }
+
 
     /**
      * Update the specified resource in storage.

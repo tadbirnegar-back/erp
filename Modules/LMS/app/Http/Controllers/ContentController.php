@@ -15,11 +15,19 @@ class ContentController extends Controller
     use ContentTrait;
     public function setLog(Request $request)
     {
-        $data = $request->all();
-        $user = Auth::user();
-        $user->load('student');
-        $log = $this->contentLogUpsert($data , $user);
-        $round = $this->calculateRounds($log , $user);
-        return response()->json($round);
+        try {
+            \DB::beginTransaction();
+            $data = $request->all();
+            $user = Auth::user();
+            $user->load('student');
+            $log = $this->contentLogUpsert($data , $user);
+
+            $round = $this->calculateRounds($log , $user);
+            \DB::commit();
+            return response()->json($round);
+        }catch (\Exception $exception){
+            \DB::rollBack();
+            return response() -> json(['error' => $exception->getMessage()], 500);
+        }
     }
 }

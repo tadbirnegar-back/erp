@@ -143,5 +143,11 @@
         "slug": "/lms/exam-result/list",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن سوال",
+        "slug": "/lms/add/questions",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
     }
 ]

@@ -38,7 +38,7 @@ class ShowExamQuestionResource extends ResourceCollection
         })->values()->toArray();
 
         return [
-            'totalTime' => $totalTime,
+            'totalTime' => $totalTime * 60,
             'time_per_question' => $questionTime * 60,
             'examQuestions' => $questions,
         ];
