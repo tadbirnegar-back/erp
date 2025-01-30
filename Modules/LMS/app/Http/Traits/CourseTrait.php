@@ -77,7 +77,7 @@ trait CourseTrait
     public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
-
+        $statusId = $this->lessonActiveStatus()->id;
         $courseQuery = Course::joinRelationship('cover')
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($subQuery) use ($searchTerm) {
@@ -94,10 +94,15 @@ trait CourseTrait
             ->with(['status'])
             ->withCount([
                 'chapters',
-                'lessons',
                 'questions',
+                'lessons' => function ($query) use ($statusId) {
+                    $query->whereHas('lessonStatus', function ($subQuery) use ($statusId) {
+                        $subQuery->where('status_id', $statusId);
+                    });
+                }
             ])
             ->paginate($perPage, ['*'], 'page', $pageNumber);
+
         return $courseQuery;
     }
 
