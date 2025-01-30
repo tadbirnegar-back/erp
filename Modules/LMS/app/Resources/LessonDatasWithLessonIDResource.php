@@ -24,7 +24,7 @@ class LessonDatasWithLessonIDResource extends JsonResource
                         'teacher_id' => $content->first()->teacher_alias_id,
                         'log' => $content->first()->content_consume_data
                             ? [
-                                'set' => $content->first()->content_consume_set,
+                                'set' => json_decode($content->first()->content_consume_set),
                                 'last_played' => $content->first()->content_consume_last_played,
                                 'consumation' => $content->first()->content_consume_data,
                                 'create_date' => convertDateTimeGregorianToJalaliDateTime($content->first()->content_consume_create_date),

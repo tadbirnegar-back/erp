@@ -198,7 +198,7 @@ trait LessonTrait
                 'lesson_id' => $lessonID,
                 'student_id' => $user->student->id,
                 'study_count' => 1,
-                'is_complete' => true,
+                'is_completed' => true,
                 'first_study_date' => now(),
                 'last_study_date' => now(),
             ]
