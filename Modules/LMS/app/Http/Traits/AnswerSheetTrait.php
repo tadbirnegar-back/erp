@@ -140,9 +140,9 @@ trait AnswerSheetTrait
         $declinedStatus = $this->answerSheetDeclinedStatus();
 
         if ($approvedStatus && $declinedStatus) {
-            $isPassingScore = Setting::where('pass_score', '<=', $score);
+            $passScore = Setting::where('key', 'pass_score')->value('value');
 
-            return $isPassingScore ? $approvedStatus : $declinedStatus;
+            return ($passScore !== null && $score >= $passScore) ? $approvedStatus : $declinedStatus;
         }
 
         return null;
