@@ -48,9 +48,6 @@ class Chapter extends Model
 
     public function activeLessons()
     {
-        return $this->hasMany(Lesson::class, 'chapter_id', 'id')
-            ->whereHas('latestStatus', function ($query) {
-                $query->where('name', 'Active'); // Filter by 'Active' status
-            });
+        return $this->hasMany(Lesson::class, 'chapter_id', 'id');
     }
 }
