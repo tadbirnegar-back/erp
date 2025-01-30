@@ -26,7 +26,6 @@ trait ExamsTrait
             'exams.id as examID',
             'courses.title as courseTitle',
             'questions.title as questionTitle',
-            'question_exams.exam_id as qExamID'
         ]);
         $query->withCount(['questions as totalQuestions']);
 
@@ -77,7 +76,7 @@ trait ExamsTrait
             ->when($questionTypeLevel, function ($query) use ($questionTypeLevel) {
                 $query->where('question_type_id', $questionTypeLevel);
             })
-            ->joinRelationship('questionExams.exam.courseExams.course')
+            ->joinRelationship('lesson.chapter.course')
             ->where('courses.id', $id)
             ->limit($questionCount)
             ->get();
