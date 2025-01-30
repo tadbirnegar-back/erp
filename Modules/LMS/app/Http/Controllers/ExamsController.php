@@ -119,16 +119,12 @@ class ExamsController extends Controller
 
     public function index(Request $request)
     {
-        $auth = Auth::user()->load('student');
-        if (!$auth) {
 
-            return response()->json('list doesnt exist for this student', 404);
-        }
-        $student = $auth->student;
+        $student = Auth::user()->load('student');
         $data = $request->all();
 
 
-        $result = $this->examsIndex($data, $student);
+        $result = $this->examsIndex($data, $student->student);
         $response = ExamListResource::make($result);
         return response()->json($response);
 
