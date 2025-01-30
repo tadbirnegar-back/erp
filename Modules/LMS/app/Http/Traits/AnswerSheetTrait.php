@@ -10,6 +10,7 @@ use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\QuestionExam;
+use Modules\SettingsMS\app\Models\Setting;
 
 
 trait AnswerSheetTrait
@@ -56,8 +57,11 @@ trait AnswerSheetTrait
             if (empty($qA['option_id']) || empty($qA['question_id'])) {
                 $value = null;
             } else {
+
                 $option = Option::where('id', $qA['option_id'])->first();
                 $value = $option ? $option->title : null;
+
+                $value = $option->title;
                 $optionIDs[] = $option->id;
             }
 
@@ -136,11 +140,9 @@ trait AnswerSheetTrait
         $declinedStatus = $this->answerSheetDeclinedStatus();
 
         if ($approvedStatus && $declinedStatus) {
-            if ($score >= 50) {
-                return $approvedStatus;
-            } else {
-                return $declinedStatus;
-            }
+            $passScore = Setting::where('key', 'pass_score')->value('value');
+
+            return ($passScore !== null && $score >= $passScore) ? $approvedStatus : $declinedStatus;
         }
 
         return null;
