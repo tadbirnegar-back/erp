@@ -76,7 +76,6 @@ trait ContentTrait
         $log = ContentConsumeLog::where('student_id', $user->student->id)->find($logID);
 
         if($consume_secounds + 1 > $file_secounds*70/100){
-
             $log->consume_round = $log -> consume_round + 1 ;
             $log -> consume_data = null;
             $log -> is_complete = true;
@@ -105,6 +104,7 @@ trait ContentTrait
                 $this -> lessonLogCreate($content->lesson_alias_id , $user);
             }
 
+            return $content;
 
             //mohasebeye afzudane +1 be enroll az injas
             $chapter = ContentConsumeLog::with('content.lesson.chapter.course')->find($logID);
