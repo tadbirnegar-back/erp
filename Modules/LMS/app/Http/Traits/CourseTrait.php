@@ -13,6 +13,7 @@ use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
+use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
@@ -33,6 +34,7 @@ trait CourseTrait
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
     private static string $active = QuestionsEnum::ACTIVE->value;
+    private static string $Active = LessonStatusEnum::ACTIVE->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
@@ -77,7 +79,9 @@ trait CourseTrait
     public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
-
+        $statusId = Status::where('model', Lesson::class)
+            ->where('name', $this::$Active)
+            ->value('id');
         $courseQuery = Course::joinRelationship('cover')
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($subQuery) use ($searchTerm) {
@@ -94,10 +98,15 @@ trait CourseTrait
             ->with(['status'])
             ->withCount([
                 'chapters',
-                'lessons',
                 'questions',
+                'lessons' => function ($query) use ($statusId) {
+                    $query->whereHas('lessonStatus', function ($subQuery) use ($statusId) {
+                        $subQuery->where('status_id', $statusId);
+                    });
+                }
             ])
             ->paginate($perPage, ['*'], 'page', $pageNumber);
+
         return $courseQuery;
     }
 
