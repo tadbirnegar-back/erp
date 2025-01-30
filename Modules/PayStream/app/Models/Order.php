@@ -4,6 +4,7 @@ namespace Modules\PayStream\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\LMS\app\Models\Enroll;
 use Modules\PayStream\Database\factories\OrderFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -93,4 +94,10 @@ class Order extends Model
     {
         return Status::all()->where('model', '=', self::class);
     }
+
+    public function enroll()
+    {
+        return $this->belongsTo(Enroll::class, 'orderable_id', 'id');
+    }
+
 }

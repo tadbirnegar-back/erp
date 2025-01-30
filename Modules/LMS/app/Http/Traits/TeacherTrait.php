@@ -60,7 +60,7 @@ trait TeacherTrait
     {
         $searchTerm = $data['name'] ?? null;
         $teacherQuery = WorkForce::where('workforceable_type', Teacher::class)
-            ->joinRelationship('person.avatar')
+            ->leftJoinRelationship('person.avatar')
             ->when($searchTerm, function ($query) use ($searchTerm) {
                 $query->where(function ($subQuery) use ($searchTerm) {
                     $subQuery

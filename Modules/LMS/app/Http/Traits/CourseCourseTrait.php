@@ -26,4 +26,11 @@ trait CourseCourseTrait
 
         return $data;
     }
+
+    public function syncPreReqDatas($course,$ids)
+    {
+        $courseIds = json_decode($ids, true);
+        $course->prerequisiteCourses()->sync($courseIds);
+    }
+
 }

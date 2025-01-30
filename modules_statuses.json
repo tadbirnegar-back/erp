@@ -20,6 +20,7 @@
     "PayStream": true,
     "Controller": true,
     "CourseController": true,
+    "VCM": true,
     "ACMS": true,
     "ACC": true,
     "BNK": true

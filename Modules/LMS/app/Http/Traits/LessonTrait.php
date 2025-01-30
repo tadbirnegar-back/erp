@@ -9,6 +9,7 @@ use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\FileLesson;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\LessonStudyLog;
+use Modules\LMS\app\Models\StatusLesson;
 use Modules\LMS\app\Models\Teacher;
 
 trait LessonTrait
@@ -19,6 +20,16 @@ trait LessonTrait
             'chapter_id' => $data['chapterID'],
             'description' => $data['description'],
             'title' => $data['title'],
+        ]);
+    }
+
+    public function addActiveLessonStatus(Lesson $lesson)
+    {
+        $statusID = $this->lessonActiveStatus()->id;
+        StatusLesson::create([
+            'status_id' => $statusID,
+            'lesson_id' => $lesson -> id ,
+            'created_date' => now()
         ]);
     }
 
@@ -59,8 +70,7 @@ trait LessonTrait
     {
         $query = Lesson::query()
             ->leftJoinRelationship('contents.teacher.workForceForJoin.person.avatar', [
-                'contents' => fn($join) => $join->as('contents_alias')
-                    ->withGlobalScopes(),
+                'contents' => fn($join) => $join->as('contents_alias'),
                 'teacher' => fn($join) => $join->as('teacher_alias'),
                 'workForceForJoin' => fn($join) => $join->as('workForce_alias')
                     ->on('workForce_alias.workforceable_type', '=', DB::raw("'" . addslashes(Teacher::class) . "'")),
@@ -68,13 +78,11 @@ trait LessonTrait
                 'avatar' => fn($join) => $join->as('teacher_avatar_alias'),
             ])
             ->leftJoinRelationship('contents.contentType', [
-                'contents' => fn($join) => $join->withGlobalScopes()
-                    ->on('contents.id', '=', 'contents_alias.id'),
+                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'contentType' => fn($join) => $join->as('content_type_alias'),
             ])
             ->leftJoinRelationship('contents.file', [
-                'contents' => fn($join) => $join->withGlobalScopes()
-                    ->on('contents.id', '=', 'contents_alias.id'),
+                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'file' => fn($join) => $join->as('content_file_alias'),
             ])
             ->leftJoinRelationship('files.file', [
@@ -91,8 +99,7 @@ trait LessonTrait
                 'user' => fn($join) => $join->on('users.id', '=', 'comments_alias.creator_id'),
             ])
             ->leftJoinRelationship('contents.consumeLog', [
-                'contents' => fn($join) => $join->withGlobalScopes()
-                    ->on('contents.id', '=', 'contents_alias.id'),
+                'contents' => fn($join) => $join->on('contents.id', '=', 'contents_alias.id'),
                 'consumeLog' => fn($join) => $join->as('content_consume_alias')
                     ->on('content_id', 'contents_alias.id')
                     ->on('content_consume_alias.student_id', '=', DB::raw($user->student->id)),

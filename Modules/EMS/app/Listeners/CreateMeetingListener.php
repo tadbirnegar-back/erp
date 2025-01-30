@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Listeners;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Jobs\StoreMeetingJob;
 
 class CreateMeetingListener
@@ -21,11 +22,11 @@ class CreateMeetingListener
     public function handle($event): void
     {
         if ($event->meeting->meetingType->title == "جلسه هیئت تطبیق") {
-            $meetingDate3 = $event->meeting->getRawOriginal('meeting_date');
+            $meetingDate3 = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($event->meeting->meeting_date);
 
-            $alertMembers = Carbon::parse($meetingDate3)->subDays(1);
+            $alertDate = Carbon::parse($meetingDate3)->subDays(1);
 
-            StoreMeetingJob::dispatch($event->meeting->id)->delay($alertMembers);
+            StoreMeetingJob::dispatch($event->meeting->id)->delay($alertDate);
         }
 
     }

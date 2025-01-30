@@ -49,8 +49,8 @@ trait ContentTrait
                 'student_id' => $user->student->id,
             ],
             [
-                'consume_data' => convertSecondToMinute($data['consumeData']),
-                'last_played' => convertSecondToMinute($data['lastPlayed']),
+                'consume_data' => $data['consumeData'],
+                'last_played' => $data['lastPlayed'],
                 'set' => $data['set'],
                 'create_date' => $isNewEntry ? now() : $contentLog->create_date,
                 'last_modified' => now(),

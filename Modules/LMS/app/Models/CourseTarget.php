@@ -23,11 +23,6 @@ class CourseTarget extends Model
 
     protected $fillable = ['id', 'parent_ounit_id' , 'course_id'];
 
-    public function propertyble()
-    {
-        return $this->morphTo();
-    }
-
     public function ounitFeatures()
     {
         return $this->hasMany(CourseOunitFeature::class, 'course_target_id', 'id');
@@ -41,6 +36,11 @@ class CourseTarget extends Model
     public function employeeFeatures()
     {
         return $this->hasMany(CourseEmployeeFeature::class, 'course_target_id', 'id');
+    }
+
+    public function targetOunitCat()
+    {
+        return $this->hasMany(TargetOunitCat::class, 'course_target_id', 'id');
     }
 
 }

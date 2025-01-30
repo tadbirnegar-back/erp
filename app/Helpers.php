@@ -107,6 +107,22 @@ function convertGregorianToJalali(string $gregorianDate)
     return $persianCharJalaliDate;
 }
 
+function convertSecondToMinute($second)
+{
+    $minutes = floor($second / 60);
+    $remainingSeconds = $second % 60;
+
+    return "{$minutes}:{$remainingSeconds}";
+}
+function convertMinuteToSecondFormatted($time)
+{
+    list($minutes, $seconds) = explode(':', $time);
+
+    $totalSeconds = ($minutes * 60) + $seconds;
+
+    return $totalSeconds;
+}
+
 function getPersianMonths()
 {
     return [
@@ -200,5 +216,40 @@ function DateformatToHumanReadableJalali($date, $showClock = true)
 
     return $humanReadableDate;
 }
+
+function convertPersianToGregorianBothHaveTimeAndDont($persianCharDateTime)
+{
+    Log::info($persianCharDateTime);
+    if ($persianCharDateTime == null || empty($persianCharDateTime)) {
+        return null;
+    }
+    // Convert Persian numbers to English numbers
+    $englishJalaliDateTimeString = CalendarUtils::convertNumbers($persianCharDateTime, true);
+
+    // Check if the input string contains time information
+    $hasTime = strpos($englishJalaliDateTimeString, ':') !== false;
+
+    // Define the format based on the presence of time
+    $format = $hasTime ? 'Y/m/d H:i:s' : 'Y/m/d';
+
+    // Parse the date and time from the Jalali format and convert to Gregorian
+    $dateTime = CalendarUtils::createCarbonFromFormat($format, $englishJalaliDateTimeString);
+
+    // Return the datetime string, including the time if it was provided
+    return $hasTime ? $dateTime->toDateTimeString() : $dateTime->toDateString();
+}
+
+function convertDateTimeGregorianToJalaliDateTimeButWithoutTime(string $value)
+{
+    // Convert to Jalali with time (H:i:s)
+    $jalali = CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19 12:30:45
+    $jalaliPersianNumbers = CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹ ۱۲:۳۰:۴۵
+
+    $dateOnly = substr($jalaliPersianNumbers, 0, 10); // ۱۳۹۵-۰۲-۱۹
+
+    return $dateOnly;
+}
+
+
 
 

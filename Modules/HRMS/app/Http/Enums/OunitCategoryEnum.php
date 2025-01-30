@@ -2,7 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Enums;
 
-use Modules\OUnitMS\app\Models\{CityOfc, Department, DistrictOfc, StateOfc, TownOfc, VillageOfc};
+use Modules\OUnitMS\app\Models\{CityOfc, Department, DistrictOfc, FreeZone, StateOfc, TownOfc, VillageOfc};
 
 enum OunitCategoryEnum: int
 {
@@ -12,6 +12,7 @@ enum OunitCategoryEnum: int
     case TownOfc = 4;
     case VillageOfc = 5;
     case Department = 6;
+    case FreeZone = 7;
 
 
     public function getLabel()
@@ -23,6 +24,7 @@ enum OunitCategoryEnum: int
             self::TownOfc => 'دهستان',
             self::VillageOfc => 'دهیاری',
             self::Department => 'دپارتمان',
+            self::FreeZone => 'منطقه آزاد'
         };
     }
 
@@ -35,6 +37,7 @@ enum OunitCategoryEnum: int
             self::TownOfc => TownOfc::class,
             self::VillageOfc => VillageOfc::class,
             self::Department => Department::class,
+            self::FreeZone => FreeZone::class,
         };
     }
 
@@ -61,7 +64,18 @@ enum OunitCategoryEnum: int
     public static function getDesiredLabelWithValue($label)
     {
         foreach (self::cases() as $case) {
-            if ($case->getLabel() === $label) {
+            if ($case->getUnitableType() === $label) {
+                return $case->value;
+            }
+        }
+        throw new \InvalidArgumentException("label not found: $label");
+
+    }
+
+    public static function getValueFromlabel($label)
+    {
+        foreach (self::cases() as $case) {
+            if ($case->getUnitableType() == $label) {
                 return $case->value;
             }
         }
@@ -81,6 +95,17 @@ enum OunitCategoryEnum: int
         throw new \InvalidArgumentException("ID not found: $id");
     }
 
+    public static function getModelByValue(int $value)
+    {
+        foreach (self::cases() as $case) {
+            if ($case->value === $value) {
+                return $case->getUnitableType();
+            }
+        }
+
+        // Optionally, handle cases where the value is not found
+        throw new \InvalidArgumentException("Value not found: $value");
+    }
 
 
 }

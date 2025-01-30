@@ -17,7 +17,7 @@ trait VerifyInfoRepository
 
         if (is_null($notif)) {
             // If no notification exists, send new ones
-            $user->notify((new VerifyInfoNotification()));
+            $user->notify(new VerifyInfoNotification());
             $username = Person::find($user->person_id)->display_name;
             $user->notify((new VerifyPanelNotification($username)));
             $hasConfirmed = false; // User is not confirmed yet

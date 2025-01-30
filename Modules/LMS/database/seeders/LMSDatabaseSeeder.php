@@ -3,7 +3,6 @@
 namespace Modules\LMS\database\seeders;
 
 use Illuminate\Database\Seeder;
-use Modules\LMS\app\Models\OucPropertyValue;
 
 class LMSDatabaseSeeder extends Seeder
 {
@@ -16,15 +15,19 @@ class LMSDatabaseSeeder extends Seeder
         $this->call([
 //             ModuleCategorySeeder::class,
 //             ModuleSeeder::class,
-//             PermissionSeeder::class,
+//            PermissionSeeder::class,
+//            PermissionSeeder::class,
 //            QuestionStatusSeeder::class,
 //            OptionStatusSeeder::class,
 //            LessonStatusSeeder::class,
 //            FillCommentsTable::class,
 //            ContentStatusSeeder::class,
+//            ContentStatusSeeder::class,
+//            AnswerSheetStatusSeeder::class
+//            ContentStatusSeeder::class,
 //            OunitCatsSeeder::class,
-            OucPropertiesSeeder::class,
-            OucPropertyValues::class,
+//            OucPropertiesSeeder::class,
+//            OucPropertyValues::class,
         ]);
     }
 }
