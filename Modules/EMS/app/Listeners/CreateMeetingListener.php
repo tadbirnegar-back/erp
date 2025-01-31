@@ -4,6 +4,7 @@ namespace Modules\EMS\app\Listeners;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Jobs\StoreMeetingJob;
 
 class CreateMeetingListener
@@ -21,7 +22,7 @@ class CreateMeetingListener
      */
     public function handle($event): void
     {
-        if ($event->meeting->meetingType->title == "جلسه هیئت تطبیق") {
+        if ($event->meeting->meetingType->title == "جلسه هیئت تطبیق" || $event->meeting->meetingType->title == MeetingTypeEnum::FREE_ZONE->value) {
             $meetingDate3 = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($event->meeting->meeting_date);
 
             $alertDate = Carbon::parse($meetingDate3)->subDays(1);

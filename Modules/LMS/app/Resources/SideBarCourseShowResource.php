@@ -3,6 +3,8 @@
 namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Models\Lesson;
 
 class SideBarCourseShowResource extends JsonResource
 {
@@ -17,7 +19,12 @@ class SideBarCourseShowResource extends JsonResource
         $activeLesson = collect($this->resource['sidebar'])->firstWhere('lesson_id', $activeLessonID);
         $activeChapterID = $activeLesson ? $activeLesson->chapter_id : null;
 
-        $sidebarData = collect($this->resource['sidebar'])->groupBy('chapter_id')->map(function ($items, $chapterId) use ($activeLessonID, $activeChapterID) {
+        // Filter only active lessons
+        $filteredSidebar = collect($this->resource['sidebar'])->filter(function ($lessonItem) {
+            return $this->isLessonActive($lessonItem->lesson_id);
+        });
+
+        $sidebarData = $filteredSidebar->groupBy('chapter_id')->map(function ($items, $chapterId) use ($activeLessonID, $activeChapterID) {
             return [
                 'chapter_name' => $items->first()->chapter_title,
                 'chapter_id' => $chapterId,
@@ -33,7 +40,7 @@ class SideBarCourseShowResource extends JsonResource
                             'durations' => $durations,
                             'lesson_id' => $lessonItem->lesson_id,
                             'chapter_id' => $lessonItem->chapter_id,
-                            'canShow' => ($lessonItem->lesson_id <= $activeLessonID) && ($chapterId <= $activeChapterID), // Ensuring correct chapter
+                            'canShow' => $lessonItem->is_completed || (($lessonItem->lesson_id <= $activeLessonID) && ($chapterId <= $activeChapterID)),
                         ];
                     })->reduce(function ($carry, $lessonItem) {
                         $carry['durations'] = array_unique(array_merge($carry['durations'] ?? [], $lessonItem['durations']));
@@ -58,4 +65,15 @@ class SideBarCourseShowResource extends JsonResource
             'activeLessonID' => $activeLessonID,
         ];
     }
+
+    /**
+     * Check if the lesson is active
+     */
+    private function isLessonActive($lessonId)
+    {
+        $lesson = Lesson::with('latestStatus')->find($lessonId);
+
+        return optional($lesson->latestStatus->first())->name === LessonStatusEnum::ACTIVE->value;
+    }
+
 }

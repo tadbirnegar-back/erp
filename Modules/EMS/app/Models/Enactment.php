@@ -79,6 +79,15 @@ class Enactment extends Model
         return $this->belongsTo(Meeting::class);
     }
 
+
+    public function nonFreezoneMeeting(): BelongsTo
+    {
+        $mtID = MeetingType::where('title', MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+        $shuraMtID = MeetingType::where('title', MeetingTypeEnum::SHURA_MEETING->value)->first()->id;
+        return $this->belongsTo(Meeting::class, 'meeting_id')
+        ->whereNotIn('meeting_type_id', [$mtID , $shuraMtID]);
+    }
+
     public function enactmentReviews(): HasMany
     {
         return $this->hasMany(EnactmentReview::class, 'enactment_id');
@@ -268,9 +277,10 @@ class Enactment extends Model
     public function members()
     {
         $meetingType = \DB::table('meeting_types')
-            ->select('id')
             ->whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING , MeetingTypeEnum::FREE_ZONE])
-            ->first();
+            ->get()
+            ->pluck('id')
+            ->toArray();
 
         return $this->hasManyDeep(MeetingMember::class, [
             EnactmentMeeting::class,
@@ -286,7 +296,7 @@ class Enactment extends Model
                 'meeting_id',
                 'id',
             ])
-            ->where('meetings.meeting_type_id', $meetingType->id) // Use the `id` property
+            ->whereIn('meetings.meeting_type_id', $meetingType) // Use the `id` property
             ->orderBy('enactment_meeting.create_date', 'desc')
             ->with('mr');
     }
@@ -294,14 +304,17 @@ class Enactment extends Model
     public function membersNew()
     {
         $meetingType = \DB::table('meeting_types')
-            ->select('id')
-            ->whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING , MeetingTypeEnum::FREE_ZONE])
-            ->first();
-        return $this->hasManyDeep(MeetingMember::class, [
-            EnactmentMeeting::class,
-            Meeting::class,
+            ->whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING, MeetingTypeEnum::FREE_ZONE])
+            ->get()
+            ->pluck('id')
+            ->toArray();
 
-        ],
+        return $this->hasManyDeep(
+            MeetingMember::class,
+            [
+                EnactmentMeeting::class,
+                Meeting::class,
+            ],
             [
                 'enactment_id',
                 'id',
@@ -311,10 +324,11 @@ class Enactment extends Model
                 'id',
                 'meeting_id',
                 'id',
-            ])
-            ->where('meetings.meeting_type_id', $meetingType->id) // Use the `id` property
-            ->orderBy('enactment_meeting.create_date', 'desc');
-//        return $this->hasManyThrough(MeetingMember::class, Meeting::class, 'id', 'meeting_id', 'meeting_id', 'id')->with('mr');
+            ]
+        )
+            ->whereIn('meetings.meeting_type_id', $meetingType)
+            ->orderBy('enactment_meeting.create_date', 'desc')
+            ->distinct('meeting_members.employee_id'); // Ensures unique employee IDs
     }
 
     public function consultingMembers()
@@ -389,6 +403,17 @@ class Enactment extends Model
             ->value('id');
         return $this->latestMeeting()
             ->whereIn('meeting_type_id', [$freeZoneMeetingtypeId, $meetingtypeId]);
+    }
+
+
+    public function onlyHeyaatMeeting(): HasOneThrough
+    {
+        $meetingtypeId = \DB::table('meeting_types')
+            ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->value('id');
+
+        return $this->latestMeeting()
+            ->where('meeting_type_id', $meetingtypeId);
     }
 
     public function latestFreeZoneMeeting(): HasOneThrough
