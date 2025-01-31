@@ -213,12 +213,16 @@ trait CourseTrait
 
 
             ],
-            'StudyLog' => ['lessonStudyLog' => function ($query) use ($user, $isEnrolled) {
-                $query->where('student_id', $user->student->id)
-                    ->where('is_completed', true)
-                    ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1);
-
-            }]
+            'StudyLog' => [
+                'lessonStudyLog' => function ($query) use ($user, $isEnrolled) {
+                    $query->where('student_id', $user->student->id)
+                        ->where('is_completed', true)
+                        ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1)
+                        ->whereHas('lesson.latestStatus', function ($query) {
+                            $query->where('name', LessonStatusEnum::ACTIVE->value);
+                        });
+                }
+            ]
         ]);
 
 // Flatten and prepare the relations array
@@ -289,6 +293,16 @@ trait CourseTrait
             $AdditionalData["enrolled"] = $isEnrolled;
         }
 
+        $AllowToDos['canTrainingExam'] = false;
+        $AllowToDos['canReportCard'] = false;
+
+        if ($AllowToDos['joined']) {
+            $studyCount = $AdditionalData["enrolled"]->isEnrolled[0]["orderable"]["study_count"];
+            if ($studyCount > 0) {
+                $AllowToDos["canFinalExam"] = true;
+            }
+        }
+
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
 
@@ -306,7 +320,9 @@ trait CourseTrait
                 foreach ($chapters as $chapter) {
                     if (isset($chapter['lessons']) && !empty($chapter['lessons'])) {
                         foreach ($chapter['lessons'] as $lesson) {
-                            $allLessons[] = $lesson['id'];
+                            if ($lesson->latestStatus()->first()->name === LessonStatusEnum::ACTIVE->value) {
+                                $allLessons[] = $lesson['id'];
+                            }
                         }
                     }
                 }
@@ -331,7 +347,10 @@ trait CourseTrait
 
         // Calculate completion percentage
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
-
+        if($completionPercentage > 100)
+        {
+            $completionPercentage = 100;
+        }
         // Return the results
         return [
             'total_lessons' => $totalLessons,
