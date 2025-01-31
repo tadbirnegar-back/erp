@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Exception;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\RolesEnum;
@@ -25,6 +26,7 @@ use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingStatus;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\FreeZone;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
@@ -83,7 +85,6 @@ class EnactmentController extends Controller
         $user = Auth::user();
         $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
 
-
         try {
             $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
                 $q->with('organizationUnit.descendantsAndSelf');
@@ -102,6 +103,55 @@ class EnactmentController extends Controller
         } catch (Exception $e) {
             return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
         }
+    }
+
+    public function indexArchiveForFreeZone(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $user->load(['activeFreeZoneRecruitmentScript.organizationUnit']);
+        $user->load('employee');
+        $freezoneIds = $user->activeFreeZoneRecruitmentScript->pluck('organizationUnit.unitable_id');
+
+        if(!empty($freezoneIds[0])){
+
+            $ounitsAzad = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
+                ->with('organizationUnit')
+                ->get()
+                ->pluck('organizationUnit');
+            try {
+                $data = $request->all();
+                $enactments = $this->indexPendingForFreeZoneEnactment($data, $ounitsAzad->pluck('id')->toArray(), $user->id);
+
+                $statuses = Enactment::GetAllStatuses();
+                $enactmentReviews = EnactmentReview::GetAllStatuses();
+                return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $ounitsAzad->pluck('id')->toArray(),
+                ]);
+            } catch (Exception $e) {
+                return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
+            }
+        }else{
+            $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
+
+            try {
+                $ounits = $user->load(['activeRecruitmentScript' => function ($q) {
+                    $q->with('organizationUnit.descendantsAndSelf');
+                }])?->activeRecruitmentScript?->pluck('organizationUnit.descendantsAndSelf')
+                    ->flatten()
+                    ->pluck('id')
+                    ->toArray();
+
+                $data = $request->all();
+                $enactments = $this->indexPendingForFreeZoneByDistricStatusEnactment($data, $ounits, $user->id);
+
+                $statuses = Enactment::GetAllStatuses();
+                $enactmentReviews = EnactmentReview::GetAllStatuses();
+                return response()->json(['data' => $enactments, 'statusList' => $statuses, 'enactmentReviews' => $enactmentReviews, 'ounits' => $user->activeDistrictRecruitmentScript->pluck('organizationUnit'),
+                ]);
+            } catch (Exception $e) {
+                return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
+            }
+        }
+
     }
 
     /**
@@ -132,7 +182,7 @@ class EnactmentController extends Controller
             $heyatOunit = OrganizationUnit::with([
                 'ancestorsAndSelf' => function ($query) {
                     $query->where('unitable_type', DistrictOfc::class)
-                        ->with(['meetingMembers' => function ($query) {
+                        ->with(['meetingMembersHeyat' => function ($query) {
                             $query->whereHas('roles', function ($query) {
                                 $query->where('name', RolesEnum::OZV_HEYAAT->value);
                             });
@@ -140,15 +190,16 @@ class EnactmentController extends Controller
                 },
             ])->find($data['ounitID']);
 
-            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembersHeyat;
+
 
             if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
                 return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
             }
 
-            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->load('meetingMembers');
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->load('meetingMembersHeyat');
 
-            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembers;
+            $heyaatTemplateMembers = $heyatOunit->ancestorsAndSelf[0]?->meetingMembersHeyat;
 
 
             if (isset($data['meetingID'])) {
@@ -272,6 +323,242 @@ class EnactmentController extends Controller
                 $data['meetingDate'] = $meetingDate;
 
                 $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::HEYAAT_MEETING->value)->first()->id;
+
+
+                $data['ounitID'] = $ancestor->id;
+                $meetingHeyaat = $this->storeMeeting($data);
+
+                //Make Enactments
+
+                $enactment = $this->storeEnactment($data, $meetingShura);
+                $enactment->meetings()->attach($meetingShura->id);
+                $enactment->meetings()->attach($meetingHeyaat->id);
+
+                //Add statuses to enactment
+                $statuses = [
+                    $this->enactmentPendingSecretaryStatus()->id,
+                    $this->enactmentPendingForHeyaatDateStatus()->id,
+                ];
+
+                $commonData = [
+                    'enactment_id' => $enactment->id,
+                    'operator_id' => $data['creatorID'],
+                    'description' => $data['description'] ?? null,
+                    'attachment_id' => $data['attachmentID'] ?? null,
+                ];
+
+                // Build and save each status individually to trigger the observer
+                foreach ($statuses as $statusId) {
+                    $statusData = array_merge($commonData, ['status_id' => $statusId]);
+                    EnactmentStatus::create($statusData); // This triggers the `created` observer
+                }
+
+                $files = json_decode($data['attachments'], true);
+
+                $this->attachFiles($enactment, $files);
+
+
+                foreach ($heyaatTemplateMembers as $mm) {
+                    $newMember = $mm->replicate(['laravel_through_key']);
+                    $newMember->meeting_id = $meetingHeyaat->id; // Set the new meeting_id
+                    $newMember->save();
+
+
+                    $newMember = $mm->replicate(['laravel_through_key']);
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
+                }
+
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'مصوبه جدید با موفقیت ثبت شد', 'data' => $enactment], 200);
+
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => 'مصوبه جدید ثبت نشد', $exception->getMessage(), $exception->getTrace()], 500);
+
+        }
+    }
+    public function addEnactmentFreeZone(Request $request)
+    {
+        try {
+
+
+            DB::beginTransaction();
+            $data = $request->all();
+
+            $validate = Validator::make($data, ['ounitID' => [
+                'required',
+                'exists:organization_units,id'
+            ],
+            ]);
+
+            if ($validate->fails()) {
+                return response()->json($validate->errors(), 422);
+            }
+
+            $user = Auth::user();
+            $data['creatorID'] = $user->id;
+            $data['operatorID'] = $user->id;
+            //Validations
+            $village_id = OrganizationUnit::find($data['ounitID'])->unitable_id;
+            $free_zone_id = VillageOfc::find($village_id)->free_zone_id;
+
+
+            $heyatOunit = OrganizationUnit::with([
+                'ancestorsAndSelf' => function ($query) {
+                    $query->where('unitable_type', DistrictOfc::class)
+                        ->with(['meetingMembers' => function ($query) {
+                            $query->whereHas('roles', function ($query) {
+                                $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                            });
+                        }]);
+                },
+            ])->find($data['ounitID']);
+
+            $heyatOunitForMember = OrganizationUnit::with([
+                'ancestorsAndSelf' => function ($query) {
+                    $query->where('unitable_type', DistrictOfc::class)
+                        ->with(['meetingMembersAzad' => function ($query) {
+                            $query->whereHas('roles', function ($query) {
+                                $query->where('name', RolesEnum::OZV_HEYAT_FREEZONE->value);
+                            });
+                        }]);
+                },
+            ])->find($data['ounitID']);
+
+            $heyaatTemplateMembers = $heyatOunitForMember->ancestorsAndSelf[0]?->meetingMembersAzad;
+
+
+
+            if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
+                return response()->json(['message' => 'اعضا هیئت جلسه برای این بخش تعریف نشده است'], 400);
+            }
+
+            $heyaatTemplateMembers = $heyatOunitForMember->ancestorsAndSelf[0]?->load('meetingMembersAzad');
+
+            $heyaatTemplateMembers = $heyatOunitForMember->ancestorsAndSelf[0]?->meetingMembersAzad;
+
+
+            if (isset($data['meetingID'])) {
+                $enactmentLimitPerMeeting = $this->getEnactmentLimitPerMeeting();
+
+                $EncInMeetingcount = Meeting::withCount(['enactments' => function ($query) {
+                    $query->whereDoesntHave('status', function ($query) {
+                        $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                    });
+                }])
+                    ->first()
+                    ->enactments_count;
+
+                if ($enactmentLimitPerMeeting->value <= $EncInMeetingcount) {
+                    return response()->json([
+                        "message" => "جلسه انتخاب شده تکمیل ظرفیت شده است."
+                    ], 422);
+                }
+
+
+                $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
+
+                //Shura Meeting
+                $data['meetingTypeID'] = MeetingType::where('title', '=', $meetingTypeEnum)->first()->id;
+
+
+                $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
+                $meetingShura = $this->storeMeeting($data);
+
+                $enactment = $this->storeEnactment($data, $meetingShura);
+
+                $enactment->meetings()->attach($meetingShura->id);
+
+                $files = json_decode($data['attachments'], true);
+
+                $this->attachFiles($enactment, $files);
+
+                $meeting = Meeting::find($data['meetingID']);
+
+
+                foreach ($meeting->meetingMembers as $mm) {
+                    $newMember = $mm->replicate(['laravel_through_key']);
+                    $newMember->meeting_id = $meetingShura->id; // Set the new meeting_id
+                    $newMember->save();
+                }
+
+                $meeting->enactments()->attach($enactment->id);
+
+
+                //Add statuses To Enactment
+
+                $statuses = [
+                    $this->enactmentPendingSecretaryStatus()->id,
+                    $this->enactmentPendingForHeyaatDateStatus()->id,
+                ];
+
+                $commonData = [
+                    'enactment_id' => $enactment->id,
+                    'operator_id' => $data['creatorID'],
+                    'description' => $data['description'] ?? null,
+                    'attachment_id' => $data['attachmentID'] ?? null,
+                ];
+
+                // Build and save each status individually to trigger the observer
+                foreach ($statuses as $statusId) {
+                    $statusData = array_merge($commonData, ['status_id' => $statusId]);
+                    EnactmentStatus::create($statusData); // This triggers the `created` observer
+                }
+
+
+            } else if (isset($data['meetingDate'])) {
+
+                //Validations
+                $ancestor = "";
+// Ensure ancestors are loaded and not null before attempting to access the first ancestor
+                if ($heyatOunit && $heyatOunit->ancestorsAndSelf->isNotEmpty()) {
+                    $ancestor = $heyatOunit->ancestorsAndSelf->first();
+
+                    $ancestor->load('firstFreeMeetingByNowForFreeZone');
+
+                }
+
+
+                $firstFreeMeeting = $ancestor->firstFreeMeetingByNowForFreeZone;
+
+                if (!empty($firstFreeMeeting)) {
+                    return response()->json(['message' => "شما نمیتوانید با داشتن جلسه خالی جلسه دیگری ایجاد نمایید"], 404);
+                }
+
+
+                $currentDate = Carbon::now();
+                $newMeetingDate = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($data['meetingDate']);
+
+                // Make sure $newMeetingDate is a Carbon instance
+                $newMeetingDate = Carbon::parse($newMeetingDate);
+
+                $maxDays = \DB::table('settings')
+                    ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
+                    ->value('value');
+
+                if ($newMeetingDate->lt($currentDate) || $newMeetingDate->gt($currentDate->addDays($maxDays))) {
+                    return response()->json(["message" => "تاریخ انتخاب شده درست نیست"], 404);
+                }
+
+                //End Of Validations
+
+
+                $meetingDate = $data['meetingDate'];
+                $data['meetingDate'] = $data['shuraDate'] . ' ۰۰:۰۰:۰۰';
+
+
+                $meetingTypeEnum = MeetingTypeEnum::SHURA_MEETING;
+
+                //Shura Meeting
+                $data['meetingTypeID'] = MeetingType::where('title', '=', $meetingTypeEnum)->first()->id;
+                $meetingShura = $this->storeMeeting($data);
+
+                $data['meetingDate'] = $meetingDate;
+
+                $data['meetingTypeID'] = MeetingType::where('title', '=', MeetingTypeEnum::FREE_ZONE->value)->first()->id;
 
 
                 $data['ounitID'] = $ancestor->id;
@@ -543,7 +830,7 @@ class EnactmentController extends Controller
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {
-                    $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                    $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
                 })->with('status')->get();
 
             if ($reviewStatuses->count() > 1) {
@@ -590,14 +877,14 @@ class EnactmentController extends Controller
 
     }
 
-    public function enactmentNoInconsistency($id)
+    public function enactmentNoInconsistency(Request $request, $id)
     {
         try {
             DB::beginTransaction();
             $user = Auth::user();
             $enactment = Enactment::find($id);
             $status = $this->reviewNoInconsistencyStatus();
-
+            $data = $request->all();
             EnactmentReview::updateOrCreate(
                 ['enactment_id' => $id, 'user_id' => $user->id],
                 [
@@ -609,8 +896,9 @@ class EnactmentController extends Controller
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {
-                    $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                    $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
                 })->with('status')->get();
+
 
             if ($reviewStatuses->count() > 1) {
                 $result = $reviewStatuses->groupBy('status.id')

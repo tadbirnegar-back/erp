@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Auth;
 use Carbon\Carbon;
 use DB;
+use http\Env\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Mockery\Exception;
@@ -22,6 +23,7 @@ use Modules\EMS\app\Models\EnactmentTitle;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\EMS\app\Models\MR;
+use Modules\EMS\app\Resources\FreeZoneLiveSearchResource;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
@@ -40,6 +42,7 @@ use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\FreeZone;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
@@ -816,23 +819,33 @@ class EMSController extends Controller
         $user = Auth::user();
         $searchTerm = $request->name;
 
-        $user->load(['activeDistrictRecruitmentScript.ounit']);
+        $user->load(['activeDistrictRecruitmentScript.ounit.descendants']);
 
-        $ounits = $user->activeDistrictRecruitmentScript->pluck('ounit');
+
+        $ounits = $user->activeDistrictRecruitmentScript->pluck('ounit.descendants');
+
+        $filteredOunits = $ounits[0]->filter(function ($unit) {
+            return $unit->unitable_type === VillageOfc::class;
+        })->pluck('unitable_id');
 
 // Ensure $ounits is a collection of Eloquent models
-        $DecendentsOunits = $ounits->map(function ($ounit) use ($searchTerm) {
-            return $ounit?->descendants()->where('unitable_type', VillageOfc::class)
-                ->where(
-                    function ($query) use ($searchTerm) {
-                        $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
-                            ->orWhere('name', 'like', '%' . $searchTerm . '%');
-                    }
-                )->with('ancestors', 'unitable')->get();
+        $villageOfc = VillageOfc::whereIntegerInRaw('id', $filteredOunits)
+            ->whereNull('free_zone_id')
+            ->whereHas('organizationUnit', function ($query) use ($searchTerm) {
+            $query
+                ->where(function ($query) use ($searchTerm) {
+                    $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                        ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                });
         })
-            ->flatten();
+            ->with(['organizationUnit.ancestors' => function ($query) {
+                $query->orderByDesc('id');
+            }])
+            ->get()
+            ->pluck('organizationUnit');
 
-        return response()->json($DecendentsOunits);
+
+        return response()->json($villageOfc);
     }
 
 
@@ -850,4 +863,37 @@ class EMSController extends Controller
         ]);
     }
 
+    public function liveSearchFreeZone(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 422);
+        }
+
+        $user = Auth::user();
+        $searchTerm = $request->name;
+
+        $user->load(['activeRsForSearchFz.organizationUnit']);
+        $freezoneIds = $user->activeRsForSearchFz->pluck('organizationUnit.unitable_id');
+
+        $ounits = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
+            ->whereHas('organizationUnit', function ($query) use ($searchTerm) {
+                $query
+                    ->where(function ($query) use ($searchTerm) {
+                        $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                            ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                    });
+            })
+            ->with(['organizationUnit.ancestors' => function ($query) {
+                $query->orderByDesc('id'); // Replace 'id' with the appropriate column for reverse ordering
+            }])
+            ->get()
+            ->pluck('organizationUnit');
+
+
+        return response()->json($ounits);
+    }
 }
