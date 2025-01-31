@@ -87,7 +87,8 @@ trait LessonTrait
             ])
             ->leftJoinRelationship('files.file', [
                 'file' => fn($join) => $join->as('lesson_files_alias'),
-                'files' => fn($join) => $join->on('file_lesson.lesson_id', '=', 'lessons.id')
+                'files' => fn($join) => $join->as('lesson_pivot_file')
+                    ->on('file_lesson.lesson_id', '=', 'lessons.id')
             ])
             ->leftJoinRelationship('comments.user.person.avatar', [
                 'comments' => fn($join) => $join->as('comments_alias')
@@ -113,6 +114,8 @@ trait LessonTrait
                 'contents_alias.id as content_id', // done
                 'lesson_files_alias.id as lesson_file_id',
                 'lesson_files_alias.slug as lesson_file_slug',
+                'lesson_files_alias.size as lesson_file_size',
+                'lesson_pivot_file.title as lesson_file_title',
                 'comments_alias.text as lesson_comment_text',
                 'comments_alias.id as lesson_comment_id',
                 'comments_alias.create_date as lesson_comment_create_date',

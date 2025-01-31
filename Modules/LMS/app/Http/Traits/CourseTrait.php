@@ -531,16 +531,18 @@ trait CourseTrait
         })->filter()->values();
 
 
-        //Get those with is complete of 0
+
+        // Get those with isComplete of 0 (null)
         $lessonsWithIncomplete = collect($groupedData)
             ->flatMap(fn($chapter) => $chapter['lessons'])
             ->filter(fn($lesson) => $lesson['isComplete'] === null)
             ->pluck('id');
 
+// Get the first incomplete lesson, if available
         if ($lessonsWithIncomplete->isNotEmpty()) {
-            $lastLessonId = $lessonsWithIncomplete->last();
+            $lastLessonId = $lessonsWithIncomplete->first(); // Get the first incomplete lesson
         } else {
-
+            // If all lessons are completed, get the first lesson
             $lastLessonId = collect($groupedData)
                 ->flatMap(fn($chapter) => $chapter['lessons'])
                 ->pluck('id')
@@ -551,6 +553,7 @@ trait CourseTrait
             "lessonID" => $lastLessonId,
             "sidebar" => $data,
         ];
+
     }
 
     public function showCourseForUpdate($id)

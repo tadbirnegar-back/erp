@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Number;
 
 class LessonDatasWithLessonIDResource extends JsonResource
 {
@@ -54,12 +55,14 @@ class LessonDatasWithLessonIDResource extends JsonResource
                 })->filter()->values()->flatten(1)->first(),
 
                 'files' => $lesson->map(function ($file) {
+                    $sizeWithUnit = Number::fileSize($file->lesson_file_size, 2, 3);
+                    $parts = explode(' ', $sizeWithUnit, 2);
                     return [
                         'id' => $file->lesson_file_id,
-                        'file_title' => 'ضمیمه',
+                        'file_title' => $file -> lesson_file_title,
                         'url' => url($file->lesson_file_slug),
-                        'size' => 12 ,
-                        'Measurement_criteria' => 'MB',
+                        'size' => intval(Number::fileSize($file->lesson_file_size, 2, 3)) ,
+                        'Measurement_criteria' => $parts[1],
                     ];
                 })->filter()->unique('id')->values(),
             ];
