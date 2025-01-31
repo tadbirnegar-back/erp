@@ -89,13 +89,13 @@ trait CourseTrait
                 'courses.id as course_id',
                 'courses.title as course_title',
                 'files.slug',
+
             ])
             ->with(['status'])
             ->withCount([
                 'chapters',
                 'questions',
                 'lessons' => function ($query) use ($statusId) {
-                    // Ensure we count only lessons where the latest status is active
                     $query->whereIn('lessons.id', function ($subQuery) use ($statusId) {
                         $subQuery->select('lesson_id')
                             ->from('status_lesson as sl1')
@@ -107,7 +107,6 @@ trait CourseTrait
             ->paginate($perPage, ['*'], 'page', $pageNumber);
         return $courseQuery;
     }
-
 
     public function storeCourseDatas($data, $user)
     {
