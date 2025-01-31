@@ -12,6 +12,7 @@ use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Models\Job;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseCourseTrait;
@@ -127,6 +128,16 @@ class CourseController extends Controller
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
+            $componentsToRenderWithData['course']->chapters->each(function ($chapter) {
+                $chapter->setRelation(
+                    'lessons',
+                    $chapter->lessons->filter(function ($lesson) {
+                        return $lesson->lastStatus[0]->name === LessonStatusEnum::ACTIVE->value;
+                    })
+                );
+            });
+
+
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 403);
