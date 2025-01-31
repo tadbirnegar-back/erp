@@ -167,6 +167,7 @@ trait EnactmentTrait
             $ounits = [$data['ounitID']];
         }
 
+
         if (isset($data['freeZoneID'])) {
             $ounits = OrganizationUnit::with(['descendantsAndSelf' => function ($query) {
                 $query->where('unitable_type', VillageOfc::class);
@@ -187,6 +188,154 @@ trait EnactmentTrait
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
         });
+        $query->when($statuses, function ($query) use ($statuses) {
+            $query->whereHas('status', function ($query) use ($statuses) {
+                $query->whereIn('status_id', $statuses)
+                    ->where('enactment_status.id', function ($subQuery) {
+                        $subQuery->select(DB::raw('MAX(id)'))
+                            ->from('enactment_status')
+                            ->whereColumn('enactment_id', 'enactments.id');
+                    });
+            });
+        });
+
+
+        $query->when($reviewStatus, function ($query) use ($reviewStatus) {
+            if ($reviewStatus == -1) {
+                $query->where('final_status_id', null);
+            } else {
+                $query->where('final_status_id', $reviewStatus);
+            }
+        });
+
+        $query->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->where(function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(custom_title) AGAINST(? IN BOOLEAN MODE)', [$searchTerm])
+                    ->orWhereHas('title', function ($query) use ($searchTerm) {
+                        $query->whereRaw('MATCH(title) AGAINST(? IN BOOLEAN MODE)', [$searchTerm]);
+                    });
+            });
+        });
+        if (!empty($data['startDate']) && !empty($data['endDate'])) {
+            $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
+
+            $query->whereHas('latestMeeting', function ($q) use ($dateStart, $dateEnd) {
+                $q->whereBetween('meeting_date', [$dateStart, $dateEnd]);
+            });
+        }
+
+
+        return $query->with(['status', 'latestHeyaatMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf', 'finalStatus'])
+            ->orderBy('create_date', 'desc')
+            ->paginate($perPage, ['*'], 'page', $pageNum);
+    }
+
+    public function indexPendingForFreeZoneByDistricStatusEnactment(array $data, array $ounits, $userId)
+    {
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+        $statuses = $data['statusID'] ?? null;
+        if (!is_null($statuses)) {
+            $statuses = json_decode($statuses);
+        }
+        $reviewStatus = $data['reviewStatusID'] ?? null;
+        $searchTerm = $data['title'] ?? null;
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
+
+
+        if (isset($data['freeZoneID'])) {
+            $ounits = OrganizationUnit::with(['descendantsAndSelf' => function ($query) {
+                $query->where('unitable_type', VillageOfc::class);
+            }])->find($data['freeZoneID'])->descendantsAndSelf->flatten()
+                ->pluck('id')
+                ->toArray();
+        }
+
+        if (isset($data['districtID'])) {
+
+            $ounits = OrganizationUnit::with(['descendantsAndSelf' => function ($query) {
+                $query->where('unitable_type', VillageOfc::class);
+            }])->find($data['districtID'])->descendantsAndSelf->flatten()
+                ->pluck('id')
+                ->toArray();
+        }
+
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', $ounits);
+        })->whereHas('latestFreeZoneMeeting');
+        $query->when($statuses, function ($query) use ($statuses) {
+            $query->whereHas('status', function ($query) use ($statuses) {
+                $query->whereIn('status_id', $statuses)
+                    ->where('enactment_status.id', function ($subQuery) {
+                        $subQuery->select(DB::raw('MAX(id)'))
+                            ->from('enactment_status')
+                            ->whereColumn('enactment_id', 'enactments.id');
+                    });
+            });
+        });
+
+
+        $query->when($reviewStatus, function ($query) use ($reviewStatus) {
+            if ($reviewStatus == -1) {
+                $query->where('final_status_id', null);
+            } else {
+                $query->where('final_status_id', $reviewStatus);
+            }
+        });
+
+        $query->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->where(function ($query) use ($searchTerm) {
+                $query->whereRaw('MATCH(custom_title) AGAINST(? IN BOOLEAN MODE)', [$searchTerm])
+                    ->orWhereHas('title', function ($query) use ($searchTerm) {
+                        $query->whereRaw('MATCH(title) AGAINST(? IN BOOLEAN MODE)', [$searchTerm]);
+                    });
+            });
+        });
+        if (!empty($data['startDate']) && !empty($data['endDate'])) {
+            $dateStart = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $dateEnd = convertJalaliPersianCharactersToGregorian($data['endDate']);
+
+            $query->whereHas('latestMeeting', function ($q) use ($dateStart, $dateEnd) {
+                $q->whereBetween('meeting_date', [$dateStart, $dateEnd]);
+            });
+        }
+
+
+        return $query->with(['status', 'latestHeyaatMeeting', 'reviewStatuses', 'title', 'ounit.ancestorsAndSelf', 'finalStatus'])
+            ->orderBy('create_date', 'desc')
+            ->paginate($perPage, ['*'], 'page', $pageNum);
+    }
+
+    public function indexPendingForFreeZoneEnactment(array $data, array $ounits, $userId)
+    {
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+        $statuses = $data['statusID'] ?? null;
+        if (!is_null($statuses)) {
+            $statuses = json_decode($statuses);
+        }
+        $reviewStatus = $data['reviewStatusID'] ?? null;
+        $searchTerm = $data['title'] ?? null;
+        if (!empty($data['ounitID'])) {
+            $ounits = [$data['ounitID']];
+        }
+
+        if (isset($data['districtID'])) {
+
+            $ounits = OrganizationUnit::with(['descendantsAndSelf' => function ($query) {
+                $query->where('unitable_type', VillageOfc::class);
+            }])->find($data['districtID'])->descendantsAndSelf->flatten()
+                ->pluck('id')
+                ->toArray();
+        }
+
+
+        $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
+            $query->whereIntegerInRaw('ounit_id', $ounits);
+        })->whereHas('latestFreeZoneMeeting');
         $query->when($statuses, function ($query) use ($statuses) {
             $query->whereHas('status', function ($query) use ($statuses) {
                 $query->whereIn('status_id', $statuses)
@@ -746,9 +895,19 @@ trait EnactmentTrait
                     }]);
 
             }],
-            'ConsultingReviewCards' => ['consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
-                $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
-            },
+            'ConsultingReviewCards' => [
+                'members' => function ($query) use ($user) {
+                    $query->where('employee_id', $user->id)
+                        ->with([
+                            'roles' => function ($q) {
+                                $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value, RolesEnum::OZV_HEYAT_FREEZONE])
+                                    ->orWhereIn('name', [RolesEnum::KARSHENAS_MASHVARATI->value, RolesEnum::KARSHENAS_MASHVERATI_FREEZONE])
+                                    ->distinct();
+                            }]);
+                },
+                'consultingMembers.enactmentReviews' => function ($query) use ($enactment) {
+                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
+                },
             ],
             'BoardReviewCards' => ['boardMembers.enactmentReviews' => function ($query) use ($enactment) {
                 $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
@@ -787,6 +946,15 @@ trait EnactmentTrait
 
             }],
             'FormNumThree' => [
+                'members' => function ($query) use ($user) {
+                    $query->where('employee_id', $user->id)
+                        ->with([
+                            'roles' => function ($q) {
+                                $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value, RolesEnum::OZV_HEYAT_FREEZONE])
+                                    ->orWhereIn('name', [RolesEnum::KARSHENAS_MASHVARATI->value, RolesEnum::KARSHENAS_MASHVERATI_FREEZONE])
+                                    ->distinct();
+                            }]);
+                },
                 // MainEnactment logic
                 'reviewStatuses',
                 'latestMeeting',
