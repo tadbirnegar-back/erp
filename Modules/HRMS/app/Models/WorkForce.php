@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\HRMS\Database\factories\WorkForceFactory;
+use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 
@@ -20,7 +21,14 @@ class WorkForce extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = [
+        'workforceable_id',
+        'workforceable_type',
+        'isMarried',
+        'person_id',
+        'military_service_status_id',
+        'isar_id',
+    ];
     public $timestamps = false;
 
     protected static function newFactory(): WorkForceFactory
@@ -97,4 +105,9 @@ class WorkForce extends Model
 //    {
 //        return $this->hasMany(StatusWorkForce::class);
 //    }
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'workforceable_id');
+    }
+
 }

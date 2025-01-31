@@ -146,6 +146,7 @@ class FileMSController extends Controller
             $uploadedFile = $request->file('file');
             $data['fileName'] = $uploadedFile->getClientOriginalName();
             $data['fileSize'] = $uploadedFile->getSize();
+            $data['duration'] = $request->duration;
             $fileExtension = $uploadedFile->getClientOriginalExtension();
             $extension = Extension::where('name', '=', $fileExtension)->get(['id'])->first();
 

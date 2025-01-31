@@ -18,4 +18,9 @@ class PositionRole extends Pivot
 
     public $timestamps = false;
 
+    public function position()
+    {
+        return $this->belongsTo(Position::class, 'position_id');
+    }
+
 }

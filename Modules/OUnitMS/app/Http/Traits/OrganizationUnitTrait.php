@@ -2,6 +2,7 @@
 
 namespace Modules\OUnitMS\app\Http\Traits;
 
+use Modules\OUnitMS\app\Http\Enums\StatusEnum;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\Department;
 use Modules\OUnitMS\app\Models\DistrictOfc;
@@ -34,11 +35,11 @@ trait OrganizationUnitTrait
         $organizationUnit = new OrganizationUnit();
         $organizationUnit->name = $data['name'];
         $organizationUnit->head_id = $data['headID'] ?? null;
+        $status = $this->activeOrganizationUnitStatus();
+        $organizationUnit->status_id = $status->id;
 
         $state->organizationUnit()->save($organizationUnit);
 
-        $status = $this->activeOrganizationUnitStatus();
-        $organizationUnit->statuses()->attach($status->id);
 
         return $state;
     }
@@ -52,7 +53,8 @@ trait OrganizationUnitTrait
         $organizationUnit = new OrganizationUnit();
         $organizationUnit->head_id = $data['headID'] ?? null;
         $organizationUnit->name = $data['name'] ?? null;
-
+        $status = $this->activeOrganizationUnitStatus();
+        $organizationUnit->status_id = $status->id;
         $department->organizationUnit()->save($organizationUnit);
 
         $status = $this->activeOrganizationUnitStatus();
@@ -120,6 +122,8 @@ trait OrganizationUnitTrait
         $organizationUnit->name = $data['name'];
         $organizationUnit->head_id = $data['headID'] ?? null;
         $organizationUnit->parent_id = $ounit->id;
+        $status = $this->activeOrganizationUnitStatus();
+        $organizationUnit->status_id = $status->id;
 
         $districtOfc->organizationUnit()->save($organizationUnit);
 
@@ -168,6 +172,8 @@ trait OrganizationUnitTrait
         $organizationUnit->name = $data['name'];
         $organizationUnit->head_id = $data['headID'] ?? null;
         $organizationUnit->parent_id = $ounit->id;
+        $status = $this->activeOrganizationUnitStatus();
+        $organizationUnit->status_id = $status->id;
 
         $townOfc->organizationUnit()->save($organizationUnit);
 
@@ -219,7 +225,8 @@ trait OrganizationUnitTrait
         $organizationUnit->name = $data['name'];
         $organizationUnit->head_id = $data['headID'] ?? null;
         $organizationUnit->parent_id = $ounit->id;
-
+        $status = $this->activeOrganizationUnitStatus();
+        $organizationUnit->status_id = $status->id;
         $villageOfc->organizationUnit()->save($organizationUnit);
 
 //        $status = $this->activeOrganizationUnitStatus();
@@ -327,5 +334,25 @@ trait OrganizationUnitTrait
             )->with(['positions.levels', 'person', 'ancestors'])->get();
 
         return $result;
+    }
+
+    public function getActiveStatuses()
+    {
+        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', StatusEnum::Active->value);
+
+    }
+
+    public function getInactiveStatuses()
+    {
+        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', StatusEnum::Inactive->value);
+
+    }
+
+    public function softDeletingOunits(OrganizationUnit $ounit)
+    {
+
+        $status = $this->getInactiveStatuses();
+        $ounit->status_id = $status->id;
+        $ounit->save();
     }
 }

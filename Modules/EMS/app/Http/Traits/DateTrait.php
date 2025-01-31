@@ -94,4 +94,5 @@ trait DateTrait
 
         return $humanReadableDate;
     }
+
 }

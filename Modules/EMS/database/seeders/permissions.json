@@ -162,8 +162,14 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "ثبت مصوبه منطقه آزاد",
-        "slug": "/mes/add-enactment/free-zone",
+        "name": "افزودن مصوبه منطقه آزاد",
+        "slug": "/mes/enactment/add-freezone",
+        "moduleName": "EMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست مصوبات منطقه آزاد",
+        "slug": "/mes/freezone/list",
         "moduleName": "EMS",
         "permissionTypeName": "sidebar"
     }

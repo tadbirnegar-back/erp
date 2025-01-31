@@ -94,5 +94,11 @@
         "slug": "/oms/department/{id}",
         "moduleName": "OuinitMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف دپارتمان",
+        "slug": "/oms/ounit/delete/{id}",
+        "moduleName": "OuinitMS",
+        "permissionTypeName": "operational"
     }
 ]

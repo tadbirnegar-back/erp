@@ -20,6 +20,7 @@ class Status extends Model
      */
     protected $fillable = [];
 
+
     protected static function newFactory(): StatusFactory
     {
         //return StatusFactory::new();

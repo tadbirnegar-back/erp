@@ -24,6 +24,7 @@ use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Models\Payment;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\OUnitMS\app\Http\GlobalScope\ActiveScope;
 use Modules\OUnitMS\Database\factories\OrganizationUnitFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -44,7 +45,9 @@ class OrganizationUnit extends Model
         'unitable_id',
         'unitable_type',
         'head_id',
-        'parent_id',];
+        'parent_id',
+        'status_id'
+    ];
     public $timestamps = false;
 
     protected static function newFactory(): OrganizationUnitFactory
@@ -337,4 +340,22 @@ class OrganizationUnit extends Model
         return Status::all()->where('model', '=', self::class);
     }
 
+//    public function GetAllUsers(): Collection
+//    {
+//        {
+//            return  User::all()->where('model', '=', self::class);
+//        }
+//
+//    }
+
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new ActiveScope());
+    }
+//
+//    public function GetStatuses()
+//    {
+//
+//    }
 }

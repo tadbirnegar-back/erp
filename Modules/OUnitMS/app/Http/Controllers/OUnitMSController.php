@@ -261,6 +261,26 @@ class OUnitMSController extends Controller
         return response()->json($result);
     }
 
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+            $ounit = OrganizationUnit::find($id);
+            if (!$ounit) {
+                return response()->json(['message' => 'موردی یافت نشد'], 404);
+            }
+            $this->softDeletingOunits($ounit);
+            DB::commit();
+            return response()->json(['message' => 'باموفقیت حذف شد']);
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در حذف'], 500);
+        }
+    }
+
+//       $result= $this->SoftDeletingOunits($id);
+
     public function villageSearchByName(Request $request)
     {
         $data = $request->all();
@@ -275,7 +295,10 @@ class OUnitMSController extends Controller
 
 
         return response()->json($result);
+
     }
 
 
 }
+
+

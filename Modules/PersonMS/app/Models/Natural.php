@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AddressMS\app\Models\Address;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Models\LevelOfEducation;
 use Modules\PersonMS\Database\factories\NaturalFactory;
 
 class Natural extends Model
@@ -69,6 +70,11 @@ class Natural extends Model
     public function religionType()
     {
         return $this->belongsTo(ReligionType::class,'religion_type_id');
+    }
+
+    public function educationalLevel() : BelongsTo
+    {
+        return $this->belongsTo(LevelOfEducation::class,'level_of_education_id');
     }
 
 

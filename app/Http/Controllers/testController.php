@@ -3,82 +3,33 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
-use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
-use Modules\EMS\app\Models\Enactment;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\LMS\app\Http\Traits\ExamsTrait;
+use Modules\LMS\app\Models\Exam;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
+    use ExamsTrait;
 
-    public function run()
+    public function run($courseId)
     {
+        $student = User::with('student')->find(60);
+
+        $query = AnswerSheet::joinRelationship('exam.courseExams.course')
+            ->where('courses.id', $courseId)
+            ->where('answer_sheets.student_id', $student->id)
+            ->exists();
 
 
-        $ens = [149];
-//         $ens = [
-//             // 147,
-//         // 148,
-//         149
-//         ];
+        return response()->json($query);
 
-        foreach ($ens as $en) {
-            try {
-                $enactment = Enactment::with("latestHeyaatMeeting")->find($en);
-                StoreEnactmentStatusJob::dispatch($en);
-                StoreEnactmentStatusKarshenasJob::dispatch($en);
-                DB::commit();
-            } catch (\Exception $exception) {
-                DB::rollBack();
-                return response()->json(['error' => $exception->getMessage()]);
-            }
-
-
-        }
-            // Ensure meeting_date is in Carbon instance (convert if necessary)
-//            $meetingDate1 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
-//            $meetingDate2 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
-//            $meetingDate3 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
-
-            //            $receiptMaxDay = $this->getReceptionMaxDays()?->value ?? 7;
-
-
-            // Add 16 days and 5 minutes to the meeting date
-            //            $delayHeyat = now()->addDays($receiptMaxDay + 1)->addMinutes(5);
-            //            $delayKarshenas = now()->addDays($receiptMaxDay + 1)->addMinutes(5);
-
-//            $delayHeyat = Carbon::parse($meetingDate1)->addDays(1);
-//            $delayKarshenas = Carbon::parse($meetingDate2)->addDays(1);
-
-
-//            $alertHeayaatDelay = $timeNow->addDays($receiptMaxDay - 1)->addMinutes(5);
-//            $alertKarshenasDelay = $timeNow->addDays($receiptMaxDay - 1)->addMinutes(5);
-
-
-            // Dispatch the job with the calculated delay
-
-            StoreEnactmentStatusJob::dispatch($en);
-            StoreEnactmentStatusKarshenasJob::dispatch($en);
-            //            AlertKarshenas::dispatch($enactmentStatus->enactment_id)->delay($alertKarshenasDelay);
-            //AlertHeyaat::dispatch($enactmentStatus->enactment_id)->delay($alertHeayaatDelay);
-
-            // Convert the fetched date to a Carbon instance
-            //  $delayPending = Carbon::parse($meetingDate3);
-
-            //  PendingForHeyaatStatusJob::dispatch($en)->delay($delayPending);
-
-            //  $alertMembers = Carbon::parse($meetingDate3)->subDays(1);
-
-            //   StoreMeetingJob::dispatch($enactment->latestHeyaatMeeting->id)->delay($alertMembers);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
@@ -238,7 +189,7 @@ class testController extends Controller
 //        dd($childData);
 
 
-            //        RecruitmentScriptStatus::create([
+        //        RecruitmentScriptStatus::create([
 //            "recruitment_script_id" => 2795,
 //            "status_id" => 60
 //        ]);
@@ -260,6 +211,14 @@ class testController extends Controller
 //            'ounit_id' => 3889,
 //        ]);
 
+        $query = Exam::joinRelationship('course');
+        $query->leftJoinRelationship('questions');
+        $query->addSelect([
+            'exams.title as examTitle',
+            'courses.title as coursesTitle',
+            'questions.title as question_title',
+        ]);
+        $query->withCount(['questions as totalQuestions']);
 //        $user = User::find(2172);
 //        $userRoles = $user->roles->pluck('name')->toArray();
 //
@@ -295,7 +254,7 @@ class testController extends Controller
 //                    $query->where('enactment_id', $enactment->id)->with(['status', 'attachment']);
 //                },
 
-            // BoardReviewCards logic
+        // BoardReviewCards logic
 
 
 //        EnactmentStatus::create([
@@ -316,6 +275,7 @@ class testController extends Controller
 //            $a
 //        );
 
+        return $query->where('exams.id', 1)->get();
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //
@@ -571,5 +531,5 @@ class testController extends Controller
 
 //         }
 
-        }
     }
+}

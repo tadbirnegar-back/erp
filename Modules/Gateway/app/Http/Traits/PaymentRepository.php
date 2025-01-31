@@ -42,7 +42,6 @@ trait PaymentRepository
                 $payment->organization_unit_id = $ou['ounitID'];
                 $payment->save();
 
-
             });
 
 

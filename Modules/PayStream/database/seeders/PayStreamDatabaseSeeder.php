@@ -3,6 +3,8 @@
 namespace Modules\PayStream\database\seeders;
 
 use Illuminate\Database\Seeder;
+use Modules\PayStream\database\seeders\ProcessStatusSeeder;
+use Modules\PayStream\app\Models\FinancialStatus;
 
 class PayStreamDatabaseSeeder extends Seeder
 {
@@ -11,6 +13,12 @@ class PayStreamDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+//            FinancialStatusSeeder::class,
+//            ProcessStatusSeeder::class,
+//            InvoiceStatusSeeder::class,
+//            PsPaymentStatusSeeder::class,
+            InvoiceStatusSeeder::class,
+        ]);
     }
 }

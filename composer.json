@@ -11,6 +11,7 @@
         "php": "^8.2",
         "ajcastro/eager-load-pivot-relations": "^0.3.0",
         "guzzlehttp/guzzle": "^7.2",
+        "kirschbaum-development/eloquent-power-joins": "^4.0",
         "laravel/framework": "10.42.*",
         "laravel/horizon": "^5.30.2",
         "laravel/passport": "^11.8",
@@ -22,7 +23,7 @@
         "shetabit/payment": "^5.8",
         "staudenmeir/belongs-to-through": "^2.15",
         "staudenmeir/eloquent-eager-limit-x-laravel-adjacency-list": "^1.2",
-        "staudenmeir/eloquent-has-many-deep": "^1.19",
+        "staudenmeir/eloquent-has-many-deep": "^1.19.4",
         "tzsk/sms": "^8.0"
     },
     "require-dev": {

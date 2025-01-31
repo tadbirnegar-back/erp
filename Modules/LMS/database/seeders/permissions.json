@@ -34,5 +34,120 @@
         "slug": "/students/delete/{id}",
         "moduleName": "LMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن مدرس",
+        "slug": "/lms/teachers/add",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست مدرسان",
+        "slug": "/teachers/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست دوره های آموزشی",
+        "slug": "/lms/courses/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ثبت نام در دوره",
+        "slug": "/lms/register/course/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن درس",
+        "slug": "/lms/lesson/add",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش فصل",
+        "slug": "/lms/chapter/edit/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف فصل",
+        "slug": "/lms/chapter/delete/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش درس",
+        "slug": "/lms/lesson/update/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات ویرایش درس",
+        "slug": "/lms/lesson/update/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن دوره آموزشی",
+        "slug": "/lms/course/add",
+        "moduleName" : "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی دوره آموزشی",
+        "slug": "/lms/course/update/{id}",
+        "moduleName" : "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست دوره ها",
+        "slug": "/lms/course/related-courses-list",
+        "moduleName" : "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مدیریت دروس دوره",
+        "slug": "/lms/publish/course/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+
+    {
+        "name": "انتشار دوره",
+        "slug": "/lms/course/make-publish/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف دوره",
+        "slug": "/lms/course/delete/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لغو دوره",
+        "slug": "/lms/course/cancel/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف درس",
+        "slug": "/lms/lesson/delete/{id}",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست آزمون های من",
+        "slug": "/lms/exam-result/list",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن سوال",
+        "slug": "/lms/add/questions",
+        "moduleName": "LMS",
+        "permissionTypeName": "operational"
     }
 ]

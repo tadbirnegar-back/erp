@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AAA\app\Models\User as AAAUser;
 use Modules\AddressMS\app\Models\Address;
+use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\Database\factories\PersonFactory;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\LaravelAdjacencyList\Tests\IdeHelper\Models\User;
@@ -66,6 +68,17 @@ class Person extends Model
     {
         return $this->hasOne(WorkForce::class, 'person_id');
     }
+
+    public function teacherWorkforce(): HasOne
+    {
+        return $this->hasOne(WorkForce::class, 'person_id')->where('workforceable_type', Teacher::class);
+    }
+
+    public function workForces(): HasMany
+    {
+        return $this->hasMany(WorkForce::class, 'person_id');
+    }
+
 
     public function addresses(): HasMany
     {
@@ -160,6 +173,11 @@ class Person extends Model
         )
             ->where('workforceable_type', Employee::class)
             ->latest('create_date');
+    }
+
+    public function customers()
+    {
+        return $this -> hasMany(Customer::class, 'person_id');
     }
 
 
