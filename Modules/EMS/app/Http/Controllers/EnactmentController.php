@@ -830,7 +830,7 @@ class EnactmentController extends Controller
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {
-                    $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                    $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
                 })->with('status')->get();
 
             if ($reviewStatuses->count() > 1) {
@@ -898,6 +898,7 @@ class EnactmentController extends Controller
                 ->whereHas('user.roles', function ($query) {
                     $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
                 })->with('status')->get();
+
 
             if ($reviewStatuses->count() > 1) {
                 $result = $reviewStatuses->groupBy('status.id')
