@@ -12,7 +12,7 @@ class RelatedCourseListResource extends JsonResource
     use CourseTrait;
     public function toArray($request): array
     {
-        $data = collect($this->resource->items()); // Access the items in the paginator
+        $data = collect($this->resource->items());
 
         // Filter data where course_id exists
         $filteredData = $data->filter(function ($item) {
