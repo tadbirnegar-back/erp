@@ -351,8 +351,6 @@ trait CourseTrait
         {
             $completionPercentage = 100;
         }
-        \Log::info(json_encode(["all" => $allLessons , "complete" => $completedLessonIds]));
-
         // Return the results
         return [
             'total_lessons' => $totalLessons,
