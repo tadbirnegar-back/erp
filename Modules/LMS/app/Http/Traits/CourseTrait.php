@@ -89,22 +89,25 @@ trait CourseTrait
                 'courses.id as course_id',
                 'courses.title as course_title',
                 'files.slug',
-
             ])
             ->with(['status'])
             ->withCount([
                 'chapters',
                 'questions',
                 'lessons' => function ($query) use ($statusId) {
-                    $query->whereHas('lessonStatus', function ($subQuery) use ($statusId) {
-                        $subQuery->where('status_id', $statusId);
+                    // Ensure we count only lessons where the latest status is active
+                    $query->whereIn('lessons.id', function ($subQuery) use ($statusId) {
+                        $subQuery->select('lesson_id')
+                            ->from('status_lesson as sl1')
+                            ->whereRaw('sl1.id = (SELECT MAX(sl2.id) FROM status_lesson as sl2 WHERE sl2.lesson_id = sl1.lesson_id)')
+                            ->where('sl1.status_id', $statusId);
                     });
                 }
             ])
             ->paginate($perPage, ['*'], 'page', $pageNumber);
-
         return $courseQuery;
     }
+
 
     public function storeCourseDatas($data, $user)
     {
@@ -347,8 +350,7 @@ trait CourseTrait
 
         // Calculate completion percentage
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
-        if($completionPercentage > 100)
-        {
+        if ($completionPercentage > 100) {
             $completionPercentage = 100;
         }
         // Return the results
