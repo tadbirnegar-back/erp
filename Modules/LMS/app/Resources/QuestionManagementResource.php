@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 
 class QuestionManagementResource extends JsonResource
 {
@@ -11,6 +12,12 @@ class QuestionManagementResource extends JsonResource
      */
     public function toArray($request): array
     {
+        $questionIDs = collect($this->resource['questionList'])->pluck('questionID')->unique();
+
+        $existingQuestionIDs = DB::table('question_exam')
+            ->whereIn('question_id', $questionIDs)
+            ->pluck('question_id')
+            ->toArray();
 
         $groupedQuestions = collect($this->resource['questionList'])->groupBy('questionID');
         $uniqueCourseTitles = collect($this->resource['questionList'])->pluck('courseTitle')->first();
@@ -18,9 +25,9 @@ class QuestionManagementResource extends JsonResource
         return [
             'courseTitle' => $uniqueCourseTitles,
 
-            'questionsList' => $groupedQuestions->map(function ($questions) {
-
+            'questionsList' => $groupedQuestions->map(function ($questions) use ($existingQuestionIDs) {
                 $firstQuestion = $questions->first();
+                $existsInExamQuestion = in_array($firstQuestion['questionID'], $existingQuestionIDs);
 
                 return [
                     'title' => $firstQuestion['questionTitle'],
@@ -28,8 +35,9 @@ class QuestionManagementResource extends JsonResource
                     'difficulty' => $firstQuestion['difficultyName'],
                     'repository' => $firstQuestion['repositoryName'],
                     'questionTypeName' => $firstQuestion['questionTypeName'],
-                    'deleteAble' => $firstQuestion['questionID'] === $firstQuestion['answerQuestionID'],
-                    'editable' => $firstQuestion['questionID'] === $firstQuestion['answerQuestionID'],
+                    'deleteAble' => $existsInExamQuestion,
+                    'editable' => $existsInExamQuestion,
+//                    'existsInExamQuestion' => $existsInExamQuestion,
 
                     'sources' => [
                         'chapterTitle' => $firstQuestion['chapterTitle'],
