@@ -151,7 +151,7 @@ trait CourseTrait
 
     public function courseShow($course, $user)
     {
-        //Take User Initial Info
+
         $user->load([
             'answerSheets',
             'student',
@@ -160,7 +160,7 @@ trait CourseTrait
 
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
-        $answerSheet = $user->answerSheets[0] ?? null; // Handle potential null
+        $answerSheet = $user->answerSheets[0] ?? null;
         $student = $user->student;
 
         $AllowToDos = [
@@ -173,11 +173,10 @@ trait CourseTrait
         ];
 
 
-// Check exam approval status
         $exampApprovedStatus = $this->answerSheetApprovedStatus()->id;
+
         $isApproveFromExam = ($answerSheet && $answerSheet->status_id == $exampApprovedStatus);
 
-// Check enrollment status
 
         if (empty($isEnrolled->isEnrolled[0])) {
             $isJoined = false;
@@ -225,14 +224,12 @@ trait CourseTrait
             ]
         ]);
 
-// Flatten and prepare the relations array
         $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())
             ->flatMap(fn($relations) => collect($relations)->mapWithKeys(fn($relation, $key) => is_callable($relation) ? [$key => $relation] : [$relation => fn($query) => $query]))->all();
 
 
-// Now use the flattened components with the load method (ensure it's passed as an array)
-        $course = $course->load($flattenedComponents);  // Use $flattenedComponents here
-//        return $enactment;
+        $course = $course->load($flattenedComponents);
+
         $componentsWithData = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys()))->map(function ($relations, $component) use ($course, $user) {
             $relationData = collect($relations)->mapWithKeys(function ($relation, $key) use ($course, $user) {
                 $relationName = is_callable($relation) ? explode('.', $key)[0] : explode('.', $relation)[0];

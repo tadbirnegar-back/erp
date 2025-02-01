@@ -32,11 +32,6 @@ use Modules\LMS\app\Http\Controllers\TeacherController;
 //});
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/teachers/list', [TeacherController::class, 'index']);
-    Route::post('/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
-    Route::post('/students/search', [StudentController::class, 'isPersonStudent']);
-    Route::post('/dehyari/add', [StudentController::class, 'store']);
-    Route::post('/students/list', [StudentController::class, 'index']);
     Route::post('/students/{id}', [StudentController::class, 'show']);
     Route::post('/students/update/{id}', [StudentController::class, 'show']);
     Route::put('/students/update/{id}', [StudentController::class, 'update']);
@@ -68,8 +63,17 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/view-course/{id}', [CourseController::class, 'learningShow']);
     Route::post('/lms/lesson/data', [LessonController::class, 'sendLessonDatas']);
     Route::post('/lms/content-log/set', [ContentController::class, 'setLog']);
-
-
+    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
+    Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
+    Route::get('/lms/questions/dropdown/{id}', [QuestionsController::class, 'showDropDowns']);
+    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
+    Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
+    Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
+    Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
+    Route::post('/lms/show/setting', [SettingController::class, 'index']);
+    Route::post('/lms/store/setting', [SettingController::class, 'store']);
+    Route::post('/teachers/list', [TeacherController::class, 'index']);
+    Route::post('/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
@@ -86,15 +90,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course-course/list/{id}', [CourseCourseController::class, 'listing']);
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
-    Route::post('/lms/exams/list', [ExamsController::class, 'index']);
-    Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
-    Route::get('/lms/questions/dropdown/{id}', [QuestionsController::class, 'showDropDowns']);
-    Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
-    Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
-    Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);
-    Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
-    Route::post('/lms/show/setting', [SettingController::class, 'index']);
-    Route::post('/lms/store/setting', [SettingController::class, 'store']);
-    Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
-
 });

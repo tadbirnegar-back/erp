@@ -73,7 +73,19 @@ trait ContentTrait
 
     public function increseContentlogRound($consume_secounds , $file_secounds , $logID , $user)
     {
-        $log = ContentConsumeLog::where('student_id', $user->student->id)->find($logID);
+        $log = ContentConsumeLog::with('content.lesson')->where('student_id', $user->student->id)->find($logID);
+
+        $content = Content::query()
+            ->leftJoinRelationship('lesson.lessonStudyLog' , [
+                'lesson' => fn ($query) => $query -> as('lesson_alias'),
+                'lessonStudyLog' => fn ($query) => $query -> as('lesson_log_alias')
+                    -> on('lesson_log_alias.lesson_id' , 'lesson_alias.id'),
+            ])
+            ->select([
+                'lesson_alias.id as lesson_alias_id',
+                'lesson_log_alias.id as lesson_log_alias_id',
+                'lesson_log_alias.is_completed as lesson_log_alias_is_completed',
+            ])->where('contents.id' , $log['content_id'])->first();
 
         if($consume_secounds + 1 > $file_secounds*70/100){
             $log->consume_round = $log -> consume_round + 1 ;
@@ -82,23 +94,13 @@ trait ContentTrait
             $log -> set = null;
             $log -> last_played = null;
             $log -> save();
-
-            $content = Content::query()
-                ->leftJoinRelationship('lesson.lessonStudyLog' , [
-                    'lesson' => fn ($query) => $query -> as('lesson_alias'),
-                    'lessonStudyLog' => fn ($query) => $query -> as('lesson_log_alias')
-                        -> on('lesson_log_alias.lesson_id' , 'lesson_alias.id'),
-                ])
-                ->select([
-                   'lesson_alias.id as lesson_alias_id',
-                    'lesson_log_alias.id as lesson_log_alias_id',
-                ])->where('contents.id' , $log['content_id'])->first();
-
             if(isset($content->lesson_log_alias_id))
             {
                 $lessonLog = LessonStudyLog::find($content->lesson_log_alias_id);
                 $lessonLog -> study_count = $lessonLog -> study_count + 1 ;
                 $lessonLog -> last_study_date = now();
+                $lessonLog -> is_completed = true;
+                $lessonLog -> student_id = $user->student->id;
                 $lessonLog -> save();
             }else{
                 $this -> lessonLogCreate($content->lesson_alias_id , $user);
@@ -137,7 +139,7 @@ trait ContentTrait
                 $enroll->save();
             }
         }
-        return $log;
+        return [$log , "lessons" => ['lessonID' => $content -> lesson_log_alias_id , 'is_completed' => $content -> lesson_log_alias_is_completed]];
     }
 
 
