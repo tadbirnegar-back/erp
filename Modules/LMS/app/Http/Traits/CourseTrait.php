@@ -39,7 +39,11 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
         $status = Status::where('name', $this::$active)->firstOrFail();
-        $latestStatus = StatusCourse::latest('create_date')->first();
+
+        $latestStatusSubquery = DB::table('status_course')
+            ->select('course_id', DB::raw('MAX(create_date) as latest_status_date'))
+            ->groupBy('course_id');
+
 
         $query = Course::query()
             ->joinRelationship('cover')
@@ -49,32 +53,29 @@ trait CourseTrait
             ->leftJoinRelationship('chapters.lessons.questions', [
                 'questions' => fn($join) => $join->on('questions.status_id', DB::raw($status->id))
             ])
-            ->addSelect([
-                'courses.id as course_id',
-                'courses.title',
-                'courses.cover_id',
-                'files.slug as cover_slug',
-                'chapters.id as chapter_id',
-                'lessons.id as lesson_id',
-                'questions.id as question_id'
-            ])
-            ->join('statuses as course_status', function ($join) {
-                $join->on('course_status.id', '=', \DB::raw('(
-                SELECT id
-                FROM statuses AS ps
-                WHERE ps.course_id = courses.id
-                ORDER BY ps.create_date DESC
-                LIMIT 1
-            )'));
+            ->joinSub($latestStatusSubquery, 'latest_status', function ($join) {
+                $join->on('courses.id', '=', 'latest_status.course_id');
             })
-            ->whereHas('statusCourse.status', function ($query) use ($latestStatus) {
-                $query->where('status_course.status_id', $latestStatus->id)
-                    ->whereIn('course_status.name', [
-                        $this::$presenting,
-                        $this::$pishnevis,
-                        $this::$waitToPresent,
-                    ]);
-            });
+            ->join('status_course as sc', function ($join) {
+                $join->on('sc.course_id', '=', 'courses.id')
+                    ->on('sc.create_date', '=', 'latest_status.latest_status_date');
+            })
+            ->join('statuses as s', 's.id', '=', 'sc.status_id')
+            ->whereIn('s.name', [
+                $this::$presenting,
+                $this::$pishnevis,
+                $this::$waitToPresent,
+            ]);
+        $query->addSelect([
+            'courses.id as course_id',
+            'courses.title',
+            'courses.cover_id',
+            'files.slug as cover_slug',
+            'chapters.id as chapter_id',
+            'lessons.id as lesson_id',
+            'questions.id as question_id',
+            's.name as latest_status_name'
+        ]);
 
         $query->when($searchTerm, function ($query) use ($searchTerm) {
             $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])

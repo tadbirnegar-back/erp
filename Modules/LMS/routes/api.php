@@ -44,7 +44,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/add', [TeacherController::class, 'store']);
-//    Route::post('/lms/courses/questions/list', [CourseController::class, 'courseList']);
+    Route::post('/lms/courses/questions/list', [CourseController::class, 'courseList']);
     Route::post('/lms/courses/lesson/list', [CourseController::class, 'lessonList']);
     Route::post('/lms/lesson/add', [LessonController::class, 'addLesson']);
     Route::post('/lms/chapter/edit/{id}', [ChapterController::class, 'update']);
@@ -98,4 +98,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
 
 });
-Route::post('/lms/courses/questions/list', [CourseController::class, 'courseList']);
