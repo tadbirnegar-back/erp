@@ -10,7 +10,9 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Exam;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 
 class testController extends Controller
@@ -18,18 +20,12 @@ class testController extends Controller
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
     use ExamsTrait;
 
-    public function run($courseId)
+    public function run()
     {
-        $student = User::with('student')->find(60);
 
-        $query = AnswerSheet::joinRelationship('exam.courseExams.course')
-            ->where('courses.id', $courseId)
-            ->where('answer_sheets.student_id', $student->id)
-            ->exists();
-
-
-        return response()->json($query);
-
+        Course::create([
+            'title' => 'Course 1',
+        ]);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);

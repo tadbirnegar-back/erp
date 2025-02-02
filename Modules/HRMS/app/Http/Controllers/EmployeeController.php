@@ -589,9 +589,9 @@ class EmployeeController extends Controller
 
         if ($employee) {
             $employee = $this->loadLatestActiveScript($employee);
-            $scriptTypes = $this->getCompatibleIssueTimesByName($employee->latestRecruitmentScript ? $employee->latestRecruitmentScript->issueTime->title : null);
+            $scriptTypes = ScriptType::where('origin_id', ScriptTypeOriginEnum::Main->value)->get();
         } else {
-            $scriptTypes = $this->getCompatibleIssueTimesByName();
+            $scriptTypes = ScriptType::where('origin_id', ScriptTypeOriginEnum::Main->value)->get();
         }
 
         return response()->json(['data' => $data, 'scriptTypes' => $scriptTypes, 'message' => $message]);

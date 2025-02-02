@@ -42,12 +42,6 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": "ویرایش درس",
-        "slug": "/lms/lesson/update/{id}",
-        "moduleName": "LMS",
-        "permissionTypeName": "operational"
-    },
-    {
         "name": "افزودن دوره",
         "slug": "/lms/course/add",
         "moduleName": "LMS",
