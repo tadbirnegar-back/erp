@@ -13,6 +13,7 @@ use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
+use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
@@ -344,8 +345,7 @@ trait CourseTrait
 
         // Calculate completion percentage
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
-        if($completionPercentage > 100)
-        {
+        if ($completionPercentage > 100) {
             $completionPercentage = 100;
         }
         // Return the results
@@ -514,36 +514,44 @@ trait CourseTrait
                     'title' => $chapter->first()->chapter_title,
                     'description' => $chapter->first()->chapter_description,
                     'lessons' => $chapter->groupBy('lesson_id')->map(function ($lesson) {
+                        $firstLesson = $lesson->first();
+                        $status = $this->checkLessonStatus($firstLesson->lesson_id);
+
                         return [
-                            'id' => $lesson->first()->lesson_id,
-                            'title' => $lesson->first()->lesson_title,
-                            'isComplete' => $lesson->first()->is_completed,
-                            'duration' => convertSecondToMinute($lesson->first()->files_duration),
-                            'chapter_id' => $lesson->first()->chapter_id,
+                            'id' => $firstLesson->lesson_id,
+                            'title' => $firstLesson->lesson_title,
+                            'isComplete' => $firstLesson->is_completed,
+                            'duration' => convertSecondToMinute($firstLesson->files_duration),
+                            'chapter_id' => $firstLesson->chapter_id,
+                            'status' => $status->first()->name,
                         ];
                     })->values(),
                 ];
             }
             return null;
         })->filter()->values();
-
-
-
-        // Get those with isComplete of 0 (null)
-        $lessonsWithIncomplete = collect($groupedData)
+        $activeLessons = collect($groupedData)
             ->flatMap(fn($chapter) => $chapter['lessons'])
-            ->filter(fn($lesson) => $lesson['isComplete'] === null)
+
+            ->filter(fn($lesson) => $lesson['status'] == LessonStatusEnum::ACTIVE->value && $lesson['isComplete'] === null)
             ->pluck('id');
 
-// Get the first incomplete lesson, if available
-        if ($lessonsWithIncomplete->isNotEmpty()) {
-            $lastLessonId = $lessonsWithIncomplete->first(); // Get the first incomplete lesson
+        if ($activeLessons->isNotEmpty()) {
+            $lastLessonId = $activeLessons->first();
         } else {
-            // If all lessons are completed, get the first lesson
-            $lastLessonId = collect($groupedData)
+            $lessonsWithIncomplete = collect($groupedData)
                 ->flatMap(fn($chapter) => $chapter['lessons'])
-                ->pluck('id')
-                ->first();
+                ->filter(fn($lesson) => $lesson['isComplete'] === null)
+                ->pluck('id');
+
+            if ($lessonsWithIncomplete->isNotEmpty()) {
+                $lastLessonId = $lessonsWithIncomplete->first();
+            } else {
+                $lastLessonId = collect($groupedData)
+                    ->flatMap(fn($chapter) => $chapter['lessons'])
+                    ->pluck('id')
+                    ->first();
+            }
         }
 
         return [
@@ -551,8 +559,14 @@ trait CourseTrait
             "sidebar" => $data,
         ];
 
+
     }
 
+    public function checkLessonStatus($id)
+    {
+        $lesson = Lesson::with('latestStatus')->find($id);
+        return $lesson -> latestStatus;
+    }
     public function showCourseForUpdate($id)
     {
         $query = Course::query()

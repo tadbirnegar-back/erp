@@ -208,6 +208,7 @@ trait LessonTrait
         );
     }
 
+
     public function lessonActiveStatus()
     {
         return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::ACTIVE->value);

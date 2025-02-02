@@ -69,9 +69,9 @@ class LessonDatasWithLessonIDResource extends JsonResource
         })->values();
 
         $activeContent = collect($this->resource['lessonDetails'])
-            ->filter(function ($content) {
-                return !empty($content->content_consume_data);
-            })
+//            ->filter(function ($content) {
+//                return !empty($content->content_consume_data);
+//            })
             ->sortByDesc(function ($content) {
                 return $content->content_consume_create_date;
             })

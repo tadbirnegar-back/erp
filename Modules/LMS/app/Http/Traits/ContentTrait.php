@@ -10,10 +10,12 @@ use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\ContentConsumeLog;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\LessonStudyLog;
+use Modules\LMS\app\Resources\SideBarCourseShowResource;
 
 trait ContentTrait
 {
-    use LessonTrait;
+    use LessonTrait , CourseTrait;
+
     public function storeContent($data)
     {
         $insertData = $this->prepareContentData($data);
@@ -61,49 +63,54 @@ trait ContentTrait
         );
     }
 
-    public function calculateRounds($data , $user)
+    public function calculateRounds($data, $user)
     {
-        $content =Content::query()
-         ->leftJoinRelationshipUsingAlias('file' , 'file_alias')
-         ->select([
-            'file_alias.duration as duration',
-        ])->where('contents.id' , $data['content_id'])->first();
-        return $this->increseContentlogRound($data['consume_data'], $content->duration , $data['id'] , $user);
+        $content = Content::query()
+            ->leftJoinRelationshipUsingAlias('file', 'file_alias')
+            ->select([
+                'file_alias.duration as duration',
+            ])->where('contents.id', $data['content_id'])->first();
+        return $this->increseContentlogRound($data['consume_data'], $content->duration, $data['id'], $user);
     }
 
-    public function increseContentlogRound($consume_secounds , $file_secounds , $logID , $user)
+    public function increseContentlogRound($consume_secounds, $file_secounds, $logID, $user)
     {
         $log = ContentConsumeLog::with('content.lesson')->where('student_id', $user->student->id)->find($logID);
 
         $content = Content::query()
-            ->leftJoinRelationship('lesson.lessonStudyLog' , [
-                'lesson' => fn ($query) => $query -> as('lesson_alias'),
-                'lessonStudyLog' => fn ($query) => $query -> as('lesson_log_alias')
-                    -> on('lesson_log_alias.lesson_id' , 'lesson_alias.id'),
+            ->leftJoinRelationship('lesson.lessonStudyLog', [
+                'lesson' => fn($query) => $query->as('lesson_alias'),
+                'lessonStudyLog' => fn($query) => $query->as('lesson_log_alias')
+                    ->on('lesson_log_alias.lesson_id', 'lesson_alias.id'),
             ])
             ->select([
                 'lesson_alias.id as lesson_alias_id',
                 'lesson_log_alias.id as lesson_log_alias_id',
                 'lesson_log_alias.is_completed as lesson_log_alias_is_completed',
-            ])->where('contents.id' , $log['content_id'])->first();
+            ])->where('contents.id', $log['content_id'])->first();
 
-        if($consume_secounds + 1 > $file_secounds*70/100){
-            $log->consume_round = $log -> consume_round + 1 ;
-            $log -> consume_data = null;
-            $log -> is_complete = true;
-            $log -> set = null;
-            $log -> last_played = null;
-            $log -> save();
-            if(isset($content->lesson_log_alias_id))
-            {
+        $contentToChapter = Content::with('lesson.chapter')->find($log['content_id']);
+        $course = $contentToChapter->lesson->chapter->course;
+        $sidebarData = $this->dataShowViewCourseSideBar($course , $user);
+
+        $sidebar = new SideBarCourseShowResource($sidebarData);
+
+        if ($consume_secounds + 1 > $file_secounds * 70 / 100) {
+            $log->consume_round = $log->consume_round + 1;
+            $log->consume_data = null;
+            $log->is_complete = true;
+            $log->set = null;
+            $log->last_played = null;
+            $log->save();
+            if (isset($content->lesson_log_alias_id)) {
                 $lessonLog = LessonStudyLog::find($content->lesson_log_alias_id);
-                $lessonLog -> study_count = $lessonLog -> study_count + 1 ;
-                $lessonLog -> last_study_date = now();
-                $lessonLog -> is_completed = true;
-                $lessonLog -> student_id = $user->student->id;
-                $lessonLog -> save();
-            }else{
-                $this -> lessonLogCreate($content->lesson_alias_id , $user);
+                $lessonLog->study_count = $lessonLog->study_count + 1;
+                $lessonLog->last_study_date = now();
+                $lessonLog->is_completed = true;
+                $lessonLog->student_id = $user->student->id;
+                $lessonLog->save();
+            } else {
+                $this->lessonLogCreate($content->lesson_alias_id, $user);
             }
 
             //mohasebeye afzudane +1 be enroll az injas
@@ -127,28 +134,33 @@ trait ContentTrait
                 }
             }
 
-            if($allLessonsCompleted) {
+            if ($allLessonsCompleted) {
                 $enroll = $user->enrolls->where('course_id', $chapter->content->lesson->chapter->course->id)->first();
                 $enroll->study_completed = true;
                 $enroll->study_count = $enroll->study_count + 1;
-                if(is_null($enroll->first_completed_date))
-                {
+                if (is_null($enroll->first_completed_date)) {
                     $enroll->first_completed_date = now();
                 }
                 $enroll->last_completed_date = now();
                 $enroll->save();
             }
         }
-        return [$log , "lessons" => ['lessonID' => $content -> lesson_log_alias_id , 'is_completed' => $content -> lesson_log_alias_is_completed]];
+        return ["log" => $log, "lessons" => ['lessonID' => $content->lesson_log_alias_id, 'is_completed' => $content->lesson_log_alias_is_completed] , "sidebar" => $sidebar];
+    }
+
+    public function checkLessonStatus($id)
+    {
+        $lesson = Lesson::with('latestStatus')->find($id);
+        return $lesson -> latestStatus;
     }
 
 
     public function deactiveContent($data)
     {
         $contentIDs = json_decode($data['deleteContent']);
-        $statusId = $this -> contentInActiveStatus() -> id;
+        $statusId = $this->contentInActiveStatus()->id;
 
-        Content::withoutGlobalScope(ContentScope::class)->whereIn('id' , $contentIDs)->update(['status_id' => $statusId]);
+        Content::withoutGlobalScope(ContentScope::class)->whereIn('id', $contentIDs)->update(['status_id' => $statusId]);
     }
 
     public function contentActiveStatus()
