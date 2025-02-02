@@ -123,8 +123,7 @@ class ExamsController extends Controller
         $student = Auth::user()->load('student');
         $data = $request->all();
 
-
-        $result = $this->examsIndex($data, $student->student);
+        $result = $this->examsIndex($student->student, $data);
         $response = ExamListResource::make($result);
         return response()->json($response);
 
