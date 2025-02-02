@@ -8,7 +8,6 @@ use Modules\LMS\app\Models\CourseExam;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\QuestionExam;
-use Modules\LMS\app\Models\Student;
 use Modules\LMS\app\Resources\ExamPreviewResource;
 use Modules\SettingsMS\app\Models\Setting;
 
@@ -124,9 +123,8 @@ trait ExamsTrait
     }
 
 
-    public function examsIndex(array $data = [], Student $auth)
+    public function examsIndex($student, array $data = [])
     {
-
         $query = AnswerSheet::joinRelationship('repository')
             ->joinRelationship('questionType', 'question_type_alias')
             ->joinRelationship('exam', 'exam_alias')
@@ -143,7 +141,7 @@ trait ExamsTrait
             'question_types.id as questionTypeID',
             'statuses.name as statusName',
             'statuses.id as statusID'
-        ])->where('answer_sheets.student_id', $auth->id);
+        ])->where('answer_sheets.student_id', $student->id);
 
 
         return $query->get();
