@@ -190,8 +190,8 @@ trait AnswerSheetTrait
     public function student($student)
     {
         $query = User::query()
-            ->joinRelationship('person.avatar')
-            ->joinRelationship('roles.RolePosition.position')
+            ->leftJoinRelationship('person.avatar')
+            ->leftJoinRelationship('roles.RolePosition.position')
             ->select([
                 'persons.display_name as name',
                 'files.slug as avatar',
@@ -199,7 +199,6 @@ trait AnswerSheetTrait
             ])
             ->where('users.id', $student->id)
             ->first();
-
 
         return [
             'name' => $query->name ?? null,
