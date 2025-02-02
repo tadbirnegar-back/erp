@@ -89,12 +89,6 @@ trait ContentTrait
                 'lesson_log_alias.is_completed as lesson_log_alias_is_completed',
             ])->where('contents.id', $log['content_id'])->first();
 
-        $contentToChapter = Content::with('lesson.chapter')->find($log['content_id']);
-        $course = $contentToChapter->lesson->chapter->course;
-        $sidebarData = $this->dataShowViewCourseSideBar($course , $user);
-
-        $sidebar = new SideBarCourseShowResource($sidebarData);
-
         if ($consume_secounds + 1 > $file_secounds * 70 / 100) {
             $log->consume_round = $log->consume_round + 1;
             $log->consume_data = null;
@@ -145,7 +139,7 @@ trait ContentTrait
                 $enroll->save();
             }
         }
-        return ["log" => $log, "lessons" => ['lessonID' => $content->lesson_log_alias_id, 'is_completed' => $content->lesson_log_alias_is_completed] , "sidebar" => $sidebar];
+        return ["log" => $log, "lessons" => ['lessonID' => $content->lesson_log_alias_id, 'is_completed' => $content->lesson_log_alias_is_completed]];
     }
 
     public function checkLessonStatus($id)
