@@ -9,6 +9,7 @@ use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
+use Modules\LMS\app\Observers\CourseObserver;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\PayStream\app\Models\Order;
 use Modules\PersonMS\app\Models\Person;
@@ -41,6 +42,14 @@ class Course extends Model
         'access_date',
         'privacy_id'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::observe(CourseObserver::class);
+    }
+
 
     public function isRequired(): Attribute
     {

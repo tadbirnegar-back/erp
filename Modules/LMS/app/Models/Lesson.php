@@ -57,6 +57,13 @@ class Lesson extends Model
             ->take(1); // Take the latest record
     }
 
+    public function latestStatusFirstOne()
+    {
+        return $this->belongsTo(Status::class, 'status_lesson', 'lesson_id', 'status_id')
+            ->orderByDesc('id') // Order by ID in descending order
+            ->take(1); // Take the latest record
+    }
+
     public function lastStatus()
     {
         return $this->belongsToMany(Status::class, 'status_lesson')
