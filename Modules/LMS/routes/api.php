@@ -59,8 +59,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/course/cancel/{id}', [CourseController::class, 'cancelCourse']);
     Route::get('/lms/lesson/delete/{id}', [LessonController::class, 'deleteLesson']);
     Route::get('/lms/course/my-enrolled-courses', [CourseController::class, 'myEnrolledCourses']);
-    Route::post('/lms/exam/store-ansSheet/{id}', [ExamResultController::class, 'storeAnsS']);
-    Route::post('/lms/exam/show/{id}', [ExamResultController::class, 'showAns']);
+//    Route::post('/lms/exam/store-ansSheet/{id}', [ExamResultController::class, 'storeAnsS']);
+//    Route::post('/lms/exam/show/{id}', [ExamResultController::class, 'showAns']);
     Route::get('/lms/exam-result/list', [ExamsController::class, 'index']);
     Route::get('/lms/pre-view/{id}', [ExamsController::class, 'previewExam']);
     Route::get('/lms/generated-exam/{id}', [ExamsController::class, 'generateExam']);
@@ -98,3 +98,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
 
 });
+Route::post('/lms/exam/show/{id}', [ExamResultController::class, 'showAns']);
+
+Route::post('/lms/exam/store-ansSheet/{id}', [ExamResultController::class, 'storeAnsS']);
