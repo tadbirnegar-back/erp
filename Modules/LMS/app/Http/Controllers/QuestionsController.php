@@ -23,6 +23,7 @@ class QuestionsController extends Controller
      */
     public function storeQuestionAndOptions(Request $request, $courseID)
     {
+
         try {
             DB::beginTransaction();
 
@@ -129,12 +130,14 @@ class QuestionsController extends Controller
 
     public function showQuestion($questionID)
     {
+
         $response = $this->showEditedQuestion($questionID);
         return new EditedQuestionResource(collect($response));
     }
 
     public function update(Request $request, $questionID)
     {
+
         try {
             $data = $request->all();
 
