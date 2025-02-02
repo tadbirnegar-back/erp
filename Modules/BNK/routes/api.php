@@ -1,7 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\BNK\app\Http\Controllers\BankAccountController;
+use Modules\BNK\app\Http\Controllers\CardController;
+use Modules\BNK\app\Http\Controllers\ChequeController;
 
 /*
     |--------------------------------------------------------------------------
@@ -14,6 +16,26 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('bnk', fn (Request $request) => $request->user())->name('bnk');
+Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
+    Route::get('/bnk/bank-accounts/list', [BankAccountController::class, 'index']);
+
+    Route::post('/bnk/bank-accounts/add', [BankAccountController::class, 'store']);
+
+    Route::get('/bnk/bank-accounts/add', [BankAccountController::class, 'addBaseInfo']);
+
+    Route::get('/bnk/bank-accounts/{id}', [BankAccountController::class, 'show']);
+
+    Route::put('/bnk/bank-accounts/edit/{id}', [BankAccountController::class, 'update']);
+    
+    Route::get('/bnk/bank-accounts/edit/{id}', [BankAccountController::class, 'edit']);
+
+    Route::delete('/bnk/bank-accounts/delete/{id}', [BankAccountController::class, 'destroy']);
+
+    Route::post('/bnk/cheque-book/add', [ChequeController::class, 'store']);
+
+    Route::put('/bnk/cheque-book/edit/{id}', [ChequeController::class, 'update']);
+
+    Route::post('/bnk/card/add', [CardController::class, 'store']);
+
+    Route::put('/bnk/card/edit/{id}', [CardController::class, 'update']);
 });

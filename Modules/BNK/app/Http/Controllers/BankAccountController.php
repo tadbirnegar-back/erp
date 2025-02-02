@@ -3,30 +3,66 @@
 namespace Modules\BNK\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DB;
 use Illuminate\Http\Request;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
+use Modules\BNK\app\Http\Enums\BankAccountTypeEnum;
+use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Models\Bank;
 use Modules\BNK\app\Models\BankAccount;
+use Modules\BNK\app\Models\BankAccountCard;
+use Modules\BNK\app\Models\ChequeBook;
+use Modules\BNK\app\Resources\BankAccountListResource;
+use Modules\BNK\app\Resources\BankAccountShowResource;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Validator;
 
 class BankAccountController extends Controller
 {
+    use BankTrait;
 
-    public function store(Request $request)
+    public function index(Request $request)
     {
+        $data = $request->all();
         $validate = Validator::make($request->all(), [
-            'bankID' => 'required',
-            'branchID' => 'required',
-            'accountNumber' => 'required',
-            'accountName' => 'required',
-            'accountType' => 'required',
-            'accountStatus' => 'required',
             'ounitID' => 'required',
         ]);
 
         if ($validate->fails()) {
             return response()->json(['error' => $validate->errors()], 422);
+        }
+        $bankAccount = $this->bankAccountIndex($data);
+
+        return BankAccountListResource::collection($bankAccount);
+
+    }
+
+    public function store(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'branchID' => 'required',
+            'accountNumber' => 'required',
+            'accountTypeID' => 'required',
+            'registerDate' => 'sometimes',
+            'ibanNumber' => 'required',
+            'ounitID' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['error' => $validate->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $bankAccount = $this->storeBankAccount($data);
+
+            DB::commit();
+            return response()->json(['data' => $bankAccount]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage(), $e->getTrace()], 500);
         }
     }
 
@@ -34,25 +70,29 @@ class BankAccountController extends Controller
     {
         $banks = Bank::with('bankBranches')->get();
 
-        return response()->json(['data' => $banks]);
+        return response()->json(['data' => [
+            'banks' => $banks,
+            'accountTypes' => BankAccountTypeEnum::getAllLabelAndValues(),
+        ]
+        ]);
     }
 
     public function show($id)
     {
 
-        $bankAccount = BankAccount::with(['bankBranch.bank.logo', 'latestStatus', 'chequeBooks.latestStatus', 'accountCards.latestStatus', 'ounit' => function ($query) {
+        $bankAccount = BankAccount::with(['bankBranch.bank.logo', 'latestStatus', 'chequeBooks.latestStatus', 'chequeBooks.cheques.latestStatus', 'accountCards.latestStatus', 'ounit' => function ($query) {
             $query->with(['village', 'ancestors' => function ($query) {
                 $query->where('unitable_type', '!=', StateOfc::class);
             }]);
         }])
-            ->where('id', $id)
-            ->first();
+            ->find($id);
 
         $user = auth()->user();
         $user->load(['activeRecruitmentScripts' => function ($query) use ($bankAccount) {
-            $query->where('organization_unit_id', $bankAccount->ounit_id)
+            $query
+                ->where('organization_unit_id', $bankAccount->ounit_id)
                 ->whereHas('scriptType', function ($query) {
-                    $query->where('name', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+                    $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
                 });
         }]);
 
@@ -60,24 +100,88 @@ class BankAccountController extends Controller
             return response()->json(['error' => 'شما دسترسی برای مشاهده این بخش را ندارید'], 403);
 
         }
+
+        return BankAccountShowResource::make($bankAccount)->additional(['cardStatusList' => BankAccountCard::GetAllStatuses()->get(), 'chequeBookStatusList' => ChequeBook::GetAllStatuses()->get()]);
     }
 
-    public function storeChequeAndCheques(Request $request)
+    public function edit($id)
     {
-        $data = $request->all();
-        $data['userID'] = auth()->user()->id;
 
+        $bankAccount = BankAccount::with(['bankBranch.bank.logo', 'ounit'])->find($id);
+
+        $user = auth()->user();
+        $user->load(['activeRecruitmentScripts' => function ($query) use ($bankAccount) {
+            $query
+                ->where('organization_unit_id', $bankAccount->ounit_id)
+                ->whereHas('scriptType', function ($query) {
+                    $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+                });
+        }]);
+
+        if ($user->activeRecruitmentScripts->isEmpty()) {
+            return response()->json(['error' => 'شما دسترسی برای مشاهده این بخش را ندارید'], 403);
+
+        }
+
+        return BankAccountShowResource::make($bankAccount)->additional([
+                'banks' => Bank::with('bankBranches')->get(),
+                'accountTypes' => BankAccountTypeEnum::getAllLabelAndValues(),
+            ]
+        );
+    }
+
+    public function update(Request $request, $id)
+    {
         $validate = Validator::make($request->all(), [
-            'accountID' => 'required',
-            'count' => 'required',
-            'series' => 'required',
-
+            'branchID' => 'required',
+            'accountNumber' => 'required',
+            'accountTypeID' => 'required',
+            'registerDate' => 'sometimes',
+            'ibanNumber' => 'required',
         ]);
 
         if ($validate->fails()) {
             return response()->json(['error' => $validate->errors()], 422);
         }
 
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $bankAccount = BankAccount::find($id);
+            $bankAccount = $this->updateBankAccount($data, $bankAccount);
 
+            DB::commit();
+            return response()->json(['data' => $bankAccount]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        $bankAccount = BankAccount::
+        where('id', $id)
+            ->first();
+
+        $user = auth()->user();
+        $user->load(['activeRecruitmentScripts' => function ($query) use ($bankAccount) {
+            $query->where('organization_unit_id', $bankAccount->ounit_id)
+                ->whereHas('scriptType', function ($query) {
+                    $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+                });
+        }]);
+
+        if ($user->activeRecruitmentScripts->isEmpty()) {
+            return response()->json(['error' => 'شما دسترسی برای مشاهده این بخش را ندارید'], 403);
+
+        }
+
+        $deleteStatus = $this->bankAccountDeactivateStatus();
+
+        $bankAccount->statuses()->attach($deleteStatus->id);
+
+        return response()->json(['message' => 'حساب بانکی با موفقیت حذف شد'], 200);
     }
 }

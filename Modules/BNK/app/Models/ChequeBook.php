@@ -30,12 +30,12 @@ class ChequeBook extends Model
 
     public function statuses()
     {
-        return $this->belongsToMany(Status::class, 'bnkChequeBook_status', 'cheque_book_id', 'status_id');
+        return $this->belongsToMany(Status::class, 'bnkChequeBook_status', 'chequeBook_id', 'status_id');
     }
 
     public function latestStatus()
     {
-        return $this->hasOneThrough(Status::class, BnkChequeBookStatus::class, 'account_id', 'id', 'id', 'status_id')
+        return $this->hasOneThrough(Status::class, BnkChequeBookStatus::class, 'chequeBook_id', 'id', 'id', 'status_id')
             ->orderBy('bnkChequeBook_status.create_date', 'desc');
     }
 

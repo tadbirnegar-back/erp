@@ -114,6 +114,7 @@ function convertSecondToMinute($second)
 
     return "{$minutes}:{$remainingSeconds}";
 }
+
 function convertMinuteToSecondFormatted($time)
 {
     list($minutes, $seconds) = explode(':', $time);
@@ -219,7 +220,6 @@ function DateformatToHumanReadableJalali($date, $showClock = true)
 
 function convertPersianToGregorianBothHaveTimeAndDont($persianCharDateTime)
 {
-    Log::info($persianCharDateTime);
     if ($persianCharDateTime == null || empty($persianCharDateTime)) {
         return null;
     }

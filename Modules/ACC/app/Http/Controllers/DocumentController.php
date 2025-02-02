@@ -32,7 +32,8 @@ class DocumentController extends Controller
      */
     public function index(Request $request)
     {
-        $validate = Validator::make($request->all(), [
+        $data = $request->all();
+        $validate = Validator::make($data, [
             'ounitID' => 'required',
         ]);
 
@@ -49,7 +50,7 @@ class DocumentController extends Controller
                     ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
                     ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
             }])
-            ->where('acc_documents.ounit_id', 2748)
+            ->where('acc_documents.ounit_id', $data['ounitID'])
             ->where('acc_documents.fiscal_year_id', $fiscalYear->id)
             ->select([
                 'acc_documents.id as id',

@@ -2,6 +2,7 @@
 
 namespace Modules\BNK\app\Http\Traits;
 
+use Modules\BNK\app\Http\Enums\BankAccountStatusEnum;
 use Modules\BNK\app\Models\Bank;
 use Modules\BNK\app\Models\BankAccount;
 use Modules\BNK\app\Models\BankBranch;
@@ -14,7 +15,7 @@ trait BankTrait
 
     public function __construct()
     {
-        $this->bankAccountLatestStatus = '(SELECT MAX(create_date) FROM ' . BnkAccountStatus::getTableName() . ' WHERE account_id = ' . BankAccount::getTableName() . '.id)';
+        $this->bankAccountLatestStatus = BnkAccountStatus::getTableName() . '.create_date =' . '(SELECT MAX(create_date) FROM ' . BnkAccountStatus::getTableName() . ' WHERE account_id = ' . BankAccount::getTableName() . '.id)';
     }
 
     public function bankAccountIndex($data)
@@ -32,11 +33,11 @@ trait BankTrait
                 }
             ])
             ->where('ounit_id', $data['ounitID'])
-            ->addSelect([
-//                $bankAccountTable . '.*',
+            ->select([
+                $bankAccountTable . '.id as id',
                 $bankTable . '.name as bank_name',
                 $bankBranchTable . '.name as branch_name',
-                $bankBranchTable . '.branch_code as branch_branch_code',
+                $bankBranchTable . '.branch_code as branch_code',
                 $bankBranchTable . '.address as branch_address',
                 'statuses.name as status_name',
                 'statuses.class_name as status_class_name',
@@ -52,12 +53,13 @@ trait BankTrait
     {
         $prepareData = $this->prepareBankAccountData($data);
         $bankAccount = BankAccount::create($prepareData->toArray()[0]);
-
+        $bankAccount->statuses()->attach($this->bankAccountActivateStatus()->id);
         return $bankAccount;
     }
 
     public function updateBankAccount(array $data, BankAccount $bankAccount)
     {
+        $data['ounitID'] = $bankAccount->ounit_id;
         $prepareData = $this->prepareBankAccountData($data);
         $bankAccount->update($prepareData->toArray()[0]);
 
@@ -81,5 +83,15 @@ trait BankTrait
         });
 
         return $data;
+    }
+
+    public function bankAccountDeactivateStatus()
+    {
+        return BankAccount::GetAllStatuses()->where('name', '=', BankAccountStatusEnum::INACTIVE->value)->first();
+    }
+
+    public function bankAccountActivateStatus()
+    {
+        return BankAccount::GetAllStatuses()->where('name', '=', BankAccountStatusEnum::ACTIVE->value)->first();
     }
 }

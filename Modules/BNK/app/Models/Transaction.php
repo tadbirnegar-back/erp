@@ -5,6 +5,8 @@ namespace Modules\BNK\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\BNK\Database\factories\TransactionFactory;
+use Modules\StatusMS\app\Models\Status;
+
 
 class Transaction extends Model
 {
@@ -18,4 +20,13 @@ class Transaction extends Model
 
     public $timestamps = false;
 
+     public static function getTableName()
+     {
+            return with(new static)->getTable();
+     }
+
+    public static function GetAllStatuses()
+    {
+        return Status::where('model',self::class);
+    }
 }

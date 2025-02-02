@@ -44,11 +44,12 @@ class AccountsController extends Controller
                 'acc_account_categories.name as accountCategory',
             ])
             ->get();
+        $x = $accs;
         $accs = $accs->groupBy('accountCategory')->map(function ($item) {
             return $item->toHierarchy();
         });
 
-        return response()->json(['data' => $accs]);
+        return response()->json(['data' => $accs, 'x' => $x]);
     }
 
     public function update(Request $request, $id)

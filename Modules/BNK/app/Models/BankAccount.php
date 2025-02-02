@@ -2,10 +2,12 @@
 
 namespace Modules\BNK\app\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\BNK\app\Http\Enums\BankAccountTypeEnum;
 use Modules\BNK\Database\factories\BankAccountFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\StatusMS\app\Models\Status;
@@ -27,9 +29,38 @@ class BankAccount extends Model
         'register_date',
     ];
 
+    protected $casts = [
+        'account_type_id' => BankAccountTypeEnum::class
+    ];
+
     public $timestamps = false;
 
     protected $table = 'bnk_bank_accounts';
+
+    public function registerDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Jalali
+                $dateTimeString = convertGregorianToJalali($value);
+
+                return $dateTimeString;
+            },
+
+            set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Gregorian
+                $dateTimeString = convertJalaliPersianCharactersToGregorian($value);
+
+                return $dateTimeString;
+            }
+        );
+    }
 
     public function bankBranch(): BelongsTo
     {
@@ -65,6 +96,11 @@ class BankAccount extends Model
     public static function getTableName()
     {
         return with(new static)->getTable();
+    }
+
+    public static function GetAllStatuses()
+    {
+        return Status::where('model', self::class);
     }
 
 }

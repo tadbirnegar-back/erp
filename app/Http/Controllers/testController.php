@@ -4,12 +4,11 @@ namespace App\Http\Controllers;
 
 
 use Carbon\Carbon;
-use Modules\ACMS\app\Http\Trait\BudgetItemsTrait;
-use Modules\ACMS\app\Http\Trait\BudgetTrait;
-use Modules\ACMS\app\Http\Trait\CircularTrait;
-use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
-use Modules\ACMS\app\Http\Trait\OunitFiscalYearTrait;
+use Modules\AAA\app\Models\User;
+use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
+use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Models\Bank;
+use Modules\BNK\app\Models\BankAccount;
 use Modules\EMS\app\Jobs\PendingForHeyaatStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
@@ -19,10 +18,22 @@ use Modules\EMS\app\Models\Enactment;
 
 class testController extends Controller
 {
-    use FiscalYearTrait, CircularTrait, OunitFiscalYearTrait, BudgetTrait, BudgetItemsTrait;
+    use BankTrait;
 
     public function run()
     {
+        $user = User::find(1905);
+        $bankAccount = BankAccount::find(6);
+        $user->load(['activeRecruitmentScripts' => function ($query) use ($bankAccount) {
+            $query
+                ->where('organization_unit_id', $bankAccount->ounit_id)
+                ->whereHas('scriptType', function ($query) {
+                    $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+                });
+        }]);
+        dd($user->activeRecruitmentScripts);
+//        dd($this->bankAccountActivateStatus());
+        dd(convertGregorianToJalali('2022-02-01 00:00:0'));
         for ($i = 0; $i < 5; $i++) {
             $chequeData[] = [
                 'segmentNumber' => 100 + $i,

@@ -1,0 +1,56 @@
+[
+    {
+        "name": "حساب های بانکی",
+        "slug": "/bnk/bank-accounts/list",
+        "moduleName": "BNK",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن حساب بانکی",
+        "slug": "/bnk/bank-accounts/add",
+        "moduleName": "BNK",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی حساب بانکی",
+        "slug": "/bnk/bank-accounts/edit/{id}",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "غیرفعال کردن حساب بانکی",
+        "slug": "/bnk/bank-accounts/delete/{id}",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده حساب بانکی",
+        "slug": "/bnk/bank-accounts/{id}",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن دسته چک",
+        "slug": "/bnk/cheque-book/add",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی دسته چک",
+        "slug": "/bnk/cheque-book/edit/{id}",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن کارت بانکی",
+        "slug": "/bnk/card/add",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی کارت بانکی",
+        "slug": "/bnk/card/edit/{id}",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
+    }
+]

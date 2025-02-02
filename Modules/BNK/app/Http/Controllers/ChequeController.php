@@ -22,19 +22,20 @@ class ChequeController extends Controller
         $validator = Validator::make($data, [
             'series' => 'required',
             'count' => 'required',
+            'accountID' => 'required',
             'startNumber' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 422);
         }
-
+        $data['userID'] = auth()->user()->id;
         try {
             DB::beginTransaction();
             $chequeBook = $this->storeChequeBook($data);
             $chequeData = [];
 
-            for ($i = 0; $i <= $data['count']; $i++) {
+            for ($i = 0; $i < $data['count']; $i++) {
                 $chequeData[] = [
                     'segmentNumber' => $data['startNumber'] + $i,
                 ];
@@ -43,8 +44,8 @@ class ChequeController extends Controller
             $this->bulkInsertCheque($chequeData, $chequeBook);
 
             DB::commit();
-
-            return response()->json(['message' => 'چک ها با موفقیت ثبت شدند'], 200);
+            $chequeBook->load('cheques.latestStatus', 'latestStatus');
+            return response()->json(['data' => $chequeBook]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
@@ -52,11 +53,10 @@ class ChequeController extends Controller
 
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
         $data = $request->all();
         $validator = Validator::make($data, [
-            'cbID' => 'required',
             'series' => 'required',
             'count' => 'required',
             'startNumber' => 'required',
@@ -69,10 +69,10 @@ class ChequeController extends Controller
 
         try {
             DB::beginTransaction();
-            $chequeBook = ChequeBook::with('cheques')->find($data['cbID']);
+            $chequeBook = ChequeBook::with('cheques')->find($id);
 
             $blankCheques = Cheque::where('cheque_book_id', $chequeBook->id)
-                ->whereHas('lastStatus', function ($query) {
+                ->whereHas('latestStatus', function ($query) {
                     $query->where('statuses.name', ChequeStatusEnum::BLANK->value);
                 })
                 ->count();
@@ -82,22 +82,23 @@ class ChequeController extends Controller
             }
             $chequeBook->statuses()->attach($data['cbStatusID']);
 
-            $deleteStatus = $this->deletedChequeBook();
-            $chequeBook->cheques->each(function ($cheque) use ($deleteStatus) {
-                $cheque->statuses()->attach($deleteStatus->id);
+//            $deleteStatus = $this->deletedChequeBook();
+            $chequeBook->cheques->each(function ($cheque) {
+                $cheque->delete();
             });
             $chequeData = [];
 
-            for ($i = 0; $i <= $data['count']; $i++) {
+            for ($i = 0; $i < $data['count']; $i++) {
                 $chequeData[] = [
                     'segmentNumber' => $data['startNumber'] + $i,
                 ];
             }
+            $chequeBook = $this->updateChequeBook($data, $chequeBook);
 
             $this->bulkInsertCheque($chequeData, $chequeBook);
             DB::commit();
-
-            return response()->json(['message' => 'دسته چک با موفقیت ویرایش شد'], 200);
+            $chequeBook->load('cheques.latestStatus', 'latestStatus');
+            return response()->json(['data' => $chequeBook]);
 
         } catch (\Exception $e) {
             DB::rollBack();

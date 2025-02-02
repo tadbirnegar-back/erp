@@ -21,6 +21,18 @@ trait ChequeTrait
 
     }
 
+    public function updateChequeBook(array $data, ChequeBook $chequeBook)
+    {
+        $chequeBook->cheque_series = $data['series'];
+        $chequeBook->cheque_count = $data['count'];
+        $chequeBook->save();
+
+        $chequeBook->statuses()->attach($data['cbStatusID']);
+
+        return $chequeBook;
+
+    }
+
     public function bulkInsertCheque(array $data, ChequeBook $book)
     {
         $prepareData = $this->prepareChequeData($data, $book);

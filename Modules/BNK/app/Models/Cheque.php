@@ -32,6 +32,17 @@ class Cheque extends Model
         return with(new static)->getTable();
     }
 
+    public function latestStatus()
+    {
+        return $this->hasOneThrough(Status::class, BnkChequeStatus::class, 'cheque_id', 'id', 'id', 'status_id')
+            ->orderBy('bnkCheque_status.create_date', 'desc');
+    }
+
+    public function statuses()
+    {
+        return $this->belongsToMany(Status::class, 'bnkCheque_status', 'cheque_id', 'status_id');
+    }
+
     public static function GetAllStatuses()
     {
         return Status::where('model', self::class);

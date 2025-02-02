@@ -17,20 +17,32 @@ trait BankAccountCardTrait
         return $bankAccountCard;
     }
 
-    public function bulkInsertBankAccountCard(array $data)
+    public function updateBankAccountCard(array $data, BankAccountCard $bankAccountCard)
     {
-        $prepareData = $this->prepareBankAccountCardData($data);
-        $bankAccountCard = BankAccountCard::insert($prepareData->toArray());
+        $bankAccountCard->expire_date = $data['expireDate'];
+        $bankAccountCard->card_number = $data['cardNumber'];
+        $bankAccountCard->save();
 
-        $latestBankAccountCards = BankAccountCard::take($prepareData->count())->orderBy('id', 'desc')->get();
-        $status = $this->activeBankAccountCardStatus();
-
-        $latestBankAccountCards->each(function ($bankAccountCard) use ($status) {
-            $bankAccountCard->statuses()->attach($status->id);
-        });
+        $bankAccountCard->statuses()->attach($data['statusID']);
 
         return $bankAccountCard;
     }
+
+
+//    public function bulkInsertBankAccountCard(array $data)
+//    {
+//        $prepareData = $this->prepareBankAccountCardData($data);
+//        $bankAccountCard = BankAccountCard::insert($prepareData->toArray());
+//
+//        $latestBankAccountCards = BankAccountCard::take($prepareData->count())->orderBy('id', 'desc')->get();
+//        $status = $this->activeBankAccountCardStatus();
+//
+//        $latestBankAccountCards->each(function ($bankAccountCard) use ($status) {
+//            $bankAccountCard->statuses()->attach($status->id);
+//        });
+//
+//        return $bankAccountCard;
+//    }
 
     public function prepareBankAccountCardData(array $data)
     {
