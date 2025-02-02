@@ -110,7 +110,7 @@ class LessonController extends Controller
             $lessonDatas = $this->getLessonDatasBasedOnLessonId($data['lessonID'], $user);
         }
         $response = new LessonDatasWithLessonIDResource($lessonDatas);
-        return response()->json($response);
+        return response() -> json($response);
     }
 
     public function show($id)

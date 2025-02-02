@@ -42,7 +42,7 @@
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "لیست مدرسان",
+        "name": "لیست مدرلیست دوره های آموزشیسان",
         "slug": "/teachers/list",
         "moduleName": "LMS",
         "permissionTypeName": "sidebar"

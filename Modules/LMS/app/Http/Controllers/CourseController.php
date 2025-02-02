@@ -122,12 +122,15 @@ class CourseController extends Controller
                 ]);
             })->with('latestStatus')->find($id);
 
+
             $user = Auth::user();
             if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
+
+
             $componentsToRenderWithData['course']->chapters->each(function ($chapter) {
                 $chapter->setRelation(
                     'lessons',
@@ -253,6 +256,7 @@ class CourseController extends Controller
                 $this->courseEndedStatus()->id,
             ]);
         })->find($id);
+
         if (empty($course)) {
             return response()->json(["message" => "دوره با این مشخصات وجود ندارد"], 403);
         }
