@@ -96,13 +96,15 @@ trait CourseTrait
                 'chapters',
                 'questions',
                 'lessons' => function ($query) use ($statusId) {
-                    $query->whereHas('lessonStatus', function ($subQuery) use ($statusId) {
-                        $subQuery->where('status_id', $statusId);
+                    $query->whereIn('lessons.id', function ($subQuery) use ($statusId) {
+                        $subQuery->select('lesson_id')
+                            ->from('status_lesson as sl1')
+                            ->whereRaw('sl1.id = (SELECT MAX(sl2.id) FROM status_lesson as sl2 WHERE sl2.lesson_id = sl1.lesson_id)')
+                            ->where('sl1.status_id', $statusId);
                     });
                 }
             ])
             ->paginate($perPage, ['*'], 'page', $pageNumber);
-
         return $courseQuery;
     }
 
@@ -347,8 +349,7 @@ trait CourseTrait
 
         // Calculate completion percentage
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
-        if($completionPercentage > 100)
-        {
+        if ($completionPercentage > 100) {
             $completionPercentage = 100;
         }
         // Return the results
@@ -529,7 +530,6 @@ trait CourseTrait
             }
             return null;
         })->filter()->values();
-
 
 
         // Get those with isComplete of 0 (null)
