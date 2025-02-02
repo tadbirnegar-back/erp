@@ -39,6 +39,7 @@ trait CourseTrait
     {
         $searchTerm = $data['name'] ?? null;
         $status = Status::where('name', $this::$active)->firstOrFail();
+        $latestStatus = StatusCourse::latest('create_date')->first();
 
         $query = Course::query()
             ->joinRelationship('cover')
@@ -57,12 +58,22 @@ trait CourseTrait
                 'lessons.id as lesson_id',
                 'questions.id as question_id'
             ])
-            ->whereHas('statusCourse.status', function ($query) {
-                $query->whereIn('name', [
-                    $this::$presenting,
-                    $this::$pishnevis,
-                    $this::$waitToPresent,
-                ]);
+            ->join('statuses as course_status', function ($join) {
+                $join->on('course_status.id', '=', \DB::raw('(
+                SELECT id
+                FROM statuses AS ps
+                WHERE ps.course_id = courses.id
+                ORDER BY ps.create_date DESC
+                LIMIT 1
+            )'));
+            })
+            ->whereHas('statusCourse.status', function ($query) use ($latestStatus) {
+                $query->where('status_course.status_id', $latestStatus->id)
+                    ->whereIn('course_status.name', [
+                        $this::$presenting,
+                        $this::$pishnevis,
+                        $this::$waitToPresent,
+                    ]);
             });
 
         $query->when($searchTerm, function ($query) use ($searchTerm) {
@@ -347,8 +358,7 @@ trait CourseTrait
 
         // Calculate completion percentage
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
-        if($completionPercentage > 100)
-        {
+        if ($completionPercentage > 100) {
             $completionPercentage = 100;
         }
         // Return the results
@@ -529,7 +539,6 @@ trait CourseTrait
             }
             return null;
         })->filter()->values();
-
 
 
         // Get those with isComplete of 0 (null)

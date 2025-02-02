@@ -8,7 +8,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Models\Job;
@@ -165,7 +164,6 @@ class CourseController extends Controller
             $course = Course::with('prerequisiteCourses')->find($id);
 
             $user = Auth::user();
-
 
 
             // Check if the user has completed prerequisite courses.
