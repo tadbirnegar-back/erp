@@ -97,13 +97,15 @@ trait CourseTrait
                 'chapters',
                 'questions',
                 'lessons' => function ($query) use ($statusId) {
-                    $query->whereHas('lessonStatus', function ($subQuery) use ($statusId) {
-                        $subQuery->where('status_id', $statusId);
+                    $query->whereIn('lessons.id', function ($subQuery) use ($statusId) {
+                        $subQuery->select('lesson_id')
+                            ->from('status_lesson as sl1')
+                            ->whereRaw('sl1.id = (SELECT MAX(sl2.id) FROM status_lesson as sl2 WHERE sl2.lesson_id = sl1.lesson_id)')
+                            ->where('sl1.status_id', $statusId);
                     });
                 }
             ])
             ->paginate($perPage, ['*'], 'page', $pageNumber);
-
         return $courseQuery;
     }
 
@@ -530,6 +532,7 @@ trait CourseTrait
             }
             return null;
         })->filter()->values();
+
         $activeLessons = collect($groupedData)
             ->flatMap(fn($chapter) => $chapter['lessons'])
 
