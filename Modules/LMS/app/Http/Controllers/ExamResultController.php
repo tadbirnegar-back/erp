@@ -3,8 +3,8 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
 use Modules\LMS\app\Http\Traits\ExamResultTrait;
@@ -43,7 +43,6 @@ class ExamResultController extends Controller
             }
 
             $student = Auth::user()->load('student');
-
             $optionID = array_filter(array_column($data['questions'], 'option_id'));
 
             $answerSheet = $this->storeAnswerSheet($examId, $student, $optionID, $data, $usedTime);
@@ -68,7 +67,7 @@ class ExamResultController extends Controller
                 ->map(function ($answer) {
                     return [
                         'question_id' => $answer->question_id,
-                        'option_id' => Option::where('title', $answer->selected_option)->value('id')
+                        'option_id' => Option::where('title', $answer->selected_option)->where('question_id', $answer->question_id)->value('id')
                     ];
                 })
                 ->toArray()
