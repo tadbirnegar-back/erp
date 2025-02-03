@@ -8,11 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\AAA\app\Models\User;
 use Modules\ACC\Database\factories\DocumentFactory;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+use Znck\Eloquent\Traits\BelongsToThrough;
 
 class Document extends Model
 {
@@ -26,6 +30,7 @@ class Document extends Model
         'document_number',
         'description',
         'fiscal_year_id',
+        'document_type_id',
         'ounit_id',
         'creator_id',
         'document_date',
@@ -38,7 +43,15 @@ class Document extends Model
     public function DocumentDate(): Attribute
     {
         return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Jalali
+                $dateTimeString = convertGregorianToJalali($value);
 
+                return $dateTimeString;
+            },
             set: function ($value) {
                 if (is_null($value)) {
                     return null;
@@ -80,6 +93,17 @@ class Document extends Model
     public function ounit(): BelongsTo
     {
         return $this->belongsTo(OrganizationUnit::class);
+    }
+
+    use HasRelationships, BelongsToThrough;
+
+    public function person()
+    {
+        return $this->belongsToThrough(Person::class, [User::class],
+            foreignKeyLookup: [
+                Person::class => 'person_id',
+                User::class => 'creator_id',
+            ]);
     }
 
     public static function GetAllStatuses()

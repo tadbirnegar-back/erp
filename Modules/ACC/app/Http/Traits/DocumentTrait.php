@@ -68,6 +68,7 @@ trait DocumentTrait
                 'fiscal_year_id' => $item['fiscalYearID'],
                 'ounit_id' => $item['ounitID'],
                 'creator_id' => $item['userID'],
+                'document_type_id' => $item['documentTypeID'] ?? 1,
                 'description' => $item['description'] ?? null,
             ];
         });

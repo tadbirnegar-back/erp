@@ -27,6 +27,24 @@ enum AccountCategoryTypeEnum: int
 
     }
 
+    public function getAccCategories()
+    {
+        return match ($this) {
+            self::BALANCE_SHEET => [AccCategoryEnum::CURRENT_ASSETS, AccCategoryEnum::SURPLUS_DEFICIT, AccCategoryEnum::CURRENT_LIABILITIES],
+            self::BUDGETARY => [AccCategoryEnum::INCOME, AccCategoryEnum::EXPENSE],
+            self::REGULATORY => [AccCategoryEnum::REGULATORY_ACCOUNTS],
+        };
+    }
+
+    public function getAccCategoryValues()
+    {
+        $accCategories = $this->getAccCategories();
+
+        return collect($accCategories)->map(function ($item) {
+            return $item->value;
+        })->toArray();
+    }
+
     public static function getAllLabelAndValues()
     {
         return collect(self::cases())->map(function ($item) {

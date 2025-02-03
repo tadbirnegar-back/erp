@@ -31,7 +31,11 @@ class AccountsController extends Controller
         }
 
         $accs = AccountCategory::leftJoinRelationship('accounts', function ($join) use ($data) {
-            $join->where('ounit_id', $data['ounitID'])
+            $join
+                ->where(function ($query) use ($data) {
+                    $query->where('acc_accounts.ounit_id', $data['ounitID'])
+                        ->orWhereNull('acc_accounts.ounit_id');
+                })
                 ->withGlobalScopes();
         })
             ->select([

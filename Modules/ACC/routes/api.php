@@ -19,6 +19,8 @@ use Modules\ACMS\app\Http\Controllers\ACMSController;
 Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::get('/acc/my-villages/list', [ACMSController::class, 'dispatchedCircularsForMyVillage']);
 
+    Route::get('/acc/fiscal-year/list', [DocumentController::class, 'fiscalYearList']);
+
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
     Route::post('/acc/accounts/list', [AccountsController::class, 'index']);
@@ -31,11 +33,27 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::put('/acc/accounts/edit/{id}', [AccountsController::class, 'update']);
 
+    Route::post('/acc/documents/opening-doc', [DocumentController::class, 'createOpeningDocument']);
+
+    Route::post('/acc/documents/close-temp-docs', [DocumentController::class, 'createClosingTemporaryDocument']);
+
+    Route::post('/acc/documents/close-year-docs', [DocumentController::class, 'createClosingDocument']);
+
+    Route::post('/acc/documents/close-temp-docs/add', [DocumentController::class, 'insertClosingTemporaryDocument']);
+
+    Route::post('/acc/documents/close-year-docs/add', [DocumentController::class, 'insertClosingTemporaryDocument']);
+
+    Route::post('/acc/documents/opening-doc/add', [DocumentController::class, 'insertClosingTemporaryDocument']);
+
+    Route::get('/acc/fiscal-year/current', [DocumentController::class, 'currentFiscalYearSummary']);
+
     Route::post('/acc/documents/add', [DocumentController::class, 'store']);
 
     Route::get('/acc/documents/add', [DocumentController::class, 'addDocumentBaseInfo']);
 
     Route::get('/acc/documents/list', [DocumentController::class, 'index']);
+
+    Route::post('/acc/documents/archive/list', [DocumentController::class, 'archiveIndex']);
 
     Route::get('/acc/documents/{ounitID}/doc/{id}', [DocumentController::class, 'show']);
 

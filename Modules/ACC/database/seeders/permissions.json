@@ -36,10 +36,58 @@
         "permissionTypeName": "sidebar"
     },
     {
+        "name": "بایگانی اسناد",
+        "slug": "/acc/documents/archive/list",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
         "name": "مشاهده سند",
         "slug": "/acc/documents/{ounitID}/doc/{id}",
         "moduleName": "ACC",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "بستن سند های موقت",
+        "slug": "/acc/documents/close-temp-docs",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "سند اختتامیه",
+        "slug": "/acc/documents/close-year-docs",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید نهایی و بستن سند های موقت",
+        "slug": "/acc/documents/close-temp-docs/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "سند افتتاحیه",
+        "slug": "/acc/documents/opening-doc",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید نهایی و ایجاد سند افتتاحیه",
+        "slug": "/acc/documents/opening-doc/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید نهایی و ایجاد سند اختتامیه",
+        "slug": "/acc/documents/close-year-docs/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "سال مالی جاری",
+        "slug": "/acc/fiscal-year/current",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
     },
     {
         "name": "بروزرسانی سند",

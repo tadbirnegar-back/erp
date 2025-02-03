@@ -13,13 +13,16 @@ class ArticlesListResource extends JsonResource
     public function toArray($request): array
     {
 
-        return [
+        $result = [
             'id' => $this->id,
             'description' => $this->description,
             'debt_amount' => $this->debt_amount ?? 0,
             'credit_amount' => $this->credit_amount ?? 0,
             'priority' => $this->priority,
-            'account' => [
+        ];
+
+        if ($this->relationLoaded('account')) {
+            $result['account'] = [
                 'id' => $this->account->id,
                 'name' => $this->account->name,
                 'type' => AccountLayerTypesEnum::from($this->account->accountable_type)->getLabel(),
@@ -36,7 +39,9 @@ class ArticlesListResource extends JsonResource
                         'type' => AccountLayerTypesEnum::from($ancestor->accountable_type)->getLabel(),
                     ];
                 }) : [],
-            ]
-        ];
+            ];
+        }
+
+        return $result;
     }
 }

@@ -47,6 +47,12 @@ trait AccountTrait
                 $item['chainCode'] = $item['categoryID'] . $item['segmentCode'];
             }
 
+            if ($accountableType === DetailAccount::class) {
+                $ounitID = $item['ounitID'];
+            } else {
+                $ounitID = null;
+            }
+
             return [
                 'name' => $item['name'],
                 'segment_code' => $item['segmentCode'],
@@ -54,7 +60,7 @@ trait AccountTrait
                 'accountable_id' => $accountableID,
                 'accountable_type' => $accountableType,
                 'parent_id' => $parent?->id ?? null,
-                'ounit_id' => $item['ounitID'],
+                'ounit_id' => $ounitID,
                 'category_id' => $item['categoryID'],
                 'subject_id' => $item['subjectID'] ?? null,
                 'status_id' => $status->id,
