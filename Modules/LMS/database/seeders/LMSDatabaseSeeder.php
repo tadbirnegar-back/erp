@@ -26,8 +26,8 @@ class LMSDatabaseSeeder extends Seeder
 //            AnswerSheetStatusSeeder::class
 //            ContentStatusSeeder::class,
 //            OunitCatsSeeder::class,
-//            OucPropertiesSeeder::class,
-//            OucPropertyValues::class,
+            OucPropertiesSeeder::class,
+            OucPropertyValues::class,
         ]);
     }
 }
