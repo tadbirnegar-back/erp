@@ -172,6 +172,7 @@ trait CourseTrait
             'person.avatar'
         ]);
 
+
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         $answerSheet = $user->answerSheets[0] ?? null;
@@ -306,6 +307,7 @@ trait CourseTrait
 
         $AllowToDos['canTrainingExam'] = false;
         $AllowToDos['canReportCard'] = false;
+        $AllowToDos["canFinalExam"] = true;
 
         if ($AllowToDos['joined']) {
             $studyCount = $AdditionalData["enrolled"]->isEnrolled[0]["orderable"]["study_count"];

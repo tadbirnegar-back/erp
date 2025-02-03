@@ -130,6 +130,7 @@ class CourseController extends Controller
             $componentsToRenderWithData = $this->courseShow($course, $user);
 
 
+
             $componentsToRenderWithData['course']->chapters->each(function ($chapter) {
                 $chapter->setRelation(
                     'lessons',
@@ -415,6 +416,9 @@ class CourseController extends Controller
                 'course_id' => $id,
                 'status_id' => $this->coursePresentingStatus()->id,
                 'create_date' => now()
+            ]);
+            Course::find($id)->update([
+                'access_date' => now()
             ]);
             DB::commit();
             return response()->json(['message' => "دوره با موفقیت منتشر شد"]);

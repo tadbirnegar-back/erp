@@ -72,8 +72,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/questions/update/show/{id}', [QuestionsController::class, 'showQuestion']);
     Route::post('/lms/show/setting', [SettingController::class, 'index']);
     Route::post('/lms/store/setting', [SettingController::class, 'store']);
-    Route::post('lms/teachers/list', [TeacherController::class, 'index']);
-    Route::post('lms/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
+    Route::post('/lms/teachers/list', [TeacherController::class, 'index']);
+    Route::post('/lms/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
