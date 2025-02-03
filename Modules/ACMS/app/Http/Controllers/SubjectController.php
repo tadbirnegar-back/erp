@@ -8,6 +8,8 @@ use DB;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\ACC\app\Http\Traits\AccountTrait;
+use Modules\ACC\app\Models\Account;
 use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
 use Modules\ACMS\app\Models\Circular;
 use Modules\ACMS\app\Models\CircularItem;
@@ -16,7 +18,7 @@ use Validator;
 
 class SubjectController extends Controller
 {
-    use CircularSubjectsTrait;
+    use CircularSubjectsTrait, AccountTrait;
 
     public function storeSubjectAndAttachToCircular(Request $request): JsonResponse
     {
@@ -42,6 +44,9 @@ class SubjectController extends Controller
             if (isset($data['parentID'])) {
                 $parent = CircularSubject::find($data['parentID']);
                 $data['subjectTypeID'] = $parent->subject_type_id;
+                $parentAcc = Account::where('entity_type', get_class($parent))->where('entity_id', $parent->id)->first();
+            } else {
+                $parentAcc = null;
             }
 
             $subject = $this->storeSubject($data);
@@ -49,6 +54,17 @@ class SubjectController extends Controller
             $circular->circularSubjects()->attach($subject->id, [
                 'percentage' => $data['percentage'] ?? 0
             ]);
+
+            $accData = [
+                'name' => $subject->name,
+                'ounitID' => null,
+                'segmentCode' => $subject->code,
+                'entityType' => get_class($subject),
+                'entityID' => $subject->id,
+            ];
+
+            $accBankAccount = $this->storeAccount($accData, $parentAcc);
+
 
             DB::commit();
             return response()->json(['data' => $subject], 200);
@@ -80,10 +96,20 @@ class SubjectController extends Controller
             $descendants->each(function ($item) {
                 $item->update(['isActive' => false]);
             });
-            $subjectIDs = $descendants->pluck('id')->toArray();
+            $subjectIDs = $descendants->pluck('id');
             $circular = Circular::find($data['circularID']);
 
-            $circular->circularSubjects()->detach($subjectIDs);
+            $circular->circularSubjects()->detach($subjectIDs->toArray());
+
+            $subjectAccs = Account::where('entity_type', CircularSubject::class)
+                ->whereIntegerInRaw('entity_id', $subjectIDs->toArray())
+                ->get();
+            $deleteStatus = $this->bankAccountDeactivateStatus();
+            $subjectAccs->each(function ($bankAccount) use ($deleteStatus) {
+                $bankAccount->statuses()->attach($deleteStatus->id);
+            });
+
+
             DB::commit();
             return response()->json(['data' => $circular->circularSubjects->toHierarchy(), 'message' => 'با موفقیت حذف شد'], 200);
 

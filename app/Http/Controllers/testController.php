@@ -14,7 +14,6 @@ use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
 use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
 use Modules\EMS\app\Jobs\StoreMeetingJob;
 use Modules\EMS\app\Models\Enactment;
-use Morilog\Jalali\Jalalian;
 
 
 class testController extends Controller
@@ -23,7 +22,7 @@ class testController extends Controller
 
     public function run()
     {
-        dd(Jalalian::now()->toDateString());
+        dd(get_class(BankAccount::with('bank')->find(3)->bank));
         $user = User::find(1905);
         $bankAccount = BankAccount::find(6);
         $user->load(['activeRecruitmentScripts' => function ($query) use ($bankAccount) {

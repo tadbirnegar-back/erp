@@ -14,7 +14,13 @@ class BankBranch extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'name',
+        'branch_code',
+        'address',
+        'phone_number',
+        'bank_id',
+    ];
 
     public $timestamps = false;
     protected $table = 'bnk_bank_branches';

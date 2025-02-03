@@ -11,6 +11,7 @@ use Modules\BNK\app\Http\Enums\BankAccountTypeEnum;
 use Modules\BNK\Database\factories\BankAccountFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\StatusMS\app\Models\Status;
+use Znck\Eloquent\Traits\BelongsToThrough;
 
 class BankAccount extends Model
 {
@@ -65,6 +66,16 @@ class BankAccount extends Model
     public function bankBranch(): BelongsTo
     {
         return $this->belongsTo(BankBranch::class, 'branch_id');
+    }
+
+    use BelongsToThrough;
+
+    public function bank()
+    {
+        return $this->belongsToThrough(Bank::class, BankBranch::class, foreignKeyLookup: [
+            BankBranch::class => 'branch_id',
+            Bank::class => 'bank_id',
+        ]);
     }
 
     public function statuses()

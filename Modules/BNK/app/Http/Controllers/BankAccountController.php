@@ -5,6 +5,9 @@ namespace Modules\BNK\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use DB;
 use Illuminate\Http\Request;
+use Modules\ACC\app\Http\Traits\AccountTrait;
+use Modules\ACC\app\Models\Account;
+use Modules\ACC\app\Models\SubAccount;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\BNK\app\Http\Enums\BankAccountTypeEnum;
 use Modules\BNK\app\Http\Traits\BankTrait;
@@ -19,7 +22,7 @@ use Validator;
 
 class BankAccountController extends Controller
 {
-    use BankTrait;
+    use BankTrait, AccountTrait;
 
     public function index(Request $request)
     {
@@ -56,6 +59,23 @@ class BankAccountController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $bankAccount = $this->storeBankAccount($data);
+
+            $bank = $bankAccount->bank;
+            $className = get_class($bank);
+
+            $acc = Account::where('accountable_type', SubAccount::class)
+                ->where('entity_type', $className)
+                ->where('entity_id', $bank->id)
+                ->first();
+
+            $data = [
+                'name' => ' حساب بانک' . $bank->name . ' شعبه ' . $bankAccount->bankBranch->name,
+                'ounitID' => $bankAccount->ounit_id,
+                'segmentCode' => '001',
+                'entityType' => get_class($bankAccount),
+                'entityID' => $bankAccount->id,
+            ];
+            $accBankAccount = $this->storeAccount($data, $acc);
 
             DB::commit();
             return response()->json(['data' => $bankAccount]);

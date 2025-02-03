@@ -64,6 +64,8 @@ trait AccountTrait
                 'category_id' => $item['categoryID'],
                 'subject_id' => $item['subjectID'] ?? null,
                 'status_id' => $status->id,
+                'entity_type' => $item['entityType'] ?? null,
+                'entity_id' => $item['entityID'] ?? null,
             ];
         });
 
