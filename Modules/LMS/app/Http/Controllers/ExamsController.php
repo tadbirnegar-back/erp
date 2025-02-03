@@ -120,7 +120,8 @@ class ExamsController extends Controller
     public function index(Request $request)
     {
 
-        $student = Auth::user()->load('student');
+        $student = Auth::user();
+        $student->load('student');
         $data = $request->all();
 
         $result = $this->examsIndex($student->student, $data);
