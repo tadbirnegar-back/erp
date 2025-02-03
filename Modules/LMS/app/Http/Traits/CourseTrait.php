@@ -82,8 +82,7 @@ trait CourseTrait
             $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
                 ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
         });
-
-        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
+        return $query->get();
     }
 
 
@@ -231,7 +230,7 @@ trait CourseTrait
                 'lessonStudyLog' => function ($query) use ($user, $isEnrolled) {
                     $query->where('student_id', $user->student->id)
                         ->where('is_completed', true)
-                        ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1)
+//                        ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1)
                         ->whereHas('lesson.latestStatus', function ($query) {
                             $query->where('name', LessonStatusEnum::ACTIVE->value);
                         });
@@ -317,7 +316,6 @@ trait CourseTrait
 
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
-
 
     private function calculateLessonCompletion($response)
     {

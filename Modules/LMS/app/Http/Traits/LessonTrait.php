@@ -130,6 +130,7 @@ trait LessonTrait
                 'content_consume_alias.last_played as content_consume_last_played',
                 'content_consume_alias.set as content_consume_set',
                 'content_consume_alias.create_date as content_consume_create_date',
+                'content_consume_alias.consume_round as content_consume_consume_round',
             ])
             ->where('lessons.id', $lessonID)
             ->get();
