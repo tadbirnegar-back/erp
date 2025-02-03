@@ -24,7 +24,7 @@ class ExamPreviewResource extends ResourceCollection
 
         return $grouped->map(function ($items, $id) use ($questionTime, $examNumber) {
             $firstItem = $items->first();
-            $totalQuestions = $items->count();
+            $totalQuestions = $firstItem->totalQuestions;
             $examTime = $questionTime * $examNumber;
 
             return [
