@@ -88,7 +88,7 @@ class ExamsController extends Controller
             if ($questionCount < $questionLimit) {
                 return response()->json([
                     'error' => 'تعداد سوالات آزمون با مقدار تعیین شده در تنظیمات همخوانی ندارد.'
-                ], 422);
+                ], 403);
             }
 
             $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);

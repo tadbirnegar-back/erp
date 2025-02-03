@@ -28,6 +28,7 @@ class LessonDatasWithLessonIDResource extends JsonResource
                                 'set' => json_decode($content->first()->content_consume_set),
                                 'last_played' => $content->first()->content_consume_last_played,
                                 'consumation' => $content->first()->content_consume_data,
+                                'consume_round' => $content->first()->content_consume_consume_round,
                                 'create_date' => convertDateTimeGregorianToJalaliDateTime($content->first()->content_consume_create_date),
                             ]
                             : [],
@@ -69,13 +70,22 @@ class LessonDatasWithLessonIDResource extends JsonResource
         })->values();
 
         $activeContent = collect($this->resource['lessonDetails'])
-//            ->filter(function ($content) {
-//                return !empty($content->content_consume_data);
-//            })
+            ->filter(function ($content) {
+                return $content -> content_consume_consume_round == null;
+            })
             ->sortByDesc(function ($content) {
                 return $content->content_consume_create_date;
             })
             ->first();
+
+        if($activeContent == null)
+        {
+            $activeContent = collect($this->resource['lessonDetails'])
+                ->sortByDesc(function ($content) {
+                    return $content->content_consume_create_date;
+                })
+                ->first();
+        }
 
         return [
             'lesson_details' => $lessonDetailsData->first(),

@@ -14,7 +14,7 @@ use Modules\LMS\app\Resources\SideBarCourseShowResource;
 
 trait ContentTrait
 {
-    use LessonTrait , CourseTrait;
+    use LessonTrait, CourseTrait;
 
     public function storeContent($data)
     {
@@ -81,7 +81,8 @@ trait ContentTrait
             ->leftJoinRelationship('lesson.lessonStudyLog', [
                 'lesson' => fn($query) => $query->as('lesson_alias'),
                 'lessonStudyLog' => fn($query) => $query->as('lesson_log_alias')
-                    ->on('lesson_log_alias.lesson_id', 'lesson_alias.id'),
+                    ->on('lesson_log_alias.lesson_id', 'lesson_alias.id')
+                    ->where('student_id', $user->student->id)
             ])
             ->select([
                 'lesson_alias.id as lesson_alias_id',
@@ -96,7 +97,9 @@ trait ContentTrait
             $log->set = null;
             $log->last_played = null;
             $log->save();
+
             if (isset($content->lesson_log_alias_id)) {
+
                 $lessonLog = LessonStudyLog::find($content->lesson_log_alias_id);
                 $lessonLog->study_count = $lessonLog->study_count + 1;
                 $lessonLog->last_study_date = now();
@@ -104,7 +107,7 @@ trait ContentTrait
                 $lessonLog->student_id = $user->student->id;
                 $lessonLog->save();
             } else {
-                $this->lessonLogCreate($content->lesson_alias_id, $user);
+                $lessonLog = $this->lessonLogCreate($content->lesson_alias_id, $user);
             }
 
             $chapter = ContentConsumeLog::with('content.lesson.chapter.course')->find($logID);
@@ -144,7 +147,7 @@ trait ContentTrait
     public function checkLessonStatus($id)
     {
         $lesson = Lesson::with('latestStatus')->find($id);
-        return $lesson -> latestStatus;
+        return $lesson->latestStatus;
     }
 
 
