@@ -7,6 +7,7 @@ use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\DetailAccount;
 use Modules\ACC\app\Models\GlAccount;
 use Modules\ACC\app\Models\SubAccount;
+use Modules\ACMS\app\Models\CircularSubject;
 use Modules\StatusMS\app\Models\Status;
 
 trait AccountTrait
@@ -45,6 +46,10 @@ trait AccountTrait
                 $item['chainCode'] = $parent->chain_code . $item['segmentCode'];
             } else {
                 $item['chainCode'] = $item['categoryID'] . $item['segmentCode'];
+            }
+
+            if ($item['entityType'] && $item['entityType'] == CircularSubject::class) {
+                $item['chainCode'] = $item['segmentCode'];
             }
 
             if ($accountableType === DetailAccount::class) {

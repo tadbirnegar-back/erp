@@ -3,17 +3,16 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
-use Modules\AAA\app\Models\User;
-use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
+use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
+use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
+use Modules\ACC\app\Models\Account;
+use Modules\ACC\app\Models\Document;
+use Modules\ACMS\app\Models\FiscalYear;
+use Modules\BNK\app\Http\Enums\ChequeStatusEnum;
 use Modules\BNK\app\Http\Traits\BankTrait;
-use Modules\BNK\app\Models\Bank;
 use Modules\BNK\app\Models\BankAccount;
-use Modules\EMS\app\Jobs\PendingForHeyaatStatusJob;
-use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
-use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
-use Modules\EMS\app\Jobs\StoreMeetingJob;
-use Modules\EMS\app\Models\Enactment;
+use Modules\BNK\app\Models\BnkChequeStatus;
+use Modules\BNK\app\Models\Cheque;
 
 
 class testController extends Controller
@@ -22,70 +21,85 @@ class testController extends Controller
 
     public function run()
     {
-        dd(get_class(BankAccount::with('bank')->find(3)->bank));
-        $user = User::find(1905);
-        $bankAccount = BankAccount::find(6);
-        $user->load(['activeRecruitmentScripts' => function ($query) use ($bankAccount) {
-            $query
-                ->where('organization_unit_id', $bankAccount->ounit_id)
-                ->whereHas('scriptType', function ($query) {
-                    $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
-                });
-        }]);
-        dd($user->activeRecruitmentScripts);
-//        dd($this->bankAccountActivateStatus());
-        dd(convertGregorianToJalali('2022-02-01 00:00:0'));
-        for ($i = 0; $i < 5; $i++) {
-            $chequeData[] = [
-                'segmentNumber' => 100 + $i,
-            ];
-        }
-        dd($chequeData);
-        dd(Bank::getTableName());
-        $ens = [
-            141, 138, 139, 140
-            // 166,169,177,   //7 bahman 2 pm
+        $account = Account::with(['cheques'])->find(69);
+        $cheque = Cheque::
+        joinRelationship('chequeBook.account', [
+            'account' => function ($join) {
+                $join
+                    ->where(Account::getTableName() . '.id', 200)
+                    ->where(Account::getTableName() . '.entity_type', BankAccount::class);
+            }
+        ])
+            ->joinRelationship('statuses', [
+                'statuses' => function ($join) {
+                    $join
+                        ->whereRaw(BnkChequeStatus::getTableName() . '.create_date = (SELECT MAX(create_date) FROM ' . BnkChequeStatus::getTableName() . ' WHERE cheque_id = bnk_cheques.id)')
+                        ->where('statuses.name', '=', ChequeStatusEnum::BLANK->value);
+                }
+            ])
+            ->orderBy('segment_number', 'asc')
+            ->first();
+        dd($cheque);
+//        $accs = AccountCategory::leftJoinRelationship('accounts', function ($join) {
+//            $join
+//                ->where(function ($query) {
+//                    $query->where('acc_accounts.ounit_id', 197)
+//                        ->orWhereNull('acc_accounts.ounit_id');
+//                })
+//                ->withGlobalScopes();
+//        })
+//            ->select([
+//                'acc_accounts.id as id',
+//                'acc_accounts.name as title',
+//                'acc_accounts.segment_code as code',
+//                'acc_accounts.chain_code as chainedCode',
+//                'acc_accounts.parent_id as parent_id',
+//                'acc_account_categories.id as categoryID',
+//                'acc_account_categories.name as accountCategory',
+//            ])
+//            ->get();
+//        $a = $accs->groupBy('accountCategory')->map(function ($item) {
+//            return $item->toHierarchy();
+//        });
+//        return response()->json(['data' => $a]);
 
-            // 171,173,          // 7bahman 8am
-            // 179,180,181,182,163,164,178,188,   //8 bahman
-            // 185,192
-            // 184
+        $data = [
+            'ounitID' => 197,
+            'fiscalYearID' => 2
         ];
-        $meetings = [];
-        foreach ($ens as $en) {
-            $enactment = Enactment::with("latestHeyaatMeeting")->find($en);
+        $fiscalYear = FiscalYear::find($data['fiscalYearID']);
+        $lastYearFiscalYear = FiscalYear::where('name', $fiscalYear->name - 1)->first();
 
-            // Ensure meeting_date is in Carbon instance (convert if necessary)
-            $meetingDate1 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
-            $meetingDate2 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
-            $meetingDate3 = $enactment->latestHeyaatMeeting->getRawOriginal('meeting_date');
+        $lastYearClosingDoc = Document::joinRelationship('articles.account')
+            ->where('acc_documents.ounit_id', $data['ounitID'])
+            ->where('acc_documents.document_type_id', DocumentTypeEnum::CLOSING->value)
+            ->where('acc_documents.fiscal_year_id', $lastYearFiscalYear->id)
+            ->joinRelationship('statuses', [
+                'statuses' => function ($join) {
+                    $join
+                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                        ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+                }
+            ])
+//            ->withoutGlobalScopes()
+            ->select([
+                \DB::raw('SUM( acc_articles.debt_amount) as total_debt_amount'),
+                \DB::raw('SUM( acc_articles.credit_amount) as total_credit_amount'),
+                'acc_accounts.id as id',
+                'acc_accounts.name as name',
+                'acc_accounts.segment_code as code',
+                'acc_accounts.chain_code as chainedCode',
 
+            ])
+            ->groupBy(
+                'acc_accounts.id',
+                'acc_accounts.name',
+                'acc_accounts.segment_code',
+                'acc_accounts.chain_code'
+            )
+            ->get();
 
-            $delayHeyat = Carbon::parse($meetingDate1)->addDays(1);
-            $delayKarshenas = Carbon::parse($meetingDate2)->addDays(1);
-
-
-            // Dispatch the job with the calculated delay
-            // Convert the fetched date to a Carbon instance
-
-            $delayPending = Carbon::parse($meetingDate3);
-            $alertMembers = Carbon::parse($meetingDate3)->subDays(1);
-
-
-            StoreEnactmentStatusJob::dispatch($en)->delay($delayHeyat);   // ray khodkar heyaat
-            StoreEnactmentStatusKarshenasJob::dispatch($en)->delay($delayKarshenas);  // ray khdkar kharshenas
-            PendingForHeyaatStatusJob::dispatch($en)->delay($delayPending);  // dar entezar barresi
-            $meetings[] = $enactment->latestHeyaatMeeting;
-        }
-
-        $uniqueMeetings = collect($meetings)->unique('id');
-        foreach ($uniqueMeetings as $meeting) {
-            $meetingDate3 = $meeting->getRawOriginal('meeting_date');
-
-            $alertMembers = Carbon::parse($meetingDate3)->subDays(1);
-
-            StoreMeetingJob::dispatch($meeting->id)->delay($alertMembers);
-        }
+        dd($lastYearClosingDoc);
 
         $output = "<!DOCTYPE html>
     <html>

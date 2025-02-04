@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Models\Account;
+use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
 use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
 use Modules\ACMS\app\Models\Circular;
 use Modules\ACMS\app\Models\CircularItem;
@@ -61,6 +62,7 @@ class SubjectController extends Controller
                 'segmentCode' => $subject->code,
                 'entityType' => get_class($subject),
                 'entityID' => $subject->id,
+                'categoryID' => SubjectTypeEnum::from($subject->subject_type_id)->getCategoryEnum()->value,
             ];
 
             $accBankAccount = $this->storeAccount($accData, $parentAcc);

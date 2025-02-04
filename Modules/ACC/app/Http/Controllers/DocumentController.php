@@ -15,12 +15,14 @@ use Modules\ACC\app\Http\Traits\DocumentTrait;
 use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\AccountCategory;
 use Modules\ACC\app\Models\Article;
+use Modules\ACC\app\Models\DetailAccount;
 use Modules\ACC\app\Models\Document;
 use Modules\ACC\app\Resources\ArticlesListResource;
 use Modules\ACC\app\Resources\CurrentFiscalYearResource;
 use Modules\ACC\app\Resources\DocumentListResource;
 use Modules\ACC\app\Resources\DocumentShowResource;
 use Modules\ACMS\app\Models\FiscalYear;
+use Modules\BNK\app\Models\BankAccount;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Morilog\Jalali\Jalalian;
@@ -237,11 +239,16 @@ class DocumentController extends Controller
                 'acc_accounts.segment_code as code',
                 'acc_accounts.chain_code as chainedCode',
                 'acc_accounts.parent_id as parent_id',
+                'acc_accounts.entity_type as entity_type',
+                'acc_accounts.accountable_type as accountable_type',
                 'acc_account_categories.id as categoryID',
                 'acc_account_categories.name as accountCategory',
             ])
             ->get();
         $accs = $accs->groupBy('accountCategory')->map(function ($item) {
+            $item->map(function ($item) {
+                return $item->setAttribute('isBankAccount', $item->accountable_type == DetailAccount::class && $item->entity_type == BankAccount::class,);
+            });
             return $item->toHierarchy();
         });
         return response()->json($accs);
@@ -419,8 +426,8 @@ class DocumentController extends Controller
                 ->whereIntegerInRaw('acc_accounts.category_id', $tempCategory)
                 ->withoutGlobalScopes()
                 ->select([
-                    \DB::raw('SUM(DISTINCT acc_articles.debt_amount) as total_debt_amount'),
-                    \DB::raw('SUM(DISTINCT acc_articles.credit_amount) as total_credit_amount'),
+                    \DB::raw('(SELECT SUM(debt_amount) FROM acc_articles WHERE acc_articles.account_id = acc_accounts.id) as total_debt_amount'),
+                    \DB::raw('(SELECT SUM(credit_amount) FROM acc_articles WHERE acc_articles.account_id = acc_accounts.id) as total_credit_amount'),
                     'acc_accounts.id as id',
                     'acc_accounts.name as name',
                     'acc_accounts.segment_code as code',
@@ -549,8 +556,8 @@ class DocumentController extends Controller
                 ->whereIntegerInRaw('acc_accounts.category_id', $categories)
                 ->withoutGlobalScopes()
                 ->select([
-                    \DB::raw('SUM(DISTINCT acc_articles.debt_amount) as total_debt_amount'),
-                    \DB::raw('SUM(DISTINCT acc_articles.credit_amount) as total_credit_amount'),
+                    \DB::raw('(SELECT SUM(debt_amount) FROM acc_articles WHERE acc_articles.account_id = acc_accounts.id) as total_debt_amount'),
+                    \DB::raw('(SELECT SUM(credit_amount) FROM acc_articles WHERE acc_articles.account_id = acc_accounts.id) as total_credit_amount'),
                     'acc_accounts.id as id',
                     'acc_accounts.name as name',
                     'acc_accounts.segment_code as code',

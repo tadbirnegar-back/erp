@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('creator_id')->nullable()->index();
             $table->dateTime('create_date')->useCurrent();
 
-            $table->foreign('account_id')->references('id')->on('acc_accounts')->onDelete('cascade');
+            $table->foreign('account_id')->references('id')->on('bnk_bank_accounts')->onDelete('cascade');
             $table->foreign('creator_id')->references('id')->on('users')->onDelete('set null');
         });
     }

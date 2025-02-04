@@ -26,12 +26,14 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::get('/bnk/bank-accounts/{id}', [BankAccountController::class, 'show']);
 
     Route::put('/bnk/bank-accounts/edit/{id}', [BankAccountController::class, 'update']);
-    
+
     Route::get('/bnk/bank-accounts/edit/{id}', [BankAccountController::class, 'edit']);
 
     Route::delete('/bnk/bank-accounts/delete/{id}', [BankAccountController::class, 'destroy']);
 
     Route::post('/bnk/cheque-book/add', [ChequeController::class, 'store']);
+
+    Route::post('/bnk/get-first-available-cheque', [ChequeController::class, 'getFirstAvailableCheque']);
 
     Route::put('/bnk/cheque-book/edit/{id}', [ChequeController::class, 'update']);
 

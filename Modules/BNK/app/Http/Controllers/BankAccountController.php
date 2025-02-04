@@ -69,7 +69,7 @@ class BankAccountController extends Controller
                 ->first();
 
             $data = [
-                'name' => ' حساب بانک' . $bank->name . ' شعبه ' . $bankAccount->bankBranch->name,
+                'name' => ' حساب ' . $bankAccount->account_type_id->getLabel() . ' ' . $bank->name . ' ' . $bankAccount->bankBranch->name . ' ' . $bankAccount->account_number,
                 'ounitID' => $bankAccount->ounit_id,
                 'segmentCode' => '001',
                 'entityType' => get_class($bankAccount),
