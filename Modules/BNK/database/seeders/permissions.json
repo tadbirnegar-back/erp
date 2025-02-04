@@ -52,5 +52,11 @@
         "slug": "/bnk/card/edit/{id}",
         "moduleName": "BNK",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "دریافت اولین چک موجود",
+        "slug": "/bnk/get-first-available-cheque",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
     }
 ]

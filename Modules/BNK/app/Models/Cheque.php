@@ -4,6 +4,7 @@ namespace Modules\BNK\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\BNK\Database\factories\ChequeFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -41,6 +42,11 @@ class Cheque extends Model
     public function statuses()
     {
         return $this->belongsToMany(Status::class, 'bnkCheque_status', 'cheque_id', 'status_id');
+    }
+
+    public function chequeBook(): BelongsTo
+    {
+        return $this->belongsTo(ChequeBook::class, 'cheque_book_id');
     }
 
     public static function GetAllStatuses()

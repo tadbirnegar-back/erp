@@ -4,6 +4,8 @@ namespace Modules\ACC\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\ACC\app\Http\Enums\AccountLayerTypesEnum;
+use Modules\ACC\app\Models\DetailAccount;
+use Modules\BNK\app\Models\BankAccount;
 
 class ArticlesListResource extends JsonResource
 {
@@ -27,6 +29,7 @@ class ArticlesListResource extends JsonResource
                 'name' => $this->account->name,
                 'type' => AccountLayerTypesEnum::from($this->account->accountable_type)->getLabel(),
                 'chain_code' => $this->account->chain_code,
+                'isBankAccount' => $this->account->accountable_type == DetailAccount::class && $this->account->entity_type == BankAccount::class,
                 'category' => [
                     'name' => $this->account->accountCategory->name,
                     'code' => $this->account->accountCategory->id,

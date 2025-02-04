@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\AccountCategory;
+use Modules\BNK\app\Http\Enums\ChequeStatusEnum;
+use Modules\BNK\app\Models\BankAccount;
+use Modules\BNK\app\Models\BnkChequeStatus;
+use Modules\BNK\app\Models\Cheque;
 use Validator;
 
 class AccountsController extends Controller
@@ -48,12 +52,11 @@ class AccountsController extends Controller
                 'acc_account_categories.name as accountCategory',
             ])
             ->get();
-        $x = $accs;
         $accs = $accs->groupBy('accountCategory')->map(function ($item) {
             return $item->toHierarchy();
         });
 
-        return response()->json(['data' => $accs, 'x' => $x]);
+        return response()->json(['data' => $accs]);
     }
 
     public function update(Request $request, $id)
@@ -149,6 +152,46 @@ class AccountsController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getFirstEmptyCheck(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'accountID' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['error' => $validate->errors()], 422);
+        }
+
+        $cheque = Cheque::
+        joinRelationship('chequeBook.account', [
+            'account' => function ($join) use ($data) {
+                $join
+                    ->where(Account::getTableName() . '.id', $data['accountID'])
+                    ->where(Account::getTableName() . '.entity_type', BankAccount::class);
+            }
+        ])
+            ->joinRelationship('statuses', [
+                'statuses' => function ($join) {
+                    $join
+                        ->whereRaw(BnkChequeStatus::getTableName() . '.create_date = (SELECT MAX(create_date) FROM ' . BnkChequeStatus::getTableName() . ' WHERE cheque_id = bnk_cheques.id)')
+                        ->where('statuses.name', '=', ChequeStatusEnum::BLANK->value);
+                }
+            ])
+            ->orderBy('segment_number', 'asc')
+            ->first();
+
+        if ($cheque) {
+            return response()->json(['data' => [
+                'cheque_id' => $cheque->id,
+                'segment_number' => $cheque->segment_number,
+            ]
+            ], 200);
+        } else {
+            return response()->json(['data' => null], 200);
         }
     }
 }
