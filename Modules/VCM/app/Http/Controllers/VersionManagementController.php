@@ -19,7 +19,7 @@ class VersionManagementController extends Controller
             \DB::beginTransaction();
             $data = $request->all();
             $version = VcmVersions::create([
-                'create_date' => now() ,
+                'create_date' => now(),
                 'high_version' => $data['high_version'],
                 'low_version' => $data['low_version'],
                 'mid_version' => $data['mid_version'],
@@ -34,25 +34,23 @@ class VersionManagementController extends Controller
                 ]);
             }
             \DB::commit();
-            return response() -> json(['message' => 'ورژن با موفقیت ثبت شد']);
+            return response()->json(['message' => 'ورژن با موفقیت ثبت شد']);
 
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             \DB::rollBack();
-            return response()->json(['error' => $exception->getMessage()] , 400);
+            return response()->json(['error' => $exception->getMessage()], 400);
         }
     }
 
     public function indexVersion(Request $request)
     {
         $data = $request->all();
-        if($data['version_type'] == 1)
-        {
+        if ($data['version_type'] == 1) {
             $high = intval(VcmVersions::orderByDesc('id')->value('high_version'));
             $high = $high + 1;
             $middle = 0;
             $low = 0;
-        }elseif($data['version_type'] == 2)
-        {
+        } elseif ($data['version_type'] == 2) {
             $version = VcmVersions::select('high_version', 'mid_version')
                 ->orderByDesc('id')
                 ->first();
@@ -61,8 +59,8 @@ class VersionManagementController extends Controller
             $middle = intval(optional($version)->mid_version) + 1;
             $low = 0;
 
-        }else{
-            $version = VcmVersions::select('high_version', 'mid_version' , 'low_version')
+        } else {
+            $version = VcmVersions::select('high_version', 'mid_version', 'low_version')
                 ->orderByDesc('id')
                 ->first();
 
@@ -71,16 +69,10 @@ class VersionManagementController extends Controller
             $low = intval(optional($version)->low_version) + 1;
         }
 
-        $modules = Module::with('category')->get();
         return response()->json([
-            'version' => [
-                'high' => $high,
-                'middle' => $middle,
-                'low' => $low,
-            ],
-            'modules' => [
-                $modules
-            ]
+            'high' => $high,
+            'middle' => $middle,
+            'low' => $low,
         ]);
     }
 
@@ -101,7 +93,7 @@ class VersionManagementController extends Controller
         $vcm = VcmFeatures::with('module.category')->whereIn('vcm_version_id', $versions)->get();
 
 //        return response()->json([$vcm]);
-        if(!empty($versions)){
+        if (!empty($versions)) {
             foreach ($versions as $version) {
                 VcmUserVersion::create([
                     'vcm_version_id' => $version,
@@ -123,10 +115,14 @@ class VersionManagementController extends Controller
 
 // Return as JSON response
             return response()->json($grouped->values());
-        }else{
+        } else {
             return response()->json(['data' => null]);
         }
+    }
 
-
+    public function indexModules()
+    {
+        $modules = Module::with('category')->get();
+        return response() -> json($modules);
     }
 }
