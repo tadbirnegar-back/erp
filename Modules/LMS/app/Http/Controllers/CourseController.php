@@ -129,6 +129,7 @@ class CourseController extends Controller
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
 
+            return response() -> json($componentsToRenderWithData);
 
 
             $componentsToRenderWithData['course']->chapters->each(function ($chapter) {

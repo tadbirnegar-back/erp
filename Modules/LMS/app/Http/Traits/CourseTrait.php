@@ -171,8 +171,16 @@ trait CourseTrait
             'student',
             'person.avatar'
         ]);
+        return $user->student->id;
 
-
+        $ans = Course::with('exams.answerSheets')->find($course->id);
+        $examIds = $ans->exams->pluck('id');
+        $ansSheets = AnswerSheet::whereIn('exam_id', $examIds)
+            ->where('student_id', $user->student->id)
+            ->orderBy('id', 'desc')
+            ->limit(1)
+            ->get();
+        return response() -> json(empty($ansSheets[0]));
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         $answerSheet = $user->answerSheets[0] ?? null;

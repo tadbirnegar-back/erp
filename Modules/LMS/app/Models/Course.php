@@ -156,7 +156,7 @@ class Course extends Model
 
     public function exams()
     {
-        return $this->belongsToMany(Exam::class, 'course_exams', 'course_id', 'exam_id');
+        return $this->belongsToMany(Exam::class, 'course_exam', 'course_id', 'exam_id');
     }
 
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
