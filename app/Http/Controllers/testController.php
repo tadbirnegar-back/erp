@@ -6,13 +6,11 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\Meeting;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
-use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Exam;
-use Modules\OUnitMS\app\Models\VillageOfc;
 
 
 class testController extends Controller
@@ -22,10 +20,6 @@ class testController extends Controller
 
     public function run()
     {
-
-        Course::create([
-            'title' => 'Course 1',
-        ]);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
@@ -206,15 +200,6 @@ class testController extends Controller
 //            'meeting_type_id' => 2,
 //            'ounit_id' => 3889,
 //        ]);
-
-        $query = Exam::joinRelationship('course');
-        $query->leftJoinRelationship('questions');
-        $query->addSelect([
-            'exams.title as examTitle',
-            'courses.title as coursesTitle',
-            'questions.title as question_title',
-        ]);
-        $query->withCount(['questions as totalQuestions']);
 //        $user = User::find(2172);
 //        $userRoles = $user->roles->pluck('name')->toArray();
 //

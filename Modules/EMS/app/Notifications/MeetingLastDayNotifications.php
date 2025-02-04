@@ -20,13 +20,16 @@ class MeetingLastDayNotifications extends Notification implements ShouldQueue
     private string $username;
     private string $date;
 
+    private string $meetingType;
+
     /**
      * @param string $otpCode
      */
-    public function __construct(string $username, string $date)
+    public function __construct(string $username, string $date , $text)
     {
         $this->username = $username;
         $this->date = $date;
+        $this->meetingType = $text;
     }
 
 
@@ -60,7 +63,7 @@ class MeetingLastDayNotifications extends Notification implements ShouldQueue
         try {
             //Todo: Change Pattern
             $a = (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=ye3xdk0ub8clsh5 \n username={$this->username} \n date={$this->date}")
+            ->send("patterncode=ye3xdk0ub8clsh5 \n username={$this->username} \n date={$this->date} \n meetingType={$this->meetingType}")
                 ->to($notifiable->mobile);
 
 
