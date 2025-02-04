@@ -70,10 +70,17 @@ class VersionManagementController extends Controller
             $middle = intval(optional($version)->mid_version);
             $low = intval(optional($version)->low_version) + 1;
         }
+
+        $modules = Module::with('category')->get();
         return response()->json([
-            'high' => $high,
-            'middle' => $middle,
-            'low' => $low,
+            'version' => [
+                'high' => $high,
+                'middle' => $middle,
+                'low' => $low,
+            ],
+            'modules' => [
+                $modules
+            ]
         ]);
     }
 
@@ -121,9 +128,5 @@ class VersionManagementController extends Controller
         }
 
 
-    }
-    public function indexModules()
-    {
-        return Module::with('category')->get();
     }
 }
