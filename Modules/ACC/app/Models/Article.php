@@ -21,6 +21,7 @@ class Article extends Model
         'credit_amount',
         'account_id',
         'document_id',
+        'transaction_id',
 
     ];
 

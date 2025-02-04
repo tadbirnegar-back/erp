@@ -40,6 +40,7 @@ trait ArticleTrait
                 'credit_amount' => $item['creditAmount'] ?? 0,
                 'account_id' => $item['accountID'],
                 'document_id' => $document->id,
+                'transaction_id' => $item['transactionID'] ?? null,
             ];
         });
 

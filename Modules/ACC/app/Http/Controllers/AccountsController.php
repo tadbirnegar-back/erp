@@ -14,6 +14,7 @@ use Modules\BNK\app\Http\Enums\ChequeStatusEnum;
 use Modules\BNK\app\Models\BankAccount;
 use Modules\BNK\app\Models\BnkChequeStatus;
 use Modules\BNK\app\Models\Cheque;
+use Modules\BNK\app\Models\ChequeBook;
 use Validator;
 
 class AccountsController extends Controller
@@ -181,13 +182,17 @@ class AccountsController extends Controller
                         ->where('statuses.name', '=', ChequeStatusEnum::BLANK->value);
                 }
             ])
+            ->addSelect([
+                ChequeBook::getTableName() . '.cheque_series as series',
+            ])
             ->orderBy('segment_number', 'asc')
             ->first();
 
         if ($cheque) {
             return response()->json(['data' => [
-                'cheque_id' => $cheque->id,
-                'segment_number' => $cheque->segment_number,
+                'chequeID' => $cheque->id,
+                'segmentNumber' => $cheque->segment_number,
+                'series' => $cheque->series,
             ]
             ], 200);
         } else {

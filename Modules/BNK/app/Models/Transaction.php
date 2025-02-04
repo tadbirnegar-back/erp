@@ -2,8 +2,8 @@
 
 namespace Modules\BNK\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Modules\BNK\Database\factories\TransactionFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -16,17 +16,30 @@ class Transaction extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
-
+    protected $fillable = [
+        'deposit',
+        'withdrawal',
+        'transfer',
+        'transactionable_id',
+        'transactionable_type',
+        'bank_account_id',
+        'creator_id',
+        'cheque_id',
+        'card_id',
+        'status_id',
+        'isSynced',
+        'create_date',
+    ];
     public $timestamps = false;
+    protected $table = 'bnk_transactions';
 
-     public static function getTableName()
-     {
-            return with(new static)->getTable();
-     }
+    public static function getTableName()
+    {
+        return with(new static)->getTable();
+    }
 
     public static function GetAllStatuses()
     {
-        return Status::where('model',self::class);
+        return Status::where('model', self::class);
     }
 }

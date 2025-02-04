@@ -19,6 +19,7 @@ class BNKDatabaseSeeder extends Seeder
             ChequeStatusSeeder::class,
             ChequeBookStatusSeeder::class,
             CardStatusSeeder::class,
+            TransactionStatusSeeder::class,
         ]);
     }
 }
