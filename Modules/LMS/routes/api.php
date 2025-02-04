@@ -12,6 +12,7 @@ use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
 use Modules\LMS\app\Http\Controllers\QuestionsController;
+use Modules\LMS\app\Http\Controllers\ReportingController;
 use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\StudentController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
@@ -91,3 +92,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
 });
+Route::post('/lms/reporting/data/{id}', [ReportingController::class, 'index']);
