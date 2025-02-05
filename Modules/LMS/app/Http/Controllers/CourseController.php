@@ -130,7 +130,6 @@ class CourseController extends Controller
             $componentsToRenderWithData = $this->courseShow($course, $user);
 
 
-
             $componentsToRenderWithData['course']->chapters->each(function ($chapter) {
                 $chapter->setRelation(
                     'lessons',
@@ -326,40 +325,32 @@ class CourseController extends Controller
     public function relatedCoursesList(Request $request)
     {
         $user = Auth::user();
-        $perPage = $data['perPage'] = 10000;
+        $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
-        $user->load('activeRecruitmentScripts');
-        $ounits = $user->activeRecruitmentScripts
-            ->pluck('organization_unit_id')
-            ->filter()
+        $user->load([
+            'activeRecruitmentScripts.ounit.ancestorsAndSelf' => function ($query){
+                $query->whereNot('unitable_type', TownOfc::class);
+            }
+        ]);
+
+        $relatedOrgans = $user->activeRecruitmentScripts
+            ->pluck('ounit.ancestorsAndSelf')
+            ->flatten(1)
+            ->unique()
             ->toArray();
 
-
-        //Get All the ounits can be inside target
-        $relatedOrgans = OrganizationUnit::with(['ancestors' => function ($query) use ($ounits) {
-            $query->whereNot('unitable_type', TownOfc::class);
-        }])->whereIn('id', $ounits)->get();
 
         $allData = [];
 
         foreach ($relatedOrgans as $unit) {
-            $categoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
-            if ($categoryId) {
-                $allData[] = [
-                    'id' => $unit['id'],
-                    'category_id' => $categoryId,
-                ];
-            }
-
-            foreach ($unit['ancestors'] as $ancestor) {
-                $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($ancestor['unitable_type']);
+                $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
                 if ($ancestorCategoryId) {
                     $allData[] = [
-                        'id' => $ancestor['id'],
+                        'id' => $unit['id'],
                         'category_id' => $ancestorCategoryId,
                     ];
                 }
-            }
+
         }
 
 // Remove duplicate entries
@@ -385,6 +376,7 @@ class CourseController extends Controller
 
         $title = $request->name;
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
+        return response()->json($courses);
         $paginatedCourses = new LengthAwarePaginator(
             collect($courses)->forPage($pageNum, $perPage),
             count($courses), // Total items in the collection (this should be the total count from your query)

@@ -883,15 +883,16 @@ trait CourseTrait
     {
         $ids = array_column($ounit, 'id');
         $ounitCats = array_unique(array_column($ounit, 'category_id'));
-        $course = Course::query()
+        $courses = Course::query()
             ->join('status_course as status_course_alias', 'status_course_alias.course_id', '=', 'courses.id')
             ->join('statuses as statuses_alias', function ($join) {
                 $join->on('statuses_alias.id', '=', 'status_course_alias.status_id')
-                    ->where('statuses_alias.name', '=', DB::raw("'" . addslashes($this::$presenting) . "'"));
+                    ->whereRaw('status_course_alias.create_date = (SELECT MAX(create_date) FROM status_course WHERE course_id = courses.id)')
+                    ->where('statuses_alias.name', '=', $this::$presenting);
             })
-            ->leftJoin('chapters as chapters_alias', 'chapters_alias.course_id', '=', 'courses.id')
-            ->leftJoin('lessons as lessons_alias', 'lessons_alias.chapter_id', '=', 'chapters_alias.id')
-            ->leftJoin('contents as contents_alias', 'contents_alias.lesson_id', '=', 'lessons_alias.id')
+            ->withCount('chapters')
+            ->withCount('chapters.lessons')
+            ->withCount('chapters.lessons.contents')
             ->leftJoin('content_type as content_type_alias', 'content_type_alias.id', '=', 'contents_alias.content_type_id')
             ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
             ->join('course_targets as targets_alias', function ($join) use ($ids) {
@@ -963,9 +964,9 @@ trait CourseTrait
             ])
             ->where('courses.title', 'like', '%' . $title . '%')
             ->get();
-        return $course;
-    }
 
+        return $courses;
+    }
 
     public function courseCanceledStatus()
     {

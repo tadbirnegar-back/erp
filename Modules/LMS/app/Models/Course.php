@@ -252,4 +252,9 @@ class Course extends Model
         return $this->hasOne(CourseTarget::class, 'course_id', 'id');
     }
 
+    public function contentTypes()
+    {
+
+    }
+
 }
