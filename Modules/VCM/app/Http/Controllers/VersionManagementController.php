@@ -7,12 +7,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\AAA\app\Models\Module;
 use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\VCM\app\Models\VcmFeatures;
 use Modules\VCM\app\Models\VcmUserVersion;
 use Modules\VCM\app\Models\VcmVersions;
 
 class VersionManagementController extends Controller
 {
+    use DateTrait;
     public function storeVersion(Request $request)
     {
         try {
@@ -78,7 +80,7 @@ class VersionManagementController extends Controller
 
     public function showVersion()
     {
-        $user = User::find(2174);
+        $user = \Auth::user();
 
         $versions = \DB::table('vcm_versions')
             ->whereNotIn('id', function ($query) use ($user) {
@@ -90,9 +92,9 @@ class VersionManagementController extends Controller
             ->pluck('id');
 
 
-        $vcm = VcmFeatures::with('module.category')->whereIn('vcm_version_id', $versions)->get();
+        $vcm = VcmFeatures::with('module.category' , 'version')->whereIn('vcm_version_id', $versions)->get();
 
-//        return response()->json([$vcm]);
+
         if (!empty($versions)) {
             foreach ($versions as $version) {
                 VcmUserVersion::create([
@@ -100,21 +102,7 @@ class VersionManagementController extends Controller
                     'user_id' => $user->id,
                 ]);
             }
-            $grouped = $vcm->groupBy('vcm_version_id')->map(function ($features, $versionId) {
-                // Get version date (assuming the relation is set up correctly)
-                $version_date = convertDateTimeGregorianToJalaliDateTime(VcmVersions::find($versionId)->create_date);
-
-                return [
-                    'version_id' => $versionId,
-                    'version_date' => $version_date,
-                    'categories' => $features->groupBy('module.category.name')->map(function ($items) {
-                        return $items->pluck('description');
-                    })
-                ];
-            });
-
-// Return as JSON response
-            return response()->json($grouped->values());
+            return response() -> json($vcm);
         } else {
             return response()->json(['data' => null]);
         }
@@ -123,6 +111,6 @@ class VersionManagementController extends Controller
     public function indexModules()
     {
         $modules = Module::with('category')->get();
-        return response() -> json($modules);
+        return response()->json($modules);
     }
 }

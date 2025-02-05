@@ -33,4 +33,9 @@ class VcmFeatures extends Model
         return $this->hasOne(Module::class, 'id', 'module_id');
     }
 
+    public function version()
+    {
+        return $this->belongsTo(VcmVersions::class, 'vcm_version_id', 'id');
+    }
+
 }
