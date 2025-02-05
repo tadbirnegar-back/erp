@@ -21,7 +21,9 @@ trait ArticleTrait
         $data = $this->articleDataPreparation($data, $document);
         $article = Article::upsert($data->toArray(), ['id']);
 
-        return $article;
+        $articles = Article::take($data->count())->orderBy('id', 'desc')->get();
+
+        return $articles;
 
     }
 

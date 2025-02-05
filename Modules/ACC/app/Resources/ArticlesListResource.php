@@ -21,6 +21,21 @@ class ArticlesListResource extends JsonResource
             'debt_amount' => $this->debt_amount ?? 0,
             'credit_amount' => $this->credit_amount ?? 0,
             'priority' => $this->priority,
+            'transaction_id' => $this->transaction_id,
+            'transaction_code' => $this->relationLoaded('transaction') && !is_null($this?->transaction) ? $this?->transaction?->cheque?->segment_number : null,
+            'transaction' => $this->relationLoaded('transaction') && !is_null($this?->transaction) ? [
+                'id' => $this?->transaction->id,
+                'cheque' => [
+                    'id' => $this?->transaction->cheque->id,
+                    'payee_name' => $this->transaction->cheque->payee_name,
+                    'segment_number' => $this->transaction->cheque->segment_number,
+                    'due_date' => $this->transaction->cheque->due_date,
+                    'status' => [
+                        'name' => $this->transaction->cheque->latestStatus->name,
+                        'class_name' => $this->transaction->cheque->latestStatus->class_name,
+                    ],
+                ],
+            ] : null,
         ];
 
         if ($this->relationLoaded('account')) {

@@ -4,6 +4,7 @@ namespace Modules\BNK\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\BNK\Database\factories\TransactionFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -32,6 +33,11 @@ class Transaction extends Model
     ];
     public $timestamps = false;
     protected $table = 'bnk_transactions';
+
+    public function cheque(): BelongsTo
+    {
+        return $this->belongsTo(Cheque::class, 'cheque_id');
+    }
 
     public static function getTableName()
     {

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\ACC\app\Http\Controllers\AccountsController;
 use Modules\BNK\app\Http\Controllers\BankAccountController;
 use Modules\BNK\app\Http\Controllers\CardController;
 use Modules\BNK\app\Http\Controllers\ChequeController;
@@ -33,7 +34,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/bnk/cheque-book/add', [ChequeController::class, 'store']);
 
-    Route::post('/bnk/get-first-available-cheque', [ChequeController::class, 'getFirstAvailableCheque']);
+    Route::post('/bnk/get-first-available-cheque', [AccountsController::class, 'getFirstEmptyCheck']);
 
     Route::put('/bnk/cheque-book/edit/{id}', [ChequeController::class, 'update']);
 

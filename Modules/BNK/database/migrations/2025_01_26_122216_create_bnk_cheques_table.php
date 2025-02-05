@@ -15,7 +15,6 @@ return new class extends Migration {
 
             $table->string('payee_name')->nullable()->index();
             $table->string('segment_number')->index();
-            $table->unsignedBigInteger('amount')->nullable()->default(0);
             $table->unsignedBigInteger('cheque_book_id');
             $table->dateTime('due_date')->nullable();
             $table->dateTime('signed_date')->nullable();

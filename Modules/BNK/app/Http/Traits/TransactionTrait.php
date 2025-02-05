@@ -9,6 +9,7 @@ trait TransactionTrait
 {
     public function storeTransaction(array $data)
     {
+        $data['statusID'] = $this->transactionActiveStatus()->id;
         $preparationData = $this->prepareTransactionData($data);
         $transaction = Transaction::create($preparationData->toArray()[0]);
 

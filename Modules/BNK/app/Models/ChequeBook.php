@@ -4,6 +4,7 @@ namespace Modules\BNK\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\ACC\app\Models\Account;
 use Modules\BNK\Database\factories\ChequeBookFactory;
@@ -48,6 +49,11 @@ class ChequeBook extends Model
     public function account()
     {
         return $this->belongsTo(Account::class, 'account_id', 'entity_id');
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class, 'account_id');
     }
 
     public static function getTableName()

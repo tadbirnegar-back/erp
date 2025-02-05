@@ -10,6 +10,8 @@ use Modules\ACC\app\Models\Document;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\BNK\app\Http\Enums\ChequeStatusEnum;
 use Modules\BNK\app\Http\Traits\BankTrait;
+use Modules\BNK\app\Http\Traits\ChequeTrait;
+use Modules\BNK\app\Http\Traits\TransactionTrait;
 use Modules\BNK\app\Models\BankAccount;
 use Modules\BNK\app\Models\BnkChequeStatus;
 use Modules\BNK\app\Models\Cheque;
@@ -17,10 +19,52 @@ use Modules\BNK\app\Models\Cheque;
 
 class testController extends Controller
 {
-    use BankTrait;
+    use BankTrait, ChequeTrait, TransactionTrait;
 
     public function run()
     {
+        $testData = [
+            ['id' => 1, 'title' => 'Article 1', 'paymentType' => 1],
+            ['id' => 2, 'title' => 'Article 2', 'paymentType' => 2],
+            ['id' => 3, 'title' => 'Article 3'], // No paymentType key
+            ['id' => 4, 'title' => 'Article 4', 'paymentType' => 1],
+            ['id' => 5, 'title' => 'Article 5', 'paymentType' => 2],
+            ['id' => 6, 'title' => 'Article 6'], // No paymentType key
+            ['id' => 7, 'title' => 'Article 7', 'paymentType' => 1],
+            ['id' => 8, 'title' => 'Article 8', 'paymentType' => 2],
+        ];
+
+        $data['articles'] = json_encode($testData);
+
+        $articles = json_decode($data['articles'], true);
+
+        $cheques = array_filter($articles, fn($article) => isset($article['paymentType']) && $article['paymentType'] == 2 && !isset($article['transactionID']));
+
+        foreach ($cheques as $cheque) {
+            //chequeID
+            //payeeName
+            //transactionCode
+            //dueDate
+            //paymentType
+            $whiteCheque = Cheque::with('chequeBook')->find($cheque['chequeID']);
+            $whiteCheque = $this->updateCheque($cheque, $whiteCheque);
+            $whiteCheque->statuses()->attach($this->issuedChequeStatus()->id);
+            $cheque['withdrawal'] = $cheque['creditAmount'];
+            $cheque['bankAccountID'] = 11;
+            $cheque['userID'] = 1905;
+            $cheque['chequeID'] = $whiteCheque->id;
+            $transaction = $this->storeTransaction($data);
+
+        }
+
+
+//        $internetBanks = array_filter($articles, fn($article) => isset($article['paymentType']) && $article['paymentType'] == 2);
+//        $noPaymentType = array_filter($articles, fn($article) => !isset($article['paymentType']));
+//
+//        dump($cheques);
+//        dump($internetBanks);
+//        dump($noPaymentType);
+        dd(!empty($cheques));
         $account = Account::with(['cheques'])->find(69);
         $cheque = Cheque::
         joinRelationship('chequeBook.account', [

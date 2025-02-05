@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\ACC\Database\factories\ArticleFactory;
+use Modules\BNK\app\Models\Transaction;
 
 class Article extends Model
 {
@@ -38,5 +39,8 @@ class Article extends Model
         return $this->belongsTo(Document::class, 'document_id');
     }
 
-
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class, 'transaction_id');
+    }
 }

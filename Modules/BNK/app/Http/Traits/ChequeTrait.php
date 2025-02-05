@@ -48,6 +48,14 @@ trait ChequeTrait
         return $cheque;
     }
 
+    public function updateCheque(array $data, Cheque $cheque)
+    {
+        $data['segmentNumber'] = $cheque->segment_number;
+        $preparedData = $this->prepareChequeData($data, $cheque->chequeBook);
+        $cheque->update($preparedData->toArray()[0]);
+        return $cheque;
+    }
+
 
     public function prepareChequeBookData(array $data)
     {
@@ -76,7 +84,6 @@ trait ChequeTrait
             return [
                 'payee_name' => $item['payeeName'] ?? null,
                 'segment_number' => $item['segmentNumber'],
-                'amount' => $item['amount'] ?? null,
                 'cheque_book_id' => $chequeBook->id,
                 'due_date' => $item['dueDate'] ?? null,
                 'signed_date' => $item['signedDate'] ?? null,
@@ -89,6 +96,11 @@ trait ChequeTrait
     public function whiteChequeStatus()
     {
         return Cheque::GetAllStatuses()->where('name', ChequeStatusEnum::BLANK->value)->first();
+    }
+
+    public function issuedChequeStatus()
+    {
+        return Cheque::GetAllStatuses()->where('name', ChequeStatusEnum::ISSUE->value)->first();
     }
 
     public function activeChequeBook()

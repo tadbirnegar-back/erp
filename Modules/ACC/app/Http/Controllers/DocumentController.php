@@ -22,7 +22,10 @@ use Modules\ACC\app\Resources\CurrentFiscalYearResource;
 use Modules\ACC\app\Resources\DocumentListResource;
 use Modules\ACC\app\Resources\DocumentShowResource;
 use Modules\ACMS\app\Models\FiscalYear;
+use Modules\BNK\app\Http\Traits\ChequeTrait;
+use Modules\BNK\app\Http\Traits\TransactionTrait;
 use Modules\BNK\app\Models\BankAccount;
+use Modules\BNK\app\Models\Cheque;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Morilog\Jalali\Jalalian;
@@ -30,7 +33,7 @@ use Validator;
 
 class DocumentController extends Controller
 {
-    use DocumentTrait, ArticleTrait;
+    use DocumentTrait, ArticleTrait, ChequeTrait, TransactionTrait;
 
 
     /**
@@ -200,7 +203,7 @@ class DocumentController extends Controller
             }, 'articles' => function ($query) {
                 $query
                     ->orderBy('priority', 'asc')
-                    ->with(['account' => function ($query) {
+                    ->with(['transaction.cheque.latestStatus', 'account' => function ($query) {
                         $query
                             ->with('accountCategory', 'ancestorsAndSelf')
                             ->withoutGlobalScopes();
@@ -266,11 +269,45 @@ class DocumentController extends Controller
             return response()->json(['message' => 'سند یافت نشد'], 404);
         }
         try {
+            $user = Auth::user();
             DB::beginTransaction();
             $this->updateDocument($document, $data);
 
+            //chequeID
+            //payeeName
+            //transactionCode
+            //dueDate
+            //paymentType
             $articles = json_decode($data['articles'], true);
-            $this->bulkStoreArticle($articles, $document);
+            $noPaymentType = array_filter($articles, fn($article) => !isset($article['paymentType']));
+            if (!empty($noPaymentType)) {
+                $this->bulkStoreArticle($noPaymentType, $document);
+            }
+
+            $cheques = array_filter($articles, fn($article) => isset($article['paymentType']) && $article['paymentType'] == 1 && !isset($article['transactionID']));
+
+            $newCheques = [];
+            foreach ($cheques as $cheque) {
+                //chequeID
+                //payeeName
+                //transactionCode
+                //dueDate
+                //paymentType
+                $whiteCheque = Cheque::with('chequeBook')->find($cheque['chequeID']);
+                $whiteCheque = $this->updateCheque($cheque, $whiteCheque);
+                $whiteCheque->statuses()->attach($this->issuedChequeStatus()->id);
+                $cheque['withdrawal'] = $cheque['creditAmount'];
+                $cheque['bankAccountID'] = $whiteCheque->chequeBook->bankAccount->id;
+                $cheque['userID'] = $user->id;
+                $cheque['chequeID'] = $whiteCheque->id;
+                $transaction = $this->storeTransaction($cheque);
+                $cheque['transactionID'] = $transaction->id;
+                $newCheques[] = $cheque;
+            }
+            if (!empty($newCheques)) {
+                $this->bulkStoreArticle($newCheques, $document);
+            }
+
 
             if (isset($data['deletedID'])) {
                 Article::find($data['deletedID'])->delete();
@@ -280,7 +317,7 @@ class DocumentController extends Controller
             $document->load(['articles' => function ($query) {
                 $query
                     ->orderBy('priority', 'asc')
-                    ->with(['account' => function ($query) {
+                    ->with(['transaction.cheque.latestStatus', 'account' => function ($query) {
                         $query
                             ->with('accountCategory', 'ancestorsAndSelf')
                             ->withoutGlobalScopes();
@@ -291,7 +328,7 @@ class DocumentController extends Controller
             return ArticlesListResource::collection($document->articles);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json($e->getMessage(), 500);
+            return response()->json([$e->getMessage(), $e->getTrace()], 500);
         }
 
     }

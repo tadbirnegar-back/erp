@@ -2,6 +2,7 @@
 
 namespace Modules\BNK\app\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +20,6 @@ class Cheque extends Model
     protected $fillable = [
         'payee_name',
         'segment_number',
-        'amount',
         'cheque_book_id',
         'due_date',
         'signed_date',
@@ -27,6 +27,31 @@ class Cheque extends Model
 
     public $timestamps = false;
     protected $table = 'bnk_cheques';
+
+    public function dueDate(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Jalali
+                $dateTimeString = convertGregorianToJalali($value);
+
+                return $dateTimeString;
+            },
+
+            set: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                // Convert to Gregorian
+                $dateTimeString = convertJalaliPersianCharactersToGregorian($value);
+
+                return $dateTimeString;
+            }
+        );
+    }
 
     public static function getTableName()
     {
