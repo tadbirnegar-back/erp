@@ -95,4 +95,32 @@ trait DateTrait
         return $humanReadableDate;
     }
 
+    public function formatToShortJalali($date)
+    {
+        // Check if the date string contains time
+        $dateTimeParts = explode(' ', $date);
+        $datePart = $dateTimeParts[0];
+
+        // Split the date part by '/'
+        $parts = explode('/', $datePart);
+        $year = $parts[0];
+        $monthNumber = $parts[1]; // Get the second part as the month number
+        $day = $parts[2];
+
+        // Convert month number to Persian month name
+        $eng = $this->persianNumbersToEng($monthNumber);
+        $monthName = $this->humanReadableDate($eng);
+
+        // Remove leading zeros from the day
+        $dayWithoutZero = $this->removeLeftZero($day);
+
+        // Return the formatted date
+        return [
+            'year' => $year,
+            'monthName' => $monthName,
+            'dayWithoutZero' => $dayWithoutZero
+        ];
+    }
+
+
 }
