@@ -40,8 +40,7 @@ class ReportingController extends Controller
                         'question_id' => $answer->question_id,
                         'option_id' => Option::where('title', $answer->selected_option)->value('id')
                     ];
-                })
-                ->toArray()
+                })->toArray()
         ];
 
         $data = $this->ans($answerSheetID, $student, $data, $courseID);
