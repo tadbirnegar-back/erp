@@ -2,7 +2,6 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
-use Modules\HRMS\app\Http\Enums\VillageEnum;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -14,15 +13,11 @@ trait NewReqScriptTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['ancestorsAndSelf' => function ($query) {
-            $query->whereNot('unitable_type', VillageOfc::class);
-        }])
-            ->selectRaw('organization_units.name, MATCH(name) AGAINST(?) AS relevance', [$searchTerm])
+        $query = OrganizationUnit::where('unitable_type', VillageOfc::class)
             ->whereRaw('MATCH(name) AGAINST(?)', [$searchTerm])
             ->orWhere('name', 'LIKE', '%' . $searchTerm . '%')
-            ->where('name', VillageEnum::ACTIVE->value)
             ->orderBy('name')
-            ->select('id', 'name')
+            ->with('ancestors')
             ->get();
 
         return $query->flatten();
