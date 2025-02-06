@@ -43,9 +43,8 @@ class ReportingController extends Controller
                 })->toArray()
         ];
 
-        $data = $this->ans($answerSheetID, $student, $data, $courseID);
-
-        return response()->json($data);
+        $first = $this->ans($answerSheetID, $student, $data, $courseID);
+        return response()->json($first);
     }
 
 

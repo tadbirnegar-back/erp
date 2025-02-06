@@ -6,11 +6,11 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\EMS\app\Models\Meeting;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
+use Modules\LMS\app\Models\AnswerSheet;
 
 
 class testController extends Controller
@@ -20,6 +20,9 @@ class testController extends Controller
 
     public function run()
     {
+
+        $ans = AnswerSheet::find(93);
+        return response()->json($ans);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
