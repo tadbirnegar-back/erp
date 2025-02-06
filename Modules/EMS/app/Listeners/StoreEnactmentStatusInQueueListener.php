@@ -51,8 +51,8 @@ class StoreEnactmentStatusInQueueListener
 //            $delayHeyat = now()->addDays($receiptMaxDay + 1)->addMinutes(5);
 //            $delayKarshenas = now()->addDays($receiptMaxDay + 1)->addMinutes(5);
 
-            $delayHeyat = Carbon::parse($meetingDate1)->addDays(1);
-            $delayKarshenas = Carbon::parse($meetingDate2)->addDays(1);
+            $delayHeyat = Carbon::parse($meetingDate1)->setTime(23, 50, 0);
+            $delayKarshenas = Carbon::parse($meetingDate2)->setTime(23, 50, 0);
 
 
 //            $alertHeayaatDelay = $timeNow->addDays($receiptMaxDay - 1)->addMinutes(5);
