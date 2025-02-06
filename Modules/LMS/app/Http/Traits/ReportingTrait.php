@@ -153,7 +153,9 @@ trait ReportingTrait
             ->select([
                 'courses.title as courseTitle',
             ])
-            ->withCount('chapters', 'lessons')
+            ->withCount(['chapters', 'lessons' => function ($query) {
+                $query->where('is_completed', 1);
+            }])
             ->where('courses.id', $courseID)
             ->where('answer_sheets.student_id', $studentID)
             ->distinct()
