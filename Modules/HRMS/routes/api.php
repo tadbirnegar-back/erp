@@ -171,9 +171,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
 
     Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
+    Route::post('/hrm/new/req/script', [NewScriptController::class, 'indexVillage']);
+    Route::post('/hrm/request-new-Supervisor', [NewScriptController::class, 'storeSarParast']);
+    Route::post('/hrm/district/list', [NewScriptController::class, 'districtsDropDown']);
+    Route::post('/hrm/request-new-heayt', [NewScriptController::class, 'storeheyat']);
 
 });
-Route::post('/hrm/new/req/script', [NewScriptController::class, 'indexVillage']);
-Route::post('/hrm/request-new-Supervisor', [NewScriptController::class, 'storeSarParast']);
-Route::post('/hrm/district/show', [NewScriptController::class, 'districtsDropDown']);
-Route::post('/hrm/request-new-heayt', [NewScriptController::class, 'storeheyat']);
