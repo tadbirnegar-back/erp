@@ -38,7 +38,11 @@ class ReportingResource extends JsonResource
                 'totalDuration' => $this['courseInformation']['totalDuration'],
                 'completionPercentage' => $this['courseInformation']['completionPercentage'],
             ],
-            'practicalExamEnrollment' => $this['practiceExam'],
+            'practiceExam' => [
+                'calculate' => $this['practiceExam']['calculate'],
+                'answerSheetOfPracticalExam' => $this['practiceExam']['answerSheetOfPracticalExam'],
+                'practicalExamEnrollment' => $this['practiceExam']['practicalExamEnrollment'],
+            ],
         ];
     }
 }
