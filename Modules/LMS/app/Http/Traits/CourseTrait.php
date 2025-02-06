@@ -976,7 +976,6 @@ trait CourseTrait
                 'statuses_alias.class_name as class_name',
                 'cover_alias.slug as cover_slug',
             ])
-            ->withCount('chapters')
             ->withCount('lessons')
             ->with(['contentTypes' => function ($query) {
                 $query->distinct();

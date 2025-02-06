@@ -398,8 +398,7 @@ class CourseController extends Controller
 
         $title = $request->name;
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs , $isTourism, $isFarm, $isAttachedToCity, $degree , $perPage , $pageNum);
-        return response() -> json($courses);
-        return  RelatedCourseListResource::collection($courses->data);
+        return  RelatedCourseListResource::collection($courses);
     }
 
     public function publishCourseDataShow($id)

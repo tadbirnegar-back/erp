@@ -97,11 +97,19 @@ class VersionManagementController extends Controller
             ->get()
             ->groupBy(fn($item) => $item->vcm_version_id)
             ->map(function ($versionGroup) {
-                return $versionGroup
+                $firstItem = $versionGroup->first();
+                $versionData = [
+                    'id' => $firstItem->version->id,
+                    'create_date' => $firstItem->version->create_date,
+                    'high_version' => $firstItem->version->high_version,
+                    'mid_version' => $firstItem->version->mid_version,
+                    'low_version' => $firstItem->version->low_version,
+                ];
+
+                $modules = $versionGroup
                     ->groupBy(fn($item) => $item->module->category->name)
                     ->map(function ($categoryGroup) {
                         $descriptions = $categoryGroup->pluck('description')->toArray();
-
                         $firstItem = $categoryGroup->first();
                         return [
                             'id' => $firstItem->id,
@@ -109,11 +117,14 @@ class VersionManagementController extends Controller
                             'vcm_version_id' => $firstItem->vcm_version_id,
                             'module_id' => $firstItem->module_id,
                             'module' => $firstItem->module,
-                            'version' => $firstItem->version,
                         ];
                     })->values();
-            })
-            ->values();
+
+                return [
+                    'version' => $versionData,
+                    'modules' => $modules
+                ];
+            })->values();
         if ($versions->isNotEmpty()) {
             foreach ($versions as $version) {
                 VcmUserVersion::create([
@@ -144,11 +155,19 @@ class VersionManagementController extends Controller
             ->get()
             ->groupBy(fn($item) => $item->vcm_version_id)
             ->map(function ($versionGroup) {
-                return $versionGroup
+                $firstItem = $versionGroup->first();
+                $versionData = [
+                    'id' => $firstItem->version->id,
+                    'create_date' => $firstItem->version->create_date,
+                    'high_version' => $firstItem->version->high_version,
+                    'mid_version' => $firstItem->version->mid_version,
+                    'low_version' => $firstItem->version->low_version,
+                ];
+
+                $modules = $versionGroup
                     ->groupBy(fn($item) => $item->module->category->name)
                     ->map(function ($categoryGroup) {
                         $descriptions = $categoryGroup->pluck('description')->toArray();
-
                         $firstItem = $categoryGroup->first();
                         return [
                             'id' => $firstItem->id,
@@ -156,11 +175,14 @@ class VersionManagementController extends Controller
                             'vcm_version_id' => $firstItem->vcm_version_id,
                             'module_id' => $firstItem->module_id,
                             'module' => $firstItem->module,
-                            'version' => $firstItem->version,
                         ];
                     })->values();
-            })
-            ->values();
+
+                return [
+                    'version' => $versionData,
+                    'modules' => $modules
+                ];
+            })->values();
 
         return response()->json($vcm);
 

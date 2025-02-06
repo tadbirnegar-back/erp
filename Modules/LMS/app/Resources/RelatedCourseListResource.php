@@ -13,9 +13,17 @@ class RelatedCourseListResource extends JsonResource
 
     public function toArray($request): array
     {
-
+        return [
+            'course_id' => $this->id,
+            'course_title' => $this->course_title,
+            'course_exp_date' => $this->course_exp_date,
+            'status_name' => $this->status_name,
+            'class_name' => $this->class_name,
+            'cover_slug' => url($this->cover_slug),
+            'lesson_count' => $this->lessons_count,
+            'distinct_content_types' => $this->contentTypes->pluck('name')->toArray(),
+        ];
     }
-
 
 
 }
