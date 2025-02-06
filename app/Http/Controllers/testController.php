@@ -11,6 +11,8 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
+use Modules\LMS\app\Models\ContentType;
+use Modules\LMS\app\Models\Course;
 
 
 class testController extends Controller
@@ -21,6 +23,8 @@ class testController extends Controller
     public function run()
     {
 
+        $data = Course::with('contentTypes')->find(134);
+        return response() -> json($data);
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);

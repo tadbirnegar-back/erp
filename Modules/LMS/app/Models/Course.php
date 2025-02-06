@@ -252,4 +252,12 @@ class Course extends Model
         return $this->hasOne(CourseTarget::class, 'course_id', 'id');
     }
 
+    public function contentTypes()
+    {
+        return $this->hasManyDeep(ContentType::class, [Chapter::class, Lesson::class , Content::class],
+            ['course_id', 'chapter_id', 'lesson_id', 'id'],
+            ['id', 'id', 'id', 'content_type_id']
+        );
+    }
+
 }
