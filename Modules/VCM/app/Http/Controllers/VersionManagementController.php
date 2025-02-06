@@ -15,6 +15,7 @@ use Modules\VCM\app\Models\VcmVersions;
 class VersionManagementController extends Controller
 {
     use DateTrait;
+
     public function storeVersion(Request $request)
     {
         try {
@@ -94,10 +95,10 @@ class VersionManagementController extends Controller
         $vcm = VcmFeatures::with('module.category', 'version')
             ->whereIn('vcm_version_id', $versions)
             ->get()
-            ->groupBy(fn($item) => $item->vcm_version_id) // Group by version ID
+            ->groupBy(fn($item) => $item->vcm_version_id)
             ->map(function ($versionGroup) {
                 return $versionGroup
-                    ->groupBy(fn($item) => $item->module->category->name) // Group by category name
+                    ->groupBy(fn($item) => $item->module->category->name)
                     ->map(function ($categoryGroup) {
                         $descriptions = $categoryGroup->pluck('description')->toArray();
 
@@ -110,32 +111,58 @@ class VersionManagementController extends Controller
                             'module' => $firstItem->module,
                             'version' => $firstItem->version,
                         ];
-                    })->values(); // Reset array keys
+                    })->values();
             })
-            ->flatten(1) // Flatten the nested structure
-            ->values(); // Reset keys to ensure a clean array output
-
+            ->values();
         if ($versions->isNotEmpty()) {
             foreach ($versions as $version) {
-                 VcmUserVersion::create([
-                     'vcm_version_id' => $version,
-                     'user_id' => $user->id,
-                 ]);
+                VcmUserVersion::create([
+                    'vcm_version_id' => $version,
+                    'user_id' => $user->id,
+                ]);
             }
             return response()->json($vcm);
         } else {
-            return response()->json(['data' => null] , 204);
+            return response()->json(['data' => null], 204);
         }
     }
-
-
-
-
-
 
     public function indexModules()
     {
         $modules = Module::with('category')->get();
         return response()->json($modules);
+    }
+
+    public function indexAllVersions()
+    {
+
+        $versions = \DB::table('vcm_versions')
+            ->pluck('id');
+
+        $vcm = VcmFeatures::with('module.category', 'version')
+            ->whereIn('vcm_version_id', $versions)
+            ->get()
+            ->groupBy(fn($item) => $item->vcm_version_id)
+            ->map(function ($versionGroup) {
+                return $versionGroup
+                    ->groupBy(fn($item) => $item->module->category->name)
+                    ->map(function ($categoryGroup) {
+                        $descriptions = $categoryGroup->pluck('description')->toArray();
+
+                        $firstItem = $categoryGroup->first();
+                        return [
+                            'id' => $firstItem->id,
+                            'description' => $descriptions,
+                            'vcm_version_id' => $firstItem->vcm_version_id,
+                            'module_id' => $firstItem->module_id,
+                            'module' => $firstItem->module,
+                            'version' => $firstItem->version,
+                        ];
+                    })->values();
+            })
+            ->values();
+
+        return response()->json($vcm);
+
     }
 }

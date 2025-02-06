@@ -879,7 +879,7 @@ trait CourseTrait
         return $course;
     }
 
-    public function getRelatedLists($title, $ounit, $level, $position, $job)
+    public function getRelatedLists($title, $ounit, $level, $position, $job , $isTourism, $isFarm, $isAttachedToCity, $degree , $perPage , $pageNum)
     {
         $ids = array_column($ounit, 'id');
         $ounitCats = array_unique(array_column($ounit, 'category_id'));
@@ -890,10 +890,6 @@ trait CourseTrait
                     ->whereRaw('status_course_alias.create_date = (SELECT MAX(create_date) FROM status_course WHERE course_id = courses.id)')
                     ->where('statuses_alias.name', '=', $this::$presenting);
             })
-            ->withCount('chapters')
-            ->withCount('chapters.lessons')
-            ->withCount('chapters.lessons.contents')
-            ->leftJoin('content_type as content_type_alias', 'content_type_alias.id', '=', 'contents_alias.content_type_id')
             ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
             ->join('course_targets as targets_alias', function ($join) use ($ids) {
                 $join->on('targets_alias.course_id', '=', 'courses.id');
@@ -903,21 +899,21 @@ trait CourseTrait
             ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
             ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
             ->where(function ($query) use ($level, $position, $job) {
-                $query->whereIn('employee_feat_alias.propertyble_id', $level)
+                $query->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
                     ->where('employee_feat_alias.propertyble_type', Level::class);
 
                 if (!empty($position)) {
                     $query->orWhere(function ($subQuery) use ($position, $level) {
-                        $subQuery->whereIn('employee_feat_alias.propertyble_id', $position)
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $position)
                             ->where('employee_feat_alias.propertyble_type', Position::class);
-                        $subQuery->orWhereIn('employee_feat_alias.propertyble_id', $level)
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
                             ->where('employee_feat_alias.propertyble_type', Level::class);
                     });
                 }
 
                 if (!empty($job)) {
                     $query->orWhere(function ($subQuery) use ($job) {
-                        $subQuery->whereIn('employee_feat_alias.propertyble_id', $job)
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $job)
                             ->where('employee_feat_alias.propertyble_type', Job::class);
                     });
                 }
@@ -942,28 +938,52 @@ trait CourseTrait
             ->leftJoin('village_ofcs as village_ofc_alias', function ($join) {
                 $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id');
             })
+            ->where(function ($query) use ($isTourism, $isFarm, $isAttachedToCity, $degree) {
+                if(!empty($isTourism)){
+                    $query->Where(function ($subQuery) use ($isTourism) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isTourism)
+                            ->where('ouc_prop_alias.column_name', DB::raw("degree"));
+                    });
+                }
+                if(!empty($isFarm)){
+                    $query->orWhere(function ($subQuery) use ($isFarm) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isFarm)
+                            ->where('ouc_prop_alias.column_name', DB::raw("isFarm"));
+                    });
+                }
+
+                if(!empty($isAttachedToCity)){
+                    $query->orWhere(function ($subQuery) use ($isAttachedToCity) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isAttachedToCity)
+                            ->where('ouc_prop_alias.column_name', DB::raw("isAttached_to_city"));
+                    });
+                }
+
+                if(!empty($degree)){
+                    $query->orWhere(function ($subQuery) use ($degree) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $degree)
+                            ->where('ouc_prop_alias.column_name', DB::raw("degree"));
+                    });
+                }
+
+                $query->orWhereNull('ouc_prop_alias.id');
+            })
             ->select([
-                'courses.id as course_id',
+                'courses.id as id',
                 'courses.title as course_title',
                 'courses.expiration_date as course_exp_date',
                 'statuses_alias.name as status_name',
                 'statuses_alias.class_name as class_name',
                 'cover_alias.slug as cover_slug',
-                'lessons_alias.id as lesson_id',
-                'content_type_alias.name as content_type_alias_name',
-                'targets_alias.id as target_id',
-                'village_ofc_alias.degree as village_degree',
-                'village_ofc_alias.isTourism as village_tourism',
-                'village_ofc_alias.isFarm as village_farm',
-                'village_ofc_alias.isAttached_to_city as village_attached_to_city',
-                'village_ofc_alias.hasLicense as village_license',
-                'ouc_prop_value.value as prop_value',
-                'ouc_prop_alias.column_name as column_name',
-                'target_ounit_cat_alias.ounit_cat_id as ounit_name',
-                'targets_alias.id as target_id'
             ])
+            ->withCount('chapters')
+            ->withCount('lessons')
+            ->with(['contentTypes' => function ($query) {
+                $query->distinct();
+            }])
             ->where('courses.title', 'like', '%' . $title . '%')
-            ->get();
+            ->distinct()
+            ->paginate($perPage, ['*'], $pageNum);
 
         return $courses;
     }

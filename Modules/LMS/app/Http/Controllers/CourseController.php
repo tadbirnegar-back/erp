@@ -328,10 +328,23 @@ class CourseController extends Controller
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $user->load([
-            'activeRecruitmentScripts.ounit.ancestorsAndSelf' => function ($query){
-                $query->whereNot('unitable_type', TownOfc::class);
+            'activeRecruitmentScripts.ounit' => function ($query){
+                $query->with(['ancestorsAndSelf' => function ($q) {
+                    $q->whereNot('unitable_type', TownOfc::class);
+                }]);
             }
         ]);
+
+        $villageOfcs = [];
+
+        foreach ($user->activeRecruitmentScripts as $script) {
+            if ($script->ounit && $script->ounit->unitable_type === VillageOFC::class) {
+                $script->ounit->load('unitable');
+                $villageOfcs[] = $script->ounit->unitable;
+            }
+        }
+
+
 
         $relatedOrgans = $user->activeRecruitmentScripts
             ->pluck('ounit.ancestorsAndSelf')
@@ -353,9 +366,10 @@ class CourseController extends Controller
 
         }
 
-// Remove duplicate entries
         $allOunits = array_unique($allData, SORT_REGULAR);
 
+
+        //Employee Features Plucks
         $levels = $user->activeRecruitmentScripts
             ->pluck('level_id')
             ->filter()
@@ -374,18 +388,18 @@ class CourseController extends Controller
             ->unique()
             ->toArray();
 
-        $title = $request->name;
-        $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
-        return response()->json($courses);
-        $paginatedCourses = new LengthAwarePaginator(
-            collect($courses)->forPage($pageNum, $perPage),
-            count($courses), // Total items in the collection (this should be the total count from your query)
-            $perPage, // Items per page
-            $pageNum, // Current page number
-            ['path' => url()->current()] // URL for pagination links
-        );
 
-        return new RelatedCourseListResource($paginatedCourses);
+        //Ounit features plucks
+        $villageOfcs = collect($villageOfcs);
+        $isTourism = $villageOfcs->pluck('isTourism')->toArray();
+        $isAttachedToCity = $villageOfcs->pluck('isAttached_to_city')->toArray();
+        $isFarm = $villageOfcs->pluck('isFarm')->toArray();
+        $degree = $villageOfcs->pluck('degree')->toArray();
+
+        $title = $request->name;
+        $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs , $isTourism, $isFarm, $isAttachedToCity, $degree , $perPage , $pageNum);
+        return response() -> json($courses);
+        return  RelatedCourseListResource::collection($courses->data);
     }
 
     public function publishCourseDataShow($id)
