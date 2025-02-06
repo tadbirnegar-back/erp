@@ -14,7 +14,9 @@ trait NewReqScriptTrait
     {
         $searchTerm = $data['name'] ?? null;
 
-        $query = OrganizationUnit::where('unitable_type', VillageOfc::class)->with('ancestors')
+        $query = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['ancestorsAndSelf' => function ($query) {
+            $query->whereNot('unitable_type', VillageOfc::class);
+        }])
             ->selectRaw('organization_units.name, MATCH(name) AGAINST(?) AS relevance', [$searchTerm])
             ->whereRaw('MATCH(name) AGAINST(?)', [$searchTerm])
             ->orWhere('name', 'LIKE', '%' . $searchTerm . '%')
