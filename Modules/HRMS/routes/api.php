@@ -66,6 +66,10 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::put('/hrm/positions/update/{id}', [PositionController::class, 'update']);
     Route::delete('/hrm/positions/delete/{id}', [PositionController::class, 'destroy']);
 
+    Route::post('/hrm/new/req/script', [NewScriptController::class, 'indexVillage']);
+    Route::post('/hrm/request-new-Supervisor', [NewScriptController::class, 'storeSarParast']);
+    Route::post('/hrm/district/list', [NewScriptController::class, 'districtsDropDown']);
+    Route::post('/hrm/request-new-heayt', [NewScriptController::class, 'storeheyat']);
 
     Route::post('/hrm/skills/add', [SkillController::class, 'store']);
     Route::post('/hrm/skills/list', [SkillController::class, 'index']);
@@ -171,9 +175,5 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::get('/hrm/rc/ptp/{id}', [RecruitmentScriptController::class, 'ptpShow']);
 
     Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
-    Route::post('/hrm/new/req/script', [NewScriptController::class, 'indexVillage']);
-    Route::post('/hrm/request-new-Supervisor', [NewScriptController::class, 'storeSarParast']);
-    Route::post('/hrm/district/list', [NewScriptController::class, 'districtsDropDown']);
-    Route::post('/hrm/request-new-heayt', [NewScriptController::class, 'storeheyat']);
 
 });
