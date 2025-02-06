@@ -10,6 +10,7 @@ use Modules\LMS\app\Http\Traits\ReportingTrait;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Option;
+use Modules\LMS\app\Resources\ReportingResource;
 
 class ReportingController extends Controller
 {
@@ -20,7 +21,7 @@ class ReportingController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index($courseID): JsonResponse
+    public function index($courseID)
     {
         $student = User::with('student')->find(68);
         $answerSheetID = AnswerSheet::joinRelationship('exam.courseExams.course')
@@ -43,8 +44,10 @@ class ReportingController extends Controller
                 })->toArray()
         ];
 
-        $first = $this->ans($answerSheetID, $student, $data, $courseID);
-        return response()->json($first);
+        $result = $this->ans($answerSheetID, $student, $data, $courseID);
+        return response()->json($result);
+        return ReportingResource::make($result);
+
     }
 
 

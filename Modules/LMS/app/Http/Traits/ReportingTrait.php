@@ -25,12 +25,10 @@ trait ReportingTrait
             ->select([
                 'answer_sheets.start_date_time',
                 'answer_sheets.student_id as studentID',
-                'answer_sheets.status_id as statusID',
                 'statuses.name as statusName',
                 'answer_sheets.score as score',
                 'answer_sheets.exam_id as examID',
                 'answer_sheets.id as answerSheetID',
-                'repositories.id as repoID',
             ])
             ->where('repositories.id', $repo)
             ->where('courses.id', $courseID)
@@ -38,16 +36,12 @@ trait ReportingTrait
             ->orderBy('answer_sheets.start_date_time', 'desc')
             ->first();
 
-        if (!$mostRecentAnswerSheet) {
-            return response()->json(['error' => 'No answer sheets found'], 404);
-        }
-
         $studentInfo = $this->student($user);
         $examId = $mostRecentAnswerSheet->examID;
         $examFinalCount = $this->examFinalCount($studentID, $courseID, $repo);
-        $examPracticeCount = $this->practicalExam($answerSheetID, $user, $data, $courseID);
+        $practicalExam = $this->practicalExam($answerSheetID, $user, $data, $courseID);
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
-        $calculate = $this->counting($optionID, $answerSheetID, $examId);
+        $calculate = $this->counting($optionID, $answerSheetID, $examId, $repo);
         $failedExams = $this->FailedExams($studentID, $courseID, $repo);
         $courseInfo = $this->courseInfo($studentID, $courseID);
 
@@ -57,29 +51,58 @@ trait ReportingTrait
             'answerSheetOfFinalExam' => $mostRecentAnswerSheet,
             'studentInfo' => $studentInfo,
             'finalExamEnrollment' => $examFinalCount,
-            'practiceExamEnrollment' => $examPracticeCount,
+            'practiceExam' => $practicalExam,
             'FailedExams' => $failedExams,
             'courseInformation' => $courseInfo,
         ];
     }
 
 
-    public function counting($optionID, $answerSheetID, $examId)
+    public function counting($optionID, $answerSheetID, $examId, $repo)
     {
-        $correctAnswers = $this->correctAnswers($optionID);
-        $falseAnswers = $this->falseAnswers($optionID);
+        $correctAnswers = $this->correct($optionID, $repo);
+        $falseAnswers = $this->false($optionID, $repo);
         $nullAnswers = $this->nullAnswers($answerSheetID);
-        $score = $this->score($examId, $optionID);
-        $questionCount = $this->questionCount($examId);
+        $questionCount = $this->questions($examId, $repo);
 
         return [
-            'score' => $score,
             'correct' => $correctAnswers,
             'false' => $falseAnswers,
             'null' => $nullAnswers,
             'allQuestions' => $questionCount,
         ];
     }
+
+    public function correct($optionID, $repo)
+    {
+        return Question::joinRelationship('repository')
+            ->joinRelationship('options')
+            ->whereIn('options.id', $optionID)
+            ->where('is_correct', 1)
+            ->where('repositories.id', $repo)
+            ->count();
+    }
+
+    public function false($optionID, $repo)
+    {
+        return Question::joinRelationship('repository')
+            ->joinRelationship('options')
+            ->whereIn('options.id', $optionID)
+            ->where('is_correct', 0)
+            ->where('repositories.id', $repo)
+            ->count();
+    }
+
+
+    public function questions($examId, $repo)
+    {
+        return Question::joinRelationship('repository')
+            ->joinRelationship('questionExams')
+            ->where('exam_id', $examId)
+            ->where('repositories.id', $repo)
+            ->count('question_id');
+    }
+
 
     public function examFinalCount($studentID, $courseID, $repo)
     {
@@ -105,10 +128,8 @@ trait ReportingTrait
             ->joinRelationship('status')
             ->joinRelationship('repository')
             ->select([
-                'answer_sheets.id as answerSheetID',
                 'exams.title as examTitle',
                 'answer_sheets.start_date_time as startTime',
-
             ])
             ->where('repositories.id', $repo)
             ->where('courses.id', $courseID)
@@ -208,14 +229,13 @@ trait ReportingTrait
 
     public function practicalExam($answerSheetID, $user, $data, $courseID)
     {
-//        $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
         $practiceRepo = Repository::where('name', RepositoryEnum::PRACTICE->value)->first()->id;
         $studentID = $user->student->id;
         $AnswerSheet = Question::joinRelationship('answers.answerSheet.exam.courseExams.course')
             ->joinRelationship('status')
             ->joinRelationship('repository')
             ->select([
-                'answer_sheets.exam_id as examID',
+//                'answer_sheets.exam_id as examID',
                 'answer_sheets.start_date_time as startTime',
                 'answer_sheets.score as score',
             ])
@@ -224,15 +244,13 @@ trait ReportingTrait
             ->where('answer_sheets.student_id', $studentID)
             ->get();
         $examId = $AnswerSheet->pluck('examID')->toArray();
-        $startDate = $AnswerSheet->pluck('startTime')->toArray();
         $examCount = $this->examPracticalCount($studentID, $courseID, $practiceRepo);
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
         $calculate = $this->count($optionID, $answerSheetID, $examId, $practiceRepo);
         return [
             'calculate' => $calculate,
             'answerSheetOfPracticalExam' => $AnswerSheet,
-            'startDate' => $startDate,
-            'ExamEnrollment' => $examCount,
+            'practicalExamEnrollment' => $examCount,
         ];
     }
 
@@ -259,11 +277,9 @@ trait ReportingTrait
         $correctAnswers = $this->correctQuestionAnswers($optionID, $practiceRepo);
         $falseAnswers = $this->inCorrectAnswers($optionID, $practiceRepo);
         $nullAnswers = $this->nullAnswers($answerSheetID);
-        $score = $this->score($examId, $optionID);
         $questionCount = $this->questionsCount($examId, $practiceRepo);
 
         return [
-            'score' => $score,
             'correct' => $correctAnswers,
             'false' => $falseAnswers,
             'null' => $nullAnswers,
