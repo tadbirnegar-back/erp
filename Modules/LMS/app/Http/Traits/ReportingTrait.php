@@ -137,8 +137,12 @@ trait ReportingTrait
             ->where('answer_sheets.status_id', $this->answerSheetDeclinedStatus()->id)
             ->distinct()
             ->get();
-
-        return $failedExams;
+        $examTitle = $failedExams->pluck('examTitle')->toArray();
+        $startTime = $failedExams->pluck('startTime')->toArray();
+        return [
+            'examTitle' => $examTitle,
+            'startTime' => $startTime
+        ];
     }
 
 
@@ -153,9 +157,7 @@ trait ReportingTrait
             ->select([
                 'courses.title as courseTitle',
             ])
-            ->withCount(['chapters', 'lessons' => function ($query) {
-                $query->where('is_completed', 1);
-            }])
+            ->withCount('chapters', 'lessons')
             ->where('courses.id', $courseID)
             ->where('answer_sheets.student_id', $studentID)
             ->distinct()
@@ -237,7 +239,6 @@ trait ReportingTrait
             ->joinRelationship('status')
             ->joinRelationship('repository')
             ->select([
-//                'answer_sheets.exam_id as examID',
                 'answer_sheets.start_date_time as startTime',
                 'answer_sheets.score as score',
             ])

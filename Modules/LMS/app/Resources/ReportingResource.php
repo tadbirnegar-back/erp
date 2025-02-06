@@ -11,7 +11,9 @@ class ReportingResource extends JsonResource
      */
     public function toArray($request): array
     {
+
         return [
+
             'studentInfo' => [
                 'name' => $this['studentInfo']['name'],
                 'poseName' => $this['studentInfo']['poseName'],
@@ -20,10 +22,13 @@ class ReportingResource extends JsonResource
             'answerSheetOfFinalExam' => [
                 'score' => $this['answerSheetOfFinalExam']['score'],
                 'statusName' => $this['answerSheetOfFinalExam']['statusName'],
-                'startTime' => $this['answerSheetOfFinalExam']['start_date_time'],
+                'startTime' => convertDateTimeGregorianToJalaliDateTime($this['answerSheetOfFinalExam']['start_date_time']),
             ],
             'finalExamEnrollment' => $this['finalExamEnrollment'],
-            'FailedExams' => $this['FailedExams'],
+            'FailedExams' => [
+                'examTitle' => $this['FailedExams']['examTitle'],
+                'startTime' => ($this['FailedExams']['startTime']->convertDateTimeGregorianToJalaliDateTime()),
+            ],
 
             'calculate' => [
                 'correct' => $this['calculate']['correct'],
