@@ -68,7 +68,7 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/hrm/new/req/script', [NewScriptController::class, 'indexVillage']);
     Route::post('/hrm/request-new-Supervisor', [NewScriptController::class, 'storeSarParast']);
-    Route::post('/hrm/district/list', [NewScriptController::class, 'districtsDropDown']);
+    Route::get('/hrm/district/list', [NewScriptController::class, 'districtsDropDown']);
     Route::post('/hrm/request-new-heayt', [NewScriptController::class, 'storeheyat']);
 
     Route::post('/hrm/skills/add', [SkillController::class, 'store']);

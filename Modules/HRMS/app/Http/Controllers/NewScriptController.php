@@ -5,7 +5,6 @@ namespace Modules\HRMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Traits\EmployeeTrait;
@@ -82,7 +81,8 @@ class NewScriptController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user = User::find(60);
             $employee = $user->employee;
             $hireType = HireType::where('title', 'تمام وقت')->first();
             $scriptType = ScriptType::where('title', 'انتصاب هیئت تطبیق')->first();
