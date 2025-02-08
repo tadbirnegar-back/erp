@@ -45,16 +45,16 @@ class ExamsController extends Controller
             $completed = $this->isCourseCompleted($student);
             $attempted = $this->hasAttemptedAndPassedExam($student, $courseId);
             if ($enrolled && !$attempted && !$completed) {
-//                $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
-//                $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
-//                $data = $this->createExam($course, $questionType, $repository);
-//                $previewData = $this->PExam($data->id, $courseId, $student);
+                $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
+                $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
+                $data = $this->createExam($course, $questionType, $repository);
+                $previewData = $this->PExam($data->id, $courseId, $student);
                 $course = Course::find($courseId);
                 $settings = Setting::whereIn('key', [
                     'question_numbers_perExam',
                     'time_per_questions',
                 ])->pluck('value', 'key');
-                $timePerQuestions = $settings->get('question_numbers_per_exam');
+                $timePerQuestions = $settings->get('time_per_questions');
                 $questionNumber = $settings->get('question_numbers_perExam');
                 $examTime = $timePerQuestions * $questionNumber * 60;
                 $courseTitle = $course->title;
@@ -64,6 +64,7 @@ class ExamsController extends Controller
                     'timePerQuestion' => $timePerQuestions.':0',
                     'exam_time' => $examTime,
                     'questionsCount' => $questionNumber,
+                    'exam_type' => 'آزمون نهایی'
                 ]);
             } else {
                 DB::rollBack();
@@ -84,16 +85,16 @@ class ExamsController extends Controller
         try {
             DB::beginTransaction();
 
-            $course = Course::find($courseId);
+            $course = Course::find($id);
             if (empty($course)) {
                 return response()->json(['message' => 'دوره‌ای با این شناسه یافت نشد.'], 404);
             }
 
 
             $student = Auth::user()->load('student');
-            $enrolled = $this->isEnrolledToDefinedCourse($courseId, $student);
+            $enrolled = $this->isEnrolledToDefinedCourse($id, $student);
             $completed = $this->isCourseCompleted($student);
-            $attempted = $this->hasAttemptedAndPassedExam($student, $courseId);
+            $attempted = $this->hasAttemptedAndPassedExam($student, $id);
             if ($enrolled && !$attempted && !$completed) {
                 $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
                 $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
