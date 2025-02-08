@@ -18,7 +18,7 @@ use Modules\VCM\app\Http\Controllers\VersionManagementController;
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/vcm/version/store' , [VersionManagementController::class , 'storeVersion']);
     Route::post('/vcm/version/list' , [VersionManagementController::class , 'indexVersion']);
-    Route::get('/vcm/modules/list' , [VersionManagementController::class , 'indexModules']);
+    Route::post('/vcm/modules/list' , [VersionManagementController::class , 'indexModules']);
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {

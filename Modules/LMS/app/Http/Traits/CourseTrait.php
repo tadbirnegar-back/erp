@@ -172,10 +172,16 @@ trait CourseTrait
             'person.avatar'
         ]);
 
-
+        $ans = Course::with('exams.answerSheets')->find($course->id);
+        $examIds = $ans->exams->pluck('id')->toArray();
+        $ansSheets = AnswerSheet::whereIn('exam_id', $examIds)
+            ->where('student_id', $user->student->id)
+            ->orderByDesc('id')
+            ->limit(1)
+            ->get();
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
-        $answerSheet = $user->answerSheets[0] ?? null;
+        $answerSheet = is_null($ansSheets->first()) ? null : $ansSheets->first();
         $student = $user->student;
 
         $AllowToDos = [
@@ -307,7 +313,6 @@ trait CourseTrait
 
         $AllowToDos['canTrainingExam'] = false;
         $AllowToDos['canReportCard'] = false;
-        $AllowToDos["canFinalExam"] = true;
 
         if ($AllowToDos['joined']) {
             $studyCount = $AdditionalData["enrolled"]->isEnrolled[0]["orderable"]["study_count"];
