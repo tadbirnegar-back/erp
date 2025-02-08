@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\CourseExam;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Question;
@@ -155,6 +156,4 @@ trait ExamsTrait
             ->firstWhere('name', '=', self::$active);
 
     }
-
-
 }
