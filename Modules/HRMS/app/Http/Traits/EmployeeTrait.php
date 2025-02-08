@@ -272,7 +272,6 @@ trait EmployeeTrait
     {
         $hireTypeId = $hireType->id;
         $scriptTypeId = $scriptType->id;
-
         $hireType->load(['scriptAgents' => function ($query) use ($scriptTypeId) {
             $query->where('script_type_id', $scriptTypeId);
 
