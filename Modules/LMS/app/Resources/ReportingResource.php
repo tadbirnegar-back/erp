@@ -27,8 +27,9 @@ class ReportingResource extends JsonResource
             'finalExamEnrollment' => $this['finalExamEnrollment'],
             'FailedExams' => [
                 'examTitle' => $this['FailedExams']['examTitle'],
-                'startTime' => ($this['FailedExams']['startTime']->convertDateTimeGregorianToJalaliDateTime()),
+                'startTime' => array_map(fn($date) => convertDateTimeGregorianToJalaliDateTime($date), $this['FailedExams']['startTime']),
             ],
+
 
             'calculate' => [
                 'correct' => $this['calculate']['correct'],

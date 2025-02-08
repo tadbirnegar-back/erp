@@ -138,6 +138,7 @@ class Course extends Model
     {
         return $this->statuses()->orderByDesc('status_course.id')->take(1);
     }
+
     public function enrolls()
     {
         return $this->hasMany(Enroll::class, 'course_id', 'id');
@@ -251,5 +252,12 @@ class Course extends Model
     {
         return $this->hasOne(CourseTarget::class, 'course_id', 'id');
     }
+
+    public function lessonStatus()
+    {
+        return $this->hasOneThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')
+            ->orderBy('status_lesson.created_date', 'desc');
+    }
+
 
 }

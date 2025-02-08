@@ -12,7 +12,7 @@ use Modules\LMS\app\Models\Repository;
 
 trait ReportingTrait
 {
-    use AnswerSheetTrait;
+    use AnswerSheetTrait, lessonTrait;
 
 
     public function ans($answerSheetID, $user, $data, $courseID)
@@ -148,6 +148,7 @@ trait ReportingTrait
 
     public function CourseInfo($studentID, $courseID)
     {
+        $statusID = $this->lessonActiveStatus()->id;
         $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO)->first()->id;
         $VidContentTypes = ContentType::where('name', ContentTypeEnum::VIDEO)->first()->id;
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
@@ -157,7 +158,8 @@ trait ReportingTrait
             ->select([
                 'courses.title as courseTitle',
             ])
-            ->withCount('chapters', 'lessons')
+            ->withCount('chapters')
+            ->withCount('lessonStatus')
             ->where('courses.id', $courseID)
             ->where('answer_sheets.student_id', $studentID)
             ->distinct()
