@@ -40,7 +40,6 @@ trait CourseTrait
         $searchTerm = $data['name'] ?? null;
 
         $questionStatus = $this->questionActiveStatus();
-        $lessonStatus = $this->lessonActiveStatus();
         $latestStatusSubquery = DB::table('status_course')
             ->select('course_id', DB::raw('MAX(create_date) as latest_status_date'))
             ->groupBy('course_id');

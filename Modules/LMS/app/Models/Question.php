@@ -101,5 +101,4 @@ class Question extends Model
         return $this->hasMany(Option::class, 'question_id', 'id');
     }
 
-
 }
