@@ -56,12 +56,6 @@ class Lesson extends Model
             ->orderByDesc('id') // Order by ID in descending order
             ->take(1); // Take the latest record
     }
-    public function oneLatestStatus()
-    {
-        return $this->hasOneThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'status_id')
-            ->orderByDesc('status_lesson.id');
-    }
-
 
     public function latestStatusFirstOne()
     {
