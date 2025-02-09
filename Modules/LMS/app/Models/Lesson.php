@@ -58,8 +58,8 @@ class Lesson extends Model
     }
     public function oneLatestStatus()
     {
-        return $this->hasManyThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')
-            ->latest('status_lesson.id');
+        return $this->hasOneThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'status_id')
+            ->orderByDesc('status_lesson.id');
     }
 
 
