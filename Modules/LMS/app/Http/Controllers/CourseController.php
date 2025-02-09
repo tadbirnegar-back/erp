@@ -153,9 +153,7 @@ class CourseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
-        $response = new CourseListResource($result);
-
-        return $response;
+        return CourseListResource::collection($result);
     }
 
 
@@ -328,7 +326,7 @@ class CourseController extends Controller
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $user->load([
-            'activeRecruitmentScripts.ounit' => function ($query){
+            'activeRecruitmentScripts.ounit' => function ($query) {
                 $query->with(['ancestorsAndSelf' => function ($q) {
                     $q->whereNot('unitable_type', TownOfc::class);
                 }]);
@@ -345,7 +343,6 @@ class CourseController extends Controller
         }
 
 
-
         $relatedOrgans = $user->activeRecruitmentScripts
             ->pluck('ounit.ancestorsAndSelf')
             ->flatten(1)
@@ -356,13 +353,13 @@ class CourseController extends Controller
         $allData = [];
 
         foreach ($relatedOrgans as $unit) {
-                $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
-                if ($ancestorCategoryId) {
-                    $allData[] = [
-                        'id' => $unit['id'],
-                        'category_id' => $ancestorCategoryId,
-                    ];
-                }
+            $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
+            if ($ancestorCategoryId) {
+                $allData[] = [
+                    'id' => $unit['id'],
+                    'category_id' => $ancestorCategoryId,
+                ];
+            }
 
         }
 
@@ -397,10 +394,9 @@ class CourseController extends Controller
         $degree = $villageOfcs->pluck('degree')->toArray();
 
         $title = $request->name;
-        $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs , $isTourism, $isFarm, $isAttachedToCity, $degree , $perPage , $pageNum);
-        return  RelatedCourseListResource::collection($courses);
+        $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
+        return RelatedCourseListResource::collection($courses);
     }
-
     public function publishCourseDataShow($id)
     {
         $data = $this->showCourseDataForEnteshareDore($id);

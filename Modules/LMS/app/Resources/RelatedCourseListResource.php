@@ -20,7 +20,7 @@ class RelatedCourseListResource extends JsonResource
             'status_name' => $this->status_name,
             'class_name' => $this->class_name,
             'cover_slug' => url($this->cover_slug),
-            'lesson_count' => $this->lessons_count,
+            'lesson_count' => $this->all_active_lessons_count,
             'distinct_content_types' => $this->contentTypes->pluck('name')->toArray(),
         ];
     }

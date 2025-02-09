@@ -40,49 +40,38 @@ trait CourseTrait
         $searchTerm = $data['name'] ?? null;
 
         $questionStatus = $this->questionActiveStatus();
-        $latestStatusSubquery = DB::table('status_course')
-            ->select('course_id', DB::raw('MAX(create_date) as latest_status_date'))
-            ->groupBy('course_id');
-
-
         $query = Course::query()
             ->joinRelationship('cover')
-            ->leftJoinRelationship('chapters.lessons.lessonStatus', [
-                'lessonStatus' => fn($join) => $join->whereRaw('status_lesson.create_date = (SELECT MAX(create_date) FROM status_lesson WHERE lesson_id = lessons.id)')
-                    ->where('statuses.name', LessonStatusEnum::ACTIVE->value)
-            ])
-            ->leftJoinRelationship('chapters.lessons.questions', [
-                'questions' => fn($join) => $join->on('questions.status_id', DB::raw($questionStatus->id))
-            ])
-            ->joinSub($latestStatusSubquery, 'latest_status', function ($join) {
-                $join->on('courses.id', '=', 'latest_status.course_id');
-            })
-            ->join('status_course as sc', function ($join) {
-                $join->on('sc.course_id', '=', 'courses.id')
-                    ->on('sc.create_date', '=', 'latest_status.latest_status_date');
-            })
-            ->join('statuses as s', 's.id', '=', 'sc.status_id')
-            ->whereIn('s.name', [
-                $this::$presenting,
-                $this::$pishnevis,
-                $this::$waitToPresent,
-            ]);
+            ->withCount('allActiveLessons')
+            ->withCount('chapters')
+            ->withCount(['questions' => function ($query) use ($questionStatus) {
+                $query->where('status_id', $questionStatus->id);
+            }])
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+                    ->on('status_course.id', '=', \DB::raw('(
+                    SELECT id
+                    FROM status_course AS cs
+                    WHERE cs.course_id = courses.id
+                    ORDER BY cs.create_date DESC
+                    LIMIT 1
+                )'))
+                    ->whereIn('statuses.name', [$this::$presenting, $this::$waitToPresent, $this::$pishnevis]);
+            }]);
         $query->addSelect([
             'courses.id as course_id',
             'courses.title',
             'courses.cover_id',
             'files.slug as cover_slug',
-            'chapters.id as chapter_id',
-            'lessons.id as lesson_id',
-            'questions.id as question_id',
-            's.name as latest_status_name'
+            'statuses.name as status_name',
+            'statuses.class_name as status_class_name',
         ]);
 
         $query->when($searchTerm, function ($query) use ($searchTerm) {
             $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
                 ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
         });
-        return $query->get();
+        return $query->paginate($perPage);
     }
 
 
@@ -976,7 +965,7 @@ trait CourseTrait
                 'statuses_alias.class_name as class_name',
                 'cover_alias.slug as cover_slug',
             ])
-            ->withCount('lessons')
+            ->withCount('allActiveLessons')
             ->with(['contentTypes' => function ($query) {
                 $query->distinct();
             }])

@@ -9,6 +9,7 @@ use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Observers\CourseObserver;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\PayStream\app\Models\Order;
@@ -138,6 +139,7 @@ class Course extends Model
     {
         return $this->statuses()->orderByDesc('status_course.id')->take(1);
     }
+
     public function enrolls()
     {
         return $this->hasMany(Enroll::class, 'course_id', 'id');
@@ -254,10 +256,35 @@ class Course extends Model
 
     public function contentTypes()
     {
-        return $this->hasManyDeep(ContentType::class, [Chapter::class, Lesson::class , Content::class],
+        return $this->hasManyDeep(ContentType::class, [Chapter::class, Lesson::class, Content::class],
             ['course_id', 'chapter_id', 'lesson_id', 'id'],
             ['id', 'id', 'id', 'content_type_id']
         );
+    }
+
+    public function latestStatuses()
+    {
+        return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->orderByDesc('status_course.id')->take(1);
+    }
+
+    public function allLessons()
+    {
+        return $this->hasManyThrough(
+            Lesson::class,
+            Chapter::class,
+            'course_id',
+            'chapter_id',
+            'id',
+            'id'
+        );
+    }
+
+    public function allActiveLessons()
+    {
+        return $this->allLessons()->whereHas('oneLatestStatus', function ($query) {
+            $query->where('name', LessonStatusEnum::ACTIVE->value);
+        });
     }
 
 }
