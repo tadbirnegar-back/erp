@@ -16,7 +16,7 @@ class RelatedCourseListResource extends JsonResource
         return [
             'course_id' => $this->id,
             'course_title' => $this->course_title,
-            'course_exp_date' => $this->course_exp_date,
+            'course_exp_date' => $this->course_exp_date ? Carbon::parse($this->course_exp_date)->diffInDays(Carbon::now()) : null,
             'status_name' => $this->status_name,
             'class_name' => $this->class_name,
             'cover_slug' => url($this->cover_slug),

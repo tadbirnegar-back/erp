@@ -24,7 +24,7 @@ use Modules\StatusMS\app\Models\Status;
 
 trait CourseTrait
 {
-    use AnswerSheetTrait, LessonTrait, OrderTrait;
+    use AnswerSheetTrait, LessonTrait, OrderTrait, QuestionsTrait;
 
     private static string $presenting = CourseStatusEnum::PRESENTING->value;
     private static string $ended = CourseStatusEnum::ENDED->value;
@@ -33,14 +33,14 @@ trait CourseTrait
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
-    private static string $active = QuestionsEnum::ACTIVE->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
-        $status = Status::where('name', $this::$active)->firstOrFail();
 
+        $questionStatus = $this->questionActiveStatus();
+        $lessonStatus = $this->lessonActiveStatus();
         $latestStatusSubquery = DB::table('status_course')
             ->select('course_id', DB::raw('MAX(create_date) as latest_status_date'))
             ->groupBy('course_id');
@@ -49,10 +49,11 @@ trait CourseTrait
         $query = Course::query()
             ->joinRelationship('cover')
             ->leftJoinRelationship('chapters.lessons.lessonStatus', [
-                'lessonStatus' => fn($join) => $join->on('status_lesson.status_id', DB::raw($status->id))
+                'lessonStatus' => fn($join) => $join->whereRaw('status_lesson.create_date = (SELECT MAX(create_date) FROM status_lesson WHERE lesson_id = lessons.id)')
+                    ->where('statuses.name', LessonStatusEnum::ACTIVE->value)
             ])
             ->leftJoinRelationship('chapters.lessons.questions', [
-                'questions' => fn($join) => $join->on('questions.status_id', DB::raw($status->id))
+                'questions' => fn($join) => $join->on('questions.status_id', DB::raw($questionStatus->id))
             ])
             ->joinSub($latestStatusSubquery, 'latest_status', function ($join) {
                 $join->on('courses.id', '=', 'latest_status.course_id');
@@ -552,7 +553,6 @@ trait CourseTrait
 
         $activeLessons = collect($groupedData)
             ->flatMap(fn($chapter) => $chapter['lessons'])
-
             ->filter(fn($lesson) => $lesson['status'] == LessonStatusEnum::ACTIVE->value && $lesson['isComplete'] === null)
             ->pluck('id');
 
@@ -585,8 +585,9 @@ trait CourseTrait
     public function checkLessonStatus($id)
     {
         $lesson = Lesson::with('latestStatus')->find($id);
-        return $lesson -> latestStatus;
+        return $lesson->latestStatus;
     }
+
     public function showCourseForUpdate($id)
     {
         $query = Course::query()
@@ -879,7 +880,7 @@ trait CourseTrait
         return $course;
     }
 
-    public function getRelatedLists($title, $ounit, $level, $position, $job , $isTourism, $isFarm, $isAttachedToCity, $degree , $perPage , $pageNum)
+    public function getRelatedLists($title, $ounit, $level, $position, $job, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum)
     {
         $ids = array_column($ounit, 'id');
         $ounitCats = array_unique(array_column($ounit, 'category_id'));
@@ -939,27 +940,27 @@ trait CourseTrait
                 $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id');
             })
             ->where(function ($query) use ($isTourism, $isFarm, $isAttachedToCity, $degree) {
-                if(!empty($isTourism)){
+                if (!empty($isTourism)) {
                     $query->Where(function ($subQuery) use ($isTourism) {
                         $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isTourism)
                             ->where('ouc_prop_alias.column_name', DB::raw("degree"));
                     });
                 }
-                if(!empty($isFarm)){
+                if (!empty($isFarm)) {
                     $query->orWhere(function ($subQuery) use ($isFarm) {
                         $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isFarm)
                             ->where('ouc_prop_alias.column_name', DB::raw("isFarm"));
                     });
                 }
 
-                if(!empty($isAttachedToCity)){
+                if (!empty($isAttachedToCity)) {
                     $query->orWhere(function ($subQuery) use ($isAttachedToCity) {
                         $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isAttachedToCity)
                             ->where('ouc_prop_alias.column_name', DB::raw("isAttached_to_city"));
                     });
                 }
 
-                if(!empty($degree)){
+                if (!empty($degree)) {
                     $query->orWhere(function ($subQuery) use ($degree) {
                         $subQuery->whereIntegerInRaw('ouc_prop_value.value', $degree)
                             ->where('ouc_prop_alias.column_name', DB::raw("degree"));

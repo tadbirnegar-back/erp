@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\LMS\app\Http\Traits\questionsTrait;
+use Modules\LMS\app\Http\Traits\QuestionsTrait;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
 use Modules\LMS\app\Resources\QuestionManagementResource;
@@ -14,7 +14,7 @@ use Modules\LMS\app\Resources\QuestionResource;
 
 class QuestionsController extends Controller
 {
-    use questionsTrait;
+    use QuestionsTrait;
 
     public array $data = [];
 
