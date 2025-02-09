@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\ContentTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
@@ -36,14 +37,14 @@ trait ReportingTrait
             ->orderBy('answer_sheets.start_date_time', 'desc')
             ->first();
 
-        $studentInfo = $this->student($user);
+        $studentInfo = $this->studentInfo($user);
         $examId = $mostRecentAnswerSheet->examID;
         $examFinalCount = $this->examFinalCount($studentID, $courseID, $repo);
         $practicalExam = $this->practicalExam($answerSheetID, $user, $data, $courseID);
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
         $calculate = $this->counting($optionID, $answerSheetID, $examId, $repo);
         $failedExams = $this->FailedExams($studentID, $courseID, $repo);
-        $courseInfo = $this->courseInfo($studentID, $courseID);
+        $courseInfo = $this->courseInfo($studentID, $courseID, $user);
 
 
         return [
@@ -54,6 +55,19 @@ trait ReportingTrait
             'practiceExam' => $practicalExam,
             'FailedExams' => $failedExams,
             'courseInformation' => $courseInfo,
+        ];
+    }
+
+    public function studentInfo($student)
+    {
+        $query = User::with(['person.avatar', 'activeRecruitmentScripts.position'])
+            ->where('users.id', $student->id)
+            ->first();
+
+        return [
+            'name' => $query->person->display_name ?? null,
+            'avatar' => $query->person->avatar->slug ?? null,
+            'poseName' => $query->activeRecruitmentScripts->first()->position->name ?? null,
         ];
     }
 
@@ -125,10 +139,10 @@ trait ReportingTrait
     public function FailedExams($studentID, $courseID, $repo)
     {
         $failedExams = Question::joinRelationship('answers.answerSheet.exam.courseExams.course')
-            ->joinRelationship('status')
             ->joinRelationship('repository')
             ->select([
                 'exams.title as examTitle',
+                'exams.id as examID',
                 'answer_sheets.start_date_time as startTime',
             ])
             ->where('repositories.id', $repo)
@@ -137,17 +151,16 @@ trait ReportingTrait
             ->where('answer_sheets.status_id', $this->answerSheetDeclinedStatus()->id)
             ->distinct()
             ->get();
-        $examTitle = $failedExams->pluck('examTitle')->toArray();
-        $startTime = $failedExams->pluck('startTime')->toArray();
-        return [
-            'examTitle' => $examTitle,
-            'startTime' => $startTime
-        ];
+
+        return $failedExams;
+
     }
 
 
-    public function CourseInfo($studentID, $courseID)
+    public function CourseInfo($studentID, $courseID, $user)
     {
+//        return Lesson::with('oneLatestStatus')->find(49);
+//        return Course::with('allActiveLessons')->find($courseID);
         $statusID = $this->lessonActiveStatus()->id;
         $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO)->first()->id;
         $VidContentTypes = ContentType::where('name', ContentTypeEnum::VIDEO)->first()->id;
@@ -159,7 +172,7 @@ trait ReportingTrait
                 'courses.title as courseTitle',
             ])
             ->withCount('chapters')
-            ->withCount('lessonStatus')
+            ->withCount('allActiveLessons')
             ->where('courses.id', $courseID)
             ->where('answer_sheets.student_id', $studentID)
             ->distinct()
@@ -171,13 +184,30 @@ trait ReportingTrait
         $sumVideo = $durationVideo->sum('total');
         $totalDuration = $sumAudio + $sumVideo;
         $completionPercentage = $this->completionPercentage($courseID, $studentID);
+        $activeLessonsCount = $this->ActiveLessonsCount($courseID);
+
+        $enrolled = $this->enrolled($courseID, $user);
+        return [
+            'course' => $course->first(),
+            'durationOfAudio' => $durationAudio->first(),
+            'durationOfVideo' => $durationVideo->first(),
+            'totalDuration' => $totalDuration,
+            'completionPercentage' => $completionPercentage,
+            'activeLessonsCount' => $activeLessonsCount,
+            'erolled' => $enrolled,
+        ];
+    }
+
+    public function enrolled($courseID, $user)
+    {
+        $user->load(['enrolls' => function ($q) use ($courseID) {
+            $q->where('course_id', $courseID);
+        }]);
+
+        $studyCount = $user->enrolls->sum('study_count');
 
         return [
-            'course' => $course,
-            'durationOfAudio' => $durationAudio,
-            'durationOfVideo' => $durationVideo,
-            'totalDuration' => $totalDuration / 60,
-            'completionPercentage' => $completionPercentage,
+            'study_count' => $studyCount,
         ];
     }
 
@@ -199,9 +229,9 @@ trait ReportingTrait
             ->get();
         return $course->map(function ($item) {
             return [
-                'duration' => $item->duration / 60,
-                'consume_round' => $item->consume_round / 60,
-                'total' => (($item->duration * $item->consume_round) + $item->consume_data) / 60,
+                'duration' => $item->duration,
+                'consume_round' => $item->consume_round,
+                'total' => (($item->duration * $item->consume_round) + $item->consume_data),
             ];
         });
 
@@ -225,9 +255,9 @@ trait ReportingTrait
             ->get();
         return $course->map(function ($item) {
             return [
-                'duration' => $item->duration / 60,
-                'consume_round' => $item->consume_round / 60,
-                'total' => (($item->duration * $item->consume_round) + $item->consume_data) / 60,
+                'duration' => $item->duration,
+                'consume_round' => $item->consume_round,
+                'total' => (($item->duration * $item->consume_round) + $item->consume_data),
             ];
         });
 
@@ -249,6 +279,7 @@ trait ReportingTrait
             ->where('answer_sheets.student_id', $studentID)
             ->get();
         $examId = $AnswerSheet->pluck('examID')->toArray();
+        $score = $AnswerSheet->pluck('score')->toArray();
         $examCount = $this->examPracticalCount($studentID, $courseID, $practiceRepo);
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
         $calculate = $this->count($optionID, $answerSheetID, $examId, $practiceRepo);
@@ -256,6 +287,7 @@ trait ReportingTrait
             'calculate' => $calculate,
             'answerSheetOfPracticalExam' => $AnswerSheet,
             'practicalExamEnrollment' => $examCount,
+            'scoreAverage' => count($score) > 0 ? array_sum($score) / count($score) : 0,
         ];
     }
 
@@ -334,6 +366,17 @@ trait ReportingTrait
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
 
         return $completionPercentage;
+    }
+
+    public function ActiveLessonsCount($courseID)
+    {
+        $statusID = $this->lessonActiveStatus()->id;
+
+        return Course::joinRelationship('chapters.lessons.latestStatus')
+            ->where('status_lesson.status_id', $statusID)
+            ->whereRaw('status_lesson.created_date = (SELECT MAX(sl.created_date) FROM status_lesson sl WHERE sl.lesson_id = lessons.id)')
+            ->where('courses.id', $courseID)
+            ->count();
     }
 
 }

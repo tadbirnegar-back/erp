@@ -253,11 +253,35 @@ class Course extends Model
         return $this->hasOne(CourseTarget::class, 'course_id', 'id');
     }
 
-    public function lessonStatus()
+    public function contentTypes()
     {
-        return $this->hasOneThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')
-            ->orderBy('status_lesson.created_date', 'desc');
+        return $this->hasManyDeep(ContentType::class, [Chapter::class, Lesson::class, Content::class],
+            ['course_id', 'chapter_id', 'lesson_id', 'id'],
+            ['id', 'id', 'id', 'content_type_id']
+        );
     }
 
+    public function latestStatuses()
+    {
+        return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->orderByDesc('status_course.id')->take(1);
+    }
+
+    public function allLessons()
+    {
+        return $this->hasManyThrough(
+            Lesson::class,
+            Chapter::class,
+            'course_id',
+            'chapter_id',
+            'id',
+            'id'
+        );
+    }
+
+    public function allActiveLessons()
+    {
+        return $this->allLessons()->with('oneLatestStatus');
+    }
 
 }

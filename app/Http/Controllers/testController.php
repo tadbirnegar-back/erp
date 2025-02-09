@@ -10,19 +10,24 @@ use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
-use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Http\Traits\LessonTrait;
+use Modules\LMS\app\Models\Course;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
-    use ExamsTrait;
+    use ExamsTrait, LessonTrait;
 
     public function run()
     {
+        $statusID = $this->lessonActiveStatus()->id;
+        Course::joinRelationship('lessons.lessonStatus')
+            ->select(['status_lesson.status_id'])
+            ->where('status_lesson.status_id', $statusID)
+            ->where('courses.id', 106)
+            ->count();
 
-        $ans = AnswerSheet::find(93);
-        return response()->json($ans);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
@@ -259,7 +264,6 @@ class testController extends Controller
 //            $a
 //        );
 
-        return $query->where('exams.id', 1)->get();
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //
