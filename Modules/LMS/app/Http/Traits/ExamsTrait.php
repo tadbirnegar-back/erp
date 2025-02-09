@@ -14,8 +14,8 @@ use Modules\SettingsMS\app\Models\Setting;
 
 trait ExamsTrait
 {
-    private static string $active = QuestionsEnum::ACTIVE->value;
 
+    use QuestionsTrait;
 
     public function examPreview($id)
     {
@@ -57,7 +57,7 @@ trait ExamsTrait
 
     public function DataPreparation($exam, $id)
     {
-        $status = $this->activeStatus()->id;
+        $status = $this->questionActiveStatus()->id;
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
@@ -147,13 +147,6 @@ trait ExamsTrait
 
         return $query->get();
 
-
-    }
-
-    public function activeStatus()
-    {
-        return Question::GetAllStatuses()
-            ->firstWhere('name', '=', self::$active);
 
     }
 }
