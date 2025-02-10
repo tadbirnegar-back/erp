@@ -2,8 +2,11 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Question;
+use Modules\LMS\app\Models\Repository;
 
 trait CourseReportTrait
 {
@@ -92,4 +95,24 @@ trait CourseReportTrait
 
     }
 
+    public function ans($courseID)
+    {
+        $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
+        return Question::joinRelationship('answers.answerSheet.status')
+            ->joinRelationship('answers.answerSheet.exam.courseExams.course')
+            ->joinRelationship('repository')
+            ->select([
+                'answer_sheets.start_date_time',
+                'answer_sheets.student_id as studentID',
+                'statuses.name as statusName',
+                'answer_sheets.score as score',
+                'answer_sheets.exam_id as examID',
+                'answer_sheets.id as answerSheetID',
+            ])
+            ->where('repositories.id', $repo)
+            ->where('courses.id', $courseID)
+            ->orderBy('answer_sheets.start_date_time', 'desc')
+            ->first();
+//        $scoreAvrage=
+    }
 }
