@@ -13,7 +13,7 @@ use Modules\LMS\app\Models\Repository;
 
 trait ReportingTrait
 {
-    use AnswerSheetTrait, lessonTrait;
+    use AnswerSheetTrait, LessonTrait;
 
 
     public function ans($answerSheetID, $user, $data, $courseID)
@@ -36,8 +36,20 @@ trait ReportingTrait
             ->where('answer_sheets.student_id', $studentID)
             ->orderBy('answer_sheets.start_date_time', 'desc')
             ->first();
-
         $studentInfo = $this->studentInfo($user);
+
+        if (!$mostRecentAnswerSheet) {
+            return [
+                'message' => 'هیچ آزمونی برای این دانشجو یافت نشد.',
+                'answerSheetOfFinalExam' => null,
+                'studentInfo' => $studentInfo,
+                'finalExamEnrollment' => 0,
+                'practiceExam' => $this->practicalExam($answerSheetID, $user, $data, $courseID),
+                'FailedExams' => [],
+                'courseInformation' => $this->courseInfo($studentID, $courseID, $user),
+            ];
+        }
+
         $examId = $mostRecentAnswerSheet->examID;
         $examFinalCount = $this->examFinalCount($studentID, $courseID, $repo);
         $practicalExam = $this->practicalExam($answerSheetID, $user, $data, $courseID);
@@ -159,14 +171,10 @@ trait ReportingTrait
 
     public function CourseInfo($studentID, $courseID, $user)
     {
-//        return Lesson::with('oneLatestStatus')->find(49);
-//        return Course::with('allActiveLessons')->find($courseID);
-        $statusID = $this->lessonActiveStatus()->id;
         $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO)->first()->id;
         $VidContentTypes = ContentType::where('name', ContentTypeEnum::VIDEO)->first()->id;
-        $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
-            ->joinRelationship('chapters.lessons.contents.file')
-            ->joinRelationship('courseExams.exams.answerSheets')
+        $course = Course::joinRelationship('chapters.lessons.contents.file')
+            ->leftJoinRelationship('courseExams.exams.answerSheets')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->select([
                 'courses.title as courseTitle',
@@ -174,9 +182,9 @@ trait ReportingTrait
             ->withCount('chapters')
             ->withCount('allActiveLessons')
             ->where('courses.id', $courseID)
-            ->where('answer_sheets.student_id', $studentID)
             ->distinct()
             ->get();
+
 
         $durationAudio = $this->AudioDuration($studentID, $courseID, $contentTypes);
         $durationVideo = $this->VideoDuration($studentID, $courseID, $VidContentTypes);
@@ -184,16 +192,15 @@ trait ReportingTrait
         $sumVideo = $durationVideo->sum('total');
         $totalDuration = $sumAudio + $sumVideo;
         $completionPercentage = $this->completionPercentage($courseID, $studentID);
-        $activeLessonsCount = $this->ActiveLessonsCount($courseID);
 
         $enrolled = $this->enrolled($courseID, $user);
+
         return [
             'course' => $course->first(),
             'durationOfAudio' => $durationAudio->first(),
             'durationOfVideo' => $durationVideo->first(),
             'totalDuration' => $totalDuration,
             'completionPercentage' => $completionPercentage,
-            'activeLessonsCount' => $activeLessonsCount,
             'erolled' => $enrolled,
         ];
     }
@@ -216,14 +223,14 @@ trait ReportingTrait
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
-            ->joinRelationship('courseExams.exams.answerSheets')
+            ->leftJoinRelationship('courseExams.exams.answerSheets')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
                 'content_consume_log.consume_data as consume_data',
             ])
             ->where('courses.id', $courseID)
-            ->where('answer_sheets.student_id', $studentID)
+            ->where('content_consume_log.student_id', $studentID)
             ->where('content_type.id', $contentTypes)
             ->distinct()
             ->get();
@@ -242,17 +249,18 @@ trait ReportingTrait
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
-            ->joinRelationship('courseExams.exams.answerSheets')
+            ->leftJoinRelationship('courseExams.exams.answerSheets')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
                 'content_consume_log.consume_data as consume_data',
             ])
             ->where('courses.id', $courseID)
-            ->where('answer_sheets.student_id', $studentID)
+            ->where('content_consume_log.student_id', $studentID)
             ->where('content_type.id', $VidContentTypes)
             ->distinct()
             ->get();
+
         return $course->map(function ($item) {
             return [
                 'duration' => $item->duration,
@@ -366,17 +374,6 @@ trait ReportingTrait
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
 
         return $completionPercentage;
-    }
-
-    public function ActiveLessonsCount($courseID)
-    {
-        $statusID = $this->lessonActiveStatus()->id;
-
-        return Course::joinRelationship('chapters.lessons.latestStatus')
-            ->where('status_lesson.status_id', $statusID)
-            ->whereRaw('status_lesson.created_date = (SELECT MAX(sl.created_date) FROM status_lesson sl WHERE sl.lesson_id = lessons.id)')
-            ->where('courses.id', $courseID)
-            ->count();
     }
 
 }

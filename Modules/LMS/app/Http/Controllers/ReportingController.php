@@ -3,9 +3,9 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\ReportingTrait;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
@@ -23,16 +23,17 @@ class ReportingController extends Controller
      */
     public function index($courseID)
     {
-//        $student = Auth::user()->load('student');
-        $student = User::with('student')->find(68);
+
+        $student = Auth::user()->load('student');
+        //
+        if (!$courseID) {
+            return response()->json(['message' => 'No Course found'], 403);
+        }
+//        $student = User::with('student')->find(68);
         $answerSheetID = AnswerSheet::joinRelationship('exam.courseExams.course')
             ->orderBy('answer_sheets.start_date_time', 'desc')
             ->value('answer_sheets.id');
 
-
-        if (!$answerSheetID) {
-            return response()->json(['message' => 'No Answer Sheet found'], 404);
-        }
 
         $data = [
             'questions' => Answers::where('answer_sheet_id', $answerSheetID)
@@ -46,7 +47,7 @@ class ReportingController extends Controller
         ];
 
         $result = $this->ans($answerSheetID, $student, $data, $courseID);
-//        return response()->json($result);
+
         return ReportingResource::make($result);
 
     }

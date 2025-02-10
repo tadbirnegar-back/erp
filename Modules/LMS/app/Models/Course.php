@@ -9,6 +9,7 @@ use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Observers\CourseObserver;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\PayStream\app\Models\Order;
@@ -281,7 +282,19 @@ class Course extends Model
 
     public function allActiveLessons()
     {
-        return $this->allLessons()->with('oneLatestStatus');
+        return $this->lessons()->whereExists(function ($query) {
+            $query->select(\DB::raw(1))
+                ->from('status_lesson as ls')
+                ->join('statuses as s', 'ls.status_id', '=', 's.id')
+                ->whereColumn('ls.lesson_id', 'lessons.id')
+                ->where('s.name', LessonStatusEnum::ACTIVE->value)
+                ->where('ls.created_date', function ($subQuery) {
+                    $subQuery->selectRaw('MAX(created_date)')
+                        ->from('status_lesson as sub_ls')
+                        ->whereColumn('sub_ls.lesson_id', 'ls.lesson_id');
+                });
+        });
     }
+
 
 }
