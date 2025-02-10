@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
@@ -129,6 +130,7 @@ class CourseController extends Controller
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
 
+            return response()->json($componentsToRenderWithData);
 
             $componentsToRenderWithData['course']->chapters->each(function ($chapter) {
                 $chapter->setRelation(
@@ -323,8 +325,12 @@ class CourseController extends Controller
     public function relatedCoursesList(Request $request)
     {
         $user = Auth::user();
-        $perPage = $data['perPage'] ?? 10;
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 50;
         $pageNum = $data['pageNum'] ?? 1;
+
+        Log::info($pageNum);
+
         $user->load([
             'activeRecruitmentScripts.ounit' => function ($query) {
                 $query->with(['ancestorsAndSelf' => function ($q) {

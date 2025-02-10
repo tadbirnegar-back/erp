@@ -161,13 +161,17 @@ trait CourseTrait
             'person.avatar'
         ]);
 
-        $ans = Course::with('exams.answerSheets')->find($course->id);
-        $examIds = $ans->exams->pluck('id')->toArray();
-        $ansSheets = AnswerSheet::whereIn('exam_id', $examIds)
-            ->where('student_id', $user->student->id)
-            ->orderByDesc('id')
-            ->limit(1)
-            ->get();
+        if($user->student == null){
+            $ansSheets = collect();
+        }else{
+            $ans = Course::with('exams.answerSheets')->find($course->id);
+            $examIds = $ans->exams->pluck('id')->toArray();
+            $ansSheets = AnswerSheet::whereIn('exam_id', $examIds)
+                ->where('student_id', $user->student->id)
+                ->orderByDesc('id')
+                ->limit(1)
+                ->get();
+        }
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
         $answerSheet = is_null($ansSheets->first()) ? null : $ansSheets->first();
@@ -269,12 +273,12 @@ trait CourseTrait
         if ($isJoined) {
             $AllowToDos['joined'] = true;
             $AdditionalData["percentage"] = $this->calculateLessonCompletion($componentsWithData);
+            $AllowToDos['canReportCard'] = true;
 
             if ($course->latestStatus->name == $this::$presenting) {
                 $AllowToDos['canRead'] = true;
                 $AllowToDos['joined'] = true;
                 $AllowToDos['canTrainingExam'] = true;
-                $AllowToDos['canReportCard'] = true;
 
                 if ($AdditionalData["percentage"]["completion_percentage"] == 100) {
                     $AllowToDos["canFinalExam"] = true;
@@ -301,7 +305,6 @@ trait CourseTrait
         }
 
         $AllowToDos['canTrainingExam'] = false;
-        $AllowToDos['canReportCard'] = false;
 
         if ($AllowToDos['joined']) {
             $studyCount = $AdditionalData["enrolled"]->isEnrolled[0]["orderable"]["study_count"];
@@ -970,8 +973,8 @@ trait CourseTrait
                 $query->distinct();
             }])
             ->where('courses.title', 'like', '%' . $title . '%')
-            ->distinct()
-            ->paginate($perPage, ['*'], $pageNum);
+            ->distinct('courses.id')
+            ->paginate( $perPage,  $columns = ['*'],  $pageName = 'page',  $pageNum);
 
         return $courses;
     }
