@@ -129,7 +129,6 @@ class CourseController extends Controller
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
 
-
             $componentsToRenderWithData['course']->chapters->each(function ($chapter) {
                 $chapter->setRelation(
                     'lessons',
@@ -323,8 +322,10 @@ class CourseController extends Controller
     public function relatedCoursesList(Request $request)
     {
         $user = Auth::user();
-        $perPage = $data['perPage'] ?? 10;
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 50;
         $pageNum = $data['pageNum'] ?? 1;
+
         $user->load([
             'activeRecruitmentScripts.ounit' => function ($query) {
                 $query->with(['ancestorsAndSelf' => function ($q) {
