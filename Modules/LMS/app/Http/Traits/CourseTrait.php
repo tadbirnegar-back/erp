@@ -146,7 +146,7 @@ trait CourseTrait
         $course->is_required = $data['isRequired'] ?? $course->is_required;
         $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null;
         $course->expiration_date = isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null;
-        $course->preview_video_id = $data['previewVideoID'] ?? $course->preview_video_id;
+        $course->preview_video_id = $data['previewVideoID'] == 'null' ? null : (isset($data['previewVideoID']) ? $data['previewVideoID'] : $course->preview_video_id);
         $course->cover_id = $data['coverID'] ?? $course->cover_id;
         $course->save();
         return $course;
