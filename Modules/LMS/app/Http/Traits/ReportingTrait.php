@@ -3,9 +3,11 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\AAA\app\Models\User;
+use Modules\LMS\app\Http\Enums\ContentStatusEnum;
 use Modules\LMS\app\Http\Enums\ContentTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Question;
@@ -220,6 +222,7 @@ trait ReportingTrait
 
     public function AudioDuration($studentID, $courseID, $contentTypes)
     {
+        $contentStatus = optional(Content::where('status_id', ContentStatusEnum::ACTIVE->value)->first())->status_id;
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
@@ -232,6 +235,7 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->where('content_consume_log.student_id', $studentID)
             ->where('content_type.id', $contentTypes)
+            ->where('contents.status_id', $contentStatus)
             ->distinct()
             ->get();
         return $course->map(function ($item) {
@@ -246,6 +250,7 @@ trait ReportingTrait
 
     public function VideoDuration($studentID, $courseID, $VidContentTypes)
     {
+        $contentStatus = optional(Content::where('status_id', ContentStatusEnum::ACTIVE->value)->first())->status_id;
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
@@ -258,6 +263,7 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->where('content_consume_log.student_id', $studentID)
             ->where('content_type.id', $VidContentTypes)
+            ->where('contents.status_id', $contentStatus)
             ->distinct()
             ->get();
 
