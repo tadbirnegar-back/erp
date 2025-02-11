@@ -403,6 +403,7 @@ class CourseController extends Controller
     {
         try {
             $data = $this->showCourseDataForEnteshareDore($id);
+            return response() -> json($data);
             return new PublishCoursePreviewResource($data);
         }catch (\Exception $e){
             return response()->json(['message' => $e->getMessage()], 404);
