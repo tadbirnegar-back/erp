@@ -47,6 +47,7 @@ trait CourseReportTrait
         $declinedStudents = $this->countAnswerSheetDeclinedStatusOfStudents($courseID);
         $allStudentsCount = $this->allStudentsCount($courseID);
         $subCount = $this->subCount($courseID);
+        $months = $this->scoresAndMonthChartData($courseID);
 
 
         return [
@@ -210,7 +211,7 @@ trait CourseReportTrait
         ];
     }
 
-    public function scoresAndMonthChartData()
+    public function scoresAndMonthChartData($courseID)
     {
         $query = Course::joinRelationship('courseExams')
             ->joinRelationship('exams')
@@ -219,6 +220,7 @@ trait CourseReportTrait
                 'answer_sheets.score as scores',
                 'answer_sheets.finish_date_time as finish_date_time',
             ])
+            ->where('course_exams.course_id', $courseID)
             ->get();
         $month = $query->pluck('finish_date_time')->unique();
         $convert = $this->humanReadableDate($month)->$month;
