@@ -46,6 +46,7 @@ class CourseController extends Controller
 
     public function store(Request $request)
     {
+
         try {
             DB::beginTransaction();
             $data = $request->all();
@@ -66,7 +67,7 @@ class CourseController extends Controller
             return response()->json(['message' => "دوره با موفقیت ساخته شد"]);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => $exception->getMessage()]);
+            return response()->json(['message' => $exception->getMessage()] , 404);
         }
     }
 
@@ -94,7 +95,7 @@ class CourseController extends Controller
             return response()->json(['message' => 'دوره شما با موفقیت به روز رسانی شد'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 200);
+            return response()->json(['message' => $e->getMessage()], 404);
         }
 
 
@@ -400,9 +401,13 @@ class CourseController extends Controller
     }
     public function publishCourseDataShow($id)
     {
-        $data = $this->showCourseDataForEnteshareDore($id);
-        return response()->json($data );
-        return new PublishCoursePreviewResource($data);
+        try {
+            $data = $this->showCourseDataForEnteshareDore($id);
+            return new PublishCoursePreviewResource($data);
+        }catch (\Exception $e){
+            return response()->json(['message' => $e->getMessage()], 404);
+        }
+
     }
 
 
