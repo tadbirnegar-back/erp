@@ -3,7 +3,6 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\AAA\app\Models\User;
-use Modules\LMS\app\Http\Enums\ContentStatusEnum;
 use Modules\LMS\app\Http\Enums\ContentTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
@@ -222,7 +221,7 @@ trait ReportingTrait
 
     public function AudioDuration($studentID, $courseID, $contentTypes)
     {
-        $contentStatus = optional(Content::where('status_id', ContentStatusEnum::ACTIVE->value)->first())->status_id;
+        $contentStatus = $this->activeContentStatus()->id;
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
@@ -250,7 +249,7 @@ trait ReportingTrait
 
     public function VideoDuration($studentID, $courseID, $VidContentTypes)
     {
-        $contentStatus = optional(Content::where('status_id', ContentStatusEnum::ACTIVE->value)->first())->status_id;
+        $contentStatus = $this->activeContentStatus()->id;
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
@@ -380,6 +379,11 @@ trait ReportingTrait
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
 
         return $completionPercentage;
+    }
+
+    public function activeContentStatus()
+    {
+        return Content::GetAllStatuses()->firstWhere('name', '=', 'فعال');
     }
 
 }
