@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
+use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Question;
@@ -50,6 +51,7 @@ trait CourseReportTrait
 
     public function AudioDuration($courseID, $contentTypes)
     {
+        $contentStatus = $this->activeContentStatus()->id;
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->leftJoinRelationship('chapters.lessons.contents.file')
@@ -61,6 +63,7 @@ trait CourseReportTrait
             ])
             ->where('courses.id', $courseID)
             ->where('content_type.id', $contentTypes)
+            ->where('contents.status_id', $contentStatus)
             ->distinct()
             ->get();
 
@@ -77,6 +80,8 @@ trait CourseReportTrait
 
     public function VideoDuration($courseID, $VidContentTypes)
     {
+        $contentStatus = $this->activeContentStatus()->id;
+
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
@@ -88,6 +93,7 @@ trait CourseReportTrait
             ])
             ->where('courses.id', $courseID)
             ->where('content_type.id', $VidContentTypes)
+            ->where('contents.status_id', $contentStatus)
             ->distinct()
             ->get();
 //        dd($course->count());
@@ -101,6 +107,11 @@ trait CourseReportTrait
             ];
         });
 
+    }
+
+    public function activeContentStatus()
+    {
+        return Content::GetAllStatuses()->firstWhere('name', '=', 'فعال');
     }
 
     public function ans($courseID)
@@ -123,4 +134,6 @@ trait CourseReportTrait
             ->first();
 //        $scoreAvrage=
     }
+
+
 }
