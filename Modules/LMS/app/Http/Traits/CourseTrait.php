@@ -119,7 +119,7 @@ trait CourseTrait
             'access_date' => isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
             'expiration_date' => isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null,
             'cover_id' => $data['coverID'],
-            'preview_video_id' => $data['previewVideoID'],
+            'preview_video_id' => $data['previewVideoID'] == "null" ? null : $data['previewVideoID'],
             'price' => $data['price'] ?? 0,
             'creator_id' => $user->id,
             'created_date' => now()
@@ -727,7 +727,7 @@ trait CourseTrait
                 'courses.is_required as course_alias_is_required',
                 'courses.expiration_date as course_alias_expiration_date',
                 'courses.access_date as course_alias_access_date',
-                'course_cover_alias.id as course_video_id',
+                'course_cover_alias.id as course_cover_id',
                 'course_cover_alias.slug as course_cover_slug',
                 'course_cover_alias.name as course_cover_title',
                 'course_cover_alias.size as course_cover_size',
