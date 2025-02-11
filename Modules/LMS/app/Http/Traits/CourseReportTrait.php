@@ -2,8 +2,9 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
-use Modules\LMS\app\Models\Content;
+use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Question;
@@ -11,6 +12,8 @@ use Modules\LMS\app\Models\Repository;
 
 trait CourseReportTrait
 {
+    use AnswerSheetTrait, ContentTrait, DateTrait;
+
     public function CourseInfo($courseID)
     {
 //        ContentTypeEnum::AUDIO
@@ -38,6 +41,12 @@ trait CourseReportTrait
         $sumStudyAudio = $durationAudio->sum('duration');
         $sumStudyVideo = $durationVideo->sum('duration');
         $totalStudyDuration = ($sumStudyAudio + $sumStudyVideo) / 2;
+        $certificatesCount = $this->certificatesCount($courseID);
+        $enrolledStudentsAndScoreAverage = $this->enrolledStudentsAndScoreAverage($courseID);
+        $approvedStudents = $this->countAnswerSheetApprovedStatusOfStudents($courseID);
+        $declinedStudents = $this->countAnswerSheetDeclinedStatusOfStudents($courseID);
+        $allStudentsCount = $this->allStudentsCount($courseID);
+        $subCount = $this->subCount($courseID);
 
 
         return [
@@ -45,13 +54,19 @@ trait CourseReportTrait
             'durationOfAudio' => $durationAudio->first(),
             'durationOfVideo' => $durationVideo->first(),
             'totalPlayedDuration' => $totalDuration,
+            'certificatesCount' => $certificatesCount,
+            'scoreAverageAndEnrolledStudents' => $enrolledStudentsAndScoreAverage,
+            'approvedStudents' => $approvedStudents,
+            'declinedStudents' => $declinedStudents,
+            'allStudents' => $allStudentsCount,
+            'subCount' => $subCount
         ];
     }
 
 
     public function AudioDuration($courseID, $contentTypes)
     {
-        $contentStatus = $this->activeContentStatus()->id;
+        $contentStatus = $this->contentActiveStatus()->id;
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->leftJoinRelationship('chapters.lessons.contents.file')
@@ -69,7 +84,6 @@ trait CourseReportTrait
 
         return $course->map(function ($item) {
             return [
-                'test' => $item,
                 'duration' => $item->duration,
                 'consume_round' => $item->consume_round,
                 'total' => (($item->duration * $item->consume_round) + $item->consume_data),
@@ -80,7 +94,7 @@ trait CourseReportTrait
 
     public function VideoDuration($courseID, $VidContentTypes)
     {
-        $contentStatus = $this->activeContentStatus()->id;
+        $contentStatus = $this->contentActiveStatus()->id;
 
         $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
@@ -96,11 +110,8 @@ trait CourseReportTrait
             ->where('contents.status_id', $contentStatus)
             ->distinct()
             ->get();
-//        dd($course->count());
-
         return $course->map(function ($item) {
             return [
-                'test' => $item,
                 'duration' => $item->duration,
                 'consume_round' => $item->consume_round,
                 'total' => (($item->duration * $item->consume_round) + $item->consume_data),
@@ -109,31 +120,112 @@ trait CourseReportTrait
 
     }
 
-    public function activeContentStatus()
+    public function certificatesCount($courseID)
     {
-        return Content::GetAllStatuses()->firstWhere('name', '=', 'فعال');
+        return Course::joinRelationship('enrolls')
+            ->whereNotNull('certificate_file_id')
+            ->where('enrolls.course_id', $courseID)
+            ->count();
     }
 
-    public function ans($courseID)
+    public function enrolledStudentsAndScoreAverage($courseID)
     {
         $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
-        return Question::joinRelationship('answers.answerSheet.status')
+
+        $ans = Question::joinRelationship('answers.answerSheet.status')
             ->joinRelationship('answers.answerSheet.exam.courseExams.course')
             ->joinRelationship('repository')
-            ->select([
-                'answer_sheets.start_date_time',
-                'answer_sheets.student_id as studentID',
-                'statuses.name as statusName',
-                'answer_sheets.score as score',
-                'answer_sheets.exam_id as examID',
-                'answer_sheets.id as answerSheetID',
-            ])
+            ->select('answer_sheets.score as scores')
             ->where('repositories.id', $repo)
             ->where('courses.id', $courseID)
-            ->orderBy('answer_sheets.start_date_time', 'desc')
-            ->first();
-//        $scoreAvrage=
+            ->distinct()
+            ->orderBy('answer_sheets.score', 'desc');
+        return [
+            'average' => $ans->average('answer_sheets.score'),
+            'EnrolledStudents' => $ans->count('answer_sheets.student_id'),
+            'scores' => $ans->get()->pluck('scores'),
+        ];
     }
 
+    public function countAnswerSheetApprovedStatusOfStudents($courseID)
+    {
+        $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
+        $passStatus = $this->answerSheetApprovedStatus()->id;
+        $count = AnswerSheet::joinRelationship('answers.questions')
+            ->joinRelationship('status')
+            ->joinRelationship('exam.courseExams.course', [
+                'course' => fn($join) => $join->as('course_alias'),
+                'exam' => fn($join) => $join->as('exam_alias')
+            ])
+            ->joinRelationship('repository')
+            ->where('repositories.id', $repo)
+            ->where('answer_sheets.status_id', $passStatus)
+            ->where('course_alias.id', $courseID)
+            ->distinct()
+            ->get();
+        return $count->count();
+    }
+
+    public function countAnswerSheetDeclinedStatusOfStudents($courseID)
+    {
+        $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
+        $declinedStatus = $this->answerSheetDeclinedStatus()->id;
+        $count = AnswerSheet::joinRelationship('answers.questions')
+            ->joinRelationship('status')
+            ->joinRelationship('exam.courseExams.course', [
+                'course' => fn($join) => $join->as('course_alias'),
+                'exam' => fn($join) => $join->as('exam_alias')
+            ])
+            ->joinRelationship('repository')
+            ->where('repositories.id', $repo)
+            ->where('answer_sheets.status_id', $declinedStatus)
+            ->where('course_alias.id', $courseID)
+            ->distinct()
+            ->get();
+        return $count->count();
+    }
+
+    public function allStudentsCount($courseID)
+    {
+        return Course::joinRelationship('enrolls')
+            ->where('enrolls.course_id', $courseID)
+            ->count();
+    }
+
+    public function subCount($courseID)
+    {
+        $studyCompletedCount = Course::joinRelationship('enrolls')
+            ->where('enrolls.course_id', $courseID)
+            ->where('enrolls.study_completed', 1)
+            ->count();
+
+        $isStudyingCount = Course::joinRelationship('enrolls')
+            ->where('enrolls.course_id', $courseID)
+            ->where('enrolls.study_completed', 0)
+            ->count();
+
+        return [
+            'studyCompleted' => $studyCompletedCount,
+            'isStudying' => $isStudyingCount,
+        ];
+    }
+
+    public function scoresAndMonthChartData()
+    {
+        $query = Course::joinRelationship('courseExams')
+            ->joinRelationship('exams')
+            ->joinRelationship('answerSheets')
+            ->select([
+                'answer_sheets.score as scores',
+                'answer_sheets.finish_date_time as finish_date_time',
+            ])
+            ->get();
+        $month = $query->pluck('finish_date_time')->unique();
+        $convert = $this->humanReadableDate($month)->$month;
+        return [
+            'month' => $convert,
+        ];
+
+    }
 
 }
