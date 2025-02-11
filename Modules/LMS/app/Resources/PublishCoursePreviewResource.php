@@ -117,17 +117,10 @@ class PublishCoursePreviewResource extends JsonResource
                 $chapterName = $chapterGroup->first()->chapters_alias_title;
                 $chapterReadOnly = $chapterGroup->first()->chapters_alias_read_only ? true : false;
                 $lessons = $chapterGroup->map(function ($lesson) {
-                    $lessonStatusData = $this->checkStatusOfLesson($lesson->lessons_alias_id);
                     return [
                         'lesson_id' => $lesson->lessons_alias_id,
                         'lesson_title' => $lesson->lessons_alias_title,
-                        'status_name' => $lessonStatusData?->latestStatus[0]?->name,
                     ];
-                })->filter(function ($lesson) {
-                    if($lesson['status_name'] == LessonStatusEnum::ACTIVE->value)
-                    {
-                        return !is_null($lesson['lesson_id']);
-                    }
                 })->unique()->values()->toArray();
 
                 return [
@@ -220,12 +213,6 @@ class PublishCoursePreviewResource extends JsonResource
     private function courseStatushandle($course_id)
     {
         return Course::with('latestStatus')->find($course_id);
-    }
-
-
-    private function checkStatusOfLesson($lessonId)
-    {
-        return Lesson::with('latestStatus')->find($lessonId);
     }
 
 }

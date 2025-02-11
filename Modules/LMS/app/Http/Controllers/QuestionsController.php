@@ -189,6 +189,7 @@ class QuestionsController extends Controller
             $courseID = $question->courseID;
 
             $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs);
+
             if ($updateResult) {
                 return response()->json([
                     'message' => 'Question updated successfully',

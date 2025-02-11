@@ -12,6 +12,8 @@ use Modules\StatusMS\app\Models\Status;
 
 trait QuestionsTrait
 {
+    use LessonTrait;
+
     private static string $active = QuestionsEnum::ACTIVE->value;
     private static string $inactive = QuestionsEnum::EXPIRED->value;
 
@@ -168,7 +170,11 @@ trait QuestionsTrait
                 foreach ($options as $option) {
                     if (isset($option['option_id'])) {
                         Option::where('id', $option['option_id'])
-                            ->update(['is_correct' => $option['is_correct']]);
+                            ->update([
+                                'is_correct' => $option['is_correct'],
+                                'title' => $option['title'],
+                                ]);
+
                     } else {
                         Option::create([
                             'title' => $option['title'] ?? 'Default Title',

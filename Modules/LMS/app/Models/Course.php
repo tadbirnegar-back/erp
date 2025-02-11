@@ -10,6 +10,7 @@ use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Http\Traits\QuestionsTrait;
 use Modules\LMS\app\Observers\CourseObserver;
 use Modules\LMS\Database\factories\CourseFactory;
 use Modules\PayStream\app\Models\Order;
@@ -19,7 +20,7 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Course extends Model
 {
-    use HasFactory;
+    use HasFactory , QuestionsTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -215,10 +216,11 @@ class Course extends Model
 
     public function questions()
     {
+        $status = $this->questionActiveStatus()->id;
         return $this->hasManyDeep(Question::class, [Chapter::class, Lesson::class],
             ['course_id', 'chapter_id', 'lesson_id'],
             ['id', 'id', 'id']
-        );
+        )->where('questions.status_id', $status);
     }
 
     public function person()

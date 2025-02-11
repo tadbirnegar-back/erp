@@ -60,6 +60,7 @@ class ExamsController extends Controller
                 $courseTitle = $course->title;
                 DB::commit();
                 return response() -> json([
+                    'course_id' => $course->id,
                     'course_title' => $courseTitle,
                     'timePerQuestion' => $timePerQuestions.':0',
                     'exam_time' => $examTime,

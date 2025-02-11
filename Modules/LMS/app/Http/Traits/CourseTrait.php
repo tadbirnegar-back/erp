@@ -161,9 +161,9 @@ trait CourseTrait
             'person.avatar'
         ]);
 
-        if($user->student == null){
+        if ($user->student == null) {
             $ansSheets = collect();
-        }else{
+        } else {
             $ans = Course::with('exams.answerSheets')->find($course->id);
             $examIds = $ans->exams->pluck('id')->toArray();
             $ansSheets = AnswerSheet::whereIn('exam_id', $examIds)
@@ -670,6 +670,7 @@ trait CourseTrait
 
     public function showCourseDataForEnteshareDore($id)
     {
+
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
@@ -710,8 +711,8 @@ trait CourseTrait
             ->leftJoinRelationship('courseTarget.targetOunitCat', [
                 'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
             ])
-            ->leftJoinRelationship('chapters.lessons', [
-                'lessons' => fn($join) => $join->as('lessons_alias'),
+            ->leftJoinRelationship('chapters.allActiveLessons', [
+                'allActiveLessons' => fn($join) => $join->as('lessons_alias'),
                 'chapters' => fn($join) => $join->as('chapters_alias'),
             ])
             ->leftJoinRelationship('lastStatusForJoin.status', [
@@ -974,7 +975,7 @@ trait CourseTrait
             }])
             ->where('courses.title', 'like', '%' . $title . '%')
             ->distinct('courses.id')
-            ->paginate( $perPage,  $columns = ['*'],  $pageName = 'page',  $pageNum);
+            ->paginate($perPage, $columns = ['*'], $pageName = 'page', $pageNum);
 
         return $courses;
     }
