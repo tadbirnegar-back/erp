@@ -12,8 +12,10 @@ trait CourseReportTrait
 {
     public function CourseInfo($courseID)
     {
-        $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO)->first()->id;
-        $VidContentTypes = ContentType::where('name', ContentTypeEnum::VIDEO)->first()->id;
+//        ContentTypeEnum::AUDIO
+//        ContentTypeEnum::VIDEOv
+        $contentTypes = ContentType::where('name', 'صوتی')->first()->id;
+        $VidContentTypes = ContentType::where('name', 'تصویری')->first()->id;
         $course = Course::joinRelationship('chapters.lessons.contents.file')
             ->leftJoinRelationship('courseExams.exams.answerSheets')
             ->joinRelationship('chapters.lessons.contents.contentType')

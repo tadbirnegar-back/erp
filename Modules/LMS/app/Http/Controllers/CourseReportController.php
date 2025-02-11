@@ -5,19 +5,22 @@ namespace Modules\LMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\LMS\app\Http\Traits\CourseReportTrait;
 
 class CourseReportController extends Controller
 {
+    use CourseReportTrait;
+
     public array $data = [];
 
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index($courseID): JsonResponse
     {
-        //
+        $courseReport = $this->CourseInfo($courseID);
 
-        return response()->json($this->data);
+        return response()->json($courseReport);
     }
 
     /**

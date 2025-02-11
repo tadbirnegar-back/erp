@@ -5,6 +5,7 @@ use Modules\LMS\app\Http\Controllers\ChapterController;
 use Modules\LMS\app\Http\Controllers\ContentController;
 use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\CourseCourseController;
+use Modules\LMS\app\Http\Controllers\CourseReportController;
 use Modules\LMS\app\Http\Controllers\ExamResultController;
 use Modules\LMS\app\Http\Controllers\ExamsController;
 use Modules\LMS\app\Http\Controllers\LessonController;
@@ -91,3 +92,4 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
 });
+Route::get('/lms/course/report/{id}', [CourseReportController::class, 'index']);
