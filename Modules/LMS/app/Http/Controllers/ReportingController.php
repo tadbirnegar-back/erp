@@ -29,7 +29,6 @@ class ReportingController extends Controller
         if (!$courseID) {
             return response()->json(['message' => 'No Course found'], 403);
         }
-//        $student = User::with('student')->find(68);
         $answerSheetID = AnswerSheet::joinRelationship('exam.courseExams.course')
             ->orderBy('answer_sheets.start_date_time', 'desc')
             ->value('answer_sheets.id');
@@ -47,7 +46,6 @@ class ReportingController extends Controller
         ];
 
         $result = $this->ans($answerSheetID, $student, $data, $courseID);
-
         return ReportingResource::make($result);
 
     }
