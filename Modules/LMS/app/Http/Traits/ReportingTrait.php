@@ -7,7 +7,6 @@ use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\ContentTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
-use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Question;
@@ -15,7 +14,7 @@ use Modules\LMS\app\Models\Repository;
 
 trait ReportingTrait
 {
-    use AnswerSheetTrait, LessonTrait;
+    use AnswerSheetTrait, LessonTrait, ContentTrait;
 
 
     public function ans($answerSheetID, $user, $data, $courseID)
@@ -227,7 +226,7 @@ trait ReportingTrait
 
     public function AudioDuration($studentID, $courseID, $contentTypes)
     {
-        $contentStatus = $this->activeContentStatus()->id;
+        $contentStatus = $this->contentActiveStatus()->id;
         $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog', [
             'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
         ])
@@ -257,7 +256,7 @@ trait ReportingTrait
 
     public function VideoDuration($studentID, $courseID, $VidContentTypes)
     {
-        $contentStatus = $this->activeContentStatus()->id;
+        $contentStatus = $this->contentActiveStatus()->id;
         $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog', [
             'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
         ])
@@ -398,11 +397,10 @@ trait ReportingTrait
         return ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
     }
 
-
-    public function activeContentStatus()
-    {
-        return Content::GetAllStatuses()->firstWhere('name', '=', 'فعال');
-    }
+//    public function activeContentStatus()
+//    {
+//        return Content::GetAllStatuses()->firstWhere('name', '=', 'فعال');
+//    }
 
 
 }
