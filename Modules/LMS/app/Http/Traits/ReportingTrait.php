@@ -226,12 +226,25 @@ trait ReportingTrait
 
     public function AudioDuration($studentID, $courseID, $contentTypes)
     {
+        $lessonActiveStatus = $this->lessonActiveStatus()->id; // Assuming this returns the active status ID
         $contentStatus = $this->contentActiveStatus()->id;
+
+        // Subquery to fetch the latest and active `lesson_id`
+        $latestStatusSubquery = DB::table('status_lesson')
+            ->select('lesson_id') // Only select `lesson_id`
+            ->where('status_id', $lessonActiveStatus) // Filter by active status
+            ->whereIn('created_date', function ($query) {
+                $query->selectRaw('MAX(created_date)')
+                    ->from('status_lesson')
+                    ->groupBy('lesson_id');
+            });
+
         $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog', [
             'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
         ])
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
+            ->joinRelationship('chapters.lessons.lessonStatus')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
@@ -240,8 +253,10 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
+            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery) // Use `lesson_id` here
             ->distinct()
             ->get();
+
         return $course->map(function ($item) {
             $total = ($item->duration * $item->consume_round) + $item->consume_data;
             return [
@@ -250,18 +265,29 @@ trait ReportingTrait
                 'total' => ($total == 0) ? null : $total,
             ];
         });
-
-
     }
 
     public function VideoDuration($studentID, $courseID, $VidContentTypes)
     {
-        $contentStatus = $this->contentActiveStatus()->id;
+        $lessonActiveStatus = $this->lessonActiveStatus()->id; // Active status ID for lessons
+        $contentStatus = $this->contentActiveStatus()->id; // Active status ID for contents
+
+        // Subquery to fetch the latest `status_lesson` records
+        $latestStatusSubquery = DB::table('status_lesson')
+            ->select('lesson_id') // Only select `lesson_id`
+            ->where('status_id', $lessonActiveStatus) // Filter by active status
+            ->whereIn('created_date', function ($query) {
+                $query->selectRaw('MAX(created_date)')
+                    ->from('status_lesson')
+                    ->groupBy('lesson_id');
+            });
+
         $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog', [
             'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
         ])
             ->joinRelationship('chapters.lessons.contents.contentType')
-            ->leftJoinRelationship('chapters.lessons.contents.file')
+            ->leftJoinRelationship('chapters.lessons.contents.file') // Use leftJoin for optional files
+            ->joinRelationship('chapters.lessons.lessonStatus')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
@@ -270,6 +296,7 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->where('content_type.id', $VidContentTypes)
             ->where('contents.status_id', $contentStatus)
+            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery) // Use subquery for latest status
             ->distinct()
             ->get();
 
@@ -278,10 +305,9 @@ trait ReportingTrait
             return [
                 'duration' => $item->duration,
                 'consume_round' => $item->consume_round,
-                'total' => ($total == 0) ? null : $total,
+                'total' => ($total == 0) ? null : $total, // Return null if total is 0
             ];
         });
-
     }
 
     public function practicalExam($answerSheetID, $user, $data, $courseID)
