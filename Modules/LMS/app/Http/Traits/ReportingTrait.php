@@ -226,13 +226,12 @@ trait ReportingTrait
 
     public function AudioDuration($studentID, $courseID, $contentTypes)
     {
-        $lessonActiveStatus = $this->lessonActiveStatus()->id; // Assuming this returns the active status ID
+        $lessonActiveStatus = $this->lessonActiveStatus()->id;
         $contentStatus = $this->contentActiveStatus()->id;
 
-        // Subquery to fetch the latest and active `lesson_id`
         $latestStatusSubquery = DB::table('status_lesson')
-            ->select('lesson_id') // Only select `lesson_id`
-            ->where('status_id', $lessonActiveStatus) // Filter by active status
+            ->select('lesson_id')
+            ->where('status_id', $lessonActiveStatus)
             ->whereIn('created_date', function ($query) {
                 $query->selectRaw('MAX(created_date)')
                     ->from('status_lesson')
@@ -253,7 +252,7 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
-            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery) // Use `lesson_id` here
+            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery)
             ->distinct()
             ->get();
 
@@ -269,13 +268,12 @@ trait ReportingTrait
 
     public function VideoDuration($studentID, $courseID, $VidContentTypes)
     {
-        $lessonActiveStatus = $this->lessonActiveStatus()->id; // Active status ID for lessons
-        $contentStatus = $this->contentActiveStatus()->id; // Active status ID for contents
+        $lessonActiveStatus = $this->lessonActiveStatus()->id;
+        $contentStatus = $this->contentActiveStatus()->id;
 
-        // Subquery to fetch the latest `status_lesson` records
         $latestStatusSubquery = DB::table('status_lesson')
-            ->select('lesson_id') // Only select `lesson_id`
-            ->where('status_id', $lessonActiveStatus) // Filter by active status
+            ->select('lesson_id')
+            ->where('status_id', $lessonActiveStatus)
             ->whereIn('created_date', function ($query) {
                 $query->selectRaw('MAX(created_date)')
                     ->from('status_lesson')
@@ -286,7 +284,7 @@ trait ReportingTrait
             'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
         ])
             ->joinRelationship('chapters.lessons.contents.contentType')
-            ->leftJoinRelationship('chapters.lessons.contents.file') // Use leftJoin for optional files
+            ->leftJoinRelationship('chapters.lessons.contents.file')
             ->joinRelationship('chapters.lessons.lessonStatus')
             ->select([
                 'files.duration as duration',
@@ -296,7 +294,7 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->where('content_type.id', $VidContentTypes)
             ->where('contents.status_id', $contentStatus)
-            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery) // Use subquery for latest status
+            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery)
             ->distinct()
             ->get();
 
@@ -305,7 +303,7 @@ trait ReportingTrait
             return [
                 'duration' => $item->duration,
                 'consume_round' => $item->consume_round,
-                'total' => ($total == 0) ? null : $total, // Return null if total is 0
+                'total' => ($total == 0) ? null : $total,
             ];
         });
     }
