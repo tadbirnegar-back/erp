@@ -6,29 +6,25 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\Meeting;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
-use Modules\LMS\app\Http\Traits\LessonTrait;
+use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
-    use ExamsTrait, LessonTrait;
+    use ExamsTrait;
 
     public function run()
     {
-        $statusID = $this->lessonActiveStatus()->id;
-        Course::joinRelationship('lessons.lessonStatus')
-            ->select(['status_lesson.status_id'])
-            ->where('status_lesson.status_id', $statusID)
-            ->where('courses.id', 106)
-            ->count();
 
-
+        $data = Course::with('contentTypes')->find(134);
+        return response() -> json($data);
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);

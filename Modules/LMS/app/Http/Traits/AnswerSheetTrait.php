@@ -15,21 +15,6 @@ use Modules\SettingsMS\app\Models\Setting;
 
 trait AnswerSheetTrait
 {
-    public function answerSheetApprovedStatus()
-    {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
-    }
-
-    public function answerSheetTakingExamStatus()
-    {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::TAKING_EXAM->value);
-    }
-
-    public function answerSheetDeclinedStatus()
-    {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
-    }
-
 
     public function storeAnswerSheet($examId, $student, $optionID, $data, $usedTime,)
     {
@@ -312,6 +297,21 @@ trait AnswerSheetTrait
             ->select('course_alias.id as courseID')
             ->where('answer_sheets.id', $answerSheetID)->first();
 
+    }
+
+    public function answerSheetApprovedStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
+    }
+
+    public function answerSheetTakingExamStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::TAKING_EXAM->value);
+    }
+
+    public function answerSheetDeclinedStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
     }
 
 

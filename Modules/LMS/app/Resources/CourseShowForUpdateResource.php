@@ -102,9 +102,10 @@ class CourseShowForUpdateResource extends JsonResource
                 return !is_null($item['id']); // Remove items with null IDs
             })->unique('id')->values();
 
-            $sizeWithUnitVideo = Number::fileSize($courseInfo->course_video_size, 2, 3);
-            $partsvideo = explode(' ', $sizeWithUnitVideo, 2);
-
+            if($courseInfo->course_video_size != null){
+                $sizeWithUnitVideo = Number::fileSize($courseInfo->course_video_size, 2, 3);
+                $partsvideo = explode(' ', $sizeWithUnitVideo, 2);
+            }
             $sizeWithCover = Number::fileSize($courseInfo->course_cover_size, 2, 3);
             $partscover = explode(' ', $sizeWithCover, 2);
 
@@ -119,10 +120,10 @@ class CourseShowForUpdateResource extends JsonResource
                     'privacy_id' => $courseInfo->course_alias_privacy_id,
                 ],
                 'video' => [
-                    'slug' => $courseInfo->course_video_slug,
-                    'title' => $courseInfo->course_video_title,
-                    'id' => $courseInfo->course_video_id,
-                    'size' => intval(Number::fileSize($courseInfo->course_video_size, 2, 3)) . ' ' . $partsvideo[1],
+                    'slug' => $courseInfo->course_video_slug == null ? null : url($courseInfo->course_video_slug),
+                    'title' => $courseInfo->course_video_title == null ? null : $courseInfo->course_video_title,
+                    'id' => $courseInfo->course_video_id == null ? null : $courseInfo->course_video_id,
+                    'size' => $courseInfo->course_video_size == null ? null : intval(Number::fileSize($courseInfo->course_video_size, 2, 3)) . ' ' . $partsvideo[1],
                 ],
                 'cover' => [
                     'slug' => $courseInfo->course_cover_slug,

@@ -267,6 +267,35 @@ class Course extends Model
         return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
             ->orderByDesc('status_course.id')->take(1);
     }
+    public function allActiveLessons()
+    {
+        return $this->lessons()->whereExists(function ($query) {
+            $query->select(\DB::raw(1))
+                ->from('status_lesson as ls')
+                ->join('statuses as s', 'ls.status_id', '=', 's.id')
+                ->whereColumn('ls.lesson_id', 'lessons.id')
+                ->where('s.name', LessonStatusEnum::ACTIVE->value)
+                ->where('ls.created_date', function ($subQuery) {
+                    $subQuery->selectRaw('MAX(created_date)')
+                        ->from('status_lesson as sub_ls')
+                        ->whereColumn('sub_ls.lesson_id', 'ls.lesson_id');
+                });
+        });
+    }
+
+    public function contentTypes()
+    {
+        return $this->hasManyDeep(ContentType::class, [Chapter::class, Lesson::class, Content::class],
+            ['course_id', 'chapter_id', 'lesson_id', 'id'],
+            ['id', 'id', 'id', 'content_type_id']
+        );
+    }
+
+    public function latestStatuses()
+    {
+        return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
+            ->orderByDesc('status_course.id')->take(1);
+    }
 
     public function allLessons()
     {

@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\CourseExam;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Question;
@@ -13,8 +14,8 @@ use Modules\SettingsMS\app\Models\Setting;
 
 trait ExamsTrait
 {
-    private static string $active = QuestionsEnum::ACTIVE->value;
 
+    use QuestionsTrait;
 
     public function examPreview($id)
     {
@@ -56,7 +57,7 @@ trait ExamsTrait
 
     public function DataPreparation($exam, $id)
     {
-        $status = $this->activeStatus()->id;
+        $status = $this->questionActiveStatus()->id;
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
@@ -148,13 +149,4 @@ trait ExamsTrait
 
 
     }
-
-    public function activeStatus()
-    {
-        return Question::GetAllStatuses()
-            ->firstWhere('name', '=', self::$active);
-
-    }
-
-
 }
