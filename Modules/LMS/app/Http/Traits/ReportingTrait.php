@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use DB;
 use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Enums\ContentTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
@@ -222,17 +223,17 @@ trait ReportingTrait
     public function AudioDuration($studentID, $courseID, $contentTypes)
     {
         $contentStatus = $this->activeContentStatus()->id;
-        $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
+        $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog', [
+            'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
+        ])
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
-            ->leftJoinRelationship('courseExams.exams.answerSheets')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
                 'content_consume_log.consume_data as consume_data',
             ])
             ->where('courses.id', $courseID)
-            ->where('content_consume_log.student_id', $studentID)
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
             ->distinct()
@@ -250,17 +251,17 @@ trait ReportingTrait
     public function VideoDuration($studentID, $courseID, $VidContentTypes)
     {
         $contentStatus = $this->activeContentStatus()->id;
-        $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
+        $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog', [
+            'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
+        ])
             ->joinRelationship('chapters.lessons.contents.contentType')
-            ->joinRelationship('chapters.lessons.contents.file')
-            ->leftJoinRelationship('courseExams.exams.answerSheets')
+            ->leftJoinRelationship('chapters.lessons.contents.file')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
                 'content_consume_log.consume_data as consume_data',
             ])
             ->where('courses.id', $courseID)
-            ->where('content_consume_log.student_id', $studentID)
             ->where('content_type.id', $VidContentTypes)
             ->where('contents.status_id', $contentStatus)
             ->distinct()
