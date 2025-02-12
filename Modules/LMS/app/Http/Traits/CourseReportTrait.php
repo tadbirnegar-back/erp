@@ -21,7 +21,7 @@ trait CourseReportTrait
 //        ContentTypeEnum::VIDEOv
         $contentTypes = ContentType::where('name', 'صوتی')->first()->id;
         $VidContentTypes = ContentType::where('name', 'تصویری')->first()->id;
-        $course = Course::joinRelationship('chapters.lessons.contents.file')
+        $course = Course::leftJoinRelationship('chapters.lessons.contents.file')
             ->leftJoinRelationship('courseExams.exams.answerSheets')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->select([
