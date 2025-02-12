@@ -20,7 +20,7 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Course extends Model
 {
-    use HasFactory , QuestionsTrait;
+    use HasFactory, QuestionsTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -269,6 +269,7 @@ class Course extends Model
         return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
             ->orderByDesc('status_course.id')->take(1);
     }
+
     public function allActiveLessons()
     {
         return $this->lessons()->whereExists(function ($query) {
@@ -285,4 +286,12 @@ class Course extends Model
         });
     }
 
+    public function answerSheets()
+    {
+        return $this->hasManyDeep(AnswerSheet::class, [CourseExam::class],
+            ['course_id', 'exam_id'],
+            ['id', 'exam_id']
+
+        );
+    }
 }

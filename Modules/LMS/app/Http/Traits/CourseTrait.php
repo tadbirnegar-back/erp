@@ -216,7 +216,7 @@ trait CourseTrait
                 },
                 'chapters' => function ($query) {
                     $query->with([
-                        'lessons' => function ($query) {
+                        'allActiveLessons' => function ($query) {
                             $query->whereHas('latestStatus', function ($q) {
                                 $q->where('name', LessonStatusEnum::ACTIVE->value);
                             });
@@ -303,15 +303,25 @@ trait CourseTrait
 
             $AdditionalData["enrolled"] = $isEnrolled;
         }
-
         $AllowToDos['canTrainingExam'] = false;
+        $AllowToDos['canDegree'] = false;
+
 
         if ($AllowToDos['joined']) {
             $studyCount = $AdditionalData["enrolled"]->isEnrolled[0]["orderable"]["study_count"];
             if ($studyCount > 0) {
-                $AllowToDos["canFinalExam"] = true;
+                if ($user->student != null) {
+                    $AllowToDos['canFinalExam'] = !($this->hasAttemptedAndPassedExam($user->student, $course->id) == true);
+                } else {
+                    $AllowToDos['canFinalExam'] = false;
+                }
+            } else {
+
+                $AllowToDos['canFinalExam'] = false;
+
             }
         }
+
 
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
@@ -327,11 +337,9 @@ trait CourseTrait
             if ($component['name'] === 'MainCourse') {
                 $chapters = $component['data']['chapters'] ?? [];
                 foreach ($chapters as $chapter) {
-                    if (isset($chapter['lessons']) && !empty($chapter['lessons'])) {
-                        foreach ($chapter['lessons'] as $lesson) {
-                            if ($lesson->latestStatus()->first()->name === LessonStatusEnum::ACTIVE->value) {
-                                $allLessons[] = $lesson['id'];
-                            }
+                    if (isset($chapter['allActiveLessons']) && !empty($chapter['allActiveLessons'])) {
+                        foreach ($chapter['allActiveLessons'] as $lesson) {
+                            $allLessons[] = $lesson['id'];
                         }
                     }
                 }
@@ -711,8 +719,8 @@ trait CourseTrait
             ->leftJoinRelationship('courseTarget.targetOunitCat', [
                 'targetOunitCat' => fn($join) => $join->as('targetOunitCat'),
             ])
-            ->leftJoinRelationship('chapters.allActiveLessons', [
-                'allActiveLessons' => fn($join) => $join->as('lessons_alias'),
+            ->leftJoinRelationship('chapters.lessons', [
+                'lessons' => fn($join) => $join->as('lessons_alias'),
                 'chapters' => fn($join) => $join->as('chapters_alias'),
             ])
             ->leftJoinRelationship('lastStatusForJoin.status', [
@@ -811,16 +819,18 @@ trait CourseTrait
 
         $status = $this->ActiveAnswerSheetStatus();
 
-        $passed = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
+        $exams = Course::with(['answerSheets' => function ($query) use ($status, $student) {
             $query->where('status_id', $status->id);
-        })
-            ->exists();
+            $query->where('student_id', $student->id);
+        }])->find($courseId);
 
-        if ($passed) {
+        if ($exams->answerSheets->count() > 0) {
             return true;
+        } else {
+            return false;
         }
 
-        return false;
+
     }
 
     public function enrolledCourses($user)

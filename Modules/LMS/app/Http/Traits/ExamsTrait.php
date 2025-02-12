@@ -101,7 +101,8 @@ trait ExamsTrait
             'questions.id as questionID',
             'questions.title as questionTitle',
             'options.id as optionID',
-            'options.title as optionTitle'
+            'options.title as optionTitle',
+            'exams.id as exam_id'
 
         ]);
         return $query->where('exams.id', $id)->get();

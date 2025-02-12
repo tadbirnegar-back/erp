@@ -17,34 +17,46 @@ class QuestionResource extends JsonResource
         $repo = Repository::all();
         $question_type = QuestionType::all();
         $difficulties = Difficulty::all();
+
         return [
             'course_data' => $this->makeCourseDatas($this->resource),
             'repository' => $repo,
             'questionType' => $question_type,
-            'difficulties' => $difficulties
+            'difficulties' => $difficulties,
         ];
-
     }
 
-    private function makeCourseDatas($data)
+    /**
+     * Make course data with chapters and lessons.
+     */
+    public function makeCourseDatas($course): array
     {
-        return collect($data)
-            ->groupBy('lessonID')
-            ->groupBy(fn($lessons) => $lessons->first()['chapterID'])
-            ->map(function ($lessons, $chapterID) {
-                return [
-                    'chapter_id' => $chapterID,
-                    'chapter_title' => $lessons->first()->first()['chapterTitle'],
-                    'lessons' => $lessons->map(function ($lessonGroup) {
-                        $lesson = $lessonGroup->first();
-                        return [
-                            'lesson_id' => $lesson['lessonID'],
-                            'lesson_title' => $lesson['lessonTitle'],
-                        ];
-                    })->values()->toArray(),
-                ];
-            })->values();
+        $course_data = [];
+
+        // Loop through each chapter and extract its lessons
+        foreach ($course['chapters'] as $chapter) {
+            $course_data[] = [
+                'chapter_id' => $chapter['id'] ?? null,
+                'chapter_title' => $chapter['title'] ?? null,
+                'lessons' => $this->makeLessons($chapter['all_active_lessons']),
+            ];
+        }
+
+        return $course_data;
     }
 
-
+    /**
+     * Make lessons data.
+     */
+    public function makeLessons($lessons): array
+    {
+        $lesson_data = [];
+        foreach ($lessons as $lesson) {
+            $lesson_data[] = [
+                'lesson_id' => $lesson['id'] ?? null,
+                'lesson_title' => $lesson['title'] ?? null,
+            ];
+        }
+        return $lesson_data;
+    }
 }
