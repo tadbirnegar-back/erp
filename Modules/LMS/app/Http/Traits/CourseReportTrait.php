@@ -9,6 +9,7 @@ use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\Repository;
+use Morilog\Jalali\Jalalian;
 
 trait CourseReportTrait
 {
@@ -60,7 +61,8 @@ trait CourseReportTrait
             'approvedStudents' => $approvedStudents,
             'declinedStudents' => $declinedStudents,
             'allStudents' => $allStudentsCount,
-            'subCount' => $subCount
+            'subCount' => $subCount,
+            'scoreAndMonthChart' => $months
         ];
     }
 
@@ -211,23 +213,45 @@ trait CourseReportTrait
         ];
     }
 
+
     public function scoresAndMonthChartData($courseID)
     {
-        $query = Course::joinRelationship('courseExams')
-            ->joinRelationship('exams')
-            ->joinRelationship('answerSheets')
+        // Fetch data from the database
+        $query = Course::joinRelationship('courseExams.exams.answerSheets')
             ->select([
                 'answer_sheets.score as scores',
                 'answer_sheets.finish_date_time as finish_date_time',
             ])
-            ->where('course_exams.course_id', $courseID)
+            ->where('courses.id', $courseID)
             ->get();
-        $month = $query->pluck('finish_date_time')->unique();
-        $convert = $this->humanReadableDate($month)->$month;
-        return [
-            'month' => $convert,
-        ];
 
+        // Group scores by Persian month name
+        $groupedData = $query->groupBy(function ($item) {
+            // Convert Gregorian date to Persian date
+            $persianDate = Jalalian::fromDateTime($item->finish_date_time);
+
+            // Extract Persian month number (1-12)
+            $monthNumber = $persianDate->getMonth();
+
+            // Convert month number to Persian month name using humanReadableDate
+            return $this->humanReadableDate($monthNumber);
+        });
+
+        // Prepare the result
+        $result = [];
+        foreach ($groupedData as $monthName => $items) {
+            // Extract scores for this month
+            $scores = $items->pluck('scores')->toArray();
+
+            // Add to the result
+            $result[] = [
+                'month' => $monthName,
+                'scores' => $scores,
+            ];
+        }
+
+        return $result;
     }
+
 
 }
