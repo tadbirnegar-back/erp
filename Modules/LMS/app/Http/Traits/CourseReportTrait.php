@@ -69,7 +69,7 @@ trait CourseReportTrait
 
     public function AudioDuration($courseID, $contentTypes)
     {
-        $contentStatus = $this->activeContentStatus()->id;
+        $contentStatus = $this->contentActiveStatus()->id;
         $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
@@ -97,7 +97,7 @@ trait CourseReportTrait
 
     public function VideoDuration($courseID, $VidContentTypes)
     {
-        $contentStatus = $this->activeContentStatus()->id;
+        $contentStatus = $this->contentActiveStatus()->id;
         $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->leftJoinRelationship('chapters.lessons.contents.file')
