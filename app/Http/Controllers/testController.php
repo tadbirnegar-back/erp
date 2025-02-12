@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
 use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
@@ -21,6 +22,23 @@ class testController extends Controller
 
     public function run()
     {
+        $statuses = [];
+        $givenStatus = 2;
+        switch ($givenStatus) {
+            case -1:
+                $statuses = collect(DocumentStatusEnum::cases())
+                    ->reject(fn($item) => $item->value === DocumentStatusEnum::DELETED->value)
+                    ->pluck('value')
+                    ->toArray();
+                break;
+            case 1:
+                $statuses[] = DocumentStatusEnum::CONFIRMED->value;
+                break;
+            case 2:
+                $statuses[] = DocumentStatusEnum::DRAFT->value;
+                break;
+        }
+        dd($statuses);
 
         $budget = Budget::joinRelationship('ounitFiscalYear.fiscalYear')
             ->joinRelationship('statuses', [

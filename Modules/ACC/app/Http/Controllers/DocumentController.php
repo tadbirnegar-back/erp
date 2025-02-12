@@ -22,6 +22,7 @@ use Modules\ACC\app\Resources\ArticlesListResource;
 use Modules\ACC\app\Resources\CurrentFiscalYearResource;
 use Modules\ACC\app\Resources\DocumentListResource;
 use Modules\ACC\app\Resources\DocumentShowResource;
+use Modules\ACC\app\Resources\TarazLogResource;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
@@ -891,6 +892,8 @@ class DocumentController extends Controller
             'ounitID' => 'required',
             'fiscalYearID' => 'required',
             'balanceType' => 'required',
+            'status' => 'required',
+            'showType' => 'required',
             'startDate' => 'sometimes',
             'endDate' => 'sometimes',
             'startDocNum' => 'sometimes',
@@ -916,7 +919,34 @@ class DocumentController extends Controller
             $endDocNum = $data['endDocNum'];
             $searchByDate = false;
             $searchByDocNum = true;
+            $startDate = null;
+            $endDate = null;
+
         }
+        $statuses = [];
+        $givenStatus = $data['status'];
+        switch ($givenStatus) {
+            case -1:
+                $statuses = collect(DocumentStatusEnum::cases())
+                    ->reject(fn($item) => $item->value === DocumentStatusEnum::DELETED->value)
+                    ->pluck('value')
+                    ->toArray();
+                break;
+            case 1:
+                $statuses[] = DocumentStatusEnum::CONFIRMED->value;
+                break;
+            case 2:
+                $statuses[] = DocumentStatusEnum::DRAFT->value;
+                break;
+        }
+        $openType = isset($data['opening']) ? DocumentTypeEnum::OPENING->value : -1;
+        $periodTypes = [
+            DocumentTypeEnum::NORMAL->value,
+            ...($data['temporary'] ?? false ? [DocumentTypeEnum::TEMPORARY->value] : []),
+            ...($data['closing'] ?? false ? [DocumentTypeEnum::CLOSING->value] : []),
+        ];
+        $periodTypesString = implode(',', $periodTypes);
+
 
         $accountableType = AccountLayerTypesEnum::getLayerByID($data['balanceType']);
 
@@ -933,44 +963,63 @@ class DocumentController extends Controller
                 SELECT * FROM descendants
             ) as descendants')
         )
-            ->join('acc_articles', 'acc_articles.account_id', '=', 'descendants.id')
-            ->join('acc_documents', 'acc_documents.id', '=', 'acc_articles.document_id')
+            ->leftJoin('acc_articles', 'acc_articles.account_id', '=', 'descendants.id')
+            ->leftJoin('acc_documents', 'acc_documents.id', '=', 'acc_articles.document_id')
             // Join the pivot table for statuses. This table contains the create_date and status_name.
-            ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+            ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
+            ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
             ->join('acc_accounts as root_account', 'root_account.id', '=', 'descendants.root_id')
             // Ensure we only get the latest status per document
             ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
             // And only if that latest status has the name "active"
-            ->where('statuses.name', DocumentStatusEnum::CONFIRMED->value)
+            ->whereIn('statuses.name', $statuses)
             ->where('acc_documents.ounit_id', $data['ounitID'])
             ->where('acc_documents.fiscal_year_id', $data['fiscalYearID'])
             ->when($searchByDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('acc_documents.document_date', [$startDate, $endDate]);
             })
             ->when($searchByDocNum, function ($query) use ($startDocNum, $endDocNum) {
-                $query->whereBetween('acc_documents.document_number', [$startDocNum, $endDocNum]);
+                $query->whereintegerInRaw('acc_documents.document_number', [$startDocNum, $endDocNum]);
             })
             ->select(
-                'descendants.root_id',
-                'root_account.name',
-                DB::raw('SUM(acc_articles.credit_amount) as total_deposit'),
-                DB::raw('SUM(acc_articles.debt_amount) as total_withdraw'),
+                [
+                    'descendants.root_id',
+                    'root_account.name',
 
-                // Sums for document_type_id = 1 & 2 (combined)
-                DB::raw("SUM(CASE WHEN acc_documents.document_type_id IN (1, 2) THEN acc_articles.credit_amount ELSE 0 END) as deposit_type1_2"),
-                DB::raw("SUM(CASE WHEN acc_documents.document_type_id IN (1, 2) THEN acc_articles.debt_amount ELSE 0 END) as withdraw_type1_2"),
+                    // Sums for document_type_id = 1 & 2 & 4 (combined)
+                    DB::raw("SUM(CASE WHEN acc_documents.document_type_id IN ({$periodTypesString}) THEN acc_articles.credit_amount ELSE 0 END) as period_credit"),
+                    DB::raw("SUM(CASE WHEN acc_documents.document_type_id IN ({$periodTypesString}) THEN acc_articles.debt_amount ELSE 0 END) as period_debt"),
 
-                // Sums for document_type_id = 3 (separately)
-                DB::raw("SUM(CASE WHEN acc_documents.document_type_id = 3 THEN acc_articles.credit_amount ELSE 0 END) as deposit_type3"),
-                DB::raw("SUM(CASE WHEN acc_documents.document_type_id = 3 THEN acc_articles.debt_amount ELSE 0 END) as withdraw_type3"),
+                    // Sums for document_type_id = 3, opening type
+                    DB::raw("SUM(CASE WHEN acc_documents.document_type_id = {$openType} THEN acc_articles.credit_amount ELSE 0 END) as opening_credit"),
+                    DB::raw("SUM(CASE WHEN acc_documents.document_type_id = {$openType} THEN acc_articles.debt_amount ELSE 0 END) as opening_debt"),
 
-                // Sums for document_type_id = 4 (separately)
-                DB::raw("SUM(CASE WHEN acc_documents.document_type_id = 4 THEN acc_articles.credit_amount ELSE 0 END) as deposit_type4"),
-                DB::raw("SUM(CASE WHEN acc_documents.document_type_id = 4 THEN acc_articles.debt_amount ELSE 0 END) as withdraw_type4")
+                ]
             )
             ->groupBy('descendants.root_id', 'root_account.name')
             ->get();
+        $showType = $data['showType'];
+        if ($showType == 1) {
+            $results = $results->reject(function ($item) {
+                return $item->opening_credit == 0 && $item->opening_debt == 0 && $item->period_credit == 0 && $item->period_debt == 0;
+            });
+        } elseif ($showType == 2) {
+            $results = $results->reject(function ($item) {
+                $untilNowCredit = $item->opening_credit + $item->period_credit;
+                $untilNowDebt = $item->opening_debt + $item->period_debt;
 
-        return response()->json($results);
+                return $untilNowCredit - $untilNowDebt == 0;
+            });
+        } elseif ($showType == 3) {
+            $results = $results->reject(function ($item) {
+                $untilNowCredit = $item->opening_credit + $item->period_credit;
+                $untilNowDebt = $item->opening_debt + $item->period_debt;
+
+                return $untilNowCredit - $untilNowDebt != 0;
+            });
+        }
+
+
+        return TarazLogResource::collection($results);
     }
 }
