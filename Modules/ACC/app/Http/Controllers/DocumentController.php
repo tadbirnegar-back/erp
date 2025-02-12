@@ -8,6 +8,7 @@ use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\ACC\app\Http\Enums\AccountCategoryTypeEnum;
+use Modules\ACC\app\Http\Enums\AccountLayerTypesEnum;
 use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
 use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
@@ -193,7 +194,7 @@ class DocumentController extends Controller
             ])
             ->with(['ounit' => function ($query) {
                 $query
-                    ->with(['ancestors' => function ($query) {
+                    ->with(['person', 'ancestors' => function ($query) {
                         $query
                             ->where('unitable_type', '!=', StateOfc::class)
                             ->withoutGlobalScopes();
@@ -203,7 +204,10 @@ class DocumentController extends Controller
             }, 'articles' => function ($query) {
                 $query
                     ->orderBy('priority', 'asc')
-                    ->with(['transaction.cheque.latestStatus', 'account' => function ($query) {
+                    ->with(['transaction.cheque' => function ($query) {
+                        $query->with(['latestStatus', 'bankAccount.bankBranch.bank']);
+
+                    }, 'account' => function ($query) {
                         $query
                             ->with('accountCategory', 'ancestorsAndSelf')
                             ->withoutGlobalScopes();
@@ -279,12 +283,12 @@ class DocumentController extends Controller
             //dueDate
             //paymentType
             $articles = json_decode($data['articles'], true);
-            $noPaymentType = array_filter($articles, fn($article) => !isset($article['paymentType']));
+            $noPaymentType = array_values(array_filter($articles, fn($article) => !isset($article['paymentType'])));
             if (!empty($noPaymentType)) {
                 $this->bulkStoreArticle($noPaymentType, $document);
             }
 
-            $cheques = array_filter($articles, fn($article) => isset($article['paymentType']) && $article['paymentType'] == 1 && !isset($article['transactionID']));
+            $cheques = array_values(array_filter($articles, fn($article) => isset($article['paymentType']) && $article['paymentType'] == 1 && !isset($article['transactionID'])));
 
             $newCheques = [];
             foreach ($cheques as $cheque) {
@@ -310,7 +314,15 @@ class DocumentController extends Controller
 
 
             if (isset($data['deletedID'])) {
-                Article::find($data['deletedID'])->delete();
+                $article = Article::with('transaction.cheque')->find($data['deletedID']);
+                if ($article->transaction) {
+                    $transaction = $this->softDeleteTransaction($article->transaction);
+                    $cheque = $article->transaction?->cheque;
+                    $this->resetChequeAndFree($cheque);
+
+                }
+
+                $article->delete();
             }
 
             DB::commit();
@@ -525,7 +537,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 51010)->first();
+                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 5101)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -657,7 +669,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 51010)->first();
+                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 5101)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -781,7 +793,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 51010)->first();
+                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 5101)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -870,5 +882,95 @@ class DocumentController extends Controller
         $result['ounit'] = $ounit;
 
         return CurrentFiscalYearResource::make($result);
+    }
+
+    public function financialBalanceReport(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'ounitID' => 'required',
+            'fiscalYearID' => 'required',
+            'balanceType' => 'required',
+            'startDate' => 'sometimes',
+            'endDate' => 'sometimes',
+            'startDocNum' => 'sometimes',
+            'endDocNum' => 'sometimes',
+            'opening' => 'sometimes',
+            'closing' => 'sometimes',
+            'temporary' => 'sometimes',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 422);
+        }
+
+        if (isset($data['startDate'])) {
+            $startDate = convertJalaliPersianCharactersToGregorian($data['startDate']);
+            $endDate = convertJalaliPersianCharactersToGregorian($data['endDate']);
+            $searchByDate = true;
+            $searchByDocNum = false;
+            $startDocNum = null;
+            $endDocNum = null;
+        } else {
+            $startDocNum = $data['startDocNum'];
+            $endDocNum = $data['endDocNum'];
+            $searchByDate = false;
+            $searchByDocNum = true;
+        }
+
+        $accountableType = AccountLayerTypesEnum::getLayerByID($data['balanceType']);
+
+        $results = DB::table(DB::raw('(
+                WITH RECURSIVE descendants AS (
+                    SELECT id, id as root_id
+                    FROM acc_accounts
+                    WHERE accountable_type ="' . addslashes($accountableType) . '"
+                    UNION ALL
+                    SELECT a.id, d.root_id
+                    FROM acc_accounts a
+                    INNER JOIN descendants d ON a.parent_id = d.id
+                )
+                SELECT * FROM descendants
+            ) as descendants')
+        )
+            ->join('acc_articles', 'acc_articles.account_id', '=', 'descendants.id')
+            ->join('acc_documents', 'acc_documents.id', '=', 'acc_articles.document_id')
+            // Join the pivot table for statuses. This table contains the create_date and status_name.
+            ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+            ->join('acc_accounts as root_account', 'root_account.id', '=', 'descendants.root_id')
+            // Ensure we only get the latest status per document
+            ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+            // And only if that latest status has the name "active"
+            ->where('statuses.name', DocumentStatusEnum::CONFIRMED->value)
+            ->where('acc_documents.ounit_id', $data['ounitID'])
+            ->where('acc_documents.fiscal_year_id', $data['fiscalYearID'])
+            ->when($searchByDate, function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('acc_documents.document_date', [$startDate, $endDate]);
+            })
+            ->when($searchByDocNum, function ($query) use ($startDocNum, $endDocNum) {
+                $query->whereBetween('acc_documents.document_number', [$startDocNum, $endDocNum]);
+            })
+            ->select(
+                'descendants.root_id',
+                'root_account.name',
+                DB::raw('SUM(acc_articles.credit_amount) as total_deposit'),
+                DB::raw('SUM(acc_articles.debt_amount) as total_withdraw'),
+
+                // Sums for document_type_id = 1 & 2 (combined)
+                DB::raw("SUM(CASE WHEN acc_documents.document_type_id IN (1, 2) THEN acc_articles.credit_amount ELSE 0 END) as deposit_type1_2"),
+                DB::raw("SUM(CASE WHEN acc_documents.document_type_id IN (1, 2) THEN acc_articles.debt_amount ELSE 0 END) as withdraw_type1_2"),
+
+                // Sums for document_type_id = 3 (separately)
+                DB::raw("SUM(CASE WHEN acc_documents.document_type_id = 3 THEN acc_articles.credit_amount ELSE 0 END) as deposit_type3"),
+                DB::raw("SUM(CASE WHEN acc_documents.document_type_id = 3 THEN acc_articles.debt_amount ELSE 0 END) as withdraw_type3"),
+
+                // Sums for document_type_id = 4 (separately)
+                DB::raw("SUM(CASE WHEN acc_documents.document_type_id = 4 THEN acc_articles.credit_amount ELSE 0 END) as deposit_type4"),
+                DB::raw("SUM(CASE WHEN acc_documents.document_type_id = 4 THEN acc_articles.debt_amount ELSE 0 END) as withdraw_type4")
+            )
+            ->groupBy('descendants.root_id', 'root_account.name')
+            ->get();
+
+        return response()->json($results);
     }
 }

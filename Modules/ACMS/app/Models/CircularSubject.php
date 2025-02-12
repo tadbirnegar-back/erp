@@ -48,6 +48,11 @@ class CircularSubject extends Model
         return $this->hasMany(Account::class, 'subject_id');
     }
 
+    public function account(): HasOne
+    {
+        return $this->hasOne(Account::class, 'subject_id');
+    }
+
     public function circularItems(): HasMany
     {
         return $this->hasMany(CircularItem::class, 'subject_id');

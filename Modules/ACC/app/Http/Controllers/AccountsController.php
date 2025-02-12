@@ -116,7 +116,7 @@ class AccountsController extends Controller
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage(), $e->getTrace()], 500);
         }
 
         return response()->json($account);

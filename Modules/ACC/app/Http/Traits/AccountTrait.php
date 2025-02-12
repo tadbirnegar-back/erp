@@ -48,7 +48,7 @@ trait AccountTrait
                 $item['chainCode'] = $item['categoryID'] . $item['segmentCode'];
             }
 
-            if ($item['entityType'] && $item['entityType'] == CircularSubject::class) {
+            if (isset($item['entityType']) && $item['entityType'] == CircularSubject::class) {
                 $item['chainCode'] = $item['segmentCode'];
             }
 

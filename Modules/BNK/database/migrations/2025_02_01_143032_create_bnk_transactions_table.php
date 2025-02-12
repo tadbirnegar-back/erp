@@ -31,6 +31,7 @@ return new class extends Migration {
             $table->foreign('creator_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('cheque_id')->references('id')->on('bnk_cheques')->onDelete('cascade');
             $table->foreign('card_id')->references('id')->on('bnk_account_cards')->onDelete('cascade');
+            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade');
         });
     }
 

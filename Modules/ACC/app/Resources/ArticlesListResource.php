@@ -27,6 +27,11 @@ class ArticlesListResource extends JsonResource
                 'id' => $this?->transaction->id,
                 'cheque' => [
                     'id' => $this?->transaction->cheque->id,
+                    'bank' => [
+                        'accountNumber' => $this?->transaction->cheque->bankAccount->account_number,
+                        'branch' => $this?->transaction->cheque->bankAccount->bankBranch->name,
+                        'bankName' => $this?->transaction->cheque->bankAccount->bankBranch->bank->name,
+                    ],
                     'payee_name' => $this->transaction->cheque->payee_name,
                     'segment_number' => $this->transaction->cheque->segment_number,
                     'due_date' => $this->transaction->cheque->due_date,

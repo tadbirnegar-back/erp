@@ -62,6 +62,7 @@ class SubjectController extends Controller
                 'segmentCode' => $subject->code,
                 'entityType' => get_class($subject),
                 'entityID' => $subject->id,
+                'subjectID' => $subject->id,
                 'categoryID' => SubjectTypeEnum::from($subject->subject_type_id)->getCategoryEnum()->value,
             ];
 

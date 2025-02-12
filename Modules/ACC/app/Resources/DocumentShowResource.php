@@ -14,7 +14,7 @@ class DocumentShowResource extends JsonResource
         return [
             'id' => $this->id,
             'description' => $this->document_description,
-            'document_date' => is_null($this->document_date) ? null : convertGregorianToJalali($this->document_date),
+            'document_date' => $this?->document_date,
             'status' => [
                 'name' => $this->status_name,
                 'class_name' => $this->status_class_name,
@@ -22,6 +22,7 @@ class DocumentShowResource extends JsonResource
             'fiscalYear' => $this->fiscalYear_name,
             'document_number' => $this->document_number,
             'ounit' => [
+                'head' => $this->ounit->person->display_name,
                 'abadi_code' => $this->village_abadicode,
                 'name' => $this->ounit->name,
                 'ancestors' => $this->ounit->ancestors->map(function ($ancestor) {

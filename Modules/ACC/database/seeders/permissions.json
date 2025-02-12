@@ -112,5 +112,11 @@
         "slug": "/acc/documents/delete-status",
         "moduleName": "ACC",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "تراز آزمایشی",
+        "slug": "/acc/documents/balance-sheet-report",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
     }
 ]

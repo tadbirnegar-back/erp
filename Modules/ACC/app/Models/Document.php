@@ -36,7 +36,7 @@ class Document extends Model
         'document_date',
         'create_date',
     ];
-
+    
     public $timestamps = false;
     protected $table = 'acc_documents';
 

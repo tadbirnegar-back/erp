@@ -16,6 +16,16 @@ trait TransactionTrait
         return $transaction;
     }
 
+    public function softDeleteTransaction(Transaction $transaction)
+    {
+        $status = $this->transactionDeleteStatus();
+        $transaction->status_id = $status->id;
+        $transaction->save();
+
+        return $transaction;
+
+    }
+
     public function prepareTransactionData(array $data)
     {
         if (!isset($data[0]) || !is_array($data[0])) {

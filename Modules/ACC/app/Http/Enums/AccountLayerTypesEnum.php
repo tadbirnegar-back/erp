@@ -31,4 +31,16 @@ enum AccountLayerTypesEnum: string
 
     }
 
+    public static function getLayerByID(int $id): ?string
+    {
+        $layer = match ($id) {
+            1 => self::MAIN,
+            2 => self::SUB,
+            3 => self::DETAIL,
+            default => null,
+        };
+        return $layer?->value ?? null;
+    }
+
+
 }

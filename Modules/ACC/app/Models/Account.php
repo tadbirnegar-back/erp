@@ -58,6 +58,11 @@ class Account extends Model
         return $this->hasManyThrough(Cheque::class, ChequeBook::class, 'account_id', 'cheque_book_id', 'entity_id', 'id');
     }
 
+    public function descendantsArticles()
+    {
+        return $this->hasManyOfDescendantsAndSelf(Article::class, 'account_id');
+    }
+
     public static function getTableName()
     {
         return with(new static)->getTable();

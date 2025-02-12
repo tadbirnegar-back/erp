@@ -74,6 +74,17 @@ trait ChequeTrait
         return $data;
     }
 
+    public function resetChequeAndFree(Cheque $cheque)
+    {
+        $cheque->update([
+            'payee_name' => null,
+            'due_date' => null,
+        ]);
+        $cheque->statuses()->attach($this->whiteChequeStatus()->id);
+
+        return $cheque;
+    }
+
     public function prepareChequeData(array $data, ChequeBook $chequeBook)
     {
         if (!isset($data[0]) || !is_array($data[0])) {

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\BNK\Database\factories\ChequeFactory;
 use Modules\StatusMS\app\Models\Status;
+use Znck\Eloquent\Traits\BelongsToThrough;
 
 class Cheque extends Model
 {
@@ -73,6 +74,17 @@ class Cheque extends Model
     {
         return $this->belongsTo(ChequeBook::class, 'cheque_book_id');
     }
+
+    use BelongsToThrough;
+
+    public function bankAccount()
+    {
+        return $this->belongsToThrough(BankAccount::class, ChequeBook::class, foreignKeyLookup: [
+            BankAccount::class => 'account_id',
+            ChequeBook::class => 'cheque_book_id',
+        ]);
+    }
+
 
     public static function GetAllStatuses()
     {

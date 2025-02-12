@@ -7,7 +7,6 @@ use DB;
 use Illuminate\Http\Request;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Models\Account;
-use Modules\ACC\app\Models\SubAccount;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\BNK\app\Http\Enums\BankAccountTypeEnum;
 use Modules\BNK\app\Http\Traits\BankTrait;
@@ -63,8 +62,7 @@ class BankAccountController extends Controller
             $bank = $bankAccount->bank;
             $className = get_class($bank);
 
-            $acc = Account::where('accountable_type', SubAccount::class)
-                ->where('entity_type', $className)
+            $acc = Account::where('entity_type', $className)
                 ->where('entity_id', $bank->id)
                 ->first();
 
