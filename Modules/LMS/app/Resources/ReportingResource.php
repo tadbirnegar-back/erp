@@ -20,7 +20,7 @@ class ReportingResource extends JsonResource
             ],
             'answerSheetOfFinalExam' => [
                 'score' => data_get($this, 'answerSheetOfFinalExam.score'),
-                'statusName' => data_get($this, 'answerSheetOfFinalExam.statusName') === 'رد شده'
+                'statusName' => in_array(data_get($this, 'answerSheetOfFinalExam.statusName'), ['رد شده', null], true)
                     ? 'در انتظار امتحان'
                     : data_get($this, 'answerSheetOfFinalExam.statusName'),
                 'startTime' => convertDateTimeGregorianToJalaliDateTime($this['answerSheetOfFinalExam']['start_date_time'] ?? null),
