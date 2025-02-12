@@ -13,7 +13,7 @@ use Morilog\Jalali\Jalalian;
 
 trait CourseReportTrait
 {
-    use AnswerSheetTrait, ContentTrait, DateTrait;
+    use AnswerSheetTrait, ContentTrait, DateTrait, LessonTrait;
 
     public function CourseInfo($courseID)
     {
@@ -69,55 +69,55 @@ trait CourseReportTrait
 
     public function AudioDuration($courseID, $contentTypes)
     {
-        $contentStatus = $this->contentActiveStatus()->id;
-        $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
-            ->joinRelationship('chapters.lessons.contents.contentType')
-            ->leftJoinRelationship('chapters.lessons.contents.file')
-            ->select([
-                'files.duration as duration',
-                'content_consume_log.consume_round as consume_round',
-                'content_consume_log.consume_data as consume_data',
-                'files.id as fileID',
-            ])
-            ->where('courses.id', $courseID)
-            ->where('content_type.id', $contentTypes)
-            ->where('contents.status_id', $contentStatus)
-            ->distinct()
-            ->get();
-
-        return $course->map(function ($item) {
-            return [
-                'duration' => $item->duration,
-                'consume_round' => $item->consume_round,
-                'total' => (($item->duration * $item->consume_round) + $item->consume_data),
-            ];
-        });
-
-    }
-
-    public function VideoDuration($courseID, $VidContentTypes)
-    {
-        $contentStatus = $this->contentActiveStatus()->id;
-
-        $course = Course::joinRelationship('chapters.lessons.contents.consumeLog')
+        $contentStatus = $this->activeContentStatus()->id;
+        $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
                 'content_consume_log.consume_data as consume_data',
-                'files.id as fileID',
+            ])
+            ->where('courses.id', $courseID)
+            ->where('content_type.id', $contentTypes)
+            ->where('contents.status_id', $contentStatus)
+            ->distinct()
+            ->get();
+        return $course->map(function ($item) {
+            $total = ($item->duration * $item->consume_round) + $item->consume_data;
+            return [
+                'duration' => $item->duration,
+                'consume_round' => $item->consume_round,
+                'total' => ($total == 0) ? null : $total,
+            ];
+        });
+
+
+    }
+
+    public function VideoDuration($courseID, $VidContentTypes)
+    {
+        $contentStatus = $this->activeContentStatus()->id;
+        $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog')
+            ->joinRelationship('chapters.lessons.contents.contentType')
+            ->leftJoinRelationship('chapters.lessons.contents.file')
+            ->select([
+                'files.duration as duration',
+                'content_consume_log.consume_round as consume_round',
+                'content_consume_log.consume_data as consume_data',
             ])
             ->where('courses.id', $courseID)
             ->where('content_type.id', $VidContentTypes)
             ->where('contents.status_id', $contentStatus)
             ->distinct()
             ->get();
+
         return $course->map(function ($item) {
+            $total = ($item->duration * $item->consume_round) + $item->consume_data;
             return [
                 'duration' => $item->duration,
                 'consume_round' => $item->consume_round,
-                'total' => (($item->duration * $item->consume_round) + $item->consume_data),
+                'total' => ($total == 0) ? null : $total,
             ];
         });
 
