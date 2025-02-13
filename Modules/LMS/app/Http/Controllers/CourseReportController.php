@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\LMS\app\Http\Traits\CourseReportTrait;
+use Modules\LMS\app\Resources\CourseReportResource;
 
 class CourseReportController extends Controller
 {
@@ -19,8 +20,8 @@ class CourseReportController extends Controller
     public function index($courseID): JsonResponse
     {
         $courseReport = $this->CourseInfo($courseID);
-
         return response()->json($courseReport);
+        return CourseReportResource::make($courseReport);
     }
 
     /**
