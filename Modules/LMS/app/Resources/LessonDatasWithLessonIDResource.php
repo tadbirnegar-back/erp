@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Number;
 
 class LessonDatasWithLessonIDResource extends JsonResource
 {
@@ -24,9 +25,10 @@ class LessonDatasWithLessonIDResource extends JsonResource
                         'teacher_id' => $content->first()->teacher_alias_id,
                         'log' => $content->first()->content_consume_data
                             ? [
-                                'set' => $content->first()->content_consume_set,
+                                'set' => json_decode($content->first()->content_consume_set),
                                 'last_played' => $content->first()->content_consume_last_played,
                                 'consumation' => $content->first()->content_consume_data,
+                                'consume_round' => $content->first()->content_consume_consume_round,
                                 'create_date' => convertDateTimeGregorianToJalaliDateTime($content->first()->content_consume_create_date),
                             ]
                             : [],
@@ -51,13 +53,17 @@ class LessonDatasWithLessonIDResource extends JsonResource
                             'avatar' => url($validComment->commented_person_avatar),
                         ];
                     });
-                })->filter()->values()->flatten(1)->all(),
+                })->filter()->values()->flatten(1)->first(),
 
                 'files' => $lesson->map(function ($file) {
+                    $sizeWithUnit = Number::fileSize($file->lesson_file_size, 2, 3);
+                    $parts = explode(' ', $sizeWithUnit, 2);
                     return [
                         'id' => $file->lesson_file_id,
-                        'file_title' => $file->lesson_file_slug,
+                        'file_title' => $file -> lesson_file_title,
                         'url' => url($file->lesson_file_slug),
+                        'size' => intval(Number::fileSize($file->lesson_file_size, 2, 3)) ,
+                        'Measurement_criteria' => $parts[1],
                     ];
                 })->filter()->unique('id')->values(),
             ];
@@ -65,16 +71,32 @@ class LessonDatasWithLessonIDResource extends JsonResource
 
         $activeContent = collect($this->resource['lessonDetails'])
             ->filter(function ($content) {
-                return !empty($content->content_consume_data);
+                return $content -> content_consume_consume_round == null;
             })
             ->sortByDesc(function ($content) {
                 return $content->content_consume_create_date;
             })
             ->first();
 
+        if($activeContent == null)
+        {
+            $activeContent = collect($this->resource['lessonDetails'])
+                ->sortByDesc(function ($content) {
+                    return $content->content_consume_create_date;
+                })
+                ->first();
+        }
+
         return [
-            'lesson_details' => $lessonDetailsData,
+            'lesson_details' => $lessonDetailsData->first(),
             'activeContent' => $activeContent ? $activeContent->content_id : null,
+            'user' => $this -> getUserData()
         ];
+    }
+
+    private function getUserData()
+    {
+        $user = \Auth::user();
+        return $user->load('person.avatar');
     }
 }

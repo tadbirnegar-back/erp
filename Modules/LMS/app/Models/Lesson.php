@@ -43,10 +43,39 @@ class Lesson extends Model
         return $this->belongsToMany(Status::class, 'status_lesson', 'lesson_id', 'status_id');
     }
 
+
+    public function lastPivotStatus()
+    {
+        $this->hasMany(StatusLesson::class, 'lesson_id', 'id');
+    }
+
     public function latestStatus()
     {
         return $this->belongsToMany(Status::class, 'status_lesson', 'lesson_id', 'status_id')
-            ->latest();
+            ->orderByDesc('id') // Order by ID in descending order
+            ->take(1); // Take the latest record
+    }
+
+    public function oneLatestStatus()
+    {
+        return $this->hasOneThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')
+            ->orederByDesc('status_lesson.created_date');
+    }
+
+
+    public function latestStatusFirstOne()
+    {
+        return $this->belongsTo(Status::class, 'status_lesson', 'lesson_id', 'status_id')
+            ->orderByDesc('id') // Order by ID in descending order
+            ->take(1); // Take the latest record
+    }
+
+    public function lastStatus()
+    {
+        return $this->belongsToMany(Status::class, 'status_lesson')
+            ->withPivot('id')
+            ->orderBy('status_lesson.id', 'desc')
+            ->limit(1); // Get the latest one
     }
 
     public function contents()

@@ -10,25 +10,11 @@ use Modules\LMS\App\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\QuestionExam;
+use Modules\SettingsMS\app\Models\Setting;
 
 
 trait AnswerSheetTrait
 {
-    public function answerSheetApprovedStatus()
-    {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
-    }
-
-    public function answerSheetTakingExamStatus()
-    {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::TAKING_EXAM->value);
-    }
-
-    public function answerSheetDeclinedStatus()
-    {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
-    }
-
 
     public function storeAnswerSheet($examId, $student, $optionID, $data, $usedTime,)
     {
@@ -56,8 +42,11 @@ trait AnswerSheetTrait
             if (empty($qA['option_id']) || empty($qA['question_id'])) {
                 $value = null;
             } else {
+
                 $option = Option::where('id', $qA['option_id'])->first();
                 $value = $option ? $option->title : null;
+
+                $value = $option->title;
                 $optionIDs[] = $option->id;
             }
 
@@ -136,11 +125,9 @@ trait AnswerSheetTrait
         $declinedStatus = $this->answerSheetDeclinedStatus();
 
         if ($approvedStatus && $declinedStatus) {
-            if ($score >= 50) {
-                return $approvedStatus;
-            } else {
-                return $declinedStatus;
-            }
+            $passScore = Setting::where('key', 'pass_score')->value('value');
+
+            return ($passScore !== null && $score >= $passScore) ? $approvedStatus : $declinedStatus;
         }
 
         return null;
@@ -188,8 +175,8 @@ trait AnswerSheetTrait
     public function student($student)
     {
         $query = User::query()
-            ->joinRelationship('person.avatar')
-            ->joinRelationship('roles.RolePosition.position')
+            ->leftJoinRelationship('person.avatar')
+            ->leftJoinRelationship('roles.RolePosition.position')
             ->select([
                 'persons.display_name as name',
                 'files.slug as avatar',
@@ -197,7 +184,6 @@ trait AnswerSheetTrait
             ])
             ->where('users.id', $student->id)
             ->first();
-
 
         return [
             'name' => $query->name ?? null,
@@ -311,6 +297,21 @@ trait AnswerSheetTrait
             ->select('course_alias.id as courseID')
             ->where('answer_sheets.id', $answerSheetID)->first();
 
+    }
+
+    public function answerSheetApprovedStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
+    }
+
+    public function answerSheetTakingExamStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::TAKING_EXAM->value);
+    }
+
+    public function answerSheetDeclinedStatus()
+    {
+        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
     }
 
 

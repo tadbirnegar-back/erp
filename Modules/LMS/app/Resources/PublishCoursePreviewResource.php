@@ -3,14 +3,19 @@
 namespace Modules\LMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Number;
-use Modules\HRMS\App\Http\Enums\CourseStatusEnum;
+use Illuminate\Support\Facades\Log;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\LMS\app\Http\Enums\CourseStatusEnum;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Traits\CourseTargetTrait;
+use Illuminate\Support\Number;
+use Modules\LMS\app\Http\Traits\LessonTrait;
+use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Lesson;
 
 class PublishCoursePreviewResource extends JsonResource
 {
-    use CourseTargetTrait;
+    use CourseTargetTrait , LessonTrait;
 
     /**
      * Transform the resource into an array.
@@ -69,8 +74,7 @@ class PublishCoursePreviewResource extends JsonResource
                             $mergedTarget['value_info']['value'] = $targetInfo->value_alias_value !== null
                                 ? ($targetInfo->value_alias_value == 1 ? 'بله' : 'خیر')
                                 : $mergedTarget['value_info']['value'];
-                        }
-                        $mergedTarget['property_info']['id'] = $targetInfo->oucProperty_id ?? $mergedTarget['property_info']['id'];
+                        }                        $mergedTarget['property_info']['id'] = $targetInfo->oucProperty_id ?? $mergedTarget['property_info']['id'];
                         $mergedTarget['value_info']['operator'] = $targetInfo->value_alias_operator ?? $mergedTarget['value_info']['operator'];
                     }
 
@@ -99,43 +103,58 @@ class PublishCoursePreviewResource extends JsonResource
                     'title' => $item->pre_reg_alias_title,
                 ];
             })->filter(function ($item) {
-                return !is_null($item['id']); // Remove items with null IDs
+                return !is_null($item['id']);
             })->unique('id')->values();
 
-            $sizeWithUnitVideo = Number::fileSize($courseInfo->course_video_size, 2, 3);
-            $partsvideo = explode(' ', $sizeWithUnitVideo, 2);
+            if($courseInfo->course_video_size != null){
+                $sizeWithUnitVideo = Number::fileSize($courseInfo->course_video_size, 2, 3);
+                $partsvideo = explode(' ', $sizeWithUnitVideo, 2);
+            }
+
 
             $sizeWithCover = Number::fileSize($courseInfo->course_cover_size, 2, 3);
             $partscover = explode(' ', $sizeWithCover, 2);
 
             $chapters = $group->groupBy('chapters_alias_id')->map(function ($chapterGroup, $chapterId) {
+
                 $chapterName = $chapterGroup->first()->chapters_alias_title;
+                $chapterReadOnly = $chapterGroup->first()->chapters_alias_read_only ? true : false;
                 $lessons = $chapterGroup->map(function ($lesson) {
+                    $lessonStatusData = $this->checkStatusOfLesson($lesson->lessons_alias_id);
                     return [
                         'lesson_id' => $lesson->lessons_alias_id,
                         'lesson_title' => $lesson->lessons_alias_title,
+                        'status_name' => $lessonStatusData?->latestStatus[0]?->name,
                     ];
                 })->filter(function ($lesson) {
-                    return !is_null($lesson['lesson_id']);
-                })->values()->unique();
+                    if($lesson['status_name'] == LessonStatusEnum::ACTIVE->value)
+                    {
+                        return !is_null($lesson['lesson_id']);
+                    }
+                })->unique()->values()->toArray();
 
                 return [
                     'chapter_id' => $chapterId,
                     'chapter_name' => $chapterName,
                     'lessons' => $lessons,
+                    'readOnly' => $chapterReadOnly,
+                    'warningToDelete' => $chapterName !== 'بدون فصل' && count($lessons) > 0,
                 ];
             });
 
+            $courseStatus =  $this -> courseStatushandle($courseInfo->course_alias_id);
+            $name = $courseStatus->latestStatus->name;
+            $class_name = $courseStatus->latestStatus->class_name;
 
             return [
                 'course_info' => [
                     'id' => $courseInfo->course_alias_id,
                     'title' => $courseInfo->course_alias_title,
                     'description' => $courseInfo->course_alias_description,
-                    'is_required' => ["name" => $courseInfo->course_alias_is_required ? 'اجباری' : 'اختیاری', "class_name" => 'primary'],
+                    'is_required' => ["name" => $courseInfo->course_alias_is_required ? 'اجباری' : 'اختیاری' , "class_name" => 'primary'],
                     'expiration_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_expiration_date),
                     'access_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_access_date),
-                    'privacy' => ['id' => $courseInfo->privacy_alias_id, 'name' => $courseInfo->privacy_alias_name, 'class_name' => 'primary'],
+                    'privacy' => [ 'id' => $courseInfo->privacy_alias_id , 'name' => $courseInfo->privacy_alias_name  , 'class_name' => 'primary'],
                     'price' => $courseInfo->course_alias_price
                 ],
                 'cover' => [
@@ -145,20 +164,19 @@ class PublishCoursePreviewResource extends JsonResource
                     'size' => intval(Number::fileSize($courseInfo->course_cover_size, 2, 3)) . ' ' . $partscover[1],
                 ],
                 'video' => [
-                    'slug' => url($courseInfo->course_video_slug),
-                    'title' => $courseInfo->course_video_title,
-                    'id' => $courseInfo->course_video_id,
-                    'size' => intval(Number::fileSize($courseInfo->course_video_size, 2, 3)) . ' ' . $partsvideo[1],
+                    'slug' => $courseInfo->course_video_slug == null ? null : url($courseInfo->course_video_slug),
+                    'title' => $courseInfo->course_video_title == null ? null : $courseInfo->course_video_title,
+                    'id' => $courseInfo->course_video_id == null ? null : $courseInfo->course_video_id,
+//                    'size' => $courseInfo == null ? null : intval(Number::fileSize($courseInfo->course_video_size, 2, 3)) . ' ' . $partsvideo[1],
                 ],
                 'pre_req' => $preReqs,
                 'course_targets' => $courseTargets->values(),
-                'chapters' => $chapters->values(),
-                'status' => ["name" => $courseInfo->status_alias_name, "class_name" => $courseInfo->status_alias_class_name],
-                'buttons' => $this->ButtonsToRender()[$courseInfo->status_alias_name],
+                'chapters' => $chapters->first()['chapter_id'] == '' ? [] : $chapters->values(),
+                'status' => ["name" => $name ,  "class_name" => $class_name],
+                'buttons' => $this->ButtonsToRender()[$name],
             ];
         })->first();
     }
-
     private function isForAllCats($ids)
     {
         return count($ids) > 1;
@@ -168,7 +186,6 @@ class PublishCoursePreviewResource extends JsonResource
     {
         return OunitCategoryEnum::getLabelById($id);
     }
-
     /**
      * Concatenate values if both are not null.
      */
@@ -187,20 +204,31 @@ class PublishCoursePreviewResource extends JsonResource
     {
         return [
             CourseStatusEnum::PISHNEVIS->value => [
-                'PublishBtn',
+                'PublishBtn' ,
                 'CourseOperationBtn'
             ],
             CourseStatusEnum::WAITING_TO_PRESENT->value => [
-                'EditBtn',
-                'CourseEditBtn'
+                'EditBtn' ,
+                'CancelBtn'
             ],
             CourseStatusEnum::PRESENTING->value => [
-                'CancelBtn',
+                'CancelBtn' ,
             ],
             CourseStatusEnum::ENDED->value => ['noBtn'],
             CourseStatusEnum::DELETED->value => ['noBtn'],
             CourseStatusEnum::CANCELED->value => ['noBtn'],
         ];
+    }
+
+    private function courseStatushandle($course_id)
+    {
+        return Course::with('latestStatus')->find($course_id);
+    }
+
+
+    private function checkStatusOfLesson($lessonId)
+    {
+        return Lesson::with('latestStatus')->find($lessonId);
     }
 
 }

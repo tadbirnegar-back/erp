@@ -31,7 +31,7 @@ class LessonController extends Controller
             $data = $request->all();
 
             $user = Auth::user();
-            Comment::create([
+            $comment = Comment::create([
                 'text' => $data['text'],
                 'commentable_id' => $data['lesson_id'],
                 'creator_id' => $user->id,
@@ -39,7 +39,10 @@ class LessonController extends Controller
                 'create_date' => now()
             ]);
             DB::commit();
-            return response()->json(['message' => "نظر شما ذخیره شد"], 200);
+            return response()->json(['comment' => [
+                'created_at' => convertDateTimeGregorianToJalaliDateTime(now()),
+                'text' => $comment->text,
+            ]], 200);
         } catch (\Exception $exception) {
             DB::rollBack();
             return response()->json(['message' => "نظر شما ذخیره نشد"], 400);
@@ -71,7 +74,7 @@ class LessonController extends Controller
             return response()->json(['message' => "درس مورد نظر شما با موفقیت ساخته شد"], 200);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => "درس مورد نظر شما ساخته نشد"], 404);
+            return response()->json(['message' => $exception->getMessage()], 404);
         }
     }
 
@@ -107,7 +110,7 @@ class LessonController extends Controller
             $lessonDatas = $this->getLessonDatasBasedOnLessonId($data['lessonID'], $user);
         }
         $response = new LessonDatasWithLessonIDResource($lessonDatas);
-        return response()->json($response);
+        return response() -> json($response);
     }
 
     public function show($id)

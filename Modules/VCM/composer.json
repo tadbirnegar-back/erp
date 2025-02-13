@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/vcm",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\VCM\\": "",
+            "Modules\\VCM\\App\\": "app/",
+            "Modules\\VCM\\Database\\Factories\\": "database/factories/",
+            "Modules\\VCM\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\VCM\\Tests\\": "tests/"
+        }
+    }
+}

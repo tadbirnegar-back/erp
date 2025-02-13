@@ -3,19 +3,16 @@
 namespace App\Http\Controllers;
 
 
-use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\Meeting;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
-use Modules\LMS\app\Models\AnswerSheet;
-use Modules\LMS\app\Models\Exam;
-use Modules\OUnitMS\app\Models\DistrictOfc;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\LMS\app\Models\ContentType;
+use Modules\LMS\app\Models\Course;
 
 
 class testController extends Controller
@@ -23,19 +20,11 @@ class testController extends Controller
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
     use ExamsTrait;
 
-    public function run($courseId)
+    public function run()
     {
-        $student = User::with('student')->find(60);
 
-        $query = AnswerSheet::joinRelationship('exam.courseExams.course')
-            ->where('courses.id', $courseId)
-            ->where('answer_sheets.student_id', $student->id)
-            ->exists();
-
-
-        return response()->json($query);
-
-
+        $data = Course::with('contentTypes')->find(134);
+        return response() -> json($data);
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);
@@ -215,15 +204,6 @@ class testController extends Controller
 //            'meeting_type_id' => 2,
 //            'ounit_id' => 3889,
 //        ]);
-
-        $query = Exam::joinRelationship('course');
-        $query->leftJoinRelationship('questions');
-        $query->addSelect([
-            'exams.title as examTitle',
-            'courses.title as coursesTitle',
-            'questions.title as question_title',
-        ]);
-        $query->withCount(['questions as totalQuestions']);
 //        $user = User::find(2172);
 //        $userRoles = $user->roles->pluck('name')->toArray();
 //
@@ -280,7 +260,6 @@ class testController extends Controller
 //            $a
 //        );
 
-        return $query->where('exams.id', 1)->get();
 //        $organizationUnitIds = OrganizationUnit::where('unitable_type', VillageOfc::class)->with(['head.person.personable', 'head.person.workForce.educationalRecords.levelOfEducation', 'ancestorsAndSelf', 'unitable', 'ancestors' => function ($q) {
 //            $q->where('unitable_type', DistrictOfc::class);
 //

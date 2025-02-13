@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\Database\factories\ChapterFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -44,4 +45,9 @@ class Chapter extends Model
         return $this->hasMany(Lesson::class, 'chapter_id', 'id');
     }
 
+
+    public function activeLessons()
+    {
+        return $this->hasMany(Lesson::class, 'chapter_id', 'id');
+    }
 }

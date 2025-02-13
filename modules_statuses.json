@@ -19,5 +19,6 @@
     "EMS": true,
     "PayStream": true,
     "Controller": true,
-    "CourseController": true
+    "CourseController": true,
+    "VCM": true
 }

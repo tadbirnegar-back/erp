@@ -42,9 +42,9 @@ class ExamResultResource extends ResourceCollection
 
         $jalaliStartDate = $startTime ? convertDateTimeGregorianToJalaliDateTime($startTime) : null;
 
-        $studentInfo['avatar'] = isset($studentInfo['avatar']) && $studentInfo['avatar']
-            ? $this->baseUrl . '/' . ltrim($studentInfo['avatar'], '/')
-            : "{$this->baseUrl}/default-avatar.png";
+        if (isset($studentInfo['avatar']) && $studentInfo['avatar']) {
+            $studentInfo['avatar'] = $this->baseUrl . '/' . ltrim($studentInfo['avatar'], '/');
+        }
 
         $groupedAnswers = collect($data['answerSheet'])
             ->groupBy('questionID')

@@ -75,11 +75,6 @@ class Question extends Model
         return $this->belongsTo(Repository::class, 'repository_id', 'id');
     }
 
-    public function Questionype()
-    {
-        return $this->belongsTo(QuestionType::class, 'question_type_id', 'id');
-
-    }
 
     public function chapter()
     {
@@ -105,6 +100,5 @@ class Question extends Model
     {
         return $this->hasMany(Option::class, 'question_id', 'id');
     }
-
 
 }

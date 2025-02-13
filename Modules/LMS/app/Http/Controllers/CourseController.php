@@ -8,10 +8,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Models\Job;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
 use Modules\LMS\app\Http\Traits\CourseCourseTrait;
@@ -46,6 +46,7 @@ class CourseController extends Controller
 
     public function store(Request $request)
     {
+
         try {
             DB::beginTransaction();
             $data = $request->all();
@@ -66,7 +67,7 @@ class CourseController extends Controller
             return response()->json(['message' => "دوره با موفقیت ساخته شد"]);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => $exception->getMessage()]);
+            return response()->json(['message' => $exception->getMessage()] , 404);
         }
     }
 
@@ -94,7 +95,7 @@ class CourseController extends Controller
             return response()->json(['message' => 'دوره شما با موفقیت به روز رسانی شد'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 200);
+            return response()->json(['message' => $e->getMessage()], 404);
         }
 
 
@@ -120,15 +121,28 @@ class CourseController extends Controller
                     $this->courseCanceledStatus()->id
                 ]);
             })->with('latestStatus')->find($id);
+
+
             $user = Auth::user();
             if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
+
+            $componentsToRenderWithData['course']->chapters->each(function ($chapter) {
+                $chapter->setRelation(
+                    'lessons',
+                    $chapter->lessons->filter(function ($lesson) {
+                        return $lesson->lastStatus[0]->name === LessonStatusEnum::ACTIVE->value;
+                    })
+                );
+            });
+
+
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
+            return response()->json(['message' => $e->getMessage()], 403);
         }
     }
 
@@ -139,9 +153,7 @@ class CourseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
 
         $result = $this->courseIndex($perPage, $pageNum, $data);
-        $response = new CourseListResource($result);
-
-        return $response;
+        return CourseListResource::collection($result);
     }
 
 
@@ -152,8 +164,7 @@ class CourseController extends Controller
 
             $course = Course::with('prerequisiteCourses')->find($id);
 
-//            $user = Auth::user();
-            $user = User::find(67);
+            $user = Auth::user();
 
 
             // Check if the user has completed prerequisite courses.
@@ -241,6 +252,7 @@ class CourseController extends Controller
                 $this->courseEndedStatus()->id,
             ]);
         })->find($id);
+
         if (empty($course)) {
             return response()->json(["message" => "دوره با این مشخصات وجود ندارد"], 403);
         }
@@ -258,6 +270,7 @@ class CourseController extends Controller
         }
 
         $data = $this->dataShowViewCourseSideBar($course, $user);
+
 
         $sidebar = new SideBarCourseShowResource($data);
         return response()->json($sidebar);
@@ -310,45 +323,52 @@ class CourseController extends Controller
     public function relatedCoursesList(Request $request)
     {
         $user = Auth::user();
-        $perPage = $data['perPage'] ?? 10;
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 50;
         $pageNum = $data['pageNum'] ?? 1;
-        $user->load('activeRecruitmentScripts');
-        $ounits = $user->activeRecruitmentScripts
-            ->pluck('organization_unit_id')
-            ->filter()
+
+        $user->load([
+            'activeRecruitmentScripts.ounit' => function ($query) {
+                $query->with(['ancestorsAndSelf' => function ($q) {
+                    $q->whereNot('unitable_type', TownOfc::class);
+                }]);
+            }
+        ]);
+
+        $villageOfcs = [];
+
+        foreach ($user->activeRecruitmentScripts as $script) {
+            if ($script->ounit && $script->ounit->unitable_type === VillageOFC::class) {
+                $script->ounit->load('unitable');
+                $villageOfcs[] = $script->ounit->unitable;
+            }
+        }
+
+
+        $relatedOrgans = $user->activeRecruitmentScripts
+            ->pluck('ounit.ancestorsAndSelf')
+            ->flatten(1)
+            ->unique()
             ->toArray();
 
-
-        //Get All the ounits can be inside target
-        $relatedOrgans = OrganizationUnit::with(['ancestors' => function ($query) use ($ounits) {
-            $query->whereNot('unitable_type', TownOfc::class);
-        }])->whereIn('id', $ounits)->get();
 
         $allData = [];
 
         foreach ($relatedOrgans as $unit) {
-            $categoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
-            if ($categoryId) {
+            $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
+            if ($ancestorCategoryId) {
                 $allData[] = [
                     'id' => $unit['id'],
-                    'category_id' => $categoryId,
+                    'category_id' => $ancestorCategoryId,
                 ];
             }
 
-            foreach ($unit['ancestors'] as $ancestor) {
-                $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($ancestor['unitable_type']);
-                if ($ancestorCategoryId) {
-                    $allData[] = [
-                        'id' => $ancestor['id'],
-                        'category_id' => $ancestorCategoryId,
-                    ];
-                }
-            }
         }
 
-// Remove duplicate entries
         $allOunits = array_unique($allData, SORT_REGULAR);
 
+
+        //Employee Features Plucks
         $levels = $user->activeRecruitmentScripts
             ->pluck('level_id')
             ->filter()
@@ -367,23 +387,27 @@ class CourseController extends Controller
             ->unique()
             ->toArray();
 
+
+        //Ounit features plucks
+        $villageOfcs = collect($villageOfcs);
+        $isTourism = $villageOfcs->pluck('isTourism')->toArray();
+        $isAttachedToCity = $villageOfcs->pluck('isAttached_to_city')->toArray();
+        $isFarm = $villageOfcs->pluck('isFarm')->toArray();
+        $degree = $villageOfcs->pluck('degree')->toArray();
+
         $title = $request->name;
-        $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs);
-        $paginatedCourses = new LengthAwarePaginator(
-            collect($courses)->forPage($pageNum, $perPage),
-            count($courses), // Total items in the collection (this should be the total count from your query)
-            $perPage, // Items per page
-            $pageNum, // Current page number
-            ['path' => url()->current()] // URL for pagination links
-        );
-
-        return new RelatedCourseListResource($paginatedCourses);
+        $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
+        return RelatedCourseListResource::collection($courses);
     }
-
     public function publishCourseDataShow($id)
     {
-        $data = $this->showCourseDataForEnteshareDore($id);
-        return new PublishCoursePreviewResource($data);
+        try {
+            $data = $this->showCourseDataForEnteshareDore($id);
+            return new PublishCoursePreviewResource($data);
+        }catch (\Exception $e){
+            return response()->json(['message' => $e->getMessage()], 404);
+        }
+
     }
 
 
@@ -393,8 +417,16 @@ class CourseController extends Controller
             DB::beginTransaction();
             StatusCourse::create([
                 'course_id' => $id,
+                'status_id' => $this->courseWaitPresentingStatus()->id,
+                'create_date' => now()
+            ]);
+            StatusCourse::create([
+                'course_id' => $id,
                 'status_id' => $this->coursePresentingStatus()->id,
                 'create_date' => now()
+            ]);
+            Course::find($id)->update([
+                'access_date' => now()
             ]);
             DB::commit();
             return response()->json(['message' => "دوره با موفقیت منتشر شد"]);
@@ -422,14 +454,15 @@ class CourseController extends Controller
         }
     }
 
-    public function cancelCourse($id)
+    public function cancelCourse(Request $request, $id)
     {
         try {
             DB::beginTransaction();
             StatusCourse::create([
                 'course_id' => $id,
                 'status_id' => $this->courseCanceledStatus()->id,
-                'create_date' => now()
+                'create_date' => now(),
+                'description' => $request->description
             ]);
             DB::commit();
             return response()->json(['message' => "دوره با موفقیت حذف شد"]);

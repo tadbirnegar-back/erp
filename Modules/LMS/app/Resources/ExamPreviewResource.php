@@ -24,7 +24,7 @@ class ExamPreviewResource extends ResourceCollection
 
         return $grouped->map(function ($items, $id) use ($questionTime, $examNumber) {
             $firstItem = $items->first();
-            $totalQuestions = $items->count(); // Total questions
+            $totalQuestions = $firstItem->totalQuestions;
             $examTime = $questionTime * $examNumber;
 
             return [
@@ -32,8 +32,8 @@ class ExamPreviewResource extends ResourceCollection
                 'exam_title' => $firstItem->examTitle ?? null,
                 'questionsCount' => $totalQuestions,
                 'course_title' => $firstItem->courseTitle ?? null,
-                'timePerQuestion' => convertSecondToMinute($questionTime),
-                'exam_time' => convertSecondToMinute($examTime),
+                'timePerQuestion' => convertSecondToMinute($questionTime * 60),
+                'exam_time' => $examTime * 60,
             ];
         })->values()->toArray();
     }
