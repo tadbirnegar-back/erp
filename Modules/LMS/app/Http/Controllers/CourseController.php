@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,7 @@ use Modules\LMS\app\Http\Traits\CourseCourseTrait;
 use Modules\LMS\app\Http\Traits\CourseEmployeeFeatureTrait;
 use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
+use Modules\LMS\app\Jobs\CourseAccessDateJob;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\StatusCourse;
 use Modules\LMS\app\Resources\AllCoursesListResource;
@@ -411,19 +413,34 @@ class CourseController extends Controller
     {
         try {
             DB::beginTransaction();
-            StatusCourse::create([
-                'course_id' => $id,
-                'status_id' => $this->courseWaitPresentingStatus()->id,
-                'create_date' => now()
-            ]);
-            StatusCourse::create([
-                'course_id' => $id,
-                'status_id' => $this->coursePresentingStatus()->id,
-                'create_date' => now()
-            ]);
-            Course::find($id)->update([
-                'access_date' => now()
-            ]);
+            $course = Course::find($id);
+            if($course->access_date == null){
+                StatusCourse::create([
+                    'course_id' => $id,
+                    'status_id' => $this->courseWaitPresentingStatus()->id,
+                    'create_date' => now()
+                ]);
+                StatusCourse::create([
+                    'course_id' => $id,
+                    'status_id' => $this->coursePresentingStatus()->id,
+                    'create_date' => now()
+                ]);
+
+                Course::find($id)->update([
+                    'access_date' => now()
+                ]);
+            }else{
+                StatusCourse::create([
+                    'course_id' => $id,
+                    'status_id' => $this->courseWaitPresentingStatus()->id,
+                    'create_date' => now()
+                ]);
+
+                $date = convertPersianToGregorianBothHaveTimeAndDont($course->access_date);
+                $accessDate = Carbon::parse($date);
+                CourseAccessDateJob::dispatchAfterResponse($course->id)->delay($accessDate);
+            }
+
             DB::commit();
             return response()->json(['message' => "دوره با موفقیت منتشر شد"]);
         } catch (\Exception $exception) {
