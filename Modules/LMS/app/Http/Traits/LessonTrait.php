@@ -28,7 +28,7 @@ trait LessonTrait
         $statusID = $this->lessonActiveStatus()->id;
         StatusLesson::create([
             'status_id' => $statusID,
-            'lesson_id' => $lesson -> id ,
+            'lesson_id' => $lesson->id,
             'created_date' => now()
         ]);
     }
