@@ -17,7 +17,7 @@ trait CourseReportTrait
 {
     use AnswerSheetTrait, ContentTrait, DateTrait, LessonTrait;
 
-    public function CourseInfo($courseID)
+    public function CourseInformation($courseID)
     {
 
         $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO->value)->first()->id;

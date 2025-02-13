@@ -19,7 +19,7 @@ class CourseReportController extends Controller
      */
     public function index($courseID): JsonResponse
     {
-        $courseReport = $this->CourseInfo($courseID);
+        $courseReport = $this->CourseInformation($courseID);
 //        return response()->json($courseReport);
         return CourseReportResource::make($courseReport);
     }
