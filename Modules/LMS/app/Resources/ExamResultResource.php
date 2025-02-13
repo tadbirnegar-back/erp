@@ -43,7 +43,22 @@ class ExamResultResource extends ResourceCollection
         $jalaliStartDate = $startTime ? convertDateTimeGregorianToJalaliDateTime($startTime) : null;
 
         if (isset($studentInfo['avatar']) && $studentInfo['avatar']) {
-            $studentInfo['avatar'] = $this->baseUrl . '/' . ltrim($studentInfo['avatar'], '/');
+            // Decode the JSON string to get the avatar details
+            $avatarData = json_decode($studentInfo['avatar'], true);
+
+            // Check if the decoded data is valid and contains the 'slug' field
+            if (is_array($avatarData) && isset($avatarData['slug'])) {
+                // If the slug already contains the full URL, use it directly
+                if (filter_var($avatarData['slug'], FILTER_VALIDATE_URL)) {
+                    $studentInfo['avatar'] = $avatarData['slug'];
+                } else {
+                    // Otherwise, construct the URL using the baseUrl
+                    $studentInfo['avatar'] = $this->baseUrl . '/' . ltrim($avatarData['slug'], '/');
+                }
+            } else {
+                // If the avatar data is invalid, set it to null or a default value
+                $studentInfo['avatar'] = null;
+            }
         }
 
         $groupedAnswers = collect($data['answerSheet'])

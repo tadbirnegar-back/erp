@@ -41,6 +41,7 @@ class ShowExamQuestionResource extends ResourceCollection
             'totalTime' => $totalTime * 60,
             'time_per_question' => $questionTime * 60,
             'examQuestions' => $questions,
+            'exam_id' => $this->collection->first()->exam_id,
         ];
     }
 }

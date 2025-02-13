@@ -81,7 +81,7 @@ class QuestionsController extends Controller
                     'error' => 'Course not found.'
                 ], 403);
             }
-            return new QuestionResource(collect($show));
+            return new QuestionResource(collect($show->first()));
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while fetching dropdowns.',
@@ -113,8 +113,7 @@ class QuestionsController extends Controller
     {
         try {
             DB::beginTransaction();
-
-            $question = $this->questionDelete($questionID);
+            $this->questionDelete($questionID);
             DB::commit();
 
             return response()->json(['message' => 'Question status updated to inactive successfully.',], 200);
@@ -189,6 +188,7 @@ class QuestionsController extends Controller
             $courseID = $question->courseID;
 
             $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs);
+
             if ($updateResult) {
                 return response()->json([
                     'message' => 'Question updated successfully',
