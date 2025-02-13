@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use DB;
 use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\LMS\app\Http\Enums\ContentTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
@@ -15,7 +16,7 @@ use Morilog\Jalali\Jalalian;
 
 trait ReportingTrait
 {
-    use AnswerSheetTrait, LessonTrait, ContentTrait;
+    use AnswerSheetTrait, LessonTrait, ContentTrait, DateTrait;
 
 
     public function ans($answerSheetID, $user, $data, $courseID)
@@ -175,9 +176,9 @@ trait ReportingTrait
     {
         $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO)->first()->id;
         $VidContentTypes = ContentType::where('name', ContentTypeEnum::VIDEO)->first()->id;
-        $course = Course::joinRelationship('chapters.lessons.contents.file')
+        $course = Course::leftJoinRelationship('chapters.lessons.contents.file')
             ->leftJoinRelationship('courseExams.exams.answerSheets')
-            ->joinRelationship('chapters.lessons.contents.contentType')
+            ->leftJoinRelationship('chapters.lessons.contents.contentType')
             ->select([
                 'courses.title as courseTitle',
             ])

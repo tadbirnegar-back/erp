@@ -13,10 +13,12 @@ class CourseReportResource extends JsonResource
     {
         return [
             'course' => [
-                'courseTitle' => $this->courseTitle,
-                'chapters_count' => $this->chaptersCount,
-                'all_active_lessons_count' => $this->allActiveLessonsCount,
+                'courseTitle' => $this['course']['courseTitle'] ?? null,
+                'chapters_count' => $this['course']['chaptersCount'] ?? null,
+                'all_active_lessons_count' => $this['course']['allActiveLessonsCount'] ?? null,
             ],
         ];
     }
+
+
 }
