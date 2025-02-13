@@ -8,7 +8,6 @@ use Modules\LMS\app\Http\Traits\ReportingTrait;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Option;
-use Modules\LMS\app\Resources\CourseReportResource;
 use Modules\LMS\app\Resources\ReportingResource;
 
 class ReportingController extends Controller
@@ -55,7 +54,7 @@ class ReportingController extends Controller
     public function AllEnrollsCourseReport($courseID)
     {
         $courseReport = $this->CourseInformation($courseID);
-//        return response()->json($courseReport);
-        return CourseReportResource::make($courseReport);
+        return response()->json($courseReport);
+//        return CourseReportResource::make($courseReport);
     }
 }
