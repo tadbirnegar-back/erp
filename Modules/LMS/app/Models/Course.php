@@ -267,6 +267,7 @@ class Course extends Model
         return $this->hasOneThrough(Status::class, StatusCourse::class, 'course_id', 'id', 'id', 'status_id')
             ->orderByDesc('status_course.id')->take(1);
     }
+
     public function allActiveLessons()
     {
         return $this->lessons()->whereExists(function ($query) {
@@ -282,5 +283,6 @@ class Course extends Model
                 });
         });
     }
+
 
 }
