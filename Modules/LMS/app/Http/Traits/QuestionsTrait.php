@@ -10,7 +10,7 @@ use Modules\LMS\app\Models\Option;
 use Modules\LMS\app\Models\Question;
 use Modules\StatusMS\app\Models\Status;
 
-trait questionsTrait
+trait QuestionsTrait
 {
     private static string $active = QuestionsEnum::ACTIVE->value;
     private static string $inactive = QuestionsEnum::EXPIRED->value;
@@ -283,14 +283,5 @@ trait questionsTrait
         return Question::GetAllStatuses()->firstWhere('name', QuestionsEnum::EXPIRED->value);
     }
 
-    public function lessonActiveStatus()
-    {
-        return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::ACTIVE->value);
-    }
-
-    public function lessonInActiveStatus()
-    {
-        return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
-    }
 
 }

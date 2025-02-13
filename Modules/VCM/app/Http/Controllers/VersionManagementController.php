@@ -15,6 +15,7 @@ use Modules\VCM\app\Models\VcmVersions;
 class VersionManagementController extends Controller
 {
     use DateTrait;
+
     public function storeVersion(Request $request)
     {
         try {
@@ -91,20 +92,49 @@ class VersionManagementController extends Controller
             ->where('create_date', '>', $user->created_at)
             ->pluck('id');
 
+        $vcm = VcmFeatures::with('module.category', 'version')
+            ->whereIn('vcm_version_id', $versions)
+            ->get()
+            ->groupBy(fn($item) => $item->vcm_version_id)
+            ->map(function ($versionGroup) {
+                $firstItem = $versionGroup->first();
+                $versionData = [
+                    'id' => $firstItem->version->id,
+                    'create_date' => $firstItem->version->create_date,
+                    'high_version' => $firstItem->version->high_version,
+                    'mid_version' => $firstItem->version->mid_version,
+                    'low_version' => $firstItem->version->low_version,
+                ];
 
-        $vcm = VcmFeatures::with('module.category' , 'version')->whereIn('vcm_version_id', $versions)->get();
+                $modules = $versionGroup
+                    ->groupBy(fn($item) => $item->module->category->name)
+                    ->map(function ($categoryGroup) {
+                        $descriptions = $categoryGroup->pluck('description')->toArray();
+                        $firstItem = $categoryGroup->first();
+                        return [
+                            'id' => $firstItem->id,
+                            'description' => $descriptions,
+                            'vcm_version_id' => $firstItem->vcm_version_id,
+                            'module_id' => $firstItem->module_id,
+                            'module' => $firstItem->module,
+                        ];
+                    })->values();
 
-
-        if (!empty($versions)) {
+                return [
+                    'version' => $versionData,
+                    'modules' => $modules
+                ];
+            })->values();
+        if ($versions->isNotEmpty()) {
             foreach ($versions as $version) {
                 VcmUserVersion::create([
                     'vcm_version_id' => $version,
                     'user_id' => $user->id,
                 ]);
             }
-            return response() -> json($vcm);
+            return response()->json($vcm);
         } else {
-            return response()->json(['data' => null]);
+            return response()->json(['data' => null], 204);
         }
     }
 
@@ -112,5 +142,49 @@ class VersionManagementController extends Controller
     {
         $modules = Module::with('category')->get();
         return response()->json($modules);
+    }
+
+    public function indexAllVersions()
+    {
+
+        $versions = \DB::table('vcm_versions')
+            ->pluck('id');
+
+        $vcm = VcmFeatures::with('module.category', 'version')
+            ->whereIn('vcm_version_id', $versions)
+            ->get()
+            ->groupBy(fn($item) => $item->vcm_version_id)
+            ->map(function ($versionGroup) {
+                $firstItem = $versionGroup->first();
+                $versionData = [
+                    'id' => $firstItem->version->id,
+                    'create_date' => $firstItem->version->create_date,
+                    'high_version' => $firstItem->version->high_version,
+                    'mid_version' => $firstItem->version->mid_version,
+                    'low_version' => $firstItem->version->low_version,
+                ];
+
+                $modules = $versionGroup
+                    ->groupBy(fn($item) => $item->module->category->name)
+                    ->map(function ($categoryGroup) {
+                        $descriptions = $categoryGroup->pluck('description')->toArray();
+                        $firstItem = $categoryGroup->first();
+                        return [
+                            'id' => $firstItem->id,
+                            'description' => $descriptions,
+                            'vcm_version_id' => $firstItem->vcm_version_id,
+                            'module_id' => $firstItem->module_id,
+                            'module' => $firstItem->module,
+                        ];
+                    })->values();
+
+                return [
+                    'version' => $versionData,
+                    'modules' => $modules
+                ];
+            })->values();
+
+        return response()->json($vcm);
+
     }
 }

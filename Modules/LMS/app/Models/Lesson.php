@@ -4,8 +4,6 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Modules\LMS\app\Http\GlobalScope\ContentScope;
-use Modules\LMS\app\Http\GlobalScope\LessonScope;
 use Modules\LMS\Database\factories\LessonFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -29,6 +27,7 @@ class Lesson extends Model
         'description',
         'title'
     ];
+
     public function chapter()
     {
         return $this->belongsTo(Chapter::class, 'chapter_id', 'id');
@@ -56,6 +55,13 @@ class Lesson extends Model
             ->orderByDesc('id') // Order by ID in descending order
             ->take(1); // Take the latest record
     }
+
+    public function oneLatestStatus()
+    {
+        return $this->hasOneThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')
+            ->orederByDesc('status_lesson.created_date');
+    }
+
 
     public function latestStatusFirstOne()
     {

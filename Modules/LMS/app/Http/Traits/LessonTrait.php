@@ -209,6 +209,14 @@ trait LessonTrait
         );
     }
 
+    public function updateLessonDatas($lesson, $data)
+    {
+        $lesson->update([
+            'description' => $data['lesson_description'],
+            'title' => $data['lesson_title'],
+            'chapter_id' => $data['chapterID'],
+        ]);
+    }
 
     public function lessonActiveStatus()
     {
@@ -218,14 +226,5 @@ trait LessonTrait
     public function lessonInActiveStatus()
     {
         return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
-    }
-
-    public function updateLessonDatas($lesson, $data)
-    {
-        $lesson->update([
-            'description' => $data['lesson_description'],
-            'title' => $data['lesson_title'],
-            'chapter_id' => $data['chapterID'],
-        ]);
     }
 }
