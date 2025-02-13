@@ -11,6 +11,7 @@ use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\ChapterTrait;
 use Modules\LMS\app\Http\Traits\ContentTrait;
 use Modules\LMS\app\Http\Traits\LessonTrait;
+use Modules\LMS\app\Http\Traits\QuestionsTrait;
 use Modules\LMS\app\Models\Comment;
 use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
@@ -22,7 +23,7 @@ use Modules\LMS\app\Resources\LessonDatasWithLessonIDResource;
 
 class LessonController extends Controller
 {
-    use ChapterTrait, LessonTrait, ContentTrait;
+    use ChapterTrait, LessonTrait, ContentTrait , QuestionsTrait;
 
     public function storeComment(Request $request)
     {
@@ -172,11 +173,16 @@ class LessonController extends Controller
     {
         try {
             DB::beginTransaction();
+            $lesson = Lesson::find($id);
+            $lesson->questions()->each(function ($question) {
+                $this->questionDelete($question->id);
+            });
             StatusLesson::create([
                 'lesson_id' => $id,
                 'status_id' => $this->lessonInActiveStatus()->id,
                 'created_date' => now()
             ]);
+
             DB::commit();
             return response() -> json(['message' => "درس مورد نظر با موفقیت حذف گردید"]);
         }catch (\Exception $exception)

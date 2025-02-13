@@ -27,8 +27,6 @@ class ExamResultController extends Controller
     public function storeAnsS(Request $request, $examId)
     {
         try {
-
-
             $jsonData = $request->data;
             $data = json_decode($jsonData, true);
             $usedTime = $request->usedTime;

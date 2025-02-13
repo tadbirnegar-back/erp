@@ -130,16 +130,12 @@ class CourseController extends Controller
 
             $componentsToRenderWithData = $this->courseShow($course, $user);
 
-            $componentsToRenderWithData['course']->chapters->each(function ($chapter) {
-                $chapter->setRelation(
-                    'lessons',
-                    $chapter->lessons->filter(function ($lesson) {
-                        return $lesson->lastStatus[0]->name === LessonStatusEnum::ACTIVE->value;
-                    })
-                );
-            });
+            $chapters = $componentsToRenderWithData['course']['chapters'];
 
-
+            foreach ($chapters as $chapter) {
+                $chapter['lessons'] = $chapter['allActiveLessons'];
+                unset($chapter['allActiveLessons']);
+            }
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 403);
