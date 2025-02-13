@@ -75,6 +75,13 @@ class Lesson extends Model
             ->whereRaw('status_lesson.id = (SELECT MAX(id) FROM status_lesson WHERE status_lesson.lesson_id = lessons.id)');
     }
 
+    public function oneLatestStatus()
+    {
+        return $this->hasOneThrough(Status::class, StatusLesson::class, 'lesson_id', 'id', 'id', 'status_id')
+            ->orederByDesc('status_lesson.created_date');
+    }
+
+
     public function latestStatusFirstOne()
     {
         return $this->belongsTo(Status::class, 'status_lesson', 'lesson_id', 'status_id')

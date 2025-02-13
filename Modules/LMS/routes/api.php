@@ -12,6 +12,7 @@ use Modules\LMS\app\Http\Controllers\OucPropertyController;
 use Modules\LMS\app\Http\Controllers\OucPropertyValueController;
 use Modules\LMS\app\Http\Controllers\PriviciesController;
 use Modules\LMS\app\Http\Controllers\QuestionsController;
+use Modules\LMS\app\Http\Controllers\ReportingController;
 use Modules\LMS\app\Http\Controllers\SettingController;
 use Modules\LMS\app\Http\Controllers\StudentController;
 use Modules\LMS\app\Http\Controllers\TeacherController;
@@ -75,6 +76,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teachers/list', [TeacherController::class, 'index']);
     Route::post('/lms/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
     Route::get('/lms/examPreperation/{id}', [ExamsController::class, 'isExamReady']);
+    Route::get('/lms/reporting/data/{id}', [ReportingController::class, 'index']);
+
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
