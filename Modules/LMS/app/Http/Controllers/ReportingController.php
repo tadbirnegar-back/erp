@@ -25,7 +25,6 @@ class ReportingController extends Controller
     {
 
         $student = Auth::user()->load('student');
-
         if (!$courseID) {
             return response()->json(['message' => 'No Course found'], 403);
         }
