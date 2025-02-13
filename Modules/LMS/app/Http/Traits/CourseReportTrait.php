@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use DB;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
@@ -69,10 +70,22 @@ trait CourseReportTrait
 
     public function AudioDuration($courseID, $contentTypes)
     {
+        $lessonActiveStatus = $this->lessonActiveStatus()->id;
         $contentStatus = $this->contentActiveStatus()->id;
+
+        $latestStatusSubquery = DB::table('status_lesson')
+            ->select('lesson_id')
+            ->where('status_id', $lessonActiveStatus)
+            ->whereIn('created_date', function ($query) {
+                $query->selectRaw('MAX(created_date)')
+                    ->from('status_lesson')
+                    ->groupBy('lesson_id');
+            });
+
         $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
+            ->joinRelationship('chapters.lessons.lessonStatus')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
@@ -81,8 +94,10 @@ trait CourseReportTrait
             ->where('courses.id', $courseID)
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
+            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery)
             ->distinct()
             ->get();
+
         return $course->map(function ($item) {
             $total = ($item->duration * $item->consume_round) + $item->consume_data;
             return [
@@ -91,16 +106,26 @@ trait CourseReportTrait
                 'total' => ($total == 0) ? null : $total,
             ];
         });
-
-
     }
 
-    public function VideoDuration($courseID, $VidContentTypes)
+    public function VideoDuration( $courseID, $VidContentTypes)
     {
+        $lessonActiveStatus = $this->lessonActiveStatus()->id;
         $contentStatus = $this->contentActiveStatus()->id;
+
+        $latestStatusSubquery = DB::table('status_lesson')
+            ->select('lesson_id')
+            ->where('status_id', $lessonActiveStatus)
+            ->whereIn('created_date', function ($query) {
+                $query->selectRaw('MAX(created_date)')
+                    ->from('status_lesson')
+                    ->groupBy('lesson_id');
+            });
+
         $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog')
             ->joinRelationship('chapters.lessons.contents.contentType')
             ->leftJoinRelationship('chapters.lessons.contents.file')
+            ->joinRelationship('chapters.lessons.lessonStatus')
             ->select([
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
@@ -109,6 +134,7 @@ trait CourseReportTrait
             ->where('courses.id', $courseID)
             ->where('content_type.id', $VidContentTypes)
             ->where('contents.status_id', $contentStatus)
+            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery)
             ->distinct()
             ->get();
 
@@ -120,7 +146,6 @@ trait CourseReportTrait
                 'total' => ($total == 0) ? null : $total,
             ];
         });
-
     }
 
     public function certificatesCount($courseID)
