@@ -20,6 +20,7 @@ use Modules\LMS\app\Http\Traits\CourseEmployeeFeatureTrait;
 use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
 use Modules\LMS\app\Jobs\CourseAccessDateJob;
+use Modules\LMS\app\Jobs\CourseExpirationJob;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\StatusCourse;
 use Modules\LMS\app\Resources\AllCoursesListResource;
@@ -435,12 +436,7 @@ class CourseController extends Controller
                     'status_id' => $this->courseWaitPresentingStatus()->id,
                     'create_date' => now()
                 ]);
-
-                $date = convertPersianToGregorianBothHaveTimeAndDont($course->access_date);
-                $accessDate = Carbon::parse($date);
-                CourseAccessDateJob::dispatchAfterResponse($course->id)->delay($accessDate);
             }
-
             DB::commit();
             return response()->json(['message' => "دوره با موفقیت منتشر شد"]);
         } catch (\Exception $exception) {
