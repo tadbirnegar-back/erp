@@ -5,6 +5,7 @@ use Modules\LMS\app\Http\Controllers\ChapterController;
 use Modules\LMS\app\Http\Controllers\ContentController;
 use Modules\LMS\app\Http\Controllers\CourseController;
 use Modules\LMS\app\Http\Controllers\CourseCourseController;
+use Modules\LMS\app\Http\Controllers\CourseReportController;
 use Modules\LMS\app\Http\Controllers\ExamResultController;
 use Modules\LMS\app\Http\Controllers\ExamsController;
 use Modules\LMS\app\Http\Controllers\LessonController;
@@ -77,9 +78,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
     Route::get('/lms/examPreperation/{id}', [ExamsController::class, 'isExamReady']);
     Route::get('/lms/reporting/data/{id}', [ReportingController::class, 'index']);
+    Route::get('/lms/course/report/{id}', [CourseReportController::class, 'index']);
     Route::post('/lms/report/list', [CourseController::class, 'lessonList']);
-
-
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);
