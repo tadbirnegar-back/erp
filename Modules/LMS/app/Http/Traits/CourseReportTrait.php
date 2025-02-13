@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use DB;
 use Modules\EMS\app\Http\Traits\DateTrait;
+use Modules\LMS\app\Http\Enums\ContentTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\ContentType;
@@ -18,10 +19,9 @@ trait CourseReportTrait
 
     public function CourseInfo($courseID)
     {
-//        ContentTypeEnum::AUDIO
-//        ContentTypeEnum::VIDEOv
-        $contentTypes = ContentType::where('name', 'صوتی')->first()->id;
-        $VidContentTypes = ContentType::where('name', 'تصویری')->first()->id;
+
+        $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO->value)->first()->id;
+        $VidContentTypes = ContentType::where('name', ContentTypeEnum::VIDEO->value)->first()->id;
         $course = Course::leftJoinRelationship('chapters.lessons.contents.file')
             ->leftJoinRelationship('courseExams.exams.answerSheets')
             ->joinRelationship('chapters.lessons.contents.contentType')
@@ -108,7 +108,7 @@ trait CourseReportTrait
         });
     }
 
-    public function VideoDuration( $courseID, $VidContentTypes)
+    public function VideoDuration($courseID, $VidContentTypes)
     {
         $lessonActiveStatus = $this->lessonActiveStatus()->id;
         $contentStatus = $this->contentActiveStatus()->id;
@@ -241,7 +241,6 @@ trait CourseReportTrait
 
     public function scoresAndMonthChartData($courseID)
     {
-        // Fetch data from the database
         $query = Course::joinRelationship('courseExams.exams.answerSheets')
             ->select([
                 'answer_sheets.score as scores',
@@ -250,28 +249,30 @@ trait CourseReportTrait
             ->where('courses.id', $courseID)
             ->get();
 
-        // Group scores by Persian month name
+        $persianMonths = [
+            "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
+            "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"
+        ];
+
         $groupedData = $query->groupBy(function ($item) {
-            // Convert Gregorian date to Persian date
             $persianDate = Jalalian::fromDateTime($item->finish_date_time);
-
-            // Extract Persian month number (1-12)
             $monthNumber = $persianDate->getMonth();
-
-            // Convert month number to Persian month name using humanReadableDate
             return $this->humanReadableDate($monthNumber);
         });
 
-        // Prepare the result
         $result = [];
-        foreach ($groupedData as $monthName => $items) {
-            // Extract scores for this month
-            $scores = $items->pluck('scores')->toArray();
+        foreach ($persianMonths as $monthName) {
+            if ($groupedData->has($monthName)) {
+                $items = $groupedData[$monthName];
+                $scores = $items->pluck('scores');
+                $averageScore = round($scores->avg(), 2);
+            } else {
+                $averageScore = 0;
+            }
 
-            // Add to the result
             $result[] = [
                 'month' => $monthName,
-                'scores' => $scores,
+                'average_score' => $averageScore,
             ];
         }
 
