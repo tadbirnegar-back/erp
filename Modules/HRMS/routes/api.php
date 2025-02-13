@@ -77,6 +77,7 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::post('/hrm/skills/update/{id}', [SkillController::class, 'show']);
     Route::put('/hrm/skills/update/{id}', [SkillController::class, 'update']);
     Route::delete('/hrm/skills/delete/{id}', [SkillController::class, 'destroy']);
+    Route::post('/hrm/dehyar/request', [RecruitmentScriptController::class, 'getMyVillageScripts']);
 
     Route::get('/hrm/rc/add', [EmployeeController::class, 'addEmployeeBaseInfo']);
 });
@@ -163,8 +164,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/hrm/rc/manager-reject/{id}', [RecruitmentScriptController::class, 'RejectRecruitmentScript']);
 
     Route::post('/hrm/rc/manager-approve/{id}', [RecruitmentScriptController::class, 'approveRecruitmentScript']);
-
-    Route::post('/hrm/dehyar/request', [RecruitmentScriptController::class, 'getMyVillageScripts']);
 
     Route::post('/hrm/village/search-by-abadi-code', [RecruitmentScriptController::class, 'getVillageOfcByAbadiCode']);
 

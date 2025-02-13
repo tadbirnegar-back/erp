@@ -4,7 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Illuminate\Support\Facades\DB;
 use Modules\FileMS\app\Models\File;
-use Modules\LMS\App\Http\Enums\LessonStatusEnum;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\FileLesson;
 use Modules\LMS\app\Models\Lesson;
