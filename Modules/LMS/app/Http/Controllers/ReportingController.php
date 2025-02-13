@@ -46,7 +46,7 @@ class ReportingController extends Controller
         ];
 
         $result = $this->ans($answerSheetID, $student, $data, $courseID);
-//        return response()->json($result);
+        return response()->json($result);
         return ReportingResource::make($result);
 
     }

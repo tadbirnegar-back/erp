@@ -194,17 +194,18 @@ trait ReportingTrait
 
         $durationAudio = $this->AudioDuration($studentID, $courseID, $contentTypes);
         $durationVideo = $this->VideoDuration($studentID, $courseID, $VidContentTypes);
-        $sumAudio = $durationAudio->sum('total');
-        $sumVideo = $durationVideo->sum('total');
+        $sumAudio = $durationAudio['total'];
+        $sumVideo = $durationVideo['total'];
         $totalDuration = $sumAudio + $sumVideo;
+
         $completionPercentage = $this->completionPercentage($courseID, $studentID);
 
         $enrolled = $this->enrolled($courseID, $user);
 
         return [
             'course' => $course->first(),
-            'durationOfAudio' => $durationAudio->first(),
-            'durationOfVideo' => $durationVideo->first(),
+            'durationOfAudio' => $durationAudio,
+            'durationOfVideo' => $durationVideo,
             'totalDuration' => $totalDuration,
             'completionPercentage' => $completionPercentage,
             'erolled' => $enrolled,
@@ -255,15 +256,24 @@ trait ReportingTrait
             ->whereIn('status_lesson.lesson_id', $latestStatusSubquery)
             ->distinct()
             ->get();
-
-        return $course->map(function ($item) {
-            $total = ($item->duration * $item->consume_round) + $item->consume_data;
-            return [
-                'duration' => $item->duration,
-                'consume_round' => $item->consume_round,
-                'total' => ($total == 0) ? null : $total,
-            ];
+        $totalDuration = $course->sum(function ($item) {
+            return $item->duration == 0 ? null : $item->duration;
         });
+
+        $totalConsumeRound = $course->sum(function ($item) {
+            return $item->consume_round == 0 ? null : $item->consume_round;
+        });
+
+        $totalConsumeData = $course->sum(function ($item) {
+            return $item->consume_data == 0 ? null : $item->consume_data;
+        });
+        $totalOverall = ($totalDuration * $totalConsumeRound) + $totalConsumeData;
+        return [
+            'duration' => $totalDuration,
+            'consume_round' => $totalConsumeRound,
+            'total' => ($totalOverall == 0) ? null : $totalOverall,
+        ];
+
     }
 
     public function VideoDuration($studentID, $courseID, $VidContentTypes)
@@ -298,14 +308,24 @@ trait ReportingTrait
             ->distinct()
             ->get();
 
-        return $course->map(function ($item) {
-            $total = ($item->duration * $item->consume_round) + $item->consume_data;
-            return [
-                'duration' => $item->duration,
-                'consume_round' => $item->consume_round,
-                'total' => ($total == 0) ? null : $total,
-            ];
+        $totalDuration = $course->sum(function ($item) {
+            return $item->duration == 0 ? null : $item->duration;
         });
+
+        $totalConsumeRound = $course->sum(function ($item) {
+            return $item->consume_round == 0 ? null : $item->consume_round;
+        });
+
+        $totalConsumeData = $course->sum(function ($item) {
+            return $item->consume_data == 0 ? null : $item->consume_data;
+        });
+        $totalOverall = ($totalDuration * $totalConsumeRound) + $totalConsumeData;
+        return [
+            'duration' => $totalDuration,
+            'consume_round' => $totalConsumeRound,
+            'total' => ($totalOverall == 0) ? null : $totalOverall,
+        ];
+
     }
 
     public function practicalExam($answerSheetID, $user, $data, $courseID)
