@@ -78,6 +78,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/search', [TeacherController::class, 'LiveSearchTeacher']);
     Route::get('/lms/examPreperation/{id}', [ExamsController::class, 'isExamReady']);
     Route::get('/lms/reporting/data/{id}', [ReportingController::class, 'index']);
+    Route::get('/lms/course/report/{id}', [CourseReportController::class, 'index']);
 
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -96,4 +97,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
 });
-Route::get('/lms/course/report/{id}', [CourseReportController::class, 'index']);
