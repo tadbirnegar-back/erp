@@ -40,9 +40,9 @@ trait CourseReportTrait
         $sumVideo = $durationVideo['total'];
         $totalDuration = $sumAudio + $sumVideo;
 
-        $sumStudyAudio = $durationAudio->sum('duration');
-        $sumStudyVideo = $durationVideo->sum('duration');
-        $totalStudyDuration = ($sumStudyAudio + $sumStudyVideo) / 2;
+        $avgAudio = $durationAudio['averageOfAudio'];
+        $avgVideo = $durationVideo['averageOfVideo'];
+        $totalStudyDurationAverage = ($avgAudio + $avgVideo);
         $certificatesCount = $this->certificatesCount($courseID);
         $enrolledStudentsAndScoreAverage = $this->enrolledStudentsAndScoreAverage($courseID);
         $approvedStudents = $this->countAnswerSheetApprovedStatusOfStudents($courseID);
@@ -63,7 +63,8 @@ trait CourseReportTrait
             'declinedStudents' => $declinedStudents,
             'allStudents' => $allStudentsCount,
             'subCount' => $subCount,
-            'scoreAndMonthChart' => $months
+            'scoreAndMonthChart' => $months,
+            'totalStudyDurationAverage' => $totalStudyDurationAverage,
         ];
     }
 
@@ -109,10 +110,14 @@ trait CourseReportTrait
             return $item->consume_data == 0 ? null : $item->consume_data;
         });
         $totalOverall = ($totalDuration * $totalConsumeRound) + $totalConsumeData;
+        $allStudentsCount = $this->allStudentsCount($courseID);
+
+        $average = $allStudentsCount > 0 ? $totalDuration / $allStudentsCount : 0;
         return [
             'duration' => $totalDuration,
             'consume_round' => $totalConsumeRound,
             'total' => ($totalOverall == 0) ? null : $totalOverall,
+            'averageOfAudio' => $average,
         ];
 
     }
@@ -159,10 +164,14 @@ trait CourseReportTrait
             return $item->consume_data == 0 ? null : $item->consume_data;
         });
         $totalOverall = ($totalDuration * $totalConsumeRound) + $totalConsumeData;
+        $allStudentsCount = $this->allStudentsCount($courseID);
+
+        $average = $allStudentsCount > 0 ? $totalDuration / $allStudentsCount : 0;
         return [
             'duration' => $totalDuration,
             'consume_round' => $totalConsumeRound,
             'total' => ($totalOverall == 0) ? null : $totalOverall,
+            'averageOfVideo' => $average,
         ];
 
     }
