@@ -5,13 +5,24 @@ namespace Modules\LMS\app\Http\Traits;
 use DB;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\DateTrait;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\LMS\app\Http\Enums\ContentTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\CourseEmployeeFeature;
+use Modules\LMS\app\Models\CourseOunitFeature;
+use Modules\LMS\app\Models\CourseTarget;
+use Modules\LMS\app\Models\OucProperty;
+use Modules\LMS\app\Models\OucPropertyValue;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\Repository;
+use Modules\LMS\app\Models\TargetOunitCat;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Morilog\Jalali\Jalalian;
 
 trait ReportingTrait
@@ -733,5 +744,126 @@ trait ReportingTrait
         return $result;
     }
 
+
+    public function CountOfMashmuls($courseId)
+    {
+        $course = Course::find($courseId);
+        $courseTargets = $this->GetCourseTarget($course->id);
+        $courseOunitFeatures = $this -> getOunitFeatures($courseTargets);
+        $propValues = $this->getPropertyValueFeatures($courseOunitFeatures);
+        $props = $this -> getProperties($propValues);
+
+
+
+        return $this -> CountingAllTheCourseContainers($course , $courseTargets , $propValues , $props);
+
+
+
+    }
+
+
+    private function GetCourseTarget($courseId)
+    {
+        return CourseTarget::where('course_id' , $courseId)->get();
+    }
+
+    private function getEmployeeFeatures($courseTargets)
+    {
+        $courseTargets = $courseTargets->pluck('id')->toArray();
+        return CourseEmployeeFeature::whereIn('course_target_id' , $courseTargets)->get();
+    }
+
+
+    private function getOunitFeatures($courseTargets)
+    {
+        $courseTargets = $courseTargets->pluck('id')->toArray();
+        return CourseOunitFeature::whereIn('course_target_id' , $courseTargets)->get();
+    }
+
+
+    private function getPropertyValueFeatures($courseOunitFeatures)
+    {
+        $propValues = $courseOunitFeatures->pluck('ouc_property_value')->toArray();
+        return OucPropertyValue::whereIn('ouc_property_id' , $propValues)->get();
+    }
+
+    private function getProperties($propValues)
+    {
+        $props = $propValues->pluck('ouc_property_id')->toArray();
+        return OucProperty::whereIn('id' , $props)->get();
+    }
+
+
+    private function CountingAllTheCourseContainers($course, $courseTargets, $propValues, $props)
+    {
+        $AllRectuitments = [];
+
+        foreach ($courseTargets as $courseTarget) {
+            // Get categories related to the course target
+            $categories = TargetOunitCat::where('course_target_id', $courseTarget    ->id)->get();
+            $ounitCats = $categories->pluck('ounit_cat_id')->toArray();
+            $categoriesModel = OunitCategoryEnum::getModelsByValues($ounitCats);
+
+            // Fetch the organization unit along with its descendants
+            $parentUnit = OrganizationUnit::with('descendants')->find($courseTarget->parent_ounit_id);
+
+            if ($parentUnit && $parentUnit->descendants) {
+                // Ensure descendants is a collection before filtering
+                $filteredDescendants = collect($parentUnit->descendants)->filter    (function ($descendant) {
+                    return $descendant->unitable_type ===     'Modules\\OUnitMS\\app\\Models\\VillageOfc';
+                })->values(); // Reset array keys
+
+                // Convert object to an array if needed
+                $parentUnit->setRelation('descendants', $filteredDescendants);
+            }
+            //Props Degree and column
+
+
+            $AllOunitIds = $parentUnit->descendants->pluck('id')->toArray();
+            $courseTargets = $courseTargets->pluck('id')->toArray();
+
+
+
+            $empFeature =  CourseEmployeeFeature::with('propertyble')->where('course_target_id' , $courseTarget->id)->get();
+
+            $levelIds = $empFeature->where('propertyble_type', 'Modules\\HRMS\\app\\Models\\Level')
+                ->pluck('propertyble_id')
+                ->toArray();
+
+            $positionIds = $empFeature->where('propertyble_type', 'Modules\\HRMS\\app\\Models\\Position')
+                ->pluck('propertyble_id')
+                ->toArray();
+
+            $jobIds = $empFeature->where('propertyble_type', 'Modules\\HRMS\\app\\Models\\Job')
+                ->pluck('propertyble_id')
+                ->toArray();
+
+// Query recruitmentScripts with optional filtering
+            $recruitmentScripts = RecruitmentScript::query();
+
+            if (!empty($levelIds)) {
+                $recruitmentScripts->orWhereIn('level_id', $levelIds);
+            }
+
+            if (!empty($positionIds)) {
+                $recruitmentScripts->orWhereIn('position_id', $positionIds);
+            }
+
+            if (!empty($jobIds)) {
+                $recruitmentScripts->orWhereIn('job_id', $jobIds);
+            }
+
+            if(!empty($AllOunitIds)){
+                $recruitmentScripts->orWhereIn('organization_unit_id', $AllOunitIds);
+            }
+
+// Fetch results
+            $recruitmentScripts = $recruitmentScripts->select('employee_id')->pluck('employee_id')->toArray();
+            $AllRectuitments[] = $recruitmentScripts;
+        }
+
+        $flattenedArray = array_unique(array_merge(...$AllRectuitments));
+        return count(array_values($flattenedArray));
+    }
 
 }
