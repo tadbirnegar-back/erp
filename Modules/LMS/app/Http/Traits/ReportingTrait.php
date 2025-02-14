@@ -476,6 +476,7 @@ trait ReportingTrait
         $allStudentsCount = $this->allStudentsCount($courseID);
         $subCount = $this->subCount($courseID);
         $months = $this->scoresAndMonthChartData($courseID);
+        $cover = $this->CourseCover($courseID);
 
 
         return [
@@ -491,9 +492,34 @@ trait ReportingTrait
             'subCount' => $subCount,
             'scoreAndMonthChart' => $months,
             'totalStudyDurationAverage' => $totalStudyDurationAverage,
+            'cover' => $cover,
         ];
     }
 
+    public function CourseCover($courseID)
+    {
+        $course = Course::with(['cover'])->find($courseID);
+
+        if (!$course) {
+            return response()->json([
+                'error' => 'Course not found',
+            ], 404);
+        }
+
+        if (!$course->cover) {
+            return response()->json([
+                'error' => 'Cover not found for this course',
+            ], 404);
+        }
+
+        $relativePath = $course->cover->slug;
+
+        $coverUrl = $relativePath ? url($relativePath) : asset('images/default-cover.png');
+
+        return ([
+            'avatar' => $coverUrl,
+        ]);
+    }
 
     public function AudioCourseDuration($courseID, $contentTypes)
     {
@@ -622,8 +648,11 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->distinct()
             ->orderBy('answer_sheets.score', 'desc');
+
+        $averageScore = $ans->get()->pluck('scores')->avg();
+
         return [
-            'average' => $ans->average('answer_sheets.score'),
+            'average' => $averageScore,
             'EnrolledStudents' => $ans->count('answer_sheets.student_id'),
             'scores' => $ans->get()->pluck('scores'),
         ];

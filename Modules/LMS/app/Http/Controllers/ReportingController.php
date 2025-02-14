@@ -54,6 +54,9 @@ class ReportingController extends Controller
      */
     public function AllEnrollsCourseReport($courseID)
     {
+        if (empty($courseID)) {
+            return response()->json(['message' => 'No Course found'], 403);
+        }
         $courseReport = $this->CourseInformation($courseID);
 
         return CourseReportResource::make($courseReport);
