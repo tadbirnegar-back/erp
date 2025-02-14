@@ -54,8 +54,10 @@ class ReportingController extends Controller
      */
     public function AllEnrollsCourseReport($courseID)
     {
+        $this->CountOfMashmuls($courseID);
         $courseReport = $this->CourseInformation($courseID);
 
         return CourseReportResource::make($courseReport);
     }
+
 }

@@ -107,5 +107,21 @@ enum OunitCategoryEnum: int
         throw new \InvalidArgumentException("Value not found: $value");
     }
 
+    public static function getModelsByValues(array $values)
+    {
+        $models = [];
+
+        foreach ($values as $value) {
+            foreach (self::cases() as $case) {
+                if ($case->value === $value) {
+                    $models[] = $case->getUnitableType();
+                    break;
+                }
+            }
+        }
+
+        return $models;
+    }
+
 
 }
