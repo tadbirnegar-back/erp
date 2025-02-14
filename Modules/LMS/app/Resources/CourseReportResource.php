@@ -45,11 +45,12 @@ class CourseReportResource extends JsonResource
             ],
             'totalStudyDurationAverage' => $this['totalStudyDurationAverage'] ?? null,
             'subInfoOfAllStudents' => [
-                'includedStudents' => 100,
-                'hasNotParticipated' => 50,
+                'includedStudents' => $this['includedStudents'] ?? null,
+                'hasNotParticipated' => $this['includedStudents'] - ($this['subCount']['studyCompleted'] + $this['subCount']['isStudying']) ?? null,
                 'studyCompleted' => $this['subCount']['studyCompleted'] ?? null,
                 'isStudying' => $this['subCount']['isStudying'] ?? null,
             ],
+
             'scoreAndMonthChart' => array_map(function ($item) {
                 return [
                     'month' => $item['month'] ?? null,

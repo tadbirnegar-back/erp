@@ -57,8 +57,9 @@ class ReportingController extends Controller
         if (empty($courseID)) {
             return response()->json(['message' => 'No Course found'], 403);
         }
-        $courseReport = $this->CourseInformation($courseID);
 
+        $courseReport = $this->CourseInformation($courseID);
         return CourseReportResource::make($courseReport);
     }
+
 }
