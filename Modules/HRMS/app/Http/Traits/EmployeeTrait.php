@@ -42,7 +42,7 @@ trait EmployeeTrait
 
     public function employeeIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $employeeQuery = Employee::with('person.avatar', 'status', 'positions')->distinct();
+        $employeeQuery = Employee::with('person.avatar', 'status', 'positions');
 
         $searchTerm = $data['name'] ?? null;
         $position = $data['positionID'] ?? null;
