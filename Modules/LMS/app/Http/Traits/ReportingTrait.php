@@ -20,9 +20,7 @@ use Modules\LMS\app\Models\OucPropertyValue;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\Repository;
 use Modules\LMS\app\Models\TargetOunitCat;
-use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\VillageOfc;
 use Morilog\Jalali\Jalalian;
 
 trait ReportingTrait
@@ -487,6 +485,8 @@ trait ReportingTrait
         $allStudentsCount = $this->allStudentsCount($courseID);
         $subCount = $this->subCount($courseID);
         $months = $this->scoresAndMonthChartData($courseID);
+        $cover = $this->CourseCover($courseID);
+        $mashmuls = $this->CountOfMashmuls($courseID);
 
 
         return [
@@ -502,9 +502,35 @@ trait ReportingTrait
             'subCount' => $subCount,
             'scoreAndMonthChart' => $months,
             'totalStudyDurationAverage' => $totalStudyDurationAverage,
+            'cover' => $cover,
+            'includedStudents' => $mashmuls
         ];
     }
 
+    public function CourseCover($courseID)
+    {
+        $course = Course::with(['cover'])->find($courseID);
+
+        if (!$course) {
+            return response()->json([
+                'error' => 'Course not found',
+            ], 404);
+        }
+
+        if (!$course->cover) {
+            return response()->json([
+                'error' => 'Cover not found for this course',
+            ], 404);
+        }
+
+        $relativePath = $course->cover->slug;
+
+        $coverUrl = $relativePath ? url($relativePath) : asset('images/default-cover.png');
+
+        return ([
+            'avatar' => $coverUrl,
+        ]);
+    }
 
     public function AudioCourseDuration($courseID, $contentTypes)
     {
@@ -633,8 +659,11 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->distinct()
             ->orderBy('answer_sheets.score', 'desc');
+
+        $averageScore = $ans->get()->pluck('scores')->avg();
+
         return [
-            'average' => $ans->average('answer_sheets.score'),
+            'average' => $averageScore,
             'EnrolledStudents' => $ans->count('answer_sheets.student_id'),
             'scores' => $ans->get()->pluck('scores'),
         ];
@@ -749,14 +778,12 @@ trait ReportingTrait
     {
         $course = Course::find($courseId);
         $courseTargets = $this->GetCourseTarget($course->id);
-        $courseOunitFeatures = $this -> getOunitFeatures($courseTargets);
+        $courseOunitFeatures = $this->getOunitFeatures($courseTargets);
         $propValues = $this->getPropertyValueFeatures($courseOunitFeatures);
-        $props = $this -> getProperties($propValues);
+        $props = $this->getProperties($propValues);
 
 
-
-        return $this -> CountingAllTheCourseContainers($course , $courseTargets , $propValues , $props);
-
+        return $this->CountingAllTheCourseContainers($course, $courseTargets, $propValues, $props);
 
 
     }
@@ -764,33 +791,33 @@ trait ReportingTrait
 
     private function GetCourseTarget($courseId)
     {
-        return CourseTarget::where('course_id' , $courseId)->get();
+        return CourseTarget::where('course_id', $courseId)->get();
     }
 
     private function getEmployeeFeatures($courseTargets)
     {
         $courseTargets = $courseTargets->pluck('id')->toArray();
-        return CourseEmployeeFeature::whereIn('course_target_id' , $courseTargets)->get();
+        return CourseEmployeeFeature::whereIn('course_target_id', $courseTargets)->get();
     }
 
 
     private function getOunitFeatures($courseTargets)
     {
         $courseTargets = $courseTargets->pluck('id')->toArray();
-        return CourseOunitFeature::whereIn('course_target_id' , $courseTargets)->get();
+        return CourseOunitFeature::whereIn('course_target_id', $courseTargets)->get();
     }
 
 
     private function getPropertyValueFeatures($courseOunitFeatures)
     {
         $propValues = $courseOunitFeatures->pluck('ouc_property_value')->toArray();
-        return OucPropertyValue::whereIn('ouc_property_id' , $propValues)->get();
+        return OucPropertyValue::whereIn('ouc_property_id', $propValues)->get();
     }
 
     private function getProperties($propValues)
     {
         $props = $propValues->pluck('ouc_property_id')->toArray();
-        return OucProperty::whereIn('id' , $props)->get();
+        return OucProperty::whereIn('id', $props)->get();
     }
 
 
@@ -800,7 +827,7 @@ trait ReportingTrait
 
         foreach ($courseTargets as $courseTarget) {
             // Get categories related to the course target
-            $categories = TargetOunitCat::where('course_target_id', $courseTarget    ->id)->get();
+            $categories = TargetOunitCat::where('course_target_id', $courseTarget->id)->get();
             $ounitCats = $categories->pluck('ounit_cat_id')->toArray();
             $categoriesModel = OunitCategoryEnum::getModelsByValues($ounitCats);
 
@@ -809,8 +836,8 @@ trait ReportingTrait
 
             if ($parentUnit && $parentUnit->descendants) {
                 // Ensure descendants is a collection before filtering
-                $filteredDescendants = collect($parentUnit->descendants)->filter    (function ($descendant) {
-                    return $descendant->unitable_type ===     'Modules\\OUnitMS\\app\\Models\\VillageOfc';
+                $filteredDescendants = collect($parentUnit->descendants)->filter(function ($descendant) {
+                    return $descendant->unitable_type === 'Modules\\OUnitMS\\app\\Models\\VillageOfc';
                 })->values(); // Reset array keys
 
                 // Convert object to an array if needed
@@ -823,8 +850,7 @@ trait ReportingTrait
             $courseTargets = $courseTargets->pluck('id')->toArray();
 
 
-
-            $empFeature =  CourseEmployeeFeature::with('propertyble')->where('course_target_id' , $courseTarget->id)->get();
+            $empFeature = CourseEmployeeFeature::with('propertyble')->where('course_target_id', $courseTarget->id)->get();
 
             $levelIds = $empFeature->where('propertyble_type', 'Modules\\HRMS\\app\\Models\\Level')
                 ->pluck('propertyble_id')
@@ -853,7 +879,7 @@ trait ReportingTrait
                 $recruitmentScripts->orWhereIn('job_id', $jobIds);
             }
 
-            if(!empty($AllOunitIds)){
+            if (!empty($AllOunitIds)) {
                 $recruitmentScripts->orWhereIn('organization_unit_id', $AllOunitIds);
             }
 

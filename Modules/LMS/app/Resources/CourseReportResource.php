@@ -13,6 +13,7 @@ class CourseReportResource extends JsonResource
     {
         return [
             'course' => [
+                'cover' => $this['cover']['avatar'] ?? null,
                 'courseTitle' => $this['course']['courseTitle'] ?? null,
                 'chapters_count' => $this['course']['chapters_count'] ?? null,
                 'all_active_lessons_count' => $this['course']['all_active_lessons_count'] ?? null,
@@ -35,24 +36,27 @@ class CourseReportResource extends JsonResource
                 'total' => $this['durationOfVideo']['total'] ?? null,
                 'averageOfVideo' => $this['durationOfVideo']['averageOfVideo'] ?? null,
             ],
+            'totalDuration' => ($this['durationOfAudio']['duration'] ?? 0) + ($this['durationOfVideo']['duration'] ?? 0),
+
             'totalPlayedDuration' => $this['totalPlayedDuration'] ?? null,
             'subInfoOfAllEnrollmentStudents' => [
                 'approvedStudents' => $this['approvedStudents'] ?? null,
                 'declinedStudents' => $this['declinedStudents'] ?? null,
             ],
+            'totalStudyDurationAverage' => $this['totalStudyDurationAverage'] ?? null,
             'subInfoOfAllStudents' => [
-                'includedStudents' => 100,
-                'hasNotParticipated' => 50,
+                'includedStudents' => $this['includedStudents'] ?? null,
+                'hasNotParticipated' => $this['includedStudents'] - ($this['subCount']['studyCompleted'] + $this['subCount']['isStudying']) ?? null,
                 'studyCompleted' => $this['subCount']['studyCompleted'] ?? null,
                 'isStudying' => $this['subCount']['isStudying'] ?? null,
             ],
+
             'scoreAndMonthChart' => array_map(function ($item) {
                 return [
                     'month' => $item['month'] ?? null,
                     'average_score' => $item['average_score'] ?? null,
                 ];
             }, $this['scoreAndMonthChart'] ?? []),
-
 
         ];
     }
