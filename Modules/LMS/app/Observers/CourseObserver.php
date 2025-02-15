@@ -4,7 +4,6 @@ namespace Modules\LMS\app\Observers;
 
 use Modules\LMS\app\Events\CourseAccessDateEvent;
 use Modules\LMS\app\Events\CourseExpirationEvent;
-use Modules\LMS\app\Events\CourseExpirationUpdateEvent;
 use Modules\LMS\app\Models\Course;
 
 class CourseObserver

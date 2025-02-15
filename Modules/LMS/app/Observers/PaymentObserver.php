@@ -2,7 +2,6 @@
 
 namespace Modules\LMS\app\Observers;
 
-use Illuminate\Support\Facades\Log;
 use Modules\LMS\app\Events\PaymentCreatedEvent;
 use Modules\PayStream\app\Models\PsPayments;
 
