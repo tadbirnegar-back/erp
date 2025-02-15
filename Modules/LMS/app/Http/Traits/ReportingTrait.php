@@ -820,6 +820,29 @@ trait ReportingTrait
         return OucProperty::whereIn('id', $props)->get();
     }
 
+    public static function getUnitableHierarchy($unitType)
+    {
+        $hierarchy = [
+            'Modules\OUnitMS\app\Models\StateOfc' => [
+                'Modules\OUnitMS\app\Models\CityOfc',
+                'Modules\OUnitMS\app\Models\DistrictOfc',
+                'Modules\OUnitMS\app\Models\VillageOfc',
+            ],
+            'Modules\OUnitMS\app\Models\CityOfc' => [
+                'Modules\OUnitMS\app\Models\DistrictOfc',
+                'Modules\OUnitMS\app\Models\VillageOfc',
+            ],
+            'Modules\OUnitMS\app\Models\DistrictOfc' => [
+                'Modules\OUnitMS\app\Models\VillageOfc',
+            ],
+            'Modules\OUnitMS\app\Models\VillageOfc' => [
+                'Modules\OUnitMS\app\Models\VillageOfc',
+            ],
+        ];
+
+        return $hierarchy[$unitType] ?? [];
+    }
+
 
     private function CountingAllTheCourseContainers($course, $courseTargets, $propValues, $props)
     {
@@ -835,14 +858,30 @@ trait ReportingTrait
             $parentUnit = OrganizationUnit::with('descendants')->find($courseTarget->parent_ounit_id);
 
             if ($parentUnit && $parentUnit->descendants) {
+                $selectedUnitType = $parentUnit->unitable_type;
+
+                // Initialize an empty array to hold valid unit types
+                $validUnitTypes = [];
+
+                // Loop through each category model and merge the valid unit types
+                foreach ($categoriesModel as $category) {
+                    // Get valid unit types for each category model and merge them into the validUnitTypes array
+                    $validUnitTypes = array_merge($validUnitTypes, (array)$this->getUnitableHierarchy($category));
+                }
+
+                // Remove duplicates from the valid unit types array
+                $validUnitTypes = array_unique($validUnitTypes);
+
                 // Ensure descendants is a collection before filtering
-                $filteredDescendants = collect($parentUnit->descendants)->filter(function ($descendant) {
-                    return $descendant->unitable_type === 'Modules\\OUnitMS\\app\\Models\\VillageOfc';
+                $filteredDescendants = collect($parentUnit->descendants)->filter(function ($descendant) use ($validUnitTypes) {
+                    return in_array($descendant->unitable_type, $validUnitTypes);
                 })->values(); // Reset array keys
 
                 // Convert object to an array if needed
                 $parentUnit->setRelation('descendants', $filteredDescendants);
             }
+
+
             //Props Degree and column
 
 
