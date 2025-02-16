@@ -59,7 +59,6 @@ trait ReportingTrait
                 'practiceExam' => $this->practicalExam($answerSheetID, $user, $data, $courseID),
                 'FailedExams' => [],
                 'courseInformation' => $this->courseInfo($studentID, $courseID, $user),
-                'examResultListCount' => $this->examResultListCount($courseID),
             ];
         }
 
@@ -70,7 +69,6 @@ trait ReportingTrait
         $calculate = $this->counting($optionID, $answerSheetID, $examId, $repo);
         $failedExams = $this->FailedExams($studentID, $courseID, $repo);
         $courseInfo = $this->courseInfo($studentID, $courseID, $user);
-        $examResultListCount = $this->examResultListCount($courseID);
 
 
         return [
@@ -81,23 +79,8 @@ trait ReportingTrait
             'practiceExam' => $practicalExam,
             'FailedExams' => $failedExams,
             'courseInformation' => $courseInfo,
-            'examResultListCount' => $examResultListCount,
         ];
     }
-
-    public function examResultListCount($courseID)
-    {
-        $count = Course::joinRelationship('courseExams.exams.answerSheets')
-            ->where('courses.id', $courseID)
-            ->count();
-        if ($count > 0) {
-            return true;
-        } else {
-            return false;
-        }
-
-    }
-
 
     public function studentInfo($student)
     {
@@ -474,11 +457,9 @@ trait ReportingTrait
 
         $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO->value)->first()->id;
         $VidContentTypes = ContentType::where('name', ContentTypeEnum::VIDEO->value)->first()->id;
-        $course = Course::
-
-        leftJoinRelationship('chapters.lessons.contents.file')
+        $course = Course::leftJoinRelationship('chapters.lessons.contents.file')
             ->leftJoinRelationship('courseExams.exams.answerSheets')
-            ->leftJoinRelationship('chapters.lessons.contents.contentType')
+            ->joinRelationship('chapters.lessons.contents.contentType')
             ->select([
                 'courses.title as courseTitle',
             ])
@@ -487,7 +468,6 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->distinct()
             ->get();
-//            ->find($courseID);
 
         $durationAudio = $this->AudioCourseDuration($courseID, $contentTypes);
         $durationVideo = $this->VideoCourseDuration($courseID, $VidContentTypes);
@@ -677,15 +657,13 @@ trait ReportingTrait
             ->select('answer_sheets.score as scores')
             ->where('repositories.id', $repo)
             ->where('courses.id', $courseID)
-            ->distinct()
-            ->orderBy('answer_sheets.score', 'desc');
+            ->distinct();
 
         $averageScore = $ans->get()->pluck('scores')->avg();
 
         return [
             'average' => $averageScore,
             'EnrolledStudents' => $ans->count('answer_sheets.student_id'),
-            'scores' => $ans->get()->pluck('scores'),
         ];
     }
 
@@ -755,12 +733,15 @@ trait ReportingTrait
 
     public function scoresAndMonthChartData($courseID)
     {
-        $query = Course::joinRelationship('courseExams.exams.answerSheets')
+        $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
+
+        $query = Course::joinRelationship('courseExams.exams.answerSheets.answers.questions.repository')
             ->select([
                 'answer_sheets.score as scores',
                 'answer_sheets.finish_date_time as finish_date_time',
             ])
             ->where('courses.id', $courseID)
+            ->where('repositories.id', $repo)
             ->get();
 
         $persianMonths = [
