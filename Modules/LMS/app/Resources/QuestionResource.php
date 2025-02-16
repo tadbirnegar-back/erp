@@ -32,7 +32,6 @@ class QuestionResource extends JsonResource
     public function makeCourseDatas($course): array
     {
         $course_data = [];
-
         // Loop through each chapter and extract its lessons
         foreach ($course['chapters'] as $chapter) {
             $course_data[] = [
