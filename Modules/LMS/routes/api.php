@@ -98,3 +98,5 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
 });
+Route::get('/lms/course/report/{id}', [ReportingController::class, 'AllEnrollsCourseReport']);
+Route::get('/lms/reporting/data/{id}', [ReportingController::class, 'index']);

@@ -48,6 +48,7 @@ class ReportingResource extends JsonResource
                 'practicalExamEnrollment' => data_get($this, 'practiceExam.practicalExamEnrollment'),
                 'scoreAverage' => data_get($this, 'practiceExam.scoreAverage'),
             ],
+            'examResultListCount' => $this['examResultListCount']
         ];
     }
 

@@ -59,6 +59,7 @@ trait ReportingTrait
                 'practiceExam' => $this->practicalExam($answerSheetID, $user, $data, $courseID),
                 'FailedExams' => [],
                 'courseInformation' => $this->courseInfo($studentID, $courseID, $user),
+                'examResultListCount' => $this->examResultListCount($courseID),
             ];
         }
 
@@ -69,6 +70,7 @@ trait ReportingTrait
         $calculate = $this->counting($optionID, $answerSheetID, $examId, $repo);
         $failedExams = $this->FailedExams($studentID, $courseID, $repo);
         $courseInfo = $this->courseInfo($studentID, $courseID, $user);
+        $examResultListCount = $this->examResultListCount($courseID);
 
 
         return [
@@ -79,8 +81,23 @@ trait ReportingTrait
             'practiceExam' => $practicalExam,
             'FailedExams' => $failedExams,
             'courseInformation' => $courseInfo,
+            'examResultListCount' => $examResultListCount,
         ];
     }
+
+    public function examResultListCount($courseID)
+    {
+        $count = Course::joinRelationship('courseExams.exams.answerSheets')
+            ->where('courses.id', $courseID)
+            ->count();
+        if ($count > 0) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
 
     public function studentInfo($student)
     {
@@ -457,9 +474,11 @@ trait ReportingTrait
 
         $contentTypes = ContentType::where('name', ContentTypeEnum::AUDIO->value)->first()->id;
         $VidContentTypes = ContentType::where('name', ContentTypeEnum::VIDEO->value)->first()->id;
-        $course = Course::leftJoinRelationship('chapters.lessons.contents.file')
+        $course = Course::
+
+        leftJoinRelationship('chapters.lessons.contents.file')
             ->leftJoinRelationship('courseExams.exams.answerSheets')
-            ->joinRelationship('chapters.lessons.contents.contentType')
+            ->leftJoinRelationship('chapters.lessons.contents.contentType')
             ->select([
                 'courses.title as courseTitle',
             ])
@@ -468,6 +487,7 @@ trait ReportingTrait
             ->where('courses.id', $courseID)
             ->distinct()
             ->get();
+//            ->find($courseID);
 
         $durationAudio = $this->AudioCourseDuration($courseID, $contentTypes);
         $durationVideo = $this->VideoCourseDuration($courseID, $VidContentTypes);
