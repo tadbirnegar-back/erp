@@ -59,6 +59,7 @@ class ReportingController extends Controller
         }
 
         $courseReport = $this->CourseInformation($courseID);
+        return response()->json($courseReport);
         return CourseReportResource::make($courseReport);
     }
 
