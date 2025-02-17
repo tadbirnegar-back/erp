@@ -25,6 +25,7 @@ class CancelHandler implements StatusHandlerInterface
     public function execute(): void
     {
         $this->detachRolesByPosition($this->script->user, $this->script->position_id);
+        $this->detachHeadIdFromOunit($this->script, $this->script->user->id);
         $this->notifyScriptUser();
         $this->AddFinishDate($this->script);
     }
