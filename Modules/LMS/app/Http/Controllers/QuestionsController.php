@@ -21,7 +21,7 @@ class QuestionsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function storeQuestionAndOptions(Request $request, $courseID)
+    public function storeQuestionAndOptions(Request $request, $questionsID)
     {
 
         try {
@@ -54,7 +54,7 @@ class QuestionsController extends Controller
 
             $user = Auth::user();
 
-            $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs);
+            $question = $this->insertQuestionWithOptions($data, $options, $questionsID, $user, $repositoryIDs);
             DB::commit();
             if ($question) {
                 return response()->json([
@@ -89,6 +89,26 @@ class QuestionsController extends Controller
             ], 500);
         }
     }
+
+
+    public function showDropDownsAddQuestion($courseId)
+    {
+        try {
+            $show = $this->dropDownsAddQuestion($courseId);
+            if (!$show) {
+                return response()->json([
+                    'error' => 'Course not found.'
+                ], 403);
+            }
+            return new QuestionResource(collect($show));
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while fetching dropdowns.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
     public function questionsManagement($id)
     {
