@@ -21,7 +21,7 @@ class QuestionsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function storeQuestionAndOptions(Request $request, $courseID)
+    public function storeQuestionAndOptions(Request $request, $questionsID)
     {
 
         try {
@@ -54,14 +54,14 @@ class QuestionsController extends Controller
 
             $user = Auth::user();
 
-            $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs);
-            DB::commit();
+            $question = $this->insertQuestionWithOptions($data, $options, $questionsID, $user, $repositoryIDs);
             if ($question) {
+                DB::commit();
                 return response()->json([
                     'message' => 'Question created successfully',
                 ], 201);
             }
-
+            DB::rollBack();
             return response()->json(['message' => 'Failed to create question'], 500);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -89,6 +89,26 @@ class QuestionsController extends Controller
             ], 500);
         }
     }
+
+
+    public function showDropDownsAddQuestion($courseId)
+    {
+        try {
+            $show = $this->dropDownsAddQuestion($courseId);
+            if (!$show) {
+                return response()->json([
+                    'error' => 'Course not found.'
+                ], 403);
+            }
+            return new QuestionResource(collect($show));
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while fetching dropdowns.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
     public function questionsManagement($id)
     {
@@ -138,6 +158,7 @@ class QuestionsController extends Controller
     {
 
         try {
+            DB::beginTransaction();
             $data = $request->all();
 
             $options = json_decode($data['options'], true);
@@ -190,17 +211,21 @@ class QuestionsController extends Controller
             $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs);
 
             if ($updateResult) {
+                Db::commit();
                 return response()->json([
                     'message' => 'Question updated successfully',
                     'course_id' => $courseID
                 ], 200);
             }
 
+            Db::rollBack();
+
             return response()->json([
                 'message' => 'Failed to update question'
             ], 500);
 
         } catch (\Exception $e) {
+            Db::rollBack();
             return response()->json([
                 'message' => 'An error occurred while updating the question.',
                 'error' => $e->getMessage(),

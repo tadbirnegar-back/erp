@@ -42,9 +42,14 @@ class ExamsController extends Controller
 
             $student = Auth::user()->load('student');
             $enrolled = $this->isEnrolledToDefinedCourse($courseId, $student);
-            $completed = $this->isCourseCompleted($student);
+            if(is_null($enrolled)){
+                $isEnrolles = false;
+            }else{
+                $isEnrolles = true;
+            }
+            $completed = $this->isCourseNotCompleted($student);
             $attempted = $this->hasAttemptedAndPassedExam($student->student, $courseId);
-            if ($enrolled && !$completed && !$attempted) {
+            if ($isEnrolles && $completed && !$attempted) {
                 $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
                 $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
                 $data = $this->createExam($course, $questionType, $repository);
@@ -94,9 +99,9 @@ class ExamsController extends Controller
 
             $student = Auth::user()->load('student');
             $enrolled = $this->isEnrolledToDefinedCourse($id, $student);
-            $completed = $this->isCourseCompleted($student);
+            $completed = $this->isCourseNotCompleted($student);
             $attempted = $this->hasAttemptedAndPassedExam($student->student, $id);
-            if ($enrolled && !$completed && !$attempted) {
+            if ($enrolled && $completed && !$attempted) {
                 $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
                 $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
                 $data = $this->createExam($course, $questionType, $repository);
@@ -172,10 +177,10 @@ class ExamsController extends Controller
             }
 
             $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
-            $completed = $this->isCourseCompleted($student);
+            $completed = $this->isCourseNotCompleted($student);
             $attempted = $this->hasAttemptedAndPassedExam($student->student, $courseID);
 
-            if ($enrolled && !$attempted && !$completed) {
+            if ($enrolled && !$attempted && $completed) {
                 $examQuestions = $this->showExam($id);
                 $response = new ShowExamQuestionResource($examQuestions);
 

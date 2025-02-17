@@ -25,7 +25,7 @@ class ReportingResource extends JsonResource
                     : data_get($this, 'answerSheetOfFinalExam.statusName'),
                 'startTime' => convertDateTimeGregorianToJalaliDateTime($this['answerSheetOfFinalExam']['start_date_time'] ?? null),
             ],
-            'examResultListCount'=> !(data_get($this, 'answerSheetOfFinalExam.score') == null),
+            'examResultListCount'=> data_get($this, 'finalExamEnrollment') > 0,
             'finalExamEnrollment' => data_get($this, 'finalExamEnrollment'),
             'FailedExams' => data_get($this, 'FailedExams'),
 
@@ -49,7 +49,6 @@ class ReportingResource extends JsonResource
                 'practicalExamEnrollment' => data_get($this, 'practiceExam.practicalExamEnrollment'),
                 'scoreAverage' => data_get($this, 'practiceExam.scoreAverage'),
             ],
-            'examResultListCount' => $this['examResultListCount']
         ];
     }
 
