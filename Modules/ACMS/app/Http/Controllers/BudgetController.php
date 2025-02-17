@@ -44,12 +44,12 @@ class BudgetController extends Controller
 
         $ounits = $recruitmentScripts->pluck('organizationUnit.id');
 
-        $budgets = Budget::leftJoinRelationshipUsingAlias('children', function ($join) {
-            $join->as('budgets_alias')
-                ->on('budgets_alias.id', '=', 'bgt_budgets.parent_id')
-                ->whereNull('budgets_alias.id');
-        }
-        )
+        $budgets = Budget::
+        whereNotIn('bgt_budgets.id', function ($query) {
+            $query->select('bgt_budgets.parent_id')
+                ->from('bgt_budgets')
+                ->whereNotNull('bgt_budgets.parent_id');
+        })
             ->joinRelationship('statuses', [
                 'statuses' => function ($join) {
                     $join
@@ -64,9 +64,11 @@ class BudgetController extends Controller
                 'statuses.name as status_name',
                 'statuses.class_name as status_class_name',
                 'bgt_budgets.id as budget_id',
+                'bgt_budgets.ounitFiscalYear_id',
                 'bgt_budgets.name as budget_name',
                 'village_ofcs.abadi_code as village_abadicode',
             ])
+            ->with(['fiscalYear'])
             ->get();
         return VillageBudgetListResource::collection($budgets);
 

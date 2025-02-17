@@ -13,6 +13,7 @@ class VillageBudgetListResource extends JsonResource
     {
         return [
             'name' => $this->ounit_name ?? $this->budget_name,
+            'fiscalYear' => $this->fiscalYear?->name,
             'status' => [
                 'name' => $this->status_name,
                 'class_name' => $this->status_class_name,
