@@ -657,15 +657,13 @@ trait ReportingTrait
             ->select('answer_sheets.score as scores')
             ->where('repositories.id', $repo)
             ->where('courses.id', $courseID)
-            ->distinct()
-            ->orderBy('answer_sheets.score', 'desc');
+            ->distinct();
 
         $averageScore = $ans->get()->pluck('scores')->avg();
 
         return [
             'average' => $averageScore,
             'EnrolledStudents' => $ans->count('answer_sheets.student_id'),
-            'scores' => $ans->get()->pluck('scores'),
         ];
     }
 
@@ -735,12 +733,15 @@ trait ReportingTrait
 
     public function scoresAndMonthChartData($courseID)
     {
-        $query = Course::joinRelationship('courseExams.exams.answerSheets')
+        $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
+
+        $query = Course::joinRelationship('courseExams.exams.answerSheets.answers.questions.repository')
             ->select([
                 'answer_sheets.score as scores',
                 'answer_sheets.finish_date_time as finish_date_time',
             ])
             ->where('courses.id', $courseID)
+            ->where('repositories.id', $repo)
             ->get();
 
         $persianMonths = [
