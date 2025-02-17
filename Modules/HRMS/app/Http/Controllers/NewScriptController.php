@@ -61,7 +61,7 @@ class NewScriptController extends Controller
             $data['jobID'] = $job->id;
             $data['operatorID'] = $user->id;
             $data['scriptAgents'] = $encodedSas;
-            $data['positionID'] = Position::where('name', 'دهیار')->first()->id;
+            $data['positionID'] = Position::where('name', 'سرپرست دهیاری')->first()->id;
             $pendingRsStatus = $this->pendingRsStatus();
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
@@ -69,6 +69,7 @@ class NewScriptController extends Controller
             DB::commit();
             return response()->json($rsRes);
         } catch (\Exception $e) {
+
             return response()->json(['message' => 'خطا در افزودن حکم', $e->getMessage(), $e->getTrace()], 500);
         }
 
@@ -100,7 +101,7 @@ class NewScriptController extends Controller
             $data['jobID'] = $job->id;
             $data['operatorID'] = $user->id;
             $data['scriptAgents'] = $encodedSas;
-            $data['positionID'] = Position::where('name', 'دهیار')->first()->id;
+            $data['positionID'] = Position::where('id', $data['positionID'])->first()->id;
             $pendingRsStatus = $this->pendingRsStatus();
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);

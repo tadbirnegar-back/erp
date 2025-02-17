@@ -25,6 +25,7 @@ class ReportingResource extends JsonResource
                     : data_get($this, 'answerSheetOfFinalExam.statusName'),
                 'startTime' => convertDateTimeGregorianToJalaliDateTime($this['answerSheetOfFinalExam']['start_date_time'] ?? null),
             ],
+            'examResultListCount'=> !(data_get($this, 'answerSheetOfFinalExam.score') == null),
             'finalExamEnrollment' => data_get($this, 'finalExamEnrollment'),
             'FailedExams' => data_get($this, 'FailedExams'),
 

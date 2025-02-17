@@ -824,9 +824,12 @@ class EMSController extends Controller
 
         $ounits = $user->activeDistrictRecruitmentScript->pluck('ounit.descendants');
 
-        $filteredOunits = $ounits[0]->filter(function ($unit) {
-            return $unit->unitable_type === VillageOfc::class;
-        })->pluck('unitable_id');
+
+        $filteredOunits = collect($ounits)->flatMap(function ($units) {
+            return $units->filter(function ($unit) {
+                return $unit->unitable_type === VillageOfc::class;
+            })->pluck('unitable_id');
+        });
 
 // Ensure $ounits is a collection of Eloquent models
         $villageOfc = VillageOfc::whereIntegerInRaw('id', $filteredOunits)

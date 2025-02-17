@@ -17,13 +17,13 @@ trait QuestionsTrait
     private static string $active = QuestionsEnum::ACTIVE->value;
     private static string $inactive = QuestionsEnum::EXPIRED->value;
 
-    public function dropDowns($courseID)
+    public function dropDowns($quesionId)
     {
-        $status = $this->lessonActiveStatus()->id;
+        $question = Question::find($quesionId);
+        $question->load('course');
+        $courseID = $question->course->id;
+        return Course::with('chapters.allActiveLessons')->find($courseID);
 
-        $query = Course::with('chapters.allActiveLessons');
-        return $query->where('courses.id', $courseID)
-            ->get();
     }
 
     public function insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs)

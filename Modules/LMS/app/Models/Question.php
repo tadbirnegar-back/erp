@@ -82,10 +82,17 @@ class Question extends Model
             ['lesson_id', 'chapter_id'],
             ['id', 'id']
         );
-
-
     }
 
+
+
+    public function course()
+    {
+        return $this->hasOneDeep( Course::class , [Lesson::class,Chapter::class],
+            ['id', 'id' , 'id'],
+            ['lesson_id', 'chapter_id' , 'course_id']
+        );
+    }
     public function answers()
     {
         return $this->hasMany(Answers::class, 'question_id', 'id');

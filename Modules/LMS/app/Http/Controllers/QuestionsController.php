@@ -72,16 +72,16 @@ class QuestionsController extends Controller
         }
     }
 
-    public function showDropDowns($courseID)
+    public function showDropDowns($questionId)
     {
         try {
-            $show = $this->dropDowns($courseID);
+            $show = $this->dropDowns($questionId);
             if (!$show) {
                 return response()->json([
                     'error' => 'Course not found.'
                 ], 403);
             }
-            return new QuestionResource(collect($show->first()));
+            return new QuestionResource(collect($show));
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while fetching dropdowns.',
