@@ -26,6 +26,7 @@ class TarazLogResource extends JsonResource
         }
         return [
             'name' => $this->name,
+            'chainCode' => $this->chain_code,
             'openingCredit' => $this->opening_credit,
             'periodCredit' => $this->period_credit,
             'untilNowCredit' => $untilNowCredit,

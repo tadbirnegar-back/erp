@@ -10,8 +10,10 @@ use Mockery\Exception;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
+use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Models\Budget;
 use Modules\ACMS\app\Models\BudgetItem;
+use Modules\ACMS\app\Models\BudgetStatus;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\ACMS\app\Resources\BudgetSingleResource;
 use Modules\ACMS\app\Resources\VillageBudgetListResource;
@@ -23,6 +25,7 @@ use Validator;
 
 class BudgetController extends Controller
 {
+    use BudgetTrait;
 
     /**
      * Display a listing of the resource.
@@ -299,13 +302,84 @@ class BudgetController extends Controller
                 'description' => $request->description,
                 'file_id' => $request->fileID,
             ]);
+            $newBudget = $budget->replicate();
+            $newBudget->parent_id = $budget->id;
+            $newBudget->create_date = now();
+            $newBudget->save();
+            $status = $this->proposedBudgetStatus();
+            BudgetStatus::create([
+                'budget_id' => $newBudget->id,
+                'status_id' => $status->id,
+                'creator_id' => Auth::user()->id,
+                'create_date' => now(),
+            ]);
+            $items = $budget->budgetItems;
+            $newItems = $items->map(function ($item) use ($newBudget) {
+                return [
+                    'budget_id' => $newBudget->id,
+                    'circular_item_id' => $item->circular_item_id,
+                    'proposed_amount' => $item->proposed_amount,
+                    'finalized_amount' => 0,
+                    'percentage' => $item->percentage,
+                ];
+            });
+            BudgetItem::insert($newItems->toArray());
             DB::commit();
-            return response()->json(['message' => 'بودجه با موفقیت لغو شد'], 200);
+            return response()->json(['message' => 'بودجه با موفقیت لغو شد', 'data' => $newBudget], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
 
+    }
+
+    public function insertSupplementaryBudget(Request $request)
+    {
+        $data = $request->all();
+        $validator = \Validator::make($data, [
+            'budgetID' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+        try {
+            DB::beginTransaction();
+            $budget = Budget::with('budgetItems')->find($request->budgetID);
+            if (is_null($budget)) {
+                return response()->json(['error' => 'بودجه مورد نظر یافت نشد'], 404);
+            }
+            $newBudget = $budget->replicate();
+            $newBudget->isSupplementary = true;
+            $newBudget->parent_id = $budget->id;
+            $newBudget->create_date = now();
+            $newBudget->save();
+            $status = $this->proposedBudgetStatus();
+            BudgetStatus::create([
+                'budget_id' => $newBudget->id,
+                'status_id' => $status->id,
+                'creator_id' => Auth::user()->id,
+                'create_date' => now(),
+            ]);
+            $items = $budget->budgetItems;
+            $newItems = $items->map(function ($item) use ($newBudget) {
+                return [
+                    'budget_id' => $newBudget->id,
+                    'circular_item_id' => $item->circular_item_id,
+                    'proposed_amount' => $item->proposed_amount,
+                    'finalized_amount' => 0,
+                    'percentage' => $item->percentage,
+                ];
+            });
+            BudgetItem::insert($newItems->toArray());
+
+
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت بودجه متمم ایجاد شد', 'data' => $newBudget], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

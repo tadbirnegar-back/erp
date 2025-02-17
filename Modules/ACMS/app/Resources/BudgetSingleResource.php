@@ -50,7 +50,10 @@ class BudgetSingleResource extends JsonResource
             'archive' => $this->ancestors->isEmpty() ? [] : $this->ancestors->map(function ($ancestor) {
 
                 return [
+                    'id' => $ancestor->id,
                     'name' => $ancestor->name,
+                    'budgetType' => $ancestor->isSupplementary == 0 ? "بودجه اصلی" : "بودجه متمم",
+                    'createDate' => convertGregorianToJalali($ancestor->create_date) ?? null,
                     'status' => [
                         'name' => $ancestor->latestStatus->name,
                         'class_name' => $ancestor->latestStatus->class_name

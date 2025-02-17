@@ -71,10 +71,11 @@ class DocumentController extends Controller
                 'acc_documents.document_date as document_date',
                 'acc_documents.document_number as document_number',
                 'acc_documents.create_date as create_date',
+                'acc_documents.document_type_id as document_type_id',
                 \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
                 \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
             ])
-            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date', 'statuses.name', 'statuses.class_name')
+            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date', 'acc_documents.document_type_id', 'statuses.name', 'statuses.class_name')
             ->get();
 
         return DocumentListResource::collection($docs);
@@ -131,10 +132,7 @@ class DocumentController extends Controller
     {
         $data = $request->all();
         $validate = Validator::make($data, [
-            'fiscalYear' => [
-                'required',
-                'exists:fiscal_years,name'
-            ],
+            'fiscalYear' => 'required',
             'ounitID' => 'required',
         ]);
 
@@ -147,7 +145,7 @@ class DocumentController extends Controller
 
         $lastDocNumber = Document::where('fiscal_year_id', $data['fiscalYearID'])
             ->where('ounit_id', $data['ounitID'])
-            ->latest('document_number')
+            ->orderByRaw('CAST(document_number AS UNSIGNED) DESC')
             ->first();
 
         $data['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 1;
@@ -346,16 +344,6 @@ class DocumentController extends Controller
 
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
     public function setConfirmedStatusTODocument(Request $request)
     {
         $data = $request->all();
@@ -435,6 +423,13 @@ class DocumentController extends Controller
             DB::beginTransaction();
             $status = $this->deleteDocumentStatus();
             $this->attachStatusToDocument($document, $status, Auth::user()->id);
+            $articles = $document->articles()->whereNotNull('transaction_id')->get();
+            $articles->each(function ($article) {
+                $transaction = $article->transaction;
+                $cheque = $article->transaction?->cheque;
+                $this->resetChequeAndFree($cheque);
+
+            });
             DB::commit();
             return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (\Exception $e) {
@@ -460,29 +455,32 @@ class DocumentController extends Controller
             DB::beginTransaction();
             $fiscalYear = FiscalYear::find($data['fiscalYearID']);
             $tempCategory = AccountCategoryTypeEnum::BUDGETARY->getAccCategoryValues();
+            $subQuery = \DB::table('acc_articles')
+                ->selectRaw('
+        DISTINCT acc_articles.id,
+        acc_articles.debt_amount,
+        acc_articles.credit_amount,
+        acc_articles.account_id
+    ')
+                ->join('acc_documents', 'acc_articles.document_id', '=', 'acc_documents.id')
+                ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
+                ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
+                ->where('acc_documents.fiscal_year_id', '=', $fiscalYear->id)
+                ->where('acc_documents.document_type_id', '!=', DocumentTypeEnum::TEMPORARY->value)
+                ->where('acc_documents.ounit_id', '=', $data['ounitID']);
 
-            $docs = Account::joinRelationship('articles.document.statuses', [
-                'document' => function ($join) use ($data, $fiscalYear) {
-                    $join
-                        ->where('acc_documents.ounit_id', $data['ounitID'])
-                        ->where('acc_documents.fiscal_year_id', $fiscalYear->id);
-                },
-                'statuses' => function ($join) {
-                    $join
-                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
-                        ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
-                }
-            ])
+            $docs = Account::joinSub($subQuery, 'distinct_articles', function ($join) {
+                $join->on('acc_accounts.id', '=', 'distinct_articles.account_id');
+            })
                 ->whereIntegerInRaw('acc_accounts.category_id', $tempCategory)
-                ->withoutGlobalScopes()
                 ->select([
-                    \DB::raw('(SELECT SUM(debt_amount) FROM acc_articles WHERE acc_articles.account_id = acc_accounts.id) as total_debt_amount'),
-                    \DB::raw('(SELECT SUM(credit_amount) FROM acc_articles WHERE acc_articles.account_id = acc_accounts.id) as total_credit_amount'),
                     'acc_accounts.id as id',
                     'acc_accounts.name as name',
                     'acc_accounts.segment_code as code',
                     'acc_accounts.chain_code as chainedCode',
-
+                    \DB::raw('SUM(distinct_articles.debt_amount) as total_debt_amount'),
+                    \DB::raw('SUM(distinct_articles.credit_amount) as total_credit_amount'),
                 ])
                 ->groupBy(
                     'acc_accounts.id',
@@ -491,15 +489,45 @@ class DocumentController extends Controller
                     'acc_accounts.chain_code'
                 )
                 ->get();
+//            $docs = Account::joinRelationship('articles.document.statuses', [
+//                'document' => function ($join) use ($data, $fiscalYear) {
+////                    $join->where('acc_documents.ounit_id', $data['ounitID']);
+//                },
+//                'statuses' => function ($join) {
+//                    $join
+//                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)');
+//                }
+//            ])
+//                ->whereIntegerInRaw('acc_accounts.category_id', $tempCategory)
+//                ->where('acc_documents.fiscal_year_id', $fiscalYear->id)
+//                ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
+//                ->where('acc_documents.ounit_id', $data['ounitID'])
+//                ->withoutGlobalScopes()
+//                ->select([
+//                    \DB::raw('SUM(debt_amount) as total_debt_amount'),
+//                    \DB::raw('SUM(credit_amount) as total_credit_amount'),
+//                    'acc_accounts.id as id',
+//                    'acc_accounts.name as name',
+//                    'acc_accounts.segment_code as code',
+//                    'acc_accounts.chain_code as chainedCode',
+//
+//                ])
+//                ->groupBy(
+//                    'acc_accounts.id',
+//                    'acc_accounts.name',
+//                    'acc_accounts.segment_code',
+//                    'acc_accounts.chain_code'
+//                )
+//                ->get();
 
             if ($docs->isEmpty()) {
                 return response()->json(['message' => 'No account found'], 404);
             }
 
             $doc['fiscalYearID'] = $fiscalYear->id;
-            $lastDocNumber = Document::where('fiscal_year_id', $doc['fiscalYearID'])
+            $lastDocNumber = Document::where('fiscal_year_id', $data['fiscalYearID'])
                 ->where('ounit_id', $data['ounitID'])
-                ->latest('document_number')
+                ->orderByRaw('CAST(document_number AS UNSIGNED) DESC')
                 ->first();
 
             $doc['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 1;
@@ -590,29 +618,62 @@ class DocumentController extends Controller
             $regularCategory = AccountCategoryTypeEnum::REGULATORY->getAccCategoryValues();
 
             $categories = array_merge($balanceCategory, $regularCategory);
+//            $docs = Account::joinRelationship('articles.document.statuses', [
+//                'document' => function ($join) use ($data, $fiscalYear) {
+//                    $join
+//                        ->where('acc_documents.ounit_id', $data['ounitID']);
+//                },
+//                'statuses' => function ($join) {
+//                    $join
+//                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)');
+//                }
+//            ])
+//                ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
+//                ->where('acc_documents.fiscal_year_id', $fiscalYear->id)
+//                ->whereIntegerInRaw('acc_accounts.category_id', $categories)
+//                ->withoutGlobalScopes()
+//                ->select([
+//                    \DB::raw('SUM(debt_amount) as total_debt_amount'),
+//                    \DB::raw('SUM(credit_amount) as total_credit_amount'),
+//                    'acc_accounts.id as id',
+//                    'acc_accounts.name as name',
+//                    'acc_accounts.segment_code as code',
+//                    'acc_accounts.chain_code as chainedCode',
+//
+//                ])
+//                ->groupBy(
+//                    'acc_accounts.id',
+//                    'acc_accounts.name',
+//                    'acc_accounts.segment_code',
+//                    'acc_accounts.chain_code'
+//                )
+//                ->get();
+            $subQuery = \DB::table('acc_articles')
+                ->selectRaw('
+        DISTINCT acc_articles.id,
+        acc_articles.debt_amount,
+        acc_articles.credit_amount,
+        acc_articles.account_id
+    ')
+                ->join('acc_documents', 'acc_articles.document_id', '=', 'acc_documents.id')
+                ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
+                ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
+                ->where('acc_documents.fiscal_year_id', '=', $fiscalYear->id)
+                ->where('acc_documents.document_type_id', '!=', DocumentTypeEnum::CLOSING->value)
+                ->where('acc_documents.ounit_id', '=', $data['ounitID']);
 
-            $docs = Account::joinRelationship('articles.document.statuses', [
-                'document' => function ($join) use ($data, $fiscalYear) {
-                    $join
-                        ->where('acc_documents.ounit_id', $data['ounitID'])
-                        ->where('acc_documents.fiscal_year_id', $fiscalYear->id);
-                },
-                'statuses' => function ($join) {
-                    $join
-                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
-                        ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
-                }
-            ])
+            $docs = Account::joinSub($subQuery, 'distinct_articles', function ($join) {
+                $join->on('acc_accounts.id', '=', 'distinct_articles.account_id');
+            })
                 ->whereIntegerInRaw('acc_accounts.category_id', $categories)
-                ->withoutGlobalScopes()
                 ->select([
-                    \DB::raw('(SELECT SUM(debt_amount) FROM acc_articles WHERE acc_articles.account_id = acc_accounts.id) as total_debt_amount'),
-                    \DB::raw('(SELECT SUM(credit_amount) FROM acc_articles WHERE acc_articles.account_id = acc_accounts.id) as total_credit_amount'),
                     'acc_accounts.id as id',
                     'acc_accounts.name as name',
                     'acc_accounts.segment_code as code',
                     'acc_accounts.chain_code as chainedCode',
-
+                    \DB::raw('SUM(distinct_articles.debt_amount) as total_debt_amount'),
+                    \DB::raw('SUM(distinct_articles.credit_amount) as total_credit_amount'),
                 ])
                 ->groupBy(
                     'acc_accounts.id',
@@ -627,9 +688,9 @@ class DocumentController extends Controller
             }
 
             $doc['fiscalYearID'] = $fiscalYear->id;
-            $lastDocNumber = Document::where('fiscal_year_id', $doc['fiscalYearID'])
+            $lastDocNumber = Document::where('fiscal_year_id', $data['fiscalYearID'])
                 ->where('ounit_id', $data['ounitID'])
-                ->latest('document_number')
+                ->orderByRaw('CAST(document_number AS UNSIGNED) DESC')
                 ->first();
 
             $doc['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 1;
@@ -722,9 +783,7 @@ class DocumentController extends Controller
             $lastYearClosingDoc = Account::joinRelationship('articles.document.statuses', [
                 'document' => function ($join) use ($data, $lastYearFiscalYear) {
                     $join
-                        ->where('acc_documents.ounit_id', $data['ounitID'])
-                        ->where('acc_documents.document_type_id', DocumentTypeEnum::CLOSING->value)
-                        ->where('acc_documents.fiscal_year_id', $lastYearFiscalYear->id);
+                        ->where('acc_documents.ounit_id', $data['ounitID']);
                 },
                 'statuses' => function ($join) {
                     $join
@@ -732,10 +791,12 @@ class DocumentController extends Controller
                         ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
                 }
             ])
+                ->where('acc_documents.document_type_id', DocumentTypeEnum::CLOSING->value)
+                ->where('acc_documents.fiscal_year_id', $lastYearFiscalYear->id)
                 ->withoutGlobalScopes()
                 ->select([
-                    \DB::raw('SUM(DISTINCT acc_articles.debt_amount) as total_debt_amount'),
-                    \DB::raw('SUM(DISTINCT acc_articles.credit_amount) as total_credit_amount'),
+                    \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
+                    \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
                     'acc_accounts.id as id',
                     'acc_accounts.name as name',
                     'acc_accounts.segment_code as code',
@@ -751,9 +812,9 @@ class DocumentController extends Controller
                 ->get();
 
             $doc['fiscalYearID'] = $fiscalYear->id;
-            $lastDocNumber = Document::where('fiscal_year_id', $doc['fiscalYearID'])
+            $lastDocNumber = Document::where('fiscal_year_id', $data['fiscalYearID'])
                 ->where('ounit_id', $data['ounitID'])
-                ->latest('document_number')
+                ->orderByRaw('CAST(document_number AS UNSIGNED) DESC')
                 ->first();
 
             $doc['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 1;
@@ -866,13 +927,31 @@ class DocumentController extends Controller
         $ounit = OrganizationUnit::with(['ancestors', 'village'])->find($data['ounitID']);
 
         $openingDoc = Document::where('document_type_id', DocumentTypeEnum::OPENING->value)
-            ->where('fiscal_year_id', $data['fiscalYearID'])->where('ounit_id', $ounit->id)->with(['articles', 'person'])->first();
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+            }])
+            ->where('fiscal_year_id', $data['fiscalYearID'])
+            ->where('ounit_id', $ounit->id)->with(['articles', 'person'])->first();
 
         $closeTempDoc = Document::where('document_type_id', DocumentTypeEnum::TEMPORARY->value)
-            ->where('fiscal_year_id', $data['fiscalYearID'])->where('ounit_id', $ounit->id)->with(['articles', 'person'])->first();
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+            }])
+            ->where('fiscal_year_id', $data['fiscalYearID'])
+            ->where('ounit_id', $ounit->id)->with(['articles', 'person'])->first();
 
         $closingDoc = Document::where('document_type_id', DocumentTypeEnum::CLOSING->value)
-            ->where('fiscal_year_id', $data['fiscalYearID'])->where('ounit_id', $ounit->id)->with(['articles', 'person'])->first();
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+            }])
+            ->where('fiscal_year_id', $data['fiscalYearID'])
+            ->where('ounit_id', $ounit->id)->with(['articles', 'person'])->first();
 
 
         $result = [];
@@ -955,11 +1034,13 @@ class DocumentController extends Controller
                     SELECT id, id as root_id
                     FROM acc_accounts
                     WHERE accountable_type ="' . addslashes($accountableType) . '"
+                    AND (ounit_id = ' . $data['ounitID'] . ' OR ounit_id IS NULL)
                     UNION ALL
                     SELECT a.id, d.root_id
                     FROM acc_accounts a
                     INNER JOIN descendants d ON a.parent_id = d.id
-                )
+                    WHERE (a.ounit_id = ' . $data['ounitID'] . ' OR a.ounit_id IS NULL)
+                        )
                 SELECT * FROM descendants
             ) as descendants')
         )
@@ -979,12 +1060,13 @@ class DocumentController extends Controller
                 $query->whereBetween('acc_documents.document_date', [$startDate, $endDate]);
             })
             ->when($searchByDocNum, function ($query) use ($startDocNum, $endDocNum) {
-                $query->whereintegerInRaw('acc_documents.document_number', [$startDocNum, $endDocNum]);
+                $query->whereBetween('acc_documents.document_number', [$startDocNum, $endDocNum]);
             })
             ->select(
                 [
                     'descendants.root_id',
                     'root_account.name',
+                    'root_account.chain_code',
 
                     // Sums for document_type_id = 1 & 2 & 4 (combined)
                     DB::raw("SUM(CASE WHEN acc_documents.document_type_id IN ({$periodTypesString}) THEN acc_articles.credit_amount ELSE 0 END) as period_credit"),
@@ -996,7 +1078,7 @@ class DocumentController extends Controller
 
                 ]
             )
-            ->groupBy('descendants.root_id', 'root_account.name')
+            ->groupBy('descendants.root_id', 'root_account.name', 'root_account.chain_code')
             ->get();
         $showType = $data['showType'];
         if ($showType == 1) {

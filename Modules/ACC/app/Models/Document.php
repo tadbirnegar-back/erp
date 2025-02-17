@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\AAA\app\Models\User;
+use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\Database\factories\DocumentFactory;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -36,9 +37,12 @@ class Document extends Model
         'document_date',
         'create_date',
     ];
-    
+
     public $timestamps = false;
     protected $table = 'acc_documents';
+    protected $casts = [
+        'document_type_id' => DocumentTypeEnum::class,
+    ];
 
     public function DocumentDate(): Attribute
     {
@@ -76,7 +80,8 @@ class Document extends Model
 
     public function latestStatus()
     {
-        return $this->hasOneThrough(Status::class, DocumentStatus::class, 'document_id', 'id', 'id', 'status_id')->orderBy('accDocument_status.create_date', 'desc');
+        return $this->hasOneThrough(Status::class, DocumentStatus::class, 'document_id', 'id', 'id', 'status_id')
+            ->orderBy('accDocument_status.create_date', 'desc');
     }
 
     public function village()

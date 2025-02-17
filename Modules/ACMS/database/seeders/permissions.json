@@ -118,5 +118,11 @@
         "slug": "/bgt/budgets/decline",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "ایجاد بودجه متمم",
+        "slug": "/bgt/budgets/supplementary/add",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]
