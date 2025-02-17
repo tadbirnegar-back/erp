@@ -325,34 +325,6 @@ trait ReportingTrait
 
     }
 
-    private function calculateConsumeDataVideoMyCourse($courseID, $studentID , $contentTypes , $contentActiveStatusId)
-    {
-        $consumeLog = Course::with(['allActiveLessons.contents' => function ($q) use ($courseID, $studentID, $contentTypes, $contentActiveStatusId) {
-            $q->where('status_id', $contentActiveStatusId);
-            $q->where('content_type_id', $contentTypes);
-            $q->with(['consumeLog' => function ($query) use ($studentID) {
-                $query->where('student_id', $studentID);
-            }]);
-            $q->with('file');
-        }])->find($courseID);
-
-        $total = 0;
-
-        $contents = $consumeLog?->allActiveLessons?->flatMap->contents;
-
-        if ($contents) {
-            foreach ($contents as $item) {
-                if ($item->consumeLog !== null && $item->file !== null) {
-                    $completedOnes = $item->consumeLog->consume_round * $item->file->duration;
-                    $total += $completedOnes + ($item->consumeLog->consume_data ?? 0);
-                }
-            }
-        }
-
-        return $total;
-
-    }
-
     public function practicalExam($answerSheetID, $user, $data, $courseID)
     {
         $practiceRepo = Repository::where('name', RepositoryEnum::PRACTICE->value)->first()->id;
