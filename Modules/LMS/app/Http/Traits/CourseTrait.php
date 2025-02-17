@@ -798,15 +798,14 @@ trait CourseTrait
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
     }
 
-    public function isCourseCompleted($student)
+    public function isCourseNotCompleted($student)
     {
-        $isComplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
-            $query->where('is_completed', 1);
-        })
-            ->where('student_id', $student->id)
-            ->exists();
+        $isComplete = Course::whereHas('allActiveLessons.lessonStudyLog', function ($query) use ($student) {
+            $query->where('is_completed', '!=', 1)
+                ->where('student_id', $student->id);
+        })->first();
 
-        return $isComplete;
+        return is_null($isComplete);
     }
 
 
