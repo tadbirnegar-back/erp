@@ -266,15 +266,22 @@ trait ReportingTrait
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
             ->get();
-        $totalDuration = $course->sum(function ($item) {
-            return $item->duration == 0 ? null : $item->duration;
-        });
-        $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
-        return [
-            'duration' => $totalDuration,
-            'total' => $total,
-        ];
-
+        if(count($course) > 0)
+        {
+            $totalDuration = $course->sum(function ($item) {
+                return $item->duration == 0 ? null : $item->duration;
+            });
+            $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
+            return [
+                'duration' => $totalDuration,
+                'total' => $total,
+            ];
+        }else{
+            return [
+                'duration' => 0,
+                'total' => 0,
+            ];
+        }
     }
 
     private function calculateConsumeDataMyCourse($courseID, $studentID , $contentTypes , $contentActiveStatusId)
@@ -351,14 +358,22 @@ trait ReportingTrait
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
             ->get();
-        $totalDuration = $course->sum(function ($item) {
-            return $item->duration == 0 ? null : $item->duration;
-        });
-        $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
-        return [
-            'duration' => $totalDuration,
-            'total' => $total,
-        ];
+        if(count($course) > 0)
+        {
+            $totalDuration = $course->sum(function ($item) {
+                return $item->duration == 0 ? null : $item->duration;
+            });
+            $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
+            return [
+                'duration' => $totalDuration,
+                'total' => $total,
+            ];
+        }else{
+            return [
+                'duration' => 0,
+                'total' => 0,
+            ];
+        }
 
     }
 
@@ -581,15 +596,26 @@ trait ReportingTrait
             ->where('contents.status_id', $contentStatus)
             ->get();
 
-        $totalDuration = $course->sum(function ($item) {
-            return $item->duration == 0 ? null : $item->duration;
-        });
-        $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
-        return [
-            'duration' => $totalDuration,
-            'total' => $total,
-            'averageOfAudio' => $total / $course[0]->enrolls_count
-        ];
+        if(count($course) > 0)
+        {
+            $totalDuration = $course->sum(function ($item) {
+                return $item->duration == 0 ? null : $item->duration;
+            });
+            $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
+            return [
+                'duration' => $totalDuration,
+                'total' => $total,
+                'averageOfAudio' => $course[0]->enrolls_count > 0 ? $total / $course[0]->enrolls_count : 0
+            ];
+        }else{
+            return [
+                'duration' => 0,
+                'total' => 0,
+                'averageOfAudio' => 0
+            ];
+        }
+
+
 
     }
 
@@ -613,15 +639,24 @@ trait ReportingTrait
             ->where('contents.status_id', $contentStatus)
             ->get();
 
-        $totalDuration = $course->sum(function ($item) {
-            return $item->duration == 0 ? null : $item->duration;
-        });
-        $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
-        return [
-            'duration' => $totalDuration,
-            'total' => $total,
-            'averageOfVideo' => $total / $course[0]->enrolls_count
-        ];
+        if(count($course) > 0)
+        {
+            $totalDuration = $course->sum(function ($item) {
+                return $item->duration == 0 ? null : $item->duration;
+            });
+            $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
+            return [
+                'duration' => $totalDuration,
+                'total' => $total,
+                'averageOfVideo' => $course[0]->enrolls_count > 0 ? $total / $course[0]->enrolls_count : 0
+            ];
+        }else{
+            return [
+                'duration' => 0,
+                'total' => 0,
+                'averageOfVideo' => 0
+            ];
+        }
 
     }
 
