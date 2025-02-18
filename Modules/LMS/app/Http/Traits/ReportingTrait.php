@@ -677,9 +677,7 @@ trait ReportingTrait
             ->joinRelationship('repository')
             ->select('answer_sheets.score as scores')
             ->where('repositories.id', $repo)
-            ->where('courses.id', $courseID)
-            ->distinct();
-
+            ->where('courses.id', $courseID);
         $averageScore = $ans->get()->pluck('scores')->avg();
 
         return [
