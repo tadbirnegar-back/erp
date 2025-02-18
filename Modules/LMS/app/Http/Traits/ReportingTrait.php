@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use DB;
 use Modules\AAA\app\Models\User;
+use Modules\CustomerMS\app\Http\Traits\CustomerTrait;
 use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -20,12 +21,13 @@ use Modules\LMS\app\Models\OucProperty;
 use Modules\LMS\app\Models\OucPropertyValue;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\Repository;
+use Modules\LMS\app\Models\Student;
 use Modules\LMS\app\Models\TargetOunitCat;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Morilog\Jalali\Jalalian;
 trait ReportingTrait
 {
-    use AnswerSheetTrait, LessonTrait, ContentTrait, DateTrait;
+    use AnswerSheetTrait, LessonTrait, ContentTrait, DateTrait, CustomerTrait;
 
 
     public function ans($answerSheetID, $user, $data, $courseID)
@@ -111,15 +113,22 @@ trait ReportingTrait
         ];
     }
 
-    public function correct($optionID, $repo)
+    public function correct($optionIDs, $repo)
     {
-        return Question::joinRelationship('repository')
-            ->joinRelationship('options')
-            ->whereIn('options.id', $optionID)
-            ->where('is_correct', 1)
-            ->where('repositories.id', $repo)
-            ->count();
+        $count = 0;
+
+        foreach ($optionIDs as $optionID) {
+            $count += Question::join('repositories', 'questions.repository_id', '=', 'repositories.id')
+                ->join('options', 'questions.id', '=', 'options.question_id')
+                ->where('options.id', $optionID)
+                ->where('options.is_correct', 1)
+                ->where('repositories.id', $repo)
+                ->count();
+        }
+
+        return $count;
     }
+
 
     public function false($optionID, $repo)
     {
@@ -155,6 +164,7 @@ trait ReportingTrait
             ->where('answer_sheets.student_id', $studentID)
             ->where('courses.id', $courseID)
             ->where('repositories.id', $repo)
+            ->distinct()
             ->get()
             ->count();
         return $countExams;
@@ -427,14 +437,20 @@ trait ReportingTrait
 
     }
 
-    public function correctQuestionAnswers($optionID, $practiceRepo)
+    public function correctQuestionAnswers($optionIDs, $practiceRepo)
     {
-        return Question::joinRelationship('repository')
-            ->joinRelationship('options')
-            ->whereIn('options.id', $optionID)
-            ->where('is_correct', 1)
-            ->where('repositories.id', $practiceRepo)
-            ->count();
+        $count = 0;
+
+        foreach ($optionIDs as $optionID) {
+            $count += Question::join('repositories', 'questions.repository_id', '=', 'repositories.id')
+                ->join('options', 'questions.id', '=', 'options.question_id')
+                ->where('options.id', $optionID)
+                ->where('options.is_correct', 1)
+                ->where('repositories.id', $practiceRepo)
+                ->count();
+        }
+
+        return $count;
     }
 
     public function inCorrectAnswers($optionID, $practiceRepo)
@@ -651,6 +667,7 @@ trait ReportingTrait
             ->where('repositories.id', $repo)
             ->where('answer_sheets.status_id', $passStatus)
             ->where('course_alias.id', $courseID)
+            ->latest('answer_sheets.finish_date_time')
             ->distinct()
             ->get();
         return $count->count();
@@ -658,22 +675,24 @@ trait ReportingTrait
 
     public function countAnswerSheetDeclinedStatusOfStudents($courseID)
     {
-        $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
-        $declinedStatus = $this->answerSheetDeclinedStatus()->id;
-        $count = AnswerSheet::joinRelationship('answers.questions')
-            ->joinRelationship('status')
-            ->joinRelationship('exam.courseExams.course', [
-                'course' => fn($join) => $join->as('course_alias'),
-                'exam' => fn($join) => $join->as('exam_alias')
-            ])
-            ->joinRelationship('repository')
-            ->where('repositories.id', $repo)
-            ->where('answer_sheets.status_id', $declinedStatus)
-            ->where('course_alias.id', $courseID)
-            ->distinct()
-            ->get();
-        return $count->count();
+        $approved = $this->countAnswerSheetApprovedStatusOfStudents($courseID);
+        $enrollsThatAreNotApproved = $this->enrollsThatAreNotApproved($courseID);
+
+        return $enrollsThatAreNotApproved - $approved;
     }
+
+    public function enrollsThatAreNotApproved($courseID)
+    {
+        $status = $this->activeCustomerStatus()->id;
+
+        $query = Course::joinRelationship('enrolls.order.customer')
+            ->where('courses.id', $courseID)
+            ->where('customers.customerable_type', Student::class)
+            ->where('customers.status_id', $status);
+        return $query->count();
+
+    }
+
 
     public function allStudentsCount($courseID)
     {

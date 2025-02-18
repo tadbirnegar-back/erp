@@ -6,12 +6,10 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\EMS\app\Models\Meeting;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
-use Modules\LMS\app\Models\ContentType;
 use Modules\LMS\app\Models\Course;
 
 
@@ -22,9 +20,22 @@ class testController extends Controller
 
     public function run()
     {
+        $courseID = Course::find(11)?->id;
 
-        $data = Course::with('contentTypes')->find(134);
-        return response() -> json($data);
+        $rrr = Course::with('person.customers')
+            ->where('courses.id', $courseID) // اینجا مقدار عددی ارسال می‌شود
+            ->whereHas('person.customers', function ($query) {
+                $query->whereIn('customerable_id', function ($subQuery) {
+                    $subQuery->select('id')->from('students');
+                });
+            })
+            ->get();
+
+        return $rrr;
+
+
+        return $rrr->count();
+
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
 //        }])->find(40);
