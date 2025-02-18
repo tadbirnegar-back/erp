@@ -68,6 +68,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/lms/add/question/{id}', [QuestionsController::class, 'storeQuestionAndOptions']);
     Route::post('/lms/last/changed-setting/show', [SettingController::class, 'LastShow']);
     Route::get('/lms/questions/dropdown/{id}', [QuestionsController::class, 'showDropDowns']);
+    Route::get('/lms/questions/add/dropdown/{id}', [QuestionsController::class, 'showDropDownsAddQuestion']);
     Route::get('/lms/question/list/{id}', [QuestionsController::class, 'questionsManagement']);
     Route::get('/lms/questions/delete/{id}', [QuestionsController::class, 'deleteQuestionAndRelatedOptions']);
     Route::post('/lms/questions/update/{id}', [QuestionsController::class, 'update']);

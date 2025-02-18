@@ -8,6 +8,7 @@ use Modules\LMS\app\Http\GlobalScope\ContentScope;
 use Modules\LMS\app\Models\Chapter;
 use Modules\LMS\app\Models\Content;
 use Modules\LMS\app\Models\ContentConsumeLog;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\LessonStudyLog;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
@@ -117,20 +118,29 @@ trait ContentTrait
             $lessons = $allContentsOfChapter->lessons->pluck('id')->toArray();
 
             $activeLessons = collect();
-            $allLessonsCompleted = true;
+            $isCompletedAllLessons = true;
 
             foreach ($lessons as $lesson) {
-                $lessonStatus = Lesson::with(['latestStatus', 'contents.consumeLog'])->find($lesson);
-                if (!empty($lessonStatus->latestStatus) && $lessonStatus->latestStatus[0]->name === LessonStatusEnum::ACTIVE->value) {
-                    $activeLessons->push($lessonStatus);
-                }
+                $lesson = Lesson::find($lesson);
+                $lesson->load('chapter.course');
 
-                if (!$lessonStatus->contents->contains(fn($content) => $content->consumeLog && $content->consumeLog->is_complete)) {
-                    $allLessonsCompleted = false;
-                }
+                $course = Course::find($lesson->chapter->course->id);
+
+                //Enroll
+                $enroll = $user->enrolls->where('course_id', $chapter->content->lesson->chapter->course->id)->first();
+                $studyCount = $enroll->study_count;
+
+                //log check
+                $course->load(['allActiveLessons.lessonStudyLog' => function ($query) use ($user) {
+                    $query->where('student_id', $user->student->id);
+                }]);
+                $isCompletedAllLessons = $course->allActiveLessons->every(function ($lesson) use ($studyCount) {
+                    $lessonStudyLog = $lesson->lessonStudyLog->first(); // Ensure single instance
+                    return $lessonStudyLog && $lessonStudyLog->is_completed == true && $lessonStudyLog->study_count > $studyCount;
+                });
             }
 
-            if ($allLessonsCompleted) {
+            if ($isCompletedAllLessons) {
                 $enroll = $user->enrolls->where('course_id', $chapter->content->lesson->chapter->course->id)->first();
                 $enroll->study_completed = true;
                 $enroll->study_count = $enroll->study_count + 1;

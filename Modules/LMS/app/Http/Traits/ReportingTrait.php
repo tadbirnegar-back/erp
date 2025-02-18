@@ -9,6 +9,7 @@ use Modules\EMS\app\Http\Traits\DateTrait;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\LMS\app\Http\Enums\ContentTypeEnum;
+use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\ContentType;
@@ -24,7 +25,6 @@ use Modules\LMS\app\Models\Student;
 use Modules\LMS\app\Models\TargetOunitCat;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Morilog\Jalali\Jalalian;
-
 trait ReportingTrait
 {
     use AnswerSheetTrait, LessonTrait, ContentTrait, DateTrait, CustomerTrait;
@@ -246,105 +246,118 @@ trait ReportingTrait
         ];
     }
 
+
+
     public function AudioDuration($studentID, $courseID, $contentTypes)
     {
         $lessonActiveStatus = $this->lessonActiveStatus()->id;
         $contentStatus = $this->contentActiveStatus()->id;
 
-        $latestStatusSubquery = DB::table('status_lesson')
-            ->select('lesson_id')
-            ->where('status_id', $lessonActiveStatus)
-            ->whereIn('created_date', function ($query) {
-                $query->selectRaw('MAX(created_date)')
-                    ->from('status_lesson')
-                    ->groupBy('lesson_id');
-            });
-
-        $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog', [
-            'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
-        ])
-            ->joinRelationship('chapters.lessons.contents.contentType')
+        $course = Course::joinRelationship('chapters.lessons.contents.contentType')
             ->joinRelationship('chapters.lessons.contents.file')
-            ->joinRelationship('chapters.lessons.lessonStatus')
+            ->joinRelationship('chapters.lessons.statuses', ['statuses' => function ($join) {
+                $join->whereRaw('status_lesson.created_date = (SELECT MAX(created_date) FROM status_lesson WHERE lesson_id = lessons.id)')
+                    ->where('statuses.name', '=', LessonStatusEnum::ACTIVE->value);
+            }])
             ->select([
                 'files.duration as duration',
-                'content_consume_log.consume_round as consume_round',
-                'content_consume_log.consume_data as consume_data',
             ])
             ->where('courses.id', $courseID)
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
-            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery)
-            ->distinct()
             ->get();
         $totalDuration = $course->sum(function ($item) {
             return $item->duration == 0 ? null : $item->duration;
         });
-
-        $totalConsumeRound = $course->sum(function ($item) {
-            return $item->consume_round == 0 ? null : $item->consume_round;
-        });
-
-        $totalConsumeData = $course->sum(function ($item) {
-            return $item->consume_data == 0 ? null : $item->consume_data;
-        });
-        $totalOverall = ($totalDuration * $totalConsumeRound) + $totalConsumeData;
+        $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
         return [
             'duration' => $totalDuration,
-            'consume_round' => $totalConsumeRound,
-            'total' => ($totalOverall == 0) ? null : $totalOverall,
+            'total' => $total,
         ];
 
     }
 
-    public function VideoDuration($studentID, $courseID, $VidContentTypes)
+    private function calculateConsumeDataMyCourse($courseID, $studentID , $contentTypes , $contentActiveStatusId)
+    {
+        $consumeLog = Course::with(['allActiveLessons.contents' => function ($q) use ($courseID, $studentID, $contentTypes, $contentActiveStatusId) {
+            $q->where('status_id', $contentActiveStatusId);
+            $q->where('content_type_id', $contentTypes);
+            $q->with(['consumeLog' => function ($query) use ($studentID) {
+                $query->where('student_id', $studentID);
+            }]);
+            $q->with('file');
+        }])->find($courseID);
+
+        $total = 0;
+
+        $contents = $consumeLog?->allActiveLessons?->flatMap->contents;
+
+        if ($contents) {
+            foreach ($contents as $item) {
+                if ($item->consumeLog !== null && $item->file !== null) {
+                    $completedOnes = $item->consumeLog->consume_round * $item->file->duration;
+                    $total += $completedOnes + ($item->consumeLog->consume_data ?? 0);
+                }
+            }
+        }
+
+        return $total;
+
+    }
+
+
+    private function calculateAllConsumesDataMyCourse($courseID, $contentTypes, $contentActiveStatusId)
+    {
+        $consumeLog = Course::with(['allActiveLessons.contents' => function ($q) use ($courseID, $contentTypes, $contentActiveStatusId) {
+            $q->where('status_id', $contentActiveStatusId);
+            $q->where('content_type_id', $contentTypes);
+            $q->with('consumeLogs', 'file');
+        }])->find($courseID);
+
+        $total = 0;
+
+        $contents = $consumeLog?->allActiveLessons?->flatMap->contents;
+
+        if ($contents) {
+            foreach ($contents as $item) {
+                if ($item->consumeLogs != []&& $item->file !== null) {
+                    foreach ($item->consumeLogs as $log) {
+                        $completedOnes = $log->consume_round * $item->file->duration;
+                        $total += $completedOnes + ($log->consume_data ?? 0);
+                    }
+                }
+            }
+        }
+
+        return $total;
+    }
+
+
+    public function videoDuration($studentID, $courseID, $contentTypes)
     {
         $lessonActiveStatus = $this->lessonActiveStatus()->id;
         $contentStatus = $this->contentActiveStatus()->id;
 
-        $latestStatusSubquery = DB::table('status_lesson')
-            ->select('lesson_id')
-            ->where('status_id', $lessonActiveStatus)
-            ->whereIn('created_date', function ($query) {
-                $query->selectRaw('MAX(created_date)')
-                    ->from('status_lesson')
-                    ->groupBy('lesson_id');
-            });
-
-        $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog', [
-            'consumeLog' => fn($join) => $join->on('content_consume_log.student_id', DB::raw("'" . $studentID . "'")),
-        ])
-            ->joinRelationship('chapters.lessons.contents.contentType')
-            ->leftJoinRelationship('chapters.lessons.contents.file')
-            ->joinRelationship('chapters.lessons.lessonStatus')
+        $course = Course::joinRelationship('chapters.lessons.contents.contentType')
+            ->joinRelationship('chapters.lessons.contents.file')
+            ->joinRelationship('chapters.lessons.statuses', ['statuses' => function ($join) {
+                $join->whereRaw('status_lesson.created_date = (SELECT MAX(created_date) FROM status_lesson WHERE lesson_id = lessons.id)')
+                    ->where('statuses.name', '=', LessonStatusEnum::ACTIVE->value);
+            }])
             ->select([
                 'files.duration as duration',
-                'content_consume_log.consume_round as consume_round',
-                'content_consume_log.consume_data as consume_data',
             ])
             ->where('courses.id', $courseID)
-            ->where('content_type.id', $VidContentTypes)
+            ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
-            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery)
-            ->distinct()
             ->get();
-
         $totalDuration = $course->sum(function ($item) {
             return $item->duration == 0 ? null : $item->duration;
         });
-
-        $totalConsumeRound = $course->sum(function ($item) {
-            return $item->consume_round == 0 ? null : $item->consume_round;
-        });
-
-        $totalConsumeData = $course->sum(function ($item) {
-            return $item->consume_data == 0 ? null : $item->consume_data;
-        });
-        $totalOverall = ($totalDuration * $totalConsumeRound) + $totalConsumeData;
+        $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
         return [
             'duration' => $totalDuration,
-            'consume_round' => $totalConsumeRound,
-            'total' => ($totalOverall == 0) ? null : $totalOverall,
+            'total' => $total,
         ];
 
     }
@@ -485,42 +498,41 @@ trait ReportingTrait
             ->distinct()
             ->get();
 
-//        $durationAudio = $this->AudioCourseDuration($courseID, $contentTypes);
-//        return $course;
-//        $durationVideo = $this->VideoCourseDuration($courseID, $VidContentTypes);
-//        $sumAudio = $durationAudio['total'];
-//        $sumVideo = $durationVideo['total'];
-//        $totalDuration = $sumAudio + $sumVideo;
+        $durationAudio = $this->AudioCourseDuration($courseID, $contentTypes);
+        $durationVideo = $this->VideoCourseDuration($courseID, $VidContentTypes);
+        $sumAudio = $durationAudio['total'];
+        $sumVideo = $durationVideo['total'];
+        $totalDuration = $sumAudio + $sumVideo;
 
-//        $avgAudio = $durationAudio['averageOfAudio'];
-//        $avgVideo = $durationVideo['averageOfVideo'];
-//        $totalStudyDurationAverage = ($avgAudio + $avgVideo);
-//        $certificatesCount = $this->certificatesCount($courseID);
-//        $enrolledStudentsAndScoreAverage = $this->enrolledStudentsAndScoreAverage($courseID);
+        $avgAudio = $durationAudio['averageOfAudio'];
+        $avgVideo = $durationVideo['averageOfVideo'];
+        $totalStudyDurationAverage = ($avgAudio + $avgVideo);
+        $certificatesCount = $this->certificatesCount($courseID);
+        $enrolledStudentsAndScoreAverage = $this->enrolledStudentsAndScoreAverage($courseID);
         $approvedStudents = $this->countAnswerSheetApprovedStatusOfStudents($courseID);
         $declinedStudents = $this->countAnswerSheetDeclinedStatusOfStudents($courseID);
-//        $allStudentsCount = $this->allStudentsCount($courseID);
-//        $subCount = $this->subCount($courseID);
-//        $months = $this->scoresAndMonthChartData($courseID);
-//        $cover = $this->CourseCover($courseID);
-//        $mashmuls = $this->CountOfMashmuls($courseID);
+        $allStudentsCount = $this->allStudentsCount($courseID);
+        $subCount = $this->subCount($courseID);
+        $months = $this->scoresAndMonthChartData($courseID);
+        $cover = $this->CourseCover($courseID);
+        $mashmuls = $this->CountOfMashmuls($courseID);
 
 
         return [
-//            'course' => $course->first(),
-//            'durationOfAudio' => $durationAudio,
-//            'durationOfVideo' => $durationVideo,
-//            'totalPlayedDuration' => $totalDuration,
-//            'certificatesCount' => $certificatesCount,
-//            'scoreAverageAndEnrolledStudents' => $enrolledStudentsAndScoreAverage,
+            'course' => $course->first(),
+            'durationOfAudio' => $durationAudio,
+            'durationOfVideo' => $durationVideo,
+            'totalPlayedDuration' => $totalDuration,
+            'certificatesCount' => $certificatesCount,
+            'scoreAverageAndEnrolledStudents' => $enrolledStudentsAndScoreAverage,
             'approvedStudents' => $approvedStudents,
             'declinedStudents' => $declinedStudents,
-//            'allStudents' => $allStudentsCount,
-//            'subCount' => $subCount,
-//            'scoreAndMonthChart' => $months,
-//            'totalStudyDurationAverage' => $totalStudyDurationAverage,
-//            'cover' => $cover,
-//            'includedStudents' => $mashmuls
+            'allStudents' => $allStudentsCount,
+            'subCount' => $subCount,
+            'scoreAndMonthChart' => $months,
+            'totalStudyDurationAverage' => $totalStudyDurationAverage,
+            'cover' => $cover,
+            'includedStudents' => $mashmuls
         ];
     }
 
@@ -549,99 +561,66 @@ trait ReportingTrait
         ]);
     }
 
-//    public function AudioCourseDuration($courseID, $contentTypes)
-//    {
-//        $lessonActiveStatus = $this->lessonActiveStatus()->id;
-//        $contentStatus = $this->contentActiveStatus()->id;
-//
-//        $course = Course::joinRelationship('chapters.lessons.contents.contentType')
-//            ->joinRelationship('chapters.lessons.contents.file')
-//            ->joinRelationship('chapters.lessons.statuses', ['statuses' => function ($join) {
-//                $join->whereRaw('status_lesson.created_date = (SELECT MAX(created_date) FROM status_lesson WHERE lesson_id = lessons.id)')
-//                    ->where('statuses.name', '=', LessonStatusEnum::ACTIVE->value);
-//            }])
-//            ->select([
-//                'files.duration as duration',
-//            ])
-//            ->where('courses.id', $courseID)
-//            ->where('content_type.id', $contentTypes)
-//            ->where('contents.status_id', $contentStatus)
-//            ->get();
-//        $totalDuration = $course->sum(function ($item) {
-//            return $item->duration == 0 ? null : $item->duration;
-//        });
-//
-//
-//        return [
-//            'duration' => $totalDuration,
-//            'consume_round' => $totalConsumeRound,
-//            'total' => ($totalOverall == 0) ? null : $totalOverall,
-//            'averageOfAudio' => $average,
-//        ];
-//
-//    }
-
-//    private function AudioAvgDuration($courseID, $contentTypes)
-//    {
-//        $course = Course::with(['allActiveLessons.contents.consumeLog.content.file'])->find($courseID);
-//        $totalConsumeDatas = $course->allActiveLessons->contents->consumeLog->sum('consume_data');
-//        $consume = $course->allActiveLessons()->each(function ($lesson) {
-//            $lesson->contents?->consumeLog->each(function ($content) {
-//
-//            });
-//        });
-//    }
-
-    public function VideoCourseDuration($courseID, $VidContentTypes)
+    public function AudioCourseDuration($courseID, $contentTypes)
     {
         $lessonActiveStatus = $this->lessonActiveStatus()->id;
         $contentStatus = $this->contentActiveStatus()->id;
 
-        $latestStatusSubquery = DB::table('status_lesson')
-            ->select('lesson_id')
-            ->where('status_id', $lessonActiveStatus)
-            ->whereIn('created_date', function ($query) {
-                $query->selectRaw('MAX(created_date)')
-                    ->from('status_lesson')
-                    ->groupBy('lesson_id');
-            });
-
-        $course = Course::leftJoinRelationship('chapters.lessons.contents.consumeLog')
-            ->joinRelationship('chapters.lessons.contents.contentType')
-            ->leftJoinRelationship('chapters.lessons.contents.file')
-            ->joinRelationship('chapters.lessons.lessonStatus')
+        $course = Course::joinRelationship('chapters.lessons.contents.contentType')
+            ->joinRelationship('chapters.lessons.contents.file')
+            ->joinRelationship('chapters.lessons.statuses', ['statuses' => function ($join) {
+                $join->whereRaw('status_lesson.created_date = (SELECT MAX(created_date) FROM status_lesson WHERE lesson_id = lessons.id)')
+                    ->where('statuses.name', '=', LessonStatusEnum::ACTIVE->value);
+            }])
             ->select([
                 'files.duration as duration',
-                'content_consume_log.consume_round as consume_round',
-                'content_consume_log.consume_data as consume_data',
             ])
+            ->withCount('enrolls')
             ->where('courses.id', $courseID)
-            ->where('content_type.id', $VidContentTypes)
+            ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
-            ->whereIn('status_lesson.lesson_id', $latestStatusSubquery)
-            ->distinct()
             ->get();
 
         $totalDuration = $course->sum(function ($item) {
             return $item->duration == 0 ? null : $item->duration;
         });
-
-        $totalConsumeRound = $course->sum(function ($item) {
-            return $item->consume_round == 0 ? null : $item->consume_round;
-        });
-
-        $totalConsumeData = $course->sum(function ($item) {
-            return $item->consume_data == 0 ? null : $item->consume_data;
-        });
-        $totalOverall = ($totalDuration * $totalConsumeRound) + $totalConsumeData;
-        $allStudentsCount = $this->allStudentsCount($courseID);
-
-        $average = $allStudentsCount > 0 ? $totalOverall / $allStudentsCount : 0;
+        $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
         return [
             'duration' => $totalDuration,
-            'consume_round' => $totalConsumeRound,
-            'total' => ($totalOverall == 0) ? null : $totalOverall,
-            'averageOfVideo' => $average,
+            'total' => $total,
+            'averageOfAudio' => $total / $course[0]->enrolls_count
+        ];
+
+    }
+
+    public function VideoCourseDuration($courseID, $contentTypes)
+    {
+        $lessonActiveStatus = $this->lessonActiveStatus()->id;
+        $contentStatus = $this->contentActiveStatus()->id;
+
+        $course = Course::joinRelationship('chapters.lessons.contents.contentType')
+            ->joinRelationship('chapters.lessons.contents.file')
+            ->joinRelationship('chapters.lessons.statuses', ['statuses' => function ($join) {
+                $join->whereRaw('status_lesson.created_date = (SELECT MAX(created_date) FROM status_lesson WHERE lesson_id = lessons.id)')
+                    ->where('statuses.name', '=', LessonStatusEnum::ACTIVE->value);
+            }])
+            ->select([
+                'files.duration as duration',
+            ])
+            ->withCount('enrolls')
+            ->where('courses.id', $courseID)
+            ->where('content_type.id', $contentTypes)
+            ->where('contents.status_id', $contentStatus)
+            ->get();
+
+        $totalDuration = $course->sum(function ($item) {
+            return $item->duration == 0 ? null : $item->duration;
+        });
+        $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
+        return [
+            'duration' => $totalDuration,
+            'total' => $total,
+            'averageOfVideo' => $total / $course[0]->enrolls_count
         ];
 
     }
@@ -691,7 +670,6 @@ trait ReportingTrait
             ->latest('answer_sheets.finish_date_time')
             ->distinct()
             ->get();
-//        return ($count);
         return $count->count();
     }
 

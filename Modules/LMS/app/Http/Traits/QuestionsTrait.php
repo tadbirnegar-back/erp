@@ -26,8 +26,17 @@ trait QuestionsTrait
 
     }
 
-    public function insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs)
+
+    public function dropDownsAddQuestion($courseId)
     {
+        return Course::with('chapters.allActiveLessons')->find($courseId);
+    }
+
+    public function insertQuestionWithOptions($data, $options, $questionsID, $user, $repositoryIDs)
+    {
+        $question = Question::find($questionsID);
+        $question->load('course');
+        $courseID = $question->course->id;
         $status = $this->questionActiveStatus();
         $questions = [];
         foreach ($repositoryIDs as $repositoryID) {
@@ -151,7 +160,7 @@ trait QuestionsTrait
                             ->update([
                                 'is_correct' => $option['is_correct'],
                                 'title' => $option['title'],
-                                ]);
+                            ]);
 
                     } else {
                         Option::create([
@@ -180,6 +189,9 @@ trait QuestionsTrait
 
     public function showEditedQuestion($questionID)
     {
+        $course = Question::find($questionID);
+        $courseData = $course->load('course');
+        $courseID = $courseData->course->id;
         $question = Course::joinRelationship('chapters.lessons.questions.difficulty')
             ->joinRelationship('chapters.lessons.questions.options')
             ->joinRelationship('chapters.lessons.questions.repository')
@@ -204,7 +216,8 @@ trait QuestionsTrait
                 'options.is_correct as isCorrect'
 
             ])
-            ->where('questions.id', $questionID)->get();
+            ->distinct('chapters.id')
+            ->where('courses.id', $courseID)->get();
 
         $questions = Course::joinRelationship('chapters.lessons')
             ->select([
@@ -216,12 +229,11 @@ trait QuestionsTrait
                 'courses.id as courseID',
 
 
-            ])->first();
+            ])->where('courses.id', $courseID)->get();
 
-        $id = $questions->courseID;
-        $all = $this->showAll($id);
+
         return ['questionForEdit' => $question,
-            'allListToShow' => $all,
+            'allListToShow' => $questions,
         ];
     }
 

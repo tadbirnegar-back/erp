@@ -53,6 +53,8 @@ class Lesson extends Model
         $this->hasMany(StatusLesson::class, 'lesson_id', 'id');
     }
 
+
+
     public function latestStatus()
     {
         return $this->belongsToMany(Status::class, 'status_lesson', 'lesson_id', 'status_id')
@@ -108,6 +110,7 @@ class Lesson extends Model
     }
 
 
+
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);
@@ -129,6 +132,14 @@ class Lesson extends Model
         return $this->hasMany(LessonStudyLog::class, 'lesson_id', 'id');
     }
 
+
+    public function course()
+    {
+        return $this->hasOneDeep(Course::class, [Chapter::class],
+            ['chapter_id', 'course_id'],
+            ['id', 'id']
+        );
+    }
 
 //    public function lessonStudyLog()
 //    {

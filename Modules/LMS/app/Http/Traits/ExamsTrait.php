@@ -112,7 +112,7 @@ trait ExamsTrait
     public function PExam($examID, $courseID, $student)
     {
 //        $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
-//        $completed = $this->isCourseCompleted($student);
+//        $completed = $this->isCourseNotCompleted($student);
 //        $attempted = $this->hasAttemptedAndPassedExam($student, $courseID);
 //        if ($enrolled && !$attempted && !$completed) {
         $exam = $this->examPreview($examID);
