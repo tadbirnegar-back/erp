@@ -147,11 +147,13 @@ function convertGregorianToJalali(string $gregorianDate)
 
 function convertSecondToMinute($second)
 {
-    $minutes = floor($second / 60);
+    $hours = floor($second / 3600);
+    $minutes = floor(($second % 3600) / 60);
     $remainingSeconds = $second % 60;
 
-    return "{$minutes}:{$remainingSeconds}";
+    return sprintf("%02d:%02d:%02d", $hours, $minutes, $remainingSeconds);
 }
+
 
 function convertMinuteToSecondFormatted($time)
 {
