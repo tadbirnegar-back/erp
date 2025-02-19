@@ -32,11 +32,11 @@ trait QuestionsTrait
         return Course::with('chapters.allActiveLessons')->find($courseId);
     }
 
-    public function insertQuestionWithOptions($data, $options, $questionsID, $user, $repositoryIDs)
+    public function insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs)
     {
-        $question = Question::find($questionsID);
-        $question->load('course');
-        $courseID = $question->course->id;
+
+        $course = Course::find($courseID);
+        $courseID = $course->id;
         $status = $this->questionActiveStatus();
         $questions = [];
         foreach ($repositoryIDs as $repositoryID) {
@@ -189,8 +189,8 @@ trait QuestionsTrait
 
     public function showEditedQuestion($questionID)
     {
-        $course = Question::find($questionID);
-        $courseData = $course->load('course');
+        $question = Question::find($questionID);
+        $courseData = $question->load('course');
         $courseID = $courseData->course->id;
         $question = Course::joinRelationship('chapters.lessons.questions.difficulty')
             ->joinRelationship('chapters.lessons.questions.options')
@@ -217,7 +217,7 @@ trait QuestionsTrait
 
             ])
             ->distinct('chapters.id')
-            ->where('courses.id', $courseID)->get();
+            ->where('questions.id', $questionID)->get();
 
         $questions = Course::joinRelationship('chapters.lessons')
             ->select([
@@ -232,7 +232,8 @@ trait QuestionsTrait
             ])->where('courses.id', $courseID)->get();
 
 
-        return ['questionForEdit' => $question,
+        return [
+            'questionForEdit' => $question,
             'allListToShow' => $questions,
         ];
     }

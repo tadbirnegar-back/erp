@@ -11,6 +11,7 @@ use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
 use Modules\LMS\app\Resources\QuestionManagementResource;
 use Modules\LMS\app\Resources\QuestionResource;
+use mysql_xdevapi\Collection;
 
 class QuestionsController extends Controller
 {
@@ -21,7 +22,7 @@ class QuestionsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function storeQuestionAndOptions(Request $request, $questionsID)
+    public function storeQuestionAndOptions(Request $request, $courseID)
     {
 
         try {
@@ -54,7 +55,7 @@ class QuestionsController extends Controller
 
             $user = Auth::user();
 
-            $question = $this->insertQuestionWithOptions($data, $options, $questionsID, $user, $repositoryIDs);
+            $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs);
             if ($question) {
                 DB::commit();
                 return response()->json([
@@ -120,7 +121,7 @@ class QuestionsController extends Controller
             }
             $question = $this->questionList($id);
 
-            return new QuestionManagementResource(collect($question));
+            return QuestionManagementResource::collection($question);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while fetching questions.',
@@ -151,6 +152,7 @@ class QuestionsController extends Controller
     {
 
         $response = $this->showEditedQuestion($questionID);
+
         return new EditedQuestionResource(collect($response));
     }
 

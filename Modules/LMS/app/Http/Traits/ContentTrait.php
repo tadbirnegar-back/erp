@@ -91,7 +91,7 @@ trait ContentTrait
                 'lesson_log_alias.is_completed as lesson_log_alias_is_completed',
             ])->where('contents.id', $log['content_id'])->first();
 
-        if ($consume_secounds + 1 > $file_secounds * 70 / 100) {
+        if ($consume_secounds + 1 > $file_secounds * 1 / 100) {
             $log->consume_round = $log->consume_round + 1;
             $log->consume_data = null;
             $log->is_complete = true;
