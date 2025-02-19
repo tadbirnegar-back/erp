@@ -2,7 +2,6 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use DB;
 use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\app\Http\Traits\CustomerTrait;
 use Modules\EMS\app\Http\Traits\DateTrait;
@@ -25,6 +24,7 @@ use Modules\LMS\app\Models\Student;
 use Modules\LMS\app\Models\TargetOunitCat;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Morilog\Jalali\Jalalian;
+
 trait ReportingTrait
 {
     use AnswerSheetTrait, LessonTrait, ContentTrait, DateTrait, CustomerTrait;
@@ -113,20 +113,14 @@ trait ReportingTrait
         ];
     }
 
-    public function correct($optionIDs, $repo)
+    public function correct($optionID, $repo)
     {
-        $count = 0;
-
-        foreach ($optionIDs as $optionID) {
-            $count += Question::join('repositories', 'questions.repository_id', '=', 'repositories.id')
-                ->join('options', 'questions.id', '=', 'options.question_id')
-                ->where('options.id', $optionID)
-                ->where('options.is_correct', 1)
-                ->where('repositories.id', $repo)
-                ->count();
-        }
-
-        return $count;
+        return Question::joinRelationship('repository')
+            ->joinRelationship('options')
+            ->whereIn('options.id', $optionID)
+            ->where('is_correct', 1)
+            ->where('repositories.id', $repo)
+            ->count();
     }
 
 
@@ -247,7 +241,6 @@ trait ReportingTrait
     }
 
 
-
     public function AudioDuration($studentID, $courseID, $contentTypes)
     {
         $lessonActiveStatus = $this->lessonActiveStatus()->id;
@@ -284,7 +277,7 @@ trait ReportingTrait
         }
     }
 
-    private function calculateConsumeDataMyCourse($courseID, $studentID , $contentTypes , $contentActiveStatusId)
+    private function calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes, $contentActiveStatusId)
     {
         $consumeLog = Course::with(['allActiveLessons.contents' => function ($q) use ($courseID, $studentID, $contentTypes, $contentActiveStatusId) {
             $q->where('status_id', $contentActiveStatusId);
@@ -327,7 +320,7 @@ trait ReportingTrait
 
         if ($contents) {
             foreach ($contents as $item) {
-                if ($item->consumeLogs != []&& $item->file !== null) {
+                if ($item->consumeLogs != [] && $item->file !== null) {
                     foreach ($item->consumeLogs as $log) {
                         $completedOnes = $log->consume_round * $item->file->duration;
                         $total += $completedOnes + ($log->consume_data ?? 0);
@@ -452,20 +445,14 @@ trait ReportingTrait
 
     }
 
-    public function correctQuestionAnswers($optionIDs, $practiceRepo)
+    public function correctQuestionAnswers($optionID, $practiceRepo)
     {
-        $count = 0;
-
-        foreach ($optionIDs as $optionID) {
-            $count += Question::join('repositories', 'questions.repository_id', '=', 'repositories.id')
-                ->join('options', 'questions.id', '=', 'options.question_id')
-                ->where('options.id', $optionID)
-                ->where('options.is_correct', 1)
-                ->where('repositories.id', $practiceRepo)
-                ->count();
-        }
-
-        return $count;
+        return Question::joinRelationship('repository')
+            ->joinRelationship('options')
+            ->whereIn('options.id', $optionID)
+            ->where('is_correct', 1)
+            ->where('repositories.id', $practiceRepo)
+            ->count();
     }
 
     public function inCorrectAnswers($optionID, $practiceRepo)
