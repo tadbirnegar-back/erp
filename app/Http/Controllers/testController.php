@@ -20,21 +20,18 @@ class testController extends Controller
 
     public function run()
     {
-        $courseID = Course::find(11)?->id;
+        $status = $this->questionActiveStatus();
 
-        $rrr = Course::with('person.customers')
-            ->where('courses.id', $courseID) // اینجا مقدار عددی ارسال می‌شود
-            ->whereHas('person.customers', function ($query) {
-                $query->whereIn('customerable_id', function ($subQuery) {
-                    $subQuery->select('id')->from('students');
-                });
-            })
+        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
+            ->joinRelationship('chapters.allActiveLessons.questions.options')
+            ->joinRelationship('chapters.allActiveLessons.questions.repository')
+            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
+            ->select([
+                'questions.id as QID',
+                'lessons.title as lesson title'
+            ])->where('questions.status_id', $status->id)
             ->get();
-
-        return $rrr;
-
-
-        return $rrr->count();
+        return $query;
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
