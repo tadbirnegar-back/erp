@@ -2,13 +2,10 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\Option;
 use Modules\LMS\app\Models\Question;
-use Modules\StatusMS\app\Models\Status;
 
 trait QuestionsTrait
 {
@@ -98,7 +95,8 @@ trait QuestionsTrait
                 'repositories.name as repositoryName',
                 'options.title as optionTitle',
                 'chapters.title as chapterTitle',
-                'lessons_alias.title as lessonTitle',
+                'lessons.title as lessonTitle',
+//                'lessons_alias.title as lessonTitle',
                 'courses.title as courseTitle',
                 'options.is_correct as isCorrect',
                 'answers_alias.question_id as answerQuestionID',
@@ -111,8 +109,6 @@ trait QuestionsTrait
             'questionList' => $query,
             'count' => $count
         ];
-
-
     }
 
     public function count($id)
