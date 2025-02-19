@@ -11,7 +11,6 @@ use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
 use Modules\LMS\app\Resources\QuestionManagementResource;
 use Modules\LMS\app\Resources\QuestionResource;
-use mysql_xdevapi\Collection;
 
 class QuestionsController extends Controller
 {
@@ -121,7 +120,7 @@ class QuestionsController extends Controller
             }
             $question = $this->questionList($id);
 
-            return QuestionManagementResource::collection($question);
+            return new QuestionManagementResource(collect($question));
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while fetching questions.',
