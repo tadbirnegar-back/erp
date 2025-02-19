@@ -259,16 +259,17 @@ trait ReportingTrait
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
             ->get();
-        if (count($course) > 0) {
+        if(count($course) > 0)
+        {
             $totalDuration = $course->sum(function ($item) {
                 return $item->duration == 0 ? null : $item->duration;
             });
-            $total = $this->calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes, $contentStatus);
+            $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
             return [
                 'duration' => $totalDuration,
                 'total' => $total,
             ];
-        } else {
+        }else{
             return [
                 'duration' => 0,
                 'total' => 0,
@@ -350,16 +351,17 @@ trait ReportingTrait
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
             ->get();
-        if (count($course) > 0) {
+        if(count($course) > 0)
+        {
             $totalDuration = $course->sum(function ($item) {
                 return $item->duration == 0 ? null : $item->duration;
             });
-            $total = $this->calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes, $contentStatus);
+            $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
             return [
                 'duration' => $totalDuration,
                 'total' => $total,
             ];
-        } else {
+        }else{
             return [
                 'duration' => 0,
                 'total' => 0,
@@ -581,23 +583,25 @@ trait ReportingTrait
             ->where('contents.status_id', $contentStatus)
             ->get();
 
-        if (count($course) > 0) {
+        if(count($course) > 0)
+        {
             $totalDuration = $course->sum(function ($item) {
                 return $item->duration == 0 ? null : $item->duration;
             });
-            $total = $this->calculateAllConsumesDataMyCourse($courseID, $contentTypes, $contentStatus);
+            $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
             return [
                 'duration' => $totalDuration,
                 'total' => $total,
                 'averageOfAudio' => $course[0]->enrolls_count > 0 ? $total / $course[0]->enrolls_count : 0
             ];
-        } else {
+        }else{
             return [
                 'duration' => 0,
                 'total' => 0,
                 'averageOfAudio' => 0
             ];
         }
+
 
 
     }
@@ -622,17 +626,18 @@ trait ReportingTrait
             ->where('contents.status_id', $contentStatus)
             ->get();
 
-        if (count($course) > 0) {
+        if(count($course) > 0)
+        {
             $totalDuration = $course->sum(function ($item) {
                 return $item->duration == 0 ? null : $item->duration;
             });
-            $total = $this->calculateAllConsumesDataMyCourse($courseID, $contentTypes, $contentStatus);
+            $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
             return [
                 'duration' => $totalDuration,
                 'total' => $total,
                 'averageOfVideo' => $course[0]->enrolls_count > 0 ? $total / $course[0]->enrolls_count : 0
             ];
-        } else {
+        }else{
             return [
                 'duration' => 0,
                 'total' => 0,
