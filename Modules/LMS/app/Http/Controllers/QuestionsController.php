@@ -21,7 +21,7 @@ class QuestionsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function storeQuestionAndOptions(Request $request, $questionsID)
+    public function storeQuestionAndOptions(Request $request, $courseID)
     {
 
         try {
@@ -54,7 +54,7 @@ class QuestionsController extends Controller
 
             $user = Auth::user();
 
-            $question = $this->insertQuestionWithOptions($data, $options, $questionsID, $user, $repositoryIDs);
+            $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs);
             if ($question) {
                 DB::commit();
                 return response()->json([
@@ -151,6 +151,7 @@ class QuestionsController extends Controller
     {
 
         $response = $this->showEditedQuestion($questionID);
+
         return new EditedQuestionResource(collect($response));
     }
 
