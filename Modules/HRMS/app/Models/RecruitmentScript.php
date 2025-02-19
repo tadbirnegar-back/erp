@@ -11,6 +11,7 @@ use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentEagerLimit\HasEagerLimit;
@@ -168,6 +169,27 @@ class RecruitmentScript extends Model
     public function rejectReason()
     {
         return $this->hasOne(RecruitmentScriptStatus::class, 'recruitment_script_id')->with(['person.avatar', 'person.position', 'status'])->orderBy('create_date', 'desc');
+    }
+
+    public function districtFromFreeZone()
+    {
+        return $this->hasOneDeep(OrganizationUnit::class, [
+            OrganizationUnit::class,
+            VillageOfc::class,
+            OrganizationUnit::class,
+            OrganizationUnit::class,
+        ],
+            [
+                'workforceable_id',
+                'id',
+                'person_id',
+
+            ],
+            [
+                'employee_id',
+                'person_id',
+                'id'
+            ]);
     }
 
 }

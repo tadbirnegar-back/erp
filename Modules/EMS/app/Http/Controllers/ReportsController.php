@@ -12,15 +12,18 @@ use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentReviewEnum;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
+use Modules\EMS\app\Http\Traits\ReportingTrait;
 use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 class ReportsController extends Controller
 {
+    use ReportingTrait;
     /**
      * Display a listing of the resource.
      */
@@ -49,130 +52,30 @@ class ReportsController extends Controller
         }
         $employeeId = $user->id;
 
+
+
         $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
         $user->load('activeFreeZoneRecruitmentScript.ounit.ancestorsAndSelf');
-        if(!is_null($user->active_free_zone_recruitment_script) && !is_null($user->active_district_recruitment_script)){
-            return response() -> json($user);
-        }else if(is_null($user->active_district_recruitment_script) && !is_null($user->active_free_zone_recruitment_script)){
-            $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten();
 
-            if ($request->ounitID) {
-                $ounit = OrganizationUnit::with('ancestorsAndSelf')->find($request->ounitID);
-            } else {
-                $ounit = $rsUnits[0];
-            }
+        $data = $this->reportMyself($user);
 
-            $user->load('person.avatar', 'mr');
+        return response()->json(['data' => $data]);
+    }
 
-            $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
+    private function meetingType($freezone, $dirstrict)
+    {
+        $heyaatMeeting = MeetingTypeEnum::HEYAAT_MEETING->value;
+        $freezoneMeeting = MeetingTypeEnum::FREE_ZONE->value;
 
-            $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
-                $query->where('employee_id', $employeeId);
-            })
-                ->where('ounit_id', $ounit->id)
-                ->where('isTemplate', false)
-                ->whereBelongsTo($meetingType, 'meetingType')
-                ->whereBetween('meeting_date', [$startDate, $endDate])
-                ->with(['enactments' => function ($q) use ($employeeId) {
-                    $q
-                        ->whereDoesntHave('status', function ($query) {
-                            $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
-                        })
-                        ->with(['enactmentReviews' => function ($qq) use ($employeeId) {
-                            $qq->where('user_id', $employeeId)
-                                ->with(['status']);
-                        }, 'title', 'latestHeyaatMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
-                            $q->where('unitable_type', '!=', StateOfc::class);
-                        }]);
-                }])
-                ->with(['meetingMembers' => function ($query) use ($employeeId) {
-                    $query->where('employee_id', $employeeId)->with('mr');
+        $meetingtypes = [];
 
-
-                }, 'ounit.ancestorsAndSelf'])
-                ->get();
-
-            $meetings->each(function ($meeting) {
-                // Collect all review statuses across enactments within the meeting and count each dynamically
-                $totalReviewCounts = $meeting->enactments
-                    ->flatMap(function ($enactment) {
-                        return $enactment->enactmentReviews;
-                    })
-                    ->groupBy('status.name')//                ->map->count()
-                ;
-
-                // Attach total counts to the meeting for easy access
-                $meeting->total_review_counts = $totalReviewCounts;
-            });
-        }else{
-            $rsUnits = $user->activeFreeZoneRecruitmentScript->pluck('ounit')->flatten();
-
-            if ($request->ounitID) {
-                $ounit = OrganizationUnit::with('ancestorsAndSelf')->find($request->ounitID);
-            } else {
-                $ounit = $rsUnits[0];
-            }
-
-            $user->load('person.avatar', 'mr');
-
-            $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
-
-            $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
-                $query->where('employee_id', $employeeId);
-            })
-                ->where('ounit_id', $ounit->id)
-                ->where('isTemplate', false)
-                ->whereBelongsTo($meetingType, 'meetingType')
-                ->whereBetween('meeting_date', [$startDate, $endDate])
-                ->with(['enactments' => function ($q) use ($employeeId) {
-                    $q
-                        ->whereDoesntHave('status', function ($query) {
-                            $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
-                        })
-                        ->with(['enactmentReviews' => function ($qq) use ($employeeId) {
-                            $qq->where('user_id', $employeeId)
-                                ->with(['status']);
-                        }, 'title', 'latestHeyaatMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
-                            $q->where('unitable_type', '!=', StateOfc::class);
-                        }]);
-                }])
-                ->with(['meetingMembers' => function ($query) use ($employeeId) {
-                    $query->where('employee_id', $employeeId)->with('mr');
-
-
-                }, 'ounit.ancestorsAndSelf'])
-                ->get();
-
-            $meetings->each(function ($meeting) {
-                // Collect all review statuses across enactments within the meeting and count each dynamically
-                $totalReviewCounts = $meeting->enactments
-                    ->flatMap(function ($enactment) {
-                        return $enactment->enactmentReviews;
-                    })
-                    ->groupBy('status.name')//                ->map->count()
-                ;
-
-                // Attach total counts to the meeting for easy access
-                $meeting->total_review_counts = $totalReviewCounts;
-            });
+        if (!is_null($freezone)) {
+            $meetingtypes[] = $freezoneMeeting;
         }
-
-        $result = [
-            'meeting_count' => $meetings->count(),
-            'enactments_count' => $meetings->pluck('enactments')->flatten()->count(),
-            'total_review_counts' => $meetings->pluck('total_review_counts')
-//                ->flatten()->sum()
-            ,
-            'enactments' => $meetings->pluck('enactments'),
-            'person' => $user->person,
-            'mr' => $user?->mr,
-//            'ounit' => $meetings->pluck('ounit')->flatten()->toArray()[0] ?? null,
-            'ounit' => $ounit ?? null,
-
-        ];
-
-
-        return response()->json(['data' => $result, 'ounits' => $rsUnits]);
+        if (!is_null($dirstrict)) {
+            $meetingtypes[] = $heyaatMeeting;
+        }
+        return $meetingtypes;
     }
 
     public function districtEnactmentReport(Request $request)
