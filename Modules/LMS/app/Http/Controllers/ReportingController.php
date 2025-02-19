@@ -24,7 +24,6 @@ class ReportingController extends Controller
     {
 
         $student = Auth::user()->load('student');
-
         if (!$courseID) {
             return response()->json(['message' => 'No Course found'], 403);
         }
@@ -39,9 +38,10 @@ class ReportingController extends Controller
                 ->map(function ($answer) {
                     return [
                         'question_id' => $answer->question_id,
-                        'option_id' => Option::where('title', $answer->selected_option)->value('id')
+                        'option_id' => Option::where('title', $answer->selected_option)->where('question_id', $answer->question_id)->value('id')
                     ];
-                })->toArray()
+                })
+                ->toArray()
         ];
 
         $result = $this->ans($answerSheetID, $student, $data, $courseID);
