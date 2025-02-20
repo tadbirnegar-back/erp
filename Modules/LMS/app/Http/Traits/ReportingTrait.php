@@ -259,17 +259,16 @@ trait ReportingTrait
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
             ->get();
-        if(count($course) > 0)
-        {
+        if (count($course) > 0) {
             $totalDuration = $course->sum(function ($item) {
                 return $item->duration == 0 ? null : $item->duration;
             });
-            $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
+            $total = $this->calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes, $contentStatus);
             return [
                 'duration' => $totalDuration,
                 'total' => $total,
             ];
-        }else{
+        } else {
             return [
                 'duration' => 0,
                 'total' => 0,
@@ -351,17 +350,16 @@ trait ReportingTrait
             ->where('content_type.id', $contentTypes)
             ->where('contents.status_id', $contentStatus)
             ->get();
-        if(count($course) > 0)
-        {
+        if (count($course) > 0) {
             $totalDuration = $course->sum(function ($item) {
                 return $item->duration == 0 ? null : $item->duration;
             });
-            $total =  $this -> calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes , $contentStatus);
+            $total = $this->calculateConsumeDataMyCourse($courseID, $studentID, $contentTypes, $contentStatus);
             return [
                 'duration' => $totalDuration,
                 'total' => $total,
             ];
-        }else{
+        } else {
             return [
                 'duration' => 0,
                 'total' => 0,
@@ -583,25 +581,23 @@ trait ReportingTrait
             ->where('contents.status_id', $contentStatus)
             ->get();
 
-        if(count($course) > 0)
-        {
+        if (count($course) > 0) {
             $totalDuration = $course->sum(function ($item) {
                 return $item->duration == 0 ? null : $item->duration;
             });
-            $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
+            $total = $this->calculateAllConsumesDataMyCourse($courseID, $contentTypes, $contentStatus);
             return [
                 'duration' => $totalDuration,
                 'total' => $total,
                 'averageOfAudio' => $course[0]->enrolls_count > 0 ? $total / $course[0]->enrolls_count : 0
             ];
-        }else{
+        } else {
             return [
                 'duration' => 0,
                 'total' => 0,
                 'averageOfAudio' => 0
             ];
         }
-
 
 
     }
@@ -626,18 +622,17 @@ trait ReportingTrait
             ->where('contents.status_id', $contentStatus)
             ->get();
 
-        if(count($course) > 0)
-        {
+        if (count($course) > 0) {
             $totalDuration = $course->sum(function ($item) {
                 return $item->duration == 0 ? null : $item->duration;
             });
-            $total =  $this -> calculateAllConsumesDataMyCourse($courseID, $contentTypes , $contentStatus);
+            $total = $this->calculateAllConsumesDataMyCourse($courseID, $contentTypes, $contentStatus);
             return [
                 'duration' => $totalDuration,
                 'total' => $total,
                 'averageOfVideo' => $course[0]->enrolls_count > 0 ? $total / $course[0]->enrolls_count : 0
             ];
-        }else{
+        } else {
             return [
                 'duration' => 0,
                 'total' => 0,
@@ -662,16 +657,31 @@ trait ReportingTrait
         $ans = Question::joinRelationship('answers.answerSheet.status')
             ->joinRelationship('answers.answerSheet.exam.courseExams.course')
             ->joinRelationship('repository')
-            ->select('answer_sheets.score as scores')
+            ->select([
+                'answer_sheets.score as scores',
+                'answer_sheets.student_id as studentID',
+                'answer_sheets.id as answerSheetID'
+            ])
             ->where('repositories.id', $repo)
-            ->where('courses.id', $courseID);
+            ->where('courses.id', $courseID)
+            ->groupBy('answer_sheets.id', 'answer_sheets.score', 'answer_sheets.student_id');
+
         $averageScore = $ans->get()->pluck('scores')->avg();
+
+        $enrolledStudentsAndScoreAverage = Question::joinRelationship('answers.answerSheet')
+            ->joinRelationship('answers.answerSheet.exam.courseExams.course')
+            ->joinRelationship('repository')
+            ->where('repositories.id', $repo)
+            ->where('courses.id', $courseID)
+            ->distinct('answer_sheets.student_id')
+            ->count('answer_sheets.student_id');
 
         return [
             'average' => $averageScore,
-            'EnrolledStudents' => $ans->count('answer_sheets.student_id'),
+            'EnrolledStudents' => $enrolledStudentsAndScoreAverage,
         ];
     }
+
 
     public function countAnswerSheetApprovedStatusOfStudents($courseID)
     {
@@ -751,6 +761,7 @@ trait ReportingTrait
             ])
             ->where('courses.id', $courseID)
             ->where('repositories.id', $repo)
+            ->groupBy('answer_sheets.score', 'answer_sheets.finish_date_time')
             ->get();
 
         $persianMonths = [
@@ -763,13 +774,13 @@ trait ReportingTrait
             $monthNumber = $persianDate->getMonth();
             return $this->humanReadableDate($monthNumber);
         });
-
         $result = [];
         foreach ($persianMonths as $monthName) {
             if ($groupedData->has($monthName)) {
                 $items = $groupedData[$monthName];
                 $scores = $items->pluck('scores');
-                $averageScore = round($scores->avg(), 2);
+                $averageScore = ($scores->avg());
+
             } else {
                 $averageScore = 0;
             }
