@@ -68,6 +68,7 @@ trait LessonTrait
 
     public function getLessonDatasBasedOnLessonId($lessonID, $user)
     {
+        $status = $this->contentActiveStatus();
         $query = Lesson::query()
             ->leftJoinRelationship('contents.teacher.workForceForJoin.person.avatar', [
                 'contents' => fn($join) => $join->as('contents_alias'),
@@ -133,6 +134,7 @@ trait LessonTrait
                 'content_consume_alias.consume_round as content_consume_consume_round',
             ])
             ->where('lessons.id', $lessonID)
+            ->where('contents_alias.status_id', '=', $status->id)
             ->get();
         return ["lessonDetails" => $query];
     }
