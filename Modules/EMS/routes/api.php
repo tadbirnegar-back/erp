@@ -94,6 +94,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::post('mes/ounitNames/liveSearch-freezone', [EMSController::class, 'liveSearchFreeZone']);
 
+    Route::post('/mes/reports-freezone/member', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'myEnactmentsReportFreeZone']);
+
 });
 
 Route::middleware([])->prefix('v1')->group(function () {
@@ -103,6 +105,7 @@ Route::middleware([])->prefix('v1')->group(function () {
     Route::post('mes/board/register', [EMSController::class, 'registerHeyaatMember']);
 
     Route::get('mes/board/register', [EMSController::class, 'registerHeyaatRequirement']);
+
 });
 
 

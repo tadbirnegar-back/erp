@@ -11,9 +11,6 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 trait ReportingTrait
 {
-
-    //This trait is not used in the current project ' but it will be used in future projects
-
     public function reportMyself($user , $request)
     {
         $meetingTypes = $this->meetingTypeFinder($user->activeFreeZoneRecruitmentScript, $user->activeDistrictRecruitmentScript);
@@ -52,7 +49,7 @@ trait ReportingTrait
         return $meetingtypes;
     }
 
-    private function findDistrictsByFreeZone($rc)
+    public function findDistrictsByFreeZone($rc)
     {
         // Execute the query
         $districts = $rc->load('getDistrictFromFreeZoneRc');

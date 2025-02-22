@@ -56,19 +56,17 @@ class ReportsController extends Controller
 
         $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
 
-        $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->flatten();
+        $rsUnits = $user->activeDistrictRecruitmentScript->pluck('ounit')->unique()->flatten();
 
         if ($request->ounitID) {
-            $ounit = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
-                $query->distinct('id');
-            }])->find($request->ounitID);
+            $ounit = OrganizationUnit::with('ancestorsAndSelf')->find($request->ounitID);
         } else {
             $ounit = $rsUnits[0];
         }
 
         $user->load('person.avatar', 'mr');
 
-        $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
+        $meetingType = MeetingType::whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING->value , MeetingTypeEnum::FREE_ZONE->value])->first();
 
         $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
             $query->where('employee_id', $employeeId);
@@ -119,7 +117,7 @@ class ReportsController extends Controller
             'person' => $user->person,
             'mr' => $user?->mr,
 //            'ounit' => $meetings->pluck('ounit')->flatten()->toArray()[0] ?? null,
-            'ounit' => $ounit->unique ?? null,
+            'ounit' => $ounit ?? null,
 
         ];
 
@@ -127,22 +125,98 @@ class ReportsController extends Controller
         return response()->json(['data' => $result, 'ounits' => $rsUnits]);
     }
 
-    private function meetingType($freezone, $dirstrict)
+
+    public function myEnactmentsReportFreeZone(Request $request)
     {
-        $heyaatMeeting = MeetingTypeEnum::HEYAAT_MEETING->value;
-        $freezoneMeeting = MeetingTypeEnum::FREE_ZONE->value;
+        $validator = Validator::make($request->all(), [
+            'startDate' => 'required',
+            'endDate' => 'required',
+        ]);
 
-        $meetingtypes = [];
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
 
-        if (!is_null($freezone)) {
-            $meetingtypes[] = $freezoneMeeting;
+        $startDate = convertJalaliPersianCharactersToGregorian($request->input('startDate'));
+
+        $endDate = convertJalaliPersianCharactersToGregorian
+        ($request->input('endDate'));
+
+//        return response()->json([$startDate, $endDate]);
+
+        if (isset($request->employeeID)) {
+            $user = User::find($request->employeeID);
+        } else {
+            $user = Auth::user();
         }
-        if (!is_null($dirstrict)) {
-            $meetingtypes[] = $heyaatMeeting;
-        }
-        return $meetingtypes;
+        $employeeId = $user->id;
+
+        $user->load('activeFreeZoneRecruitmentScript.ounit.ancestorsAndSelf');
+
+        $ounits = $this->findDistrictsByFreeZone($user->activeFreeZoneRecruitmentScript);
+
+        $rsUnits = $user->activeFreeZoneRecruitmentScript->pluck('ounit')->unique()->flatten();
+
+        $user->load('person.avatar', 'mr');
+
+        $meetingType = MeetingType::where('title', MeetingTypeEnum::FREE_ZONE->value)->first();
+
+        $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        })
+            ->whereIn('ounit_id', $ounits)
+            ->where('isTemplate', false)
+            ->whereBelongsTo($meetingType, 'meetingType')
+            ->whereBetween('meeting_date', [$startDate, $endDate])
+            ->with(['enactments' => function ($q) use ($employeeId) {
+                $q
+                    ->whereDoesntHave('status', function ($query) {
+                        $query->where('statuses.name', EnactmentStatusEnum::CANCELED->value);
+                    })
+                    ->with(['enactmentReviews' => function ($qq) use ($employeeId) {
+                        $qq->where('user_id', $employeeId)
+                            ->with(['status']);
+                    }, 'title', 'latestHeyaatMeeting', 'status', 'ounit.ancestorsAndSelf' => function ($q) {
+                        $q->where('unitable_type', '!=', StateOfc::class);
+                    }]);
+            }])
+            ->with(['meetingMembers' => function ($query) use ($employeeId) {
+                $query->where('employee_id', $employeeId)->with('mr');
+
+
+            }, 'ounit.ancestorsAndSelf'])
+            ->get();
+
+        $meetings->each(function ($meeting) {
+            // Collect all review statuses across enactments within the meeting and count each dynamically
+            $totalReviewCounts = $meeting->enactments
+                ->flatMap(function ($enactment) {
+                    return $enactment->enactmentReviews;
+                })
+                ->groupBy('status.name')//                ->map->count()
+            ;
+
+            // Attach total counts to the meeting for easy access
+            $meeting->total_review_counts = $totalReviewCounts;
+        });
+
+        $result = [
+            'meeting_count' => $meetings->count(),
+            'enactments_count' => $meetings->pluck('enactments')->flatten()->count(),
+            'total_review_counts' => $meetings->pluck('total_review_counts')
+//                ->flatten()->sum()
+            ,
+            'enactments' => $meetings->pluck('enactments'),
+            'person' => $user->person,
+            'mr' => $user?->mr,
+//            'ounit' => $meetings->pluck('ounit')->flatten()->toArray()[0] ?? null,
+            'ounit' => $ounit ?? null,
+
+        ];
+
+
+        return response()->json(['data' => $result, 'ounits' => $rsUnits]);
     }
-
     public function districtEnactmentReport(Request $request)
     {
         $validator = Validator::make($request->all(), [
