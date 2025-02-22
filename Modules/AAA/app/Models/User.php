@@ -16,6 +16,8 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Models\MR;
+use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
@@ -323,8 +325,6 @@ class User extends Authenticatable
     }
 
 
-
-
     public function activeCityRecruitmentScript()
     {
         return $this->activeRecruitmentScripts()
@@ -368,7 +368,7 @@ class User extends Authenticatable
         $scriptTypeHeyaat = FreezoneScriptTypeEnum::ADD_RC_OZV_HEYAAT;
         $scriptTypeDabir = FreezoneScriptTypeEnum::ADD_RC_DABIR;
         $scriptTypeBoss = FreezoneScriptTypeEnum::ADD_RC_RAIES;
-        $scriptId = ScriptType::whereIn('title' , [$scriptTypeHeyaat , $scriptTypeDabir , $scriptTypeBoss])->get()->pluck('id')->toArray();
+        $scriptId = ScriptType::whereIn('title', [$scriptTypeHeyaat, $scriptTypeDabir, $scriptTypeBoss])->get()->pluck('id')->toArray();
         return $this->hasManyDeep(
             RecruitmentScript::class,
             [Person::class, WorkForce::class, Employee::class],
@@ -488,5 +488,15 @@ class User extends Authenticatable
             ['id', 'person_id'],
             ['person_id', 'id']
         );
+    }
+
+    public function evalCirculars()
+    {
+        return $this->hasMany(EvalCircular::class, 'creator_id', 'id');
+    }
+
+    public function evalEvaluations()
+    {
+        return $this->hasMany(EvalEvaluation::class, 'creator_id', 'id');
     }
 }

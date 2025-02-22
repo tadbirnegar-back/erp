@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\EVAL\app\Models\EvalVariableTarget;
 use Modules\LMS\Database\factories\OucPropertyValueFactory;
 
 class OucPropertyValue extends Model
@@ -31,5 +32,11 @@ class OucPropertyValue extends Model
     {
         return $this->hasMany(CourseOunitFeature::class, 'ouc_property_value', 'id');
     }
+
+    public function evalVariableTargets()
+    {
+        return $this->hasMany(EvalVariableTarget::class, 'eval_circular_variables_id', 'id');
+    }
+
 
 }

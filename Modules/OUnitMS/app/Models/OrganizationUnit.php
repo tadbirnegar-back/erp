@@ -10,15 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Facades\Log;
 use Modules\AAA\app\Models\User;
-use Modules\AddressMS\app\Models\Village;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\SettingsEnum;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingMember;
 use Modules\EMS\app\Models\MeetingType;
+use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Models\Payment;
@@ -234,6 +233,7 @@ class OrganizationUnit extends Model
             ->orderBy('meeting_date', 'asc'); // Order by meeting date
 
     }
+
     public function fullMeetingsByNowForFreeZone(): HasMany
     {
         // Fetch the max days for reception from settings
@@ -298,9 +298,9 @@ class OrganizationUnit extends Model
     }
 
 
-    public function villageWithFreeZone() : HasMany
+    public function villageWithFreeZone(): HasMany
     {
-        return $this->hasMany(VillageOfc::class, 'free_zone_id' , 'unitable_id');
+        return $this->hasMany(VillageOfc::class, 'free_zone_id', 'unitable_id');
     }
 
     public function meetingMembers()
@@ -313,25 +313,24 @@ class OrganizationUnit extends Model
 
     public function meetingMembersAzad()
     {
-        $mtID = MeetingType::where('title' , MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+        $mtID = MeetingType::where('title', MeetingTypeEnum::FREE_ZONE->value)->first()->id;
         return $this->hasManyThrough(MeetingMember::class, Meeting::class,
             'ounit_id', 'meeting_id')
             ->where('isTemplate', '=', true)
-            ->where('meeting_type_id' , $mtID)
+            ->where('meeting_type_id', $mtID)
             ->with('mr', 'person.avatar');
     }
 
 
-
     public function meetingMembersHeyat()
     {
-        $mtID = MeetingType::where('title' , MeetingTypeEnum::OLGOO->value)->first()->id;
-        $mtIDFz = MeetingType::where('title' , MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+        $mtID = MeetingType::where('title', MeetingTypeEnum::OLGOO->value)->first()->id;
+        $mtIDFz = MeetingType::where('title', MeetingTypeEnum::FREE_ZONE->value)->first()->id;
         return $this->hasManyThrough(MeetingMember::class, Meeting::class,
             'ounit_id', 'meeting_id')
             ->where('isTemplate', '=', true)
-            ->where('meeting_type_id' , $mtID)
-            ->whereNot('meeting_type_id' , $mtIDFz)
+            ->where('meeting_type_id', $mtID)
+            ->whereNot('meeting_type_id', $mtIDFz)
             ->with('mr', 'person.avatar');
     }
 
@@ -352,6 +351,11 @@ class OrganizationUnit extends Model
     protected static function booted()
     {
         static::addGlobalScope(new ActiveScope());
+    }
+
+    public function evalEvaluations()
+    {
+        return $this->hasMany(EvalEvaluation::class, 'target_ounit_id', 'id');
     }
 //
 //    public function GetStatuses()

@@ -20,5 +20,8 @@
     "PayStream": true,
     "Controller": true,
     "CourseController": true,
-    "VCM": true
+    "VCM": true,
+    "EVAL": true,
+    "Model": true,
+    "EvalVariableTarget": true
 }
