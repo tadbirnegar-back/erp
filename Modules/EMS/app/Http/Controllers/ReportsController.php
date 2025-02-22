@@ -17,6 +17,7 @@ use Modules\EMS\app\Models\Enactment;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -24,6 +25,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 class ReportsController extends Controller
 {
     use ReportingTrait;
+
     /**
      * Display a listing of the resource.
      */
@@ -50,14 +52,13 @@ class ReportsController extends Controller
         } else {
             $user = Auth::user();
         }
-        $employeeId = $user->id;
 
-
-
-        $user->load('activeDistrictRecruitmentScript.ounit.ancestorsAndSelf');
+        $user->load(['activeDistrictRecruitmentScript.ounit.ancestorsAndSelf' => function ($query) {
+            $query->where('unitable_type', DistrictOfc::class);
+        }]);
         $user->load('activeFreeZoneRecruitmentScript.ounit.ancestorsAndSelf');
 
-        $data = $this->reportMyself($user);
+        $data = $this->reportMyself($user , $request);
 
         return response()->json(['data' => $data]);
     }

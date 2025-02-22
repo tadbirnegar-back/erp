@@ -12,13 +12,28 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 trait ReportingTrait
 {
 
-    public function reportMyself($user)
+    //This trait is not used in the current project ' but it will be used in future projects
+
+    public function reportMyself($user , $request)
     {
         $meetingTypes = $this->meetingTypeFinder($user->activeFreeZoneRecruitmentScript, $user->activeDistrictRecruitmentScript);
+        $freeZoneDistrictIds = [];
+        $districtIds = [];
         if($user->activeFreeZoneRecruitmentScript->isNotEmpty())
         {
-            $this -> reportMyselfFreeZone($user->activeFreeZoneRecruitmentScript);
+            $freeZoneDistrictIds =  $this -> findDistrictsByFreeZone($user->activeFreeZoneRecruitmentScript);
         }
+        if($user->activeDistrictRecruitmentScript->isNotEmpty())
+        {
+            if(!$request->ounitID)
+            {
+                $districtIds =  $user->activeDistrictRecruitmentScript[0]->ounit->ancestorsAndSelf->pluck('unitable_id')->toArray();
+            }else{
+                $districtIds =  [$request->ounitID];
+            }
+        }
+        $allDistrictIds = array_unique(array_merge($freeZoneDistrictIds, $districtIds));
+        return $allDistrictIds;
     }
 
     private function meetingTypeFinder($freezone, $dirstrict)
@@ -37,14 +52,10 @@ trait ReportingTrait
         return $meetingtypes;
     }
 
-    private function reportMyselfFreeZone($user)
-    {
-        $userRc = $user->activeFreeZoneRecruitmentScript;
-        $districts = $this->findDistrictsByFreeZone($userRc);
-    }
-
     private function findDistrictsByFreeZone($rc)
     {
-        $rc =
+        // Execute the query
+        $districts = $rc->load('getDistrictFromFreeZoneRc');
+        return $districts[0]->getDistrictFromFreeZoneRc->pluck('unitable_id')->toArray();
     }
 }

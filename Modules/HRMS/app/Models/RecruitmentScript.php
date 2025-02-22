@@ -10,16 +10,19 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
+use Modules\OUnitMS\app\Http\GlobalScope\ActiveScope;
+use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+use Staudenmeir\EloquentHasManyDeep\HasTableAlias;
 
 class RecruitmentScript extends Model
 {
-    use HasEagerLimit;
+    use HasEagerLimit, HasTableAlias;
 
     public $timestamps = false;
     /**
@@ -171,25 +174,31 @@ class RecruitmentScript extends Model
         return $this->hasOne(RecruitmentScriptStatus::class, 'recruitment_script_id')->with(['person.avatar', 'person.position', 'status'])->orderBy('create_date', 'desc');
     }
 
-    public function districtFromFreeZone()
+    public function getDistrictFromFreeZoneRc()
     {
-        return $this->hasOneDeep(OrganizationUnit::class, [
-            OrganizationUnit::class,
+        return $this->hasManyDeep(OrganizationUnit::class, [
+            OrganizationUnit::class . ' as freeZone',
             VillageOfc::class,
-            OrganizationUnit::class,
-            OrganizationUnit::class,
+            OrganizationUnit::class . ' as village',
+            OrganizationUnit::class . ' as townOfc',
         ],
             [
-                'workforceable_id',
                 'id',
-                'person_id',
-
+                'free_zone_id',
+                'unitable_id',
+                'id',
+                'id',
             ],
             [
-                'employee_id',
-                'person_id',
-                'id'
-            ]);
+                'organization_unit_id',
+                'unitable_id',
+                'id',
+                'parent_id',
+                'parent_id',
+            ]
+        )->withoutGlobalScopes()
+            ->where('village.unitable_type', VillageOfc::class)
+            ->distinct('unitable_id');
     }
 
 }
