@@ -82,6 +82,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     Route::post('/mes/freezone/list', [EnactmentController::class, 'indexArchiveForFreeZone']);
 
+    Route::post('/mes/reports-freezone/member', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'myEnactmentsReportFreeZone']);
+
 });
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
@@ -93,8 +95,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('mes/ounitNames/liveSearch', [EMSController::class, 'liveSearch']);
 
     Route::post('mes/ounitNames/liveSearch-freezone', [EMSController::class, 'liveSearchFreeZone']);
-
-    Route::post('/mes/reports-freezone/member', [\Modules\EMS\app\Http\Controllers\ReportsController::class, 'myEnactmentsReportFreeZone']);
 
 });
 
