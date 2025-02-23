@@ -1,0 +1,11 @@
+{
+    "name": "EVAL",
+    "alias": "eval",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EVAL\\app\\Providers\\EVALServiceProvider"
+    ],
+    "files": []
+}

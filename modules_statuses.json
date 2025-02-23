@@ -18,7 +18,6 @@
     "Gateway": true,
     "EMS": true,
     "PayStream": true,
-    "Controller": true,
-    "CourseController": true,
-    "VCM": true
+    "VCM": true,
+    "EVAL": true
 }
