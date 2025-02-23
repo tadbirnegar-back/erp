@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use Modules\EVAL\app\Http\Controllers\EvaluationController;
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('eval', fn (Request $request) => $request->user())->name('eval');
+Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 });
+Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
+});
+Route::get('/eval/evaluation/pre-view/{id}', [EvaluationController::class, 'preViewEvaluation']);

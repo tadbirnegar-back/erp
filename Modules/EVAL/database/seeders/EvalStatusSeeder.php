@@ -25,6 +25,5 @@ class EvalStatusSeeder extends Seeder
                 'class_name' => $userStatus['className'] ?? null,
             ]);
         }
-        // $this->call([]);
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Modules\AAA\app\Models\User;
 use Modules\EVAL\Database\factories\EvalEvaluationFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\StatusMS\app\Models\Status;
 
 class EvalEvaluation extends Model
 {
@@ -64,5 +65,16 @@ class EvalEvaluation extends Model
     public function evalEvaluationStatus()
     {
         return $this->hasMany(EvalEvaluationStatus::class, 'eval_evaluation_id', 'id');
+    }
+
+    public function lastStatusOfEvaluation()
+    {
+        return $this->hasOne(EvalEvaluationStatus::class, 'eval_evaluation_id', 'id')
+            ->orderBy('created_at', 'desc')->take(1);
+    }
+
+    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Status::all()->where('model', '=', self::class);
     }
 }

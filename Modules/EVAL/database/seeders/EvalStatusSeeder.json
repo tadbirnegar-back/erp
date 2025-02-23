@@ -1,10 +1,14 @@
 [
     {
-        "name": "پیش نویس",
-        "className": "warning"
-    },
-    {
         "name": "تکمیل شده",
         "className": "success"
+    },
+    {
+        "name": "در انتظار تکمیل",
+        "className": "primary"
+    },
+    {
+        "name": "منقضی شده",
+        "className": "danger"
     }
 ]
