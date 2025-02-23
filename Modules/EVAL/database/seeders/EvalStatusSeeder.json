@@ -1,0 +1,10 @@
+[
+    {
+        "name": "پیش نویس",
+        "className": "warning"
+    },
+    {
+        "name": "تکمیل شده",
+        "className": "success"
+    }
+]
