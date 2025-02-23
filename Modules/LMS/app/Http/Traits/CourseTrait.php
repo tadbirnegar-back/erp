@@ -9,7 +9,6 @@ use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
-use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
@@ -19,7 +18,6 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
 use Modules\PayStream\app\Models\ProcessStatus;
-use Modules\StatusMS\app\Models\Status;
 
 
 trait CourseTrait
@@ -144,7 +142,7 @@ trait CourseTrait
         $course->description = $data['description'] ?? $course->description;
         $course->privacy_id = $data['privacyID'] ?? $course->privacy_id;
         $course->is_required = $data['isRequired'] ?? $course->is_required;
-        $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null;
+        $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : now();
         $course->expiration_date = isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null;
         $course->preview_video_id = $data['previewVideoID'] == 'null' ? null : (isset($data['previewVideoID']) ? $data['previewVideoID'] : $course->preview_video_id);
         $course->cover_id = $data['coverID'] ?? $course->cover_id;
