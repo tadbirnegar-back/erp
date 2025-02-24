@@ -80,6 +80,7 @@ class CourseController extends Controller
             DB::beginTransaction();
             $data = $request->all();
             $course = Course::find($id);
+            $course->load('latestStatus');
             $course = $this->updateCourseDatas($course, $data);
             //store preRequisites
             if (isset($data['preRequisiteCourseIDs'])) {
