@@ -137,12 +137,18 @@ trait CourseTrait
 
     public function updateCourseDatas($course, $data): Course
     {
+        $statusName = $course->latestStatus->name;
 
         $course->title = $data['title'] ?? $course->title;
         $course->description = $data['description'] ?? $course->description;
         $course->privacy_id = $data['privacyID'] ?? $course->privacy_id;
         $course->is_required = $data['isRequired'] ?? $course->is_required;
-        $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : now();
+        if($statusName == CourseStatusEnum::WAITING_TO_PRESENT->value)
+        {
+            $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : now();
+        }else{
+            $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null;
+        }
         $course->expiration_date = isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null;
         $course->preview_video_id = $data['previewVideoID'] == 'null' ? null : (isset($data['previewVideoID']) ? $data['previewVideoID'] : $course->preview_video_id);
         $course->cover_id = $data['coverID'] ?? $course->cover_id;
