@@ -323,8 +323,6 @@ class User extends Authenticatable
     }
 
 
-
-
     public function activeCityRecruitmentScript()
     {
         return $this->activeRecruitmentScripts()
@@ -368,7 +366,7 @@ class User extends Authenticatable
         $scriptTypeHeyaat = FreezoneScriptTypeEnum::ADD_RC_OZV_HEYAAT;
         $scriptTypeDabir = FreezoneScriptTypeEnum::ADD_RC_DABIR;
         $scriptTypeBoss = FreezoneScriptTypeEnum::ADD_RC_RAIES;
-        $scriptId = ScriptType::whereIn('title' , [$scriptTypeHeyaat , $scriptTypeDabir , $scriptTypeBoss])->get()->pluck('id')->toArray();
+        $scriptId = ScriptType::whereIn('title', [$scriptTypeHeyaat, $scriptTypeDabir, $scriptTypeBoss])->get()->pluck('id')->toArray();
         return $this->hasManyDeep(
             RecruitmentScript::class,
             [Person::class, WorkForce::class, Employee::class],
@@ -488,5 +486,28 @@ class User extends Authenticatable
             ['id', 'person_id'],
             ['person_id', 'id']
         );
+    }
+
+    public function activeDehyarRcs()
+    {
+        $scriptTypeDehyar = ScriptType::where('title', 'انتصاب دهیار')->first()->id;
+        \Log::info($scriptTypeDehyar);
+        return $this->hasManyDeep(
+            RecruitmentScript::class,
+            [Person::class, WorkForce::class, Employee::class],
+            [
+                'id',
+                'person_id',
+                'id',
+                'employee_id'
+            ],
+            [
+                'person_id',
+                'id',
+                'workforceable_id',
+                'id'
+            ]
+        )->where('workforceable_type', Employee::class)
+            ->where('script_type_id', $scriptTypeDehyar);
     }
 }
