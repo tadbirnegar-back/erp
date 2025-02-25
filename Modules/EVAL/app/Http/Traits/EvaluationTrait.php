@@ -2,12 +2,19 @@
 
 namespace Modules\EVAL\app\Http\Traits;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\EVAL\app\Http\Enums\EvaluationStatusEnum;
 use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EVAL\app\Models\EvalEvaluationAnswer;
+use Modules\EVAL\app\Models\EvalEvaluationStatus;
 use Modules\EVAL\app\Models\EvalVariableTarget;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\OUnitMS\app\Models\CityOfc;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 trait EvaluationTrait
 
@@ -94,21 +101,6 @@ trait EvaluationTrait
         return $result->values();
     }
 
-    public function evaluationDoneStatus()
-    {
-        return EvalEvaluation::GetAllStatuses()->firstWhere('name', EvaluationStatusEnum::DONE->value);
-    }
-
-    public function evaluationWaitToDoneStatus()
-    {
-        return EvalEvaluation::GetAllStatuses()->firstWhere('name', EvaluationStatusEnum::WAIT_TO_DONE->value);
-    }
-
-    public function evaluationExpiredStatus()
-    {
-        return EvalEvaluation::GetAllStatuses()->firstWhere('name', EvaluationStatusEnum::EXPIRED->value);
-    }
-
     public function setAnswers($evaluationId, $answers)
     {
         $data = [];
@@ -126,7 +118,7 @@ trait EvaluationTrait
         }
     }
 
-    public function calculateEvaluation($evaluationId , $user)
+    public function calculateEvaluation($evaluationId, $user)
     {
         $evaluations = EvalEvaluationAnswer::with('evalCircularVariables.evalCircularIndicator')
             ->where('eval_evaluation_id', $evaluationId)
@@ -155,18 +147,94 @@ trait EvaluationTrait
             $totalCoefficient += $coefficient;
         }
 
-        $weightedAverage = round($totalCoefficient > 0 ? $totalSum / $totalCoefficient : 0 , 1);
+        $weightedAverage = round($totalCoefficient > 0 ? $totalSum / $totalCoefficient : 0, 1);
 
         EvalEvaluation::find($evaluationId)->update([
             'sum' => $totalSum,
             'average' => $weightedAverage,
-            'creator_id' => $user->id
+            'evaluator_id' => $user->id
         ]);
 
+        $this->makeEvaluationDone($evaluationId, $user);
     }
 
+    private function makeEvaluationDone($evaluationId, $user)
+    {
+        $status = $this->evaluationDoneStatus();
+        EvalEvaluationStatus::create([
+            'eval_evaluation_id' => $evaluationId,
+            'status_id' => $status->id,
+            'creator_id' => $user->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'description' => null,
+        ]);
+    }
+
+    public function showPreDatas($eval)
+    {
+        $evalOunit = $eval->target_ounit_id;
+
+        $myQueryAsString = "with recursive `laravel_cte` as ((select `organization_units`.*, 0 as `depth`, cast(`id` as char(65535)) as `path`
+         from `organization_units` where `organization_units`.`id` in ($evalOunit))
+          union all (select `organization_units`.*, `depth` - 1 as `depth`, concat(`path`, '.', `organization_units`.`id`) from `organization_units` inner join `laravel_cte` on `laravel_cte`.`parent_id` = `organization_units`.`id`))
+           select * from `laravel_cte` where `unitable_type` != 'Modules\OUnitMS\app\Models\TownOfc'";
 
 
+        $result = DB::table(DB::raw($myQueryAsString))
 
+
+            ->get();
+
+        return DB::select($myQueryAsString);
+
+        $ounit = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
+            $query->whereIn('unitable_type', [VillageOfc::class, DistrictOfc::class, CityOfc::class, StateOfc::class]);
+        }])->find($evalOunit);
+
+        $villageId = $ounit->ancestorsAndSelf->firstWhere('unitable_type', VillageOfc::class)?->id;
+        $districtId = $ounit->ancestorsAndSelf->firstWhere('unitable_type', DistrictOfc::class)?->id;
+        $cityId = $ounit->ancestorsAndSelf->firstWhere('unitable_type', CityOfc::class)?->id;
+        $stateId = $ounit->ancestorsAndSelf->firstWhere('unitable_type', StateOfc::class)?->id;
+
+        $organs = [
+            'village' => $villageId,
+            'district' => $districtId,
+            'city' => $cityId,
+            'state' => $stateId
+        ];
+
+        $villagerAnswers = $this->getVillageAnswers($eval->id);
+        $districtAnswers = $this->getDistrictAnswers($organs, $eval);
+        return ["village" => $villagerAnswers, "district" => $districtAnswers];
+    }
+
+    private function getDistrictAnswers($organs, $eval)
+    {
+        return EvalEvaluation::with('evaluationAnswers')
+            ->where('eval_circular_id', $eval->eval_circular_id)
+            ->where('target_ounit_id', $organs['district'])
+            ->first();
+    }
+
+    private function getVillageAnswers($evalId)
+    {
+        return EvalEvaluation::with('evaluationAnswers')->where('id', $evalId)->first();
+    }
+
+    public function evaluationDoneStatus()
+    {
+        return EvalEvaluation::GetAllStatuses()->firstWhere('name', EvaluationStatusEnum::DONE->value);
+    }
+
+    public function evaluationWaitToDoneStatus()
+    {
+        return EvalEvaluation::GetAllStatuses()->firstWhere('name', EvaluationStatusEnum::WAIT_TO_DONE->value);
+    }
+
+    public function evaluationExpiredStatus()
+    {
+        return EvalEvaluation::GetAllStatuses()->firstWhere('name', EvaluationStatusEnum::EXPIRED->value);
+    }
 
 }

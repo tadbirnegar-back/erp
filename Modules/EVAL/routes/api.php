@@ -21,4 +21,4 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 Route::get('/eval/evaluation/pre-view/{id}', [EvaluationController::class, 'preViewEvaluation']);
 Route::get('/eval/evaluation/start/{id}', [EvaluationController::class, 'evaluationStart']);
 Route::post('/eval/evaluation/done/{id}', [EvaluationController::class, 'evaluationDone']);
-Route::get('/eval/evaluation/revising/{id}' , [EvaluationController::class, 'evaluationRevising']);
+Route::get('/eval/evaluation/revising/{id}' , [EvaluationController::class, 'revisingEvaluationPreData']);

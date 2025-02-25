@@ -69,8 +69,10 @@ class EvaluationController extends Controller
             return response()->json(['message' => "متاسفانه ارزیابی شما ثبت نشد."], 403);
         }
     }
-    public function evaluationRevising($id)
+    public function revisingEvaluationPreData($id)
     {
-
+        $eval = EvalEvaluation::find($id);
+        $preDatas = $this-> showPreDatas($eval);
+        return response() -> json($preDatas);
     }
 }
