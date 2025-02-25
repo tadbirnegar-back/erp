@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 use Storage;
 use URL;
 
@@ -21,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Passport::tokensExpireIn(now()->addDays(1));
+        Passport::refreshTokensExpireIn(now()->addDays(2));
+
         Storage::disk('private')->buildTemporaryUrlsUsing(function ($path, $expiration, $options) {
             // Assuming the path is something like "2024/8/12/Cat03.jpg"
             $segments = explode('/', $path);
