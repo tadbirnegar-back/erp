@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
+use Modules\EVAL\app\Models\EvalCircular;
 use Modules\FileMS\Database\factories\FileFactory;
 use Modules\StatusMS\app\Models\Status;
 use URL;
@@ -79,5 +80,10 @@ class File extends Model
     public function getSizeAttribute($value)
     {
         return  Number::fileSize($value);
+    }
+
+    public function EvalCirculars()
+    {
+        return $this->hasmany(EvalCircular::class, 'file_id', 'id');
     }
 }

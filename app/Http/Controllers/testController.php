@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Models\EvalCircularSection;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
@@ -20,18 +22,17 @@ class testController extends Controller
 
     public function run()
     {
-        $status = $this->questionActiveStatus();
-
-        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
-            ->joinRelationship('chapters.allActiveLessons.questions.options')
-            ->joinRelationship('chapters.allActiveLessons.questions.repository')
-            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
+        $variable=EvalCircularSection::query()
+            ->joinRelationship('evalCircularIndicators.evalCircularVariable')
             ->select([
-                'questions.id as QID',
-                'lessons.title as lesson title'
-            ])->where('questions.status_id', $status->id)
+                'eval_circular_sections.title as sectionTitle',
+                'eval_circular_indicators.title as indicatorsTitle',
+                'eval_circular_indicators.coefficient as coefficient',
+                'eval_circular_variables.name as variableName',
+                'eval_circular_variables.weight as weight',
+            ])
             ->get();
-        return $query;
+        dd($variable);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
