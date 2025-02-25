@@ -29,8 +29,6 @@ class EvaluationController extends Controller
             return response()->json(['message' => 'شما دسترسی به این قسمت را ندارید'], 403);
         }
     }
-
-
     public function evaluationStart($id)
     {
         $waitToDoneStatus = $this->evaluationWaitToDoneStatus();
@@ -56,14 +54,14 @@ class EvaluationController extends Controller
 
 
     }
-
     public function evaluationDone($id , Request $request)
     {
         try {
             DB::beginTransaction();
+            $user = Auth::user();
             $answers = json_decode($request->answers);
             $this->setAnswers($id, $answers);
-            $this -> calculateEvaluation($id);
+            $this -> calculateEvaluation($id , $user);
             DB::commit();
             return response()->json(['message' => 'ارزیابی شما با موفقیت ثبت شد.']);
         }catch (\Exception $e){
@@ -71,9 +69,8 @@ class EvaluationController extends Controller
             return response()->json(['message' => "متاسفانه ارزیابی شما ثبت نشد."], 403);
         }
     }
+    public function evaluationRevising($id)
+    {
 
-//    public function evaluationRevising($id)
-//    {
-//
-//    }
+    }
 }

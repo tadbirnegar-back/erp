@@ -126,13 +126,46 @@ trait EvaluationTrait
         }
     }
 
-    public function calculateEvaluation($evaluationId)
+    public function calculateEvaluation($evaluationId , $user)
     {
-        $evaluation = EvalEvaluationAnswer::with('evalCircularVariables')->where('eval_evaluation_id', $evaluationId)->get();
+        $evaluations = EvalEvaluationAnswer::with('evalCircularVariables.evalCircularIndicator')
+            ->where('eval_evaluation_id', $evaluationId)
+            ->get();
 
+        $groupedResults = $evaluations->groupBy(function ($evaluation) {
+            return $evaluation->evalCircularVariables->eval_circular_indicator_id ?? 'unknown';
+        });
 
+        $finalResults = [];
+        $totalSum = 0;
+        $totalCoefficient = 0;
+
+        foreach ($groupedResults as $indicatorId => $answers) {
+            $sum = 0;
+
+            foreach ($answers as $answer) {
+                $sum += $answer->value * $answer->evalCircularVariables->weight / 100;
+            }
+
+            $coefficient = $answers->first()->evalCircularVariables->evalCircularIndicator->coefficient ?? 1;
+
+            $finalResults[$indicatorId] = $sum * $coefficient;
+
+            $totalSum += $finalResults[$indicatorId];
+            $totalCoefficient += $coefficient;
+        }
+
+        $weightedAverage = round($totalCoefficient > 0 ? $totalSum / $totalCoefficient : 0 , 1);
+
+        EvalEvaluation::find($evaluationId)->update([
+            'sum' => $totalSum,
+            'average' => $weightedAverage,
+            'creator_id' => $user->id
+        ]);
 
     }
+
+
 
 
 

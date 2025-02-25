@@ -26,7 +26,8 @@ class EvalEvaluation extends Model
         'evaluator_id',
         'id',
         'is_revised',
-        'target_ounit_id'
+        'target_ounit_id',
+        'average'
     ];
 
     public $timestamps = false;

@@ -37,6 +37,7 @@ return new class extends Migration {
                 ->on('eval_evaluations')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
+            $table->float('average')->nullable();
         });
     }
 
