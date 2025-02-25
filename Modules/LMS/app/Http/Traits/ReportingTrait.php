@@ -69,6 +69,7 @@ trait ReportingTrait
         $practicalExam = $this->practicalExam($answerSheetID, $user, $data, $courseID);
         $optionID = array_filter(array_column($data['questions'], 'option_id'));
         $calculate = $this->counting($optionID, $answerSheetID, $examId, $repo);
+        return [$calculate,$answerSheetID];
         $failedExams = $this->FailedExams($studentID, $courseID, $repo);
         $courseInfo = $this->courseInfo($studentID, $courseID, $user);
 
