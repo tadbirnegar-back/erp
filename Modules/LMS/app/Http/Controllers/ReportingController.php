@@ -24,8 +24,7 @@ class ReportingController extends Controller
     public function index($courseID)
     {
 
-//        $student = Auth::user()->load('student');
-        $student=User::with('student')->find(1905);
+        $student = Auth::user()->load('student');
         if (!$courseID) {
             return response()->json(['message' => 'No Course found'], 403);
         }
@@ -47,7 +46,6 @@ class ReportingController extends Controller
         ];
 
         $result = $this->ans($answerSheetID, $student, $data, $courseID);
-        return response()->json($result);
         return ReportingResource::make($result);
 
     }

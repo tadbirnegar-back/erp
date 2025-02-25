@@ -119,7 +119,6 @@ class QuestionsController extends Controller
                 ], 403);
             }
             $question = $this->questionList($id);
-            return response()->json($question);
 
             return new QuestionManagementResource(collect($question));
         } catch (\Exception $e) {

@@ -73,21 +73,25 @@ trait QuestionsTrait
 
     public function questionList($id)
     {
+
         $status = $this->questionActiveStatus();
 
-        $query = Course::leftJoin('chapters', 'courses.id', '=', 'chapters.course_id')
-            ->leftJoin('lessons', 'chapters.id', '=', 'lessons.chapter_id')
-            ->leftJoin('questions', function ($join) use ($status) {
-                $join->on('lessons.id', '=', 'questions.lesson_id')
-                    ->where('questions.status_id', '=', $status->id);
-            })
-            ->leftJoin('question_types', 'questions.question_type_id', '=', 'question_types.id')
-            ->leftJoin('difficulties', 'questions.difficulty_id', '=', 'difficulties.id')
-            ->leftJoin('repositories', 'questions.repository_id', '=', 'repositories.id')
-            ->leftJoin('options', 'questions.id', '=', 'options.question_id')
-            ->leftJoin('answers', 'questions.id', '=', 'answers.question_id')
-            ->leftJoin('answer_sheets', 'answers.answer_sheet_id', '=', 'answer_sheets.id')
+        $query = Course::leftJoinRelationship('chapters.allActiveLessons.questions', function ($join) use ($status) {
+            $join->where('questions.status_id', $status->id);
+        })
+            ->leftJoinRelationship('chapters.allActiveLessons.questions.difficulty')
+            ->leftJoinRelationship('chapters.allActiveLessons.questions.options')
+            ->leftJoinRelationship('chapters.allActiveLessons.questions.repository')
+            ->leftJoinRelationship('chapters.allActiveLessons.questions.questionType')
+            ->leftJoinRelationship('chapters.lessons.questions.answers.answerSheet', [
+                'chapters' => fn($join) => $join->as('chapters_alias'),
+                'lessons' => fn($join) => $join->as('lessons_alias'),
+                'answers' => fn($join) => $join->as('answers_alias'),
+                'answerSheet' => fn($join) => $join->as('answer_sheet_alias')
+            ])
             ->select([
+                'courses.title as courseTitle',
+                'courses.description as courseDescription',
                 'questions.id as questionID',
                 'questions.title as questionTitle',
                 'question_types.name as questionTypeName',
@@ -96,10 +100,8 @@ trait QuestionsTrait
                 'options.title as optionTitle',
                 'chapters.title as chapterTitle',
                 'lessons.title as lessonTitle',
-                'courses.title as courseTitle',
-                'courses.description as courseDescription',
                 'options.is_correct as isCorrect',
-                'answers.question_id as answerQuestionID',
+                'answers_alias.question_id as answerQuestionID',
             ])
             ->where('courses.id', $id)
             ->get();
