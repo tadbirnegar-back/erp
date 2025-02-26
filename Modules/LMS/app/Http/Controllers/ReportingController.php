@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\ReportingTrait;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
