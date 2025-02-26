@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -12,28 +13,40 @@ return new class extends Migration {
     {
         Schema::create('eval_evaluations', function (Blueprint $table) {
             $table->id();
-            $table->string('description');
+            $table->longText('description');
             $table->string('title');
             $table->unsignedBigInteger('eval_circular_id');
+            $table->unsignedBigInteger('evaluator_id')->nullable();
+            $table->unsignedBigInteger('target_ounit_id');
+            $table->unsignedBigInteger('evaluator_ounit_id')->nullable();
+            $table->dateTime('create_date');
+            $table->float('sum')->nullable();
+            $table->unsignedBigInteger('creator_id');
+            $table->boolean('is_revised')->default(false);
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->float('average')->nullable();
+
             $table->foreign('eval_circular_id')->references('id')
                 ->on('eval_circulars')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
-            $table->unsignedBigInteger('target_ounit_id');
             $table->foreign('target_ounit_id')->references('id')
                 ->on('organization_units')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
-            $table->dateTime('create_date');
-            $table->float('sum');
-            $table->unsignedBigInteger('creator_id');
             $table->foreign('creator_id')->references('id')
                 ->on('users')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
-            $table->boolean('is_revised')->default(false);
-            $table->unsignedBigInteger('parent_id');
             $table->foreign('parent_id')->references('id')
+                ->on('eval_evaluations')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
+            $table->foreign('evaluator_id')->references('id')
+                ->on('users')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
+            $table->foreign('evaluator_ounit_id')->references('id')
                 ->on('organization_units')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');

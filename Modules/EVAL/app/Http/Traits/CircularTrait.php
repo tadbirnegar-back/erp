@@ -8,6 +8,8 @@ use Modules\EVAL\app\Models\EvalCircular;
 use \Modules\EVAL\app\Http\Enums\EvalCircularStatusEnum;
 use Modules\EVAL\app\Models\EvalCircularSection;
 use Modules\EVAL\app\Models\EvalCircularStatus;
+use Modules\EVAL\app\Models\EvalEvaluation;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\StatusMS\app\Models\Status;
 
 trait CircularTrait
@@ -24,7 +26,7 @@ trait CircularTrait
             'file_id' => $data['fileID'],
             'creator_id' => $user->id,
             'create_date' => now(),
-            'expired_date' => $expiredDate,
+            'expired_date' => $data['expiredDate']? convertPersianToGregorianBothHaveTimeAndDont($data['expiredDate']) : null,
         ]);
         EvalCircularStatus::create([
             'status_id' => $status->id,
@@ -58,8 +60,7 @@ trait CircularTrait
 
     public function singleCircularSidebar($circularID)
     {
-        $query = EvalCircular::
-        joinRelationship('statuses')
+        $query = EvalCircular::joinRelationship('statuses')
             ->joinRelationship('file.extension')
             ->select([
                 'eval_circulars.id as id',
@@ -85,16 +86,19 @@ trait CircularTrait
 
     }
 
+
     public function singleCircularMain($circularID)
     {
-        return EvalCircular::joinRelationship('statuses')
-            ->select([
-                'eval_circulars.id as id',
-                'statuses.name as statusName',
-            ])
-            ->where('eval_circulars.id', $circularID)
-            ->where('statuses.name', EvalCircularStatusEnum::COMPLETED->value)
+        $villageCount = VillageOfc::count();
+
+        $countEvals = EvalEvaluation::whereNotNull('target_ounit_id')
+            ->where('parent_id', null)
+            ->where('eval_circular_id', $circularID)
             ->count();
+
+        dd($countEvals,);
+        $percentage=round($countEvals/count($villageCount)*100);
+        return $percentage;
     }
 
 
