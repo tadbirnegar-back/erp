@@ -6,17 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\AAA\app\Models\User;
 use Modules\ACMS\Database\factories\BudgetFactory;
 use Modules\FileMS\app\Models\File;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
+use Znck\Eloquent\Traits\BelongsToThrough;
 
 class Budget extends Model
 {
-    use HasRelationships, HasRecursiveRelationships;
+    use HasRelationships, HasRecursiveRelationships, BelongsToThrough;
 
 
     /**
@@ -30,10 +33,31 @@ class Budget extends Model
         'parent_id',
         'circular_id',
         'create_date',
+        'financial_manager_id',
+        'ounit_head_id',
     ];
 
     public $timestamps = false;
     protected $table = 'bgt_budgets';
+
+
+    public function financialManager()
+    {
+        return $this->belongsToThrough(Person::class, [User::class],
+            foreignKeyLookup: [
+                Person::class => 'person_id',
+                User::class => 'financial_manager_id',
+            ]);
+    }
+
+    public function ounitHead()
+    {
+        return $this->belongsToThrough(Person::class, [User::class],
+            foreignKeyLookup: [
+                Person::class => 'person_id',
+                User::class => 'ounit_head_id',
+            ]);
+    }
 
     public function statuses(): BelongsToMany
     {

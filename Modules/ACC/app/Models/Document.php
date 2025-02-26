@@ -3,7 +3,6 @@
 namespace Modules\ACC\app\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -21,7 +20,7 @@ use Znck\Eloquent\Traits\BelongsToThrough;
 
 class Document extends Model
 {
-    use HasFactory;
+    use HasRelationships, BelongsToThrough;
 
     /**
      * The attributes that are mass assignable.
@@ -36,6 +35,7 @@ class Document extends Model
         'creator_id',
         'document_date',
         'create_date',
+        'ounit_head_id',
     ];
 
     public $timestamps = false;
@@ -73,6 +73,15 @@ class Document extends Model
         return $this->hasMany(Article::class, 'document_id');
     }
 
+    public function ounitHead()
+    {
+        return $this->belongsToThrough(Person::class, [User::class],
+            foreignKeyLookup: [
+                Person::class => 'person_id',
+                User::class => 'ounit_head_id',
+            ]);
+    }
+
     public function statuses(): BelongsToMany
     {
         return $this->belongsToMany(Status::class, 'accDocument_status', 'document_id', 'status_id');
@@ -100,7 +109,6 @@ class Document extends Model
         return $this->belongsTo(OrganizationUnit::class);
     }
 
-    use HasRelationships, BelongsToThrough;
 
     public function person()
     {

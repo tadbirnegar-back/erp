@@ -22,7 +22,7 @@ class DocumentShowResource extends JsonResource
             'fiscalYear' => $this->fiscalYear_name,
             'document_number' => $this->document_number,
             'ounit' => [
-                'head' => $this->ounit->person->display_name,
+                'head' => $this?->ounitHead?->display_name,
                 'abadi_code' => $this->village_abadicode,
                 'name' => $this->ounit->name,
                 'ancestors' => $this->ounit->ancestors->map(function ($ancestor) {
@@ -31,6 +31,7 @@ class DocumentShowResource extends JsonResource
                     ];
                 }),
             ],
+            'financialManager' => $this?->person?->display_name,
             'articles' => $this->articles->isNotEmpty() ? ArticlesListResource::collection($this->articles) : []
 
         ];

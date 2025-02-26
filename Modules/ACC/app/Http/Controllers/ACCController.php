@@ -3,60 +3,34 @@
 namespace Modules\ACC\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\ACC\app\Http\Traits\AccountTrait;
+use Modules\ACC\app\Http\Traits\ArticleTrait;
+use Modules\ACC\app\Http\Traits\DocumentTrait;
+use Modules\ACC\app\Jobs\ImportDocsJob;
+use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
+use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
+use Modules\BNK\app\Http\Traits\BankTrait;
+use Modules\BNK\app\Http\Traits\ChequeTrait;
+use Modules\BNK\app\Http\Traits\TransactionTrait;
 
 class ACCController extends Controller
 {
-    public array $data = [];
+    use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): JsonResponse
+    public function importDocs(Request $request)
     {
-        //
+        $validator = \Validator::make($request->all(), [
+            'ounitID' => 'required',
+            'fileID' => 'required',
+        ]);
 
-        return response()->json($this->data);
-    }
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        ImportDocsJob::dispatch($request->ounitID, $request->fileID);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
-    {
-        //
+        return response()->json(['message' => 'Job created successfully'], 200);
 
-        return response()->json($this->data);
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
     }
 }

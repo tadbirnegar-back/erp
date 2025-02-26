@@ -62,5 +62,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/bgt/budgets/supplementary/add', [BudgetController::class, 'insertSupplementaryBudget']);
 
+    Route::post('/bgt/budgets/deduction', [BudgetController::class, 'tafrighBudget']);
+
     Route::put('/bgt/budgets/items/update', [BudgetItemController::class, 'update']);
 });

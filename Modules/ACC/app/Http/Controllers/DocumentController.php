@@ -110,11 +110,12 @@ class DocumentController extends Controller
                 'statuses.class_name as status_class_name',
                 'acc_documents.document_date as document_date',
                 'acc_documents.document_number as document_number',
+                'acc_documents.document_type_id as document_type_id',
                 'acc_documents.create_date as create_date',
                 \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
                 \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
             ])
-            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date', 'statuses.name', 'statuses.class_name')
+            ->groupBy('acc_documents.id', 'acc_documents.description', 'acc_documents.document_date', 'acc_documents.document_number', 'acc_documents.create_date', 'statuses.name', 'statuses.class_name', 'acc_documents.document_type_id')
             ->get();
 
         return DocumentListResource::collection($docs);
@@ -148,8 +149,8 @@ class DocumentController extends Controller
             ->orderByRaw('CAST(document_number AS UNSIGNED) DESC')
             ->first();
 
-        $data['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 1;
-
+        $data['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 2;
+        $data['ounitHeadID'] = OrganizationUnit::find($data['ounitID'])?->head_id;
         try {
             DB::beginTransaction();
 
@@ -161,7 +162,7 @@ class DocumentController extends Controller
             return response()->json($document);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json($e->getMessage(), 500);
+            return response()->json([$e->getMessage(), $e->getTrace()], 500);
         }
 
     }
@@ -186,14 +187,16 @@ class DocumentController extends Controller
                 'acc_documents.document_date as document_date',
                 'acc_documents.document_number as document_number',
                 'acc_documents.create_date as create_date',
+                'acc_documents.ounit_head_id as ounit_head_id',
+                'acc_documents.creator_id as creator_id',
                 'statuses.name as status_name',
                 'statuses.class_name as status_class_name',
                 'village_ofcs.abadi_code as village_abadicode',
-                'fiscal_years.name as fiscalYear_name'
+                'fiscal_years.name as fiscalYear_name',
             ])
-            ->with(['ounit' => function ($query) {
+            ->with(['ounitHead', 'person', 'ounit' => function ($query) {
                 $query
-                    ->with(['person', 'ancestors' => function ($query) {
+                    ->with(['ancestors' => function ($query) {
                         $query
                             ->where('unitable_type', '!=', StateOfc::class)
                             ->withoutGlobalScopes();
@@ -342,6 +345,38 @@ class DocumentController extends Controller
             return response()->json([$e->getMessage(), $e->getTrace()], 500);
         }
 
+    }
+
+    public function resetChequeAndFreeByArticle(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'articleID' => 'required',
+        ]);
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 422);
+        }
+        $article = Article::with('transaction.cheque')->find($data['articleID']);
+        if (!$article) {
+            return response()->json(['message' => 'رکورد مورد نظر یافت نشد'], 404);
+        }
+        try {
+            DB::beginTransaction();
+            if ($article->transaction && $article?->transaction->cheque) {
+                $transaction = $this->softDeleteTransaction($article->transaction);
+                $cheque = $article->transaction?->cheque;
+                $this->resetChequeAndFree($cheque);
+                $article->transaction_id = null;
+                $article->save();
+            } else {
+                return response()->json(['message' => 'رکورد مورد نظر یافت نشد'], 404);
+            }
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت انجام شد']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json($e->getMessage(), 500);
+        }
     }
 
     public function setConfirmedStatusTODocument(Request $request)
@@ -812,12 +847,9 @@ class DocumentController extends Controller
                 ->get();
 
             $doc['fiscalYearID'] = $fiscalYear->id;
-            $lastDocNumber = Document::where('fiscal_year_id', $data['fiscalYearID'])
-                ->where('ounit_id', $data['ounitID'])
-                ->orderByRaw('CAST(document_number AS UNSIGNED) DESC')
-                ->first();
 
-            $doc['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 1;
+
+            $doc['documentNumber'] = 1;
             $doc['documentDate'] = Jalalian::now()->toDateString();
             $doc['ounitID'] = $data['ounitID'];
             $doc['description'] = 'سند افتتاحیه';

@@ -5,6 +5,7 @@ namespace Modules\ACMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use DB;
 use Illuminate\Http\Request;
+use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
 use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
@@ -86,7 +87,6 @@ class BudgetItemController extends Controller
         }
 
         if ($budget->isSupplementary) {
-            DB::enableQueryLog();
             $subjectsWithLog = CircularSubject::withoutGlobalScopes()
                 ->with(['ancestors' => function ($query) {
                     $query->withoutGlobalScopes();
@@ -97,15 +97,36 @@ class BudgetItemController extends Controller
                         ->from('bgt_circular_subjects')
                         ->whereNotNull('bgt_circular_subjects.parent_id');
                 })
-                ->leftJoinRelationship('accounts.articles.document', [
-//                    'accounts' => function ($join) use ($budget) {
-//                        $join->where('ounit_id', $budget->ounit_id);
+                ->leftJoinRelationship('account',
+                    function ($join) use ($budget, $nextYearFiscal) {
+                        $join->leftJoin('acc_articles', 'acc_articles.account_id', '=', 'acc_accounts.id')
+                            ->join('acc_documents', function ($join) use ($nextYearFiscal, $budget) {
+                                $join->on('acc_articles.document_id', '=', 'acc_documents.id')
+                                    ->where('acc_documents.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
+                                    ->where('fiscal_year_id', $nextYearFiscal->id)
+                                    ->where('acc_documents.ounit_id', $budget->ounit_id);
+                            })
+                            ->join('accDocument_status', function ($join) {
+                                $join->on('accDocument_status.document_id', '=', 'acc_documents.id')
+                                    ->whereRaw('accDocument_status.create_date = (
+                                                 SELECT MAX(create_date)
+                                                 FROM accDocument_status
+                                                 WHERE document_id = acc_documents.id
+                                             )');
+                            })
+                            ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                            ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+                    }
+                )
+//            JoinRelationship('accounts.articles.document', [
+////                    'accounts' => function ($join) use ($budget) {
+////                        $join->where('ounit_id', $budget->ounit_id);
+////                    },
+//                    'document' => function ($join) use ($nextYearFiscal, $budget) {
+//                        $join->where('fiscal_year_id', $nextYearFiscal->id)
+//                            ->where('acc_documents.ounit_id', $budget->ounit_id);
 //                    },
-                    'document' => function ($join) use ($nextYearFiscal, $budget) {
-                        $join->where('fiscal_year_id', $nextYearFiscal->id)
-                            ->where('acc_documents.ounit_id', $budget->ounit_id);
-                    },
-                ])
+//                ])
                 ->joinRelationshipUsingAlias('circularItem.budgetItem', [
 //                'circularItem' => function ($join) {
 ////                $join->as('next_year')
@@ -141,6 +162,7 @@ class BudgetItemController extends Controller
                 ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name', 'bgt_circular_subjects.id',
                     'bgt_circular_subjects.parent_id', 'next_year_budget_item.id', 'next_year_budget_item.proposed_amount', 'next_year_budget_item.percentage')
                 ->get();
+//            return response()->json(DB::getQueryLog());
 
             $currentYearLog = CircularSubject::withoutGlobalScopes()
                 ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
@@ -205,7 +227,17 @@ class BudgetItemController extends Controller
                                     ->where('acc_documents.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
                                     ->where('fiscal_year_id', $lastYearFiscal?->id)
                                     ->where('acc_documents.ounit_id', $budget->ounit_id);
-                            });
+                            })
+                            ->join('accDocument_status', function ($join) {
+                                $join->on('accDocument_status.document_id', '=', 'acc_documents.id')
+                                    ->whereRaw('accDocument_status.create_date = (
+                                                 SELECT MAX(create_date)
+                                                 FROM accDocument_status
+                                                 WHERE document_id = acc_documents.id
+                                             )');
+                            })
+                            ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                            ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
                     }
                 )
                 ->whereNotIn('bgt_circular_subjects.id', function ($query) {
@@ -257,7 +289,17 @@ class BudgetItemController extends Controller
                             $join->on('3_months_last_year_art.document_id', '=', '3_months_last_year_doc.id')
                                 ->where('3_months_last_year_doc.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
                                 ->where('3_months_last_year_doc.ounit_id', $budget->ounit_id)
-                                ->whereBetween('3_months_last_year_doc.document_date', [$lastYearStartOfQuarter, $lastYearEndOfQuarter]);
+                                ->whereBetween('3_months_last_year_doc.document_date', [$lastYearStartOfQuarter, $lastYearEndOfQuarter])
+                                ->join('accDocument_status', function ($join) {
+                                    $join->on('accDocument_status.document_id', '=', '3_months_last_year_doc.id')
+                                        ->whereRaw('accDocument_status.create_date = (
+                                                 SELECT MAX(create_date)
+                                                 FROM accDocument_status
+                                                 WHERE document_id = 3_months_last_year_doc.id
+                                             )');
+                                })
+                                ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                                ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
                         });
                 }
                 )
@@ -294,9 +336,18 @@ class BudgetItemController extends Controller
                                     ->where('9_months_current_year_doc.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
                                     ->where('9_months_current_year_doc.ounit_id', $budget->ounit_id)
                                     ->whereBetween('9_months_current_year_doc.document_date', [$startOfCurrentYear, $endOf9thMonthOfCurrentYear]);
-                            });
+                            })->join('accDocument_status', function ($join) {
+                                $join->on('accDocument_status.document_id', '=', '9_months_current_year_doc.id')
+                                    ->whereRaw('accDocument_status.create_date = (
+                                                 SELECT MAX(create_date)
+                                                 FROM accDocument_status
+                                                 WHERE document_id = 9_months_current_year_doc.id
+                                             )');
+                            })
+                            ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id');
                     }
                 )
+                ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
                 ->whereNotIn('bgt_circular_subjects.id', function ($query) {
                     $query->select('bgt_circular_subjects.parent_id')
                         ->from('bgt_circular_subjects')

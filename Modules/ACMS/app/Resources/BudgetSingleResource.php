@@ -13,6 +13,7 @@ class BudgetSingleResource extends JsonResource
     public function toArray($request): array
     {
         return [
+            'budgetID' => $this->id,
             'name' => $this->name,
             'createDate' => convertGregorianToJalali($this->create_date) ?? null,
             'creator' => $this->statuses[0]->pivot->person->display_name,
@@ -61,8 +62,8 @@ class BudgetSingleResource extends JsonResource
                     'history' => BudgetTimelineStatusEnum::generateTimeline($ancestor)
                 ];
             }),
-            'head' => $this->ounit->person->display_name,
-            'financialManager' => $this->financialManager->display_name,
+            'head' => $this->ounitHead?->display_name,
+            'financialManager' => $this->financialManager?->display_name,
         ];
     }
 }

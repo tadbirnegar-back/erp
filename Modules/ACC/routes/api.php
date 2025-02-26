@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\ACC\app\Http\Controllers\ACCController;
 use Modules\ACC\app\Http\Controllers\AccountsController;
 use Modules\ACC\app\Http\Controllers\DocumentController;
 use Modules\ACMS\app\Http\Controllers\ACMSController;
@@ -20,6 +21,12 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::get('/acc/my-villages/list', [ACMSController::class, 'dispatchedCircularsForMyVillage']);
 
     Route::get('/acc/fiscal-year/list', [DocumentController::class, 'fiscalYearList']);
+
+});
+
+Route::middleware([])->prefix('v1')->name('api.')->group(function () {
+    Route::post('/acc/import/docs', [ACCController::class, 'importDocs']);
+
 
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
@@ -64,6 +71,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::put('/acc/documents/draft-status', [DocumentController::class, 'setDraftStatusTODocument']);
 
     Route::delete('/acc/documents/delete-status', [DocumentController::class, 'setDeleteStatusTODocument']);
+
+    Route::delete('/acc/cheque/free-cheque', [DocumentController::class, 'resetChequeAndFreeByArticle']);
 
     Route::post('/acc/documents/balance-sheet-report', [DocumentController::class, 'financialBalanceReport']);
 });

@@ -167,7 +167,7 @@ class AccountsController extends Controller
             return response()->json(['error' => $validate->errors()], 422);
         }
 
-        $cheque = Cheque::
+        $cheques = Cheque::
         joinRelationship('chequeBook.account', [
             'account' => function ($join) use ($data) {
                 $join
@@ -185,18 +185,23 @@ class AccountsController extends Controller
             ->addSelect([
                 ChequeBook::getTableName() . '.cheque_series as series',
             ])
+            ->with('bankAccount.bank')
             ->orderBy('segment_number', 'asc')
-            ->first();
+            ->get();
 
-        if ($cheque) {
-            return response()->json(['data' => [
+        $cheques = $cheques->map(function ($cheque) {
+            return [
                 'chequeID' => $cheque->id,
                 'segmentNumber' => $cheque->segment_number,
                 'series' => $cheque->series,
-            ]
-            ], 200);
-        } else {
-            return response()->json(['data' => null], 200);
-        }
+                'bank' => [
+                    'name' => $cheque->bankAccount->bank->name,
+                ],
+            ];
+        });
+
+
+        return response()->json(['data' => $cheques], 200);
+
     }
 }

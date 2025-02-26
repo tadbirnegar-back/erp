@@ -63,13 +63,14 @@ trait DocumentTrait
         $data = collect($data)->map(function ($item) {
 
             return [
-                'document_number' => $item['documentNumber'] ?? null,
+                'document_number' => convertToDbFriendly($item['documentNumber']) ?? null,
                 'document_date' => $item['documentDate'] ?? null,
                 'fiscal_year_id' => $item['fiscalYearID'],
                 'ounit_id' => $item['ounitID'],
                 'creator_id' => $item['userID'],
                 'document_type_id' => $item['documentTypeID'] ?? 1,
-                'description' => $item['description'] ?? null,
+                'ounit_head_id' => $item['ounitHeadID'] ?? null,
+                'description' => isset($item['description']) ? convertToDbFriendly($item['description']) : null,
             ];
         });
 

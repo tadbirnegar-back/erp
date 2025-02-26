@@ -118,5 +118,11 @@
         "slug": "/acc/documents/balance-sheet-report",
         "moduleName": "ACC",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "آزاد سازی چک",
+        "slug": "/acc/cheque/free-cheque",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
     }
 ]

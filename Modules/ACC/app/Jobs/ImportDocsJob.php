@@ -1,8 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\ACC\app\Jobs;
 
-
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\LazyCollection;
 use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\app\Http\Traits\AccountTrait;
@@ -14,29 +18,46 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
+use Modules\FileMS\app\Models\File;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
-class testController extends Controller
+class ImportDocsJob implements ShouldQueue
 {
-    use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
 
-    public function run()
+    /**
+     * Create a new job instance.
+     */
+
+    private int $ounitID;
+    private int $fileID;
+
+    public function __construct(int $ounitID, int $fileID)
     {
-        dd('done');
-        $pathToXlsx = storage_path('app/public/Updated_Processed_آبگرم.xlsx');
-        $rows = SimpleExcelReader::create($pathToXlsx)
-            ->getRows();
-        $a = $rows->groupBy('year')
-            ->map(function ($yearGroup) {
-                return $yearGroup->groupBy('Doc ID');
-            });
-        /**
-         * @var LazyCollection $a
-         */
-        $ounitID = 5;
-        $docStatus = $this->confirmedDocumentStatus();
+        $this->ounitID = $ounitID;
+        $this->fileID = $fileID;
+    }
 
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
         try {
+            $pathToXlsx = File::find($this->fileID)->getRawOriginal('slug');
+//            dd($pathToXlsx->getRealPath());
+            $rows = SimpleExcelReader::create($pathToXlsx)
+                ->getRows();
+            $a = $rows->groupBy('year')
+                ->map(function ($yearGroup) {
+                    return $yearGroup->groupBy('Doc ID');
+                });
+            /**
+             * @var LazyCollection $a
+             */
+            $ounitID = $this->ounitID;
+            $docStatus = $this->confirmedDocumentStatus();
             \DB::beginTransaction();
             $a->each(function ($yearGroup, $key) use ($ounitID, $docStatus) {
 
@@ -139,31 +160,9 @@ class testController extends Controller
 // Step 4: Insert each valid layer into the database.
                             $parentAccount = null;
                             $usedAccount = null;
-                            $parentSubject = null;
                             $usedCodeInArticle = $article["Account Code"];
                             $accs = [];
                             for ($layer = 1; $layer <= $maxLayer; $layer++) {
-//                                if (convertToDbFriendly($article["Ancestor_name_0"]) == 'درآمد' || convertToDbFriendly($article["Ancestor_name_0"]) == 'هزینه') {
-//
-//                                    if ($article["Ancestor_name_0"] == 'هزینه' && str_contains($article["Ancestor_name_1"], 'عمرانی')) {
-//                                        $subjectType = SubjectTypeEnum::OPERATIONAL_EXPENSE->value;
-//                                    } elseif ($article["Ancestor_name_0"] == 'هزینه' && !str_contains($article["Ancestor_name_1"], 'عمرانی')) {
-//                                        $subjectType = SubjectTypeEnum::ECONOMIC_EXPENSE->value;
-//                                    } else {
-//                                        $subjectType = SubjectTypeEnum::INCOME->value;
-//                                    }
-//
-//                                    $subjectData = [
-//                                        'subjectName' => $article["Ancestor_name_$layer"],
-//                                        'isActive' => false,
-//                                        'code' => $article["Ancestor_code_$layer"],
-//                                        'parentID' => $parentSubject?->id,
-//                                        'subjectTypeID' => $subjectType,
-//                                    ];
-//                                    $subject = $this->storeSubject($subjectData);
-//                                    $parentSubject = $subject;
-//                                }
-
 //                            $data = [];
                                 $data = [
                                     'name' => $article["Ancestor_name_$layer"],
@@ -171,7 +170,6 @@ class testController extends Controller
                                     'ounitID' => $ounitID,
                                     'segmentCode' => $segmentCodes["segment_code_$layer"] ?? null,
                                     'chainCode' => $article["Ancestor_code_$layer"],
-                                    'subjectID' => isset($subject) ? $subject?->id : null,
                                     'layer' => $layer,
                                 ];
 
@@ -244,22 +242,22 @@ class testController extends Controller
 
             });
             \DB::commit();
-            dd('done');
+
         } catch (\Exception $e) {
             \DB::rollBack();
-            dump(['error' => $e->getMessage(), 'trace' => $e->getTrace()]);
+            $this->fail($e);
         }
-
-        $output = "<!DOCTYPE html>
-    <html>
-    <head>
-        <title>Test Debugbar</title>
-    </head>
-    <body>
-    </body></html>";
-
-
-        echo $output;
-
     }
+
+    /**
+     * Get the tags that should be assigned to the job.
+     *
+     * @return array<int, string>
+     */
+    public function tags(): array
+    {
+        $ounit = OrganizationUnit::find($this->ounitID);
+        return ['render', 'ounit:' . $ounit->name, 'ounitID:' . $this->ounitID];
+    }
+
 }

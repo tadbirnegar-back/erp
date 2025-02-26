@@ -5,9 +5,9 @@ namespace Modules\ACMS\app\Http\Enums;
 enum BudgetTimelineStatusEnum: string
 {
     case PROPOSED = 'پیشنهاد به شورا روستا';
-    case PENDING_FOR_APPROVAL = 'در انتظار تایید شورا';
-    case PENDING_FOR_HEYAAT_APPROVAL = 'در انتظار تایید';
-    case FINALIZED = 'تصویب بودجه';
+    case PENDING_FOR_APPROVAL = 'در انتظار تصویب شورا';
+    case PENDING_FOR_HEYAAT_APPROVAL = 'در انتظار تائید هیئت';
+    case FINALIZED = 'تصویب شده';
     case CANCELED = 'لغو شده';
 
     public static function generateTimeline($budget)

@@ -7,6 +7,8 @@ use Auth;
 use DB;
 use Illuminate\Http\Request;
 use Mockery\Exception;
+use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
+use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Http\Enums\SubjectTypeEnum;
@@ -14,10 +16,12 @@ use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Models\Budget;
 use Modules\ACMS\app\Models\BudgetItem;
 use Modules\ACMS\app\Models\BudgetStatus;
+use Modules\ACMS\app\Models\CircularSubject;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\ACMS\app\Resources\BudgetSingleResource;
+use Modules\ACMS\app\Resources\TafriqBudgetExpanse;
+use Modules\ACMS\app\Resources\TafriqBudgetIncome;
 use Modules\ACMS\app\Resources\VillageBudgetListResource;
-use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Morilog\Jalali\Jalalian;
@@ -67,6 +71,7 @@ class BudgetController extends Controller
                 'bgt_budgets.ounitFiscalYear_id',
                 'bgt_budgets.name as budget_name',
                 'village_ofcs.abadi_code as village_abadicode',
+                'bgt_budgets.isSupplementary as isSupplementary'
             ])
             ->with(['fiscalYear'])
             ->get();
@@ -135,7 +140,9 @@ class BudgetController extends Controller
                 $q->with(['pivot.person', 'pivot.file']);
             },
             'ancestors.latestStatus',
-            'ounit.person',
+            'ounitHead',
+            'financialManager',
+//            'ounit.person',
         ])
             ->find($id);
 
@@ -144,19 +151,19 @@ class BudgetController extends Controller
         }
         $scriptType = ScriptType::where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value)->first();
 
-        $financialManager = RecruitmentScript::join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
-            ->join('statuses as s', 'rss.status_id', '=', 's.id')
-            ->where('s.name', 'فعال')
-            ->where('rss.create_date', function ($subQuery) {
-
-                $subQuery->selectRaw('MAX(create_date)')
-                    ->from('recruitment_script_status as sub_rss')
-                    ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
-            })
-            ->where('script_type_id', $scriptType->id)
-            ->where('organization_unit_id', $budget->ounit->id)
-            ->with(['user.person'])
-            ->first();
+//        $financialManager = RecruitmentScript::join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
+//            ->join('statuses as s', 'rss.status_id', '=', 's.id')
+//            ->where('s.name', 'فعال')
+//            ->where('rss.create_date', function ($subQuery) {
+//
+//                $subQuery->selectRaw('MAX(create_date)')
+//                    ->from('recruitment_script_status as sub_rss')
+//                    ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
+//            })
+//            ->where('script_type_id', $scriptType->id)
+//            ->where('organization_unit_id', $budget->ounit->id)
+//            ->with(['user.person'])
+//            ->first();
 
         $incomeResults = BudgetItem::joinRelationship('circularItem.subject')
             ->where('budget_id', $id
@@ -192,7 +199,6 @@ class BudgetController extends Controller
         $budget->setAttribute('income_sum', $incomeResults);
         $budget->setAttribute('eco_sum', $economicResults);
         $budget->setAttribute('operational_sum', $operationalResults);
-        $budget->setAttribute('financialManager', $financialManager?->user->person);
 
 
         return BudgetSingleResource::make($budget);
@@ -383,5 +389,108 @@ class BudgetController extends Controller
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function tafrighBudget(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'budgetID' => 'required',
+            'logType' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+        try {
+            $budget = Budget::joinRelationship('ounitFiscalYear.fiscalYear')
+                ->addSelect([
+                    'fiscal_years.id as fiscal_year_id',
+                    'ounit_fiscalYear.ounit_id as ounit_id',
+                ])
+                ->find($data['budgetID']);
+
+            $operationalType = SubjectTypeEnum::OPERATIONAL_EXPENSE->value;
+            $economicType = SubjectTypeEnum::ECONOMIC_EXPENSE->value;
+            $incomeType = SubjectTypeEnum::INCOME->value;
+            $select = [
+                'bgt_circular_subjects.code as code',
+                'bgt_circular_subjects.name as name',
+                'bgt_circular_subjects.id',
+                'bgt_circular_subjects.parent_id',
+                'next_year_budget_item.id as next_year_budget_item_id',
+                'next_year_budget_item.proposed_amount as next_year_proposed_amount',
+                'next_year_budget_item.percentage as next_year_percentage',
+
+            ];
+            if ($request->logType == 'expense') {
+                $types = [$operationalType, $economicType];
+                $select[] = DB::raw("SUM(COALESCE(CASE WHEN bgt_circular_subjects.subject_type_id = {$operationalType} THEN acc_articles.credit_amount ELSE 0 END, 0)) - SUM(COALESCE(CASE WHEN bgt_circular_subjects.subject_type_id = {$operationalType} THEN acc_articles.debt_amount ELSE 0 END, 0)) as total_operational_amount");
+
+                $select[] = DB::raw("SUM(COALESCE(CASE WHEN bgt_circular_subjects.subject_type_id = {$economicType} THEN acc_articles.credit_amount ELSE 0 END, 0)) - SUM(COALESCE(CASE WHEN bgt_circular_subjects.subject_type_id = {$economicType} THEN acc_articles.debt_amount ELSE 0 END, 0)) as total_economic_amount");
+
+            } else {
+                $types = [$incomeType];
+                $select[] = DB::raw("SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount");
+            }
+
+            $subjectsWithLog = CircularSubject::withoutGlobalScopes()
+                ->with(['ancestors' => function ($query) {
+                    $query->withoutGlobalScopes();
+                }])
+                ->whereIntegerInRaw('bgt_circular_subjects.subject_type_id', $types)
+                ->leftJoinRelationship('account',
+                    function ($join) use ($budget) {
+                        $join->leftJoin('acc_articles', 'acc_articles.account_id', '=', 'acc_accounts.id')
+                            ->join('acc_documents', function ($join) use ($budget) {
+                                $join->on('acc_articles.document_id', '=', 'acc_documents.id')
+                                    ->where('acc_documents.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
+                                    ->where('fiscal_year_id', $budget?->fiscal_year_id)
+                                    ->where('acc_documents.ounit_id', $budget->ounit_id);
+                            })
+                            ->join('accDocument_status', function ($join) {
+                                $join->on('accDocument_status.document_id', '=', 'acc_documents.id')
+                                    ->whereRaw('accDocument_status.create_date = (
+                                                 SELECT MAX(create_date)
+                                                 FROM accDocument_status
+                                                 WHERE document_id = acc_documents.id
+                                             )');
+                            })
+                            ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                            ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+                    }
+                )
+                ->whereNotIn('bgt_circular_subjects.id', function ($query) {
+                    $query->select('bgt_circular_subjects.parent_id')
+                        ->from('bgt_circular_subjects')
+                        ->whereNotNull('bgt_circular_subjects.parent_id');
+                })
+                ->joinRelationshipUsingAlias('circularItem.budgetItem', [
+                    'budgetItem' => function ($join) use ($budget) {
+                        $join->as('next_year_budget_item')
+                            ->where('budget_id', $budget->id);
+                    },
+                ])
+                ->select($select)
+                ->groupBy(
+                    'bgt_circular_subjects.code',
+                    'bgt_circular_subjects.name',
+                    'bgt_circular_subjects.id',
+                    'bgt_circular_subjects.parent_id',
+                    'next_year_budget_item.id',
+                    'next_year_budget_item.proposed_amount',
+                    'next_year_budget_item.percentage'
+                )
+                ->get();
+            if ($request->logType == 'expense') {
+                return TafriqBudgetExpanse::collection($subjectsWithLog);
+
+            }
+            return TafriqBudgetIncome::collection($subjectsWithLog);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
+        }
+
     }
 }

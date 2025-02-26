@@ -20,6 +20,7 @@ class VillageBudgetListResource extends JsonResource
             ],
             'budget_id' => $this->budget_id,
             'village_abadiCode' => $this->village_abadicode,
+            'budgetType' => $this->isSupplementary == 0 ? "بودجه اصلی" : "بودجه متمم",
         ];
     }
 }

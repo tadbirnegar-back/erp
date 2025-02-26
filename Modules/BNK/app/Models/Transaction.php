@@ -30,6 +30,7 @@ class Transaction extends Model
         'status_id',
         'isSynced',
         'create_date',
+        'tracking_code',
     ];
     public $timestamps = false;
     protected $table = 'bnk_transactions';

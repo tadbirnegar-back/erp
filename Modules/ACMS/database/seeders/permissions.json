@@ -124,5 +124,11 @@
         "slug": "/bgt/budgets/supplementary/add",
         "moduleName": "ACMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "تفریغ بودجه",
+        "slug": "/bgt/budgets/deduction",
+        "moduleName": "ACMS",
+        "permissionTypeName": "operational"
     }
 ]

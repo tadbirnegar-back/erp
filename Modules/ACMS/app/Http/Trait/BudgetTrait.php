@@ -3,10 +3,14 @@
 namespace Modules\ACMS\app\Http\Trait;
 
 use Modules\AAA\app\Models\User;
+use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Models\Budget;
 use Modules\ACMS\app\Models\BudgetStatus;
 use Modules\ACMS\app\Models\Circular;
+use Modules\ACMS\app\Models\OunitFiscalYear;
+use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\ScriptType;
 use Modules\StatusMS\app\Models\Status;
 
 trait BudgetTrait
@@ -38,12 +42,31 @@ trait BudgetTrait
             $data = [$data];
         }
         $data = collect($data)->map(function ($item) use ($name, $circular) {
+            $ounitFiscalYear = OunitFiscalYear::with('ounit.head')->find($item['id']);
+
+            $scriptType = ScriptType::where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value)->first();
+
+            $financialManager = RecruitmentScript::join('recruitment_script_status as rss', 'recruitment_scripts.id', '=', 'rss.recruitment_script_id')
+                ->join('statuses as s', 'rss.status_id', '=', 's.id')
+                ->where('s.name', 'فعال')
+                ->where('rss.create_date', function ($subQuery) {
+
+                    $subQuery->selectRaw('MAX(create_date)')
+                        ->from('recruitment_script_status as sub_rss')
+                        ->whereColumn('sub_rss.recruitment_script_id', 'rss.recruitment_script_id');
+                })
+                ->where('script_type_id', $scriptType->id)
+                ->where('organization_unit_id', $ounitFiscalYear->ounit->id)
+                ->with(['user'])
+                ->first();
             return [
                 'name' => $name,
                 'isSupplementary' => $item['isSupplementary'] ?? false,
                 'ounitFiscalYear_id' => $item['id'],
                 'parent_id' => $item['parentID'] ?? null,
                 'circular_id' => $circular?->id,
+                'financial_manager_id' => $financialManager->user->id ?? null,
+                'ounit_head_id' => $ounitFiscalYear->ounit?->head?->id ?? null,
             ];
         });
 

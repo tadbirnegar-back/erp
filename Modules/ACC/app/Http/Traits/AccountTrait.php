@@ -28,38 +28,67 @@ trait AccountTrait
 
         $status = $this->activeAccountStatus();
 
-        $preparationData = $this->dataPreparation($data, $accountable->id, $accountTypeToInsert, $parent, $status);
+        $preparationData = $this->accountDataPreparation($data, $accountable->id, $accountTypeToInsert, $parent, $status);
         $account = Account::create($preparationData->toArray()[0]);
 
 
         return $account;
     }
 
-    public function dataPreparation(array $data, int $accountableID, string $accountableType, ?Account $parent, Status $status)
+    public function firstOrStoreAccount(array $data, ?Account $parent = null): Account
+    {
+        $accountTypeToInsert = self::$childTypeOfCurrentParent[$parent?->accountable_type];
+
+        $account = Account::where('name', $data['name'])
+            ->where('segment_code', $data['segmentCode'])
+            ->where('chain_code', $data['chainCode'])
+            ->where('ounit_id', $data['ounitID'])
+            ->where('category_id', $data['categoryID'])
+            ->where('accountable_type', $accountTypeToInsert)
+            ->first();
+
+        if ($account) {
+            return $account;
+        }
+
+        $accountable = new $accountTypeToInsert();
+        $accountable->save();
+
+        $status = $this->activeAccountStatus();
+
+        $preparationData = $this->accountDataPreparation($data, $accountable->id, $accountTypeToInsert, $parent, $status);
+        $account = Account::create($preparationData->toArray()[0]);
+
+
+        return $account;
+    }
+
+    public function accountDataPreparation(array $data, int $accountableID, string $accountableType, ?Account $parent, Status $status)
     {
         if (!isset($data[0]) || !is_array($data[0])) {
             $data = [$data];
         }
         $data = collect($data)->map(function ($item) use ($parent, $accountableID, $accountableType, $status) {
-            if ($parent) {
-                $item['categoryID'] = $parent->category_id;
-                $item['chainCode'] = $parent->chain_code . $item['segmentCode'];
-            } else {
-                $item['chainCode'] = $item['categoryID'] . $item['segmentCode'];
-            }
+//            if ($parent) {
+//                $item['categoryID'] = $parent->category_id;
+//                $item['chainCode'] = $parent->chain_code . $item['segmentCode'];
+//            }
+//            else {
+//                $item['chainCode'] = $item['categoryID'] . $item['segmentCode'];
+//            }
 
             if (isset($item['entityType']) && $item['entityType'] == CircularSubject::class) {
                 $item['chainCode'] = $item['segmentCode'];
             }
 
-            if ($accountableType === DetailAccount::class) {
-                $ounitID = $item['ounitID'];
-            } else {
-                $ounitID = null;
-            }
+//            if ($accountableType === DetailAccount::class) {
+            $ounitID = $item['ounitID'];
+//            } else {
+//                $ounitID = null;
+//            }
 
             return [
-                'name' => $item['name'],
+                'name' => convertToDbFriendly($item['name']),
                 'segment_code' => $item['segmentCode'],
                 'chain_code' => $item['chainCode'],
                 'accountable_id' => $accountableID,
