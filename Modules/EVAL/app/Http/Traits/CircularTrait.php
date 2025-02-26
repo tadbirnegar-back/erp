@@ -91,14 +91,27 @@ trait CircularTrait
     {
         $villageCount = VillageOfc::count();
 
-        $countEvals = EvalEvaluation::whereNotNull('target_ounit_id')
+        $countEvalsForTotalForm = EvalEvaluation::
+        whereNotNull('target_ounit_id')
             ->where('parent_id', null)
             ->where('eval_circular_id', $circularID)
             ->count();
 
-        dd($countEvals,);
-        $percentage=round($countEvals/count($villageCount)*100);
-        return $percentage;
+        $countEvalsForCompeleteForm = EvalEvaluation::
+            where('sum','!=',null)
+            ->where('parent_id', null)
+            ->where('eval_circular_id', $circularID)
+            ->count();
+
+        $percentageForTotalForm=round($countEvalsForTotalForm/($villageCount)*100,2).'%';
+        $percentageForCompeleteForm=round($countEvalsForCompeleteForm/($villageCount)*100,2).'%';
+
+        return [
+            'countEvals' => $countEvalsForTotalForm,
+            'percentage' => $percentageForTotalForm,
+            'countEvalsForCompeleteForm' => $countEvalsForCompeleteForm,
+            'percentageForCompeleteForm' => $percentageForCompeleteForm,
+        ];
     }
 
 
