@@ -20,12 +20,12 @@ class QuestionManagementResource extends JsonResource
             ->toArray();
 
         $groupedQuestions = collect($this->resource['questionList'])->groupBy('questionID');
-        $uniqueCourseTitles = collect($this->resource['questionList'])->pluck('courseTitle')->first();
-        $uniqueCourseDesc = collect($this->resource['questionList'])->pluck('courseDescription')->first();
+        $uniqueCourseTitles = collect($this->resource['course'])->pluck('courseTitle');
+        $uniqueCourseDesc = collect($this->resource['questionList'])->pluck('courseDescription');
 
         return [
-            'courseTitle' => $uniqueCourseTitles,
-            'courseDescription' => $uniqueCourseDesc,
+            'courseTitle' => $this->resource['course']['title'],
+            'courseDescription' => $this->resource['course']['description'],
 
             'questionsList' => $groupedQuestions->map(function ($questions) use ($existingQuestionIDs) {
                 $firstQuestion = $questions->first();
