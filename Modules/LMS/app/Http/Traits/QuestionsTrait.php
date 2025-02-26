@@ -73,21 +73,25 @@ trait QuestionsTrait
 
     public function questionList($id)
     {
+
         $status = $this->questionActiveStatus();
 
-        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
-            ->joinRelationship('chapters.allActiveLessons.questions.options')
-            ->joinRelationship('chapters.allActiveLessons.questions.repository')
-            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
-//            ->joinRelationship('chapters.allActiveLessons.status')
+        $query = Course::leftJoinRelationship('chapters.allActiveLessons.questions', function ($join) use ($status) {
+            $join->where('questions.status_id', $status->id);
+        })
+            ->leftJoinRelationship('chapters.allActiveLessons.questions.difficulty')
+            ->leftJoinRelationship('chapters.allActiveLessons.questions.options')
+            ->leftJoinRelationship('chapters.allActiveLessons.questions.repository')
+            ->leftJoinRelationship('chapters.allActiveLessons.questions.questionType')
             ->leftJoinRelationship('chapters.lessons.questions.answers.answerSheet', [
                 'chapters' => fn($join) => $join->as('chapters_alias'),
                 'lessons' => fn($join) => $join->as('lessons_alias'),
                 'answers' => fn($join) => $join->as('answers_alias'),
                 'answerSheet' => fn($join) => $join->as('answer_sheet_alias')
-
             ])
             ->select([
+                'courses.title as courseTitle',
+                'courses.description as courseDescription',
                 'questions.id as questionID',
                 'questions.title as questionTitle',
                 'question_types.name as questionTypeName',
@@ -96,15 +100,14 @@ trait QuestionsTrait
                 'options.title as optionTitle',
                 'chapters.title as chapterTitle',
                 'lessons.title as lessonTitle',
-//                'lessons_alias.title as lessonTitle',
-                'courses.title as courseTitle',
                 'options.is_correct as isCorrect',
                 'answers_alias.question_id as answerQuestionID',
             ])
             ->where('courses.id', $id)
-            ->where('questions.status_id', $status->id)
             ->get();
+
         $count = $this->count($id);
+
         return [
             'questionList' => $query,
             'count' => $count
