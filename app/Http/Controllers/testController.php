@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -20,6 +21,8 @@ class testController extends Controller
 
     public function run()
     {
+        $a = User::first();
+        dump($a);
         $status = $this->questionActiveStatus();
 
         $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')

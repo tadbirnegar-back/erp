@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
+use Modules\AAA\app\Models\User;
 use Modules\LMS\app\Http\Traits\ReportingTrait;
 use Modules\LMS\app\Models\Answers;
 use Modules\LMS\app\Models\AnswerSheet;
@@ -29,6 +30,7 @@ class ReportingController extends Controller
         }
         $answerSheetID = AnswerSheet::joinRelationship('exam.courseExams.course')
             ->orderBy('answer_sheets.start_date_time', 'desc')
+            ->where('answer_sheets.student_id', $student->student->id)
             ->value('answer_sheets.id');
 
 
