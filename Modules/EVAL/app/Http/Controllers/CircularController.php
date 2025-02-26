@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use Modules\AAA\app\Models\User;
 use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Resources\DropDownResource;
 use Modules\EVAL\app\Resources\ItemsListResource;
 
 class CircularController extends Controller
@@ -139,10 +140,17 @@ class CircularController extends Controller
         return response()->json ($this->arzyabiEnrollmentList());
     }
 
-    public function itemList()
+    public function itemList($circularID)
     {
-        $list=$this->completingItems();
+        $list=$this->completingItems($circularID);
+//        return response()->json($list);
         return ItemsListResource::make($list);
+    }
+
+    public function dropDownsToAddVariable($circularID)
+    {
+       $dropDown= $this->dropDownsOfAddVariable($circularID);
+       return response()->json($dropDown);
     }
 
 

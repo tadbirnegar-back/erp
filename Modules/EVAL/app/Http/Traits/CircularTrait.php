@@ -48,6 +48,7 @@ trait CircularTrait
                 'statuses.name as status',
                 'statuses.class_name as status_class',
                 'eval_circulars.title as title',
+                'eval_circulars.id as circularID'
 
             ])
             ->get();
@@ -166,7 +167,7 @@ trait CircularTrait
 
     public function arzyabiEnrollmentList()
     {
-       $list= EvalCircular::query()
+        $list = EvalCircular::query()
             ->joinRelationship('evalCircularStatus.status')
             ->select([
                 'statuses.name as status',
@@ -175,24 +176,24 @@ trait CircularTrait
                 'eval_circulars.expired_date as expiredDate',
 
             ])
-           ->where('statuses.name',EvalCircularStatusEnum::WAITING)
+            ->where('statuses.name', EvalCircularStatusEnum::WAITING)
             ->get();
-       return $list->map(function ($item) {
-           $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
-          $deadLine= $expiredDate ? $expiredDate->diffInDays(now()) : null;
-          return [
-              'title' => $item->title,
-              'deadline' => $deadLine,
-              'status' => $item->status,
-              'status_class' => $item->status_class,
-          ];
+        return $list->map(function ($item) {
+            $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
+            $deadLine = $expiredDate ? $expiredDate->diffInDays(now()) : null;
+            return [
+                'title' => $item->title,
+                'deadline' => $deadLine,
+                'status' => $item->status,
+                'status_class' => $item->status_class,
+            ];
 
-       });
+        });
     }
 
-    public function completingItems()
+    public function completingItems($circularID)
     {
-       return EvalCircularSection::query()
+        return EvalCircularSection::query()
             ->joinRelationship('evalCircularIndicators.evalCircularVariable')
             ->select([
                 'eval_circular_sections.title as sectionTitle',
@@ -201,9 +202,40 @@ trait CircularTrait
                 'eval_circular_variables.title as variableName',
                 'eval_circular_variables.weight as weight',
             ])
-           ->orderBy('eval_circular_sections.title')
+            ->where('eval_circular_sections.eval_circular_id', $circularID)
             ->get();
 
     }
+
+    public function dropDownsOfAddVariable($circularID)
+    {
+        $dropDown = EvalCircular::joinRelationship('evalCircularSections.evalCircularIndicators')
+            ->select([
+                'eval_circular_sections.id as sectionID',
+                'eval_circular_sections.title as title',
+                'eval_circular_indicators.title as indicatorsTitle',
+                'eval_circular_indicators.id as indicatorsID',
+            ])
+            ->where('eval_circulars.id', $circularID)
+            ->get();
+
+        $grouped = $dropDown->groupBy('sectionID')->map(function ($items, $sectionID) {
+            return (object)[
+                'sectionID' => $sectionID,
+                'section_title' => $items->first()->title,
+                'indicators' => $items->map(function ($item) {
+                    return (object)[
+                        'id' => $item->indicatorsID,
+                        'title' => trim($item->indicatorsTitle)
+                    ];
+                })->values()
+            ];
+        });
+
+        return $grouped->all();
+    }
+
+
+
 
 }
