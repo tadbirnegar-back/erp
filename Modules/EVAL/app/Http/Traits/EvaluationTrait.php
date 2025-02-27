@@ -14,6 +14,7 @@ use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
 trait EvaluationTrait
@@ -174,39 +175,117 @@ trait EvaluationTrait
     public function showPreDatas($eval)
     {
         $evalOunit = $eval->target_ounit_id;
+        $circularId = $eval->eval_circular_id;
 
-        $myQueryAsString = "with recursive `laravel_cte` as ((select `organization_units`.*, 0 as `depth`, cast(`id` as char(65535)) as `path`
-         from `organization_units` where `organization_units`.`id` in ($evalOunit))
-          union all (select `organization_units`.*, `depth` - 1 as `depth`, concat(`path`, '.', `organization_units`.`id`) from `organization_units` inner join `laravel_cte` on `laravel_cte`.`parent_id` = `organization_units`.`id`))
-           select * from `laravel_cte` where `unitable_type` != 'Modules\OUnitMS\app\Models\TownOfc'";
+        $forbiddenOunittype = [addslashes(TownOfc::class),addslashes(VillageOfc::class)];
+        $stringForbiddenOunittype = implode("','",$forbiddenOunittype);
+
+        $myQueryAsString = "WITH RECURSIVE `laravel_cte` AS (
+        (SELECT `organization_units`.*, 0 AS `depth`, CAST(`id` AS CHAR(65535)) AS `path`
+         FROM `organization_units`
+         WHERE `organization_units`.`id` = $evalOunit)
+        UNION ALL
+        (SELECT `organization_units`.*, `depth` - 1 AS `depth`, CONCAT(`path`, '.', `organization_units`.`id`)
+         FROM `organization_units`
+         INNER JOIN `laravel_cte` ON `laravel_cte`.`parent_id` = `organization_units`.`id`)
+    )
+    SELECT * FROM `laravel_cte` WHERE `unitable_type` NOT IN ('$stringForbiddenOunittype')";
 
 
-        $result = DB::table(DB::raw($myQueryAsString))
+        $myQueryAsForAncestors = "WITH RECURSIVE `laravel_cte` AS (
+        (SELECT `organization_units`.*, 0 AS `depth`, CAST(`id` AS CHAR(65535)) AS `path`
+         FROM `organization_units`
+         WHERE `organization_units`.`id` = $evalOunit)
+        UNION ALL
+        (SELECT `organization_units`.*, `depth` - 1 AS `depth`, CONCAT(`path`, '.', `organization_units`.`id`)
+         FROM `organization_units`
+         INNER JOIN `laravel_cte` ON `laravel_cte`.`parent_id` = `organization_units`.`id`)
+    )
+    SELECT * FROM `laravel_cte`";
 
+        //Get Only The Village One
+        $result=OrganizationUnit::join('users','organization_units.head_id','=','users.id')
+            ->join('persons','persons.id','=','users.person_id')
+            ->join('eval_evaluations as eval','eval.target_ounit_id','=','organization_units.id')
+            ->leftJoin('users as evaluator','evaluator.id','=','eval.evaluator_id')
+            ->leftJoin('persons as evaluator_person','evaluator_person.id','=','evaluator.person_id')
+            ->where('organization_units.id',$evalOunit)
+            ->where('eval.eval_circular_id',$circularId)
+            ->leftJoin('eval_evaluation_answers as answers', 'answers.eval_evaluation_id', '=', 'eval.id')
+            ->leftJoin('eval_circular_variables as variables', 'variables.id', '=', 'answers.eval_circular_variables_id')
+            ->leftJoin('eval_circular_indicators as indicators', 'indicators.id', '=', 'variables.eval_circular_indicator_id')
+            ->leftJoin('eval_circular_sections as sections', 'sections.id', '=', 'indicators.eval_circular_section_id')
+            ->leftJoin('village_ofcs as village_alias', 'village_alias.id', '=', 'eval.target_ounit_id')
+            ->whereColumn('eval.target_ounit_id', '=', 'eval.evaluator_ounit_id')
+            ->select([
+                'organization_units.id as ou_id',
+                'organization_units.name as ou_name',
+                'persons.display_name as head_name',
+                'eval.id as eval_id',
+                'eval.parent_id as parent_id',
+                'eval.title as eval_title',
+                'eval.sum as eval_sum',
+                'eval.average as eval_average',
+                'eval.eval_circular_id as eval_circuit_id',
+                'answers.id as answer_id',
+                'answers.value as answer_value',
+                'variables.id as variable_id',
+                'variables.title as variable_title',
+                'variables.description as variable_description',
+                'indicators.id as indicator_id',
+                'indicators.title as indicator_title',
+                'sections.id as section_id',
+                'sections.title as section_title',
+                'village_alias.abadi_code as village_abadi_code',
+                'evaluator_person.display_name as evaluator_name',
+            ])
+            ->withoutGlobalScopes()
+        ->get();
 
-            ->get();
+        //Get the Ancestors
+        $ancestors=DB::table(DB::raw("($myQueryAsString) as ounits_alias"))
+            ->leftJoin('eval_evaluations as eval', function ($join) use ($circularId) {
+                $join->on('ounits_alias.id', '=','eval.evaluator_ounit_id')
+                    ->where('eval.eval_circular_id',$circularId);
+            })
+            ->leftJoin('users','ounits_alias.head_id','=','users.id')
+            ->leftJoin('persons','persons.id','=','users.person_id')
+            ->leftJoin('eval_evaluations','eval_evaluations.evaluator_ounit_id','=','ounits_alias.id')
+            ->leftJoin('users as evaluator','evaluator.id','=','eval_evaluations.evaluator_id')
+            ->leftJoin('persons as evaluator_person','evaluator_person.id','=','evaluator.person_id')
+            ->leftJoin('eval_evaluation_answers as answers', 'answers.eval_evaluation_id', '=', 'eval.id')
+            ->leftJoin('eval_circular_variables as variables', 'variables.id', '=', 'answers.eval_circular_variables_id')
+            ->leftJoin('eval_circular_indicators as indicators', 'indicators.id', '=', 'variables.eval_circular_indicator_id')
+            ->leftJoin('eval_circular_sections as sections', 'sections.id', '=', 'indicators.eval_circular_section_id')
+            ->leftJoin('village_ofcs as village_alias', 'village_alias.id', '=', 'eval.target_ounit_id')
 
-        return DB::select($myQueryAsString);
+            ->select([
+                'ounits_alias.id as ou_id',
+                'ounits_alias.unitable_type as ou_type',
+                'ounits_alias.name as ou_name',
+                'persons.display_name as head_name',
+                'evaluator_person.display_name as evaluator_name',
+                'eval.id as eval_id',
+                'eval.parent_id as parent_id',
+                'eval.title as eval_title',
+                'eval.sum as eval_sum',
+                'eval.average as eval_average',
+                'eval.eval_circular_id as eval_circuit_id',
+                'answers.id as answer_id',
+                'answers.value as answer_value',
+                'variables.id as variable_id',
+                'variables.title as variable_title',
+                'variables.description as variable_description',
+                'indicators.id as indicator_id',
+                'indicators.title as indicator_title',
+                'sections.id as section_id',
+                'sections.title as section_title',
+                'village_alias.abadi_code as village_abadi_code',
+                'evaluator_person.display_name as evaluator_name',
+            ])
+        ->get();
 
-        $ounit = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
-            $query->whereIn('unitable_type', [VillageOfc::class, DistrictOfc::class, CityOfc::class, StateOfc::class]);
-        }])->find($evalOunit);
-
-        $villageId = $ounit->ancestorsAndSelf->firstWhere('unitable_type', VillageOfc::class)?->id;
-        $districtId = $ounit->ancestorsAndSelf->firstWhere('unitable_type', DistrictOfc::class)?->id;
-        $cityId = $ounit->ancestorsAndSelf->firstWhere('unitable_type', CityOfc::class)?->id;
-        $stateId = $ounit->ancestorsAndSelf->firstWhere('unitable_type', StateOfc::class)?->id;
-
-        $organs = [
-            'village' => $villageId,
-            'district' => $districtId,
-            'city' => $cityId,
-            'state' => $stateId
-        ];
-
-        $villagerAnswers = $this->getVillageAnswers($eval->id);
-        $districtAnswers = $this->getDistrictAnswers($organs, $eval);
-        return ["village" => $villagerAnswers, "district" => $districtAnswers];
+        return ["village" => $result, "ancestors" => $ancestors , "ounits" => DB::select($myQueryAsForAncestors)];
     }
 
     private function getDistrictAnswers($organs, $eval)

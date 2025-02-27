@@ -71,6 +71,7 @@ class EvaluationController extends Controller
     }
     public function revisingEvaluationPreData($id)
     {
+        $user = Auth::user();
         $eval = EvalEvaluation::find($id);
         $preDatas = $this-> showPreDatas($eval);
         return response() -> json($preDatas);
