@@ -11,6 +11,7 @@ use Modules\EVAL\app\Models\EvalCircularSection;
 use Modules\EVAL\app\Models\EvalCircularStatus;
 use Modules\EVAL\app\Models\EvalCircularVariable;
 use Modules\EVAL\app\Models\EvalEvaluation;
+use Modules\EvalMS\app\Models\Evaluation;
 use Modules\LMS\app\Models\OucProperty;
 use Modules\LMS\app\Models\OucPropertyValue;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -183,14 +184,14 @@ trait CircularTrait
 
     public function EvaluationCompletedList()
     {
-        $list = EvalCircular::query()
-            ->joinRelationship('evalCircularStatus.status')
+        $list = EvalEvaluation::query()
+            ->joinRelationship('EvalEvaluationStatus.status')
             ->select([
-                'eval_circulars.id as id',
+                'eval_evaluations.id as id',
                 'statuses.name as status',
                 'statuses.class_name as status_class',
-                'eval_circulars.title as title',
-                'eval_circulars.expired_date as expiredDate',
+                'eval_evaluations.title as title',
+                'eval_evaluations.expired_date as expiredDate',
 
             ])
             ->where('statuses.name', EvalCircularStatusEnum::WAITING)
