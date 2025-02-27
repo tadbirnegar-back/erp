@@ -145,9 +145,8 @@ trait CircularTrait
         ];
     }
 
-    public function circularEdit($circularID, $data)
+    public function circularEdit($circularID, $data,$user)
     {
-//        dd($data);
         $circular = EvalCircular::where('id', $circularID)->first();
         $updateData = [
             'title' => $data['title'] ?? $circular->title,
@@ -155,6 +154,7 @@ trait CircularTrait
             'maximum_value' => $data['maximumValue'] ?? $circular->maximum_value,
             'file_id' => $data['fileID'] ?? $circular->file_id,
             'created_date' => now(),
+            'creator_id' => $user->id,
             'expired_date' => $data['expiredDate']? convertPersianToGregorianBothHaveTimeAndDont($data['expiredDate']) : null,
 
         ];
@@ -181,7 +181,7 @@ trait CircularTrait
 
     }
 
-    public function arzyabiEnrollmentList()
+    public function EvaluationCompletedList()
     {
         $list = EvalCircular::query()
             ->joinRelationship('evalCircularStatus.status')

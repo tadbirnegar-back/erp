@@ -7,6 +7,7 @@ use DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Models\EvalCircular;
@@ -21,7 +22,7 @@ class CircularController extends Controller
     public function create(Request $request)
     {
         try {
-            $user = User::find(1889);
+            $user = Auth::user();
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'
@@ -72,7 +73,7 @@ class CircularController extends Controller
         $data = $request->all();
         $list = $this->CircularsList($data);
 
-            return new CircularFirstListResource($list);
+        return response()->json(new CircularFirstListResource($list));
 
     }
 
@@ -84,17 +85,23 @@ class CircularController extends Controller
     public function editCircular(Request $request, $circularID)
     {
         try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'message' => 'کاربر مورد نظر یافت نشد'
+                ], 404);
+            }
 
             DB::beginTransaction();
             $data = $request->all();
 
-            $editCircular = $this->circularEdit($circularID, $data);
+            $editCircular = $this->circularEdit($circularID, $data,$user);
 
             if ($editCircular) {
                 DB::commit();
                 return response()->json([
                     'message' => 'بخشنامه با موفقیت ویرایش شد',
-                    'id'=>$circularID
+                    'id' => $circularID
                 ], 201);
             } else {
                 DB::rollBack();
@@ -140,15 +147,15 @@ class CircularController extends Controller
 
     }
 
-    public function arzyabiList()
+    public function evaluationList()
     {
-        return response()->json($this->arzyabiEnrollmentList());
+        return response()->json($this->EvaluationCompletedList());
     }
 
     public function itemList($circularID)
     {
         $list = $this->completingItems($circularID);
-//        return response()->json($list);
+
         return ItemsListResource::make($list);
     }
 
