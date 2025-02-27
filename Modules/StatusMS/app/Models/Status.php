@@ -45,4 +45,6 @@ class Status extends Model
     {
         return $this->belongsToMany(Order::class, 'status_order', 'status_id', 'order_id');
     }
+
+
 }

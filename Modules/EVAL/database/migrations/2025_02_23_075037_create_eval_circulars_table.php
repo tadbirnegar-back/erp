@@ -13,13 +13,13 @@ return new class extends Migration {
         Schema::create('eval_circulars', function (Blueprint $table) {
             $table->id();
             $table->longText('description');
-            $table->string('title');
+            $table->string('title')->fulltext();
             $table->unsignedBigInteger('file_id');
             $table->boolean('is_optional')->default(false);
             $table->integer('maximum_value');
             $table->unsignedBigInteger('creator_id');
-            $table->dateTime('create_date');
-            $table->dateTime('expired_date');
+            $table->dateTime('create_date')->nullable();
+            $table->dateTime('expired_date')->nullable();
 
             $table->foreign('file_id')->references('id')
                 ->on('files')
