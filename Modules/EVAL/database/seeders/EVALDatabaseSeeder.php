@@ -11,8 +11,9 @@ class EVALDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-         $this->call([
-             EvalCircularStatusSeeder::class,
-         ]);
+        $this->call([
+            EvalStatusSeeder::class,
+            EvalCircularStatusSeeder::class,
+        ]);
     }
 }

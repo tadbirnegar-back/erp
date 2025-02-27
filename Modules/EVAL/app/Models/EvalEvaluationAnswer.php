@@ -5,10 +5,11 @@ namespace Modules\EVAL\app\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\EVAL\Database\factories\EvalEvaluationAnswersFactory;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class EvalEvaluationAnswer extends Model
 {
-    use HasFactory;
+    use HasFactory, HasRelationships;
 
     /**
      * The attributes that are mass assignable.
@@ -32,4 +33,21 @@ class EvalEvaluationAnswer extends Model
     {
         return $this->belongsTo(EvalCircularVariable::class, 'eval_circular_variables_id', 'id');
     }
+
+    public function evalCircularIndicator()
+    {
+        return $this->hasOneDeep(
+            EvalCircularIndicator::class,
+            [EvalCircularVariable::class],
+            [
+                'id',
+                'id'
+            ],
+            [
+                'eval_circular_variables_id',
+                'eval_circular_indicator_id'
+            ]
+        );
+    }
+
 }

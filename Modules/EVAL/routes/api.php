@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\EVAL\app\Http\Controllers\CircularController;
 
+use Modules\EVAL\app\Http\Controllers\EvaluationController;
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -15,9 +16,14 @@ use Modules\EVAL\app\Http\Controllers\CircularController;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('eval', fn (Request $request) => $request->user())->name('eval');
+Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 });
+Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
+});
+Route::get('/eval/evaluation/pre-view/{id}', [EvaluationController::class, 'preViewEvaluation']);
+Route::get('/eval/evaluation/start/{id}', [EvaluationController::class, 'evaluationStart']);
+Route::post('/eval/evaluation/done/{id}', [EvaluationController::class, 'evaluationDone']);
+Route::get('/eval/evaluation/revising/{id}' , [EvaluationController::class, 'revisingEvaluationPreData']);
 Route::post('eval/add/circular',[CircularController::class,'create']);
 Route::post('eval/circular/list',[CircularController::class,'circularSearch']);
 Route::get('eval/single/{id}',[CircularController::class,'single']);

@@ -16,7 +16,8 @@ class EvalEvaluationStatus extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+
+    protected $table = 'evalevaluation_status';
 
     public $timestamps = false;
 
