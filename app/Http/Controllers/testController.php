@@ -3,18 +3,15 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
-use Modules\EVAL\app\Models\EvalCircular;
-use Modules\EVAL\app\Models\EvalCircularSection;
-use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\Course;
-use Modules\OUnitMS\app\Models\VillageOfc;
 
 
 class testController extends Controller
@@ -24,21 +21,20 @@ class testController extends Controller
 
     public function run()
     {
-        $circular = EvalCircular::find(1);
-        $circularID =  $circular->id;
+        $a = User::first();
+        dump($a);
+        $status = $this->questionActiveStatus();
 
-        $villageCount = VillageOfc::count();
-
-        $countEvals = EvalEvaluation::whereNotNull('target_ounit_id')
-            ->where('parent_id', null)
-            ->where('eval_circular_id', $circularID)
-            ->count();
-
-        dd($countEvals,);
-        $percentage=round($countEvals/count($villageCount)*100);
-        return $percentage;
-
-
+        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
+            ->joinRelationship('chapters.allActiveLessons.questions.options')
+            ->joinRelationship('chapters.allActiveLessons.questions.repository')
+            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
+            ->select([
+                'questions.id as QID',
+                'lessons.title as lesson title'
+            ])->where('questions.status_id', $status->id)
+            ->get();
+        return $query;
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);

@@ -30,7 +30,7 @@ class EvalCircularVariable extends Model
 
     public function evalVariableTargets()
     {
-        return $this->hasMany(EvalVariableTarget::class, 'ouc_property_value_id', 'id');
+        return $this->hasMany(EvalVariableTarget::class, 'eval_circular_variables_id', 'id');
     }
 
     public function files()
