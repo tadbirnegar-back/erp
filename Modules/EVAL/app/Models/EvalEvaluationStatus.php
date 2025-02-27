@@ -16,6 +16,15 @@ class EvalEvaluationStatus extends Model
      * The attributes that are mass assignable.
      */
 
+    protected $fillable = [
+        'status_id',
+        'creator_id',
+        'eval_evaluation_id',
+        'description',
+        'created_at',
+        'updated_at',
+        'id',
+    ];
 
     protected $table = 'evalevaluation_status';
 

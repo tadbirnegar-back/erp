@@ -24,6 +24,7 @@ Route::get('/eval/evaluation/pre-view/{id}', [EvaluationController::class, 'preV
 Route::get('/eval/evaluation/start/{id}', [EvaluationController::class, 'evaluationStart']);
 Route::post('/eval/evaluation/done/{id}', [EvaluationController::class, 'evaluationDone']);
 Route::get('/eval/evaluation/revising/{id}' , [EvaluationController::class, 'revisingEvaluationPreData']);
+Route::post('/eval/evaluation/revising/{id}' , [EvaluationController::class, 'revising']);
 Route::post('eval/add/circular',[CircularController::class,'create']);
 Route::post('eval/circular/list',[CircularController::class,'circularSearch']);
 Route::get('eval/single/{id}',[CircularController::class,'single']);
