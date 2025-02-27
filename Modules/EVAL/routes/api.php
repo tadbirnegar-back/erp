@@ -24,6 +24,6 @@ Route::get('eval/single/{id}',[CircularController::class,'single']);
 Route::get('eval/last/circular/{id}',[CircularController::class,'showLastCircularData']);
 Route::get('eval/update/circular/{id}',[CircularController::class,'editCircular']);
 Route::get('eval/delete/circular/{id}',[CircularController::class,'circularDelete']);
-Route::post('eval/arzyabi/list',[CircularController::class,'evaluationList']);
+Route::post('eval/evaluation/list',[CircularController::class,'evaluationList']);
 Route::get('eval/items/list/{id}',[CircularController::class,'itemList']);
 Route::get('eval/variable/drop-down/list/{id}',[CircularController::class,'dropDownsToAddVariable']);

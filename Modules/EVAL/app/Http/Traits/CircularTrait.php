@@ -90,6 +90,8 @@ trait CircularTrait
 
     public function singleCircularMain($circularID)
     {
+            //        counting VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
+
         $villageCount = VillageOfc::count();
 
         $countEvalsForTotalForm = EvalEvaluation::
@@ -103,6 +105,8 @@ trait CircularTrait
             ->where('parent_id', null)
             ->where('eval_circular_id', $circularID)
             ->count();
+
+            //        calculate percentage
 
         $percentageForTotalForm=round($countEvalsForTotalForm/($villageCount)*100,2).'%';
         $percentageForCompeleteForm=round($countEvalsForCompeleteForm/($villageCount)*100,2).'%';
@@ -118,6 +122,8 @@ trait CircularTrait
 
     public function lastDataForEditCircular($circularID)
     {
+                //        show last data for edit
+
         $query = EvalCircular::
         joinRelationship('statuses')
             ->joinRelationship('file.extension')
