@@ -662,10 +662,13 @@ trait ReportingTrait
         $ans = Question::joinRelationship('answers.answerSheet.status')
             ->joinRelationship('answers.answerSheet.exam.courseExams.course')
             ->joinRelationship('repository')
-            ->select('answer_sheets.score as scores')
+            ->select(['answer_sheets.score as scores',
+                'answer_sheets.student_id as student_id',
+            ])
             ->where('repositories.id', $repo)
             ->where('courses.id', $courseID);
-        $averageScore = $ans->get()->pluck('scores')->avg();
+        $averageScore = $ans->distinct('answer_sheets.student_id')->get()->pluck('scores')->avg();
+
 
         return [
             'average' => $averageScore,
