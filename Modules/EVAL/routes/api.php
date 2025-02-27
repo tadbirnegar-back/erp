@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\EVAL\app\Http\Controllers\CircularController;
+
 use Modules\EVAL\app\Http\Controllers\EvaluationController;
 /*
     |--------------------------------------------------------------------------
@@ -22,3 +24,12 @@ Route::get('/eval/evaluation/pre-view/{id}', [EvaluationController::class, 'preV
 Route::get('/eval/evaluation/start/{id}', [EvaluationController::class, 'evaluationStart']);
 Route::post('/eval/evaluation/done/{id}', [EvaluationController::class, 'evaluationDone']);
 Route::get('/eval/evaluation/revising/{id}' , [EvaluationController::class, 'revisingEvaluationPreData']);
+Route::post('eval/add/circular',[CircularController::class,'create']);
+Route::post('eval/circular/list',[CircularController::class,'circularSearch']);
+Route::get('eval/single/{id}',[CircularController::class,'single']);
+Route::get('eval/last/circular/{id}',[CircularController::class,'showLastCircularData']);
+Route::get('eval/update/circular/{id}',[CircularController::class,'editCircular']);
+Route::get('eval/delete/circular/{id}',[CircularController::class,'circularDelete']);
+Route::post('eval/arzyabi/list',[CircularController::class,'evaluationList']);
+Route::get('eval/items/list/{id}',[CircularController::class,'itemList']);
+Route::get('eval/variable/drop-down/list/{id}',[CircularController::class,'dropDownsToAddVariable']);

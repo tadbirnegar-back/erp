@@ -13,6 +13,7 @@ class EVALDatabaseSeeder extends Seeder
     {
         $this->call([
             EvalStatusSeeder::class,
+            EvalCircularStatusSeeder::class,
         ]);
     }
 }
