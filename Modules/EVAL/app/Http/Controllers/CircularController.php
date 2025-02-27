@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use Modules\AAA\app\Models\User;
 use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Resources\CircularFirstListResource;
 use Modules\EVAL\app\Resources\DropDownResource;
 use Modules\EVAL\app\Resources\ItemsListResource;
 
@@ -34,7 +35,7 @@ class CircularController extends Controller
                 'description' => 'required|string|max:255',
                 'maximumValue' => 'required|integer|min:1',
                 'fileID' => 'required|integer|exists:files,id',
-                'deadline' => 'required|integer',
+                'expiredDate' => 'required|date',
             ]);
 
             $circular = $this->AddCircular($validated, $user);
@@ -69,7 +70,9 @@ class CircularController extends Controller
     public function circularSearch(Request $request)
     {
         $data = $request->all();
-        return response()->json($this->CircularsList($data));
+        $list = $this->CircularsList($data);
+
+            return new CircularFirstListResource($list);
 
     }
 
@@ -83,13 +86,15 @@ class CircularController extends Controller
         try {
 
             DB::beginTransaction();
-            $data=$request->all();
-            $editCircular = $this->circularEdit($circularID,$data);
+            $data = $request->all();
+
+            $editCircular = $this->circularEdit($circularID, $data);
 
             if ($editCircular) {
                 DB::commit();
                 return response()->json([
                     'message' => 'بخشنامه با موفقیت ویرایش شد',
+                    'id'=>$circularID
                 ], 201);
             } else {
                 DB::rollBack();
@@ -112,7 +117,7 @@ class CircularController extends Controller
 
         try {
 
-            $delete=$this->deleteCircular($circularID);
+            $delete = $this->deleteCircular($circularID);
 
             if ($delete) {
                 DB::commit();
@@ -137,20 +142,20 @@ class CircularController extends Controller
 
     public function arzyabiList()
     {
-        return response()->json ($this->arzyabiEnrollmentList());
+        return response()->json($this->arzyabiEnrollmentList());
     }
 
     public function itemList($circularID)
     {
-        $list=$this->completingItems($circularID);
+        $list = $this->completingItems($circularID);
 //        return response()->json($list);
         return ItemsListResource::make($list);
     }
 
     public function dropDownsToAddVariable($circularID)
     {
-       $dropDown= $this->dropDownsOfAddVariable($circularID);
-       return response()->json($dropDown);
+        $dropDown = $this->dropDownsOfAddVariable($circularID);
+        return response()->json($dropDown);
     }
 
 

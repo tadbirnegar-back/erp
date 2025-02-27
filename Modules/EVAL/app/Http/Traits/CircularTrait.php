@@ -18,7 +18,6 @@ trait CircularTrait
     public function AddCircular($data, $user)
     {
         $status = Status::where('model', EvalCircular::class)->where('name', EvalCircularStatusEnum::PISHNEVIS->value)->first();
-        $expiredDate = now()->addDays($data['deadline']);
         $circular = EvalCircular::create([
             'title' => $data['title'],
             'description' => $data['description'],
@@ -49,13 +48,15 @@ trait CircularTrait
             ->select([
                 'statuses.name as status',
                 'statuses.class_name as status_class',
-                'eval_circulars.title as title',
+                'eval_circulars.title as name',
                 'eval_circulars.id as circularID'
 
             ])
             ->get();
 
-        return $query->flatten();
+
+
+        return $query;
     }
 
     public function singleCircularSidebar($circularID)
@@ -64,7 +65,7 @@ trait CircularTrait
             ->joinRelationship('file.extension')
             ->select([
                 'eval_circulars.id as id',
-                'eval_circulars.title as title',
+                'eval_circulars.title as name',
                 'eval_circulars.description as description',
                 'eval_circulars.maximum_value as MaximumValue',
                 'eval_circulars.file_id as fileID',
@@ -76,7 +77,7 @@ trait CircularTrait
                 'extensions.name as extensionName',
             ])
             ->where('eval_circulars.id', $circularID)
-            ->latest('id')
+//            ->latest('id')
             ->get();
         $completedCircularCount = $this->singleCircularMain($circularID);
         return [
@@ -122,7 +123,7 @@ trait CircularTrait
             ->joinRelationship('file.extension')
             ->select([
                 'eval_circulars.id as id',
-                'eval_circulars.title as title',
+                'eval_circulars.title as name',
                 'eval_circulars.description as description',
                 'eval_circulars.maximum_value as MaximumValue',
                 'eval_circulars.file_id as fileID',
@@ -146,19 +147,17 @@ trait CircularTrait
 
     public function circularEdit($circularID, $data)
     {
+//        dd($data);
         $circular = EvalCircular::where('id', $circularID)->first();
-
         $updateData = [
             'title' => $data['title'] ?? $circular->title,
             'description' => $data['description'] ?? $circular->description,
             'maximum_value' => $data['maximumValue'] ?? $circular->maximum_value,
             'file_id' => $data['fileID'] ?? $circular->file_id,
-        ];
+            'created_date' => now(),
+            'expired_date' => $data['expiredDate']? convertPersianToGregorianBothHaveTimeAndDont($data['expiredDate']) : null,
 
-        // Add expired_date only if 'deadline' is provided
-        if (isset($data['deadline'])) {
-            $updateData['expired_date'] = now()->addDays($data['deadline']);
-        }
+        ];
 
         $circular->update($updateData);
 

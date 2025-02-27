@@ -20,7 +20,7 @@ class EvalCircular extends Model
 
     protected $fillable = [
         'id',
-        'created_date',
+        'create_date',
         'creator_id',
         'description',
         'expired_date',
