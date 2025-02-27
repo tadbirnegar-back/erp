@@ -1,0 +1,24 @@
+[
+    {
+        "name": "پیش نویس",
+        "className": "warning"
+    },
+    {
+        "name": "تکمیل شده",
+        "className": "success"
+    },
+    {
+        "name": "ابلاغ شده",
+        "className": "success"
+    },
+    {
+        "name": "حذف شده",
+        "className": "success"
+    },
+    {
+        "name": "در انتظار تکمیل",
+        "className": "success"
+    }
+
+
+]

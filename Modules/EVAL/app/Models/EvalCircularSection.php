@@ -29,6 +29,6 @@ class EvalCircularSection extends Model
 
     public function evalCircularIndicators()
     {
-        return $this->hasMany(EvalCircularIndicator::class, 'eval_circular_section', 'id');
+        return $this->hasMany(EvalCircularIndicator::class, 'eval_circular_section_id', 'id');
     }
 }
