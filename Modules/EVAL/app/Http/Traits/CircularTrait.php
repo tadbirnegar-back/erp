@@ -6,9 +6,13 @@ use Carbon\Carbon;
 use GuzzleHttp\Promise\Create;
 use Modules\EVAL\app\Models\EvalCircular;
 use \Modules\EVAL\app\Http\Enums\EvalCircularStatusEnum;
+use Modules\EVAL\app\Models\EvalCircularIndicator;
 use Modules\EVAL\app\Models\EvalCircularSection;
 use Modules\EVAL\app\Models\EvalCircularStatus;
+use Modules\EVAL\app\Models\EvalCircularVariable;
 use Modules\EVAL\app\Models\EvalEvaluation;
+use Modules\LMS\app\Models\OucProperty;
+use Modules\LMS\app\Models\OucPropertyValue;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\StatusMS\app\Models\Status;
 
@@ -17,7 +21,7 @@ trait CircularTrait
 
     public function AddCircular($data, $user)
     {
-        $status = Status::where('model', EvalCircular::class)->where('name', EvalCircularStatusEnum::PISHNEVIS->value)->first();
+        $status = $this->pishnevisCircularStatus();
         $circular = EvalCircular::create([
             'title' => $data['title'],
             'description' => $data['description'],
@@ -25,7 +29,7 @@ trait CircularTrait
             'file_id' => $data['fileID'],
             'creator_id' => $user->id,
             'create_date' => now(),
-            'expired_date' => $data['expiredDate']? convertPersianToGregorianBothHaveTimeAndDont($data['expiredDate']) : null,
+            'expired_date' => $data['expiredDate'] ? convertPersianToGregorianBothHaveTimeAndDont($data['expiredDate']) : null,
         ]);
         EvalCircularStatus::create([
             'status_id' => $status->id,
@@ -39,7 +43,7 @@ trait CircularTrait
 
     public function CircularsList(array $data = [])
     {
-        $searchTerm = $data['title'] ?? null;
+        $searchTerm = $data['name'] ?? null;
 
         $query = EvalCircular::whereRaw('MATCH(title) AGAINST(?)', [$searchTerm])
             ->orWhere('title', 'LIKE', '%' . $searchTerm . '%')
@@ -53,7 +57,6 @@ trait CircularTrait
 
             ])
             ->get();
-
 
 
         return $query;
@@ -72,6 +75,7 @@ trait CircularTrait
                 'eval_circulars.create_date as createDate',
                 'eval_circulars.expired_date as expiredDate',
                 'statuses.name as statusName',
+                'statuses.class_name as className',
                 'files.slug as downloadUrl',
                 'files.size as fileSize',
                 'extensions.name as extensionName',
@@ -90,7 +94,7 @@ trait CircularTrait
 
     public function singleCircularMain($circularID)
     {
-            //        counting VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
+        //        counting VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
 
         $villageCount = VillageOfc::count();
 
@@ -101,15 +105,15 @@ trait CircularTrait
             ->count();
 
         $countEvalsForCompeleteForm = EvalEvaluation::
-            where('sum','!=',null)
+        where('sum', '!=', null)
             ->where('parent_id', null)
             ->where('eval_circular_id', $circularID)
             ->count();
 
-            //        calculate percentage
+        //        calculate percentage
 
-        $percentageForTotalForm=round($countEvalsForTotalForm/($villageCount)*100,2).'%';
-        $percentageForCompeleteForm=round($countEvalsForCompeleteForm/($villageCount)*100,2).'%';
+        $percentageForTotalForm = round($countEvalsForTotalForm / ($villageCount) * 100, 2) ;
+        $percentageForCompeleteForm = round($countEvalsForCompeleteForm / ($villageCount) * 100, 2);
 
         return [
             'countEvals' => $countEvalsForTotalForm,
@@ -122,11 +126,8 @@ trait CircularTrait
 
     public function lastDataForEditCircular($circularID)
     {
-                //        show last data for edit
-
         $query = EvalCircular::
-        joinRelationship('statuses')
-            ->joinRelationship('file.extension')
+            joinRelationship('file.extension')
             ->select([
                 'eval_circulars.id as id',
                 'eval_circulars.title as name',
@@ -140,18 +141,16 @@ trait CircularTrait
             ->where('eval_circulars.id', $circularID)
             ->first();
 
-        $createDate = Carbon::parse($query->createDate);
-        $expiredDate = $query->expiredDate ? Carbon::parse($query->expiredDate) : null;
-        $deadline = $expiredDate ? $expiredDate->diffInDays($createDate) : null;
+        $expiredDate = Carbon::parse($query->expiredDate);
 
 
         return [
-            'data' => $query,
-            'deadline' => $deadline,
+            $query,
+            $expiredDate
         ];
     }
 
-    public function circularEdit($circularID, $data,$user)
+    public function circularEdit($circularID, $data, $user)
     {
         $circular = EvalCircular::where('id', $circularID)->first();
         $updateData = [
@@ -161,7 +160,7 @@ trait CircularTrait
             'file_id' => $data['fileID'] ?? $circular->file_id,
             'created_date' => now(),
             'creator_id' => $user->id,
-            'expired_date' => $data['expiredDate']? convertPersianToGregorianBothHaveTimeAndDont($data['expiredDate']) : null,
+            'expired_date' => $data['expiredDate'] ? convertPersianToGregorianBothHaveTimeAndDont($data['expiredDate']) : null,
 
         ];
 
@@ -172,18 +171,13 @@ trait CircularTrait
 
     public function deleteCircular($circularID)
     {
-        $circular = EvalCircularStatus::where('eval_circular_id', $circularID)->first();
-
-        $deletedStatus = Status::where('model', EvalCircular::class)
-            ->where('name', EvalCircularStatusEnum::DELETED->value)
-            ->first();
-
-        $circular->where('eval_circular_id', $circularID)->update([
-            'status_id' => $deletedStatus->id,
-            'updated_at' => now(),
+        $deletedStatus=$this->deletedCircularStatus();
+        $update=EvalCircularStatus::updateOrCreate([
+            'eval_circular_id'=>$circularID,
+            'status_id'=>$deletedStatus->id,
+            'updated_at'=>now(),
         ]);
-        return $circular;
-
+        return $update;
 
     }
 
@@ -192,6 +186,7 @@ trait CircularTrait
         $list = EvalCircular::query()
             ->joinRelationship('evalCircularStatus.status')
             ->select([
+                'eval_circulars.id as id',
                 'statuses.name as status',
                 'statuses.class_name as status_class',
                 'eval_circulars.title as title',
@@ -229,7 +224,7 @@ trait CircularTrait
 
     }
 
-    public function dropDownsOfAddVariable($circularID)
+    public function requirementOfAddVariable($circularID)
     {
         $dropDown = EvalCircular::joinRelationship('evalCircularSections.evalCircularIndicators')
             ->select([
@@ -255,6 +250,59 @@ trait CircularTrait
         });
 
         return $grouped->all();
+    }
+
+    public function addVariableSection($circularID,$data)
+    {
+        $section= EvalCircularSection::create([
+            'title' => $data['name'],
+            'eval_circular_id' => $circularID,
+
+        ]);
+
+        $indicator= EvalCircularIndicator::create([
+            'title' => $data['name'],
+            'eval_circular_section_id' => $section->id,
+            'coefficient' => $data['coefficient'],
+            'is_correct' => $data['isCorrect'],
+        ]);
+        $variable = EvalCircularVariable::create([
+            'title' => $data['name'],
+            'eval_circular_indicator_id' => $indicator->id,
+            'weight' => $data['weight'],
+            'description' => $data['description'],
+        ]);
+        return $variable;
+    }
+
+    public function listing($data)
+    {
+        $ids = json_decode($data['ids']);
+        $properties = OucProperty::whereIn('ounit_cat_id' , $ids)->select('id' , 'name')->get();
+
+        $valueID = json_decode($data['valueID']);
+        $propertyValues = OucPropertyValue::where('ouc_property_id' , $valueID)->select('id' , 'value')->get();
+        return[
+            'properties' => $properties,
+            'propertyValues' => $propertyValues
+        ];
+
+    }
+
+
+
+    public function deletedCircularStatus()
+    {
+        return  Status::where('model',EvalCircular::class)
+            ->where('name',EvalCircularStatusEnum::DELETED->value)
+            ->first();
+    }
+
+    public function pishnevisCircularStatus()
+    {
+        return Status::where('model', EvalCircular::class)
+            ->where('name', EvalCircularStatusEnum::PISHNEVIS->value)
+            ->first();
     }
 
 

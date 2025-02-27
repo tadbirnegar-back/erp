@@ -14,6 +14,8 @@ use Modules\EVAL\app\Models\EvalCircular;
 use Modules\EVAL\app\Resources\CircularFirstListResource;
 use Modules\EVAL\app\Resources\DropDownResource;
 use Modules\EVAL\app\Resources\ItemsListResource;
+use Modules\EVAL\app\Resources\LastDataResource;
+use Modules\EVAL\app\Resources\PropertiesAndvaluesResource;
 
 class CircularController extends Controller
 {
@@ -30,14 +32,9 @@ class CircularController extends Controller
             }
 
             DB::beginTransaction();
+            $validated=$request->all();
 
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'required|string|max:255',
-                'maximumValue' => 'required|integer|min:1',
-                'fileID' => 'required|integer|exists:files,id',
-                'expiredDate' => 'required|date',
-            ]);
+
 
             $circular = $this->AddCircular($validated, $user);
 
@@ -79,7 +76,8 @@ class CircularController extends Controller
 
     public function showLastCircularData($circularID)
     {
-        return response()->json($this->lastDataForEditCircular($circularID));
+      $list=  $this->lastDataForEditCircular($circularID);
+      return response()->json(new LastDataResource($list));
     }
 
     public function editCircular(Request $request, $circularID)
@@ -94,6 +92,7 @@ class CircularController extends Controller
 
             DB::beginTransaction();
             $data = $request->all();
+            return response()->json($request);
 
             $editCircular = $this->circularEdit($circularID, $data,$user);
 
@@ -161,9 +160,21 @@ class CircularController extends Controller
 
     public function dropDownsToAddVariable($circularID)
     {
-        $dropDown = $this->dropDownsOfAddVariable($circularID);
+        $dropDown = $this->requirementOfAddVariable($circularID);
         return response()->json($dropDown);
     }
+
+    public function test(Request $request)
+    {
+        $data = $request->all();
+        $list=$this->listing($data);
+        return response()->json($list);
+        return PropertiesAndvaluesResource::collection($list);
+
+    }
+
+
+
 
 
 }
