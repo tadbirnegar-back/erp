@@ -71,7 +71,7 @@ class EvaluationController extends Controller
             $this->setAnswers($id, $answers);
             $this->calculateEvaluation($id, $user);
             DB::commit();
-            return response()->json(['message' => 'ارزیابی شما با موفقیت ثبت شد.']);
+            return response()->json(['message' => 'ارزیابی شما با موفقیت ثبت شد.'] , 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['message' => "متاسفانه ارزیابی شما ثبت نشد."], 403);

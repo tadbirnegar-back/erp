@@ -12,7 +12,8 @@ use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\Course;
-
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 class testController extends Controller
 {
@@ -21,20 +22,30 @@ class testController extends Controller
 
     public function run()
     {
-        $a = User::first();
-        dump($a);
-        $status = $this->questionActiveStatus();
 
-        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
-            ->joinRelationship('chapters.allActiveLessons.questions.options')
-            ->joinRelationship('chapters.allActiveLessons.questions.repository')
-            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
-            ->select([
-                'questions.id as QID',
-                'lessons.title as lesson title'
-            ])->where('questions.status_id', $status->id)
+        //Some Random Code to Test my larvel debug bar
+
+        $village = VillageOfc::query()
+            ->join('organization_units as ounits' , 'ounits.unitable_id' , '=' , 'village_ofcs.id')
+            ->join('recruitment_scripts as rss' , 'rss.organization_unit_id' , '=' , 'ounits.id')
+//            ->whereIn('village_ofcs.id' , [1,2,3,4,5])
             ->get();
-        return $query;
+
+
+//        $a = User::first();
+//        dump($a);
+//        $status = $this->questionActiveStatus();
+//
+//        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
+//            ->joinRelationship('chapters.allActiveLessons.questions.options')
+//            ->joinRelationship('chapters.allActiveLessons.questions.repository')
+//            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
+//            ->select([
+//                'questions.id as QID',
+//                'lessons.title as lesson title'
+//            ])->where('questions.status_id', $status->id)
+//            ->get();
+//        return $query;
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
