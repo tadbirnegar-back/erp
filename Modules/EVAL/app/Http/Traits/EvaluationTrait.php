@@ -88,7 +88,6 @@ trait EvaluationTrait
                             return $villageValue >= $propertyValue;
                         case '<=':
                             return $villageValue <= $propertyValue;
-                        case '==':
                         case '=':
                             return $villageValue == $propertyValue;
                         default:
@@ -420,6 +419,135 @@ trait EvaluationTrait
             'is_revised' => true,
         ]);
         return $newEval->id;
+    }
+
+    public function villagesNotInCirclesOfTarget($circular)
+    {
+        $allData = $circular->load('variables.evalVariableTargets.oucPropertyValue.oucProperty');
+        $variables = $allData->variables;
+
+        $forbiddenVillages = [];
+        if ($variables->contains(fn($variable) => !$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())) {
+            return $forbiddenVillages;
+        }
+
+        $result = [];
+
+        foreach ($variables as $variable) {
+            foreach ($variable->evalVariableTargets as $target) {
+                if ($target->relationLoaded('oucPropertyValue') && $target->oucPropertyValue) {
+                    $propertyValue = $target->oucPropertyValue->value;
+                    $propertyColumnName = $target->oucPropertyValue->oucProperty->column_name;
+                    $variableId = $variable->id;
+                    $operator = $target->oucPropertyValue->operator;
+                    $result[] = [
+                        'value' => $propertyValue,
+                        'column_name' => $propertyColumnName,
+                        'variable_id' => $variableId,
+                        'operator' => $operator
+                    ];
+                }
+            }
+        }
+
+        $groupedByData = collect($result)->groupBy('variable_id');
+
+        $villagesIds = [];
+        $AllVillagesIds = VillageOfc::pluck('id')->toArray();
+
+        $groupedByData = $groupedByData->map(function ($item) use ($AllVillagesIds, &$villagesIds) {
+            return $item->map(function ($nestedItem) use ($AllVillagesIds, &$villagesIds) {
+                $value = $nestedItem['value'];
+                $columnName = $nestedItem['column_name'];
+                $operator = $nestedItem['operator'];
+                switch ($operator) {
+                    case '=':
+                        $newOperator = '!=';
+                        break;
+                    case '>':
+                        $newOperator = '<';
+                        break;
+                    case '<':
+                        $newOperator = '>';
+                        break;
+                }
+
+                $villageIds = VillageOfc::where("$columnName", "$newOperator", $value)->pluck('id')->toArray();
+
+                $villagesIds[] = $villageIds;
+
+                return array_merge($nestedItem, ['villages_ids' => $villageIds]);
+            });
+        });
+
+        $commonVillages = empty($villagesIds) ? [] : array_intersect(...$villagesIds);
+
+        return collect($commonVillages)->values();
+    }
+    public function villagesNotInCirclesOfTargetForRemake($circular)
+    {
+        $allData = $circular->load('variables.evalVariableTargets.oucPropertyValue.oucProperty');
+        $evaluatedBefore = EvalEvaluation::where('eval_circular_id', $circular->id)->pluck('target_ounit_id')->toArray();
+        $variables = $allData->variables;
+
+        $forbiddenVillages = [];
+        if ($variables->contains(fn($variable) => !$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())) {
+            return $forbiddenVillages;
+        }
+
+        $result = [];
+
+        foreach ($variables as $variable) {
+            foreach ($variable->evalVariableTargets as $target) {
+                if ($target->relationLoaded('oucPropertyValue') && $target->oucPropertyValue) {
+                    $propertyValue = $target->oucPropertyValue->value;
+                    $propertyColumnName = $target->oucPropertyValue->oucProperty->column_name;
+                    $variableId = $variable->id;
+                    $operator = $target->oucPropertyValue->operator;
+                    $result[] = [
+                        'value' => $propertyValue,
+                        'column_name' => $propertyColumnName,
+                        'variable_id' => $variableId,
+                        'operator' => $operator
+                    ];
+                }
+            }
+        }
+
+        $groupedByData = collect($result)->groupBy('variable_id');
+
+        $villagesIds = [];
+        $AllVillagesIds = VillageOfc::whereNotIn('id', $evaluatedBefore)->pluck('id')->toArray();
+
+        $groupedByData = $groupedByData->map(function ($item) use ($AllVillagesIds, &$villagesIds) {
+            return $item->map(function ($nestedItem) use ($AllVillagesIds, &$villagesIds) {
+                $value = $nestedItem['value'];
+                $columnName = $nestedItem['column_name'];
+                $operator = $nestedItem['operator'];
+                switch ($operator) {
+                    case '=':
+                        $newOperator = '!=';
+                        break;
+                    case '>':
+                        $newOperator = '<';
+                        break;
+                    case '<':
+                        $newOperator = '>';
+                        break;
+                }
+
+                $villageIds = VillageOfc::where("$columnName", "$newOperator", $value)->pluck('id')->toArray();
+
+                $villagesIds[] = $villageIds;
+
+                return array_merge($nestedItem, ['villages_ids' => $villageIds]);
+            });
+        });
+
+        $commonVillages = empty($villagesIds) ? [] : array_intersect(...$villagesIds);
+        $totalVillages = array_merge($commonVillages, $evaluatedBefore);
+
+        return collect($totalVillages)->values();
     }
 
 }
