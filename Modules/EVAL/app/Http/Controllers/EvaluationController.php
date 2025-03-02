@@ -168,7 +168,7 @@ class EvaluationController extends Controller
         try {
             DB::beginTransaction();
             $circular = EvalCircular::findOrFail($id);
-            $user = User::find(2174);
+            $user = Auth::user();
             $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
             $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular)->toBase();
