@@ -14,6 +14,8 @@ use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\LMS\app\Models\OucProperty;
 use Modules\LMS\app\Models\OucPropertyValue;
+use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\StatusMS\app\Models\Status;
 
@@ -56,16 +58,104 @@ trait CircularTrait
                 'eval_circulars.title as name',
                 'eval_circulars.id as circularID'
 
-            ])
+            ])->distinct()
             ->get();
-
 
         return $query;
     }
 
+    public function listOfDistrict($user)
+    {
+        $user = OrganizationUnit::where('unitable_type', DistrictOfc::class)
+            ->where('head_id', $user->id)
+            ->with(['descendantsAndSelf' => function ($query) {
+                $query->where('unitable_type', VillageOfc::class);
+            }])
+            ->get()
+            ->toArray();
+
+        $villageIds = collect($user)
+            ->pluck('descendants_and_self.*.id')
+            ->flatten()
+            ->toArray();
+
+
+
+        $eval = EvalEvaluation::query()
+            ->joinRelationship('EvalEvaluationStatus.status')
+            ->joinRelationship('evalCircular')
+            ->joinRelationship('targetOunits')
+            ->select([
+                'eval_evaluations.id as id',
+                'statuses.name as status',
+                'statuses.class_name as status_class',
+                'eval_evaluations.title as title',
+                'eval_circulars.expired_date as expiredDate',
+                'organization_units.name as ounit_name',
+                'organization_units.head_id as head_id'
+            ])
+            ->whereIn('target_ounit_id', $villageIds)
+            ->whereIn('statuses.name', [
+                EvalCircularStatusEnum::WAITING,
+                EvalCircularStatusEnum::COMPLETED,
+            ])
+            ->distinct()
+            ->get();
+        return $eval->map(function ($item) {
+            $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
+            $deadLine = $expiredDate ? $expiredDate->diffInDays(now()) : null;
+            return [
+                'id' => $item->id,
+                'title' => $item->title,
+                'deadline' => $deadLine,
+                'status' => $item->status,
+                'status_class' => $item->status_class,
+                'ounit_name' => $item->ounit_name,
+            ];
+
+        });
+
+
+
+//        $list = EvalEvaluation::query()
+//            ->joinRelationship('EvalEvaluationStatus.status')
+//            ->joinRelationship('evalCircular')
+//            ->joinRelationship('targetOunits')
+//            ->select([
+//                'eval_evaluations.id as id',
+//                'statuses.name as status',
+//                'statuses.class_name as status_class',
+//                'eval_evaluations.title as title',
+//                'eval_circulars.expired_date as expiredDate',
+//                'organization_units.name as ounit_name',
+//                'organization_units.head_id as head_id'
+//            ])
+//            ->whereIn('statuses.name', [
+//                EvalCircularStatusEnum::WAITING,
+//                EvalCircularStatusEnum::COMPLETED,
+//            ])
+//            ->distinct()
+//            ->get();
+//        return $list;
+//        return $list->map(function ($item) {
+//            $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
+//            $deadLine = $expiredDate ? $expiredDate->diffInDays(now()) : null;
+//            return [
+//                'id' => $item->id,
+//                'title' => $item->title,
+//                'deadline' => $deadLine,
+//                'status' => $item->status,
+//                'status_class' => $item->status_class,
+//                'ounit_name' => $item->ounit_name,
+//            ];
+//
+//        });
+    }
+
     public function singleCircularSidebar($circularID)
     {
-        $query = EvalCircular::joinRelationship('statuses')
+        $query = EvalCircular::query()
+            ->joinRelationship('statuses')
             ->joinRelationship('file.extension')
             ->select([
                 'eval_circulars.id as id',
@@ -113,7 +203,7 @@ trait CircularTrait
 
         //        calculate percentage
 
-        $percentageForTotalForm = round($countEvalsForTotalForm / ($villageCount) * 100, 2) ;
+        $percentageForTotalForm = round($countEvalsForTotalForm / ($villageCount) * 100, 2);
         $percentageForCompeleteForm = round($countEvalsForCompeleteForm / ($villageCount) * 100, 2);
 
         return [
@@ -128,7 +218,7 @@ trait CircularTrait
     public function lastDataForEditCircular($circularID)
     {
         $query = EvalCircular::
-            joinRelationship('file.extension')
+        joinRelationship('file.extension')
             ->select([
                 'eval_circulars.id as id',
                 'eval_circulars.title as name',
@@ -142,12 +232,9 @@ trait CircularTrait
             ->where('eval_circulars.id', $circularID)
             ->first();
 
-        $expiredDate = Carbon::parse($query->expiredDate);
-
 
         return [
-            $query,
-            $expiredDate
+            'query' => $query,
         ];
     }
 
@@ -172,38 +259,45 @@ trait CircularTrait
 
     public function deleteCircular($circularID)
     {
-        $deletedStatus=$this->deletedCircularStatus();
-        $update=EvalCircularStatus::updateOrCreate([
-            'eval_circular_id'=>$circularID,
-            'status_id'=>$deletedStatus->id,
-            'updated_at'=>now(),
+        $deletedStatus = $this->deletedCircularStatus();
+        $update = EvalCircularStatus::updateOrCreate([
+            'eval_circular_id' => $circularID,
+            'status_id' => $deletedStatus->id,
+            'updated_at' => now(),
         ]);
         return $update;
 
     }
 
-    public function EvaluationCompletedList()
+    public function EvaluationCompletedList($user)
     {
         $list = EvalEvaluation::query()
             ->joinRelationship('EvalEvaluationStatus.status')
+            ->joinRelationship('evalCircular')
+            ->joinRelationship('targetOunits')
             ->select([
                 'eval_evaluations.id as id',
                 'statuses.name as status',
                 'statuses.class_name as status_class',
                 'eval_evaluations.title as title',
-                'eval_evaluations.expired_date as expiredDate',
-
+                'eval_circulars.expired_date as expiredDate',
+                'organization_units.name as ounit_name',
+                'organization_units.head_id as head_id'
             ])
+            ->where('organization_units.head_id', $user->id)
             ->where('statuses.name', EvalCircularStatusEnum::WAITING)
+            ->distinct()
             ->get();
         return $list->map(function ($item) {
             $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
             $deadLine = $expiredDate ? $expiredDate->diffInDays(now()) : null;
             return [
+                'id' => $item->id,
                 'title' => $item->title,
                 'deadline' => $deadLine,
                 'status' => $item->status,
                 'status_class' => $item->status_class,
+                'ounit_name' => $item->ounit_name,
             ];
 
         });
@@ -253,15 +347,15 @@ trait CircularTrait
         return $grouped->all();
     }
 
-    public function addVariableSection($circularID,$data)
+    public function addVariableSection($circularID, $data)
     {
-        $section= EvalCircularSection::create([
+        $section = EvalCircularSection::create([
             'title' => $data['name'],
             'eval_circular_id' => $circularID,
 
         ]);
 
-        $indicator= EvalCircularIndicator::create([
+        $indicator = EvalCircularIndicator::create([
             'title' => $data['name'],
             'eval_circular_section_id' => $section->id,
             'coefficient' => $data['coefficient'],
@@ -276,26 +370,102 @@ trait CircularTrait
         return $variable;
     }
 
-    public function listing($data)
-    {
-        $ids = json_decode($data['ids']);
-        $properties = OucProperty::whereIn('ounit_cat_id' , $ids)->select('id' , 'name')->get();
 
-        $valueID = json_decode($data['valueID']);
-        $propertyValues = OucPropertyValue::where('ouc_property_id' , $valueID)->select('id' , 'value')->get();
-        return[
-            'properties' => $properties,
-            'propertyValues' => $propertyValues
-        ];
+    public function editVariable($circularID, $data)
+    {
+        $section = EvalCircularSection::where('eval_circular_id', $circularID)->first();
+
+        if ($section) {
+            $section->update([
+                'title' => $data['name'],
+                'eval_circular_id' => $circularID,
+            ]);
+        }
+
+        $indicator = EvalCircularIndicator::where('eval_circular_section_id', $section->id)->first();
+
+        if ($indicator) {
+            $indicator->update([
+                'title' => $data['name'],
+                'eval_circular_section_id' => $section->id,
+                'coefficient' => $data['coefficient'],
+                'is_correct' => $data['isCorrect'],
+            ]);
+        }
+
+        $variable = EvalCircularVariable::where('eval_circular_indicator_id', $indicator->id)->first();
+
+        if ($variable) {
+            $variable->update([
+                'title' => $data['name'],
+                'eval_circular_indicator_id' => $indicator->id,
+                'weight' => $data['weight'],
+                'description' => $data['description'],
+            ]);
+        }
+
+        return $variable;
+    }
+
+    public function editSection($circularID, $data)
+    {
+        $section = EvalCircularSection::where('eval_circular_id', $circularID)->first();
+
+        if ($section) {
+            $section->update([
+                'title' => $data['name'],
+                'eval_circular_id' => $circularID,
+            ]);
+        }
+
+        return $section;
+    }
+
+    public function editIndicator($circularID, $data)
+    {
+        $section = EvalCircularSection::where('eval_circular_id', $circularID)->first();
+
+        $indicator = EvalCircularIndicator::where('eval_circular_section_id', $section->id)->first();
+
+        if ($indicator) {
+            $indicator->update([
+                'title' => $data['name'],
+                'eval_circular_section_id' => $data['sectionID'],
+                'coefficient' => $data['coefficient'],
+                'is_correct' => $data['isCorrect'],
+            ]);
+        }
+
+        return $indicator;
+    }
+
+    public function deleteSection($circularID)
+    {
+        $section = EvalCircularSection::where('eval_circular_id', $circularID)->first();
+        if ($section) {
+            $section->delete();
+        }
+        return $section;
 
     }
 
+    public function deleteIndicator($circularID)
+    {
+        $section = EvalCircularSection::where('eval_circular_id', $circularID)->first();
+
+        $indicator = EvalCircularIndicator::where('eval_circular_section_id', $section->id)->first();
+
+        if ($indicator) {
+            $indicator->delete();
+        }
+        return $indicator;
+    }
 
 
     public function deletedCircularStatus()
     {
-        return  Status::where('model',EvalCircular::class)
-            ->where('name',EvalCircularStatusEnum::DELETED->value)
+        return Status::where('model', EvalCircular::class)
+            ->where('name', EvalCircularStatusEnum::DELETED->value)
             ->first();
     }
 
@@ -305,8 +475,6 @@ trait CircularTrait
             ->where('name', EvalCircularStatusEnum::PISHNEVIS->value)
             ->first();
     }
-
-
 
 
 }

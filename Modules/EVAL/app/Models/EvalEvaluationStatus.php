@@ -17,7 +17,7 @@ class EvalEvaluationStatus extends Model
      */
 
 
-    protected $table = 'evalevaluation_status';
+    protected $table = 'evalEvaluation_status';
 
     public $timestamps = false;
 

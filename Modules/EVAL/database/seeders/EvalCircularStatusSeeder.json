@@ -16,9 +16,8 @@
         "className": "success"
     },
     {
-        "name": "در انتظار تکمیل",
-        "className": "success"
+        "name": "منقضی شده",
+        "className": "danger"
     }
-
 
 ]

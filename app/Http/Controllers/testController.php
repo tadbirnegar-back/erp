@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 
 use Modules\AAA\app\Models\User;
+use Modules\AddressMS\app\Models\District;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -12,6 +13,7 @@ use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\Course;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 
 class testController extends Controller
@@ -21,20 +23,8 @@ class testController extends Controller
 
     public function run()
     {
-        $a = User::first();
-        dump($a);
-        $status = $this->questionActiveStatus();
-
-        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
-            ->joinRelationship('chapters.allActiveLessons.questions.options')
-            ->joinRelationship('chapters.allActiveLessons.questions.repository')
-            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
-            ->select([
-                'questions.id as QID',
-                'lessons.title as lesson title'
-            ])->where('questions.status_id', $status->id)
-            ->get();
-        return $query;
+        $district = District::with('decendents')->get();
+        return response()->json($district);
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
