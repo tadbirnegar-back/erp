@@ -97,7 +97,7 @@ class EvaluationController extends Controller
     {
         try {
             DB::beginTransaction();
-            $user = User::find(2174);
+            $user = Auth::user();
             $eval = EvalEvaluation::find($id);
 
             $isPersonAllowToEvaluate = $this->isPersonAllowToEvaluate($user, $eval);
