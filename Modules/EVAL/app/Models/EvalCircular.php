@@ -8,11 +8,14 @@ use Modules\AAA\app\Models\User;
 use Modules\EVAL\Database\factories\EvalCircularFactory;
 use Modules\Eval\app\Http\Enums\EvalCircularStatusEnum;
 use Modules\FileMS\app\Models\File;
+use Modules\LMS\app\Models\OucProperty;
+use Modules\LMS\app\Models\OucPropertyValue;
 use Modules\StatusMS\app\Models\Status;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class EvalCircular extends Model
 {
-    use HasFactory;
+    use HasFactory, HasRelationships;
 
     /**
      * The attributes that are mass assignable.
@@ -47,22 +50,6 @@ class EvalCircular extends Model
         return $this->belongsTo(User::class, 'creator_id', 'id');
     }
 
-    public function CircularStatus()
-    {
-        return $this->lessons()->whereExists(function ($query) {
-            $query->select(\DB::raw(1))
-                ->from('evalEvaluation_status as es')
-                ->join('statuses as s', 'es.status_id', '=', 's.id')
-                ->whereColumn('es.eval_evaluation_id ', 'eval_evaluations.id')
-                ->where('s.name', EvalCircularStatusEnum::ACTIVE->value)
-                ->where('es.created_at', function ($subQuery) {
-                    $subQuery->selectRaw('MAX(created_at)')
-                        ->from('evalEvaluation_status as sub_ls')
-                        ->whereColumn('sub_es.eval_evaluation_id ', 'es.eval_evaluation_id ');
-                });
-        });
-    }
-
     public function statuses()
     {
         return $this->belongsToMany(Status::class, 'eval_circular_statuses', 'eval_circular_id', 'status_id');
@@ -72,9 +59,28 @@ class EvalCircular extends Model
     {
         return $this->belongsTo(File::class, 'file_id', 'id');
     }
+
     public function evalCircularStatus()
     {
         return $this->hasMany(EvalCircularStatus::class, 'eval_circular_id', 'id');
+    }
+
+    public function variables()
+    {
+        return $this->hasManyDeep(
+            EvalCircularVariable::class,
+            [EvalCircularSection::class,EvalCircularIndicator::class ],
+            [
+                'eval_circular_id',
+                'eval_circular_section_id',
+                'eval_circular_indicator_id',
+            ],
+            [
+                'id',
+                'id',
+                'id',
+            ]
+        );
     }
 
 }

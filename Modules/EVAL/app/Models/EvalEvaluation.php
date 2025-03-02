@@ -20,14 +20,18 @@ class EvalEvaluation extends Model
     protected $fillable = [
         'average',
         'sum',
-        'created_date',
+        'create_date',
         'creator_id',
         'parent_id',
         'evaluator_id',
         'id',
         'is_revised',
         'target_ounit_id',
-        'average'
+        'average',
+        'description',
+        'title',
+        'eval_circular_id',
+        'evaluator_ounit_id',
     ];
 
     public $timestamps = false;

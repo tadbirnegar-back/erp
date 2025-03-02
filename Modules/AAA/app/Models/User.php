@@ -491,7 +491,6 @@ class User extends Authenticatable
     public function activeDehyarRcs()
     {
         $scriptTypeDehyar = ScriptType::where('title', 'انتصاب دهیار')->first()->id;
-        \Log::info($scriptTypeDehyar);
         return $this->hasManyDeep(
             RecruitmentScript::class,
             [Person::class, WorkForce::class, Employee::class],
