@@ -165,5 +165,4 @@ class CircularController extends Controller
         return response()->json($dropDown);
     }
 
-
 }

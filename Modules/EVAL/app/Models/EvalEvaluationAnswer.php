@@ -15,7 +15,8 @@ class EvalEvaluationAnswer extends Model
      * The attributes that are mass assignable.
      */
 
-    protected $fillable = ['id',
+    protected $fillable = [
+        'id',
         'eval_circular_variables_id',
         'eval_evaluation_id',
         'value'
