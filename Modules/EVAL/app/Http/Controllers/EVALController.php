@@ -85,9 +85,10 @@ class EVALController extends Controller
 
 
     }
-    public function fillTheAnswers()
+    public function fillTheAnswers($id)
     {
         //Fill the evaluations
-        //---Find
+        $evals = DB::table('evaluators')->where('evaluation_id',$id)->get();
+        return response()->json($evals);
     }
 }
