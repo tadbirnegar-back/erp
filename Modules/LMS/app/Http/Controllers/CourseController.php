@@ -9,9 +9,11 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Models\Job;
+use Modules\LMS\app\Http\Enums\CourseTypeEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
@@ -125,13 +127,23 @@ class CourseController extends Controller
                     $this->courseCanceledStatus()->id
                 ]);
             })->with('latestStatus')->find($id);
-
-
             $user = Auth::user();
+
+            $isValidForExam = $this -> isValidToWatchExam($course , $user);
+            if(empty($isValidForExam[0])){
+                return response()->json(['message' => 'شما اجازه دسترسی به این دوره را ندارید'], 403);
+            }
             if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
+            if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value){
+                $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
+                if (empty($isEnrolled->isEnrolled[0])) {
+                    $purchase = new PurchaseCourse($course, $user);
+                    $purchase->handle();
+                }
+            }
             $componentsToRenderWithData = $this->courseShow($course, $user);
 
             $chapters = $componentsToRenderWithData['course']['chapters'];
@@ -480,6 +492,16 @@ class CourseController extends Controller
             DB::rollBack();
             return response()->json(["message" => $exception->getMessage()], 400);
         }
+    }
+
+    public function courseTypeList()
+    {
+        $data = [
+            ["value" => CourseTypeEnum::AMUZESHI->value , "label" => "دوره آموزشی"],
+            ["value" => CourseTypeEnum::MOKATEBEYI->value , "label" => "دوره آزمون جامع(مکاتبه ای)"]
+        ];
+        return response()->json($data);
+
     }
 
 }

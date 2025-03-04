@@ -81,7 +81,10 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/lms/reporting/data/{id}', [ReportingController::class, 'index']);
     Route::post('/lms/report/list', [CourseController::class, 'lessonList']);
     Route::get('/lms/course/report/{id}', [ReportingController::class, 'AllEnrollsCourseReport']);
-
+    Route::get('/lms/course-types/show', [CourseController::class, 'courseTypeList']);
+    Route::post('/lms/store-comprehensive/setting' , [SettingController::class, 'storeComprehensive']);
+    Route::get('/lms/show-comprehensive/setting', [SettingController::class, 'indexComprehensive']);
+    Route::get('/lms/last-comprehensive/changed-setting/show', [SettingController::class, 'LastShowComprehensive']);
 });
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/lms/teacher/check-national-code', [TeacherController::class, 'isTeacherExist']);

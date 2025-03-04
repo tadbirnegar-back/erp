@@ -24,6 +24,12 @@ class SettingController extends Controller
         return response()->json($dropDowns);
     }
 
+    public function indexComprehensive(): JsonResponse
+    {
+        $dropDowns = $this->showDropDownsComprehensive();
+        return response()->json($dropDowns);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -55,12 +61,46 @@ class SettingController extends Controller
         }
     }
 
+    public function storeComprehensive(Request $request): JsonResponse
+    {
+        $validatedData = $request->validate([
+            'Difficulty' => 'required|integer',
+            'questionType' => 'required|integer',
+            'questionNumber' => 'required|integer',
+            'timePerQuestion' => 'required|integer',
+            'passScore' => 'required|integer',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $insert = $this->dataToInsertComprehensive($validatedData);
+            DB::commit();
+            return response()->json([
+                'message' => 'Settings saved successfully!',
+                'data' => $insert,
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to save settings.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Show the specified resource.
      */
     public function LastShow(): JsonResponse
     {
         $trait = $this->LastSettingShow();
+        return response()->json($trait);
+    }
+
+    public function LastShowComprehensive(): JsonResponse
+    {
+        $trait = $this->LastSettingShowComprehensive();
         return response()->json($trait);
     }
 
