@@ -3,6 +3,7 @@
 namespace Modules\EVAL\app\Events;
 
 use Illuminate\Queue\SerializesModels;
+use Modules\EVAL\app\Models\EvalCircular;
 
 class CircularExpirationEvent
 {
@@ -11,9 +12,9 @@ class CircularExpirationEvent
     /**
      * Create a new event instance.
      */
-    public function __construct()
+    public function __construct(EvalCircular $circular)
     {
-        //
+        $this -> circular  = $circular;
     }
 
     /**

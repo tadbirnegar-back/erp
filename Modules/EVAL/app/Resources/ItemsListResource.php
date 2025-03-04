@@ -10,34 +10,43 @@ class ItemsListResource extends ResourceCollection
      * Transform the resource collection into an array.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @return object
      */
-    public function toArray($request): array
+    public function toArray($request): object
     {
+        $firstItem = $this->collection->first();
+        $name = $firstItem->name ?? null;
 
         $grouped = $this->collection->groupBy('sectionTitle');
 
-        $data = $grouped->map(function ($items, $sectionTitle) {
+        $sections = $grouped->map(function ($items, $sectionTitle) {
+            $firstSection = $items->first();
+
             return [
                 'sectionTitle' => $sectionTitle,
+                'sectionID' => $firstSection->sectionID,
                 'indicators' => $items->groupBy('indicatorsTitle')->map(function ($indicators, $indicatorsTitle) {
+                    $firstIndicator = $indicators->first();
+
                     return [
                         'indicatorsTitle' => $indicatorsTitle,
+                        'indicatorsID' => $firstIndicator->indicatorsID,
+                        'coefficient' => $firstIndicator->coefficient,
                         'variables' => $indicators->map(function ($item) {
                             return [
+                                'variableID' => $item->variableID,
                                 'variableName' => $item->variableName,
-                                'coefficient' => $item->coefficient,
                                 'weight' => $item->weight,
                             ];
-                        })->values(),
+                        })->values()->toArray(),
                     ];
-                }),
+                })->values()->toArray(),
             ];
-        });
+        })->values()->toArray();
 
-        // Return the data as an object instead of an array
-        return [
-            'data' => (object) $data->toArray(),
+        return (object) [
+            'name' => $name,
+            'sections' => $sections,
         ];
     }
 }

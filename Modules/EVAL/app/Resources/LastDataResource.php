@@ -16,13 +16,15 @@ class LastDataResource extends JsonResource
         return [
 
             'id' => $this['query']['id'],
-            'name' => $this['query']['name'],
+            'title' => $this['query']['name'],
             'description' => $this['query']['description'],
             'MaximumValue' => $this['query']['MaximumValue'],
             'fileID' => $this['query']['fileID'],
+            'fileSize' => $this['query']['fileSize'],
+            'type' => $this['query']['extensionName'],
             'download_url' => url($this['query']['downloadUrl']),
-            'create_date' => $this['query']['createDate'],
-            'expired_date' => convertDateTimeGregorianToJalaliDateTime($this['query']['expiredDate']),
+            'create_date' => explode(' ', convertDateTimeGregorianToJalaliDateTime($this['query']['createDate']))[0],
+            'expired_date' => explode(' ', convertDateTimeGregorianToJalaliDateTime($this['query']['expiredDate']))[0],
 
         ];
     }

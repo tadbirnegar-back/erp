@@ -12,12 +12,14 @@ use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Models\District;
 use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Models\EvalCircularIndicator;
+use Modules\EVAL\app\Models\EvalCircularSection;
 use Modules\EVAL\app\Resources\CircularFirstListResource;
-use Modules\EVAL\app\Resources\DropDownResource;
 use Modules\EVAL\app\Resources\ItemsListResource;
 use Modules\EVAL\app\Resources\LastDataResource;
 use Modules\EVAL\app\Resources\PropertiesAndvaluesResource;
-use Modules\EVAL\App\Resources\SingleResource;
+use Modules\EVAL\app\Resources\SingleResource;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\LMS\app\Models\OucProperty;
 use Modules\LMS\app\Models\OucPropertyValue;
 use Modules\LMS\app\Resources\OucPropertyListResource;
@@ -41,8 +43,7 @@ class CircularController extends Controller
             }
 
             DB::beginTransaction();
-            $validated=$request->all();
-
+            $validated = $request->all();
 
 
             $circular = $this->AddCircular($validated, $user);
@@ -70,30 +71,44 @@ class CircularController extends Controller
 
     public function single($circularID)
     {
-       $data = $this->singleCircularSidebar($circularID);
+        $data = $this->singleCircularSidebar($circularID);
         $circular = $data['data']->first();
 
-//       dd($data);
-       return[
-           'data' => response()->json(new SingleResource($circular)),
-           'completedCircularCount' => $data['completedCircularCount']
-       ];
+        return response()->json([
+            'data' => SingleResource::make($circular),
+            'completedCircularCount' => $data['completedCircularCount']
+        ]);
     }
 
 
     public function circularSearch(Request $request)
     {
-        $data = $request->all();
-        $list = $this->CircularsList($data);
+//        $data = $request->all();
+        $validatedData = $request->validate([
+            'name' => 'nullable|string',
+        ]);
 
-        return response()->json(new CircularFirstListResource($list));
+        $list = $this->CircularsList($validatedData);
+
+        if ($list->isEmpty()){
+            return response()->json(['message' => 'لیستی برای جستجو یافت نشد'], 404);
+        }
+        else{
+            return response()->json(new CircularFirstListResource($list));
+        }
+
 
     }
 
     public function showLastCircularData($circularID)
     {
-      $list=  $this->lastDataForEditCircular($circularID);
-      return response()->json(new LastDataResource($list));
+        $list = $this->lastDataForEditCircular($circularID);
+        if (!$list){
+            return response()->json(['message' => 'لیستی وجود ندارد'], 404);
+        }
+        else{
+            return response()->json(new LastDataResource($list));
+        }
     }
 
     public function editCircular(Request $request, $circularID)
@@ -109,7 +124,7 @@ class CircularController extends Controller
             DB::beginTransaction();
             $data = $request->all();
 
-            $editCircular = $this->circularEdit($circularID, $data,$user);
+            $editCircular = $this->circularEdit($circularID, $data, $user);
 
             if ($editCircular) {
                 DB::commit();
@@ -166,18 +181,32 @@ class CircularController extends Controller
         $user = Auth::user();
         return response()->json($this->EvaluationCompletedList($user));
     }
-    public function listForDistrict()
+
+    public function listForDistrictWaitingAndCompletedList()
     {
 //        $user = Auth::user();
-        $user = User::find(1955);
+$user=User::find(1955);
 
-
-       $districtList= $this->listOfDistrict($user);
+        $districtList = $this->listOfDistrictWaitingAndCompletedList($user);
         if (!$user) {
-         return response()->json([
-             'message' => 'شما بخشدار هیج سازمانی نمی باشید'
-         ], 403);
-     }
+            return response()->json([
+                'message' => 'شما بخشدار هیج سازمانی نمی باشید'
+            ], 403);
+        }
+        return response()->json($districtList);
+    }
+
+    public function listForDistrictCompleted()
+    {
+        $user = Auth::user();
+//$user=User::find(1955);
+
+        $districtList = $this->listOfDistrictCompletedList($user);
+        if (!$user) {
+            return response()->json([
+                'message' => 'شما بخشدار هیج سازمانی نمی باشید'
+            ], 403);
+        }
         return response()->json($districtList);
     }
 
@@ -188,17 +217,17 @@ class CircularController extends Controller
         return ItemsListResource::make($list);
     }
 
-
     public function dropDownsToAddVariable($circularID)
     {
         $dropDown = $this->requirementOfAddVariable($circularID);
         return response()->json($dropDown);
     }
 
-    public function createVariable(Request $request,$circularID )
+    public function createVariable(Request $request, $circularID)
     {
         try {
             $user = Auth::user();
+//            $user=User::find(1889);
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'
@@ -231,26 +260,32 @@ class CircularController extends Controller
         }
     }
 
-    public function updateVariable(Request $request,$circularID)
+    public function updateVariable(Request $request, $sectionID)
     {
         try {
-            $user = Auth::user();
+//            $user = Auth::user();
+            $user=User::find(1889);
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'
                 ], 403);
             }
+            $section = EvalCircularSection::where('id', $sectionID)->first();
+
+            if (!$section) {
+                return response()->json(['error' => 'بخش مورد نظر یافت نشد'], 403);
+            }
 
             DB::beginTransaction();
             $data = $request->all();
+            $editVariable = $this->editVariable($sectionID, $data);
 
-            $editVariable = $this->editVariable($circularID, $data);
 
             if ($editVariable) {
                 DB::commit();
                 return response()->json([
                     'message' => 'متغیر با موفقیت ویرایش شد',
-                    'id' => $circularID
+                    'id' => $sectionID
                 ], 201);
             } else {
                 DB::rollBack();
@@ -268,47 +303,176 @@ class CircularController extends Controller
 
     }
 
-    public function listingProperties(Request $request)
+    public function editVariableRequirement($variableID)
     {
-        $data = $request->all();
+        return response()->json($this->lastDataForEditVariable($variableID));
+    }
 
-        $ids = json_decode($data['ids']);
-        $properties = OucProperty::whereIn('ounit_cat_id', $ids)->select('id', 'name')->get();
-
-        $valueID = json_decode($data['valueID']);
-        $propertyValues = OucPropertyValue::where('ouc_property_id', $valueID)->select('id', 'value')->get();
+    public function listingProperties($circularID)
+    {
+        $oUnitCatId = OunitCategoryEnum::VillageOfc->value;
+        $properties = OucProperty::with('values')->where('ounit_cat_id', $oUnitCatId)->select('id', 'name')->get();
 
         return [
-            'properties' => OucPropertyListResource::collection($properties),
-            'propertyValues' => OucPropertyValueListResource::collection($propertyValues),
+            'properties' => PropertiesAndvaluesResource::collection($properties),
+            'dropdowns'=>$this->requirementOfAddVariable($circularID)
         ];
     }
 
-    public function sectionEdit(Request $request, $circularID)
+    public function sectionEdit(Request $request, $sectionID)
     {
-        $data = $request->all();
-        return response()->json($this->editSection($circularID, $data));
+        try {
+            $section = EvalCircularSection::find($sectionID);
+            if (!$section) {
+                return response()->json([
+                    'message' => 'بخش مورد نظر یافت نشد'
+                ], 403);
+            }
+
+            DB::beginTransaction();
+
+            $data = $request->all();
+            $edit = $this->editSection($section, $data);
+            if ($edit) {
+                DB::commit();
+                return response()->json([
+                    'message' => 'بخش با موفقیت ویرایش شد',
+                    'id' => $sectionID
+                ], 201);
+            } else {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'خطا در ویرایش بخش'
+                ], 500);
+            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'خطای غیرمنتظره رخ داد',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
-    public function indicatorEdit(Request $request, $circularID)
+
+    public function indicatorEdit(Request $request, $indicatorID)
     {
-        $data = $request->all();
-        return response()->json($this->editIndicator($circularID, $data));
+        try {
+            $indicator = EvalCircularIndicator::find($indicatorID);
+            if (!$indicator) {
+                return response()->json([
+                    'message' => 'شاخص مورد نظر یافت نشد'
+                ], 403);
+            }
+            DB::beginTransaction();
+
+            $data = $request->all();
+            $edit = $this->editIndicator($indicator, $data);
+            if ($edit) {
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'شاخص با موفقیت ویرایش شد',
+                ], 201);
+            } else {
+                return response()->json([
+                    'message' => 'خطا در ویرایش شاخص',
+                ], 500);
+            }
+        }catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'خطای غیرمنتظره رخ داد',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function sectionDelete( $circularID)
+    public function sectionDelete($sectionID)
     {
-        return response()->json($this->deleteSection($circularID));
+        try {
+            $section = EvalCircularSection::find($sectionID);
+            if (!$section) {
+                return response()->json([
+                    'message' => 'بخش مورد نظر یافت نشد'
+                ], 403);
+            }
+            DB::beginTransaction();
+
+            $delete = $this->deleteSection($section->id);
+            if ($delete) {
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'بخش با موفقیت حذف شد'
+                ], 201);
+            } else {
+                return response()->json([
+                    'message' => 'خطا در حذف بخش'
+                ], 500);
+            }
+        }catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'خطای غیرمنتظره رخ داد',
+                'error' => $e->getMessage(),
+                ], 500);
+
+        }
     }
-    public function indicatorDelete( $circularID)
+
+    public function indicatorDelete($indicatorID)
     {
-        return response()->json($this->deleteIndicator($circularID));
+        try {
+
+            DB::beginTransaction();
+
+            $delete = $this->deleteIndicator($indicatorID);
+            if ($delete) {
+                DB::commit();
+                return response()->json([
+                    'message' => 'شاخص با موفقیت حذف شد'
+                ], 201);
+            } else {
+                return response()->json([
+                    'message' => 'خطا در حذف شاخص'
+                ], 500);
+            }
+        }catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'خطای غیرمنتظره رخ داد',
+                'error' => $e->getMessage(),
+                ], 500);
+        }
     }
 
+    public function variableDelete($variableID)
+    {
+        try {
 
+            DB::beginTransaction();
 
+            $delete = $this->deleteVariable($variableID);
+            if ($delete) {
+                DB::commit();
+                return response()->json([
+                    'message' => 'متغیر با موفقیت حذف شد'
+                ], 201);
+            } else {
+                return response()->json([
+                    'message' => 'خطا در حذف متغیر'
+                ], 500);
+            }
+        }catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'خطای غیرمنتظره رخ داد',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
 
-
-
+    }
 
 
 }

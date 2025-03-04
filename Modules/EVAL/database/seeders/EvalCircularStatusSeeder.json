@@ -13,7 +13,7 @@
     },
     {
         "name": "حذف شده",
-        "className": "success"
+        "className": "danger"
     },
     {
         "name": "منقضی شده",
