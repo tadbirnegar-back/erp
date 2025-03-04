@@ -3,65 +3,91 @@
 namespace Modules\EVAL\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Models\EvalCircularIndicator;
+use Modules\EVAL\app\Models\EvalCircularSection;
+use Modules\EVAL\app\Models\EvalCircularVariable;
 
 class EVALController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function mergeOldEvaluationToNew()
     {
-        return view('eval::index');
-    }
+        try {
+            DB::beginTransaction();
+            //Store Circular
+            $circular = EvalCircular::create([
+                'title' => 'ارزیابی عملکرد دهیاری ها سال 1402',
+                'description' => 'ارزیابی عملکرد دهیاری ها سال 1402',
+                'maximum_value' => 100,
+                'file_id' => 1,
+                'creator_id' => 1905,
+                'create_date' => now(),
+                'expired_date' => Carbon::now()->addYears(1),
+            ]);
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('eval::create');
-    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        //
-    }
+            //Store Section
+            //----get section before
+            $sections = DB::table('eval_parts')->get();
 
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        return view('eval::show');
-    }
+            //----insert new section
+            $NewSections = [];
+            foreach ($sections as $section) {
+                $NewSections[] = EvalCircularSection::create([
+                    'title' => $section->title,
+                    'eval_circular_id' => $circular->id
+                ]);
+            }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('eval::edit');
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): RedirectResponse
-    {
-        //
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+            foreach ($NewSections as $NewSection) {
+                $sectionBefore = DB::table('eval_parts')->where('title', $NewSection->title)->first();
+                $indicators = DB::table('evaluator_indicators')->where('eval_part_id', $sectionBefore->id)->get();
+                foreach ($indicators as $indicator) {
+                    EvalCircularIndicator::create([
+                        'title' => $indicator->title,
+                        'coefficient' => $indicator->coefficient,
+                        'eval_circular_section_id' => $NewSection->id,
+                    ]);
+                }
+            }
+
+
+            //store variables
+            $variables = DB::table('eval_parameters')->get();
+            foreach ($variables as $variable) {
+                $oldIndicator = DB::table('evaluator_indicators')->where('id' , $variable->eval_indicator_id)->first();
+                $newIndicator = EvalCircularIndicator::where('title', $oldIndicator->title)->first();
+                $dayereShumul = $variable->circle_of_inclusion;
+                EvalCircularVariable::create([
+                    'title' => $variable->title,
+                    'weight' => $variable->weight,
+                    'eval_circular_indicator_id' => $newIndicator->id,
+                    'description' => $variable->description.'('.$dayereShumul.')',
+                ]);
+            }
+
+
+
+            DB::commit();
+
+            return response()->json($circular);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
+
+
+    }
+    public function fillTheAnswers()
     {
-        //
+        //Fill the evaluations
+        //---Find
     }
 }

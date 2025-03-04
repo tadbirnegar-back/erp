@@ -20,7 +20,8 @@ class EvalCircularVariable extends Model
     protected $fillable = ['id',
         'title',
         'eval_circular_indicator_id',
-        'weight'
+        'weight',
+        'description'
     ];
 
     public $timestamps = false;

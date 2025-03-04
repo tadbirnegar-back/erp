@@ -154,6 +154,7 @@ class EvaluationController extends Controller
                     ->onQueue('default')
                     ->dispatchAfterResponse();
             }
+
             DB::commit();
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {

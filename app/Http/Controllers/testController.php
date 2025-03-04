@@ -7,11 +7,13 @@ use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\Course;
+use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
@@ -25,11 +27,11 @@ class testController extends Controller
 
         //Some Random Code to Test my larvel debug bar
 
-        $village = VillageOfc::query()
-            ->join('organization_units as ounits' , 'ounits.unitable_id' , '=' , 'village_ofcs.id')
-            ->join('recruitment_scripts as rss' , 'rss.organization_unit_id' , '=' , 'ounits.id')
-//            ->whereIn('village_ofcs.id' , [1,2,3,4,5])
-            ->get();
+//        $village = VillageOfc::query()
+//            ->join('organization_units as ounits' , 'ounits.unitable_id' , '=' , 'village_ofcs.id')
+//            ->join('recruitment_scripts as rss' , 'rss.organization_unit_id' , '=' , 'ounits.id')
+////            ->whereIn('village_ofcs.id' , [1,2,3,4,5])
+//            ->get();
 
 
 //        $a = User::first();
