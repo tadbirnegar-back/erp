@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
+use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Http\Traits\EvaluationTrait;
 use Modules\EVAL\app\Jobs\MakeEvaluationFormJob;
 use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Models\EvalCircularStatus;
 use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EVAL\app\Resources\EvaluationRevisedResource;
 use Modules\EVAL\app\Resources\SendVariablesResource;
@@ -23,7 +25,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EvaluationController extends Controller
 {
-    use EvaluationTrait;
+    use EvaluationTrait , CircularTrait;
 
     public function preViewEvaluation($id)
     {
@@ -154,6 +156,14 @@ class EvaluationController extends Controller
                     ->onQueue('default')
                     ->dispatchAfterResponse();
             }
+
+            $circularStatus = $this->notifiedCircularStatus();
+            EvalCircularStatus::create([
+                'status_id' => $circularStatus->id,
+                'eval_circular_id' => $circular->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
             DB::commit();
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {

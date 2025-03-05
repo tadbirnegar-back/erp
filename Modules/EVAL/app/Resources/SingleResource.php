@@ -20,6 +20,7 @@ class SingleResource extends JsonResource
             'description' => $this->description,
             'maximum_value' => $this->MaximumValue,
             'file_id' => $this->fileID,
+            'fileName'=>$this->fileName,
             'create_date' => $createdDate->format('Y-m-d'),
             'expired_date' => explode(' ', convertDateTimeGregorianToJalaliDateTime($expiredDate))[0],
             'status' => [

@@ -83,7 +83,6 @@ class CircularController extends Controller
 
     public function circularSearch(Request $request)
     {
-//        $data = $request->all();
         $validatedData = $request->validate([
             'name' => 'nullable|string',
         ]);
@@ -115,6 +114,7 @@ class CircularController extends Controller
     {
         try {
             $user = Auth::user();
+//            $user=User::find(1889);
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'
@@ -182,12 +182,13 @@ class CircularController extends Controller
         return response()->json($this->EvaluationCompletedList($user));
     }
 
-    public function listForDistrictWaitingAndCompletedList()
+    public function listForDistrictWaitingAndCompletedList(Request $request)
     {
-//        $user = Auth::user();
-$user=User::find(1955);
+        $user = Auth::user();
+//        $user=User::find(1955);
+        $data = $request->all();
 
-        $districtList = $this->listOfDistrictWaitingAndCompletedList($user);
+        $districtList = $this->listOfDistrictWaitingAndCompletedList($user,$data);
         if (!$user) {
             return response()->json([
                 'message' => 'شما بخشدار هیج سازمانی نمی باشید'
@@ -196,12 +197,14 @@ $user=User::find(1955);
         return response()->json($districtList);
     }
 
-    public function listForDistrictCompleted()
+    public function listForDistrictCompleted(Request $request)
     {
         $user = Auth::user();
 //$user=User::find(1955);
 
-        $districtList = $this->listOfDistrictCompletedList($user);
+        $data = $request->all();
+
+        $districtList = $this->listOfDistrictCompletedList($user,$data);
         if (!$user) {
             return response()->json([
                 'message' => 'شما بخشدار هیج سازمانی نمی باشید'
@@ -222,10 +225,21 @@ $user=User::find(1955);
         $dropDown = $this->requirementOfAddVariable($circularID);
         return response()->json($dropDown);
     }
+    public function dropDownsToEditVariable($variableID)
+    {
+        $dropDown = $this->requirementOfEditVariable($variableID);
+        return response()->json($dropDown);
+    }
 
     public function createVariable(Request $request, $circularID)
     {
         try {
+            $circular = EvalCircular::find($circularID);
+        if (!$circular) {
+            return response()->json([
+                'message' => 'بخشنامه مورد نظر یافت نشد'
+            ], 404);
+        }
             $user = Auth::user();
 //            $user=User::find(1889);
             if (!$user) {
@@ -237,7 +251,8 @@ $user=User::find(1955);
             DB::beginTransaction();
             $data = $request->all();
 
-            $editVariable = $this->addVariableSection($circularID, $data);
+            $editVariable = $this->addVariable($circularID, $data);
+//            return response()->json($editVariable);
 
             if ($editVariable) {
                 DB::commit();
@@ -260,32 +275,28 @@ $user=User::find(1955);
         }
     }
 
-    public function updateVariable(Request $request, $sectionID)
+    public function updateVariable(Request $request, $variableId)
     {
         try {
-//            $user = Auth::user();
-            $user=User::find(1889);
+            $user = Auth::user();
+//            $user=User::find(1889);
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'
                 ], 403);
             }
-            $section = EvalCircularSection::where('id', $sectionID)->first();
-
-            if (!$section) {
-                return response()->json(['error' => 'بخش مورد نظر یافت نشد'], 403);
-            }
 
             DB::beginTransaction();
             $data = $request->all();
-            $editVariable = $this->editVariable($sectionID, $data);
+            $editVariable = $this->editVariable($variableId, $data);
+//            return response()->json($editVariable);
 
 
             if ($editVariable) {
                 DB::commit();
                 return response()->json([
                     'message' => 'متغیر با موفقیت ویرایش شد',
-                    'id' => $sectionID
+                    'id' => $variableId
                 ], 201);
             } else {
                 DB::rollBack();
@@ -316,6 +327,16 @@ $user=User::find(1955);
         return [
             'properties' => PropertiesAndvaluesResource::collection($properties),
             'dropdowns'=>$this->requirementOfAddVariable($circularID)
+        ];
+    }
+    public function listingPropertiesForEdit($variableID)
+    {
+        $oUnitCatId = OunitCategoryEnum::VillageOfc->value;
+        $properties = OucProperty::with('values')->where('ounit_cat_id', $oUnitCatId)->select('id', 'name')->get();
+
+        return [
+            'properties' => PropertiesAndvaluesResource::collection($properties),
+            'dropdowns'=>$this->requirementOfEditVariable($variableID),
         ];
     }
 

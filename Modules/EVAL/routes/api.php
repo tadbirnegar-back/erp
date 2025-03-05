@@ -34,11 +34,12 @@ Route::post('eval/add/circular',[CircularController::class,'create']);
 Route::post('eval/circular/list',[CircularController::class,'circularSearch']);
 Route::get('eval/single/{id}',[CircularController::class,'single']);
 Route::get('eval/last/circular/{id}',[CircularController::class,'showLastCircularData']);
-Route::get('eval/update/circular/{id}',[CircularController::class,'editCircular']);
+Route::post('eval/update/circular/{id}',[CircularController::class,'editCircular']);
 Route::get('eval/delete/circular/{id}',[CircularController::class,'circularDelete']);
 Route::post('eval/arzyabi/list',[CircularController::class,'evaluationList']);
 Route::get('eval/items/list/{id}',[CircularController::class,'itemList']);
 Route::get('eval/variable/drop-down/list/{id}',[CircularController::class,'dropDownsToAddVariable']);
+Route::get('eval/edit/variable/drop-down/list/{id}',[CircularController::class,'dropDownsToEditVariable']);
 Route::get('/eval/evaluation/revising/{id}', [EvaluationController::class, 'revisingEvaluationPreData']);
 Route::post('/eval/evaluating/district',[CircularController::class,'listForDistrictWaitingAndCompletedList']);
 Route::post('eval/properties/list/{id}', [CircularController::class, 'listingProperties']);
@@ -50,4 +51,6 @@ Route::post('eval/delete/section/{id}', [CircularController::class, 'sectionDele
 Route::post('eval/delete/indicator/{id}', [CircularController::class, 'indicatorDelete']);
 Route::get('eval/edit/requirement/{id}', [CircularController::class, 'editVariableRequirement']);
 Route::post('eval/delete/variable/{id}', [CircularController::class, 'variableDelete']);
+Route::get('eval/wait-to-complete/list', [CircularController::class, 'listForDistrictCompleted']);
+Route::get('eval/properties/list/edit/{id}', [CircularController::class, 'listingPropertiesForEdit']);
 
