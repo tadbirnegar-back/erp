@@ -427,7 +427,10 @@ trait EvaluationTrait
         $variables = $allData->variables;
 
         $forbiddenVillages = [];
-        if ($variables->contains(fn($variable) => !$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())) {
+        if ($variables->contains(fn($variable) =>
+            method_exists($variable, 'evalVariableTargets') &&
+            (!$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())
+        )) {
             return $forbiddenVillages;
         }
 

@@ -12,6 +12,7 @@ use Modules\EVAL\app\Models\EvalCircular;
 use Modules\EVAL\app\Models\EvalCircularIndicator;
 use Modules\EVAL\app\Models\EvalCircularSection;
 use Modules\EVAL\app\Models\EvalCircularVariable;
+use Modules\EVAL\app\Models\EvalEvaluation;
 
 class EVALController extends Controller
 {
@@ -85,10 +86,25 @@ class EVALController extends Controller
 
 
     }
-    public function fillTheAnswers($id)
+    public function fillTheAnswers($lastEvaluationID)
     {
+
         //Fill the evaluations
-        $evals = DB::table('evaluators')->where('evaluation_id',$id)->get();
+        $evals = DB::table('evaluators')->where('evaluation_id',$lastEvaluationID)->get();
+
+        foreach ($evals as $eval) {
+            $targetOunitId = $eval->organization_unit_id;
+            $newEval = EvalEvaluation::where('target_ounit_id' , $targetOunitId)->first();
+            if($newEval){
+                $newEval->sum = $eval->sum;
+                $newEval->average = $eval->average;
+                $newEval->save();
+
+                $parametersOld = DB::table('eval_parameter_answers')->where('evaluator_id')->get();
+            }
+
+
+        }
         return response()->json($evals);
     }
 }

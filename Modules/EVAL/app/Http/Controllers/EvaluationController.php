@@ -123,16 +123,18 @@ class EvaluationController extends Controller
         try {
             DB::beginTransaction();
             $circular = EvalCircular::findOrFail($id);
-            $user = Auth::user();
+            $user = User::find(2174);
             $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
-            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular)->toBase();
+//            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular)->toBase();
+//            return response() -> json($eliminatedVillagesQuery);
+            $eliminatedVillagesQuery = [];
             $allJobs = [];
 
             OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
-                ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
+//                ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
                 ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
                     $batch = [];
                     foreach ($chunk as $organizationUnit) {
@@ -159,7 +161,7 @@ class EvaluationController extends Controller
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message' => 'متاسفانه بخشنامه ابلاغ نگردید'], 404);
+            return response()->json(['message' => $e->getMessage()], 404);
         }
 
     }
