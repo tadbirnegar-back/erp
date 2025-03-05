@@ -319,6 +319,7 @@ class CircularController extends Controller
         return response()->json($this->lastDataForEditVariable($variableID));
     }
 
+
     public function listingProperties($circularID)
     {
         $oUnitCatId = OunitCategoryEnum::VillageOfc->value;
