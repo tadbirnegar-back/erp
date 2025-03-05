@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
+use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Http\Traits\EvaluationTrait;
 use Modules\EVAL\app\Jobs\MakeEvaluationFormJob;
 use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Models\EvalCircularStatus;
 use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EVAL\app\Resources\EvaluationRevisedResource;
 use Modules\EVAL\app\Resources\SendVariablesResource;
@@ -23,7 +25,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EvaluationController extends Controller
 {
-    use EvaluationTrait;
+    use EvaluationTrait , CircularTrait;
 
     public function preViewEvaluation($id)
     {
@@ -123,18 +125,16 @@ class EvaluationController extends Controller
         try {
             DB::beginTransaction();
             $circular = EvalCircular::findOrFail($id);
-            $user = User::find(2174);
+            $user = Auth::user();
             $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
-//            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular)->toBase();
-//            return response() -> json($eliminatedVillagesQuery);
-            $eliminatedVillagesQuery = [];
+            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular)->toBase();
             $allJobs = [];
 
             OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
-//                ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
+                ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
                 ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
                     $batch = [];
                     foreach ($chunk as $organizationUnit) {
@@ -157,11 +157,18 @@ class EvaluationController extends Controller
                     ->dispatchAfterResponse();
             }
 
+            $circularStatus = $this->notifiedCircularStatus();
+            EvalCircularStatus::create([
+                'status_id' => $circularStatus->id,
+                'eval_circular_id' => $circular->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
             DB::commit();
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message' => $e->getMessage()], 404);
+            return response()->json(['message' => 'متاسفانه بخشنامه ابلاغ نگردید'], 404);
         }
 
     }

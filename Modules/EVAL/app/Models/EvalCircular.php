@@ -5,6 +5,7 @@ namespace Modules\EVAL\app\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\AAA\app\Models\User;
+use Modules\EVAL\app\Observers\CircularObserver;
 use Modules\EVAL\Database\factories\EvalCircularFactory;
 use Modules\Eval\app\Http\Enums\EvalCircularStatusEnum;
 use Modules\FileMS\app\Models\File;
@@ -82,5 +83,15 @@ class EvalCircular extends Model
             ]
         );
     }
+    protected static function boot()
+    {
+        parent::boot();
 
+        static::observe(CircularObserver::class);
+    }
+    public function lastStatusOfEvalCircular()
+    {
+        return $this->hasOne(EvalCircularStatus::class, 'eval_circular_id', 'id')
+            ->orderBy('id', 'desc');
+    }
 }
