@@ -855,7 +855,7 @@ class EnactmentController extends Controller
 
             }
 
-            if ($reviewStatuses->count() == 3) {
+            if ($reviewStatuses->count() >= 2) {
                 $heyaatStatus = $this->enactmentCompleteStatus();
 
                 $enactmentStatus = new EnactmentStatus();
@@ -922,7 +922,7 @@ class EnactmentController extends Controller
 
             }
 
-            if ($reviewStatuses->count() == 3) {
+            if ($reviewStatuses->count() >= 2) {
                 $heyaatStatus = $this->enactmentCompleteStatus();
 
                 $enactmentStatus = new EnactmentStatus();
