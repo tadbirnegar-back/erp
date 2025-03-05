@@ -43,7 +43,7 @@ class StoreEnactmentStatusJob implements ShouldQueue
                     $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
                         $subQuery->where('enactment_id', $this->encId);
                     })->whereHas('roles', function ($q) {
-                        $q->where('name', RolesEnum::OZV_HEYAAT->value);
+                        $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
                     });
 
                 },])->find($this->encId);
@@ -73,10 +73,10 @@ class StoreEnactmentStatusJob implements ShouldQueue
 
                     $reviewStatuses = $enactment->enactmentReviews()
                         ->whereHas('user.roles', function ($query) {
-                            $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                            $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
                         })->with('status')->get();
 
-                    if ($reviewStatuses->count() > 1) {
+                    if ($reviewStatuses->count() >= 2) {
                         $result = $reviewStatuses->groupBy('status.id')
                             ->map(fn($statusGroup) => [
                                 'status' => $statusGroup->first(),
