@@ -25,7 +25,7 @@ class EvalCircularIndicator extends Model
 
     public function evalCircularSection()
     {
-        return $this->belongsTo(EvalCircularSection::class, 'Eval_circular_section', 'id');
+        return $this->belongsTo(EvalCircularSection::class, 'Eval_circular_section_id', 'id');
     }
 
     public function evalCircularVariable()
