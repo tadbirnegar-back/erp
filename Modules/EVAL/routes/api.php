@@ -38,4 +38,4 @@ Route::post('/eval/arzyabi/list',[CircularController::class,'evaluationList']);
 Route::get('/eval/items/list/{id}',[CircularController::class,'itemList']);
 Route::get('/eval/variable/drop-down/list/{id}',[CircularController::class,'dropDownsToAddVariable']);
 Route::get('/eval/merge/old/eval-to/new' , [EvalController::class, 'mergeOldEvaluationToNew']);
-Route::get('/eval/merge/old-to-new/answers/{id}' , [EvalController::class, 'fillTheAnswers']);
+Route::post('/eval/merge/old-to-new/answers/{id}' , [EvalController::class, 'fillTheAnswers']);
