@@ -63,5 +63,15 @@
         "ouc_property_name": "مدرک",
         "value": false,
         "operator": "="
+    },
+    {
+        "ouc_property_name": "جمعیت",
+        "value": 1000,
+        "operator": ">"
+    },
+    {
+        "ouc_property_name": "جمعیت",
+        "value": 1000,
+        "operator": "<"
     }
 ]
