@@ -427,7 +427,10 @@ trait EvaluationTrait
         $variables = $allData->variables;
 
         $forbiddenVillages = [];
-        if ($variables->contains(fn($variable) => !$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())) {
+        if ($variables->contains(fn($variable) =>
+            method_exists($variable, 'evalVariableTargets') &&
+            (!$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())
+        )) {
             return $forbiddenVillages;
         }
 
@@ -490,11 +493,6 @@ trait EvaluationTrait
         $evaluatedBefore = EvalEvaluation::where('eval_circular_id', $circular->id)->pluck('target_ounit_id')->toArray();
         $variables = $allData->variables;
 
-        $forbiddenVillages = [];
-        if ($variables->contains(fn($variable) => !$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())) {
-            return $forbiddenVillages;
-        }
-
         $result = [];
 
         foreach ($variables as $variable) {
@@ -545,6 +543,7 @@ trait EvaluationTrait
         });
 
         $commonVillages = empty($villagesIds) ? [] : array_intersect(...$villagesIds);
+
         $totalVillages = array_merge($commonVillages, $evaluatedBefore);
 
         return collect($totalVillages)->values();

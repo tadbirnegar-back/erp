@@ -21,7 +21,7 @@ class EvalCircularVariable extends Model
         'title',
         'eval_circular_indicator_id',
         'weight',
-        'description',
+        'description'
     ];
 
     public $timestamps = false;

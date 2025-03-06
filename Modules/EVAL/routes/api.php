@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\EVAL\app\Http\Controllers\CircularController;
 
+use Modules\EVAL\app\Http\Controllers\EVALController;
 use Modules\EVAL\app\Http\Controllers\EvaluationController;
 
 /*
@@ -18,10 +19,8 @@ use Modules\EVAL\app\Http\Controllers\EvaluationController;
 */
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
-
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
-
 });
 Route::get('/eval/evaluation/pre-view/{id}', [EvaluationController::class, 'preViewEvaluation']);
 Route::get('/eval/evaluation/start/{id}', [EvaluationController::class, 'evaluationStart']);
@@ -40,7 +39,6 @@ Route::post('eval/arzyabi/list',[CircularController::class,'evaluationList']);
 Route::get('eval/items/list/{id}',[CircularController::class,'itemList']);
 Route::get('eval/variable/drop-down/list/{id}',[CircularController::class,'dropDownsToAddVariable']);
 Route::get('eval/edit/variable/drop-down/list/{id}',[CircularController::class,'dropDownsToEditVariable']);
-Route::get('/eval/evaluation/revising/{id}', [EvaluationController::class, 'revisingEvaluationPreData']);
 Route::post('/eval/evaluating/district',[CircularController::class,'listForDistrictWaitingAndCompletedList']);
 Route::post('eval/properties/list/{id}', [CircularController::class, 'listingProperties']);
 Route::post('eval/add/variable/{id}', [CircularController::class, 'createVariable']);
@@ -53,4 +51,6 @@ Route::get('eval/edit/requirement/{id}', [CircularController::class, 'editVariab
 Route::post('eval/delete/variable/{id}', [CircularController::class, 'variableDelete']);
 Route::get('eval/wait-to-complete/list', [CircularController::class, 'listForDistrictCompleted']);
 Route::get('eval/properties/list/edit/{id}', [CircularController::class, 'listingPropertiesForEdit']);
+Route::get('/eval/merge/old/eval-to/new' , [EvalController::class, 'mergeOldEvaluationToNew']);
+Route::post('/eval/merge/old-to-new/answers/{id}' , [EvalController::class, 'fillTheAnswers']);
 
