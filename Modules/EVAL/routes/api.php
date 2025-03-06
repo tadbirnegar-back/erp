@@ -33,7 +33,7 @@ Route::post('eval/add/circular',[CircularController::class,'create']);
 Route::post('eval/circular/list',[CircularController::class,'circularSearch']);
 Route::get('eval/single/{id}',[CircularController::class,'single']);
 Route::get('eval/last/circular/{id}',[CircularController::class,'showLastCircularData']);
-Route::get('eval/update/circular/{id}',[CircularController::class,'editCircular']);
+Route::post('eval/update/circular/{id}',[CircularController::class,'editCircular']);
 Route::get('eval/delete/circular/{id}',[CircularController::class,'circularDelete']);
 Route::post('eval/arzyabi/list',[CircularController::class,'evaluationList']);
 Route::get('eval/items/list/{id}',[CircularController::class,'itemList']);
