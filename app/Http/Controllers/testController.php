@@ -7,6 +7,7 @@ use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
@@ -21,20 +22,21 @@ class testController extends Controller
 
     public function run()
     {
-        $a = User::first();
-        dump($a);
-        $status = $this->questionActiveStatus();
-
-        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
-            ->joinRelationship('chapters.allActiveLessons.questions.options')
-            ->joinRelationship('chapters.allActiveLessons.questions.repository')
-            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
-            ->select([
-                'questions.id as QID',
-                'lessons.title as lesson title'
-            ])->where('questions.status_id', $status->id)
-            ->get();
-        return $query;
+        StoreEnactmentStatusJob::dispatch(85);
+//        $a = User::first();
+//        dump($a);
+//        $status = $this->questionActiveStatus();
+//
+//        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
+//            ->joinRelationship('chapters.allActiveLessons.questions.options')
+//            ->joinRelationship('chapters.allActiveLessons.questions.repository')
+//            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
+//            ->select([
+//                'questions.id as QID',
+//                'lessons.title as lesson title'
+//            ])->where('questions.status_id', $status->id)
+//            ->get();
+//        return $query;
 
 //        $user = User::with(['organizationUnits.unitable', 'organizationUnits.payments' => function ($q) {
 //            $q->where('status_id', 46);
