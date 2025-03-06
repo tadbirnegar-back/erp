@@ -218,6 +218,7 @@ class CircularController extends Controller
         return response()->json($districtList);
     }
 
+
     public function itemList($circularID)
     {
         $list = $this->completingItems($circularID);

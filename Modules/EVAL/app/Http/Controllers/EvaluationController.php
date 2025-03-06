@@ -73,7 +73,7 @@ class EvaluationController extends Controller
             $this->setAnswers($id, $answers);
             $this->calculateEvaluation($id, $user);
             DB::commit();
-            return response()->json(['message' => 'ارزیابی شما با موفقیت ثبت شد.']);
+            return response()->json(['message' => 'ارزیابی شما با موفقیت ثبت شد.'] , 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['message' => "متاسفانه ارزیابی شما ثبت نشد."], 403);
@@ -128,7 +128,8 @@ class EvaluationController extends Controller
             $user = Auth::user();
             $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
-            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular)->toBase();
+            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular);
+
             $allJobs = [];
 
             OrganizationUnit::where('unitable_type', VillageOfc::class)
@@ -181,7 +182,7 @@ class EvaluationController extends Controller
             $user = Auth::user();
             $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
-            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular)->toBase();
+            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular);
             $allJobs = [];
 
             OrganizationUnit::where('unitable_type', VillageOfc::class)

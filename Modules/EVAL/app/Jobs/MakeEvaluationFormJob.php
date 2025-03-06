@@ -20,7 +20,7 @@ class MakeEvaluationFormJob implements ShouldQueue
 
     public int $ounitID;
     public int $userID;
-    public EvalCircular $circular;
+    public  $circular;
     public int $statusID;
     public function __construct($circular, $ounitID , $userID , $statusID)
     {
