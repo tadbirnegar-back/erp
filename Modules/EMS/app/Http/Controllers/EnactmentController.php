@@ -827,6 +827,13 @@ class EnactmentController extends Controller
                 ]
             );
 
+            $AllMainPersons = $enactment->load( ['members' => function ($query) {
+                $query->whereHas('roles', function ($q) {
+                    $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
+                });
+            }]);
+
+            $AllMainCount = $AllMainPersons->members->count();
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {
@@ -855,7 +862,7 @@ class EnactmentController extends Controller
 
             }
 
-            if ($reviewStatuses->count() >= 2) {
+            if ($reviewStatuses->count() == $AllMainCount) {
                 $heyaatStatus = $this->enactmentCompleteStatus();
 
                 $enactmentStatus = new EnactmentStatus();
@@ -899,6 +906,13 @@ class EnactmentController extends Controller
                     $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
                 })->with('status')->get();
 
+            $AllMainPersons = $enactment->load( ['members' => function ($query) {
+                $query->whereHas('roles', function ($q) {
+                    $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
+                });
+            }]);
+
+            $AllMainCount = $AllMainPersons->members->count();
 
             if ($reviewStatuses->count() > 1) {
                 $result = $reviewStatuses->groupBy('status.id')
@@ -922,7 +936,7 @@ class EnactmentController extends Controller
 
             }
 
-            if ($reviewStatuses->count() >= 2) {
+            if ($reviewStatuses->count() == $AllMainCount) {
                 $heyaatStatus = $this->enactmentCompleteStatus();
 
                 $enactmentStatus = new EnactmentStatus();

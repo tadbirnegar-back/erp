@@ -47,6 +47,16 @@ class StoreEnactmentStatusJob implements ShouldQueue
                     });
 
                 },])->find($this->encId);
+
+            $memebers = $enactment->members;
+
+            $AllMainPersons = $enactment->load(['members' => function ($query) {
+                $query->whereHas('roles', function ($q) {
+                    $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
+                });
+            }]);
+            $AllMainCount = $AllMainPersons->members->count();
+
             if (is_null($enactment)) {
                 $this->delete();
                 return;
@@ -76,7 +86,7 @@ class StoreEnactmentStatusJob implements ShouldQueue
                             $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
                         })->with('status')->get();
 
-                    if ($reviewStatuses->count() >= 2) {
+                    if ($reviewStatuses->count() == $AllMainCount) {
                         $result = $reviewStatuses->groupBy('status.id')
                             ->map(fn($statusGroup) => [
                                 'status' => $statusGroup->first(),
