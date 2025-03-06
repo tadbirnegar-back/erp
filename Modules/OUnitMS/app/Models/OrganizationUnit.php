@@ -164,8 +164,6 @@ class OrganizationUnit extends Model
             ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
             ->value('value');
 
-        Log::info($maxDays);
-
         // Fetch the enactment limit per meeting from settings
         $enactmentLimitPerMeeting = \DB::table('settings')
             ->where('key', SettingsEnum::ENACTMENT_LIMIT_PER_MEETING->value)
