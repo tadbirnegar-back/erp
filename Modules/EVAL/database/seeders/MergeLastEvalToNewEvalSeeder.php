@@ -19,7 +19,7 @@ class MergeLastEvalToNewEvalSeeder extends Seeder
         // Fetch evaluators for evaluation_id = 1 and update EvalEvaluation records
         DB::table('evaluators')
             ->where('evaluation_id', 1)
-            ->orderBy('id') // Required for chunk()
+            ->orderBy('id')
             ->chunk(500, function ($evals) {
                 foreach ($evals as $eval) {
                     $targetOunitId = $eval->organization_unit_id;

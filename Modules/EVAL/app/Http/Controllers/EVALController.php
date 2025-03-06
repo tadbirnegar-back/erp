@@ -37,6 +37,8 @@ class EVALController extends Controller
             //----get section before
             $sections = DB::table('eval_parts')->get();
 
+
+
             //----insert new section
             $NewSections = [];
             foreach ($sections as $section) {

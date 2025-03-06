@@ -128,7 +128,8 @@ class EvaluationController extends Controller
             $user = Auth::user();
             $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
-            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular)->toBase();
+            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular);
+
             $allJobs = [];
 
             OrganizationUnit::where('unitable_type', VillageOfc::class)
@@ -181,7 +182,7 @@ class EvaluationController extends Controller
             $user = Auth::user();
             $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
-            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular)->toBase();
+            $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular);
             $allJobs = [];
 
             OrganizationUnit::where('unitable_type', VillageOfc::class)
