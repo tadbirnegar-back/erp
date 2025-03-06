@@ -75,27 +75,21 @@ trait CircularTrait
         return $query;
     }
 
-    public function listOfDistrictWaitingAndCompletedList($user,$data)
+    public function listOfDistrictWaitingAndCompletedList(int $perPage = 10, int $pageNumber = 1, array $data = [], $user)
     {
-
-        $user = OrganizationUnit::whereIn('unitable_type',
-            [
-                DistrictOfc::class,
-                CityOfc::class,
-                StateOfc::class
-            ])
+        $user = OrganizationUnit::whereIn('unitable_type', [
+            DistrictOfc::class,
+            CityOfc::class,
+            StateOfc::class
+        ])
             ->where('head_id', $user->id)
             ->with(['descendantsAndSelf' => function ($query) {
                 $query->where('unitable_type', VillageOfc::class);
             }])
             ->get()
             ->toArray();
-        $userOunits = [];
 
-        foreach ($user as $person) {
-            $userOunits[] = $person['id'];
-        }
-
+        $userOunits = collect($user)->pluck('id')->toArray();
         $villageIds = collect($user)
             ->pluck('descendants_and_self.*.id')
             ->flatten()
@@ -103,17 +97,20 @@ trait CircularTrait
 
         $searchTerm = $data['name'] ?? null;
 
-        $eval = EvalEvaluation::query()
-            ->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
-            ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%')
-//         EvalEvaluation::query()
+        $evalQuery = EvalEvaluation::query()
+            ->where(function ($query) use ($searchTerm) {
+                if (!empty($searchTerm)) {
+                    $query->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
+                        ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%');
+                }
+            })
             ->joinRelationship('EvalEvaluationStatus.status')
             ->latest('evalEvaluation_status.id')
             ->joinRelationship('evalCircular')
             ->joinRelationship('targetOunits')
             ->leftJoin('eval_evaluations as eval_head', function ($join) use ($userOunits) {
                 $join->on('eval_head.target_ounit_id', '=', 'eval_evaluations.target_ounit_id')
-                    ->on('eval_head.eval_circular_id', '=','eval_evaluations.eval_circular_id')
+                    ->on('eval_head.eval_circular_id', '=', 'eval_evaluations.eval_circular_id')
                     ->whereIn('eval_head.evaluator_ounit_id', $userOunits);
             })
             ->select([
@@ -127,29 +124,28 @@ trait CircularTrait
             ])
             ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
             ->where('statuses.name', EvaluationStatusEnum::DONE->value)
-            ->distinct()
-            ->get();
+            ->distinct();
 
+        $eval = $evalQuery->paginate($perPage, $pageNumber);
 
-        return $eval->map(function ($item) {
+        $eval->getCollection()->transform(function ($item) {
             $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
             $deadLine = $expiredDate ? $expiredDate->diffInDays(now()) : null;
             return [
                 'id' => $item->id,
                 'title' => $item->title,
                 'deadline' => $deadLine,
-                'status' => $item->eval_head_id == null ? EvaluationStatusEnum::WAIT_TO_DONE->value :EvaluationStatusEnum::DONE->value,
+                'status' => $item->eval_head_id == null ? EvaluationStatusEnum::WAIT_TO_DONE->value : EvaluationStatusEnum::DONE->value,
                 'status_class' => $item->eval_head_id == null ? 'primary' : 'success',
                 'ounit_name' => $item->ounit_name,
-
-
             ];
-
         });
 
+        return $eval;
     }
 
-    public function listOfDistrictCompletedList($user,$data)
+
+    public function listOfDistrictCompletedList(int $perPage = 10, int $pageNumber = 1, array $data = [], $user)
     {
         $user = OrganizationUnit::whereIn('unitable_type',
             [
@@ -176,7 +172,7 @@ trait CircularTrait
 
         $searchTerm = $data['name'] ?? null;
 
-        $eval = EvalEvaluation::query()
+        $evalQuery = EvalEvaluation::query()
             ->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
             ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%')
 //         EvalEvaluation::query()
@@ -199,9 +195,11 @@ trait CircularTrait
             ])
             ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
             ->where('statuses.name', EvalCircularStatusEnum::COMPLETED->value)
-            ->distinct()
-            ->get();
-        return $eval->map(function ($item) {
+            ->distinct();
+        $eval = $evalQuery->paginate($perPage, ['*'], 'page', $pageNumber);
+
+
+        $eval->getCollection()->transform(function ($item) {
             $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
             $deadLine = $expiredDate ? $expiredDate->diffInDays(now()) : null;
             return [
@@ -214,6 +212,7 @@ trait CircularTrait
             ];
 
         });
+        return $eval;
 
     }
 
@@ -576,7 +575,8 @@ trait CircularTrait
         $targetData = json_decode($data['oucPropertyValueID'], true);
         if (is_array($targetData) && !empty($targetData)) {
             foreach ($targetData as $propertyValueID) {
-                $targets[] = EvalVariableTarget::create([
+                $targets[] = EvalVariableTarget::query()
+                ->firstOrCreate([
                     'eval_circular_variables_id' => $variable->id,
                     'ouc_property_value_id' => $propertyValueID,
                 ]);
@@ -595,15 +595,12 @@ trait CircularTrait
 
     public function deleteTargets($data,$variable)
     {
-        $delete = json_decode($data['deleteTarget'], true);
+        $delete = json_decode($data['deleteTargets'], true);
 
         return EvalVariableTarget::whereIn('ouc_property_value_id', $delete)
             ->where('eval_circular_variables_id',$variable->id)
             ->delete();
     }
-
-
-
 
 
     public function lastDataForEditVariable($variableID)

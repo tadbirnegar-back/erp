@@ -17,6 +17,7 @@ use Modules\EVAL\app\Models\EvalCircularSection;
 use Modules\EVAL\app\Resources\CircularFirstListResource;
 use Modules\EVAL\app\Resources\ItemsListResource;
 use Modules\EVAL\app\Resources\LastDataResource;
+use Modules\EVAL\app\Resources\ListOfDistrictCompletedResource;
 use Modules\EVAL\app\Resources\PropertiesAndvaluesResource;
 use Modules\EVAL\app\Resources\SingleResource;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
@@ -184,17 +185,20 @@ class CircularController extends Controller
 
     public function listForDistrictWaitingAndCompletedList(Request $request)
     {
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
         $user = Auth::user();
 //        $user=User::find(1955);
         $data = $request->all();
 
-        $districtList = $this->listOfDistrictWaitingAndCompletedList($user,$data);
+        $districtList = $this->listOfDistrictWaitingAndCompletedList($perPage,$pageNum,$data,$user);
         if (!$user) {
             return response()->json([
                 'message' => 'شما بخشدار هیج سازمانی نمی باشید'
             ], 403);
         }
-        return response()->json($districtList);
+        return response()->json(new ListOfDistrictCompletedResource( $districtList));
     }
 
     public function listForDistrictCompleted(Request $request)
@@ -203,8 +207,9 @@ class CircularController extends Controller
 //$user=User::find(1955);
 
         $data = $request->all();
-
-        $districtList = $this->listOfDistrictCompletedList($user,$data);
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+        $districtList = $this->listOfDistrictCompletedList( $perPage , $pageNum, $data, $user);
         if (!$user) {
             return response()->json([
                 'message' => 'شما بخشدار هیج سازمانی نمی باشید'
