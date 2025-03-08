@@ -412,6 +412,85 @@ class CourseController extends Controller
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
         return RelatedCourseListResource::collection($courses);
     }
+    public function relatedComprehensiveCoursesList(Request $request)
+    {
+        $user = Auth::user();
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 50;
+        $pageNum = $data['pageNum'] ?? 1;
+
+        $user->load([
+            'activeRecruitmentScripts.ounit' => function ($query) {
+                $query->with(['ancestorsAndSelf' => function ($q) {
+                    $q->whereNot('unitable_type', TownOfc::class);
+                }]);
+            }
+        ]);
+
+        $villageOfcs = [];
+
+        foreach ($user->activeRecruitmentScripts as $script) {
+            if ($script->ounit && $script->ounit->unitable_type === VillageOFC::class) {
+                $script->ounit->load('unitable');
+                $villageOfcs[] = $script->ounit->unitable;
+            }
+        }
+
+
+        $relatedOrgans = $user->activeRecruitmentScripts
+            ->pluck('ounit.ancestorsAndSelf')
+            ->flatten(1)
+            ->unique()
+            ->toArray();
+
+
+        $allData = [];
+
+        foreach ($relatedOrgans as $unit) {
+            $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
+            if ($ancestorCategoryId) {
+                $allData[] = [
+                    'id' => $unit['id'],
+                    'category_id' => $ancestorCategoryId,
+                ];
+            }
+
+        }
+
+        $allOunits = array_unique($allData, SORT_REGULAR);
+
+
+        //Employee Features Plucks
+        $levels = $user->activeRecruitmentScripts
+            ->pluck('level_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $positions = $user->activeRecruitmentScripts
+            ->pluck('position_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $jobs = $user->activeRecruitmentScripts
+            ->pluck('job_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+
+        //Ounit features plucks
+        $villageOfcs = collect($villageOfcs);
+        $isTourism = $villageOfcs->pluck('isTourism')->toArray();
+        $isAttachedToCity = $villageOfcs->pluck('isAttached_to_city')->toArray();
+        $isFarm = $villageOfcs->pluck('isFarm')->toArray();
+        $degree = $villageOfcs->pluck('degree')->toArray();
+
+        $title = $request->name;
+        $courses = $this->getRelatedComprehensiveLists($user,$title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
+        return RelatedCourseListResource::collection($courses);
+    }
     public function publishCourseDataShow($id)
     {
         try {
