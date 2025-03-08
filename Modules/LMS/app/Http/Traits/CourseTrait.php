@@ -1029,7 +1029,7 @@ trait CourseTrait
 
         return $courses;
     }
-    public function getRelatedComprehensiveLists($user,$title, $ounit, $level, $position, $job, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum)
+    public function getRelatedComprehensiveLists($user, $ounit, $level, $position, $job, $isTourism, $isFarm, $isAttachedToCity, $degree)
     {
         $usersInfo = $user->load('student');
         $student = $usersInfo->student;
@@ -1123,7 +1123,10 @@ trait CourseTrait
             })
             ->leftJoin('course_exam as course_exam_alias' , 'course_exam_alias.course_id', '=', 'courses.id')
             ->leftJoin('exams as exam_alias' , 'exam_alias.id', '=', 'course_exam_alias.exam_id')
-            ->leftJoin('answer_sheets as answer_sheet_alias' , 'answer_sheet_alias.exam_id', '=', 'exam_alias.id')
+            ->leftJoin('answer_sheets as answer_sheet_alias', function($join) use ($student){
+                $join->on('answer_sheet_alias.exam_id', '=', 'exam_alias.id')
+                    ->where('answer_sheet_alias.student_id', $student->id);
+            })
             ->leftJoin('statuses as answer_sheet_status_alias' , 'answer_sheet_status_alias.id', '=', 'answer_sheet_alias.status_id')
             ->select([
                 'courses.id as id',
@@ -1137,10 +1140,11 @@ trait CourseTrait
             ->with(['contentTypes' => function ($query) {
                 $query->distinct();
             }])
-            ->where('courses.title', 'like', '%' . $title . '%')
+//            ->where('courses.title', 'like', '%' . $title . '%')
             ->where('courses.course_type' , CourseTypeEnum::MOKATEBEYI->value)
             ->distinct('courses.id')
-            ->paginate($perPage, $columns = ['*'], $pageName = 'page', $pageNum);
+            ->get();
+//            ->paginate($perPage, $columns = ['*'], $pageName = 'page', $pageNum);
 
         return $courses;
     }

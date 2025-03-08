@@ -34,6 +34,7 @@ use Modules\LMS\app\Resources\LessonListResource;
 use Modules\LMS\app\Resources\LiveOunitSearchForCourseResource;
 use Modules\LMS\app\Resources\MyCoursesListResource;
 use Modules\LMS\app\Resources\PublishCoursePreviewResource;
+use Modules\LMS\app\Resources\RelatedCourseListComprehensiveResource;
 use Modules\LMS\app\Resources\RelatedCourseListResource;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
 use Modules\LMS\app\Resources\ViewCourseSideBarResource;
@@ -412,12 +413,12 @@ class CourseController extends Controller
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
         return RelatedCourseListResource::collection($courses);
     }
-    public function relatedComprehensiveCoursesList(Request $request)
+    public function relatedComprehensiveCoursesList()
     {
         $user = Auth::user();
-        $data = $request->all();
-        $perPage = $data['perPage'] ?? 50;
-        $pageNum = $data['pageNum'] ?? 1;
+//        $data = $request->all();
+//        $perPage = $data['perPage'] ?? 50;
+//        $pageNum = $data['pageNum'] ?? 1;
 
         $user->load([
             'activeRecruitmentScripts.ounit' => function ($query) {
@@ -440,11 +441,17 @@ class CourseController extends Controller
         $relatedOrgans = $user->activeRecruitmentScripts
             ->pluck('ounit.ancestorsAndSelf')
             ->flatten(1)
+            ->filter(function ($item) {
+                return $item !== null;
+            })
             ->unique()
             ->toArray();
 
 
+
         $allData = [];
+
+
 
         foreach ($relatedOrgans as $unit) {
             $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
@@ -487,9 +494,9 @@ class CourseController extends Controller
         $isFarm = $villageOfcs->pluck('isFarm')->toArray();
         $degree = $villageOfcs->pluck('degree')->toArray();
 
-        $title = $request->name;
-        $courses = $this->getRelatedComprehensiveLists($user,$title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
-        return RelatedCourseListResource::collection($courses);
+//        $title = $request->name;
+        $courses = $this->getRelatedComprehensiveLists($user, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree);
+        return RelatedCourseListComprehensiveResource::collection($courses);
     }
     public function publishCourseDataShow($id)
     {
