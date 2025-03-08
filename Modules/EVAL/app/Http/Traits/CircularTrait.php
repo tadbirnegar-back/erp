@@ -250,10 +250,10 @@ trait CircularTrait
 
     public function singleCircularMain($circularID)
     {
-        //     counting all VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
+        //     counting VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
         $circular = EvalCircular::find($circularID);
         $villageCount = VillageOfc::query()
-            ->whereIntegerNotInRaw('id', $this->villagesNotInCirclesOfTarget($circular))
+            ->whereIntegerInRaw('id', $this->villagesNotInCirclesOfTarget($circular))
             ->count();
 
         $countEvalsForTotalForm = EvalEvaluation::query()

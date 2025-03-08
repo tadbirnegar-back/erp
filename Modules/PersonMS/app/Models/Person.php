@@ -3,6 +3,7 @@
 namespace Modules\PersonMS\app\Models;
 
 use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -180,5 +181,9 @@ class Person extends Model
         return $this -> hasMany(Customer::class, 'person_id');
     }
 
-
+    public function scopeSearch(Builder $query, string $column, string $value)
+    {
+        return $query->whereRaw('MATCH(' . $column . ') AGAINST(? IN NATURAL LANGUAGE MODE)', [$value])
+            ->orWhere($column, 'LIKE', '%' . $value . '%');
+    }
 }

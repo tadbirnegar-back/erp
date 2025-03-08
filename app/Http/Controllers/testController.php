@@ -16,6 +16,7 @@ use Modules\LMS\app\Models\Course;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
@@ -24,7 +25,14 @@ class testController extends Controller
 
     public function run()
     {
-
+        $searchTerm = 'حمید';
+        $users = Person::search('display_name', $searchTerm)
+            ->select([
+                'persons.display_name as name',
+                'persons.id as personID'
+            ])
+            ->get();
+        return response()->json($users);
         //Some Random Code to Test my larvel debug bar
 
 //        $village = VillageOfc::query()
