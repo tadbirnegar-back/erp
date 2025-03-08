@@ -287,7 +287,12 @@ trait EvaluationTrait
             ])
             ->get();
 
-        return ["village" => $result, "ancestors" => $ancestors, "ounits" => DB::select($myQueryAsForAncestors), 'user' => $user];
+        $ounitsAncestors = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
+            $query->where('unitable_type','!=' , TownOfc::class);
+            $query->with('head.person');
+        }])->find($evalOunit);
+
+        return ["village" => $result, "ancestors" => $ancestors, "ounits" => $ounitsAncestors, 'user' => $user];
     }
 
     private function getDistrictAnswers($organs, $eval)
