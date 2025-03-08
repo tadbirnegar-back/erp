@@ -14,7 +14,7 @@ class ListOfDistrictWaitToCompleteResource extends JsonResource
         return [
             'data' => $this->resource->map(function ($item) {
                 return [
-                    'id' => $item['id'], // دسترسی به ویژگی‌ها به صورت شیء
+                    'id' => $item['id'],
                     'title' => $item['title'],
                     'deadline' => $item['deadline'],
                     'status' => $item['status'],

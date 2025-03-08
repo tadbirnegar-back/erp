@@ -18,6 +18,7 @@ use Modules\EVAL\app\Resources\CircularFirstListResource;
 use Modules\EVAL\app\Resources\ItemsListResource;
 use Modules\EVAL\app\Resources\LastDataResource;
 use Modules\EVAL\app\Resources\ListOfDistrictCompletedResource;
+use Modules\EVAL\app\Resources\ListOfDistrictWaitToCompleteResource;
 use Modules\EVAL\app\Resources\PropertiesAndvaluesResource;
 use Modules\EVAL\app\Resources\SingleResource;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
@@ -84,11 +85,14 @@ class CircularController extends Controller
 
     public function circularSearch(Request $request)
     {
+        $data = $request->all();
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
         $validatedData = $request->validate([
             'name' => 'nullable|string',
         ]);
 
-        $list = $this->CircularsList($validatedData);
+        $list = $this->CircularsList($perPage,$pageNum,$validatedData);
 
         if ($list->isEmpty()){
             return response()->json(['message' => 'لیستی برای جستجو یافت نشد'], 404);
@@ -115,7 +119,6 @@ class CircularController extends Controller
     {
         try {
             $user = Auth::user();
-//            $user=User::find(1889);
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'
@@ -126,6 +129,7 @@ class CircularController extends Controller
             $data = $request->all();
 
             $editCircular = $this->circularEdit($circularID, $data, $user);
+
 
             if ($editCircular) {
                 DB::commit();
@@ -189,7 +193,6 @@ class CircularController extends Controller
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $user = Auth::user();
-//        $user=User::find(1955);
         $data = $request->all();
         $districtList = $this->listOfDistrictWaitingAndCompletedList($perPage,$pageNum,$data,$user);
         if (!$user) {
@@ -202,8 +205,7 @@ class CircularController extends Controller
 
     public function listForDistrictCompleted(Request $request)
     {
-//        $user = Auth::user();
-$user=User::find(1955);
+        $user = Auth::user();
 
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;
@@ -214,7 +216,7 @@ $user=User::find(1955);
                 'message' => 'شما بخشدار هیج سازمانی نمی باشید'
             ], 403);
         }
-        return response()->json($districtList);
+        return response()->json(new ListOfDistrictWaitToCompleteResource($districtList));
     }
 
 
@@ -246,7 +248,6 @@ $user=User::find(1955);
             ], 404);
         }
             $user = Auth::user();
-//            $user=User::find(1889);
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'
@@ -257,7 +258,6 @@ $user=User::find(1955);
             $data = $request->all();
 
             $editVariable = $this->addVariable($circularID, $data);
-//            return response()->json($editVariable);
 
             if ($editVariable) {
                 DB::commit();
@@ -284,7 +284,6 @@ $user=User::find(1955);
     {
         try {
             $user = Auth::user();
-//            $user=User::find(1889);
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'
@@ -294,7 +293,6 @@ $user=User::find(1955);
             DB::beginTransaction();
             $data = $request->all();
             $editVariable = $this->editVariable($variableId, $data);
-//            return response()->json($editVariable);
 
 
             if ($editVariable) {
