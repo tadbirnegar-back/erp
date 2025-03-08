@@ -284,7 +284,6 @@ class CircularController extends Controller
     {
         try {
             $user = Auth::user();
-
             if (!$user) {
                 return response()->json([
                     'message' => 'کاربر مورد نظر یافت نشد'

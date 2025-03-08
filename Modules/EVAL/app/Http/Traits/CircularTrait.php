@@ -253,7 +253,7 @@ trait CircularTrait
         //     counting VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
         $circular = EvalCircular::find($circularID);
         $villageCount = VillageOfc::query()
-            ->whereIntegerInRaw('id', $this->villagesNotInCirclesOfTarget($circular))
+            ->whereIntegerNotInRaw('id', $this->villagesNotInCirclesOfTarget($circular))
             ->count();
 
         $countEvalsForTotalForm = EvalEvaluation::query()
