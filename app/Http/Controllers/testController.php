@@ -25,8 +25,9 @@ class testController extends Controller
 
     public function run()
     {
-        $searchTerm = 'حمید';
-        $users = Person::search('display_name', $searchTerm)
+        $searchTerm = 'ل';
+        $users = Person::query()
+            ->search('description', $searchTerm)
             ->select([
                 'persons.display_name as name',
                 'persons.id as personID'

@@ -180,10 +180,4 @@ class Person extends Model
     {
         return $this -> hasMany(Customer::class, 'person_id');
     }
-
-    public function scopeSearch(Builder $query, string $column, string $value)
-    {
-        return $query->whereRaw('MATCH(' . $column . ') AGAINST(? IN NATURAL LANGUAGE MODE)', [$value])
-            ->orWhere($column, 'LIKE', '%' . $value . '%');
-    }
 }
