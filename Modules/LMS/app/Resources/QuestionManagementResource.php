@@ -20,7 +20,8 @@ class QuestionManagementResource extends JsonResource
             ->toArray();
 
         $groupedQuestions = collect($this->resource['questionList'])->groupBy('questionID');
-
+        $uniqueCourseTitles = collect($this->resource['course'])->pluck('courseTitle');
+        $uniqueCourseDesc = collect($this->resource['questionList'])->pluck('courseDescription');
 
         return [
             'courseTitle' => $this->resource['course']['title'],
