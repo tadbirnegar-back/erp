@@ -75,7 +75,6 @@ class CircularController extends Controller
     {
         $data = $this->singleCircularSidebar($circularID);
         $circular = $data['data']->first();
-
         return response()->json([
             'data' => SingleResource::make($circular),
             'completedCircularCount' => $data['completedCircularCount']
