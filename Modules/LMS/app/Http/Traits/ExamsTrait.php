@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Modules\LMS\app\Http\Enums\CourseTypeEnum;
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
@@ -47,7 +48,7 @@ trait ExamsTrait
             'course_id' => $course->id,
         ]);
 
-        $questionExamData = $this->DataPreparation($exam, $course->id);
+        $questionExamData = $this->DataPreparation($exam, $course);
 
         QuestionExam::insert($questionExamData);
 
@@ -55,18 +56,29 @@ trait ExamsTrait
     }
 
 
-    public function DataPreparation($exam, $id)
+    public function DataPreparation($exam, $course)
     {
         $status = $this->questionActiveStatus()->id;
 
-        $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
-        $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
 
-        $difficultySetting = Setting::where('key', 'Difficulty_for_exam')->first();
-        $difficultyLevel = $difficultySetting ? $difficultySetting->value : null;
+        if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
+            $questionCountSetting = Setting::where('key', 'question_numbers_perExam_comprehensive')->first();
+            $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
+            $difficultySetting = Setting::where('key', 'Difficulty_for_exam_comprehensive')->first();
+            $difficultyLevel = $difficultySetting ? $difficultySetting->value : null;
+            $questionTypeSetting = Setting::where('key', 'question_type_for_exam_comprehensive')->first();
+            $questionTypeLevel = $questionTypeSetting ? (int)$questionTypeSetting->value : null;
+        }else{
+            $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
+            $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
 
-        $questionTypeSetting = Setting::where('key', 'question_type_for_exam')->first();
-        $questionTypeLevel = $questionTypeSetting ? (int)$questionTypeSetting->value : null;
+            $difficultySetting = Setting::where('key', 'Difficulty_for_exam')->first();
+            $difficultyLevel = $difficultySetting ? $difficultySetting->value : null;
+
+            $questionTypeSetting = Setting::where('key', 'question_type_for_exam')->first();
+            $questionTypeLevel = $questionTypeSetting ? (int)$questionTypeSetting->value : null;
+
+        }
 
         $randomQuestions = Question::inRandomOrder()
             ->where('status_id', $status)
@@ -77,7 +89,7 @@ trait ExamsTrait
                 $query->where('question_type_id', $questionTypeLevel);
             })
             ->joinRelationship('lesson.chapter.course')
-            ->where('courses.id', $id)
+            ->where('courses.id', $course->id)
             ->limit($questionCount)
             ->get();
 

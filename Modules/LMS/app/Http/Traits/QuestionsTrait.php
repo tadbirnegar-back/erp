@@ -73,11 +73,12 @@ trait QuestionsTrait
 
     public function questionList($id)
     {
+
         $status = $this->questionActiveStatus();
 
-        $course = Course::find($id);
-
-        $query = Course::leftJoinRelationship('chapters.allActiveLessons.questions')
+        $query = Course::leftJoinRelationship('chapters.allActiveLessons.questions', function ($join) use ($status) {
+            $join->where('questions.status_id', $status->id);
+        })
             ->leftJoinRelationship('chapters.allActiveLessons.questions.difficulty')
             ->leftJoinRelationship('chapters.allActiveLessons.questions.options')
             ->leftJoinRelationship('chapters.allActiveLessons.questions.repository')
@@ -89,6 +90,8 @@ trait QuestionsTrait
                 'answerSheet' => fn($join) => $join->as('answer_sheet_alias')
             ])
             ->select([
+                'courses.title as courseTitle',
+                'courses.description as courseDescription',
                 'questions.id as questionID',
                 'questions.title as questionTitle',
                 'question_types.name as questionTypeName',
@@ -101,19 +104,15 @@ trait QuestionsTrait
                 'answers_alias.question_id as answerQuestionID',
             ])
             ->distinct('questions.id')
-            ->whereNotNull('questions.id')
             ->where('courses.id', $id)
-            ->where('questions.status_id', $status->id)
             ->get();
 
         $count = $this->count($id);
 
         return [
             'questionList' => $query,
-            'count' => $count,
-            'course' => $course
+            'count' => $count
         ];
-
     }
 
     public function count($id)
