@@ -54,5 +54,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 });
-
-Route::get('eval/single/{id}',[CircularController::class,'single']);

@@ -70,7 +70,7 @@ trait CircularTrait
 
             ])
             ->distinct();
-        $result = $query->paginate($perPage, page: $pageNumber);
+        $result = $query->paginate($perPage, ['*'], 'page', $pageNumber);
 
         return $result;
     }
@@ -126,7 +126,7 @@ trait CircularTrait
             ->where('statuses.name', EvaluationStatusEnum::DONE->value)
             ->distinct();
 
-        $eval = $evalQuery->paginate($perPage, $pageNumber);
+        $eval = $evalQuery->paginate($perPage, ['*'], 'page', $pageNumber);
 
         $eval->getCollection()->transform(function ($item) {
             $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
