@@ -9,6 +9,7 @@ use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Http\Traits\EvaluationTrait;
+use Modules\EVAL\app\Jobs\CircularExpirationJob;
 use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
@@ -28,18 +29,19 @@ class testController extends Controller
 
     public function run()
     {
-        $circularID = 1;
 
-        $evals = EvalEvaluation::query()
-            ->joinRelationship('evalCircular.evalCircularStatus')
-            ->joinRelationship('evalEvaluationStatus')
-            ->where('eval_evaluations.eval_circular_id', $circularID)
-            ->whereNotNull('eval_evaluations.target_ounit_id')
-            ->where('eval_circular_statuses.status_id', $this->notifiedCircularStatus()->id)
-            ->where('evalEvaluation_status.status_id', $this->evaluationDoneStatus()->id)
-            ->count();
-
-        return response()->json($evals);
+//        $circularID = 1;
+//
+//        $evals = EvalEvaluation::query()
+//            ->joinRelationship('evalCircular.evalCircularStatus')
+//            ->joinRelationship('evalEvaluationStatus')
+//            ->where('eval_evaluations.eval_circular_id', $circularID)
+//            ->whereNotNull('eval_evaluations.target_ounit_id')
+//            ->where('eval_circular_statuses.status_id', $this->notifiedCircularStatus()->id)
+//            ->where('evalEvaluation_status.status_id', $this->evaluationDoneStatus()->id)
+//            ->count();
+//
+//        return response()->json($evals);
 
 
 //        $searchTerm = 'ل';
