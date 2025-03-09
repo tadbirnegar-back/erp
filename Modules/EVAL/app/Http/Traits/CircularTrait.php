@@ -253,7 +253,7 @@ trait CircularTrait
         //     counting VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
         $circular = EvalCircular::find($circularID);
         $villageCount = VillageOfc::query()
-            ->whereIntegerInRaw('id', $this->villagesNotInCirclesOfTarget($circular))
+            ->whereIntegerNotInRaw('id', $this->villagesNotInCirclesOfTarget($circular))
             ->count();
 
         $countEvalsForTotalForm = EvalEvaluation::query()
@@ -722,6 +722,16 @@ trait CircularTrait
         return Status::where('model', EvalCircular::class)
             ->where('name', EvalCircularStatusEnum::NOTIFIED->value)
             ->first();
+    }
+
+    public function countEvaluationsForNeededVillages($circularID)
+    {
+        $evals = EvalEvaluation::query()
+            ->where('eval_circular_id', $circularID)
+            ->whereNotNull('eval_evaluations.target_ounit_id')
+            ->where('eval_evaluations.status_id', $this->evaluationDoneStatus()->id)
+            ->count();
+
     }
 
 
