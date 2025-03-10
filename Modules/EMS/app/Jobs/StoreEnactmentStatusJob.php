@@ -48,7 +48,7 @@ class StoreEnactmentStatusJob implements ShouldQueue
 
                 },])->find($this->encId);
 
-            $memebers = $enactment->members;
+            $members = $enactment->members;
 
             $AllMainPersons = $enactment->load(['members' => function ($query) {
                 $query->whereHas('roles', function ($q) {
@@ -63,9 +63,9 @@ class StoreEnactmentStatusJob implements ShouldQueue
             }
 
             if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
-                if ($enactment->members->isNotEmpty()) {
+                if ($members->isNotEmpty()) {
                     $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
-                    $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
+                    $data = $members->map(function ($member) use ($noMoghayeratAutoStatus) {
                         return [
                             'user_id' => $member->employee_id,
                             'description' => null,
