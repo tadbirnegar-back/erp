@@ -22,9 +22,9 @@ class CircularExpirationJob implements ShouldQueue
      */
     public $circularId;
 
-    public function __construct(int $circular)
+    public function __construct(int $circularId)
     {
-        $this->circularId = $circular;
+        $this->circularId = $circularId;
 
     }
 
