@@ -117,6 +117,7 @@ class EvaluationRevisedResource extends JsonResource
         }
 
         $ounitType =  $this->NotEvaluatedyet($userID);
+
         if($ounitType == DistrictOfc::class){
             return [
                 'dehyar' => $data['dehyar'],
@@ -145,13 +146,8 @@ class EvaluationRevisedResource extends JsonResource
 
     private function NotEvaluatedyet($userID)
     {
-        foreach ($this['ounits'] as $ounit) {
-            if ($ounit->head_id == $userID) {
-                return $ounit->unitable_type;
-            }
-        }
-        return 'none';
+        $ounit = $this['ounits']->firstWhere('head_id', $userID);
+        return $ounit ? $ounit->unitable_type : 'none';
     }
-
 
 }
