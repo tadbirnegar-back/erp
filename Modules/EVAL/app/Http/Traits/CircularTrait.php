@@ -4,7 +4,9 @@ namespace Modules\EVAL\app\Http\Traits;
 
 use Carbon\Carbon;
 use GuzzleHttp\Promise\Create;
+use Illuminate\Support\Facades\Bus;
 use Modules\EVAL\app\Http\Enums\EvaluationStatusEnum;
+use Modules\EVAL\app\Jobs\MakeEvaluationFormJob;
 use Modules\EVAL\app\Models\EvalCircular;
 use \Modules\EVAL\app\Http\Enums\EvalCircularStatusEnum;
 use Modules\EVAL\app\Models\EvalCircularIndicator;
@@ -55,12 +57,15 @@ trait CircularTrait
         $searchTerm = $data['name'] ?? null;
 
         $query = EvalCircular::query()
-            ->whereRaw('MATCH(title) AGAINST(?)', [$searchTerm])
+            ->join('eval_circular_statuses', function ($join) {
+                $join->on('eval_circular_statuses.eval_circular_id', '=', 'eval_circulars.id')
+                    ->whereRaw('eval_circular_statuses.created_at =
+                (SELECT MAX(created_at) FROM eval_circular_statuses
+                WHERE eval_circular_statuses.eval_circular_id = eval_circulars.id)');
+            })
+            ->join('statuses', 'statuses.id', '=', 'eval_circular_statuses.status_id')
+        ->whereRaw('MATCH(title) AGAINST(?)', [$searchTerm])
             ->orWhere('title', 'LIKE', '%' . $searchTerm . '%')
-            ->joinRelationship('lastStatusOfEvalCircular.status')
-            ->whereRaw('eval_circular_statuses.created_at =
-                    (SELECT MAX(created_at) FROM eval_circular_statuses WHERE
-                    eval_circular_id = eval_circulars.id)')
             ->select([
                 'statuses.id as status_id',
                 'statuses.name as status',
@@ -291,6 +296,17 @@ trait CircularTrait
             'percentageForCompeleteForm' => $percentageForCompeleteForm,
             'WaitingToDone' => $countWaitingForCompelete,
             'notifiedTime' => explode(' ', convertDateTimeGregorianToJalaliDateTime($getNotifiedTime))[0]];
+    }
+    public function countEvaluationsForNeededVillages($circularID)
+    {
+
+        $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circularID);
+
+        return  OrganizationUnit::where('unitable_type', VillageOfc::class)
+            ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
+            ->where('village_alias.hasLicense', true)
+            ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
+            ->count();
     }
 
 
@@ -723,16 +739,4 @@ trait CircularTrait
             ->where('name', EvalCircularStatusEnum::NOTIFIED->value)
             ->first();
     }
-
-    public function countEvaluationsForNeededVillages($circularID)
-    {
-        $evals = EvalEvaluation::query()
-            ->where('eval_circular_id', $circularID)
-            ->whereNotNull('eval_evaluations.target_ounit_id')
-            ->where('eval_evaluations.status_id', $this->evaluationDoneStatus()->id)
-            ->count();
-
-    }
-
-
 }

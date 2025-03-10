@@ -29,7 +29,8 @@ class testController extends Controller
 
     public function run()
     {
-
+        $circularId=4;
+        CircularExpirationJob::dispatch($circularId)->delay(now()->addSeconds(5));
 //        $circularID = 1;
 //
 //        $evals = EvalEvaluation::query()

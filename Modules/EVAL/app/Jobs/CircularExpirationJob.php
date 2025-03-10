@@ -20,7 +20,7 @@ class CircularExpirationJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public $courseId;
+    public $circularId;
 
     public function __construct(int $circular)
     {
