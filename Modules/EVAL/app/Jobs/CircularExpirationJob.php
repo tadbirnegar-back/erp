@@ -47,8 +47,6 @@ class CircularExpirationJob implements ShouldQueue
                 'status_id' => $this->expiredCircularStatus()->id,
                 'created_at' => now(),
             ]);
-        }else {
-            \Log::info('not');
         }
     }
 }
