@@ -245,6 +245,7 @@ trait CircularTrait
             ->get();
 
         $completedCircularCount = $this->singleCircularMain($circularID);
+//        return $completedCircularCount;
 
         return [
             'data' => $query,
@@ -257,12 +258,15 @@ trait CircularTrait
     {
         //     counting VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
         $circular = EvalCircular::find($circularID);
-        $villageCount = VillageOfc::query()
-            ->whereIntegerNotInRaw('id', $this->villagesNotInCirclesOfTarget($circular))
+        $villageCount = OrganizationUnit::query()
+            ->where('unitable_type', VillageOfc::class)
+            ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
+            ->where('village_alias.hasLicense', true)
+            ->whereIntegerNotInRaw('unitable_id', $this->villagesNotInCirclesOfTarget($circular))
             ->count();
 
-        $countEvalsForTotalForm = EvalEvaluation::query()
-       -> where('parent_id', null)
+        $countNotifiedEvals = EvalEvaluation::query()
+        ->where('parent_id', null)
             ->where('eval_circular_id', $circularID)
             ->count();
 
@@ -275,8 +279,10 @@ trait CircularTrait
             ->count();
         $countWaitingForCompelete = EvalEvaluation::query()
             ->joinRelationship('evalEvaluationStatus.status')
+            ->where('evalEvaluation_status.status_id', $this->evaluationWaitToDoneStatus()->id)
             ->latest('evalEvaluation_status.id')
-            ->where('status_id', $this->evaluationWaitToDoneStatus()->id)
+            ->where('parent_id', null)
+            ->where('eval_circular_id', $circularID)
             ->count();
         $getNotifiedTime = EvalCircular::query()
             ->joinRelationship('evalCircularStatus.status')
@@ -286,29 +292,19 @@ trait CircularTrait
 
         //        calculate percentage
 
-        $percentageForTotalForm = ($countEvalsForTotalForm / ($villageCount)) * 100;
+        $percentageForTotalForm = ($countNotifiedEvals / ($villageCount)) * 100;
         $percentageForCompeleteForm = ($countEvalsForCompeleteForm / ($villageCount)) * 100;
 
+        $NotNotfiedCount = $villageCount - $countNotifiedEvals;
         return [
-            'countEvals' => $countEvalsForTotalForm,
+            'countEvals' => $countNotifiedEvals,
             'percentage' => $percentageForTotalForm,
             'countEvalsForCompeleteForm' => $countEvalsForCompeleteForm,
             'percentageForCompeleteForm' => $percentageForCompeleteForm,
             'WaitingToDone' => $countWaitingForCompelete,
+            'countMashmulVillagers' => $NotNotfiedCount >= 0 ? $NotNotfiedCount : 0,
             'notifiedTime' => explode(' ', convertDateTimeGregorianToJalaliDateTime($getNotifiedTime))[0]];
     }
-    public function countEvaluationsForNeededVillages($circularID)
-    {
-
-        $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circularID);
-
-        return  OrganizationUnit::where('unitable_type', VillageOfc::class)
-            ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
-            ->where('village_alias.hasLicense', true)
-            ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
-            ->count();
-    }
-
 
     public function lastDataForEditCircular($circularID)
     {

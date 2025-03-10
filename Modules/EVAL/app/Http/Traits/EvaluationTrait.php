@@ -490,10 +490,13 @@ trait EvaluationTrait
     public function villagesNotInCirclesOfTargetForRemake($circular)
     {
         $allData = $circular->load('variables.evalVariableTargets.oucPropertyValue.oucProperty');
-        $evaluatedBefore = EvalEvaluation::where('eval_circular_id', $circular->id)->pluck('target_ounit_id')->toArray();
+        $evaluatedBefore = EvalEvaluation::where('eval_circular_id', $circular->id)
+            ->where('is_revised', 0)
+            ->pluck('target_ounit_id')->toArray();
         $variables = $allData->variables;
 
         $result = [];
+
 
         foreach ($variables as $variable) {
             foreach ($variable->evalVariableTargets as $target) {
@@ -542,7 +545,16 @@ trait EvaluationTrait
             });
         });
 
+        if ($variables->contains(fn($variable) =>
+            method_exists($variable, 'evalVariableTargets') &&
+            (!$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())
+        )) {
+            $villagesIds =  [];
+        }
+
         $commonVillages = empty($villagesIds) ? [] : array_intersect(...$villagesIds);
+
+
 
         $totalVillages = array_merge($commonVillages, $evaluatedBefore);
 
