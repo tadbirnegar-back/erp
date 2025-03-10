@@ -7,6 +7,10 @@ use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EVAL\app\Http\Traits\CircularTrait;
+use Modules\EVAL\app\Http\Traits\EvaluationTrait;
+use Modules\EVAL\app\Jobs\CircularExpirationJob;
+use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
@@ -16,15 +20,40 @@ use Modules\LMS\app\Models\Course;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
-    use ExamsTrait;
+    use ExamsTrait,EvaluationTrait,CircularTrait;
 
     public function run()
     {
+        $circularId=4;
+        CircularExpirationJob::dispatch($circularId)->delay(now()->addSeconds(5));
+//        $circularID = 1;
+//
+//        $evals = EvalEvaluation::query()
+//            ->joinRelationship('evalCircular.evalCircularStatus')
+//            ->joinRelationship('evalEvaluationStatus')
+//            ->where('eval_evaluations.eval_circular_id', $circularID)
+//            ->whereNotNull('eval_evaluations.target_ounit_id')
+//            ->where('eval_circular_statuses.status_id', $this->notifiedCircularStatus()->id)
+//            ->where('evalEvaluation_status.status_id', $this->evaluationDoneStatus()->id)
+//            ->count();
+//
+//        return response()->json($evals);
 
+
+//        $searchTerm = 'ل';
+//        $users = Person::query()
+//            ->search('description', $searchTerm)
+//            ->select([
+//                'persons.display_name as name',
+//                'persons.id as personID'
+//            ])
+//            ->get();
+//        return response()->json($users);
         //Some Random Code to Test my larvel debug bar
 
 //        $village = VillageOfc::query()

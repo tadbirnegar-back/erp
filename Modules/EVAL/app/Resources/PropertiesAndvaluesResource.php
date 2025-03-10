@@ -11,28 +11,32 @@ class PropertiesAndvaluesResource extends JsonResource
      */
     public function toArray($request): array
     {
-        // Default response structure
         $response = [
             'id' => $this->id,
             'name' => $this->name,
-            'values' => $this->formatValues($this->values->toArray(), $this->name), // Pass property name to formatValues
+            'values' => $this->formatValues($this->values->toArray(), $this->name),
         ];
 
-        // Check if the name is "جمعیت"
         if ($this->name === 'جمعیت') {
-            foreach ($this->values as $value) {
-                // Check for the ">" operator and value > 1000
-                if ($value['operator'] === '>' && (int)$value['value'] > 1000) {
-                    $response['evaluation'] = 'بیشتر از هزار نفر';
-                    break; // Exit the loop once the condition is met
+            $populationFlag = true;
+
+            foreach ($response['values'] as &$value) {
+                if ($populationFlag) {
+                    $value['population'] = 'بیشتر از هزار نفر';
                 } else {
-                    $response['evaluation'] = 'کم از هزار نفر';
+                    $value['population'] = 'کمتر از هزار نفر';
                 }
+
+                $value['name'] = $value['population'];
+
+                $populationFlag = !$populationFlag;
             }
         }
 
         return $response;
     }
+
+
 
     /**
      * Format the values array to remove unwanted fields.
@@ -44,16 +48,13 @@ class PropertiesAndvaluesResource extends JsonResource
     private function formatValues(array $values, string $propertyName): array
     {
         return array_map(function ($value) use ($propertyName) {
-            // For "درجه", do not set the "name" field to "بله"
             if ($propertyName === 'درجه') {
                 return [
                     'id' => $value['id'],
                     'name' => $value['value']
-                    // Do not include the "name" field for "درجه"
                 ];
             }
 
-            // For other properties, set the "name" field based on the value
             return [
                 'id' => $value['id'],
                 'name' => $value['value'] ? "بله" : "خیر",

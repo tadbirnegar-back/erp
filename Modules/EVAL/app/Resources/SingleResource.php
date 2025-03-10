@@ -12,7 +12,7 @@ class SingleResource extends JsonResource
         $expiredDate = Carbon::parse($this->expiredDate);
         $createdDate = Carbon::parse($this->createDate);
         $now = Carbon::now();
-        $deadLine = $now->diffInDays($expiredDate, false); // مقدار ممکن است منفی باشد
+        $deadLine = $now->diffInDays($expiredDate, false);
 
         return [
             'id' => $this->id,
@@ -20,7 +20,7 @@ class SingleResource extends JsonResource
             'description' => $this->description,
             'maximum_value' => $this->MaximumValue,
             'file_id' => $this->fileID,
-            'fileName'=>$this->fileName,
+            'fileName' => $this->fileName,
             'create_date' => $createdDate->format('Y-m-d'),
             'expired_date' => explode(' ', convertDateTimeGregorianToJalaliDateTime($expiredDate))[0],
             'status' => [

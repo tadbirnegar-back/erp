@@ -20,11 +20,11 @@ class CircularExpirationJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public $courseId;
+    public $circularId;
 
-    public function __construct(int $circular)
+    public function __construct(int $circularId)
     {
-        $this->circularId = $circular;
+        $this->circularId = $circularId;
 
     }
 
@@ -47,8 +47,6 @@ class CircularExpirationJob implements ShouldQueue
                 'status_id' => $this->expiredCircularStatus()->id,
                 'created_at' => now(),
             ]);
-        }else {
-            \Log::info('not');
         }
     }
 }
