@@ -265,6 +265,7 @@ class ExamsController extends Controller
             return response()->json(['situation' => false], 204);
         }
 
+
         $questionsNumbersExist = Course::withCount(['questions' => function ($query) use ($settingData, $statusID, $repo) {
             $query->where('question_type_id', $settingData['question_type_for_exam']);
             $query->where('difficulty_id', $settingData['Difficulty_for_exam']);
@@ -272,7 +273,7 @@ class ExamsController extends Controller
             $query->where('repository_id', $repo->id);
         }])->find($id);
 
-        if ($questionsNumbersExist->questions_count >= $settings->get('question_numbers_perExam')) {
+        if ($questionsNumbersExist->questions_count >= $settingData['question_numbers_perExam']) {
             return response()->json(['situation' => true], 200);
         } else {
             return response()->json(['situation' => false], 204);

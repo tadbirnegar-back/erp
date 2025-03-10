@@ -74,7 +74,8 @@ trait CourseTrait
             $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
                 ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
         });
-        return $query->paginate($perPage);
+        $query->distinct('courses.id');
+        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 
 
@@ -512,8 +513,7 @@ trait CourseTrait
     }
 
 
-    public
-    function dataShowViewCourseSideBar($course, $user)
+    public function dataShowViewCourseSideBar($course, $user)
     {
         $user->load('student');
         $data = Course::query()
@@ -941,15 +941,18 @@ trait CourseTrait
             ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
             ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
             ->where(function ($query) use ($level, $position, $job) {
-                $query->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
-                    ->where('employee_feat_alias.propertyble_type', Level::class);
-
+                if(!empty($level)){
+                    $query->where(function ($subQuery) use ($level) {
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
+                            ->where('employee_feat_alias.propertyble_type', Level::class);
+                    });
+                }
                 if (!empty($position)) {
                     $query->orWhere(function ($subQuery) use ($position, $level) {
                         $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $position)
                             ->where('employee_feat_alias.propertyble_type', Position::class);
-                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
-                            ->where('employee_feat_alias.propertyble_type', Level::class);
+//                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
+//                            ->where('employee_feat_alias.propertyble_type', Level::class);
                     });
                 }
 
@@ -960,7 +963,6 @@ trait CourseTrait
                     });
                 }
 
-                // Include rows with NULL `employee_feat_alias`
                 $query->orWhereNull('employee_feat_alias.id');
             })
             ->leftJoin('course_ounit_features as course_ounit_feat_alias', function ($join) {
@@ -1053,15 +1055,18 @@ trait CourseTrait
             ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
             ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
             ->where(function ($query) use ($level, $position, $job) {
-                $query->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
-                    ->where('employee_feat_alias.propertyble_type', Level::class);
-
+                if(!empty($level)){
+                    $query->where(function ($subQuery) use ($level) {
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
+                            ->where('employee_feat_alias.propertyble_type', Level::class);
+                    });
+                }
                 if (!empty($position)) {
                     $query->orWhere(function ($subQuery) use ($position, $level) {
                         $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $position)
                             ->where('employee_feat_alias.propertyble_type', Position::class);
-                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
-                            ->where('employee_feat_alias.propertyble_type', Level::class);
+//                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
+//                            ->where('employee_feat_alias.propertyble_type', Level::class);
                     });
                 }
 
@@ -1072,7 +1077,6 @@ trait CourseTrait
                     });
                 }
 
-                // Include rows with NULL `employee_feat_alias`
                 $query->orWhereNull('employee_feat_alias.id');
             })
             ->leftJoin('course_ounit_features as course_ounit_feat_alias', function ($join) {
@@ -1133,7 +1137,6 @@ trait CourseTrait
                 }
             })
             ->leftJoin('statuses as answer_sheet_status_alias', 'answer_sheet_status_alias.id', '=', 'answer_sheet_alias.status_id')
-            ->join(DB::raw('(SELECT course_id, MAX(id) as latest_exam_id FROM course_exam GROUP BY course_id) as latest_exam'), 'course_exam_alias.id', '=', 'latest_exam.latest_exam_id')
             ->select([
                 'course_exam_alias.id as course_exam_id',
                 'courses.id as id',
