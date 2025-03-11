@@ -835,20 +835,23 @@ class EMSController extends Controller
         $villageOfc = VillageOfc::whereIntegerInRaw('id', $filteredOunits)
             ->whereNull('free_zone_id')
             ->whereHas('organizationUnit', function ($query) use ($searchTerm) {
-            $query
-                ->where(function ($query) use ($searchTerm) {
-                    $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
-                        ->orWhere('name', 'like', '%' . $searchTerm . '%');
-                });
-        })
+                $query
+                    ->where(function ($query) use ($searchTerm) {
+                        $query->whereRaw("MATCH (name) AGAINST (? IN BOOLEAN MODE)", [$searchTerm])
+                            ->orWhere('name', 'like', '%' . $searchTerm . '%');
+                    });
+            })
             ->with(['organizationUnit.ancestors' => function ($query) {
                 $query->orderByDesc('id');
             }])
-            ->get()
-            ->pluck('organizationUnit');
+            ->get();
+
+        $response = $villageOfc->each(function ($item) {
+            $item->organizationUnit->setAttribute('abadiCode', $item->abadi_code);
+        })->pluck('organizationUnit');
 
 
-        return response()->json($villageOfc);
+        return response()->json($response);
     }
 
 

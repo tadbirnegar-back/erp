@@ -131,15 +131,10 @@ class EvaluationController extends Controller
 
             $allJobs = [];
 
-// Add indexes to the following columns if not present:
-// - organization_units: (unitable_type, unitable_id)
-// - village_ofcs: (hasLicense)
-// - organization_units: (unitable_id)
 
             $validVillageIds = VillageOfc::where('hasLicense', true)
                 ->whereNotIn('id', $eliminatedVillagesQuery)
                 ->select('id');
-
 
             OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->whereIn('unitable_id', $validVillageIds)
@@ -189,36 +184,28 @@ class EvaluationController extends Controller
             DB::beginTransaction();
             $circular = EvalCircular::findOrFail($id);
             $user = Auth::user();
-            $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
             $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular);
 
-            return response() -> json($eliminatedVillagesQuery);
-
-            $allJobs = [];
-
-            $validVillageIds = VillageOfc::where('hasLicense', true)
-                ->whereNotIn('id', $eliminatedVillagesQuery)
-                ->select('id');
-
-
-            OrganizationUnit::where('unitable_type', VillageOfc::class)
-                ->whereIn('unitable_id', $validVillageIds)
-                ->select('id')
-                ->distinct()
-                ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
-                    $batch = [];
-                    foreach ($chunk as $organizationUnit) {
-                        $delayInSeconds = 10 + rand(1, 45);
-                        $batch[] = (new MakeEvaluationFormJob(
-                            $circular,
-                            $organizationUnit->id,
-                            $user->id,
-                            $waitToDoneStatus
-                        ))->delay(now()->addSeconds($delayInSeconds));
-                    }
-                    $allJobs[] = $batch;
-                }, 'id');
+            $organ = OrganizationUnit::where('unitable_type', VillageOfc::class)
+                ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
+                ->where('village_alias.hasLicense', true)
+//                ->whereNotIn('id' , $eliminatedVillagesQuery)
+                ->get();
+            return response() -> json($organ);
+//                ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
+//                    $batch = [];
+//                    foreach ($chunk as $organizationUnit) {
+//                        $delayInSeconds = 10 + rand(1, 45);
+//                        $batch[] = (new MakeEvaluationFormJob(
+//                            $circular,
+//                            $organizationUnit->id,
+//                            $user->id,
+//                            $waitToDoneStatus
+//                        ))->delay(now()->addSeconds($delayInSeconds));
+//                    }
+//                    $allJobs[] = $batch;
+//                }, 'id');
 
 
             foreach ($allJobs as $jobBatch) {

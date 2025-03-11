@@ -3,9 +3,11 @@
 namespace Modules\EVAL\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Log;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EvaluationRevisedResource extends JsonResource
 {
@@ -24,9 +26,16 @@ class EvaluationRevisedResource extends JsonResource
         return [
             $data->filter(function ($item) use ($type) {
                 return $item->ou_type == $type;
+            })->map(function ($item) {
+                if (isset($item->ou_type)) {  // Check if eval_date exists
+                    Log::info($item->ou_type);
+//                    $item->eval_date = convertDateTimeGregorianToJalaliDateTime($item->eval_date);
+                }
+                return $item;
             })->values()->groupBy('variable_id')
         ];
     }
+
 
     private function getAncesstorsPersonData($data, $type)
     {
@@ -91,53 +100,53 @@ class EvaluationRevisedResource extends JsonResource
 
         if ($bakhshdar && $bakhshdar['head_id'] == $userID) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
                 'canEvaluate' => false,
             ];
         }
 
         if ($farmandar && $farmandar['head_id'] == $userID) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
-                'city' => $data['city'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
+                'CityOfc' => $data['city'],
                 'canEvaluate' => false,
             ];
         }
 
         if ($stateOfc && $stateOfc['head_id'] == $userID) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
-                'city' => $data['city'],
-                'state' => $data['state'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
+                'CityOfc' => $data['city'],
+                'StateOfc' => $data['state'],
                 'canEvaluate' => false,
             ];
         }
 
-        $ounitType =  $this->NotEvaluatedyet($userID);
+        $ounitType = $this->NotEvaluatedyet($userID);
 
-        if($ounitType == DistrictOfc::class){
+        if ($ounitType == DistrictOfc::class) {
             return [
-                'dehyar' => $data['dehyar'],
+                'VillageOfc' => $data['dehyar'],
                 'canEvaluate' => true,
             ];
         }
 
-        if($ounitType == CityOfc::class){
+        if ($ounitType == CityOfc::class) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
                 'canEvaluate' => true,
             ];
         }
 
-        if($ounitType == StateOfc::class){
+        if ($ounitType == StateOfc::class) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
-                'city' => $data['city'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'], -
+                'CityOfc' => $data['city'],
                 'canEvaluate' => true,
             ];
         }
