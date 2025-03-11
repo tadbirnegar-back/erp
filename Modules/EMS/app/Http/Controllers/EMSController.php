@@ -896,10 +896,11 @@ class EMSController extends Controller
             ->with(['organizationUnit.ancestors' => function ($query) {
                 $query->orderByDesc('id'); // Replace 'id' with the appropriate column for reverse ordering
             }])
-            ->get()
-            ->pluck('organizationUnit');
+            ->get();
+        $response = $ounits->each(function ($item) {
+            $item->organizationUnit->setAttribute('abadiCode', $item->abadi_code);
+        })->pluck('organizationUnit');
 
-
-        return response()->json($ounits);
+        return response()->json($response);
     }
 }
