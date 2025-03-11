@@ -103,6 +103,7 @@ class EvaluationRevisedResource extends JsonResource
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
                 'canEvaluate' => false,
+                'role' => "DistrictOfc",
             ];
         }
 
@@ -112,6 +113,7 @@ class EvaluationRevisedResource extends JsonResource
                 'DistrictOfc' => $data['district'],
                 'CityOfc' => $data['city'],
                 'canEvaluate' => false,
+                'role' => "CityOfc",
             ];
         }
 
@@ -122,6 +124,7 @@ class EvaluationRevisedResource extends JsonResource
                 'CityOfc' => $data['city'],
                 'StateOfc' => $data['state'],
                 'canEvaluate' => false,
+                'role' => "StateOfc",
             ];
         }
 
@@ -131,6 +134,7 @@ class EvaluationRevisedResource extends JsonResource
             return [
                 'VillageOfc' => $data['dehyar'],
                 'canEvaluate' => true,
+                'role' => "DistrictOfc",
             ];
         }
 
@@ -139,6 +143,7 @@ class EvaluationRevisedResource extends JsonResource
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
                 'canEvaluate' => true,
+                'role' => "CityOfc",
             ];
         }
 
@@ -148,6 +153,7 @@ class EvaluationRevisedResource extends JsonResource
                 'DistrictOfc' => $data['district'], -
                 'CityOfc' => $data['city'],
                 'canEvaluate' => true,
+                'role' => "StateOfc",
             ];
         }
     }
