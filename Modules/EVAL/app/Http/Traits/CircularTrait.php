@@ -363,11 +363,10 @@ trait CircularTrait
 
     }
 
-    public function EvaluationCompletedList($user)
+    public function EvaluationWaitToCompleteList($user)
     {
         $list = EvalEvaluation::query()
             ->joinRelationship('EvalEvaluationStatus.status')
-            ->latest('evalEvaluation_status.id')
             ->joinRelationship('evalCircular')
             ->joinRelationship('targetOunits')
             ->select([
@@ -380,9 +379,20 @@ trait CircularTrait
                 'organization_units.head_id as head_id'
             ])
             ->where('organization_units.head_id', $user->id)
+            ->whereRaw("
+            statuses.name = (
+                SELECT s.name
+                FROM evalEvaluation_status ees
+                JOIN statuses s ON s.id = ees.status_id
+                WHERE ees.eval_evaluation_id = eval_evaluations.id
+                ORDER BY ees.id DESC
+                LIMIT 1
+            )
+        ")
             ->where('statuses.name', EvaluationStatusEnum::WAIT_TO_DONE->value)
             ->distinct()
             ->get();
+
         return $list->map(function ($item) {
             $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
             $deadLine = $expiredDate ? $expiredDate->diffInDays(now()) : null;

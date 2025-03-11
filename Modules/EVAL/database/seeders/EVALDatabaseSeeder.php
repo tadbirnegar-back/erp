@@ -14,7 +14,8 @@ class EVALDatabaseSeeder extends Seeder
         $this->call([
 //            EvalStatusSeeder::class,
 //            EvalCircularStatusSeeder::class,
-            MergeLastEvalToNewEvalSeeder::class,
+//            MergeLastEvalToNewEvalSeeder::class,
+            PermissionSeeder::class,
         ]);
     }
 }

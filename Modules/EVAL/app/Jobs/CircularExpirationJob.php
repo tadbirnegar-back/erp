@@ -12,6 +12,7 @@ use Modules\EVAL\app\Models\EvalCircular;
 use Modules\EVAL\app\Models\EvalCircularStatus;
 use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Models\EvalEvaluation;
+use Modules\EVAL\app\Models\EvalEvaluationStatus;
 
 class CircularExpirationJob implements ShouldQueue
 {
@@ -34,19 +35,23 @@ class CircularExpirationJob implements ShouldQueue
     public function handle(): void
     {
         $circular = EvalCircular::find($this->circularId);
-        $date = convertPersianToGregorianBothHaveTimeAndDont($circular->expired_date);
-        $date = Carbon::parse($date);
+        $evaluations = EvalEvaluation::where('eval_circular_id',$this->circularId)->first();
+
+        $date = Carbon::parse($circular->expired_date);
         if ( $date != null && $date->format('Y-m-d') == now()->format('Y-m-d')) {
             EvalCircularStatus::create([
                 'eval_circular_id' => $this->circularId,
                 'status_id' => $this->expiredCircularStatus()->id,
                 'created_at' => now(),
             ]);
-            EvalEvaluation::create([
-                'eval_circular_id' => $this->circularId,
-                'status_id' => $this->expiredCircularStatus()->id,
-                'created_at' => now(),
-            ]);
+            foreach ($evaluations as $evaluation) {
+                EvalEvaluationStatus::create([
+                    'eval_evaluation_id' => $evaluation->id,
+                    'status_id' => $this->expiredCircularStatus()->id,
+                    'created_at' => now(),
+                    'creator_id' => $evaluation->creator_id,
+                ]);
+            }
         }
     }
 }

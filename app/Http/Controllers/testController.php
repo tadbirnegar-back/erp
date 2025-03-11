@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Carbon\Carbon;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
@@ -11,7 +12,9 @@ use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Http\Traits\EvaluationTrait;
 use Modules\EVAL\app\Jobs\CircularExpirationJob;
 use Modules\EVAL\app\Models\EvalCircular;
+use Modules\EVAL\app\Models\EvalCircularStatus;
 use Modules\EVAL\app\Models\EvalEvaluation;
+use Modules\EVAL\app\Models\EvalEvaluationStatus;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
@@ -30,11 +33,31 @@ class testController extends Controller
 
     public function run()
     {
-        $circularId=4;
+        $circularId = EvalCircular::find(4);
 
-        CircularExpirationJob::dispatch($circularId)->delay(5);
+        $evaluations = EvalEvaluation::where('eval_circular_id', $circularId->id)->get();
 
-        //        $evals = EvalEvaluation::query()
+        $date = Carbon::parse($circularId->expired_date);
+        if ( $date != null && $date->format('Y-m-d') == now()->format('Y-m-d')) {
+            EvalCircularStatus::create([
+                'eval_circular_id' => $circularId->id,
+                'status_id' => $this->expiredCircularStatus()->id,
+                'created_at' => now(),
+            ]);
+            foreach ($evaluations as $evaluation) {
+                EvalEvaluationStatus::create([
+                    'eval_evaluation_id' => $evaluation->id,
+                    'status_id' => $this->expiredCircularStatus()->id,
+                    'created_at' => now(),
+                    'creator_id' => $evaluation->creator_id,
+                ]);
+            }
+        }
+//        dispatch(new CircularExpirationJob(4));
+//        return "Job dispatched!";
+
+
+        //        $evals = EvalEvaluation::query()2025-03-12 10:44:50
 //            ->joinRelationship('evalCircular.evalCircularStatus')
 //            ->joinRelationship('evalEvaluationStatus')
 //            ->where('eval_evaluations.eval_circular_id', $circularID)
