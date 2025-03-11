@@ -327,11 +327,16 @@ trait OrganizationUnitTrait
     {
         $result = OrganizationUnit::when($unitable, function ($query) use ($unitable) {
             $query->where('unitable_type', $unitable);
+            $query->with('unitable');
         })
             ->whereRaw(
                 "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
                 [$searchTerm]
             )->with(['positions.levels', 'person', 'ancestors'])->get();
+
+        $result->each(function ($item) {
+            $item->unitable->setAttribute('abadiCode', $item->abadi_code);
+        });
 
         return $result;
     }
