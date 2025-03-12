@@ -11,6 +11,7 @@ use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Traits\ExamsTrait;
 use Modules\LMS\app\Models\Course;
 
@@ -22,7 +23,11 @@ class testController extends Controller
 
     public function run()
     {
-        StoreEnactmentStatusJob::dispatch(85);
+
+        $positionsName=Position::whereIn('name',['کارشناس مشورتی','نماینده استانداری','مسئول دبیرخانه'])->get();
+        $ids=$positionsName->pluck('id');
+        return response()->json($ids);
+
 //        $a = User::first();
 //        dump($a);
 //        $status = $this->questionActiveStatus();
