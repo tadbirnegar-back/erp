@@ -42,7 +42,7 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
                     $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
                         $subQuery->where('enactment_id', $this->encId);
                     })->whereHas('roles', function ($q) {
-                        $q->where('name', RolesEnum::KARSHENAS_MASHVARATI->value);
+                        $q->whereIn('name', [RolesEnum::KARSHENAS_MASHVARATI->value , RolesEnum::KARSHENAS_MASHVERATI_FREEZONE->value]);
                     });
 
                 },])->find($this->encId);
