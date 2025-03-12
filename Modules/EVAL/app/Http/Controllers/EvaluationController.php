@@ -131,26 +131,30 @@ class EvaluationController extends Controller
 
             $allJobs = [];
 
-            OrganizationUnit::where('unitable_type', VillageOfc::class)
+            $organizationUnits = OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
                 ->whereIntegerNotInRaw('id', $eliminatedVillagesQuery)
-                ->select('id')
+                ->select('organization_units.id') // Use full table reference to avoid ambiguity
                 ->distinct()
-                ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
-                    $batch = [];
-                    foreach ($chunk as $organizationUnit) {
-                        $delayInSeconds = 10 + rand(1, 45);
-                        $batch[] = (new MakeEvaluationFormJob(
-                            $circular,
-                            $organizationUnit->id,
-                            $user->id,
-                            $waitToDoneStatus
-                        ))->delay(now()->addSeconds($delayInSeconds));
-                    }
-                    $allJobs[] = $batch;
-                }, 'id');
+                ->get();
 
+            $chunks = $organizationUnits->chunk(100);
+            $allJobs = [];
+
+            foreach ($chunks as $chunk) {
+                $batch = [];
+                foreach ($chunk as $organizationUnit) {
+                    $delayInSeconds = 10 + rand(1, 45);
+                    $batch[] = (new MakeEvaluationFormJob(
+                        $circular,
+                        $organizationUnit->id,
+                        $user->id,
+                        $waitToDoneStatus
+                    ))->delay(now()->addSeconds($delayInSeconds));
+                }
+                $allJobs[] = $batch;
+            }
 
             foreach ($allJobs as $jobBatch) {
                 Bus::batch($jobBatch)
@@ -158,6 +162,7 @@ class EvaluationController extends Controller
                     ->onQueue('default')
                     ->dispatchAfterResponse();
             }
+
 
             $circularStatus = $this->notifiedCircularStatus();
             EvalCircularStatus::create([
@@ -183,6 +188,8 @@ class EvaluationController extends Controller
             $user = Auth::user();
 
             $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular);
+
+            return response() -> json($eliminatedVillagesQuery);
 
             $organ = OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
