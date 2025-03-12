@@ -3,7 +3,6 @@
 namespace Modules\EMS\app\Listeners;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Jobs\StoreMeetingJob;
 
@@ -28,6 +27,7 @@ class CreateMeetingListener
             $alertDate = Carbon::parse($meetingDate3)->subDays(1);
 
             StoreMeetingJob::dispatch($event->meeting->id)->delay($alertDate);
+            StoreMeetingJob::dispatch($event->meeting->id); // For Notifiying Users now
         }
 
     }
