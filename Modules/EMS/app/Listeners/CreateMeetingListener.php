@@ -4,8 +4,11 @@ namespace Modules\EMS\app\Listeners;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Jobs\StoreMeetingJob;
+use Modules\EMS\app\Notifications\MeetingLastDayNotifications;
+use Modules\PersonMS\app\Models\Person;
 
 class CreateMeetingListener
 {
@@ -28,6 +31,7 @@ class CreateMeetingListener
             $alertDate = Carbon::parse($meetingDate3)->subDays(1);
 
             StoreMeetingJob::dispatch($event->meeting->id)->delay($alertDate);
+            StoreMeetingJob::dispatch($event->meeting->id); // For Notifiying Users now
         }
 
     }
