@@ -33,28 +33,28 @@ class testController extends Controller
 
     public function run()
     {
-        $circularId = EvalCircular::find(4);
-
-        $evaluations = EvalEvaluation::where('eval_circular_id', $circularId->id)->get();
-
-        $date = Carbon::parse($circularId->expired_date);
-        if ( $date != null && $date->format('Y-m-d') == now()->format('Y-m-d')) {
-            EvalCircularStatus::create([
-                'eval_circular_id' => $circularId->id,
-                'status_id' => $this->expiredCircularStatus()->id,
-                'created_at' => now(),
-            ]);
-            foreach ($evaluations as $evaluation) {
-                EvalEvaluationStatus::create([
-                    'eval_evaluation_id' => $evaluation->id,
-                    'status_id' => $this->expiredCircularStatus()->id,
-                    'created_at' => now(),
-                    'creator_id' => $evaluation->creator_id,
-                ]);
-            }
-        }
-//        dispatch(new CircularExpirationJob(4));
-//        return "Job dispatched!";
+//        $circularId = EvalCircular::find(4);
+//
+//        $evaluations = EvalEvaluation::where('eval_circular_id', $circularId->id)->get();
+//
+//        $date = Carbon::parse($circularId->expired_date);
+//        if ( $date != null && $date->format('Y-m-d') == now()->format('Y-m-d')) {
+//            EvalCircularStatus::create([
+//                'eval_circular_id' => $circularId->id,
+//                'status_id' => $this->expiredCircularStatus()->id,
+//                'created_at' => now(),
+//            ]);
+//            foreach ($evaluations as $evaluation) {
+//                EvalEvaluationStatus::create([
+//                    'eval_evaluation_id' => $evaluation->id,
+//                    'status_id' => $this->expiredCircularStatus()->id,
+//                    'created_at' => now(),
+//                    'creator_id' => $evaluation->creator_id,
+//                ]);
+//            }
+//        }
+        dispatch(new CircularExpirationJob(4));
+        return "Job dispatched!";
 
 
         //        $evals = EvalEvaluation::query()2025-03-12 10:44:50
