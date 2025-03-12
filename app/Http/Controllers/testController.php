@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
@@ -10,6 +11,8 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Http\Traits\EvaluationTrait;
 use Modules\EVAL\app\Jobs\CircularExpirationJob;
+use Modules\EVAL\app\Jobs\MakeEvaluationFormJob;
+use Modules\EVAL\app\Models\EvalCircular;
 use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
@@ -29,9 +32,51 @@ class testController extends Controller
 
     public function run()
     {
-        $circularId=4;
-        CircularExpirationJob::dispatch($circularId)->delay(now()->addSeconds(5));
-//        $circularID = 1;
+        $circular = EvalCircular::findOrFail(22);
+        $user = User::find(2174);
+        $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
+
+        $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular);
+
+        $allJobs = [];
+
+
+        $validVillageIds = VillageOfc::where('hasLicense', true)
+            ->whereNotIn('id', $eliminatedVillagesQuery)
+            ->select('id');
+
+        $a=OrganizationUnit::where('unitable_type', VillageOfc::class)
+            ->whereIn('unitable_id', $validVillageIds)
+            ->select('id')
+            ->distinct()
+            ->get();
+        dump($a);
+//            ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
+//                $batch = [];
+//                foreach ($chunk as $organizationUnit) {
+//                    $delayInSeconds = 10 + rand(1, 45);
+//                    $batch[] = (new MakeEvaluationFormJob(
+//                        $circular,
+//                        $organizationUnit->id,
+//                        $user->id,
+//                        $waitToDoneStatus
+//                    ))->delay(now()->addSeconds($delayInSeconds));
+//                }
+//                $allJobs[] = $batch;
+//            }, 'id');
+
+        $output = "<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Test Debugbar</title>
+    </head>
+    <body>
+    </body></html>";
+
+
+        echo $output;
+
+        //        $circularID = 1;
 //
 //        $evals = EvalEvaluation::query()
 //            ->joinRelationship('evalCircular.evalCircularStatus')

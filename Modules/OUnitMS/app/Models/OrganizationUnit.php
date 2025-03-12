@@ -335,9 +335,9 @@ class OrganizationUnit extends Model
             ->with('mr', 'person.avatar');
     }
 
-    public static function GetAllStatuses(): Collection
+    public static function GetAllStatuses()
     {
-        return Status::all()->where('model', '=', self::class);
+        return Status::where('model', '=', self::class);
     }
 
 //    public function GetAllUsers(): Collection

@@ -217,6 +217,7 @@ trait EvaluationTrait
             ->leftJoin('eval_circular_variables as variables', 'variables.id', '=', 'answers.eval_circular_variables_id')
             ->leftJoin('eval_circular_indicators as indicators', 'indicators.id', '=', 'variables.eval_circular_indicator_id')
             ->leftJoin('eval_circular_sections as sections', 'sections.id', '=', 'indicators.eval_circular_section_id')
+            ->leftJoin('eval_circulars as circular_alias', 'circular_alias.id', '=', 'eval.eval_circular_id')
             ->leftJoin('village_ofcs as village_alias', 'village_alias.id', '=', 'eval.target_ounit_id')
             ->whereColumn('eval.target_ounit_id', '=', 'eval.evaluator_ounit_id')
             ->select([
@@ -245,6 +246,7 @@ trait EvaluationTrait
                 'evaluator_person.display_name as evaluator_name',
                 'users.id as evaluator_id',
                 'eval_status_alias.created_at as eval_date',
+                'circular_alias.maximum_value as circular_max_value',
             ])
             ->whereNotNull('variables.id')
             ->withoutGlobalScopes()
@@ -265,6 +267,7 @@ trait EvaluationTrait
             ->leftJoin('eval_circular_variables as variables', 'variables.id', '=', 'answers.eval_circular_variables_id')
             ->leftJoin('eval_circular_indicators as indicators', 'indicators.id', '=', 'variables.eval_circular_indicator_id')
             ->leftJoin('eval_circular_sections as sections', 'sections.id', '=', 'indicators.eval_circular_section_id')
+            ->leftJoin('eval_circulars as circular_alias', 'circular_alias.id', '=', 'eval.eval_circular_id')
             ->leftJoin('village_ofcs as village_alias', 'village_alias.id', '=', 'eval.target_ounit_id')
             ->select([
                 'ounits_alias.id as ou_id',
@@ -290,6 +293,7 @@ trait EvaluationTrait
                 'sections.title as section_title',
                 'village_alias.abadi_code as village_abadi_code',
                 'users.id as evaluator_id',
+                'circular_alias.maximum_value as circular_max_value',
             ])
             ->get();
 

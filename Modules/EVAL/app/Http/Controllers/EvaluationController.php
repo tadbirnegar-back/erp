@@ -131,13 +131,10 @@ class EvaluationController extends Controller
 
             $allJobs = [];
 
-
-            $validVillageIds = VillageOfc::where('hasLicense', true)
-                ->whereNotIn('id', $eliminatedVillagesQuery)
-                ->select('id');
-
             OrganizationUnit::where('unitable_type', VillageOfc::class)
-                ->whereIn('unitable_id', $validVillageIds)
+                ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
+                ->where('village_alias.hasLicense', true)
+                ->whereIntegerNotInRaw('id', $eliminatedVillagesQuery)
                 ->select('id')
                 ->distinct()
                 ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {

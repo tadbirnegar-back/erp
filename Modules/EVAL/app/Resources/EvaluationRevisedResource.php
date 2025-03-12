@@ -23,18 +23,15 @@ class EvaluationRevisedResource extends JsonResource
 
     private function getEvaluationDataForDeclaredOunitType($data, $type)
     {
-        return [
-            $data->filter(function ($item) use ($type) {
+            $filteredData = $data->filter(function ($item) use ($type) {
                 return $item->ou_type == $type;
-            })->map(function ($item) {
-                if (isset($item->ou_type)) {  // Check if eval_date exists
-                    Log::info($item->ou_type);
-//                    $item->eval_date = convertDateTimeGregorianToJalaliDateTime($item->eval_date);
-                }
-                return $item;
-            })->values()->groupBy('variable_id')
-        ];
+            })->values();
+            return [$filteredData];
+
+
+
     }
+
 
 
     private function getAncesstorsPersonData($data, $type)
@@ -68,13 +65,13 @@ class EvaluationRevisedResource extends JsonResource
     {
         $dehyar = $this->getPersonData($this['village'][0]);
 
-        $district = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], DistrictOfc::class);
+        $district = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], DistrictOfc::class)[0];
         $bakhshdar = $this->getAncesstorsPersonData($this['ancestors'], DistrictOfc::class);
 
-        $city = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], CityOfc::class);
+        $city = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], CityOfc::class)[0];
         $farmandar = $this->getAncesstorsPersonData($this['ancestors'], CityOfc::class);
 
-        $state = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], StateOfc::class);
+        $state = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], StateOfc::class)[0];
         $stateOfc = $this->getAncesstorsPersonData($this['ancestors'], StateOfc::class);
 
         // Organize data
@@ -133,6 +130,7 @@ class EvaluationRevisedResource extends JsonResource
         if ($ounitType == DistrictOfc::class) {
             return [
                 'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
                 'canEvaluate' => true,
                 'role' => "DistrictOfc",
             ];
@@ -142,6 +140,7 @@ class EvaluationRevisedResource extends JsonResource
             return [
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
+                'CityOfc' => $data['city'],
                 'canEvaluate' => true,
                 'role' => "CityOfc",
             ];
@@ -152,6 +151,7 @@ class EvaluationRevisedResource extends JsonResource
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'], -
                 'CityOfc' => $data['city'],
+                'StateOfc' => $data['state'],
                 'canEvaluate' => true,
                 'role' => "StateOfc",
             ];
