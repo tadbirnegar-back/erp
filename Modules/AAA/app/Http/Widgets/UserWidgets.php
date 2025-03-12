@@ -3,15 +3,24 @@
 namespace Modules\AAA\app\Http\Widgets;
 
 use Modules\AAA\app\Models\User;
+use Modules\HRMS\app\Models\Employee;
 
 class UserWidgets
 {
     public static function getUserInfo(User $user)
     {
-        $user->load('person.avatar',
+        $user->load([
+            'person.avatar',
             'roles',
-            'person.workForce.workforceable.recruitmentScripts.organizationUnit',
-            'person.workForce.workforceable.recruitmentScripts.position');
+            'person.workForce' => function ($query) {
+                $query->where('workforceable_type', Employee::class)
+                    ->with([
+                        'workforceable.recruitmentScripts.organizationUnit',
+                        'workforceable.recruitmentScripts.position'
+                    ]);
+            }
+        ]);
+
 
         $data = [
             'person' => $user->person,

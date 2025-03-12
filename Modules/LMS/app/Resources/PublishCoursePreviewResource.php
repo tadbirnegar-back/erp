@@ -155,7 +155,8 @@ class PublishCoursePreviewResource extends JsonResource
                     'expiration_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_expiration_date),
                     'access_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_access_date),
                     'privacy' => [ 'id' => $courseInfo->privacy_alias_id , 'name' => $courseInfo->privacy_alias_name  , 'class_name' => 'primary'],
-                    'price' => $courseInfo->course_alias_price
+                    'price' => $courseInfo->course_alias_price,
+                    'courseType' => $courseInfo->course_alias_course_type == 1 ? 'دوره آموزشی' : 'دوره آزمون جامع(مکاتبه ای)',
                 ],
                 'cover' => [
                     'slug' => url($courseInfo->course_cover_slug),
@@ -230,5 +231,4 @@ class PublishCoursePreviewResource extends JsonResource
     {
         return Lesson::with('latestStatus')->find($lessonId);
     }
-
 }

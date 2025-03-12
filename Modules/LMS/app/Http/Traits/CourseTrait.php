@@ -2,18 +2,23 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Job;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
+use Modules\LMS\app\Http\Enums\CourseTypeEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
 use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
+use Modules\LMS\app\Resources\RelatedCourseListResource;
+use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
@@ -69,7 +74,8 @@ trait CourseTrait
             $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
                 ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
         });
-        return $query->paginate($perPage);
+        $query->distinct('courses.id');
+        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
     }
 
 
@@ -120,7 +126,8 @@ trait CourseTrait
             'preview_video_id' => $data['previewVideoID'] == "null" ? null : $data['previewVideoID'],
             'price' => $data['price'] ?? 0,
             'creator_id' => $user->id,
-            'created_date' => now()
+            'created_date' => now(),
+            'course_type' => $data['courseType']
         ]);
     }
 
@@ -143,22 +150,21 @@ trait CourseTrait
         $course->description = $data['description'] ?? $course->description;
         $course->privacy_id = $data['privacyID'] ?? $course->privacy_id;
         $course->is_required = $data['isRequired'] ?? $course->is_required;
-        if($statusName == CourseStatusEnum::WAITING_TO_PRESENT->value)
-        {
+        if ($statusName == CourseStatusEnum::WAITING_TO_PRESENT->value) {
             $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : now();
-        }else{
+        } else {
             $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null;
         }
         $course->expiration_date = isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null;
         $course->preview_video_id = $data['previewVideoID'] == 'null' ? null : (isset($data['previewVideoID']) ? $data['previewVideoID'] : $course->preview_video_id);
         $course->cover_id = $data['coverID'] ?? $course->cover_id;
+        $course->course_type = $data['courseType'] ?? $course->course_type;
         $course->save();
         return $course;
     }
 
     public function courseShow($course, $user)
     {
-
         $user->load([
             'answerSheets',
             'student',
@@ -312,21 +318,25 @@ trait CourseTrait
 
 
         if ($AllowToDos['joined']) {
-            $studyCount = $AdditionalData["enrolled"]->isEnrolled[0]["orderable"]["study_count"];
-            if ($studyCount > 0) {
-                if ($user->student != null) {
-                    $AllowToDos['canFinalExam'] = !($this->hasAttemptedAndPassedExam($user->student, $course->id) == true);
+            if ($course->course_type['value'] == CourseTypeEnum::AMUZESHI->value) {
+                $studyCount = $AdditionalData["enrolled"]->isEnrolled[0]["orderable"]["study_count"];
+                if ($studyCount > 0) {
+                    if ($user->student != null) {
+                        $AllowToDos['canFinalExam'] = !($this->hasAttemptedAndPassedExam($user->student, $course->id) == true);
+                    } else {
+                        $AllowToDos['canFinalExam'] = false;
+                    }
                 } else {
+
                     $AllowToDos['canFinalExam'] = false;
+
                 }
             } else {
-
-                $AllowToDos['canFinalExam'] = false;
-
+                if ($user->student != null) {
+                    $AllowToDos['canFinalExam'] = !($this->hasAttemptToExam($user->student, $course->id) == true);
+                }
             }
         }
-
-
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
 
@@ -379,7 +389,8 @@ trait CourseTrait
         ];
     }
 
-    private function getComponentToRenderLMS($isJoined, $status, $isApproveFromExam)
+    private
+    function getComponentToRenderLMS($isJoined, $status, $isApproveFromExam)
     {
         $statusCollection = collect($this->getByJoinAndStatusAndApproveCombination($isJoined, $status, $isApproveFromExam));
         $filtreStatus = collect($statusCollection->get($status));
@@ -395,7 +406,8 @@ trait CourseTrait
     }
 
 
-    private function getByJoinAndStatusAndApproveCombination()
+    private
+    function getByJoinAndStatusAndApproveCombination()
     {
         $combo = [
             $this::$canceled => [
@@ -462,7 +474,8 @@ trait CourseTrait
         return $combo;
     }
 
-    public function isEnrolledToDefinedCourse($courseId, $user)
+    public
+    function isEnrolledToDefinedCourse($courseId, $user)
     {
         $user->load(['isEnrolled' => function ($q) use ($courseId) {
             $q->whereHas('orderable', function ($query) use ($courseId) {
@@ -474,7 +487,8 @@ trait CourseTrait
     }
 
 
-    public function isJoinedPreRerequisites($user, $course)
+    public
+    function isJoinedPreRerequisites($user, $course)
     {
         $preCoursesIds = $course->prerequisiteCourses->pluck('id')->toArray();
 
@@ -585,13 +599,15 @@ trait CourseTrait
 
     }
 
-    public function checkLessonStatus($id)
+    public
+    function checkLessonStatus($id)
     {
         $lesson = Lesson::with('latestStatus')->find($id);
         return $lesson->latestStatus;
     }
 
-    public function showCourseForUpdate($id)
+    public
+    function showCourseForUpdate($id)
     {
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
@@ -638,6 +654,7 @@ trait CourseTrait
                 'courses.description as course_alias_description',
                 'courses.is_required as course_alias_is_required',
                 'courses.expiration_date as course_alias_expiration_date',
+                'courses.course_type as course_alias_course_type',
                 'courses.access_date as course_alias_access_date',
                 'courses.privacy_id as course_alias_privacy_id',
                 'course_video_alias.slug as course_video_slug',
@@ -680,7 +697,8 @@ trait CourseTrait
 
     }
 
-    public function showCourseDataForEnteshareDore($id)
+    public
+    function showCourseDataForEnteshareDore($id)
     {
 
         $query = Course::query()
@@ -736,6 +754,7 @@ trait CourseTrait
                 'courses.id as course_alias_id',
                 'courses.title as course_alias_title',
                 'courses.price as course_alias_price',
+                'courses.course_type as course_alias_course_type',
                 'courses.description as course_alias_description',
                 'courses.is_required as course_alias_is_required',
                 'courses.expiration_date as course_alias_expiration_date',
@@ -797,23 +816,26 @@ trait CourseTrait
 
     }
 
-    public function ActiveAnswerSheetStatus()
+    public
+    function ActiveAnswerSheetStatus()
     {
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
     }
 
-    public function isCourseNotCompleted($student)
+    public
+    function isCourseNotCompleted($student, $courseId)
     {
         $isComplete = Course::whereHas('allActiveLessons.lessonStudyLog', function ($query) use ($student) {
             $query->where('is_completed', '!=', 1)
                 ->where('student_id', $student->id);
-        })->first();
+        })->where('id', $courseId)->first();
 
         return is_null($isComplete);
     }
 
 
-    public function hasAttemptedAndPassedExam($student, $courseId)
+    public
+    function hasAttemptedAndPassedExam($student, $courseId)
     {
 //        $attempted = AnswerSheet::joinRelationship('exam.courseExams.course')
 //            ->where('courses.id', $courseId)
@@ -836,7 +858,21 @@ trait CourseTrait
 
     }
 
-    public function enrolledCourses($user)
+    public function hasAttemptToExam($student, $courseId)
+    {
+        $exams = Course::with(['answerSheets' => function ($query) use ($student) {
+            $query->where('student_id', $student->id);
+        }])->find($courseId);
+
+        if ($exams->answerSheets->count() > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public
+    function enrolledCourses($user)
     {
         $regStatus = $this::$proc_registered;
         $payedStatus = $this::$fin_pardakhtShode;
@@ -886,6 +922,245 @@ trait CourseTrait
     }
 
     public function getRelatedLists($title, $ounit, $level, $position, $job, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum)
+    {
+        $ids = array_column($ounit, 'id');
+        $ounitCats = array_unique(array_column($ounit, 'category_id'));
+        $courses = Course::query()
+            ->join('status_course as status_course_alias', 'status_course_alias.course_id', '=', 'courses.id')
+            ->join('statuses as statuses_alias', function ($join) {
+                $join->on('statuses_alias.id', '=', 'status_course_alias.status_id')
+                    ->whereRaw('status_course_alias.create_date = (SELECT MAX(create_date) FROM status_course WHERE course_id = courses.id)')
+                    ->where('statuses_alias.name', '=', $this::$presenting);
+            })
+            ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
+            ->join('course_targets as targets_alias', function ($join) use ($ids) {
+                $join->on('targets_alias.course_id', '=', 'courses.id');
+                $join->whereIn('targets_alias.parent_ounit_id', $ids);
+            })
+            ->join('target_ounit_cat as target_ounit_cat_alias', 'target_ounit_cat_alias.course_target_id', '=', 'targets_alias.id')
+            ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
+            ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
+            ->where(function ($query) use ($level, $position, $job) {
+                if(!empty($level)){
+                    $query->where(function ($subQuery) use ($level) {
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
+                            ->where('employee_feat_alias.propertyble_type', Level::class);
+                    });
+                }
+                if (!empty($position)) {
+                    $query->orWhere(function ($subQuery) use ($position, $level) {
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $position)
+                            ->where('employee_feat_alias.propertyble_type', Position::class);
+//                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
+//                            ->where('employee_feat_alias.propertyble_type', Level::class);
+                    });
+                }
+
+                if (!empty($job)) {
+                    $query->orWhere(function ($subQuery) use ($job) {
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $job)
+                            ->where('employee_feat_alias.propertyble_type', Job::class);
+                    });
+                }
+
+                $query->orWhereNull('employee_feat_alias.id');
+            })
+            ->leftJoin('course_ounit_features as course_ounit_feat_alias', function ($join) {
+                $join->on('course_ounit_feat_alias.course_target_id', '=', 'targets_alias.id');
+            })
+            ->leftJoin('ouc_property_values as ouc_prop_value', function ($join) {
+                $join->on('ouc_prop_value.id', '=', 'course_ounit_feat_alias.ouc_property_value');
+            })
+            ->leftJoin('ouc_properties as ouc_prop_alias', function ($join) {
+                $join->on('ouc_prop_alias.id', '=', 'ouc_prop_value.ouc_property_id')
+                    ->on('ouc_prop_alias.ounit_cat_id', '=', 'target_ounit_cat_alias.ounit_cat_id');
+            })
+            ->leftJoin('organization_units as organ_alias', function ($join) use ($ids) {
+                $join->whereIn('organ_alias.unitable_id', $ids)
+                    ->where('organ_alias.unitable_type', VillageOfc::class);
+            })
+            ->leftJoin('village_ofcs as village_ofc_alias', function ($join) {
+                $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id');
+            })
+            ->where(function ($query) use ($isTourism, $isFarm, $isAttachedToCity, $degree) {
+                if (!empty($isTourism)) {
+                    $query->Where(function ($subQuery) use ($isTourism) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isTourism)
+                            ->where('ouc_prop_alias.column_name', DB::raw("degree"));
+                    });
+                }
+                if (!empty($isFarm)) {
+                    $query->orWhere(function ($subQuery) use ($isFarm) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isFarm)
+                            ->where('ouc_prop_alias.column_name', DB::raw("isFarm"));
+                    });
+                }
+
+                if (!empty($isAttachedToCity)) {
+                    $query->orWhere(function ($subQuery) use ($isAttachedToCity) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isAttachedToCity)
+                            ->where('ouc_prop_alias.column_name', DB::raw("isAttached_to_city"));
+                    });
+                }
+
+                if (!empty($degree)) {
+                    $query->orWhere(function ($subQuery) use ($degree) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $degree)
+                            ->where('ouc_prop_alias.column_name', DB::raw("degree"));
+                    });
+                }
+
+                $query->orWhereNull('ouc_prop_alias.id');
+            })
+            ->select([
+                'courses.id as id',
+                'courses.title as course_title',
+                'courses.expiration_date as course_exp_date',
+                'statuses_alias.name as status_name',
+                'statuses_alias.class_name as class_name',
+                'cover_alias.slug as cover_slug',
+            ])
+            ->withCount('allActiveLessons')
+            ->with(['contentTypes' => function ($query) {
+                $query->distinct();
+            }])
+            ->where('courses.course_type', CourseTypeEnum::AMUZESHI->value)
+            ->where('courses.title', 'like', '%' . $title . '%')
+            ->distinct('courses.id')
+            ->paginate($perPage, $columns = ['*'], $pageName = 'page', $pageNum);
+
+        return $courses;
+    }
+
+    public function getRelatedComprehensiveLists($user, $ounit, $level, $position, $job, $isTourism, $isFarm, $isAttachedToCity, $degree)
+    {
+        $usersInfo = $user->load('student');
+        $student = $usersInfo->student;
+
+        $ids = array_column($ounit, 'id');
+        $ounitCats = array_unique(array_column($ounit, 'category_id'));
+        $courses = Course::query()
+            ->join('status_course as status_course_alias', 'status_course_alias.course_id', '=', 'courses.id')
+            ->join('statuses as statuses_alias', function ($join) {
+                $join->on('statuses_alias.id', '=', 'status_course_alias.status_id')
+                    ->whereRaw('status_course_alias.create_date = (SELECT MAX(create_date) FROM status_course WHERE course_id = courses.id)')
+                    ->where('statuses_alias.name', '=', $this::$presenting);
+            })
+            ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
+            ->join('course_targets as targets_alias', function ($join) use ($ids) {
+                $join->on('targets_alias.course_id', '=', 'courses.id');
+                $join->whereIn('targets_alias.parent_ounit_id', $ids);
+            })
+            ->join('target_ounit_cat as target_ounit_cat_alias', 'target_ounit_cat_alias.course_target_id', '=', 'targets_alias.id')
+            ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
+            ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
+            ->where(function ($query) use ($level, $position, $job) {
+                if(!empty($level)){
+                    $query->where(function ($subQuery) use ($level) {
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
+                            ->where('employee_feat_alias.propertyble_type', Level::class);
+                    });
+                }
+                if (!empty($position)) {
+                    $query->orWhere(function ($subQuery) use ($position, $level) {
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $position)
+                            ->where('employee_feat_alias.propertyble_type', Position::class);
+//                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
+//                            ->where('employee_feat_alias.propertyble_type', Level::class);
+                    });
+                }
+
+                if (!empty($job)) {
+                    $query->orWhere(function ($subQuery) use ($job) {
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $job)
+                            ->where('employee_feat_alias.propertyble_type', Job::class);
+                    });
+                }
+
+                $query->orWhereNull('employee_feat_alias.id');
+            })
+            ->leftJoin('course_ounit_features as course_ounit_feat_alias', function ($join) {
+                $join->on('course_ounit_feat_alias.course_target_id', '=', 'targets_alias.id');
+            })
+            ->leftJoin('ouc_property_values as ouc_prop_value', function ($join) {
+                $join->on('ouc_prop_value.id', '=', 'course_ounit_feat_alias.ouc_property_value');
+            })
+            ->leftJoin('ouc_properties as ouc_prop_alias', function ($join) {
+                $join->on('ouc_prop_alias.id', '=', 'ouc_prop_value.ouc_property_id')
+                    ->on('ouc_prop_alias.ounit_cat_id', '=', 'target_ounit_cat_alias.ounit_cat_id');
+            })
+            ->leftJoin('organization_units as organ_alias', function ($join) use ($ids) {
+                $join->whereIn('organ_alias.unitable_id', $ids)
+                    ->where('organ_alias.unitable_type', VillageOfc::class);
+            })
+            ->leftJoin('village_ofcs as village_ofc_alias', function ($join) {
+                $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id');
+            })
+            ->where(function ($query) use ($isTourism, $isFarm, $isAttachedToCity, $degree) {
+                if (!empty($isTourism)) {
+                    $query->Where(function ($subQuery) use ($isTourism) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isTourism)
+                            ->where('ouc_prop_alias.column_name', DB::raw("degree"));
+                    });
+                }
+                if (!empty($isFarm)) {
+                    $query->orWhere(function ($subQuery) use ($isFarm) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isFarm)
+                            ->where('ouc_prop_alias.column_name', DB::raw("isFarm"));
+                    });
+                }
+
+                if (!empty($isAttachedToCity)) {
+                    $query->orWhere(function ($subQuery) use ($isAttachedToCity) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isAttachedToCity)
+                            ->where('ouc_prop_alias.column_name', DB::raw("isAttached_to_city"));
+                    });
+                }
+
+                if (!empty($degree)) {
+                    $query->orWhere(function ($subQuery) use ($degree) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $degree)
+                            ->where('ouc_prop_alias.column_name', DB::raw("degree"));
+                    });
+                }
+
+                $query->orWhereNull('ouc_prop_alias.id');
+            })
+            ->leftJoin('course_exam as course_exam_alias', 'course_exam_alias.course_id', '=', 'courses.id')
+            ->leftJoin('exams as exam_alias', 'exam_alias.id', '=', 'course_exam_alias.exam_id')
+            ->leftJoin('answer_sheets as answer_sheet_alias', function ($join) use ($student) {
+                $join->on('answer_sheet_alias.exam_id', '=', 'exam_alias.id');
+                if ($student) {
+                    $join->where('answer_sheet_alias.student_id', $student->id);
+                }else{
+                    $join->where('answer_sheet_alias.student_id', '');
+                }
+            })
+            ->leftJoin('statuses as answer_sheet_status_alias', 'answer_sheet_status_alias.id', '=', 'answer_sheet_alias.status_id')
+            ->select([
+                'course_exam_alias.id as course_exam_id',
+                'courses.id as id',
+                'courses.title as course_title',
+                'courses.expiration_date as course_exp_date',
+                'answer_sheet_status_alias.name as status_name',
+                'answer_sheet_status_alias.class_name as class_name',
+                'cover_alias.slug as cover_slug',
+            ])
+            ->withCount('allActiveLessons')
+            ->with(['contentTypes' => function ($query) {
+                $query->distinct();
+            }])
+//            ->where('courses.title', 'like', '%' . $title . '%')
+            ->where('courses.course_type', CourseTypeEnum::MOKATEBEYI->value)
+            ->distinct('courses.id')
+            ->latest('course_exam_alias.id')
+            ->get();
+//            ->paginate($perPage, $columns = ['*'], $pageName = 'page', $pageNum);
+
+        return $courses;
+    }
+
+    public function getRelatedListsForDeclaredCourse($course, $ounit, $level, $position, $job, $isTourism, $isFarm, $isAttachedToCity, $degree)
     {
         $ids = array_column($ounit, 'id');
         $ounitCats = array_unique(array_column($ounit, 'category_id'));
@@ -986,41 +1261,123 @@ trait CourseTrait
             ->with(['contentTypes' => function ($query) {
                 $query->distinct();
             }])
-            ->where('courses.title', 'like', '%' . $title . '%')
             ->distinct('courses.id')
-            ->paginate($perPage, $columns = ['*'], $pageName = 'page', $pageNum);
+            ->where('courses.id', $course->id)
+            ->get();
 
         return $courses;
     }
 
-    public function courseCanceledStatus()
+    public
+    function courseCanceledStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
     }
 
-    public function courseEndedStatus()
+    public
+    function courseEndedStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
     }
 
-    public function coursePishnevisStatus()
+    public
+    function coursePishnevisStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
     }
 
-    public function courseDeletedStatus()
+    public
+    function courseDeletedStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::DELETED->value);
     }
 
-    public function coursePresentingStatus()
+    public
+    function coursePresentingStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
     }
 
-    public function courseWaitPresentingStatus()
+    public
+    function courseWaitPresentingStatus()
     {
         return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::WAITING_TO_PRESENT->value);
     }
 
+
+    public function isValidToWatchExam($course, $user)
+    {
+        $user->load([
+            'activeRecruitmentScripts.ounit' => function ($query) {
+                $query->with(['ancestorsAndSelf' => function ($q) {
+                    $q->whereNot('unitable_type', TownOfc::class);
+                }]);
+            }
+        ]);
+
+        $villageOfcs = [];
+
+        foreach ($user->activeRecruitmentScripts as $script) {
+            if ($script->ounit && $script->ounit->unitable_type === VillageOFC::class) {
+                $script->ounit->load('unitable');
+                $villageOfcs[] = $script->ounit->unitable;
+            }
+        }
+
+
+        $relatedOrgans = $user->activeRecruitmentScripts
+            ->pluck('ounit.ancestorsAndSelf')
+            ->flatten(1)
+            ->unique()
+            ->toArray();
+
+
+        $allData = [];
+
+        foreach ($relatedOrgans as $unit) {
+            $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
+            if ($ancestorCategoryId) {
+                $allData[] = [
+                    'id' => $unit['id'],
+                    'category_id' => $ancestorCategoryId,
+                ];
+            }
+
+        }
+
+        $allOunits = array_unique($allData, SORT_REGULAR);
+
+
+        //Employee Features Plucks
+        $levels = $user->activeRecruitmentScripts
+            ->pluck('level_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $positions = $user->activeRecruitmentScripts
+            ->pluck('position_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $jobs = $user->activeRecruitmentScripts
+            ->pluck('job_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+
+        //Ounit features plucks
+        $villageOfcs = collect($villageOfcs);
+        $isTourism = $villageOfcs->pluck('isTourism')->toArray();
+        $isAttachedToCity = $villageOfcs->pluck('isAttached_to_city')->toArray();
+        $isFarm = $villageOfcs->pluck('isFarm')->toArray();
+        $degree = $villageOfcs->pluck('degree')->toArray();
+
+        return response()->json($villageOfcs);
+
+        $course = $this->getRelatedListsForDeclaredCourse($course, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree);
+        return $course;
+    }
 }
