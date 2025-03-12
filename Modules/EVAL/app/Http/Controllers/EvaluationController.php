@@ -135,7 +135,7 @@ class EvaluationController extends Controller
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
                 ->whereIntegerNotInRaw('id', $eliminatedVillagesQuery)
-                ->select('organization_units.id') // Use full table reference to avoid ambiguity
+                ->select('organization_units.id')
                 ->distinct()
                 ->get();
 
