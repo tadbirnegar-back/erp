@@ -175,7 +175,7 @@ class EvaluationController extends Controller
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message' => $e->getMessage()], 404);
+            return response()->json(['message' => ''], 404);
         }
 
     }
@@ -186,6 +186,7 @@ class EvaluationController extends Controller
             DB::beginTransaction();
             $circular = EvalCircular::findOrFail($id);
             $user = Auth::user();
+            $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
             $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular);
 
@@ -193,23 +194,27 @@ class EvaluationController extends Controller
             $organ = OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
-                ->whereNotIn('organization_units.id' , $eliminatedVillagesQuery)
+                ->whereNotIn('organization_units.id', $eliminatedVillagesQuery)
+                ->select('organization_units.*') // Ensure only organization_units data is retrieved
                 ->get();
 
-            return response() -> json($organ);
-//                ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
-//                    $batch = [];
-//                    foreach ($chunk as $organizationUnit) {
-//                        $delayInSeconds = 10 + rand(1, 45);
-//                        $batch[] = (new MakeEvaluationFormJob(
-//                            $circular,
-//                            $organizationUnit->id,
-//                            $user->id,
-//                            $waitToDoneStatus
-//                        ))->delay(now()->addSeconds($delayInSeconds));
-//                    }
-//                    $allJobs[] = $batch;
-//                }, 'id');
+
+            $chunks = $organ->chunk(100);
+            $allJobs = [];
+
+            foreach ($chunks as $chunk) {
+                $batch = [];
+                foreach ($chunk as $organizationUnit) {
+                    $delayInSeconds = 10 + rand(1, 45);
+                    $batch[] = (new MakeEvaluationFormJob(
+                        $circular,
+                        $organizationUnit->id,
+                        $user->id,
+                        $waitToDoneStatus
+                    ))->delay(now()->addSeconds($delayInSeconds));
+                }
+                $allJobs[] = $batch;
+            }
 
 
             foreach ($allJobs as $jobBatch) {
@@ -218,11 +223,12 @@ class EvaluationController extends Controller
                     ->onQueue('default')
                     ->dispatchAfterResponse();
             }
+
             DB::commit();
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message' => $e->getMessage()], 403);
+            return response()->json(['message' => 'متاسفانه'], 403);
         }
 
     }
