@@ -125,6 +125,7 @@ class OrganizationUnit extends Model
             ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
             ->value('value');
 
+
         // Fetch the enactment limit per meeting from settings
         $enactmentLimitPerMeeting = \DB::table('settings')
             ->where('key', SettingsEnum::ENACTMENT_LIMIT_PER_MEETING->value)
@@ -134,7 +135,6 @@ class OrganizationUnit extends Model
         $meetingtypeId = \DB::table('meeting_types')
             ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
             ->value('id');
-
         return $this->hasOne(Meeting::class, 'ounit_id')
             ->where('meeting_type_id', $meetingtypeId)
             ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)])

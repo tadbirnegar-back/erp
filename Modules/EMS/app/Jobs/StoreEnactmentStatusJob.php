@@ -43,19 +43,29 @@ class StoreEnactmentStatusJob implements ShouldQueue
                     $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
                         $subQuery->where('enactment_id', $this->encId);
                     })->whereHas('roles', function ($q) {
-                        $q->where('name', RolesEnum::OZV_HEYAAT->value);
+                        $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
                     });
 
                 },])->find($this->encId);
+
+            $members = $enactment->members;
+
+            $AllMainPersons = $enactment->load(['members' => function ($query) {
+                $query->whereHas('roles', function ($q) {
+                    $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
+                });
+            }]);
+            $AllMainCount = $AllMainPersons->members->count();
+
             if (is_null($enactment)) {
                 $this->delete();
                 return;
             }
 
             if ($enactment->status->id != $this->enactmentCancelStatus()->id) {
-                if ($enactment->members->isNotEmpty()) {
+                if ($members->isNotEmpty()) {
                     $noMoghayeratAutoStatus = $this->reviewNoSystemInconsistencyStatus();
-                    $data = $enactment->members->map(function ($member) use ($noMoghayeratAutoStatus) {
+                    $data = $members->map(function ($member) use ($noMoghayeratAutoStatus) {
                         return [
                             'user_id' => $member->employee_id,
                             'description' => null,
@@ -73,10 +83,10 @@ class StoreEnactmentStatusJob implements ShouldQueue
 
                     $reviewStatuses = $enactment->enactmentReviews()
                         ->whereHas('user.roles', function ($query) {
-                            $query->where('name', RolesEnum::OZV_HEYAAT->value);
+                            $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
                         })->with('status')->get();
 
-                    if ($reviewStatuses->count() > 1) {
+                    if ($reviewStatuses->count() == $AllMainCount) {
                         $result = $reviewStatuses->groupBy('status.id')
                             ->map(fn($statusGroup) => [
                                 'status' => $statusGroup->first(),

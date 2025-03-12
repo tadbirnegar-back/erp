@@ -676,9 +676,12 @@ trait ReportingTrait
 
         return [
             'average' => $averageScore,
+            'scores' => $ans->pluck('scores'),
+            'student_id' => $ans->pluck('student_id'),
             'EnrolledStudents' => $this->allStudentsCount($courseID),
         ];
     }
+
 
 
     public function countAnswerSheetApprovedStatusOfStudents($courseID)
