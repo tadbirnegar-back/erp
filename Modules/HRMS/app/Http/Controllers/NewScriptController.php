@@ -45,7 +45,7 @@ class NewScriptController extends Controller
             $employee = $user->employee;
             $hireType = HireType::where('title', 'تمام وقت')->first();
             $scriptType = ScriptType::where('title', 'انتصاب سرپرست دهیاری')->first();
-            $job = Job::where('title', 'دهیار')->first();
+            $job = Job::where('title', 'سرپرست دهیاری')->first();
 
             $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
@@ -85,7 +85,7 @@ class NewScriptController extends Controller
             $employee = $user->employee;
             $hireType = HireType::where('title', 'تمام وقت')->first();
             $scriptType = ScriptType::where('title', 'انتصاب هیئت تطبیق')->first();
-            $job = Job::where('title', 'دهیار')->first();
+            $job = Job::where('title', 'عضو هیئت')->first();
 
             $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
