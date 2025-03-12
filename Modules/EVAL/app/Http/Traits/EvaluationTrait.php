@@ -572,7 +572,7 @@ trait EvaluationTrait
             ->pluck('id')
             ->toArray();
 
-        return collect($NotAllowedOunits)->values();
+        return collect($NotAllowedOunits)->values()->toArray();
     }
 
 }

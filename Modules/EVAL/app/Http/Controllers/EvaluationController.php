@@ -189,13 +189,13 @@ class EvaluationController extends Controller
 
             $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular);
 
-            return response() -> json($eliminatedVillagesQuery);
 
             $organ = OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
-//                ->whereNotIn('id' , $eliminatedVillagesQuery)
+                ->whereNotIn('organization_units.id' , $eliminatedVillagesQuery)
                 ->get();
+
             return response() -> json($organ);
 //                ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
 //                    $batch = [];
