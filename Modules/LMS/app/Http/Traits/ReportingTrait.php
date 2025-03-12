@@ -673,7 +673,7 @@ trait ReportingTrait
             'average' => $averageScore,
             'scores' => $ans->pluck('scores'),
             'student_id' => $ans->pluck('student_id'),
-            'EnrolledStudents' => $ans->count('answer_sheets.student_id'),
+            'EnrolledStudents' => $this->allStudentsCount($courseID),
         ];
     }
 
