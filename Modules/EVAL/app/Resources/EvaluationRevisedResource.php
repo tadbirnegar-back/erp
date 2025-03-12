@@ -112,8 +112,7 @@ class EvaluationRevisedResource extends JsonResource
                 'CityOfc' => $data['city'],
                 'canEvaluate' => false,
                 'role' => "CityOfc",
-//                'previousEval' => is_null($data['district'][0]['answer_id']) ? 'VillageOfc' : 'DistrictOfc'
-                'previousEval' => $data['district'][0]['answer_id']
+                'previousEval' => is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc'
             ];
         }
 
@@ -125,6 +124,8 @@ class EvaluationRevisedResource extends JsonResource
                 'StateOfc' => $data['state'],
                 'canEvaluate' => false,
                 'role' => "StateOfc",
+                'previousEval' => is_null($data['city']['evaluation'][0]->variable_id) ? (is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc') : 'CityOfc'
+
             ];
         }
 
@@ -136,6 +137,7 @@ class EvaluationRevisedResource extends JsonResource
                 'DistrictOfc' => $data['district'],
                 'canEvaluate' => true,
                 'role' => "DistrictOfc",
+                'previousEval' => "VillageOfc"
             ];
         }
 
@@ -146,7 +148,7 @@ class EvaluationRevisedResource extends JsonResource
                 'CityOfc' => $data['city'],
                 'canEvaluate' => true,
                 'role' => "CityOfc",
-                'previousEval' => $data['district'][0]['answer_id']
+                'previousEval' => is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc'
             ];
         }
 
@@ -158,6 +160,8 @@ class EvaluationRevisedResource extends JsonResource
                 'StateOfc' => $data['state'],
                 'canEvaluate' => true,
                 'role' => "StateOfc",
+                'previousEval' => is_null($data['city']['evaluation'][0]->variable_id) ? (is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc') : 'CityOfc'
+
             ];
         }
     }
