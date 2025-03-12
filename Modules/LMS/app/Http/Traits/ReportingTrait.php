@@ -677,6 +677,7 @@ trait ReportingTrait
         ];
     }
 
+
     public function countAnswerSheetApprovedStatusOfStudents($courseID)
     {
         $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
