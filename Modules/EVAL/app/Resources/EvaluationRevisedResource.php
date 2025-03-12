@@ -101,6 +101,7 @@ class EvaluationRevisedResource extends JsonResource
                 'DistrictOfc' => $data['district'],
                 'canEvaluate' => false,
                 'role' => "DistrictOfc",
+                'previousEval' => "VillageOfc"
             ];
         }
 
@@ -111,6 +112,8 @@ class EvaluationRevisedResource extends JsonResource
                 'CityOfc' => $data['city'],
                 'canEvaluate' => false,
                 'role' => "CityOfc",
+//                'previousEval' => is_null($data['district'][0]['answer_id']) ? 'VillageOfc' : 'DistrictOfc'
+                'previousEval' => $data['district'][0]['answer_id']
             ];
         }
 
@@ -143,6 +146,7 @@ class EvaluationRevisedResource extends JsonResource
                 'CityOfc' => $data['city'],
                 'canEvaluate' => true,
                 'role' => "CityOfc",
+                'previousEval' => $data['district'][0]['answer_id']
             ];
         }
 
