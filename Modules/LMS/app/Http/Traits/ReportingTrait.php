@@ -662,16 +662,26 @@ trait ReportingTrait
         $ans = Question::joinRelationship('answers.answerSheet.status')
             ->joinRelationship('answers.answerSheet.exam.courseExams.course')
             ->joinRelationship('repository')
-            ->select('answer_sheets.score as scores')
+            ->select([
+                'answer_sheets.score as scores',
+                'answer_sheets.student_id as student_id'
+            ])
             ->where('repositories.id', $repo)
-            ->where('courses.id', $courseID);
-        $averageScore = $ans->get()->pluck('scores')->avg();
+            ->where('courses.id', $courseID)
+            ->latest('answer_sheets.start_date_time')
+            ->distinct('answer_sheets.student_id')
+            ->get()
+            ->unique('student_id');
+        $averageScore = round($ans->pluck('scores')->avg(), 1);
 
         return [
             'average' => $averageScore,
-            'EnrolledStudents' => $ans->count('answer_sheets.student_id'),
+            'scores' => $ans->pluck('scores'),
+            'student_id' => $ans->pluck('student_id'),
+            'EnrolledStudents' => $this->allStudentsCount($courseID),
         ];
     }
+
 
     public function countAnswerSheetApprovedStatusOfStudents($courseID)
     {
@@ -744,14 +754,20 @@ trait ReportingTrait
     {
         $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first()->id;
 
-        $query = Course::joinRelationship('courseExams.exams.answerSheets.answers.questions.repository')
+        $query = Question::joinRelationship('answers.answerSheet.status')
+            ->joinRelationship('answers.answerSheet.exam.courseExams.course')
+            ->joinRelationship('repository')
             ->select([
                 'answer_sheets.score as scores',
-                'answer_sheets.finish_date_time as finish_date_time',
+                'answer_sheets.student_id as student_id'
             ])
-            ->where('courses.id', $courseID)
             ->where('repositories.id', $repo)
-            ->get();
+            ->where('courses.id', $courseID)
+            ->latest('answer_sheets.start_date_time')
+            ->distinct('answer_sheets.student_id')
+            ->get()
+            ->unique('student_id');
+
 
         $persianMonths = [
             "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
@@ -769,7 +785,7 @@ trait ReportingTrait
             if ($groupedData->has($monthName)) {
                 $items = $groupedData[$monthName];
                 $scores = $items->pluck('scores');
-                $averageScore = round($scores->avg(), 2);
+                $averageScore = round($scores->avg(), 1);
             } else {
                 $averageScore = 0;
             }
