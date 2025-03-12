@@ -95,13 +95,33 @@ class NewScriptController extends Controller
                     'defaultValue' => $item->pivot->default_value ?? 0,
                 ];
             });
+            $positionsName=Position::whereIn('name',['کارشناس مشورتی','نماینده استانداری'])->get();
+            $ids=$positionsName->pluck('id')->toArray();
+            $dabirId=Position::where('name','مسئول دبیرخانه')->first()->id;
+            $dabir=Position::where('name','مسئول دبیرخانه')->first();
+
             $encodedSas = json_encode($sas->toArray());
             $data['hireTypeID'] = $hireType->id;
             $data['scriptTypeID'] = $scriptType->id;
             $data['jobID'] = $job->id;
             $data['operatorID'] = $user->id;
             $data['scriptAgents'] = $encodedSas;
-            $data['positionID'] = Position::where('id', $data['positionID'])->first()->id;
+
+            if ($dabir && $dabir->id == $data['positionID']) {
+                $data['scriptTypeID'] = ScriptType::where('title', 'انتصاب دبیر')->value('id');
+            } else {
+                $data['scriptTypeID'] = ScriptType::where('title', 'انتصاب هیئت تطبیق')->value('id');
+            }
+
+
+
+            if (isset($data['positionID']) && in_array($data['positionID'], $ids)) {
+                $job = Job::where('title', 'کارشناس مشورتی')->first();
+            }
+            if ($data['positionID']== $dabirId) {
+                $job = Job::where('title', 'مسئول دبیرخانه')->first();
+            }
+            $data['jobID'] = $job ? $job->id : null;
             $pendingRsStatus = $this->pendingRsStatus();
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
