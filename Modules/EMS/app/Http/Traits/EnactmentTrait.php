@@ -187,7 +187,10 @@ trait EnactmentTrait
 
         $query = Enactment::whereHas('meeting', function ($query) use ($ounits) {
             $query->whereIntegerInRaw('ounit_id', $ounits);
-        });
+        })->with(['enactmentReviews' => function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+            $query->with('status');
+        }]);
         $query->when($statuses, function ($query) use ($statuses) {
             $query->whereHas('status', function ($query) use ($statuses) {
                 $query->whereIn('status_id', $statuses)
