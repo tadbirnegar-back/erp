@@ -68,6 +68,13 @@ class Content extends Model
         return $this->belongsTo(ContentConsumeLog::class, 'id', 'content_id');
     }
 
+
+    public function consumeLogs()
+    {
+        return $this->hasMany(ContentConsumeLog::class, 'content_id', 'id');
+    }
+
+
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);

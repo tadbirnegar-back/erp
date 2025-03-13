@@ -63,7 +63,9 @@ trait LevelTrait
                 'lvl_alias.id as level_alias_id',
                 'lvl_alias.name as level_name',
             ])
-            ->whereIn('positions.ounit_cat', $ounits)->get();
+            ->whereIn('positions.ounit_cat', $ounits)
+            ->distinct()
+            ->get();
     }
 
     public function activeLevelStatus()

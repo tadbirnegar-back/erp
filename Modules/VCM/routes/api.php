@@ -23,5 +23,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/vcm/version/show' , [VersionManagementController::class , 'showVersion']);
+    Route::get('/vcm/version/show/all' , [VersionManagementController::class , 'indexAllVersions']);
 });
 

@@ -2,38 +2,38 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
-use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Course;
-use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\Option;
 use Modules\LMS\app\Models\Question;
-use Modules\StatusMS\app\Models\Status;
 
-trait questionsTrait
+trait QuestionsTrait
 {
+    use LessonTrait;
+
     private static string $active = QuestionsEnum::ACTIVE->value;
     private static string $inactive = QuestionsEnum::EXPIRED->value;
 
-    public function dropDowns($courseID)
+    public function dropDowns($quesionId)
     {
-        $status = $this->lessonActiveStatus()->id;
+        $question = Question::find($quesionId);
+        $question->load('course');
+        $courseID = $question->course->id;
+        return Course::with('chapters.allActiveLessons')->find($courseID);
 
-        $query = Course::leftJoinRelationship('chapters.lessons.lessonStatus');
-        $query->select([
-            'chapters.id as chapterID',
-            'chapters.title as chapterTitle',
-            'lessons.id as lessonID',
-            'lessons.title as lessonTitle',
-            'status_lesson.status_id as stu_id'
-        ]);
-        return $query->where('courses.id', $courseID)
-            ->where('status_lesson.status_id', $status)
-            ->get();
+    }
+
+
+    public function dropDownsAddQuestion($courseId)
+    {
+        return Course::with('chapters.allActiveLessons')->find($courseId);
     }
 
     public function insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs)
     {
+
+        $course = Course::find($courseID);
+        $courseID = $course->id;
         $status = $this->questionActiveStatus();
         $questions = [];
         foreach ($repositoryIDs as $repositoryID) {
@@ -75,10 +75,11 @@ trait questionsTrait
     {
         $status = $this->questionActiveStatus();
 
-        $query = Course::joinRelationship('chapters.lessons.questions.difficulty')
-            ->joinRelationship('chapters.lessons.questions.options')
-            ->joinRelationship('chapters.lessons.questions.repository')
-            ->joinRelationship('chapters.lessons.questions.questionType')
+        $query = Course::joinRelationship('chapters.allActiveLessons.questions.difficulty')
+            ->joinRelationship('chapters.allActiveLessons.questions.options')
+            ->joinRelationship('chapters.allActiveLessons.questions.repository')
+            ->joinRelationship('chapters.allActiveLessons.questions.questionType')
+//            ->joinRelationship('chapters.allActiveLessons.status')
             ->leftJoinRelationship('chapters.lessons.questions.answers.answerSheet', [
                 'chapters' => fn($join) => $join->as('chapters_alias'),
                 'lessons' => fn($join) => $join->as('lessons_alias'),
@@ -94,7 +95,8 @@ trait questionsTrait
                 'repositories.name as repositoryName',
                 'options.title as optionTitle',
                 'chapters.title as chapterTitle',
-                'lessons_alias.title as lessonTitle',
+                'lessons.title as lessonTitle',
+//                'lessons_alias.title as lessonTitle',
                 'courses.title as courseTitle',
                 'options.is_correct as isCorrect',
                 'answers_alias.question_id as answerQuestionID',
@@ -107,37 +109,20 @@ trait questionsTrait
             'questionList' => $query,
             'count' => $count
         ];
-
-
     }
 
     public function count($id)
     {
-        $status = $this->questionActiveStatus();
-        $lessonStatus = $this->lessonActiveStatus()->id;
-
-        $course = Course::with(['chapters.lessons.questions' => function ($query) use ($status) {
-            $query->where('status_id', $status->id);
-        }])->find($id);
-
-        $activeLessons = \DB::table('lessons')
-            ->join('status_lesson', 'lessons.id', '=', 'status_lesson.lesson_id')
-            ->where('status_lesson.status_id', $lessonStatus)
-            ->pluck('lessons.id');
-
-        $chaptersCount = $course->chapters->count();
-
-        $lessonsCount = $course->chapters->sum(function ($chapter) use ($activeLessons) {
-            return $chapter->lessons->whereIn('id', $activeLessons)->count();
-        });
-
-        $questionsCount = $course->chapters->sum(fn($chapter) => $chapter->lessons->sum(fn($lesson) => $lesson->questions->where('status_id', $status->id)->count()));
-
+        $course = Course::query()
+            ->withCount('chapters')
+            ->withCount('allActiveLessons')
+            ->withCount('questions')
+            ->find($id);
 
         return [
-            'chapters' => $chaptersCount,
-            'lessons' => $lessonsCount,
-            'questions' => $questionsCount
+            'chapters' => $course->chapters_count,
+            'lessons' => $course->all_active_lessons_count,
+            'questions' => $course->questions_count
         ];
     }
 
@@ -168,7 +153,11 @@ trait questionsTrait
                 foreach ($options as $option) {
                     if (isset($option['option_id'])) {
                         Option::where('id', $option['option_id'])
-                            ->update(['is_correct' => $option['is_correct']]);
+                            ->update([
+                                'is_correct' => $option['is_correct'],
+                                'title' => $option['title'],
+                            ]);
+
                     } else {
                         Option::create([
                             'title' => $option['title'] ?? 'Default Title',
@@ -196,6 +185,9 @@ trait questionsTrait
 
     public function showEditedQuestion($questionID)
     {
+        $question = Question::find($questionID);
+        $courseData = $question->load('course');
+        $courseID = $courseData->course->id;
         $question = Course::joinRelationship('chapters.lessons.questions.difficulty')
             ->joinRelationship('chapters.lessons.questions.options')
             ->joinRelationship('chapters.lessons.questions.repository')
@@ -220,6 +212,7 @@ trait questionsTrait
                 'options.is_correct as isCorrect'
 
             ])
+            ->distinct('chapters.id')
             ->where('questions.id', $questionID)->get();
 
         $questions = Course::joinRelationship('chapters.lessons')
@@ -232,21 +225,21 @@ trait questionsTrait
                 'courses.id as courseID',
 
 
-            ])->first();
+            ])->where('courses.id', $courseID)->get();
 
-        $id = $questions->courseID;
-        $all = $this->showAll($id);
-        return ['questionForEdit' => $question,
-            'allListToShow' => $all,
+
+        return [
+            'questionForEdit' => $question,
+            'allListToShow' => $questions,
         ];
     }
 
     /**
      * @return string
      */
-    public static function questionDelete($questionID): string
+    public function questionDelete($questionID): string
     {
-        $status = Status::where('name', self::$inactive)->firstOrFail();
+        $status = $this->questionInActiveStatus();
 
         $question = Question::findOrFail($questionID);
         $question->status_id = $status->id;
@@ -283,14 +276,5 @@ trait questionsTrait
         return Question::GetAllStatuses()->firstWhere('name', QuestionsEnum::EXPIRED->value);
     }
 
-    public function lessonActiveStatus()
-    {
-        return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::ACTIVE->value);
-    }
-
-    public function lessonInActiveStatus()
-    {
-        return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
-    }
 
 }

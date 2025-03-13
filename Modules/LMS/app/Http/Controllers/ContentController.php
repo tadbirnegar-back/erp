@@ -22,9 +22,9 @@ class ContentController extends Controller
             $user->load('student');
             $log = $this->contentLogUpsert($data , $user);
 
-//            $round = $this->calculateRounds($log , $user);
+            $round = $this->calculateRounds($log , $user);
             \DB::commit();
-            return response()->json($log);
+            return response()->json($round);
         }catch (\Exception $exception){
             \DB::rollBack();
             return response() -> json(['error' => $exception->getMessage()], 500);

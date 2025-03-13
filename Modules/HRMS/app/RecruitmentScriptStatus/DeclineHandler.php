@@ -24,6 +24,7 @@ class DeclineHandler implements StatusHandlerInterface
         \DB::transaction(function () {
 
             $this->notifyScriptUser();
+
         });
     }
 

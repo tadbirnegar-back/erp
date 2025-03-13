@@ -27,8 +27,6 @@ class ExamResultController extends Controller
     public function storeAnsS(Request $request, $examId)
     {
         try {
-
-
             $jsonData = $request->data;
             $data = json_decode($jsonData, true);
             $usedTime = $request->usedTime;
@@ -61,14 +59,13 @@ class ExamResultController extends Controller
     public function showAns($answerSheetID)
     {
         $student = Auth::user()->load('student');
-
         $data = [
             'questions' => Answers::where('answer_sheet_id', $answerSheetID)
                 ->get(['question_id', 'value as selected_option'])
                 ->map(function ($answer) {
                     return [
                         'question_id' => $answer->question_id,
-                        'option_id' => Option::where('title', $answer->selected_option)->value('id')
+                        'option_id' => Option::where('title', $answer->selected_option)->where('question_id', $answer->question_id)->value('id')
                     ];
                 })
                 ->toArray()

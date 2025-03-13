@@ -21,6 +21,7 @@ use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Natural;
+use Modules\VCM\app\Models\VcmVersions;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class LoginController extends Controller
@@ -309,6 +310,14 @@ class LoginController extends Controller
         }
 
 
+        $version = VcmVersions::orderBy('id', 'desc')->first();
+
+        if(is_null($version)){
+            $versionTxt = '1.0.0';
+        }else{
+            $versionTxt = $version->high_version.'.'.$version->mid_version.'.'.$version->low_version;
+        }
+        $result['version'] = ["version" => $versionTxt];
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,
@@ -442,6 +451,14 @@ class LoginController extends Controller
             $result['confirmed'] = true;
         }
 
+        $version = VcmVersions::orderBy('id', 'desc')->first();
+
+        if(is_null($version)){
+            $versionTxt = '1.0.0';
+        }else{
+            $versionTxt = $version->high_version.'.'.$version->mid_version.'.'.$version->low_version;
+        }
+        $result['version'] = ["version" => $versionTxt];
         $result['userInfo'] = [
             'firstName' => $natural->first_name,
             'lastName' => $natural->last_name,

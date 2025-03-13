@@ -330,4 +330,14 @@ trait RecruitmentScriptTrait
         $script->save();
     }
 
+
+    public function detachHeadIdFromOunit(RecruitmentScript $script, $userId)
+    {
+        $ounit = $script->load('organizationUnit');
+        if ($ounit->organizationUnit->head_id == $userId) {
+            $ounit->organizationUnit->head_id = null;
+            $ounit->organizationUnit->save();
+        }
+    }
+
 }

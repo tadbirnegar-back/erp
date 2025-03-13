@@ -4,6 +4,7 @@ namespace Modules\PayStream\app\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\CustomerMS\app\Models\Customer;
 use Modules\LMS\app\Models\Enroll;
 use Modules\PayStream\Database\factories\OrderFactory;
 use Modules\StatusMS\app\Models\Status;
@@ -57,7 +58,6 @@ class Order extends Model
     }
 
 
-
     public function latestFinancialStatus()
     {
         return $this->hasOneThrough(Status::class, FinancialStatus::class, 'order_id', 'id', 'id', 'status_id')
@@ -99,5 +99,11 @@ class Order extends Model
     {
         return $this->belongsTo(Enroll::class, 'orderable_id', 'id');
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id', 'id');
+    }
+
 
 }

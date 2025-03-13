@@ -76,10 +76,16 @@ function convertDateTimeJalaliPersianCharactersToGregorian(string $persianCharDa
 }
 
 
-function convertDateTimeGregorianToJalaliDateTime(string $value)
+
+
+function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
 {
-    $jalali = CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value)); // 1395-02-19
-    $jalaliPersianNumbers = CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹
+    if ($value === null) {
+        return null;
+    }
+
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali);
     return $jalaliPersianNumbers;
 }
 
@@ -109,11 +115,13 @@ function convertGregorianToJalali(string $gregorianDate)
 
 function convertSecondToMinute($second)
 {
+    $hours = floor($second / 3600);
     $minutes = floor($second / 60);
     $remainingSeconds = $second % 60;
 
-    return "{$minutes}:{$remainingSeconds}";
+    return sprintf("%02d:%02d:%02d", $hours, $minutes, $remainingSeconds);
 }
+
 
 function convertMinuteToSecondFormatted($time)
 {

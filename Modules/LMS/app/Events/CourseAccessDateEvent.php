@@ -2,23 +2,21 @@
 
 namespace Modules\LMS\app\Events;
 
-use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
-use Modules\PayStream\app\Models\Online;
+use Modules\LMS\app\Models\Course;
 
-class OnlineCreatedEvent
+class CourseAccessDateEvent
 {
-    use Dispatchable, SerializesModels;
+    use SerializesModels;
 
-    public Online $online;
+    public Course $course;
 
     /**
      * Create a new event instance.
      */
-    public function _construct(Online $online)
+    public function __construct(Course $course)
     {
-        $this->online = $online;
+        $this -> course  = $course;
     }
 
     /**

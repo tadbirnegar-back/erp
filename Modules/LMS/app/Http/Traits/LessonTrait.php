@@ -28,7 +28,7 @@ trait LessonTrait
         $statusID = $this->lessonActiveStatus()->id;
         StatusLesson::create([
             'status_id' => $statusID,
-            'lesson_id' => $lesson -> id ,
+            'lesson_id' => $lesson->id,
             'created_date' => now()
         ]);
     }
@@ -68,6 +68,7 @@ trait LessonTrait
 
     public function getLessonDatasBasedOnLessonId($lessonID, $user)
     {
+        $status = $this->contentActiveStatus();
         $query = Lesson::query()
             ->leftJoinRelationship('contents.teacher.workForceForJoin.person.avatar', [
                 'contents' => fn($join) => $join->as('contents_alias'),
@@ -87,7 +88,8 @@ trait LessonTrait
             ])
             ->leftJoinRelationship('files.file', [
                 'file' => fn($join) => $join->as('lesson_files_alias'),
-                'files' => fn($join) => $join->on('file_lesson.lesson_id', '=', 'lessons.id')
+                'files' => fn($join) => $join->as('lesson_pivot_file')
+                    ->on('file_lesson.lesson_id', '=', 'lessons.id')
             ])
             ->leftJoinRelationship('comments.user.person.avatar', [
                 'comments' => fn($join) => $join->as('comments_alias')
@@ -113,6 +115,8 @@ trait LessonTrait
                 'contents_alias.id as content_id', // done
                 'lesson_files_alias.id as lesson_file_id',
                 'lesson_files_alias.slug as lesson_file_slug',
+                'lesson_files_alias.size as lesson_file_size',
+                'lesson_pivot_file.title as lesson_file_title',
                 'comments_alias.text as lesson_comment_text',
                 'comments_alias.id as lesson_comment_id',
                 'comments_alias.create_date as lesson_comment_create_date',
@@ -126,9 +130,12 @@ trait LessonTrait
                 'content_consume_alias.id as content_consume_id',
                 'content_consume_alias.last_played as content_consume_last_played',
                 'content_consume_alias.set as content_consume_set',
+
                 'content_consume_alias.create_date as content_consume_create_date',
+                'content_consume_alias.consume_round as content_consume_consume_round',
             ])
             ->where('lessons.id', $lessonID)
+            ->where('contents_alias.status_id', '=', $status->id)
             ->get();
         return ["lessonDetails" => $query];
     }
@@ -198,11 +205,20 @@ trait LessonTrait
                 'lesson_id' => $lessonID,
                 'student_id' => $user->student->id,
                 'study_count' => 1,
-                'is_complete' => true,
+                'is_completed' => true,
                 'first_study_date' => now(),
                 'last_study_date' => now(),
             ]
         );
+    }
+
+    public function updateLessonDatas($lesson, $data)
+    {
+        $lesson->update([
+            'description' => $data['lesson_description'],
+            'title' => $data['lesson_title'],
+            'chapter_id' => $data['chapterID'],
+        ]);
     }
 
     public function lessonActiveStatus()
@@ -213,14 +229,5 @@ trait LessonTrait
     public function lessonInActiveStatus()
     {
         return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
-    }
-
-    public function updateLessonDatas($lesson, $data)
-    {
-        $lesson->update([
-            'description' => $data['lesson_description'],
-            'title' => $data['lesson_title'],
-            'chapter_id' => $data['chapterID'],
-        ]);
     }
 }

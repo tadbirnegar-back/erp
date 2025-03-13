@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\LMS\app\Http\Traits\questionsTrait;
+use Modules\LMS\app\Http\Traits\QuestionsTrait;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Resources\EditedQuestionResource;
 use Modules\LMS\app\Resources\QuestionManagementResource;
@@ -14,7 +14,7 @@ use Modules\LMS\app\Resources\QuestionResource;
 
 class QuestionsController extends Controller
 {
-    use questionsTrait;
+    use QuestionsTrait;
 
     public array $data = [];
 
@@ -23,6 +23,7 @@ class QuestionsController extends Controller
      */
     public function storeQuestionAndOptions(Request $request, $courseID)
     {
+
         try {
             DB::beginTransaction();
 
@@ -54,13 +55,13 @@ class QuestionsController extends Controller
             $user = Auth::user();
 
             $question = $this->insertQuestionWithOptions($data, $options, $courseID, $user, $repositoryIDs);
-            DB::commit();
             if ($question) {
+                DB::commit();
                 return response()->json([
                     'message' => 'Question created successfully',
                 ], 201);
             }
-
+            DB::rollBack();
             return response()->json(['message' => 'Failed to create question'], 500);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -71,10 +72,10 @@ class QuestionsController extends Controller
         }
     }
 
-    public function showDropDowns($courseID)
+    public function showDropDowns($questionId)
     {
         try {
-            $show = $this->dropDowns($courseID);
+            $show = $this->dropDowns($questionId);
             if (!$show) {
                 return response()->json([
                     'error' => 'Course not found.'
@@ -88,6 +89,26 @@ class QuestionsController extends Controller
             ], 500);
         }
     }
+
+
+    public function showDropDownsAddQuestion($courseId)
+    {
+        try {
+            $show = $this->dropDownsAddQuestion($courseId);
+            if (!$show) {
+                return response()->json([
+                    'error' => 'Course not found.'
+                ], 403);
+            }
+            return new QuestionResource(collect($show));
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while fetching dropdowns.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
     public function questionsManagement($id)
     {
@@ -112,8 +133,7 @@ class QuestionsController extends Controller
     {
         try {
             DB::beginTransaction();
-
-            $question = $this->questionDelete($questionID);
+            $this->questionDelete($questionID);
             DB::commit();
 
             return response()->json(['message' => 'Question status updated to inactive successfully.',], 200);
@@ -129,13 +149,17 @@ class QuestionsController extends Controller
 
     public function showQuestion($questionID)
     {
+
         $response = $this->showEditedQuestion($questionID);
+
         return new EditedQuestionResource(collect($response));
     }
 
     public function update(Request $request, $questionID)
     {
+
         try {
+            DB::beginTransaction();
             $data = $request->all();
 
             $options = json_decode($data['options'], true);
@@ -186,18 +210,23 @@ class QuestionsController extends Controller
             $courseID = $question->courseID;
 
             $updateResult = $this->updateQuestionWithOptions($questionID, $data, $options, $user, $delete, $repositoryIDs);
+
             if ($updateResult) {
+                Db::commit();
                 return response()->json([
                     'message' => 'Question updated successfully',
                     'course_id' => $courseID
                 ], 200);
             }
 
+            Db::rollBack();
+
             return response()->json([
                 'message' => 'Failed to update question'
             ], 500);
 
         } catch (\Exception $e) {
+            Db::rollBack();
             return response()->json([
                 'message' => 'An error occurred while updating the question.',
                 'error' => $e->getMessage(),

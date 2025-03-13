@@ -4,18 +4,18 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\CourseExam;
 use Modules\LMS\app\Models\Exam;
 use Modules\LMS\app\Models\Question;
 use Modules\LMS\app\Models\QuestionExam;
-use Modules\LMS\app\Models\Student;
 use Modules\LMS\app\Resources\ExamPreviewResource;
 use Modules\SettingsMS\app\Models\Setting;
 
 trait ExamsTrait
 {
-    private static string $active = QuestionsEnum::ACTIVE->value;
 
+    use QuestionsTrait;
 
     public function examPreview($id)
     {
@@ -26,7 +26,6 @@ trait ExamsTrait
             'exams.id as examID',
             'courses.title as courseTitle',
             'questions.title as questionTitle',
-            'question_exams.exam_id as qExamID'
         ]);
         $query->withCount(['questions as totalQuestions']);
 
@@ -58,7 +57,7 @@ trait ExamsTrait
 
     public function DataPreparation($exam, $id)
     {
-        $status = $this->activeStatus()->id;
+        $status = $this->questionActiveStatus()->id;
 
         $questionCountSetting = Setting::where('key', 'question_numbers_perExam')->first();
         $questionCount = $questionCountSetting ? $questionCountSetting->value : 5;
@@ -77,7 +76,7 @@ trait ExamsTrait
             ->when($questionTypeLevel, function ($query) use ($questionTypeLevel) {
                 $query->where('question_type_id', $questionTypeLevel);
             })
-            ->joinRelationship('questionExams.exam.courseExams.course')
+            ->joinRelationship('lesson.chapter.course')
             ->where('courses.id', $id)
             ->limit($questionCount)
             ->get();
@@ -102,7 +101,8 @@ trait ExamsTrait
             'questions.id as questionID',
             'questions.title as questionTitle',
             'options.id as optionID',
-            'options.title as optionTitle'
+            'options.title as optionTitle',
+            'exams.id as exam_id'
 
         ]);
         return $query->where('exams.id', $id)->get();
@@ -112,7 +112,7 @@ trait ExamsTrait
     public function PExam($examID, $courseID, $student)
     {
 //        $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
-//        $completed = $this->isCourseCompleted($student);
+//        $completed = $this->isCourseNotCompleted($student);
 //        $attempted = $this->hasAttemptedAndPassedExam($student, $courseID);
 //        if ($enrolled && !$attempted && !$completed) {
         $exam = $this->examPreview($examID);
@@ -125,9 +125,8 @@ trait ExamsTrait
     }
 
 
-    public function examsIndex(array $data = [], Student $auth)
+    public function examsIndex($student, array $data = [])
     {
-
         $query = AnswerSheet::joinRelationship('repository')
             ->joinRelationship('questionType', 'question_type_alias')
             ->joinRelationship('exam', 'exam_alias')
@@ -144,20 +143,11 @@ trait ExamsTrait
             'question_types.id as questionTypeID',
             'statuses.name as statusName',
             'statuses.id as statusID'
-        ])->where('answer_sheets.student_id', $auth->id);
+        ])->where('answer_sheets.student_id', $student->id);
 
 
         return $query->get();
 
 
     }
-
-    public function activeStatus()
-    {
-        return Question::GetAllStatuses()
-            ->firstWhere('name', '=', self::$active);
-
-    }
-
-
 }

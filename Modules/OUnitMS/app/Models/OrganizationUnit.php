@@ -132,7 +132,7 @@ class OrganizationUnit extends Model
 
 
         $meetingtypeId = \DB::table('meeting_types')
-            ->whereIn('title', MeetingTypeEnum::HEYAAT_MEETING->value)
+            ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
             ->value('id');
 
         return $this->hasOne(Meeting::class, 'ounit_id')
@@ -148,7 +148,7 @@ class OrganizationUnit extends Model
                             ->from('enactment_status')
                             ->join('statuses', 'statuses.id', '=', 'enactment_status.status_id')
                             ->whereColumn('enactment_status.enactment_id', 'enactments.id')
-                            ->where('statuses.name', '=', EnactmentStatusEnum::CANCELED->value); // Exclude enactments with "باطل شده"
+                            ->where('statuses.name', '=', EnactmentStatusEnum::CANCELED->value);
                     })
                     ->groupBy('enactment_meeting.meeting_id')
                     ->havingRaw('COUNT(DISTINCT enactment_meeting.enactment_id) >= ?', [$enactmentLimitPerMeeting]);
@@ -196,7 +196,6 @@ class OrganizationUnit extends Model
 
     }
 
-
     public function fullMeetingsByNow(): HasMany
     {
         // Fetch the max days for reception from settings
@@ -235,7 +234,6 @@ class OrganizationUnit extends Model
             ->orderBy('meeting_date', 'asc'); // Order by meeting date
 
     }
-
     public function fullMeetingsByNowForFreeZone(): HasMany
     {
         // Fetch the max days for reception from settings
@@ -313,6 +311,30 @@ class OrganizationUnit extends Model
             ->with('mr', 'person.avatar');
     }
 
+    public function meetingMembersAzad()
+    {
+        $mtID = MeetingType::where('title' , MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+        return $this->hasManyThrough(MeetingMember::class, Meeting::class,
+            'ounit_id', 'meeting_id')
+            ->where('isTemplate', '=', true)
+            ->where('meeting_type_id' , $mtID)
+            ->with('mr', 'person.avatar');
+    }
+
+
+
+    public function meetingMembersHeyat()
+    {
+        $mtID = MeetingType::where('title' , MeetingTypeEnum::OLGOO->value)->first()->id;
+        $mtIDFz = MeetingType::where('title' , MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+        return $this->hasManyThrough(MeetingMember::class, Meeting::class,
+            'ounit_id', 'meeting_id')
+            ->where('isTemplate', '=', true)
+            ->where('meeting_type_id' , $mtID)
+            ->whereNot('meeting_type_id' , $mtIDFz)
+            ->with('mr', 'person.avatar');
+    }
+
     public static function GetAllStatuses()
     {
         return Status::where('model', '=', self::class);
@@ -343,4 +365,5 @@ class OrganizationUnit extends Model
     {
         static::addGlobalScope(new ActiveScope());
     }
+
 }

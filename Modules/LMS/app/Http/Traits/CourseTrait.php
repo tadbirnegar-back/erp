@@ -9,21 +9,20 @@ use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
-use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\AnswerSheet;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Enroll;
+use Modules\LMS\app\Models\Lesson;
 use Modules\LMS\app\Models\StatusCourse;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Http\Traits\OrderTrait;
 use Modules\PayStream\app\Models\FinancialStatus;
 use Modules\PayStream\app\Models\ProcessStatus;
-use Modules\StatusMS\app\Models\Status;
 
 
 trait CourseTrait
 {
-    use AnswerSheetTrait, LessonTrait, OrderTrait;
+    use AnswerSheetTrait, LessonTrait, OrderTrait, QuestionsTrait;
 
     private static string $presenting = CourseStatusEnum::PRESENTING->value;
     private static string $ended = CourseStatusEnum::ENDED->value;
@@ -32,52 +31,52 @@ trait CourseTrait
     private static string $pishnevis = CourseStatusEnum::PISHNEVIS->value;
     private static string $bargozarShavande = CourseStatusEnum::ORGANIZER->value;
     private static string $waitToPresent = CourseStatusEnum::WAITING_TO_PRESENT->value;
-    private static string $active = QuestionsEnum::ACTIVE->value;
 
 
     public function courseIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
-        $status = Status::where('name', $this::$active)->firstOrFail();
 
+        $questionStatus = $this->questionActiveStatus();
         $query = Course::query()
             ->joinRelationship('cover')
-            ->leftJoinRelationship('chapters.lessons.lessonStatus', [
-                'lessonStatus' => fn($join) => $join->on('status_lesson.status_id', DB::raw($status->id))
-            ])
-            ->leftJoinRelationship('chapters.lessons.questions', [
-                'questions' => fn($join) => $join->on('questions.status_id', DB::raw($status->id))
-            ])
-            ->addSelect([
-                'courses.id as course_id',
-                'courses.title',
-                'courses.cover_id',
-                'files.slug as cover_slug',
-                'chapters.id as chapter_id',
-                'lessons.id as lesson_id',
-                'questions.id as question_id'
-            ])
-            ->whereHas('statusCourse.status', function ($query) {
-                $query->whereIn('name', [
-                    $this::$presenting,
-                    $this::$pishnevis,
-                    $this::$waitToPresent,
-                ]);
-            });
+            ->withCount('allActiveLessons')
+            ->withCount('chapters')
+            ->withCount(['questions' => function ($query) use ($questionStatus) {
+                $query->where('status_id', $questionStatus->id);
+            }])
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+                    ->on('status_course.id', '=', \DB::raw('(
+                    SELECT id
+                    FROM status_course AS cs
+                    WHERE cs.course_id = courses.id
+                    ORDER BY cs.create_date DESC
+                    LIMIT 1
+                )'))
+                    ->whereIn('statuses.name', [$this::$presenting, $this::$waitToPresent, $this::$pishnevis]);
+            }]);
+        $query->addSelect([
+            'courses.id as course_id',
+            'courses.title',
+            'courses.cover_id',
+            'files.slug as cover_slug',
+            'statuses.name as status_name',
+            'statuses.class_name as status_class_name',
+        ]);
 
         $query->when($searchTerm, function ($query) use ($searchTerm) {
             $query->whereRaw('MATCH(courses.title) AGAINST(?)', [$searchTerm])
                 ->orWhere('courses.title', 'LIKE', '%' . $searchTerm . '%');
         });
-
-        return $query->paginate($perPage, ['*'], 'page', $pageNumber);
+        return $query->paginate($perPage);
     }
 
 
     public function lessonIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
         $searchTerm = $data['name'] ?? null;
-
+        $statusId = $this->lessonActiveStatus()->id;
         $courseQuery = Course::joinRelationship('cover')
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($subQuery) use ($searchTerm) {
@@ -94,8 +93,15 @@ trait CourseTrait
             ->with(['status'])
             ->withCount([
                 'chapters',
-                'lessons',
                 'questions',
+                'lessons' => function ($query) use ($statusId) {
+                    $query->whereIn('lessons.id', function ($subQuery) use ($statusId) {
+                        $subQuery->select('lesson_id')
+                            ->from('status_lesson as sl1')
+                            ->whereRaw('sl1.id = (SELECT MAX(sl2.id) FROM status_lesson as sl2 WHERE sl2.lesson_id = sl1.lesson_id)')
+                            ->where('sl1.status_id', $statusId);
+                    });
+                }
             ])
             ->paginate($perPage, ['*'], 'page', $pageNumber);
         return $courseQuery;
@@ -111,7 +117,7 @@ trait CourseTrait
             'access_date' => isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null,
             'expiration_date' => isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null,
             'cover_id' => $data['coverID'],
-            'preview_video_id' => $data['previewVideoID'],
+            'preview_video_id' => $data['previewVideoID'] == "null" ? null : $data['previewVideoID'],
             'price' => $data['price'] ?? 0,
             'creator_id' => $user->id,
             'created_date' => now()
@@ -136,9 +142,9 @@ trait CourseTrait
         $course->description = $data['description'] ?? $course->description;
         $course->privacy_id = $data['privacyID'] ?? $course->privacy_id;
         $course->is_required = $data['isRequired'] ?? $course->is_required;
-        $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : null;
+        $course->access_date = isset($data['accessDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['accessDate']) : now();
         $course->expiration_date = isset($data['expireDate']) ? convertPersianToGregorianBothHaveTimeAndDont($data['expireDate']) : null;
-        $course->preview_video_id = $data['previewVideoID'] ?? $course->preview_video_id;
+        $course->preview_video_id = $data['previewVideoID'] == 'null' ? null : (isset($data['previewVideoID']) ? $data['previewVideoID'] : $course->preview_video_id);
         $course->cover_id = $data['coverID'] ?? $course->cover_id;
         $course->save();
         return $course;
@@ -146,16 +152,27 @@ trait CourseTrait
 
     public function courseShow($course, $user)
     {
-        //Take User Initial Info
+
         $user->load([
             'answerSheets',
             'student',
             'person.avatar'
         ]);
 
+        if ($user->student == null) {
+            $ansSheets = collect();
+        } else {
+            $ans = Course::with('exams.answerSheets')->find($course->id);
+            $examIds = $ans->exams->pluck('id')->toArray();
+            $ansSheets = AnswerSheet::whereIn('exam_id', $examIds)
+                ->where('student_id', $user->student->id)
+                ->orderByDesc('id')
+                ->limit(1)
+                ->get();
+        }
         $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
 
-        $answerSheet = $user->answerSheets[0] ?? null; // Handle potential null
+        $answerSheet = is_null($ansSheets->first()) ? null : $ansSheets->first();
         $student = $user->student;
 
         $AllowToDos = [
@@ -168,11 +185,10 @@ trait CourseTrait
         ];
 
 
-// Check exam approval status
         $exampApprovedStatus = $this->answerSheetApprovedStatus()->id;
+
         $isApproveFromExam = ($answerSheet && $answerSheet->status_id == $exampApprovedStatus);
 
-// Check enrollment status
 
         if (empty($isEnrolled->isEnrolled[0])) {
             $isJoined = false;
@@ -198,7 +214,7 @@ trait CourseTrait
                 },
                 'chapters' => function ($query) {
                     $query->with([
-                        'lessons' => function ($query) {
+                        'allActiveLessons' => function ($query) {
                             $query->whereHas('latestStatus', function ($q) {
                                 $q->where('name', LessonStatusEnum::ACTIVE->value);
                             });
@@ -208,22 +224,24 @@ trait CourseTrait
 
 
             ],
-            'StudyLog' => ['lessonStudyLog' => function ($query) use ($user, $isEnrolled) {
-                $query->where('student_id', $user->student->id)
-                    ->where('is_completed', true)
-                    ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1);
-
-            }]
+            'StudyLog' => [
+                'lessonStudyLog' => function ($query) use ($user, $isEnrolled) {
+                    $query->where('student_id', $user->student->id)
+                        ->where('is_completed', true)
+//                        ->where('study_count', '<=', ($isEnrolled?->isEnrolled[0]->orderable->study_count ?? 0) + 1)
+                        ->whereHas('lesson.latestStatus', function ($query) {
+                            $query->where('name', LessonStatusEnum::ACTIVE->value);
+                        });
+                }
+            ]
         ]);
 
-// Flatten and prepare the relations array
         $flattenedComponents = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys())->toArray())
             ->flatMap(fn($relations) => collect($relations)->mapWithKeys(fn($relation, $key) => is_callable($relation) ? [$key => $relation] : [$relation => fn($query) => $query]))->all();
 
 
-// Now use the flattened components with the load method (ensure it's passed as an array)
-        $course = $course->load($flattenedComponents);  // Use $flattenedComponents here
-//        return $enactment;
+        $course = $course->load($flattenedComponents);
+
         $componentsWithData = $componentsToRender->only($myPermissions->intersect($componentsToRender->keys()))->map(function ($relations, $component) use ($course, $user) {
             $relationData = collect($relations)->mapWithKeys(function ($relation, $key) use ($course, $user) {
                 $relationName = is_callable($relation) ? explode('.', $key)[0] : explode('.', $relation)[0];
@@ -253,12 +271,12 @@ trait CourseTrait
         if ($isJoined) {
             $AllowToDos['joined'] = true;
             $AdditionalData["percentage"] = $this->calculateLessonCompletion($componentsWithData);
+            $AllowToDos['canReportCard'] = true;
 
             if ($course->latestStatus->name == $this::$presenting) {
                 $AllowToDos['canRead'] = true;
                 $AllowToDos['joined'] = true;
                 $AllowToDos['canTrainingExam'] = true;
-                $AllowToDos['canReportCard'] = true;
 
                 if ($AdditionalData["percentage"]["completion_percentage"] == 100) {
                     $AllowToDos["canFinalExam"] = true;
@@ -283,10 +301,28 @@ trait CourseTrait
 
             $AdditionalData["enrolled"] = $isEnrolled;
         }
+        $AllowToDos['canTrainingExam'] = false;
+        $AllowToDos['canDegree'] = false;
+
+
+        if ($AllowToDos['joined']) {
+            $studyCount = $AdditionalData["enrolled"]->isEnrolled[0]["orderable"]["study_count"];
+            if ($studyCount > 0) {
+                if ($user->student != null) {
+                    $AllowToDos['canFinalExam'] = !($this->hasAttemptedAndPassedExam($user->student, $course->id) == true);
+                } else {
+                    $AllowToDos['canFinalExam'] = false;
+                }
+            } else {
+
+                $AllowToDos['canFinalExam'] = false;
+
+            }
+        }
+
 
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
-
 
     private function calculateLessonCompletion($response)
     {
@@ -299,8 +335,8 @@ trait CourseTrait
             if ($component['name'] === 'MainCourse') {
                 $chapters = $component['data']['chapters'] ?? [];
                 foreach ($chapters as $chapter) {
-                    if (isset($chapter['lessons']) && !empty($chapter['lessons'])) {
-                        foreach ($chapter['lessons'] as $lesson) {
+                    if (isset($chapter['allActiveLessons']) && !empty($chapter['allActiveLessons'])) {
+                        foreach ($chapter['allActiveLessons'] as $lesson) {
                             $allLessons[] = $lesson['id'];
                         }
                     }
@@ -326,7 +362,9 @@ trait CourseTrait
 
         // Calculate completion percentage
         $completionPercentage = ($totalLessons > 0) ? ($completedLessons / $totalLessons) * 100 : 0;
-
+        if ($completionPercentage > 100) {
+            $completionPercentage = 100;
+        }
         // Return the results
         return [
             'total_lessons' => $totalLessons,
@@ -493,12 +531,16 @@ trait CourseTrait
                     'title' => $chapter->first()->chapter_title,
                     'description' => $chapter->first()->chapter_description,
                     'lessons' => $chapter->groupBy('lesson_id')->map(function ($lesson) {
+                        $firstLesson = $lesson->first();
+                        $status = $this->checkLessonStatus($firstLesson->lesson_id);
+
                         return [
-                            'id' => $lesson->first()->lesson_id,
-                            'title' => $lesson->first()->lesson_title,
-                            'isComplete' => $lesson->first()->is_completed,
-                            'duration' => convertSecondToMinute($lesson->first()->files_duration),
-                            'chapter_id' => $lesson->first()->chapter_id,
+                            'id' => $firstLesson->lesson_id,
+                            'title' => $firstLesson->lesson_title,
+                            'isComplete' => $firstLesson->is_completed,
+                            'duration' => convertSecondToMinute($firstLesson->files_duration),
+                            'chapter_id' => $firstLesson->chapter_id,
+                            'status' => $status->first()->name,
                         ];
                     })->values(),
                 ];
@@ -506,27 +548,41 @@ trait CourseTrait
             return null;
         })->filter()->values();
 
-
-        //Get those with is complete of 0
-        $lessonsWithIncomplete = collect($groupedData)
+        $activeLessons = collect($groupedData)
             ->flatMap(fn($chapter) => $chapter['lessons'])
-            ->filter(fn($lesson) => $lesson['isComplete'] === 0)
+            ->filter(fn($lesson) => $lesson['status'] == LessonStatusEnum::ACTIVE->value && $lesson['isComplete'] === null)
             ->pluck('id');
 
-        if ($lessonsWithIncomplete->isNotEmpty()) {
-            $lastLessonId = $lessonsWithIncomplete->last();
+        if ($activeLessons->isNotEmpty()) {
+            $lastLessonId = $activeLessons->first();
         } else {
-
-            $lastLessonId = collect($groupedData)
+            $lessonsWithIncomplete = collect($groupedData)
                 ->flatMap(fn($chapter) => $chapter['lessons'])
-                ->pluck('id')
-                ->first();
+                ->filter(fn($lesson) => $lesson['isComplete'] === null)
+                ->pluck('id');
+
+            if ($lessonsWithIncomplete->isNotEmpty()) {
+                $lastLessonId = $lessonsWithIncomplete->first();
+            } else {
+                $lastLessonId = collect($groupedData)
+                    ->flatMap(fn($chapter) => $chapter['lessons'])
+                    ->pluck('id')
+                    ->first();
+            }
         }
 
         return [
             "lessonID" => $lastLessonId,
             "sidebar" => $data,
         ];
+
+
+    }
+
+    public function checkLessonStatus($id)
+    {
+        $lesson = Lesson::with('latestStatus')->find($id);
+        return $lesson->latestStatus;
     }
 
     public function showCourseForUpdate($id)
@@ -581,11 +637,11 @@ trait CourseTrait
                 'course_video_alias.slug as course_video_slug',
                 'course_video_alias.name as course_video_title',
                 'course_video_alias.size as course_video_size',
-                'course_cover_alias.id as course_video_id',
+                'course_cover_alias.id as course_cover_id',
                 'course_cover_alias.slug as course_cover_slug',
                 'course_cover_alias.name as course_cover_title',
                 'course_cover_alias.size as course_cover_size',
-                'course_video_alias.id as course_cover_id',
+                'course_video_alias.id as course_video_id',
                 'pre_reg_alias.id as pre_reg_alias_id',
                 'pre_reg_alias.title as pre_reg_alias_title',
                 'course_target_alias.id as course_target_id',
@@ -620,6 +676,7 @@ trait CourseTrait
 
     public function showCourseDataForEnteshareDore($id)
     {
+
         $query = Course::query()
             ->leftJoinRelationshipUsingAlias('video', 'course_video_alias')
             ->leftJoinRelationshipUsingAlias('cover', 'course_cover_alias')
@@ -677,7 +734,7 @@ trait CourseTrait
                 'courses.is_required as course_alias_is_required',
                 'courses.expiration_date as course_alias_expiration_date',
                 'courses.access_date as course_alias_access_date',
-                'course_cover_alias.id as course_video_id',
+                'course_cover_alias.id as course_cover_id',
                 'course_cover_alias.slug as course_cover_slug',
                 'course_cover_alias.name as course_cover_title',
                 'course_cover_alias.size as course_cover_size',
@@ -739,15 +796,14 @@ trait CourseTrait
         return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
     }
 
-    public function isCourseCompleted($student)
+    public function isCourseNotCompleted($student)
     {
-        $isComplete = Course::joinRelationship('lessons.lessonStudyLog', function ($query) {
-            $query->where('is_completed', 1);
-        })
-            ->where('student_id', $student->id)
-            ->exists();
+        $isComplete = Course::whereHas('allActiveLessons.lessonStudyLog', function ($query) use ($student) {
+            $query->where('is_completed', '!=', 1)
+                ->where('student_id', $student->id);
+        })->first();
 
-        return $isComplete;
+        return is_null($isComplete);
     }
 
 
@@ -760,16 +816,18 @@ trait CourseTrait
 
         $status = $this->ActiveAnswerSheetStatus();
 
-        $passed = AnswerSheet::joinRelationship('status', function ($query) use ($status) {
+        $exams = Course::with(['answerSheets' => function ($query) use ($status, $student) {
             $query->where('status_id', $status->id);
-        })
-            ->exists();
+            $query->where('student_id', $student->id);
+        }])->find($courseId);
 
-        if ($passed) {
+        if ($exams->answerSheets->count() > 0) {
             return true;
+        } else {
+            return false;
         }
 
-        return false;
+
     }
 
     public function enrolledCourses($user)
@@ -821,20 +879,17 @@ trait CourseTrait
         return $course;
     }
 
-    public function getRelatedLists($title, $ounit, $level, $position, $job)
+    public function getRelatedLists($title, $ounit, $level, $position, $job, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum)
     {
         $ids = array_column($ounit, 'id');
         $ounitCats = array_unique(array_column($ounit, 'category_id'));
-        $course = Course::query()
+        $courses = Course::query()
             ->join('status_course as status_course_alias', 'status_course_alias.course_id', '=', 'courses.id')
             ->join('statuses as statuses_alias', function ($join) {
                 $join->on('statuses_alias.id', '=', 'status_course_alias.status_id')
-                    ->where('statuses_alias.name', '=', DB::raw("'" . addslashes($this::$presenting) . "'"));
+                    ->whereRaw('status_course_alias.create_date = (SELECT MAX(create_date) FROM status_course WHERE course_id = courses.id)')
+                    ->where('statuses_alias.name', '=', $this::$presenting);
             })
-            ->leftJoin('chapters as chapters_alias', 'chapters_alias.course_id', '=', 'courses.id')
-            ->leftJoin('lessons as lessons_alias', 'lessons_alias.chapter_id', '=', 'chapters_alias.id')
-            ->leftJoin('contents as contents_alias', 'contents_alias.lesson_id', '=', 'lessons_alias.id')
-            ->leftJoin('content_type as content_type_alias', 'content_type_alias.id', '=', 'contents_alias.content_type_id')
             ->leftJoin('files as cover_alias', 'cover_alias.id', '=', 'courses.cover_id')
             ->join('course_targets as targets_alias', function ($join) use ($ids) {
                 $join->on('targets_alias.course_id', '=', 'courses.id');
@@ -844,21 +899,21 @@ trait CourseTrait
             ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
             ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
             ->where(function ($query) use ($level, $position, $job) {
-                $query->whereIn('employee_feat_alias.propertyble_id', $level)
+                $query->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
                     ->where('employee_feat_alias.propertyble_type', Level::class);
 
                 if (!empty($position)) {
                     $query->orWhere(function ($subQuery) use ($position, $level) {
-                        $subQuery->whereIn('employee_feat_alias.propertyble_id', $position)
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $position)
                             ->where('employee_feat_alias.propertyble_type', Position::class);
-                        $subQuery->orWhereIn('employee_feat_alias.propertyble_id', $level)
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
                             ->where('employee_feat_alias.propertyble_type', Level::class);
                     });
                 }
 
                 if (!empty($job)) {
                     $query->orWhere(function ($subQuery) use ($job) {
-                        $subQuery->whereIn('employee_feat_alias.propertyble_id', $job)
+                        $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $job)
                             ->where('employee_feat_alias.propertyble_type', Job::class);
                     });
                 }
@@ -883,31 +938,54 @@ trait CourseTrait
             ->leftJoin('village_ofcs as village_ofc_alias', function ($join) {
                 $join->on('village_ofc_alias.id', '=', 'organ_alias.unitable_id');
             })
+            ->where(function ($query) use ($isTourism, $isFarm, $isAttachedToCity, $degree) {
+                if (!empty($isTourism)) {
+                    $query->Where(function ($subQuery) use ($isTourism) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isTourism)
+                            ->where('ouc_prop_alias.column_name', DB::raw("degree"));
+                    });
+                }
+                if (!empty($isFarm)) {
+                    $query->orWhere(function ($subQuery) use ($isFarm) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isFarm)
+                            ->where('ouc_prop_alias.column_name', DB::raw("isFarm"));
+                    });
+                }
+
+                if (!empty($isAttachedToCity)) {
+                    $query->orWhere(function ($subQuery) use ($isAttachedToCity) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $isAttachedToCity)
+                            ->where('ouc_prop_alias.column_name', DB::raw("isAttached_to_city"));
+                    });
+                }
+
+                if (!empty($degree)) {
+                    $query->orWhere(function ($subQuery) use ($degree) {
+                        $subQuery->whereIntegerInRaw('ouc_prop_value.value', $degree)
+                            ->where('ouc_prop_alias.column_name', DB::raw("degree"));
+                    });
+                }
+
+                $query->orWhereNull('ouc_prop_alias.id');
+            })
             ->select([
-                'courses.id as course_id',
+                'courses.id as id',
                 'courses.title as course_title',
                 'courses.expiration_date as course_exp_date',
                 'statuses_alias.name as status_name',
                 'statuses_alias.class_name as class_name',
                 'cover_alias.slug as cover_slug',
-                'lessons_alias.id as lesson_id',
-                'content_type_alias.name as content_type_alias_name',
-                'targets_alias.id as target_id',
-                'village_ofc_alias.degree as village_degree',
-                'village_ofc_alias.isTourism as village_tourism',
-                'village_ofc_alias.isFarm as village_farm',
-                'village_ofc_alias.isAttached_to_city as village_attached_to_city',
-                'village_ofc_alias.hasLicense as village_license',
-                'ouc_prop_value.value as prop_value',
-                'ouc_prop_alias.column_name as column_name',
-                'target_ounit_cat_alias.ounit_cat_id as ounit_name',
-                'targets_alias.id as target_id'
             ])
+            ->withCount('allActiveLessons')
+            ->with(['contentTypes' => function ($query) {
+                $query->distinct();
+            }])
             ->where('courses.title', 'like', '%' . $title . '%')
-            ->get();
-        return $course;
-    }
+            ->distinct('courses.id')
+            ->paginate($perPage, $columns = ['*'], $pageName = 'page', $pageNum);
 
+        return $courses;
+    }
 
     public function courseCanceledStatus()
     {
