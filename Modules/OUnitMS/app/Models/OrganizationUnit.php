@@ -2,7 +2,6 @@
 
 namespace Modules\OUnitMS\app\Models;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,11 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Facades\Log;
 use Modules\AAA\app\Models\User;
+use Modules\ACC\app\Models\OunitAccImport;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\ACMS\app\Models\OunitFiscalYear;
-use Modules\AddressMS\app\Models\Village;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\SettingsEnum;
@@ -237,6 +235,7 @@ class OrganizationUnit extends Model
             ->orderBy('meeting_date', 'asc'); // Order by meeting date
 
     }
+
     public function fullMeetingsByNowForFreeZone(): HasMany
     {
         // Fetch the max days for reception from settings
@@ -301,9 +300,9 @@ class OrganizationUnit extends Model
     }
 
 
-    public function villageWithFreeZone() : HasMany
+    public function villageWithFreeZone(): HasMany
     {
-        return $this->hasMany(VillageOfc::class, 'free_zone_id' , 'unitable_id');
+        return $this->hasMany(VillageOfc::class, 'free_zone_id', 'unitable_id');
     }
 
     public function meetingMembers()
@@ -327,6 +326,11 @@ class OrganizationUnit extends Model
     public function fiscalYears()
     {
         return $this->belongsToMany(FiscalYear::class, 'ounit_fiscalYear', 'ounit_id', 'fiscal_year_id');
+    }
+
+    public function importedResult()
+    {
+        return $this->hasOne(OunitAccImport::class, 'ounit_id');
     }
 
     public function ounitFiscalYears(): HasMany

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\ACC\app\Models\Account;
 use Modules\BNK\app\Http\Enums\BankAccountTypeEnum;
 use Modules\BNK\Database\factories\BankAccountFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -102,6 +103,11 @@ class BankAccount extends Model
     public function ounit(): BelongsTo
     {
         return $this->belongsTo(OrganizationUnit::class, 'ounit_id');
+    }
+
+    public function account()
+    {
+        return $this->hasOne(Account::class, 'entity_id')->where('entity_type', self::class);
     }
 
     public static function getTableName()

@@ -14,16 +14,16 @@ class BankAccountListResource extends JsonResource
         return [
             'id' => $this->id,
             'branch' => [
-                'name' => $this->branch_name,
-                'branch_code' => $this->branch_code,
+                'name' => $this?->branch_name,
+                'branch_code' => $this?->branch_code,
             ],
             'bank' => [
-                'name' => $this->bank_name,
-                'logo' => url('/') . '/' . $this->logo_slug,
+                'name' => $this?->bank_name,
+                'logo' => !is_null($this?->logo_slug) ? url('/') . '/' . $this?->logo_slug : null,
             ],
             'status' => [
-                'name' => $this->status_name,
-                'class_name' => $this->status_class_name,
+                'name' => $this?->status_name,
+                'class_name' => $this?->status_class_name,
             ],
         ];
     }

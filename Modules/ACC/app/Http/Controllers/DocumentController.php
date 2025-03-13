@@ -7,6 +7,7 @@ use Auth;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\ACC\app\Http\Enums\AccCategoryEnum;
 use Modules\ACC\app\Http\Enums\AccountCategoryTypeEnum;
 use Modules\ACC\app\Http\Enums\AccountLayerTypesEnum;
 use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
@@ -601,7 +602,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 5101)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 5101)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -766,7 +767,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 5101)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 5101)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -887,7 +888,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', 'مازاد و کسری')->where('chain_code', 5101)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 5101)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;

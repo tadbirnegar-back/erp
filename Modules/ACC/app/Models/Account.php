@@ -33,6 +33,7 @@ class Account extends Model
         'status_id',
         'entity_id',
         'entity_type',
+        'new_chain_code',
     ];
 
     public $timestamps = false;
@@ -66,6 +67,11 @@ class Account extends Model
     public static function getTableName()
     {
         return with(new static)->getTable();
+    }
+
+    public function newCode()
+    {
+        return $this->hasOne(Account::class, 'chain_code', 'new_chain_code');
     }
 
     public static function GetAllStatuses()

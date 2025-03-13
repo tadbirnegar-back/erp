@@ -15,11 +15,12 @@ use Modules\BNK\app\Models\BankAccount;
 use Modules\BNK\app\Models\BnkChequeStatus;
 use Modules\BNK\app\Models\Cheque;
 use Modules\BNK\app\Models\ChequeBook;
+use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Validator;
 
 class AccountsController extends Controller
 {
-    use AccountTrait;
+    use AccountTrait, PersonTrait;
 
     /**
      * Display a listing of the resource.
@@ -203,5 +204,42 @@ class AccountsController extends Controller
 
         return response()->json(['data' => $cheques], 200);
 
+    }
+
+    public function storeCreditAccount(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'personType' => 'required',
+            'nationalCode' => ['required', 'exists:persons,national_code'],
+            'ounitID' => 'required',
+            'name' => 'sometimes',
+            'firstName' => 'sometimes',
+            'lastName' => 'sometimes',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['error' => $validate->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            if ($data['personType'] == 1) {
+                $naturalPerson = $this->naturalStore($data);
+                $person = $naturalPerson->person;
+            } else {
+                $legal = $this->legalStore($data);
+                $person = $legal->person;
+            }
+            $accData = [
+                
+            ];
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

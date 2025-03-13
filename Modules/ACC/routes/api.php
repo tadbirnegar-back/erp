@@ -22,6 +22,19 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::get('/acc/fiscal-year/list', [DocumentController::class, 'fiscalYearList']);
 
+    Route::get('/acc/old-data/convert', [ACCController::class, 'getConfirmationForOldData']);
+
+    Route::post('/acc/account-swap', [ACCController::class, 'getOldDataToConvert']);
+
+    Route::post('/acc/swap/accounts', [ACCController::class, 'newActiveAccounts']);
+
+    Route::post('/acc/convert-to-new-codes', [ACCController::class, 'setNewChainCodeToAccount']);
+
+    Route::post('/acc/villages-to-import', [ACCController::class, 'getOunitsToImport']);
+
+    Route::post('/acc/finalize-import', [ACCController::class, 'convertToNewAccount']);
+
+
 });
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {

@@ -8,10 +8,12 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\LazyCollection;
+use Log;
 use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
+use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\AccountCategory;
 use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
@@ -58,8 +60,9 @@ class ImportDocsJob implements ShouldQueue
              */
             $ounitID = $this->ounitID;
             $docStatus = $this->confirmedDocumentStatus();
+            $docDraftStatus = $this->draftDocumentStatus();
             \DB::beginTransaction();
-            $a->each(function ($yearGroup, $key) use ($ounitID, $docStatus) {
+            $a->each(function ($yearGroup, $key) use ($ounitID, $docStatus, $docDraftStatus) {
 
 //            dd($row[5], $key);
                 $fiscalYearData = [
@@ -74,7 +77,7 @@ class ImportDocsJob implements ShouldQueue
 
 //            dump($firstItem, $secondLastItem, $lastItem);
 
-                $yearGroup->each(function ($doc, $key) use ($firstItem, $secondLastItem, $lastItem, $ounitID, $fy, $docStatus) {
+                $yearGroup->each(function ($doc, $key) use ($firstItem, $secondLastItem, $lastItem, $ounitID, $fy, $docStatus, $docDraftStatus) {
 
                     $docType = match ($key) {
                         $firstItem[0]['Doc ID'] => DocumentTypeEnum::OPENING->value,
@@ -95,11 +98,11 @@ class ImportDocsJob implements ShouldQueue
                         'userID' => 1905,
 
                     ];
-
+                    $stat = convertToDbFriendly($doc[0]['Doc Status']) == 'قطعی' ? $docStatus : $docDraftStatus;
                     $docObj = $this->storeDocument($docData);
-                    $this->attachStatusToDocument($docObj, $docStatus, 1905);
+                    $this->attachStatusToDocument($docObj, $stat, 1905);
                     $doc->each(function ($article) use ($doc, $ounitID, $docObj) {
-                        if ($article['Account Name'] != $article['Bestankari']) {
+                        if ($article['Account Code'] != '') {
                             $cat = AccountCategory::where('name', convertToDbFriendly($article['Ancestor_name_0']))->where('id', $article['Ancestor_code_0'])->first();
 
 
@@ -162,53 +165,84 @@ class ImportDocsJob implements ShouldQueue
                             $usedAccount = null;
                             $usedCodeInArticle = $article["Account Code"];
                             $accs = [];
-                            for ($layer = 1; $layer <= $maxLayer; $layer++) {
-//                            $data = [];
-                                $data = [
-                                    'name' => $article["Ancestor_name_$layer"],
-                                    'categoryID' => $cat->id,
-                                    'ounitID' => $ounitID,
-                                    'segmentCode' => $segmentCodes["segment_code_$layer"] ?? null,
-                                    'chainCode' => $article["Ancestor_code_$layer"],
-                                    'layer' => $layer,
-                                ];
 
-                                $childAccount = $this->firstOrStoreAccount($data, $parentAccount);
-                                $accs[] = $childAccount;
+                            if ($article["year"] == 1403 && empty($article['Ancestor_code_0'])) {
+//                                dd('it\'s true 1', $article);
+                                $usedAccount = Account::where('chain_code', $article['Account Code'])
+                                    ->with('accountCategory')
+                                    ->withoutGlobalScopes()
+//                                    ->where('category_id', $cat->id)
+                                    ->first();
+
+                                if (is_null($usedAccount)) {
+                                    $allowedEndings = ['81', '82', '83'];
+                                    foreach ($allowedEndings as $ending) {
+
+                                        if (str_ends_with($usedCodeInArticle, $ending)) {
+                                            $coreCode = substr($usedCodeInArticle, 0, -strlen($ending));
+
+                                            $usedAccount = Account::where('chain_code', $coreCode)
+//                                                ->where('category_id', $cat->id)
+                                                ->with('accountCategory')
+                                                ->first();
+                                            if (!is_null($usedAccount)) {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    $cat = $usedAccount->accountCategory;
+                                }
+                            } else {
+                                for ($layer = 1; $layer <= $maxLayer; $layer++) {
+//                            $data = [];
+                                    $data = [
+                                        'name' => $article["Ancestor_name_$layer"],
+                                        'categoryID' => $cat->id,
+                                        'ounitID' => $cat->name == 'درآمد' || $cat->name == 'هزینه' ? null : $ounitID,
+                                        'segmentCode' => $cat->name == 'درآمد' || $cat->name == 'هزینه' ? $article["Ancestor_code_$layer"] : $segmentCodes["segment_code_$layer"] ?? null,
+                                        'chainCode' => $article["Ancestor_code_$layer"],
+                                        'layer' => $layer,
+                                        'newChainCode' => $this->getNewChainCode($article['Account Code']),
+                                    ];
+
+                                    $childAccount = $this->firstOrStoreAccount($data, $parentAccount);
+                                    $accs[] = $childAccount;
 //                            if ($layer == $maxLayer) {
 ////                                dump($usedCodeInArticle, $childAccount, $article["Ancestor_code_$layer"], $data);
 //
 //                            }
-                                if ($usedCodeInArticle == $childAccount->chain_code) {
-                                    $usedAccount = $childAccount;
+                                    if ($usedCodeInArticle == $childAccount->chain_code) {
+                                        $usedAccount = $childAccount;
 //                                dd('dd', $usedAccount, $childAccount);
+                                    }
+                                    $parentAccount = $childAccount;
+
+                                    // For demonstration, we print the data array.
+                                    // In a Laravel project you might do:
+                                    // DB::table('your_table')->insert($data);
+                                    //print_r($data);
                                 }
-                                $parentAccount = $childAccount;
 
-                                // For demonstration, we print the data array.
-                                // In a Laravel project you might do:
-                                // DB::table('your_table')->insert($data);
-                                //print_r($data);
-                            }
-                            if (is_null($usedAccount)) {
-                                $allowedEndings = ['81', '82', '83'];
-                                foreach ($allowedEndings as $ending) {
+                                if (is_null($usedAccount)) {
+                                    $allowedEndings = ['81', '82', '83'];
+                                    foreach ($allowedEndings as $ending) {
 
-                                    if (str_ends_with($usedCodeInArticle, $ending)) {
-                                        $coreCode = substr($usedCodeInArticle, 0, -strlen($ending));
+                                        if (str_ends_with($usedCodeInArticle, $ending)) {
+                                            $coreCode = substr($usedCodeInArticle, 0, -strlen($ending));
 
-                                        foreach ($accs as $account) {
-                                            // Adjust the property name (here assumed as 'code') as needed
-                                            if ($account->chain_code == $coreCode) {
-                                                $usedAccount = $account;
-                                                break 2; // Break out of both loops once a match is found
+                                            foreach ($accs as $account) {
+                                                // Adjust the property name (here assumed as 'code') as needed
+                                                if ($account->chain_code == $coreCode) {
+                                                    $usedAccount = $account;
+                                                    break 2; // Break out of both loops once a match is found
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                             if (is_null($usedAccount)) {
-                                dd($usedCodeInArticle, $accs, $article);
+                                Log::error('error:', [$usedCodeInArticle, $accs, $article]);
                             }
 
                             $transaction = null;
@@ -257,7 +291,7 @@ class ImportDocsJob implements ShouldQueue
     public function tags(): array
     {
         $ounit = OrganizationUnit::find($this->ounitID);
-        return ['render', 'ounit:' . $ounit->name, 'ounitID:' . $this->ounitID];
+        return ['ounit:' . $ounit->name, 'ounitID:' . $this->ounitID];
     }
 
 }

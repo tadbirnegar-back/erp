@@ -36,7 +36,7 @@ trait ArticleTrait
         $data = collect($data)->map(function ($item) use ($document) {
             return [
                 'id' => $item['id'] ?? null,
-                'description' => $item['description'] ?? null,
+                'description' => convertToDbFriendly($item['description']) ?? null,
                 'priority' => $item['priority'] ?? 1,
                 'debt_amount' => $item['debtAmount'] ?? 0,
                 'credit_amount' => $item['creditAmount'] ?? 0,

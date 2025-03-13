@@ -250,6 +250,9 @@ function convertDateTimeGregorianToJalaliDateTimeButWithoutTime(string $value)
     return $dateOnly;
 }
 
+function addWithLeadingZeros($num1, $num2)
+{
+    $sum = intval($num1) + $num2;
 
-
-
+    return str_pad($sum, 3, "0", STR_PAD_LEFT);
+}

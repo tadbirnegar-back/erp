@@ -32,7 +32,7 @@ class BankAccountShowResource extends JsonResource
                     'id' => $this?->bankBranch->bank->id,
                     'name' => $this?->bankBranch->bank->name,
                     'logo' => [
-                        'slug' => $this?->bankBranch->bank->logo->slug,
+                        'slug' => $this?->bankBranch->bank?->logo?->slug,
                     ]
                 ];
             }

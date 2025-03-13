@@ -25,7 +25,7 @@ trait BankTrait
         $bankTable = Bank::getTableName();
         $bankBranchTable = BankBranch::getTableName();
 
-        $result = BankAccount::joinRelationship('bankBranch.bank.logo')
+        $result = BankAccount::leftJoinRelationship('bankBranch.bank.logo')
             ->joinRelationship('statuses', [
                 'statuses' => function ($join) use ($latestStatus) {
                     $join
@@ -62,6 +62,10 @@ trait BankTrait
         $data['ounitID'] = $bankAccount->ounit_id;
         $prepareData = $this->prepareBankAccountData($data);
         $bankAccount->update($prepareData->toArray()[0]);
+        $account = $bankAccount->account;
+
+        $account->name = ' حساب ' . $bankAccount->account_type_id->getLabel() . ' ' . $bankAccount->bank->name . ' ' . $bankAccount->account_number;
+        $account->save();
 
         return $bankAccount;
     }

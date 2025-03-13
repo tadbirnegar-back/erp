@@ -11,6 +11,7 @@ class ACCDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+//        \DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
         $this->call([
             AccountCategoryTypeSeeder::class,
             AccountCategorySeeder::class,
@@ -19,6 +20,12 @@ class ACCDatabaseSeeder extends Seeder
             PermissionsSeeder::class,
             StatusSeeder::class,
             DocumentStatusSeeder::class,
+            AccountImportSeeder::class,
+            Budget1403AccSeeder::class,
+            BankAccountsSeeder::class,
+//            OrganizationUnitsTableSeeder::class,
+//            VillageOfcsTableSeeder::class,
+
         ]);
 
     }
