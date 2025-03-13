@@ -49,11 +49,11 @@ class EvaluationController extends Controller
             $ounitsOfDehyari = $user->activeDehyarRcs->pluck('organization_unit_id')->toArray();
             $evaluationOunit = $eval->target_ounit_id;
             if (in_array($evaluationOunit, $ounitsOfDehyari)) {
-                $village = OrganizationUnit::find($evaluationOunit);
+                $village = OrganizationUnit::with('ancestorsAndSelf')->find($eval->target_ounit_id);
                 $village->load('unitable');
                 $variables = $this->showVariables($village, $id);
                 $variableResource = SendVariablesResource::collection($variables);
-                return ['variables' => $variableResource, 'message' => 'سوالات ارزیابی شما با موفقیت ساخته شد', 'count' => $variables->count()];
+                return ['variables' => $variableResource, 'message' => 'سوالات ارزیابی شما با موفقیت ساخته شد', 'count' => $variables->count() , 'ancesstors' => $village];
             } else {
                 return response()->json(['message' => "شما دهیار مورد نظر برای ارزیابی نیستید"], 403);
             }
