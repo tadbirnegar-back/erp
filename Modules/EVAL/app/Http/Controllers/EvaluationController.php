@@ -21,6 +21,7 @@ use Modules\EVAL\app\Resources\EvaluationRevisedResource;
 use Modules\EVAL\app\Resources\SendVariablesResource;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EvaluationController extends Controller
@@ -49,7 +50,9 @@ class EvaluationController extends Controller
             $ounitsOfDehyari = $user->activeDehyarRcs->pluck('organization_unit_id')->toArray();
             $evaluationOunit = $eval->target_ounit_id;
             if (in_array($evaluationOunit, $ounitsOfDehyari)) {
-                $village = OrganizationUnit::with('ancestorsAndSelf')->find($eval->target_ounit_id);
+                $village = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
+                    $query->whereNot('unitable_type', StateOfc::class);
+                }])->find($eval->target_ounit_id);
                 $village->load('unitable');
                 $variables = $this->showVariables($village, $id);
                 $variableResource = SendVariablesResource::collection($variables);

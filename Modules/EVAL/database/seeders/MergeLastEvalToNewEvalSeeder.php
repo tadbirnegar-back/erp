@@ -41,19 +41,30 @@ class MergeLastEvalToNewEvalSeeder extends Seeder
             ->orderBy('id') // Required for chunk()
             ->chunk(500, function ($oldAnswers) {
                 $insertData = [];
+                $failedEvaluators = [];
 
                 foreach ($oldAnswers as $oldAnswer) {
                     $oldEval = DB::table('evaluators')->where('id', $oldAnswer->evaluator_id)->first();
-                    if (!$oldEval) continue;
+                    if (!$oldEval) {
+                        $failedEvaluators[] = $oldAnswer->evaluator_id;
+                        continue;
+                    }
 
                     $newEval = EvalEvaluation::where('target_ounit_id', $oldEval->organization_unit_id)->first();
-                    if (!$newEval) continue;
+                    if (!$newEval) {
+                        $failedEvaluators[] = $oldAnswer->evaluator_id;
+                        continue;
+                    }
 
                     $oldParameters = DB::table('eval_parameters')->where('id', $oldAnswer->eval_parameter_id)->first();
-                    if (!$oldParameters) continue;
+                    if (!$oldParameters) {
+                        continue;
+                    }
 
                     $newVariable = EvalCircularVariable::where('title', $oldParameters->title)->first();
-                    if (!$newVariable) continue;
+                    if (!$newVariable) {
+                        continue;
+                    }
 
                     $insertData[] = [
                         'value' => $oldAnswer->value,
@@ -66,9 +77,16 @@ class MergeLastEvalToNewEvalSeeder extends Seeder
                 if (!empty($insertData)) {
                     EvalEvaluationAnswer::insert($insertData);
                 }
+
+                // Log failed evaluator IDs
+                if (!empty($failedEvaluators)) {
+                    $uniqueFailedIds = array_unique($failedEvaluators);
+                    \Log::warning('Failed to import evaluator IDs: ' . implode(', ', $uniqueFailedIds));
+                }
             });
 
         $this->command->info('Evaluation data seeded successfully.');
+
     }
 
 }
