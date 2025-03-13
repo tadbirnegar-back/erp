@@ -46,7 +46,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/eval/delete/indicator/{id}', [CircularController::class, 'indicatorDelete']);
     Route::get('/eval/edit/requirement/{id}', [CircularController::class, 'editVariableRequirement']);
     Route::post('/eval/delete/variable/{id}', [CircularController::class, 'variableDelete']);
-    Route::get('/eval/wait-to-complete/list', [CircularController::class, 'listForDistrictCompleted']);
+    Route::post('/eval/wait-to-complete/list', [CircularController::class, 'listForDistrictCompleted']);
     Route::get('/eval/properties/list/edit/{id}', [CircularController::class, 'listingPropertiesForEdit']);
     Route::get('/eval/merge/old/eval-to/new' , [EvalController::class, 'mergeOldEvaluationToNew']);
     Route::post('/eval/merge/old-to-new/answers/{id}' , [EvalController::class, 'fillTheAnswers']);

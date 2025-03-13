@@ -145,6 +145,7 @@ trait CircularTrait
                 'ounit_name' => $item->ounit_name,
             ];
         });
+        $eval->setCollection($eval->getCollection()->unique('title')->values());
 
         return $eval;
     }
@@ -193,11 +194,12 @@ trait CircularTrait
                 'eval_evaluations.id as id',
                 'eval_circulars.expired_date as expiredDate',
                 'organization_units.name as ounit_name',
+                'eval_evaluations.title as title',
                 'organization_units.head_id as head_id',
                 'eval_evaluations.evaluator_id as evaluator_id',
                 'eval_head.id as eval_head_id',
             ])
-            ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
+        ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
             ->where('statuses.name', EvalCircularStatusEnum::COMPLETED->value)
             ->distinct();
         $eval = $evalQuery->paginate($perPage, ['*'], 'page', $pageNumber);
@@ -216,6 +218,8 @@ trait CircularTrait
             ];
 
         });
+        $eval->setCollection($eval->getCollection()->unique('title')->values());
+
         return $eval;
 
     }
@@ -245,7 +249,6 @@ trait CircularTrait
             ->get();
 
         $completedCircularCount = $this->singleCircularMain($circularID);
-//        return $completedCircularCount;
 
         return [
             'data' => $query,

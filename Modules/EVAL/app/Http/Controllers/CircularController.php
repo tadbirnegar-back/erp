@@ -183,7 +183,7 @@ class CircularController extends Controller
     public function evaluationList()
     {
         $user = Auth::user();
-        return response()->json($this->EvaluationCompletedList($user));
+        return response()->json($this->EvaluationWaitToCompleteList($user));
     }
 
     public function listForDistrictWaitingAndCompletedList(Request $request)
@@ -192,6 +192,7 @@ class CircularController extends Controller
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $user = Auth::user();
+
         $data = $request->all();
         $districtList = $this->listOfDistrictWaitingAndCompletedList($perPage,$pageNum,$data,$user);
         if (!$user) {
@@ -205,7 +206,6 @@ class CircularController extends Controller
     public function listForDistrictCompleted(Request $request)
     {
         $user = Auth::user();
-
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;

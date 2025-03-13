@@ -120,7 +120,7 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": " لیست ارزیابی  ها",
+        "name": "بازنگری های در انتظار",
         "slug": "/eval/wait-to-complete/list",
         "moduleName": "EVAL",
         "permissionTypeName": "sidebar"
