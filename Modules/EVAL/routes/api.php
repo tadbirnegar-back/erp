@@ -54,5 +54,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 });
-Route::post('/eval/add/variable/{id}', [CircularController::class, 'createVariable']);
-Route::post('/eval/properties/list/{id}', [CircularController::class, 'listingProperties']);

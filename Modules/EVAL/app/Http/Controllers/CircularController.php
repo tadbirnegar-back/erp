@@ -14,6 +14,7 @@ use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Models\EvalCircular;
 use Modules\EVAL\app\Models\EvalCircularIndicator;
 use Modules\EVAL\app\Models\EvalCircularSection;
+use Modules\EVAL\app\Models\EvalCircularVariable;
 use Modules\EVAL\app\Resources\CircularFirstListResource;
 use Modules\EVAL\app\Resources\ItemsListResource;
 use Modules\EVAL\app\Resources\LastDataResource;
@@ -334,12 +335,14 @@ class CircularController extends Controller
     }
     public function listingPropertiesForEdit($variableID)
     {
+        $variable = EvalCircularVariable::with('circular')->find($variableID);
+        $circularId = $variable->circular->id;
         $oUnitCatId = OunitCategoryEnum::VillageOfc->value;
         $properties = OucProperty::with('values')->where('ounit_cat_id', $oUnitCatId)->select('id', 'name')->get();
 
         return [
             'properties' => PropertiesAndvaluesResource::collection($properties),
-            'dropdowns'=>$this->requirementOfEditVariable($variableID),
+            'dropdowns'=>$this->requirementOfAddVariable($circularId),
         ];
     }
 

@@ -459,19 +459,26 @@ trait CircularTrait
             ->get();
 
         $grouped = $dropDown->groupBy('sectionID')->map(function ($items, $sectionID) {
+            if (is_null($sectionID) || is_null($items->first()->title)) {
+                return null;
+            }
+
+            $indicators = $items->filter(function ($item) {
+                return !is_null($item->indicatorsID);
+            })->map(function ($item) {
+                return (object)[
+                    'id' => $item->indicatorsID,
+                    'title' => trim($item->indicatorsTitle)
+                ];
+            })->values();
+
             return (object)[
                 'sectionID' => $sectionID,
-                'section_title' => $items->first()->title,
-                'indicators' => $items->map(function ($item) {
-                    return (object)[
-                        'id' => $item->indicatorsID,
-                        'title' => trim($item->indicatorsTitle)
-                    ];
-                })->values()
+                'section_title' => $items->first()->title ?? '',
+                'indicators' => $indicators->isEmpty() ? [] : $indicators
             ];
-        })->values();
-
-        return $grouped->all();
+        })->filter()->values();
+        return $grouped->isEmpty() ? [] : $grouped->all();
     }
 
     public function requirementOfEditVariable($variableID)
@@ -488,19 +495,26 @@ trait CircularTrait
             ->get();
 
         $grouped = $dropDown->groupBy('sectionID')->map(function ($items, $sectionID) {
+            if (is_null($sectionID) || is_null($items->first()->title)) {
+                return null;
+            }
+
+            $indicators = $items->filter(function ($item) {
+                return !is_null($item->indicatorsID);
+            })->map(function ($item) {
+                return (object)[
+                    'id' => $item->indicatorsID,
+                    'title' => trim($item->indicatorsTitle)
+                ];
+            })->values();
+
             return (object)[
                 'sectionID' => $sectionID,
-                'section_title' => $items->first()->title,
-                'indicators' => $items->map(function ($item) {
-                    return (object)[
-                        'id' => $item->indicatorsID,
-                        'title' => trim($item->indicatorsTitle)
-                    ];
-                })->values()
+                'section_title' => $items->first()->title ?? '',
+                'indicators' => $indicators->isEmpty() ? [] : $indicators
             ];
-        })->values();
-
-        return $grouped->all();
+        })->filter()->values();
+        return $grouped->isEmpty() ? [] : $grouped->all();
     }
 
     public function showPropertiesForEdit($variableID)
