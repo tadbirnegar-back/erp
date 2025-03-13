@@ -5,6 +5,7 @@ namespace Modules\EVAL\app\Http\Traits;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\Create;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Modules\EVAL\app\Http\Enums\EvaluationStatusEnum;
 use Modules\EVAL\app\Jobs\MakeEvaluationFormJob;
 use Modules\EVAL\app\Models\EvalCircular;
@@ -413,10 +414,19 @@ trait CircularTrait
 
     public function completingItems($circularID)
     {
+        $latestStatusSubquery = DB::table('eval_circular_statuses')
+            ->select('eval_circular_id', DB::raw('MAX(id) as latest_status_id'))
+            ->groupBy('eval_circular_id');
+
         return EvalCircular::query()
             ->leftJoinRelationship('evalCircularSections.evalCircularIndicators.evalCircularVariable')
-            ->leftJoinRelationship('evalCircularStatus.status')
-            ->latest('eval_circular_statuses.id')
+            ->leftJoinSub($latestStatusSubquery, 'latest_status', function ($join) {
+                $join->on('latest_status.eval_circular_id', '=', 'eval_circulars.id');
+            })
+            ->leftJoin('eval_circular_statuses', function ($join) {
+                $join->on('eval_circular_statuses.id', '=', 'latest_status.latest_status_id');
+            })
+            ->leftJoin('statuses', 'eval_circular_statuses.status_id', '=', 'statuses.id')
             ->select([
                 'eval_circulars.title as name',
                 'eval_circular_sections.title as sectionTitle',
@@ -427,15 +437,18 @@ trait CircularTrait
                 'eval_circular_indicators.coefficient as coefficient',
                 'eval_circular_variables.title as variableName',
                 'eval_circular_variables.weight as weight',
-                'statuses.name as statusName',
+                'statuses.name as statusName', // فقط آخرین وضعیت را می‌گیریم
             ])
             ->where('eval_circulars.id', $circularID)
+            ->distinct()
             ->get();
+
     }
 
     public function requirementOfAddVariable($circularID)
     {
-        $dropDown = EvalCircular::joinRelationship('evalCircularSections.evalCircularIndicators')
+        $dropDown = EvalCircular::query()
+        ->leftJoinRelationship('evalCircularSections.evalCircularIndicators')
             ->select([
                 'eval_circular_sections.id as sectionID',
                 'eval_circular_sections.title as title',
