@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Auth;
 use Carbon\Carbon;
 use DB;
-use http\Env\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Mockery\Exception;
@@ -42,7 +41,6 @@ use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\RegisterNotification;
 use Modules\OUnitMS\app\Models\DistrictOfc;
-use Modules\OUnitMS\app\Models\FreeZone;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
@@ -425,10 +423,7 @@ class EMSController extends Controller
 
             ]);
         } catch (Exception $e) {
-            return response()->json(['message' => 'خطا در دریافت اعضای هیات', 'error' => $e->getMessage(),
-//                'file' => $e->getFile(),     // Get the file where the error occurred
-//                'line' => $e->getLine(),
-//                'trace' => $e->getTrace()   // Get the line number where the error occurred
+            return response()->json(['message' => 'خطا در دریافت اعضای هیات', 'error' => 'error',
             ], 500);
         }
 
@@ -502,10 +497,7 @@ class EMSController extends Controller
             return response()->json(['message' => 'باموفقیت بروزرسانی شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => $e->getMessage(),
-                'file' => $e->getFile(),     // Get the file where the error occurred
-                'line' => $e->getLine(),
-                'trace' => $e->getTrace()   // Get the line number where the error occurred
+            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => 'error',
             ], 500);
 
         }
@@ -661,10 +653,7 @@ class EMSController extends Controller
             DB::commit();
             return response()->json(['message' => 'باموفقیت بروزرسانی شد']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => $e->getMessage(),
-                'file' => $e->getFile(),     // Get the file where the error occurred
-                'line' => $e->getLine(),
-                'trace' => $e->getTrace(),   // Get the line number where the error occurred
+            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => 'error',
             ], 500);
         }
     }
@@ -732,10 +721,10 @@ class EMSController extends Controller
             ]]);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => $e->getMessage(),
+            return response()->json(['message' => 'خطا در بروزرسانی', 'error' => 'error',
                 'file' => $e->getFile(),     // Get the file where the error occurred
                 'line' => $e->getLine(),
-                'trace' => $e->getTrace()   // Get the line number where the error occurred
+                'trace' => 'error'   // Get the line number where the error occurred
             ], 500);
         }
     }
@@ -896,10 +885,11 @@ class EMSController extends Controller
             ->with(['organizationUnit.ancestors' => function ($query) {
                 $query->orderByDesc('id'); // Replace 'id' with the appropriate column for reverse ordering
             }])
-            ->get()
-            ->pluck('organizationUnit');
+            ->get();
+        $response = $ounits->each(function ($item) {
+            $item->organizationUnit->setAttribute('abadiCode', $item->abadi_code);
+        })->pluck('organizationUnit');
 
-
-        return response()->json($ounits);
+        return response()->json($response);
     }
 }
