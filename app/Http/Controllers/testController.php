@@ -56,8 +56,6 @@ class testController extends Controller
 //                ]);
 //            }
 //        }
-        dispatch(new CircularExpirationJob(4));
-        return "Job dispatched!";
 
 
         //        $evals = EvalEvaluation::query()2025-03-12 10:44:50
