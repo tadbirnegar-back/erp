@@ -104,12 +104,12 @@ trait CircularTrait
         $searchTerm = $data['name'] ?? null;
 
         $evalQuery = EvalEvaluation::query()
-            ->where(function ($query) use ($searchTerm) {
-                if (!empty($searchTerm)) {
-                    $query->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
-                        ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%');
-                }
-            })
+//            ->where(function ($query) use ($searchTerm) {
+//                if (!empty($searchTerm)) {
+//                    $query->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
+//                        ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%');
+//                }
+//            })
             ->joinRelationship('EvalEvaluationStatus.status')
             ->latest('evalEvaluation_status.id')
             ->joinRelationship('evalCircular')
@@ -118,6 +118,12 @@ trait CircularTrait
                 $join->on('eval_head.target_ounit_id', '=', 'eval_evaluations.target_ounit_id')
                     ->on('eval_head.eval_circular_id', '=', 'eval_evaluations.eval_circular_id')
                     ->whereIn('eval_head.evaluator_ounit_id', $userOunits);
+            })
+            ->where(function ($query) use ($searchTerm) {
+                if (!empty($searchTerm)) {
+                    $query->whereRaw('MATCH(organization_units.name) AGAINST(?)', [$searchTerm])
+                        ->orWhere('organization_units.name', 'LIKE', '%' . $searchTerm . '%');
+                }
             })
             ->select([
                 'eval_evaluations.id as id',
