@@ -178,7 +178,8 @@ class EvaluationController extends Controller
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message' => 'متاسفانه ابلاغ بخشنامه با مشکل مواجه شد'], 404);
+//            return response()->json(['message' => 'متاسفانه ابلاغ بخشنامه با مشکل مواجه شد'], 404);
+            return response() -> json($e->getMessage(), 404);
         }
 
     }
