@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
@@ -11,10 +11,9 @@ use Modules\EMS\app\Http\Traits\MeetingTrait;
 use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Http\Traits\EvaluationTrait;
 use Modules\EVAL\app\Jobs\CircularExpirationJob;
+use Modules\EVAL\app\Jobs\MakeEvaluationFormJob;
 use Modules\EVAL\app\Models\EvalCircular;
-use Modules\EVAL\app\Models\EvalCircularStatus;
 use Modules\EVAL\app\Models\EvalEvaluation;
-use Modules\EVAL\app\Models\EvalEvaluationStatus;
 use Modules\EvalMS\app\Models\Evaluator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
@@ -33,31 +32,53 @@ class testController extends Controller
 
     public function run()
     {
-//        $circularId = EvalCircular::find(4);
-//
-//        $evaluations = EvalEvaluation::where('eval_circular_id', $circularId->id)->get();
-//
-//        $date = Carbon::parse($circularId->expired_date);
-//        if ( $date != null && $date->format('Y-m-d') == now()->format('Y-m-d')) {
-//            EvalCircularStatus::create([
-//                'eval_circular_id' => $circularId->id,
-//                'status_id' => $this->expiredCircularStatus()->id,
-//                'created_at' => now(),
-//            ]);
-//            foreach ($evaluations as $evaluation) {
-//                EvalEvaluationStatus::create([
-//                    'eval_evaluation_id' => $evaluation->id,
-//                    'status_id' => $this->expiredCircularStatus()->id,
-//                    'created_at' => now(),
-//                    'creator_id' => $evaluation->creator_id,
-//                ]);
-//            }
-//        }
-        dispatch(new CircularExpirationJob(4));
-        return "Job dispatched!";
+        $circular = EvalCircular::findOrFail(22);
+        $user = User::find(2174);
+        $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
+
+        $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circular);
+
+        $allJobs = [];
 
 
-        //        $evals = EvalEvaluation::query()2025-03-12 10:44:50
+        $validVillageIds = VillageOfc::where('hasLicense', true)
+            ->whereNotIn('id', $eliminatedVillagesQuery)
+            ->select('id');
+
+        $a=OrganizationUnit::where('unitable_type', VillageOfc::class)
+            ->whereIn('unitable_id', $validVillageIds)
+            ->select('id')
+            ->distinct()
+            ->get();
+        dump($a);
+//            ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
+//                $batch = [];
+//                foreach ($chunk as $organizationUnit) {
+//                    $delayInSeconds = 10 + rand(1, 45);
+//                    $batch[] = (new MakeEvaluationFormJob(
+//                        $circular,
+//                        $organizationUnit->id,
+//                        $user->id,
+//                        $waitToDoneStatus
+//                    ))->delay(now()->addSeconds($delayInSeconds));
+//                }
+//                $allJobs[] = $batch;
+//            }, 'id');
+
+        $output = "<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Test Debugbar</title>
+    </head>
+    <body>
+    </body></html>";
+
+
+        echo $output;
+
+        //        $circularID = 1;
+//
+//        $evals = EvalEvaluation::query()
 //            ->joinRelationship('evalCircular.evalCircularStatus')
 //            ->joinRelationship('evalEvaluationStatus')
 //            ->where('eval_evaluations.eval_circular_id', $circularID)

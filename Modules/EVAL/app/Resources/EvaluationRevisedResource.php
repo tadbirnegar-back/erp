@@ -3,9 +3,11 @@
 namespace Modules\EVAL\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Log;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EvaluationRevisedResource extends JsonResource
 {
@@ -21,12 +23,16 @@ class EvaluationRevisedResource extends JsonResource
 
     private function getEvaluationDataForDeclaredOunitType($data, $type)
     {
-        return [
-            $data->filter(function ($item) use ($type) {
+            $filteredData = $data->filter(function ($item) use ($type) {
                 return $item->ou_type == $type;
-            })->values()->groupBy('variable_id')
-        ];
+            })->values();
+            return [$filteredData];
+
+
+
     }
+
+
 
     private function getAncesstorsPersonData($data, $type)
     {
@@ -59,13 +65,13 @@ class EvaluationRevisedResource extends JsonResource
     {
         $dehyar = $this->getPersonData($this['village'][0]);
 
-        $district = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], DistrictOfc::class);
+        $district = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], DistrictOfc::class)[0];
         $bakhshdar = $this->getAncesstorsPersonData($this['ancestors'], DistrictOfc::class);
 
-        $city = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], CityOfc::class);
+        $city = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], CityOfc::class)[0];
         $farmandar = $this->getAncesstorsPersonData($this['ancestors'], CityOfc::class);
 
-        $state = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], StateOfc::class);
+        $state = $this->getEvaluationDataForDeclaredOunitType($this['ancestors'], StateOfc::class)[0];
         $stateOfc = $this->getAncesstorsPersonData($this['ancestors'], StateOfc::class);
 
         // Organize data
@@ -91,53 +97,71 @@ class EvaluationRevisedResource extends JsonResource
 
         if ($bakhshdar && $bakhshdar['head_id'] == $userID) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
                 'canEvaluate' => false,
+                'role' => "DistrictOfc",
+                'previousEval' => "VillageOfc"
             ];
         }
 
         if ($farmandar && $farmandar['head_id'] == $userID) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
-                'city' => $data['city'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
+                'CityOfc' => $data['city'],
                 'canEvaluate' => false,
+                'role' => "CityOfc",
+                'previousEval' => is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc'
             ];
         }
 
         if ($stateOfc && $stateOfc['head_id'] == $userID) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
-                'city' => $data['city'],
-                'state' => $data['state'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
+                'CityOfc' => $data['city'],
+                'StateOfc' => $data['state'],
                 'canEvaluate' => false,
+                'role' => "StateOfc",
+                'previousEval' => is_null($data['city']['evaluation'][0]->variable_id) ? (is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc') : 'CityOfc'
+
             ];
         }
 
-        $ounitType =  $this->NotEvaluatedyet($userID);
-        if($ounitType == DistrictOfc::class){
+        $ounitType = $this->NotEvaluatedyet($userID);
+
+        if ($ounitType == DistrictOfc::class) {
             return [
-                'dehyar' => $data['dehyar'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
                 'canEvaluate' => true,
+                'role' => "DistrictOfc",
+                'previousEval' => "VillageOfc"
             ];
         }
 
-        if($ounitType == CityOfc::class){
+        if ($ounitType == CityOfc::class) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'],
+                'CityOfc' => $data['city'],
                 'canEvaluate' => true,
+                'role' => "CityOfc",
+                'previousEval' => is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc'
             ];
         }
 
-        if($ounitType == StateOfc::class){
+        if ($ounitType == StateOfc::class) {
             return [
-                'dehyar' => $data['dehyar'],
-                'district' => $data['district'],
-                'city' => $data['city'],
+                'VillageOfc' => $data['dehyar'],
+                'DistrictOfc' => $data['district'], -
+                'CityOfc' => $data['city'],
+                'StateOfc' => $data['state'],
                 'canEvaluate' => true,
+                'role' => "StateOfc",
+                'previousEval' => is_null($data['city']['evaluation'][0]->variable_id) ? (is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc') : 'CityOfc'
+
             ];
         }
     }
@@ -145,13 +169,8 @@ class EvaluationRevisedResource extends JsonResource
 
     private function NotEvaluatedyet($userID)
     {
-        foreach ($this['ounits'] as $ounit) {
-            if ($ounit->head_id == $userID) {
-                return $ounit->unitable_type;
-            }
-        }
-        return 'none';
+        $ounit = $this['ounits']->firstWhere('head_id', $userID);
+        return $ounit ? $ounit->unitable_type : 'none';
     }
-
 
 }

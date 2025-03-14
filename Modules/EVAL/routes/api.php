@@ -49,8 +49,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('/eval/wait-to-complete/list', [CircularController::class, 'listForDistrictCompleted']);
     Route::get('/eval/properties/list/edit/{id}', [CircularController::class, 'listingPropertiesForEdit']);
     Route::get('/eval/merge/old/eval-to/new' , [EvalController::class, 'mergeOldEvaluationToNew']);
-    Route::post('/eval/merge/old-to-new/answers/{id}' , [EvalController::class, 'fillTheAnswers']);
-
 });
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 });

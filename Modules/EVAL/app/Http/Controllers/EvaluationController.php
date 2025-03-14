@@ -21,11 +21,12 @@ use Modules\EVAL\app\Resources\EvaluationRevisedResource;
 use Modules\EVAL\app\Resources\SendVariablesResource;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 
 class EvaluationController extends Controller
 {
-    use EvaluationTrait , CircularTrait;
+    use EvaluationTrait, CircularTrait;
 
     public function preViewEvaluation($id)
     {
@@ -49,11 +50,13 @@ class EvaluationController extends Controller
             $ounitsOfDehyari = $user->activeDehyarRcs->pluck('organization_unit_id')->toArray();
             $evaluationOunit = $eval->target_ounit_id;
             if (in_array($evaluationOunit, $ounitsOfDehyari)) {
-                $village = OrganizationUnit::find($evaluationOunit);
+                $village = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
+                    $query->whereNot('unitable_type', StateOfc::class);
+                }])->find($eval->target_ounit_id);
                 $village->load('unitable');
                 $variables = $this->showVariables($village, $id);
                 $variableResource = SendVariablesResource::collection($variables);
-                return ['variables' => $variableResource, 'message' => 'سوالات ارزیابی شما با موفقیت ساخته شد', 'count' => $variables->count()];
+                return ['variables' => $variableResource, 'message' => 'سوالات ارزیابی شما با موفقیت ساخته شد', 'count' => $variables->count() , 'ancesstors' => $village];
             } else {
                 return response()->json(['message' => "شما دهیار مورد نظر برای ارزیابی نیستید"], 403);
             }
@@ -73,7 +76,7 @@ class EvaluationController extends Controller
             $this->setAnswers($id, $answers);
             $this->calculateEvaluation($id, $user);
             DB::commit();
-            return response()->json(['message' => 'ارزیابی شما با موفقیت ثبت شد.'] , 200);
+            return response()->json(['message' => 'ارزیابی شما با موفقیت ثبت شد.'], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['message' => "متاسفانه ارزیابی شما ثبت نشد."], 403);
@@ -85,7 +88,6 @@ class EvaluationController extends Controller
         $user = Auth::user();
         $eval = EvalEvaluation::find($id);
         $preDatas = $this->showPreDatas($eval, $user);
-
         $resource = new EvaluationRevisedResource($preDatas);
 
         if (collect($resource) == collect([])) {
@@ -132,24 +134,30 @@ class EvaluationController extends Controller
 
             $allJobs = [];
 
-            OrganizationUnit::where('unitable_type', VillageOfc::class)
+            $organizationUnits = OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
-                ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
-                ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
-                    $batch = [];
-                    foreach ($chunk as $organizationUnit) {
-                        $delayInSeconds = 10 + rand(1, 45);
-                        $batch[] = (new MakeEvaluationFormJob(
-                            $circular,
-                            $organizationUnit->unitable_id,
-                            $user->id,
-                            $waitToDoneStatus
-                        ))->delay(now()->addSeconds($delayInSeconds));
-                    }
-                    $allJobs[] = $batch;
-                }, 'unitable_id');
+                ->whereIntegerNotInRaw('id', $eliminatedVillagesQuery)
+                ->select('organization_units.id')
+                ->distinct()
+                ->get();
 
+            $chunks = $organizationUnits->chunk(100);
+            $allJobs = [];
+
+            foreach ($chunks as $chunk) {
+                $batch = [];
+                foreach ($chunk as $organizationUnit) {
+                    $delayInSeconds = 10 + rand(1, 45);
+                    $batch[] = (new MakeEvaluationFormJob(
+                        $circular,
+                        $organizationUnit->id,
+                        $user->id,
+                        $waitToDoneStatus
+                    ))->delay(now()->addSeconds($delayInSeconds));
+                }
+                $allJobs[] = $batch;
+            }
 
             foreach ($allJobs as $jobBatch) {
                 Bus::batch($jobBatch)
@@ -157,6 +165,7 @@ class EvaluationController extends Controller
                     ->onQueue('default')
                     ->dispatchAfterResponse();
             }
+
 
             $circularStatus = $this->notifiedCircularStatus();
             EvalCircularStatus::create([
@@ -169,7 +178,8 @@ class EvaluationController extends Controller
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message' => 'متاسفانه بخشنامه ابلاغ نگردید'], 404);
+//            return response()->json(['message' => 'متاسفانه ابلاغ بخشنامه با مشکل مواجه شد'], 404);
+            return response() -> json($e->getMessage(), 404);
         }
 
     }
@@ -183,25 +193,32 @@ class EvaluationController extends Controller
             $waitToDoneStatus = $this->evaluationWaitToDoneStatus()->id;
 
             $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTargetForRemake($circular);
-            $allJobs = [];
 
-            OrganizationUnit::where('unitable_type', VillageOfc::class)
+
+            $organ = OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
-                ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
-                ->chunkById(100, function ($chunk) use ($circular, $user, $waitToDoneStatus, &$allJobs) {
-                    $batch = [];
-                    foreach ($chunk as $organizationUnit) {
-                        $delayInSeconds = 10 + rand(1, 45);
-                        $batch[] = (new MakeEvaluationFormJob(
-                            $circular,
-                            $organizationUnit->unitable_id,
-                            $user->id,
-                            $waitToDoneStatus
-                        ))->delay(now()->addSeconds($delayInSeconds));
-                    }
-                    $allJobs[] = $batch;
-                }, 'unitable_id');
+                ->whereNotIn('organization_units.id', $eliminatedVillagesQuery)
+                ->select('organization_units.*') // Ensure only organization_units data is retrieved
+                ->get();
+
+
+            $chunks = $organ->chunk(100);
+            $allJobs = [];
+
+            foreach ($chunks as $chunk) {
+                $batch = [];
+                foreach ($chunk as $organizationUnit) {
+                    $delayInSeconds = 10 + rand(1, 45);
+                    $batch[] = (new MakeEvaluationFormJob(
+                        $circular,
+                        $organizationUnit->id,
+                        $user->id,
+                        $waitToDoneStatus
+                    ))->delay(now()->addSeconds($delayInSeconds));
+                }
+                $allJobs[] = $batch;
+            }
 
 
             foreach ($allJobs as $jobBatch) {
@@ -210,11 +227,12 @@ class EvaluationController extends Controller
                     ->onQueue('default')
                     ->dispatchAfterResponse();
             }
+
             DB::commit();
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message' => $e->getMessage()], 403);
+            return response()->json(['message' => 'متاسفانه ابلاغ بخشنامه با مشکل مواجه شد'], 403);
         }
 
     }
