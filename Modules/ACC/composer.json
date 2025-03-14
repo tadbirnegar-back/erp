@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/acc",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ACC\\": "",
+            "Modules\\ACC\\App\\": "app/",
+            "Modules\\ACC\\Database\\Factories\\": "database/factories/",
+            "Modules\\ACC\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\ACC\\Tests\\": "tests/"
+        }
+    }
+}

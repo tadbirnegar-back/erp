@@ -67,7 +67,7 @@ class QuestionsController extends Controller
             DB::rollBack();
             return response()->json([
                 'error' => 'An error occurred while processing your request.',
-                'message' => $e->getMessage(),
+                'message' => 'error',
             ], 500);
         }
     }
@@ -85,7 +85,7 @@ class QuestionsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while fetching dropdowns.',
-                'message' => $e->getMessage(),
+                'message' => 'error',
             ], 500);
         }
     }
@@ -104,7 +104,7 @@ class QuestionsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while fetching dropdowns.',
-                'message' => $e->getMessage(),
+                'message' => 'error',
             ], 500);
         }
     }
@@ -123,7 +123,7 @@ class QuestionsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while fetching questions.',
-                'message' => $e->getMessage(),
+                'message' => 'error',
             ], 500);
         }
     }
@@ -140,7 +140,7 @@ class QuestionsController extends Controller
             DB::rollBack();
             return response()->json([
                 'error' => 'An error occurred while updating the question status.',
-                'message' => $e->getMessage(),
+                'message' => 'error',
             ], 500);
         }
     }
@@ -228,7 +228,7 @@ class QuestionsController extends Controller
             Db::rollBack();
             return response()->json([
                 'message' => 'An error occurred while updating the question.',
-                'error' => $e->getMessage(),
+                'error' => 'error',
             ], 500);
         }
     }

@@ -332,7 +332,7 @@ trait OrganizationUnitTrait
             ->whereRaw(
                 "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
                 [$searchTerm]
-            )->with(['positions.levels', 'person', 'ancestors'])->get();
+            )->with(['positions.levels', 'person', 'ancestors', 'village'])->get();
 
         $result->each(function ($item) {
             $item->unitable->setAttribute('abadiCode', $item->abadi_code);

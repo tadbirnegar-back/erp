@@ -21,12 +21,14 @@
         "nwidart/laravel-modules": "^10.0",
         "predis/predis": "^2.3",
         "shetabit/payment": "^5.8",
+        "spatie/simple-excel": "^3.7",
         "staudenmeir/belongs-to-through": "^2.15",
         "staudenmeir/eloquent-eager-limit-x-laravel-adjacency-list": "^1.2",
         "staudenmeir/eloquent-has-many-deep": "^1.19.4",
         "tzsk/sms": "^8.0"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.14",
         "fakerphp/faker": "^1.9.1",
         "knuckleswtf/scribe": "^4.29",
         "laravel/pint": "^1.0",

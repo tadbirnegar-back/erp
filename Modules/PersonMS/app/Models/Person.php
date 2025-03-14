@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AAA\app\Models\User as AAAUser;
+use Modules\ACC\app\Models\Account;
 use Modules\AddressMS\app\Models\Address;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
@@ -177,7 +178,12 @@ class Person extends Model
 
     public function customers()
     {
-        return $this -> hasMany(Customer::class, 'person_id');
+        return $this->hasMany(Customer::class, 'person_id');
+    }
+
+    public function account()
+    {
+        return $this->hasOne(Account::class, 'entity_id');
     }
 
 

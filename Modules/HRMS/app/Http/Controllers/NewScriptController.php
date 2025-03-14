@@ -70,7 +70,7 @@ class NewScriptController extends Controller
             return response()->json($rsRes);
         } catch (\Exception $e) {
 
-            return response()->json(['message' => 'خطا در افزودن حکم', $e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['message' => 'خطا در افزودن حکم', 'error', 'error'], 500);
         }
 
     }
@@ -129,7 +129,7 @@ class NewScriptController extends Controller
             DB::commit();
             return response()->json($rsRes);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'خطا در افزودن حکم', $e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['message' => 'خطا در افزودن حکم', 'error', 'error'], 500);
         }
 
     }

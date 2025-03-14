@@ -167,7 +167,7 @@ class FileMSController extends Controller
             return response()->json(['file' => $file]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در بارگزاری فایل', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بارگزاری فایل', 'error' => 'error'], 500);
 
         }
 

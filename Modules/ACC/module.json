@@ -1,0 +1,11 @@
+{
+    "name": "ACC",
+    "alias": "acc",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ACC\\app\\Providers\\ACCServiceProvider"
+    ],
+    "files": []
+}

@@ -5,6 +5,7 @@ namespace Modules\Gateway\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\Gateway\app\Jobs\VerifyPaymentJob;
@@ -14,7 +15,6 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PayStream\app\Models\Online;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Payment\Facade\Payment;
-use Illuminate\Support\Facades\DB;
 
 class GatewayController extends Controller
 {
@@ -115,7 +115,7 @@ class GatewayController extends Controller
             return response()->json($result);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در اتصال یه درگاه بانکی', $e->getTrace(), $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در اتصال یه درگاه بانکی', 'error', 'error'], 500);
         }
 
 

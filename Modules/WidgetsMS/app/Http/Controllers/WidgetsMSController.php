@@ -56,12 +56,12 @@ class WidgetsMSController extends Controller
             $upsert = WidgetRepository::widgetsUpdate($widgets, $user->id);
 
             \DB::commit();
-            return response()->json(['message'=>'با موفقیت ثبت شد']);
+            return response()->json(['message' => 'با موفقیت ثبت شد']);
 
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             \DB::rollBack();
-//            return response()->json(['message'=>$e->getMessage()]);
-            return response()->json(['message'=>'خطا در ثبت تغییرات']);
+//            return response()->json(['message'=>'error']);
+            return response()->json(['message' => 'خطا در ثبت تغییرات']);
 
         }
 
