@@ -45,7 +45,7 @@ class NewScriptController extends Controller
             $employee = $user->employee;
             $hireType = HireType::where('title', 'تمام وقت')->first();
             $scriptType = ScriptType::where('title', 'انتصاب سرپرست دهیاری')->first();
-            $job = Job::where('title', 'دهیار')->first();
+            $job = Job::where('title', 'سرپرست دهیاری')->first();
 
             $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
@@ -70,7 +70,7 @@ class NewScriptController extends Controller
             return response()->json($rsRes);
         } catch (\Exception $e) {
 
-            return response()->json(['message' => 'خطا در افزودن حکم', $e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['message' => 'خطا در افزودن حکم', 'error', 'error'], 500);
         }
 
     }
@@ -85,7 +85,7 @@ class NewScriptController extends Controller
             $employee = $user->employee;
             $hireType = HireType::where('title', 'تمام وقت')->first();
             $scriptType = ScriptType::where('title', 'انتصاب هیئت تطبیق')->first();
-            $job = Job::where('title', 'دهیار')->first();
+            $job = Job::where('title', 'عضو هیئت')->first();
 
             $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
@@ -95,13 +95,33 @@ class NewScriptController extends Controller
                     'defaultValue' => $item->pivot->default_value ?? 0,
                 ];
             });
+            $positionsName=Position::whereIn('name',['کارشناس مشورتی','نماینده استانداری'])->get();
+            $ids=$positionsName->pluck('id')->toArray();
+            $dabirId=Position::where('name','مسئول دبیرخانه')->first()->id;
+            $dabir=Position::where('name','مسئول دبیرخانه')->first();
+
             $encodedSas = json_encode($sas->toArray());
             $data['hireTypeID'] = $hireType->id;
             $data['scriptTypeID'] = $scriptType->id;
             $data['jobID'] = $job->id;
             $data['operatorID'] = $user->id;
             $data['scriptAgents'] = $encodedSas;
-            $data['positionID'] = Position::where('id', $data['positionID'])->first()->id;
+
+            if ($dabir && $dabir->id == $data['positionID']) {
+                $data['scriptTypeID'] = ScriptType::where('title', 'انتصاب دبیر')->value('id');
+            } else {
+                $data['scriptTypeID'] = ScriptType::where('title', 'انتصاب هیئت تطبیق')->value('id');
+            }
+
+
+
+            if (isset($data['positionID']) && in_array($data['positionID'], $ids)) {
+                $job = Job::where('title', 'کارشناس مشورتی')->first();
+            }
+            if ($data['positionID']== $dabirId) {
+                $job = Job::where('title', 'مسئول دبیرخانه')->first();
+            }
+            $data['jobID'] = $job ? $job->id : null;
             $pendingRsStatus = $this->pendingRsStatus();
 
             $rsRes = $this->rsSingleStore($data, $employee->id, $pendingRsStatus);
@@ -109,7 +129,7 @@ class NewScriptController extends Controller
             DB::commit();
             return response()->json($rsRes);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'خطا در افزودن حکم', $e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['message' => 'خطا در افزودن حکم', 'error', 'error'], 500);
         }
 
     }

@@ -9,6 +9,7 @@ use Modules\AAA\app\Models\User;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\app\Http\Enums\CourseStatusEnum;
+use Modules\LMS\app\Http\Enums\CourseTypeEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Traits\QuestionsTrait;
 use Modules\LMS\app\Observers\CourseObserver;
@@ -34,6 +35,7 @@ class Course extends Model
         'id',
         'title',
         'price',
+        'course_type',
         'preview_video_id',
         'is_required',
         'expiration_date',
@@ -42,7 +44,7 @@ class Course extends Model
         'created_date',
         'cover_id',
         'access_date',
-        'privacy_id'
+        'privacy_id',
     ];
 
     protected static function boot()
@@ -52,6 +54,31 @@ class Course extends Model
         static::observe(CourseObserver::class);
     }
 
+
+
+    public function courseType(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                switch ($value) {
+                    case CourseTypeEnum::AMUZESHI->value:
+                        return [
+                            'value' => CourseTypeEnum::AMUZESHI->value,
+                            'label' => "دوره آموزشی",
+                            'description' => "یادگیری و ارتقاء مهارت‌ها"
+                        ];
+                    case CourseTypeEnum::MOKATEBEYI->value:
+                        return [
+                            'value' => CourseTypeEnum::MOKATEBEYI->value,
+                            'label' => "دوره آزمون جامع(مکاتبه ای)",
+                            'description' => "ارزیابی از طریق آزمون"
+                        ];
+                    default:
+                        return null;
+                }
+            }
+        );
+    }
 
     public function isRequired(): Attribute
     {

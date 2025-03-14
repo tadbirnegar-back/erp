@@ -31,7 +31,7 @@ class ScriptTypeController extends Controller
             return response()->json($scriptType);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خظا در ثبت نوع حکم', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خظا در ثبت نوع حکم', 'error' => 'error'], 500);
         }
 
     }
@@ -48,14 +48,14 @@ class ScriptTypeController extends Controller
             $scriptType = $this->updateScriptType($scriptType, $data);
 
             $deletedSTCTids = json_decode($data['deletedSTCTids'], true);
-          if (!empty($deletedSTCTids)) {
-              $scTypes = ConfirmationTypeScriptType::whereIntegerInRaw('id', $deletedSTCTids)->delete();
+            if (!empty($deletedSTCTids)) {
+                $scTypes = ConfirmationTypeScriptType::whereIntegerInRaw('id', $deletedSTCTids)->delete();
             }
             DB::commit();
             return response()->json($scriptType);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خظا در ویرایش نوع حکم', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خظا در ویرایش نوع حکم', 'error' => 'error'], 500);
         }
 
     }
@@ -72,7 +72,7 @@ class ScriptTypeController extends Controller
             return response()->json(['message' => 'نوع حکم حذف شد']);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خظا در حذف نوع حکم', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خظا در حذف نوع حکم', 'error' => 'error'], 500);
         }
     }
 

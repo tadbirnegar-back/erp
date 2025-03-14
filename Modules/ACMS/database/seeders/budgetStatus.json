@@ -1,0 +1,22 @@
+[
+    {
+        "name": "در انتظار پیشنهاد بودجه",
+        "className": "primary"
+    },
+    {
+        "name": "تصویب شده",
+        "className": "success"
+    },
+    {
+        "name": "در انتظار تایید شورا",
+        "className": "primary"
+    },
+    {
+        "name": "در انتظار تایید هیئت",
+        "className": "primary"
+    },
+    {
+        "name": "رد شده",
+        "className": "danger"
+    }
+]

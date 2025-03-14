@@ -5,6 +5,8 @@ namespace $NAMESPACE$;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use $MODULE_NAMESPACE$\$MODULE$\Database\factories\$NAME$Factory;
+use Modules\StatusMS\app\Models\Status;
+
 
 class $CLASS$ extends Model
 {
@@ -18,4 +20,13 @@ class $CLASS$ extends Model
 
     public $timestamps = false;
 
+     public static function getTableName()
+     {
+            return with(new static)->getTable();
+     }
+
+    public static function GetAllStatuses()
+    {
+        return Status::where('model',self::class);
+    }
 }

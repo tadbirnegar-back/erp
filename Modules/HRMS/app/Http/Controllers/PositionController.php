@@ -67,7 +67,7 @@ class PositionController extends Controller
             return response()->json($pos);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در ایجاد سمت', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ایجاد سمت', 'error' => 'error'], 500);
         }
     }
 
@@ -138,7 +138,7 @@ class PositionController extends Controller
             return response()->json($pos);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی سمت', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی سمت', 'error' => 'error'], 500);
         }
     }
 

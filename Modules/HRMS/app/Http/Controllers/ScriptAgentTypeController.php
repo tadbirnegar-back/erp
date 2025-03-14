@@ -23,7 +23,7 @@ class ScriptAgentTypeController extends Controller
             return response()->json($scriptAgentType);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ایجاد دسته بندی عوامل حکمی جدید', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ایجاد دسته بندی عوامل حکمی جدید', 'error' => 'error'], 500);
         }
     }
 
@@ -55,7 +55,7 @@ class ScriptAgentTypeController extends Controller
             return response()->json($updatedScriptAgentType);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی دسته بندی عوامل حکمی', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی دسته بندی عوامل حکمی', 'error' => 'error'], 500);
         }
     }
 
@@ -72,7 +72,7 @@ class ScriptAgentTypeController extends Controller
             return response()->json(['message' => 'با موفقیت حذف شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در حذف دسته بندی عوامل حکمی', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در حذف دسته بندی عوامل حکمی', 'error' => 'error'], 500);
         }
 
     }
