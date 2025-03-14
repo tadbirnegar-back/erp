@@ -49,4 +49,12 @@ class EvalCircularVariable extends Model
             ['id','ouc_property_value_id', 'ouc_property_id'],
         );
     }
+
+    public function circular()
+    {
+        return $this->hasOneDeep(EvalCircular::class, [EvalCircularIndicator::class,EvalCircularSection::class],
+            ['id','id' , 'id'],
+            ['eval_circular_indicator_id' , 'eval_circular_section_id' , 'eval_circular_id'],
+        );
+    }
 }

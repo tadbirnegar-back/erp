@@ -1,0 +1,178 @@
+[
+    {
+        "name": "افزودن بخشنامه",
+        "slug": "/eval/circular/add",
+        "moduleName": "EVAL",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست بخشنامه ها",
+        "slug": "/eval/circular/list",
+        "moduleName": "EVAL",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "نمایش بخشنامه",
+        "slug": "/eval/single/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات بخشنامه برای ویرایش",
+        "slug": "/eval/last/circular/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش بخشنامه",
+        "slug": "/eval/update/circular/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف بخشنامه",
+        "slug": "/eval/delete/circular/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": " لیست ارزیابی دهیاری ها",
+        "slug": "/eval/participation/list",
+        "moduleName": "EVAL",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "تکمیل آیتمها",
+        "slug": "/eval/items/list/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست برای ویرایش متغیر",
+        "slug": "/eval/variable/drop-down/list/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست آخربن اطلاعات برای ویرایش متغیر",
+        "slug": "/eval/edit/variable/drop-down/list/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بایگانی بازنگری ها",
+        "slug": "/eval/evaluating/district",
+        "moduleName": "EVAL",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": " لیست مشخصات",
+        "slug": "/eval/properties/list/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": " افزودن متغیر",
+        "slug": "/eval/add/variable/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش متغیر",
+        "slug": "/eval/update/variable/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش بخش",
+        "slug": "/eval/edit/section/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش شاخص",
+        "slug": "/eval/edit/indicator/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف بخش",
+        "slug": "/eval/delete/section/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف شاخص",
+        "slug": "/eval/delete/indicator/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست برای ویرایش متغیر",
+        "slug": "/eval/edit/requirement/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": " حذف متغیر",
+        "slug": "/eval/delete/variable/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بازنگری های در انتظار",
+        "slug": "/eval/wait-to-complete/list",
+        "moduleName": "EVAL",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": " لیست مشخصات ها برای ویرایش گروه هدف",
+        "slug": "/eval/properties/list/edit/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+
+    {
+        "name": "پیش نمایش ارزیابی دهیاری ها",
+        "slug": "/eval/evaluation/pre-view/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "شروع ارزیابی دهیاری ها",
+        "slug": "/eval/evaluation/start/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "پایان ارزیابی دهیاری ها",
+        "slug": "/eval/evaluation/done/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "نمایش اطلاعات باز ارزیابی",
+        "slug": "/eval/evaluation/revising/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ثبت باز ارزیابی",
+        "slug": "/eval/evaluation/revising/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ابلاغ بخشنامه",
+        "slug": "/eval/make/evaluation-form/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "باز ابلاغ بخشنامه",
+        "slug": "/eval/make/re-evaluation-form/{id}",
+        "moduleName": "EVAL",
+        "permissionTypeName": "operational"
+    }
+
+]

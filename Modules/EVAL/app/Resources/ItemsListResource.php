@@ -25,65 +25,75 @@ class ItemsListResource extends ResourceCollection
         $sections = $grouped->map(function ($items, $sectionTitle) {
             $firstSection = $items->first();
 
-            if($sectionTitle == null){
+            if ($sectionTitle == null) {
                 return [];
             }
+
+            $indicators = $items->groupBy('indicatorsTitle')->map(function ($indicators, $indicatorsTitle) {
+                $firstIndicator = $indicators->first();
+
+                // Check if the indicator is empty or invalid
+                $isEmptyIndicator = empty($indicatorsTitle) &&
+                    is_null($firstIndicator->indicatorsID ?? null) &&
+                    is_null($firstIndicator->coefficient ?? null);
+
+                // If the indicator is empty, return null (it will be filtered out later)
+                if ($isEmptyIndicator) {
+                    return null;
+                }
+
+                return [
+                    'indicatorsTitle' => $indicatorsTitle,
+                    'indicatorsID' => $firstIndicator->indicatorsID ?? null,
+                    'coefficient' => $firstIndicator->coefficient ?? null,
+                    'variables' => $indicators->map(function ($item) {
+                        // Check if the variable is empty or invalid
+                        $isEmptyVariable = is_null($item->variableID ?? null) &&
+                            is_null($item->variableName ?? null) &&
+                            is_null($item->weight ?? null);
+
+                        // If the variable is empty, return null (it will be filtered out later)
+                        if ($isEmptyVariable) {
+                            return null;
+                        }
+
+                        return [
+                            'variableID' => $item->variableID ?? null,
+                            'variableName' => $item->variableName ?? null,
+                            'weight' => $item->weight ?? null,
+                        ];
+                    })->filter()->values()->toArray(), // Filter out null variables
+                ];
+            })->filter()->values()->toArray(); // Filter out null indicators
+
             return [
                 'sectionTitle' => $sectionTitle,
-                'sectionID' => $firstSection->sectionID,
-                'indicators' => $items->groupBy('indicatorsTitle')->map(function ($indicators, $indicatorsTitle) {
-                    $firstIndicator = $indicators->first();
-
-                    return [
-                        'indicatorsTitle' => $indicatorsTitle,
-                        'indicatorsID' => $firstIndicator->indicatorsID,
-                        'coefficient' => $firstIndicator->coefficient,
-                        'variables' => $indicators->map(function ($item) {
-                            return [
-                                'variableID' => $item->variableID,
-                                'variableName' => $item->variableName,
-                                'weight' => $item->weight,
-                            ];
-                        })->values()->toArray(),
-                    ];
-                })->values()->toArray(),
+                'sectionID' => $firstSection->sectionID ?? null,
+                'indicators' => !empty($indicators) ? $indicators : [], // Ensure indicators is an empty array if empty
             ];
         })->values()->toArray();
-
 
         return (object) [
             'name' => $name,
             'sections' => $this->getSections($sections),
             'indicators' => $this->getIndicators($sections),
-            'variables'=>$this->getVariables($sections),
+            'variables' => $this->getVariables($sections),
             'Editable' => $statusName,
         ];
     }
 
-    private function getSections($items){
-        $data = [];
-        if(empty($items[0])){
-            $data = [];
-        }else{
-            $data = $items;
-        }
-        return $data;
+    private function getSections($items)
+    {
+        return !empty($items[0]) ? $items : [];
     }
-    private function getIndicators($items){
-        $data = [];
-        if(empty($items[0])){
-            $data = [];
-        }else{
-            $data = $items;
-        }
-        return $data;
-    } private function getVariables($items){
-        $data = [];
-        if(empty($items[0])){
-            $data = [];
-        }else{
-            $data = $items;
-        }
-        return $data;
+
+    private function getIndicators($items)
+    {
+        return !empty($items[0]) ? $items : [];
+    }
+
+    private function getVariables($items)
+    {
+        return !empty($items[0]) ? $items : [];
     }
 }

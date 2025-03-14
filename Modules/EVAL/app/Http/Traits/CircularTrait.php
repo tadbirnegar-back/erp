@@ -5,6 +5,7 @@ namespace Modules\EVAL\app\Http\Traits;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\Create;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Modules\EVAL\app\Http\Enums\EvaluationStatusEnum;
 use Modules\EVAL\app\Jobs\MakeEvaluationFormJob;
 use Modules\EVAL\app\Models\EvalCircular;
@@ -103,12 +104,7 @@ trait CircularTrait
         $searchTerm = $data['name'] ?? null;
 
         $evalQuery = EvalEvaluation::query()
-            ->where(function ($query) use ($searchTerm) {
-                if (!empty($searchTerm)) {
-                    $query->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
-                        ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%');
-                }
-            })
+
             ->joinRelationship('EvalEvaluationStatus.status')
             ->latest('evalEvaluation_status.id')
             ->joinRelationship('evalCircular')
@@ -117,6 +113,12 @@ trait CircularTrait
                 $join->on('eval_head.target_ounit_id', '=', 'eval_evaluations.target_ounit_id')
                     ->on('eval_head.eval_circular_id', '=', 'eval_evaluations.eval_circular_id')
                     ->whereIn('eval_head.evaluator_ounit_id', $userOunits);
+            })
+            ->where(function ($query) use ($searchTerm) {
+                if (($searchTerm)) {
+                    $query->whereRaw('MATCH(organization_units.name) AGAINST(?)', [$searchTerm])
+                        ->orWhere('organization_units.name', 'LIKE', '%' . $searchTerm . '%');
+                }
             })
             ->select([
                 'eval_evaluations.id as id',
@@ -145,6 +147,7 @@ trait CircularTrait
                 'ounit_name' => $item->ounit_name,
             ];
         });
+        $eval->setCollection($eval->getCollection()->unique('title')->values());
 
         return $eval;
     }
@@ -178,8 +181,8 @@ trait CircularTrait
         $searchTerm = $data['name'] ?? null;
 
         $evalQuery = EvalEvaluation::query()
-            ->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
-            ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%')
+//            ->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
+//            ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%')
             ->joinRelationship('EvalEvaluationStatus.status')
             ->latest('evalEvaluation_status.id')
             ->joinRelationship('evalCircular')
@@ -189,15 +192,22 @@ trait CircularTrait
                     ->on('eval_head.eval_circular_id', '=', 'eval_evaluations.eval_circular_id')
                     ->whereIn('eval_head.evaluator_ounit_id', $userOunits);
             })
+            ->where(function ($query) use ($searchTerm) {
+                if (($searchTerm)) {
+                    $query->whereRaw('MATCH(organization_units.name) AGAINST(?)', [$searchTerm])
+                        ->orWhere('organization_units.name', 'LIKE', '%' . $searchTerm . '%');
+                }
+            })
             ->select([
                 'eval_evaluations.id as id',
                 'eval_circulars.expired_date as expiredDate',
                 'organization_units.name as ounit_name',
+                'eval_evaluations.title as title',
                 'organization_units.head_id as head_id',
                 'eval_evaluations.evaluator_id as evaluator_id',
                 'eval_head.id as eval_head_id',
             ])
-            ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
+        ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
             ->where('statuses.name', EvalCircularStatusEnum::COMPLETED->value)
             ->distinct();
         $eval = $evalQuery->paginate($perPage, ['*'], 'page', $pageNumber);
@@ -216,6 +226,8 @@ trait CircularTrait
             ];
 
         });
+        $eval->setCollection($eval->getCollection()->unique('title')->values());
+
         return $eval;
 
     }
@@ -257,12 +269,15 @@ trait CircularTrait
     {
         //     counting VillageOfc , countEvalsForTotalForm , countEvalsForCompeleteForm
         $circular = EvalCircular::find($circularID);
-        $villageCount = VillageOfc::query()
-            ->whereIntegerNotInRaw('id', $this->villagesNotInCirclesOfTarget($circular))
+        $villageCount = OrganizationUnit::query()
+            ->where('unitable_type', VillageOfc::class)
+            ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
+            ->where('village_alias.hasLicense', true)
+            ->whereIntegerNotInRaw('unitable_id', $this->villagesNotInCirclesOfTarget($circular))
             ->count();
 
-        $countEvalsForTotalForm = EvalEvaluation::query()
-       -> where('parent_id', null)
+        $countNotifiedEvals = EvalEvaluation::query()
+        ->where('parent_id', null)
             ->where('eval_circular_id', $circularID)
             ->count();
 
@@ -275,8 +290,10 @@ trait CircularTrait
             ->count();
         $countWaitingForCompelete = EvalEvaluation::query()
             ->joinRelationship('evalEvaluationStatus.status')
+            ->where('evalEvaluation_status.status_id', $this->evaluationWaitToDoneStatus()->id)
             ->latest('evalEvaluation_status.id')
-            ->where('status_id', $this->evaluationWaitToDoneStatus()->id)
+            ->where('parent_id', null)
+            ->where('eval_circular_id', $circularID)
             ->count();
         $getNotifiedTime = EvalCircular::query()
             ->joinRelationship('evalCircularStatus.status')
@@ -286,29 +303,19 @@ trait CircularTrait
 
         //        calculate percentage
 
-        $percentageForTotalForm = ($countEvalsForTotalForm / ($villageCount)) * 100;
+        $percentageForTotalForm = ($countNotifiedEvals / ($villageCount)) * 100;
         $percentageForCompeleteForm = ($countEvalsForCompeleteForm / ($villageCount)) * 100;
 
+        $NotNotfiedCount = $villageCount - $countNotifiedEvals;
         return [
-            'countEvals' => $countEvalsForTotalForm,
+            'countEvals' => $countNotifiedEvals,
             'percentage' => $percentageForTotalForm,
             'countEvalsForCompeleteForm' => $countEvalsForCompeleteForm,
             'percentageForCompeleteForm' => $percentageForCompeleteForm,
             'WaitingToDone' => $countWaitingForCompelete,
+            'countMashmulVillagers' => $NotNotfiedCount >= 0 ? $NotNotfiedCount : 0,
             'notifiedTime' => explode(' ', convertDateTimeGregorianToJalaliDateTime($getNotifiedTime))[0]];
     }
-    public function countEvaluationsForNeededVillages($circularID)
-    {
-
-        $eliminatedVillagesQuery = $this->villagesNotInCirclesOfTarget($circularID);
-
-        return  OrganizationUnit::where('unitable_type', VillageOfc::class)
-            ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
-            ->where('village_alias.hasLicense', true)
-            ->whereIntegerNotInRaw('unitable_id', $eliminatedVillagesQuery)
-            ->count();
-    }
-
 
     public function lastDataForEditCircular($circularID)
     {
@@ -367,11 +374,10 @@ trait CircularTrait
 
     }
 
-    public function EvaluationCompletedList($user)
+    public function EvaluationWaitToCompleteList($user)
     {
         $list = EvalEvaluation::query()
             ->joinRelationship('EvalEvaluationStatus.status')
-            ->latest('evalEvaluation_status.id')
             ->joinRelationship('evalCircular')
             ->joinRelationship('targetOunits')
             ->select([
@@ -384,9 +390,20 @@ trait CircularTrait
                 'organization_units.head_id as head_id'
             ])
             ->where('organization_units.head_id', $user->id)
+            ->whereRaw("
+            statuses.name = (
+                SELECT s.name
+                FROM evalEvaluation_status ees
+                JOIN statuses s ON s.id = ees.status_id
+                WHERE ees.eval_evaluation_id = eval_evaluations.id
+                ORDER BY ees.id DESC
+                LIMIT 1
+            )
+        ")
             ->where('statuses.name', EvaluationStatusEnum::WAIT_TO_DONE->value)
             ->distinct()
             ->get();
+
         return $list->map(function ($item) {
             $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
             $deadLine = $expiredDate ? $expiredDate->diffInDays(now()) : null;
@@ -404,10 +421,19 @@ trait CircularTrait
 
     public function completingItems($circularID)
     {
+        $latestStatusSubquery = DB::table('eval_circular_statuses')
+            ->select('eval_circular_id', DB::raw('MAX(id) as latest_status_id'))
+            ->groupBy('eval_circular_id');
+
         return EvalCircular::query()
             ->leftJoinRelationship('evalCircularSections.evalCircularIndicators.evalCircularVariable')
-            ->leftJoinRelationship('evalCircularStatus.status')
-            ->latest('eval_circular_statuses.id')
+            ->leftJoinSub($latestStatusSubquery, 'latest_status', function ($join) {
+                $join->on('latest_status.eval_circular_id', '=', 'eval_circulars.id');
+            })
+            ->leftJoin('eval_circular_statuses', function ($join) {
+                $join->on('eval_circular_statuses.id', '=', 'latest_status.latest_status_id');
+            })
+            ->leftJoin('statuses', 'eval_circular_statuses.status_id', '=', 'statuses.id')
             ->select([
                 'eval_circulars.title as name',
                 'eval_circular_sections.title as sectionTitle',
@@ -418,15 +444,18 @@ trait CircularTrait
                 'eval_circular_indicators.coefficient as coefficient',
                 'eval_circular_variables.title as variableName',
                 'eval_circular_variables.weight as weight',
-                'statuses.name as statusName',
+                'statuses.name as statusName', // فقط آخرین وضعیت را می‌گیریم
             ])
             ->where('eval_circulars.id', $circularID)
+            ->distinct()
             ->get();
+
     }
 
     public function requirementOfAddVariable($circularID)
     {
-        $dropDown = EvalCircular::joinRelationship('evalCircularSections.evalCircularIndicators')
+        $dropDown = EvalCircular::query()
+        ->leftJoinRelationship('evalCircularSections.evalCircularIndicators')
             ->select([
                 'eval_circular_sections.id as sectionID',
                 'eval_circular_sections.title as title',
@@ -437,19 +466,26 @@ trait CircularTrait
             ->get();
 
         $grouped = $dropDown->groupBy('sectionID')->map(function ($items, $sectionID) {
+            if (is_null($sectionID) || is_null($items->first()->title)) {
+                return null;
+            }
+
+            $indicators = $items->filter(function ($item) {
+                return !is_null($item->indicatorsID);
+            })->map(function ($item) {
+                return (object)[
+                    'id' => $item->indicatorsID,
+                    'title' => trim($item->indicatorsTitle)
+                ];
+            })->values();
+
             return (object)[
                 'sectionID' => $sectionID,
-                'section_title' => $items->first()->title,
-                'indicators' => $items->map(function ($item) {
-                    return (object)[
-                        'id' => $item->indicatorsID,
-                        'title' => trim($item->indicatorsTitle)
-                    ];
-                })->values()
+                'section_title' => $items->first()->title ?? '',
+                'indicators' => $indicators->isEmpty() ? [] : $indicators
             ];
-        })->values();
-
-        return $grouped->all();
+        })->filter()->values();
+        return $grouped->isEmpty() ? [] : $grouped->all();
     }
 
     public function requirementOfEditVariable($variableID)
@@ -466,19 +502,26 @@ trait CircularTrait
             ->get();
 
         $grouped = $dropDown->groupBy('sectionID')->map(function ($items, $sectionID) {
+            if (is_null($sectionID) || is_null($items->first()->title)) {
+                return null;
+            }
+
+            $indicators = $items->filter(function ($item) {
+                return !is_null($item->indicatorsID);
+            })->map(function ($item) {
+                return (object)[
+                    'id' => $item->indicatorsID,
+                    'title' => trim($item->indicatorsTitle)
+                ];
+            })->values();
+
             return (object)[
                 'sectionID' => $sectionID,
-                'section_title' => $items->first()->title,
-                'indicators' => $items->map(function ($item) {
-                    return (object)[
-                        'id' => $item->indicatorsID,
-                        'title' => trim($item->indicatorsTitle)
-                    ];
-                })->values()
+                'section_title' => $items->first()->title ?? '',
+                'indicators' => $indicators->isEmpty() ? [] : $indicators
             ];
-        })->values();
-
-        return $grouped->all();
+        })->filter()->values();
+        return $grouped->isEmpty() ? [] : $grouped->all();
     }
 
     public function showPropertiesForEdit($variableID)
@@ -640,6 +683,11 @@ trait CircularTrait
 
     public function lastDataForEditVariable($variableID)
     {
+        $circular = EvalCircularVariable::with('circular')->find($variableID);
+        $circularID = $circular->circular->id;
+
+        $sectionWithIndicators = $this->requirementOfAddVariable($circularID);
+
         $result = EvalCircularSection::query()
             ->joinRelationship('evalCircular')
             ->joinRelationship('evalCircularIndicators.evalCircularVariable')
@@ -658,6 +706,8 @@ trait CircularTrait
             ])
             ->where('eval_circular_variables.id', $variableID)
             ->first();
+
+        $result['dropdown'] = $sectionWithIndicators;
         $property = $this->showPropertiesForEdit($variableID);
         return [
             'variable' => $result,

@@ -14,6 +14,7 @@ use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Models\EvalCircular;
 use Modules\EVAL\app\Models\EvalCircularIndicator;
 use Modules\EVAL\app\Models\EvalCircularSection;
+use Modules\EVAL\app\Models\EvalCircularVariable;
 use Modules\EVAL\app\Resources\CircularFirstListResource;
 use Modules\EVAL\app\Resources\ItemsListResource;
 use Modules\EVAL\app\Resources\LastDataResource;
@@ -183,7 +184,7 @@ class CircularController extends Controller
     public function evaluationList()
     {
         $user = Auth::user();
-        return response()->json($this->EvaluationCompletedList($user));
+        return response()->json($this->EvaluationWaitToCompleteList($user));
     }
 
     public function listForDistrictWaitingAndCompletedList(Request $request)
@@ -192,6 +193,7 @@ class CircularController extends Controller
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
         $user = Auth::user();
+
         $data = $request->all();
         $districtList = $this->listOfDistrictWaitingAndCompletedList($perPage,$pageNum,$data,$user);
         if (!$user) {
@@ -205,7 +207,6 @@ class CircularController extends Controller
     public function listForDistrictCompleted(Request $request)
     {
         $user = Auth::user();
-
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
@@ -334,12 +335,14 @@ class CircularController extends Controller
     }
     public function listingPropertiesForEdit($variableID)
     {
+        $variable = EvalCircularVariable::with('circular')->find($variableID);
+        $circularId = $variable->circular->id;
         $oUnitCatId = OunitCategoryEnum::VillageOfc->value;
         $properties = OucProperty::with('values')->where('ounit_cat_id', $oUnitCatId)->select('id', 'name')->get();
 
         return [
             'properties' => PropertiesAndvaluesResource::collection($properties),
-            'dropdowns'=>$this->requirementOfEditVariable($variableID),
+            'dropdowns'=>$this->requirementOfAddVariable($circularId),
         ];
     }
 
