@@ -261,6 +261,7 @@ trait EvaluationTrait
             ->leftJoin('users', 'ounits_alias.head_id', '=', 'users.id')
             ->leftJoin('persons', 'persons.id', '=', 'users.person_id')
             ->leftJoin('eval_evaluations', 'eval_evaluations.evaluator_ounit_id', '=', 'ounits_alias.id')
+            ->leftJoin('evalEvaluation_status as eval_status_alias', 'eval_status_alias.eval_evaluation_id', '=', 'eval.id')
             ->leftJoin('users as evaluator', 'evaluator.id', '=', 'eval_evaluations.evaluator_id')
             ->leftJoin('persons as evaluator_person', 'evaluator_person.id', '=', 'evaluator.person_id')
             ->leftJoin('eval_evaluation_answers as answers', 'answers.eval_evaluation_id', '=', 'eval.id')
@@ -293,6 +294,7 @@ trait EvaluationTrait
                 'sections.title as section_title',
                 'village_alias.abadi_code as village_abadi_code',
                 'users.id as evaluator_id',
+                'eval_status_alias.created_at as eval_date',
                 'circular_alias.maximum_value as circular_max_value',
             ])
             ->get();
