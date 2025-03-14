@@ -20,6 +20,7 @@ use Modules\LMS\app\Models\QuestionExam;
 use Modules\LMS\app\Models\QuestionType;
 use Modules\LMS\app\Models\Repository;
 use Modules\LMS\app\Resources\ExamListResource;
+use Modules\LMS\app\Resources\ShowComprehensiveExamQuestionResource;
 use Modules\LMS\app\Resources\ShowExamQuestionResource;
 use Modules\SettingsMS\app\Models\Setting;
 use Modules\StatusMS\app\Models\Status;
@@ -128,8 +129,12 @@ class ExamsController extends Controller
                 $questionCount = QuestionExam::where('exam_id', $exam->id)->count();
                 if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
                     $questionLimit = (int)Setting::where('key', 'question_numbers_perExam_comprehensive')->value('value');
+                    $examQuestions = $this->showExam($exam->id);
+                    $response = new ShowComprehensiveExamQuestionResource($examQuestions);
                 }else{
                     $questionLimit = (int)Setting::where('key', 'question_numbers_perExam')->value('value');
+                    $examQuestions = $this->showExam($exam->id);
+                    $response = new ShowExamQuestionResource($examQuestions);
                 }
                 if ($questionCount < $questionLimit) {
                     return response()->json([
@@ -137,8 +142,7 @@ class ExamsController extends Controller
                     ], 404);
                 }
 
-                $examQuestions = $this->showExam($exam->id);
-                $response = new ShowExamQuestionResource($examQuestions);
+
 
                 DB::commit();
 
