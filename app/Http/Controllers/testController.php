@@ -33,6 +33,9 @@ class testController extends Controller
 
     public function run()
     {
+
+        $a=0.1+0.2;
+        return response()->json($a);
 //        $circularId = EvalCircular::find(4);
 //
 //        $evaluations = EvalEvaluation::where('eval_circular_id', $circularId->id)->get();
