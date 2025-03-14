@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
+use Modules\LMS\app\Http\Enums\CourseTypeEnum;
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Http\Enums\QuestionTypeEnum;
 use Modules\LMS\app\Http\Enums\RepositoryEnum;
@@ -42,27 +44,40 @@ class ExamsController extends Controller
 
             $student = Auth::user()->load('student');
             $enrolled = $this->isEnrolledToDefinedCourse($courseId, $student);
-            if(is_null($enrolled)){
+            if (is_null($enrolled)) {
                 $isEnrolles = false;
-            }else{
+            } else {
                 $isEnrolles = true;
             }
-            $completed = $this->isCourseNotCompleted($student);
-            $attempted = $this->hasAttemptedAndPassedExam($student->student, $courseId);
+            if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
+                $attempted = $this->hasAttemptToExam($student->student, $course->id);
+                $completed = true;
+            }else{
+                $completed = $this->isCourseNotCompleted($student , $courseId);
+
+                $attempted = $this->hasAttemptedAndPassedExam($student->student, $course->id);
+            }
             if ($isEnrolles && $completed && !$attempted) {
-                $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
-                $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
-                $data = $this->createExam($course, $questionType, $repository);
-                $previewData = $this->PExam($data->id, $courseId, $student);
                 $course = Course::find($courseId);
-                $settings = Setting::whereIn('key', [
-                    'question_numbers_perExam',
-                    'time_per_questions',
-                ])->pluck('value', 'key');
-                $timePerQuestions = $settings->get('time_per_questions');
-                $questionNumber = $settings->get('question_numbers_perExam');
-                $examTime = $timePerQuestions * $questionNumber * 60;
-                $courseTitle = $course->title;
+                if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
+                    $settings = Setting::whereIn('key', [
+                        'question_numbers_perExam_comprehensive',
+                        'time_per_questions_comprehensive',
+                    ])->pluck('value', 'key');
+                    $timePerQuestions = $settings->get('time_per_questions_comprehensive');
+                    $questionNumber = $settings->get('question_numbers_perExam_comprehensive');
+                    $examTime = $timePerQuestions * $questionNumber * 60;
+                    $courseTitle = $course->title;
+                }else{
+                    $settings = Setting::whereIn('key', [
+                        'question_numbers_perExam',
+                        'time_per_questions',
+                    ])->pluck('value', 'key');
+                    $timePerQuestions = $settings->get('time_per_questions');
+                    $questionNumber = $settings->get('question_numbers_perExam');
+                    $examTime = $timePerQuestions * $questionNumber * 60;
+                    $courseTitle = $course->title;
+                }
                 DB::commit();
                 return response()->json([
                     'course_id' => $course->id,
@@ -70,7 +85,7 @@ class ExamsController extends Controller
                     'timePerQuestion' => $timePerQuestions . ':0',
                     'exam_time' => $examTime,
                     'questionsCount' => $questionNumber,
-                    'exam_type' => 'آزمون نهایی'
+                    'exam_type' => $course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value ? 'آزمون مکاتبه ای' : 'آزمون نهایی'
                 ]);
             } else {
                 DB::rollBack();
@@ -99,27 +114,23 @@ class ExamsController extends Controller
 
             $student = Auth::user()->load('student');
             $enrolled = $this->isEnrolledToDefinedCourse($id, $student);
-            $completed = $this->isCourseNotCompleted($student);
-            $attempted = $this->hasAttemptedAndPassedExam($student->student, $id);
+            if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
+                $attempted = $this->hasAttemptToExam($student->student, $id);
+                $completed = true;
+            }else{
+                $completed = $this->isCourseNotCompleted($student , $id);
+                $attempted = $this->hasAttemptedAndPassedExam($student->student, $id);
+            }
             if ($enrolled && $completed && !$attempted) {
                 $questionType = QuestionType::where('name', QuestionTypeEnum::MULTIPLE_CHOICE_QUESTIONS->value)->firstOrFail();
                 $repository = Repository::where('name', RepositoryEnum::FINAL->value)->firstOrFail();
-                $data = $this->createExam($course, $questionType, $repository);
-
-
-                //show exam
-                $exam = Exam::with('courses')->find($data->id);
-                if (!$exam) {
-                    return response()->json(['error' => 'آزمون یافت نشد.'], 404);
-                }
-
-                $courseID = $exam->courses->first()->id ?? null;
-                if (!$courseID) {
-                    return response()->json(['error' => 'دوره‌ای برای این آزمون یافت نشد.'], 404);
-                }
-
+                $exam = $this->createExam($course , $questionType , $repository);
                 $questionCount = QuestionExam::where('exam_id', $exam->id)->count();
-                $questionLimit = (int)Setting::where('key', 'question_numbers_perExam')->value('value');
+                if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
+                    $questionLimit = (int)Setting::where('key', 'question_numbers_perExam_comprehensive')->value('value');
+                }else{
+                    $questionLimit = (int)Setting::where('key', 'question_numbers_perExam')->value('value');
+                }
                 if ($questionCount < $questionLimit) {
                     return response()->json([
                         'error' => 'تعداد سوالات آزمون با مقدار تعیین شده در تنظیمات همخوانی ندارد.'
@@ -177,9 +188,13 @@ class ExamsController extends Controller
             }
 
             $enrolled = $this->isEnrolledToDefinedCourse($courseID, $student);
-            $completed = $this->isCourseNotCompleted($student);
-            $attempted = $this->hasAttemptedAndPassedExam($student->student, $courseID);
-
+            if($exam->course->first()->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
+                $completed = true;
+                $attempted = $this->hasAttemptToExam($student->student, $id);
+            }else{
+                $completed = $this->isCourseNotCompleted($student , $courseID);
+                $attempted = $this->hasAttemptedAndPassedExam($student->student, $id);
+            }
             if ($enrolled && !$attempted && $completed) {
                 $examQuestions = $this->showExam($id);
                 $response = new ShowExamQuestionResource($examQuestions);
@@ -197,7 +212,7 @@ class ExamsController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'خطا در دریافت سوالات و گزینه‌ها.',
-                'error' => $e->getMessage()
+                'error' => 'error'
             ], 500);
         }
     }
@@ -217,11 +232,31 @@ class ExamsController extends Controller
 
     public function isExamReady($id)
     {
-        $settings = Setting::whereIn('key', [
-            'question_numbers_perExam',
-            'Difficulty_for_exam',
-            'question_type_for_exam'
-        ])->pluck('value', 'key');
+        $course = Course::find($id);
+        $settingData = [];
+        if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
+            $settings = Setting::whereIn('key', [
+                'question_numbers_perExam_comprehensive',
+                'Difficulty_for_exam_comprehensive',
+                'question_type_for_exam_comprehensive'
+            ])->pluck('value', 'key');
+
+            $settingData['question_numbers_perExam'] = $settings->get('question_numbers_perExam_comprehensive');
+            $settingData['Difficulty_for_exam'] = $settings->get('Difficulty_for_exam_comprehensive');
+            $settingData['question_type_for_exam'] = $settings->get('question_type_for_exam_comprehensive');
+
+        }else{
+            $settings = Setting::whereIn('key', [
+                'question_numbers_perExam',
+                'Difficulty_for_exam',
+                'question_type_for_exam'
+            ])->pluck('value', 'key');
+
+            $settingData['question_numbers_perExam'] = $settings->get('question_numbers_perExam');
+            $settingData['Difficulty_for_exam'] = $settings->get('Difficulty_for_exam');
+            $settingData['question_type_for_exam'] = $settings->get('question_type_for_exam');
+        }
+
         $statusID = Status::where('model', Question::class)->where('name', QuestionsEnum::ACTIVE->value)->first();
 
         $repo = Repository::where('name', RepositoryEnum::FINAL->value)->first();
@@ -230,14 +265,15 @@ class ExamsController extends Controller
             return response()->json(['situation' => false], 204);
         }
 
-        $questionsNumbersExist = Course::withCount(['questions' => function ($query) use ($settings, $statusID, $repo) {
-            $query->where('question_type_id', $settings->get('question_type_for_exam'));
-            $query->where('difficulty_id', $settings->get('Difficulty_for_exam'));
+
+        $questionsNumbersExist = Course::withCount(['questions' => function ($query) use ($settingData, $statusID, $repo) {
+            $query->where('question_type_id', $settingData['question_type_for_exam']);
+            $query->where('difficulty_id', $settingData['Difficulty_for_exam']);
             $query->where('status_id', $statusID->id);
             $query->where('repository_id', $repo->id);
         }])->find($id);
 
-        if ($questionsNumbersExist->questions_count >= $settings->get('question_numbers_perExam')) {
+        if ($questionsNumbersExist->questions_count >= $settingData['question_numbers_perExam']) {
             return response()->json(['situation' => true], 200);
         } else {
             return response()->json(['situation' => false], 204);

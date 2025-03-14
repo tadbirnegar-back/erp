@@ -66,7 +66,7 @@ class ReportsController extends Controller
 
         $user->load('person.avatar', 'mr');
 
-        $meetingType = MeetingType::whereIn('title', [MeetingTypeEnum::HEYAAT_MEETING->value , MeetingTypeEnum::FREE_ZONE->value])->first();
+        $meetingType = MeetingType::where('title', MeetingTypeEnum::HEYAAT_MEETING->value)->first();
 
         $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
             $query->where('employee_id', $employeeId);
@@ -442,7 +442,7 @@ class ReportsController extends Controller
 
             return response()->json($childData);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
 
     }
@@ -550,7 +550,7 @@ class ReportsController extends Controller
 
 
         } catch (Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
     }
 }

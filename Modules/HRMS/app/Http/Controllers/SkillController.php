@@ -12,6 +12,7 @@ use Modules\HRMS\app\Models\Skill;
 class SkillController extends Controller
 {
     use SkillTrait;
+
 //    public array $data = [];
 //    protected SkillService $skillService;
 //
@@ -39,21 +40,21 @@ class SkillController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-     try {
-    \DB::beginTransaction();
-    $data = $request->all();
+        try {
+            \DB::beginTransaction();
+            $data = $request->all();
 
-    $skill = $this->skillStore($data);
-    if ($skill instanceof \Exception) {
-        return response()->json(['message' => 'خطا در ایجاد مهارت جدید'], 500);
-    }
+            $skill = $this->skillStore($data);
+            if ($skill instanceof \Exception) {
+                return response()->json(['message' => 'خطا در ایجاد مهارت جدید'], 500);
+            }
 
-    \DB::commit();
-    return response()->json($skill);
-} catch (\Exception $e) {
-    \DB::rollBack();
-    return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => $e->getMessage()], 500);
-}
+            \DB::commit();
+            return response()->json($skill);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => 'error'], 500);
+        }
     }
 
     /**
@@ -64,7 +65,7 @@ class SkillController extends Controller
         $skill = $this->skillShow($id);
 
         if (is_null($skill)) {
-            return response()->json(['message'=>'موزدی یافت نشد'],404);
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
 
         }
 
@@ -76,19 +77,19 @@ class SkillController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $result = Skill::findOr($id,function (){
-            return response()->json(['message'=>'موزدی یافت نشد'],404);
+        $result = Skill::findOr($id, function () {
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
         });
         $data = $request->all();
         try {
             \DB::beginTransaction();
-            $level = $this->skillUpdate($data,$result);
+            $level = $this->skillUpdate($data, $result);
 
             \DB::commit();
             return response()->json($level);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message'=>'خطا در بروزرسانی مهارت ','error'=>$e->getMessage()],500);
+            return response()->json(['message' => 'خطا در بروزرسانی مهارت ', 'error' => 'error'], 500);
         }
 
 
@@ -99,8 +100,8 @@ class SkillController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $result = Skill::findOr($id,function (){
-            return response()->json(['message'=>'موزدی یافت نشد'],404);
+        $result = Skill::findOr($id, function () {
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
         });
 
         $status = $this->inactiveSkillStatus();
@@ -108,6 +109,6 @@ class SkillController extends Controller
         $result->status_id = $status->id;
         $result->save();
 
-        return response()->json(['message'=>'مهارت با موفقیت حذف شد']);
+        return response()->json(['message' => 'مهارت با موفقیت حذف شد']);
     }
 }

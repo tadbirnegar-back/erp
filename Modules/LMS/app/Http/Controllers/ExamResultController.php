@@ -50,7 +50,7 @@ class ExamResultController extends Controller
 
             return response()->json([
                 'message' => 'Failed to store answer sheet',
-                'error' => $e->getMessage(),
+                'error' => 'error',
             ], 500);
         }
 

@@ -1,0 +1,10 @@
+[
+    {
+        "name": "بسته شده",
+        "className": "danger"
+    },
+    {
+        "name": "فعال",
+        "className": "success"
+    }
+]

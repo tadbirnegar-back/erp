@@ -10,7 +10,8 @@ use Modules\HRMS\app\Models\Job;
 
 class JobController extends Controller
 {
-use JobTrait;
+    use JobTrait;
+
     /**
      * Display a listing of the resource.
      */
@@ -37,12 +38,12 @@ use JobTrait;
 
             \DB::commit();
 
-            return response()->json( $job);
+            return response()->json($job);
         } catch (\Exception $e) {
             \DB::rollBack();
 
             // Return an error response
-            return response()->json(['message' => 'خطا در ایجاد شغل', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ایجاد شغل', 'error' => 'error'], 500);
         }
     }
 
@@ -66,8 +67,8 @@ use JobTrait;
 
             // Retrieve all data from the request
             $data = $request->all();
-$job = Job::findOr($id,function (){
-                return response()->json(['message'=>'موزدی یافت نشد'],404);
+            $job = Job::findOr($id, function () {
+                return response()->json(['message' => 'موزدی یافت نشد'], 404);
             });
             // Fetch the job using the provided ID and update it
             $job = $this->updateJob($job, $data);
@@ -80,7 +81,7 @@ $job = Job::findOr($id,function (){
             \DB::rollBack();
 
             // Return an error response
-            return response()->json(['message' => 'خطا در بروزرسانی شغل', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی شغل', 'error' => 'error'], 500);
         }
     }
 
@@ -89,9 +90,10 @@ $job = Job::findOr($id,function (){
      */
     public function destroy($id): JsonResponse
     {
-        $job = Job::findOr($id,function (){
-            return response()->json(['message'=>'موزدی یافت نشد'],404);});
-            $job = $this->deleteJob($job);
+        $job = Job::findOr($id, function () {
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
+        });
+        $job = $this->deleteJob($job);
         return response()->json(['message' => ' با موفقیت حذف شد']);
     }
 }

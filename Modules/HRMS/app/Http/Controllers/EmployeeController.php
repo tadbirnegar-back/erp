@@ -158,7 +158,7 @@ class EmployeeController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن کارمند', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در افزودن کارمند', 'error' => 'error'], 500);
         }
     }
 

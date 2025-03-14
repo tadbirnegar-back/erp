@@ -118,6 +118,7 @@ class CourseShowForUpdateResource extends JsonResource
                     'expiration_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_expiration_date),
                     'access_date' => convertDateTimeGregorianToJalaliDateTime($courseInfo->course_alias_access_date),
                     'privacy_id' => $courseInfo->course_alias_privacy_id,
+                    'courseType' => $courseInfo->course_alias_course_type,
                 ],
                 'video' => [
                     'slug' => $courseInfo->course_video_slug == null ? null : url($courseInfo->course_video_slug),

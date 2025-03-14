@@ -81,7 +81,7 @@ class DepartmentController extends Controller
             ], 200);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json($e->getMessage(), 500);
+            return response()->json('error', 500);
         }
 
 
@@ -110,7 +110,7 @@ class DepartmentController extends Controller
 //                            ->whereColumn('branch_id', 'branches.id');
 //                    });
 //            })->get();
-            return response()->json(['department'=>$department, 'statuses'=>$statuses]);
+            return response()->json(['department' => $department, 'statuses' => $statuses]);
 
         }
 
@@ -132,16 +132,17 @@ class DepartmentController extends Controller
         try {
 
 
-        $department->name = $request->departmentName;
-        $department->branch_id = $request->branchID;
-        $department->status_id = $request->statusID;
+            $department->name = $request->departmentName;
+            $department->branch_id = $request->branchID;
+            $department->status_id = $request->statusID;
 
-        $department->save();
+            $department->save();
 
-        return response()->json([
-            'message' => 'دپارتمان با موفقیت ویرایش شد',
-        ]);}catch (Exception $e){
-            return response()->json($e->getMessage());
+            return response()->json([
+                'message' => 'دپارتمان با موفقیت ویرایش شد',
+            ]);
+        } catch (Exception $e) {
+            return response()->json('error');
         }
     }
 

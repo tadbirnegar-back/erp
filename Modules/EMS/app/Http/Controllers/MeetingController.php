@@ -109,6 +109,7 @@ class MeetingController extends Controller
             $q->with('fullMeetingsByNow');
         }])->find($req->ounitID);
 
+
         $firstFreeMeeting = $organ->ancestorsAndSelf->first()?->firstFreeMeetingByNow;
         $fullMeetings = $organ->ancestorsAndSelf->first()?->fullMeetingsByNow;
 
