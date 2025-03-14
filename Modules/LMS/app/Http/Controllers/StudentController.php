@@ -59,7 +59,6 @@ class StudentController extends Controller
         $uploadedFile = $request->file('file');
 
 
-
         try {
             \DB::beginTransaction();
             $personService = new PersonRepository();
@@ -119,7 +118,7 @@ class StudentController extends Controller
             $employeeService = new EmployeeRepository();
 
             $personEmployee = $employeeService->isPersonEmployee($personResult->person->id)
-                ? $employeeService->update($data,$personResult->person->workForce->id)
+                ? $employeeService->update($data, $personResult->person->workForce->id)
                 : $employeeService->store($data);
 //        dd($personResult, $personEmployee);
 //        return response()->json(['message' => $personEmployee], 500);
@@ -145,7 +144,7 @@ class StudentController extends Controller
             return response()->json([$customerResult]);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
 //            return response()->json(['message' => 'خطا در ایجاد فراگیر جدید'], 500);
 //
         }

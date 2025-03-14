@@ -324,9 +324,9 @@ trait RecruitmentScriptTrait
 
     public function UpdateFinishDate(RecruitmentScript $script, $date)
     {
-        $finishDate = convertJalaliPersianCharactersToGregorian($date);
+//        $finishDate = convertJalaliPersianCharactersToGregorian($date);
 
-        $script->finish_date = $finishDate;
+        $script->finish_date = $date;
         $script->save();
     }
 

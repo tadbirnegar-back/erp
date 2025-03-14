@@ -2,7 +2,6 @@
 
 namespace Modules\OUnitMS\app\Models;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,9 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Facades\Log;
 use Modules\AAA\app\Models\User;
-use Modules\AddressMS\app\Models\Village;
+use Modules\ACC\app\Models\OunitAccImport;
+use Modules\ACMS\app\Models\FiscalYear;
+use Modules\ACMS\app\Models\OunitFiscalYear;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
 use Modules\EMS\app\Http\Enums\SettingsEnum;
@@ -125,6 +125,7 @@ class OrganizationUnit extends Model
             ->where('key', SettingsEnum::MAX_DAY_FOR_RECEPTION->value)
             ->value('value');
 
+
         // Fetch the enactment limit per meeting from settings
         $enactmentLimitPerMeeting = \DB::table('settings')
             ->where('key', SettingsEnum::ENACTMENT_LIMIT_PER_MEETING->value)
@@ -134,7 +135,6 @@ class OrganizationUnit extends Model
         $meetingtypeId = \DB::table('meeting_types')
             ->where('title', MeetingTypeEnum::HEYAAT_MEETING->value)
             ->value('id');
-
         return $this->hasOne(Meeting::class, 'ounit_id')
             ->where('meeting_type_id', $meetingtypeId)
             ->whereBetween('meeting_date', [now(), now()->addDays($maxDays)])
@@ -298,9 +298,9 @@ class OrganizationUnit extends Model
     }
 
 
-    public function villageWithFreeZone() : HasMany
+    public function villageWithFreeZone(): HasMany
     {
-        return $this->hasMany(VillageOfc::class, 'free_zone_id' , 'unitable_id');
+        return $this->hasMany(VillageOfc::class, 'free_zone_id', 'unitable_id');
     }
 
     public function meetingMembers()
@@ -335,27 +335,35 @@ class OrganizationUnit extends Model
             ->with('mr', 'person.avatar');
     }
 
-    public static function GetAllStatuses(): Collection
+    public static function GetAllStatuses()
     {
-        return Status::all()->where('model', '=', self::class);
+        return Status::where('model', '=', self::class);
     }
 
-//    public function GetAllUsers(): Collection
-//    {
-//        {
-//            return  User::all()->where('model', '=', self::class);
-//        }
-//
-//    }
+    public function village(): HasOne
+    {
+        return $this->hasOne(VillageOfc::class, 'id', 'unitable_id');
+    }
+
+    public function fiscalYears()
+    {
+        return $this->belongsToMany(FiscalYear::class, 'ounit_fiscalYear', 'ounit_id', 'fiscal_year_id');
+    }
+
+    public function importedResult()
+    {
+        return $this->hasOne(OunitAccImport::class, 'ounit_id');
+    }
+
+    public function ounitFiscalYears(): HasMany
+    {
+        return $this->hasMany(OunitFiscalYear::class, 'ounit_id');
+    }
 
 
     protected static function booted()
     {
         static::addGlobalScope(new ActiveScope());
     }
-//
-//    public function GetStatuses()
-//    {
-//
-//    }
+
 }

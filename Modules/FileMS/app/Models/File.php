@@ -2,12 +2,11 @@
 
 namespace Modules\FileMS\app\Models;
 
+use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Http;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Modules\EVAL\app\Models\EvalCircular;
 use Modules\FileMS\Database\factories\FileFactory;
@@ -17,7 +16,7 @@ use Znck\Eloquent\Relations\BelongsToThrough;
 
 class File extends Model
 {
-    use HasFactory;
+    use EagerLoadPivotTrait;
     use \Znck\Eloquent\Traits\BelongsToThrough;
 
     /**
@@ -66,11 +65,11 @@ class File extends Model
     {
         if ($this->isPrivate) {
             $domain = URL::to('/');
-            $value=str_replace('/', '-', $value);
+            $value = str_replace('/', '-', $value);
             $response = Http::get($domain . '/api/v1/local/temp/' . $value);
 
-            $result= $response->body();
-            $decoded= json_decode($result, true);
+            $result = $response->body();
+            $decoded = json_decode($result, true);
 //            dd($decoded);
             return $decoded;
         }
@@ -79,7 +78,7 @@ class File extends Model
 
     public function getSizeAttribute($value)
     {
-        return  Number::fileSize($value);
+        return Number::fileSize($value);
     }
 
     public function EvalCirculars()

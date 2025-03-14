@@ -78,8 +78,8 @@ class EvalEvaluation extends Model
             ->orderBy('created_at', 'desc')->take(1);
     }
 
-    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    public static function GetAllStatuses()
     {
-        return Status::all()->where('model', '=', self::class);
+        return Status::where('model', '=', self::class);
     }
 }

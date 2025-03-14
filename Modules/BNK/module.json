@@ -1,0 +1,11 @@
+{
+    "name": "BNK",
+    "alias": "bnk",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\BNK\\app\\Providers\\BNKServiceProvider"
+    ],
+    "files": []
+}

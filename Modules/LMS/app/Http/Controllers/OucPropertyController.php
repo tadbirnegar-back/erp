@@ -14,7 +14,9 @@ class OucPropertyController extends Controller
     {
         $data = $request -> all();
         $ids = json_decode($data['ids']);
-        $properties = OucProperty::whereIn('ounit_cat_id' , $ids)->select('id' , 'name')->get();
+        $properties = OucProperty::whereIn('ounit_cat_id' , $ids)->select('id' , 'name')
+            ->where('name', '!=', 'جمعیت')
+            ->get();
 
         return OucPropertyListResource::collection($properties);
     }

@@ -202,11 +202,13 @@ trait EvaluationTrait
          INNER JOIN `laravel_cte` ON `laravel_cte`.`parent_id` = `organization_units`.`id`)
     )
     SELECT * FROM `laravel_cte` WHERE `unitable_type` != '$forbiddenOunittypeTown'";
+        $CompletedStatus = $this->evaluationDoneStatus();
 
-        //Get Only The Village One
         $result = OrganizationUnit::join('users', 'organization_units.head_id', '=', 'users.id')
             ->join('persons', 'persons.id', '=', 'users.person_id')
             ->join('eval_evaluations as eval', 'eval.target_ounit_id', '=', 'organization_units.id')
+            ->join('evalEvaluation_status as eval_status_alias', 'eval_status_alias.eval_evaluation_id', '=', 'eval.id')
+            ->where('eval_status_alias.status_id', $CompletedStatus->id)
             ->leftJoin('users as evaluator', 'evaluator.id', '=', 'eval.evaluator_id')
             ->leftJoin('persons as evaluator_person', 'evaluator_person.id', '=', 'evaluator.person_id')
             ->where('organization_units.id', $evalOunit)
@@ -215,6 +217,7 @@ trait EvaluationTrait
             ->leftJoin('eval_circular_variables as variables', 'variables.id', '=', 'answers.eval_circular_variables_id')
             ->leftJoin('eval_circular_indicators as indicators', 'indicators.id', '=', 'variables.eval_circular_indicator_id')
             ->leftJoin('eval_circular_sections as sections', 'sections.id', '=', 'indicators.eval_circular_section_id')
+            ->leftJoin('eval_circulars as circular_alias', 'circular_alias.id', '=', 'eval.eval_circular_id')
             ->leftJoin('village_ofcs as village_alias', 'village_alias.id', '=', 'eval.target_ounit_id')
             ->whereColumn('eval.target_ounit_id', '=', 'eval.evaluator_ounit_id')
             ->select([
@@ -233,14 +236,19 @@ trait EvaluationTrait
                 'variables.id as variable_id',
                 'variables.title as variable_title',
                 'variables.description as variable_description',
+                'variables.weight as variable_weight',
                 'indicators.id as indicator_id',
                 'indicators.title as indicator_title',
+                'indicators.coefficient as indicator_coefficient',
                 'sections.id as section_id',
                 'sections.title as section_title',
                 'village_alias.abadi_code as village_abadi_code',
                 'evaluator_person.display_name as evaluator_name',
                 'users.id as evaluator_id',
+                'eval_status_alias.created_at as eval_date',
+                'circular_alias.maximum_value as circular_max_value',
             ])
+            ->whereNotNull('variables.id')
             ->withoutGlobalScopes()
             ->get();
 
@@ -259,6 +267,7 @@ trait EvaluationTrait
             ->leftJoin('eval_circular_variables as variables', 'variables.id', '=', 'answers.eval_circular_variables_id')
             ->leftJoin('eval_circular_indicators as indicators', 'indicators.id', '=', 'variables.eval_circular_indicator_id')
             ->leftJoin('eval_circular_sections as sections', 'sections.id', '=', 'indicators.eval_circular_section_id')
+            ->leftJoin('eval_circulars as circular_alias', 'circular_alias.id', '=', 'eval.eval_circular_id')
             ->leftJoin('village_ofcs as village_alias', 'village_alias.id', '=', 'eval.target_ounit_id')
             ->select([
                 'ounits_alias.id as ou_id',
@@ -284,10 +293,16 @@ trait EvaluationTrait
                 'sections.title as section_title',
                 'village_alias.abadi_code as village_abadi_code',
                 'users.id as evaluator_id',
+                'circular_alias.maximum_value as circular_max_value',
             ])
             ->get();
 
-        return ["village" => $result, "ancestors" => $ancestors, "ounits" => DB::select($myQueryAsForAncestors), 'user' => $user];
+        $ounitsAncestors = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
+            $query->where('unitable_type', '!=', TownOfc::class);
+            $query->with('head.person.position');
+        }])->find($evalOunit);
+
+        return ["village" => $result, "ancestors" => $ancestors, "ounits" => $ounitsAncestors, 'user' => $user];
     }
 
     private function getDistrictAnswers($organs, $eval)
@@ -427,8 +442,7 @@ trait EvaluationTrait
         $variables = $allData->variables;
 
         $forbiddenVillages = [];
-        if ($variables->contains(fn($variable) =>
-            method_exists($variable, 'evalVariableTargets') &&
+        if ($variables->contains(fn($variable) => method_exists($variable, 'evalVariableTargets') &&
             (!$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())
         )) {
             return $forbiddenVillages;
@@ -487,16 +501,13 @@ trait EvaluationTrait
 
         return collect($commonVillages)->values();
     }
+
     public function villagesNotInCirclesOfTargetForRemake($circular)
     {
         $allData = $circular->load('variables.evalVariableTargets.oucPropertyValue.oucProperty');
-        $evaluatedBefore = EvalEvaluation::where('eval_circular_id', $circular->id)
-            ->where('is_revised', 0)
-            ->pluck('target_ounit_id')->toArray();
         $variables = $allData->variables;
 
         $result = [];
-
 
         foreach ($variables as $variable) {
             foreach ($variable->evalVariableTargets as $target) {
@@ -518,10 +529,9 @@ trait EvaluationTrait
         $groupedByData = collect($result)->groupBy('variable_id');
 
         $villagesIds = [];
-        $AllVillagesIds = VillageOfc::whereNotIn('id', $evaluatedBefore)->pluck('id')->toArray();
 
-        $groupedByData = $groupedByData->map(function ($item) use ($AllVillagesIds, &$villagesIds) {
-            return $item->map(function ($nestedItem) use ($AllVillagesIds, &$villagesIds) {
+        $groupedByData = $groupedByData->map(function ($item) use (&$villagesIds) {
+            return $item->map(function ($nestedItem) use (&$villagesIds) {
                 $value = $nestedItem['value'];
                 $columnName = $nestedItem['column_name'];
                 $operator = $nestedItem['operator'];
@@ -545,20 +555,24 @@ trait EvaluationTrait
             });
         });
 
-        if ($variables->contains(fn($variable) =>
-            method_exists($variable, 'evalVariableTargets') &&
-            (!$variable->relationLoaded('evalVariableTargets') || $variable->evalVariableTargets->isEmpty())
-        )) {
-            $villagesIds =  [];
-        }
 
         $commonVillages = empty($villagesIds) ? [] : array_intersect(...$villagesIds);
 
 
+        $evaluatedBefore = EvalEvaluation::where('eval_circular_id', $circular->id)
+            ->where('is_revised', false)
+            ->orderBy('target_ounit_id', 'asc')
+            ->pluck('target_ounit_id')
+            ->toArray();
 
-        $totalVillages = array_merge($commonVillages, $evaluatedBefore);
 
-        return collect($totalVillages)->values();
+        $NotAllowedOunits = OrganizationUnit::where('unitable_type', VillageOfc::class)
+            ->whereIn('id', $evaluatedBefore)
+            ->orWhereIn('unitable_id', $commonVillages)
+            ->pluck('id')
+            ->toArray();
+
+        return collect($NotAllowedOunits)->values()->toArray();
     }
 
 }

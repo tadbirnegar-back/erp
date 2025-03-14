@@ -8,28 +8,39 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Modules\EVAL\app\Http\Traits\CircularTrait;
 use Modules\EVAL\app\Models\EvalCircular;
 use Modules\EVAL\app\Models\EvalCircularIndicator;
 use Modules\EVAL\app\Models\EvalCircularSection;
+use Modules\EVAL\app\Models\EvalCircularStatus;
 use Modules\EVAL\app\Models\EvalCircularVariable;
 use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EVAL\app\Models\EvalEvaluationAnswer;
 
 class EVALController extends Controller
 {
+    use CircularTrait;
     public function mergeOldEvaluationToNew()
     {
         try {
             DB::beginTransaction();
             //Store Circular
             $circular = EvalCircular::create([
-                'title' => 'ارزیابی عملکرد دهیاری ها سال 1402',
-                'description' => 'ارزیابی عملکرد دهیاری ها سال 1402',
+                'title' => 'ارزیابی آزمایشی 2',
+                'description' => 'این ارزیابی برایی تلفیق اطلاعات ارزیابی قبلی با ارزیابی فعلی ایجاد شده است.',
                 'maximum_value' => 100,
                 'file_id' => 1,
                 'creator_id' => 1905,
                 'create_date' => now(),
                 'expired_date' => Carbon::now()->addYears(1),
+            ]);
+
+            EvalCircularStatus::create([
+                'status_id' => $this->pishnevisCircularStatus()->id,
+                'eval_circular_id' => $circular->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'description' => null,
             ]);
 
 

@@ -160,7 +160,7 @@ class UserController extends Controller
             return response()->json(['message' => 'با موفقیت ویرایش شد', 'data' => $user]);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی کاربر', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی کاربر', 'error' => 'error'], 500);
 
         }
 
@@ -201,7 +201,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             // Handle any exceptions that may occur
             DB::rollBack();
-            return response()->json(['error' => 'خطا در بروزرسانی رمز عبور', 'details' => $e->getMessage()], 500); // "Error updating password"
+            return response()->json(['error' => 'خطا در بروزرسانی رمز عبور', 'details' => 'error'], 500); // "Error updating password"
         }
     }
 

@@ -9,9 +9,11 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Models\Job;
+use Modules\LMS\app\Http\Enums\CourseTypeEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\Services\PurchaseCourse;
 use Modules\LMS\app\Http\Services\VerificationPayment;
@@ -32,6 +34,7 @@ use Modules\LMS\app\Resources\LessonListResource;
 use Modules\LMS\app\Resources\LiveOunitSearchForCourseResource;
 use Modules\LMS\app\Resources\MyCoursesListResource;
 use Modules\LMS\app\Resources\PublishCoursePreviewResource;
+use Modules\LMS\app\Resources\RelatedCourseListComprehensiveResource;
 use Modules\LMS\app\Resources\RelatedCourseListResource;
 use Modules\LMS\app\Resources\SideBarCourseShowResource;
 use Modules\LMS\app\Resources\ViewCourseSideBarResource;
@@ -125,13 +128,24 @@ class CourseController extends Controller
                     $this->courseCanceledStatus()->id
                 ]);
             })->with('latestStatus')->find($id);
-
-
             $user = Auth::user();
+
+//            $isValidForExam = $this -> isValidToWatchExam($course , $user);
+//            return response()->json($isValidForExam);
+//            if(empty($isValidForExam[0])){
+//                return response()->json(['message' => 'شما اجازه دسترسی به این دوره را ندارید'], 403);
+//            }
             if (is_null($course) || empty($course->latestStatus)) {
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
+            if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value){
+                $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
+                if (empty($isEnrolled->isEnrolled[0])) {
+                    $purchase = new PurchaseCourse($course, $user);
+                    $purchase->handle();
+                }
+            }
             $componentsToRenderWithData = $this->courseShow($course, $user);
 
             $chapters = $componentsToRenderWithData['course']['chapters'];
@@ -399,6 +413,91 @@ class CourseController extends Controller
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
         return RelatedCourseListResource::collection($courses);
     }
+    public function relatedComprehensiveCoursesList()
+    {
+        $user = Auth::user();
+//        $data = $request->all();
+//        $perPage = $data['perPage'] ?? 50;
+//        $pageNum = $data['pageNum'] ?? 1;
+
+        $user->load([
+            'activeRecruitmentScripts.ounit' => function ($query) {
+                $query->with(['ancestorsAndSelf' => function ($q) {
+                    $q->whereNot('unitable_type', TownOfc::class);
+                }]);
+            }
+        ]);
+
+        $villageOfcs = [];
+
+        foreach ($user->activeRecruitmentScripts as $script) {
+            if ($script->ounit && $script->ounit->unitable_type === VillageOFC::class) {
+                $script->ounit->load('unitable');
+                $villageOfcs[] = $script->ounit->unitable;
+            }
+        }
+
+
+        $relatedOrgans = $user->activeRecruitmentScripts
+            ->pluck('ounit.ancestorsAndSelf')
+            ->flatten(1)
+            ->filter(function ($item) {
+                return $item !== null;
+            })
+            ->unique()
+            ->toArray();
+
+
+
+        $allData = [];
+
+
+
+        foreach ($relatedOrgans as $unit) {
+            $ancestorCategoryId = OunitCategoryEnum::getValueFromlabel($unit['unitable_type']);
+            if ($ancestorCategoryId) {
+                $allData[] = [
+                    'id' => $unit['id'],
+                    'category_id' => $ancestorCategoryId,
+                ];
+            }
+
+        }
+
+        $allOunits = array_unique($allData, SORT_REGULAR);
+
+
+        //Employee Features Plucks
+        $levels = $user->activeRecruitmentScripts
+            ->pluck('level_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $positions = $user->activeRecruitmentScripts
+            ->pluck('position_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $jobs = $user->activeRecruitmentScripts
+            ->pluck('job_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+
+        //Ounit features plucks
+        $villageOfcs = collect($villageOfcs);
+        $isTourism = $villageOfcs->pluck('isTourism')->toArray();
+        $isAttachedToCity = $villageOfcs->pluck('isAttached_to_city')->toArray();
+        $isFarm = $villageOfcs->pluck('isFarm')->toArray();
+        $degree = $villageOfcs->pluck('degree')->toArray();
+
+//        $title = $request->name;
+        $courses = $this->getRelatedComprehensiveLists($user, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree);
+        return RelatedCourseListComprehensiveResource::collection($courses);
+    }
     public function publishCourseDataShow($id)
     {
         try {
@@ -480,6 +579,16 @@ class CourseController extends Controller
             DB::rollBack();
             return response()->json(["message" => $exception->getMessage()], 400);
         }
+    }
+
+    public function courseTypeList()
+    {
+        $data = [
+            ["value" => CourseTypeEnum::AMUZESHI->value , "label" => "دوره آموزشی" , 'description' => "یادگیری و ارتقاء مهارت‌ها"],
+            ["value" => CourseTypeEnum::MOKATEBEYI->value , "label" => "دوره آزمون جامع(مکاتبه ای)" , 'description' => "ارزیابی از طریق آزمون"]
+        ];
+        return response()->json($data);
+
     }
 
 }

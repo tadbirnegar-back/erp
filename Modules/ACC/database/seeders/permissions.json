@@ -1,0 +1,140 @@
+[
+    {
+        "name": "سرفصل حساب ها",
+        "slug": "/acc/accounts/list",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن حساب",
+        "slug": "/acc/accounts/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف حساب",
+        "slug": "/acc/accounts/delete/{id}",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی حساب",
+        "slug": "/acc/accounts/edit/{id}",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن سند",
+        "slug": "/acc/documents/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست اسناد",
+        "slug": "/acc/documents/list",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بایگانی اسناد",
+        "slug": "/acc/documents/archive/list",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده سند",
+        "slug": "/acc/documents/{ounitID}/doc/{id}",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بستن سند های موقت",
+        "slug": "/acc/documents/close-temp-docs",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "سند اختتامیه",
+        "slug": "/acc/documents/close-year-docs",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید نهایی و بستن سند های موقت",
+        "slug": "/acc/documents/close-temp-docs/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "سند افتتاحیه",
+        "slug": "/acc/documents/opening-doc",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید نهایی و ایجاد سند افتتاحیه",
+        "slug": "/acc/documents/opening-doc/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید نهایی و ایجاد سند اختتامیه",
+        "slug": "/acc/documents/close-year-docs/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "سال مالی جاری",
+        "slug": "/acc/fiscal-year/current",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بروزرسانی سند",
+        "slug": "/acc/documents/edit/{id}",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تغییر وضعیت به قطعی",
+        "slug": "/acc/documents/confirmed-status",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تغییر وضعیت به موقت",
+        "slug": "/acc/documents/draft-status",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف سند",
+        "slug": "/acc/documents/delete-status",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تراز آزمایشی",
+        "slug": "/acc/documents/balance-sheet-report",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "آزاد سازی چک",
+        "slug": "/acc/cheque/free-cheque",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بررسی وجود شخص و حساب شخص",
+        "slug": "/acc/accounts/person-acc/check",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن حساب برای شخص",
+        "slug": "/acc/accounts/person-acc/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    }
+]

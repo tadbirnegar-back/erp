@@ -1,0 +1,26 @@
+[
+    {
+        "name": "سفید",
+        "className": "primary"
+    },
+    {
+        "name": "پاس شده",
+        "className": "success"
+    },
+    {
+        "name": "ابطال شده",
+        "className": "danger"
+    },
+    {
+        "name": "برگشت خورده",
+        "className": "danger"
+    },
+    {
+        "name": "صادر شده",
+        "className": "warning"
+    },
+    {
+        "name": "حذف شده",
+        "className": "danger"
+    }
+]

@@ -1,0 +1,14 @@
+[
+    {
+        "name": "پیش نویس",
+        "className": "warning"
+    },
+    {
+        "name": "قطعی",
+        "className": "success"
+    },
+    {
+        "name": "حذف شده",
+        "className": "danger"
+    }
+]
