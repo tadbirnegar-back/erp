@@ -217,6 +217,7 @@ class ReportsController extends Controller
 
         return response()->json(['data' => $result, 'ounits' => $rsUnits]);
     }
+
     public function districtEnactmentReport(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -442,7 +443,7 @@ class ReportsController extends Controller
 
             return response()->json($childData);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
 
     }
@@ -550,7 +551,7 @@ class ReportsController extends Controller
 
 
         } catch (Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
     }
 }

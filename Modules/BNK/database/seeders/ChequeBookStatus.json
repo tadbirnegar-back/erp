@@ -1,0 +1,22 @@
+[
+    {
+        "name": "ابطال شده",
+        "className": "danger"
+    },
+    {
+        "name": "فعال",
+        "className": "success"
+    },
+    {
+        "name": "گم شده",
+        "className": "danger"
+    },
+    {
+        "name": "تمام شده",
+        "className": "danger"
+    },
+    {
+        "name": "منقضی شده",
+        "className": "danger"
+    }
+]

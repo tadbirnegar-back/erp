@@ -112,7 +112,7 @@ class EnactmentController extends Controller
         $user->load('employee');
         $freezoneIds = $user->activeFreeZoneRecruitmentScript->pluck('organizationUnit.unitable_id');
 
-        if(!empty($freezoneIds[0])){
+        if (!empty($freezoneIds[0])) {
 
             $ounitsAzad = VillageOfc::whereIntegerInRaw('free_zone_id', $freezoneIds)
                 ->with('organizationUnit')
@@ -129,7 +129,7 @@ class EnactmentController extends Controller
             } catch (Exception $e) {
                 return response()->json(['message' => 'خطا در دریافت اطلاعات'], 500);
             }
-        }else{
+        } else {
             $user->load(['activeDistrictRecruitmentScript.organizationUnit.ancestors']);
 
             try {
@@ -380,6 +380,7 @@ class EnactmentController extends Controller
 
         }
     }
+
     public function addEnactmentFreeZone(Request $request)
     {
         try {
@@ -429,7 +430,6 @@ class EnactmentController extends Controller
             ])->find($data['ounitID']);
 
             $heyaatTemplateMembers = $heyatOunitForMember->ancestorsAndSelf[0]?->meetingMembersAzad;
-
 
 
             if ($heyaatTemplateMembers->isEmpty() || $heyaatTemplateMembers->count() < 2) {
@@ -749,7 +749,7 @@ class EnactmentController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
 
-            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => 'error'], 500);
         }
 
     }
@@ -805,7 +805,7 @@ class EnactmentController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => $e->getMessage(),], 500);
+            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => 'error',], 500);
         }
     }
 
@@ -837,7 +837,7 @@ class EnactmentController extends Controller
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {
-                    $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
+                    $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value, RolesEnum::OZV_HEYAT_FREEZONE->value]);
                 })->with('status')->get();
 
             if ($reviewStatuses->count() > 1) {
@@ -879,7 +879,7 @@ class EnactmentController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => 'error'], 500);
         }
 
     }
@@ -903,7 +903,7 @@ class EnactmentController extends Controller
 
             $reviewStatuses = $enactment->enactmentReviews()
                 ->whereHas('user.roles', function ($query) {
-                    $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE->value]);
+                    $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value, RolesEnum::OZV_HEYAT_FREEZONE->value]);
                 })->with('status')->get();
 
             $AllMainPersons = $enactment->load( ['members' => function ($query) {
@@ -952,7 +952,7 @@ class EnactmentController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در انجام عملیات', 'error' => 'error'], 500);
         }
 
     }

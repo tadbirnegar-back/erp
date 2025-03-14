@@ -1,0 +1,11 @@
+{
+    "name": "ACMS",
+    "alias": "acms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ACMS\\app\\Providers\\ACMSServiceProvider"
+    ],
+    "files": []
+}

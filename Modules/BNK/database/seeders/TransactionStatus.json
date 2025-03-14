@@ -1,0 +1,14 @@
+[
+    {
+        "name": "فعال",
+        "className": "success"
+    },
+    {
+        "name": "حذف شده",
+        "className": "danger"
+    },
+    {
+        "name": "سینک شده",
+        "className": "primary"
+    }
+]

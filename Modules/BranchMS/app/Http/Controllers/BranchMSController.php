@@ -100,7 +100,7 @@ class BranchMSController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
 //            return response()->json(['error' => 'خطا در ایجاد شعبه جدید'], 500);
         }
 
@@ -191,7 +191,7 @@ class BranchMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
 //            return response()->json(['error' => 'خطا سمت سرور'], 500);
         }
 

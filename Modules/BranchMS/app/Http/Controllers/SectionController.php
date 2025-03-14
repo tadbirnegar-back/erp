@@ -58,7 +58,7 @@ class SectionController extends Controller
             ], 200);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json($e->getMessage(),500);
+            return response()->json('error', 500);
         }
     }
 
@@ -78,7 +78,7 @@ class SectionController extends Controller
             $statuses = Branch::GetAllStatuses();
 //            $departments = Department::where('branch_id','=',$section->department->branch_id);
 //            $departments = Department::with('status')->where('statuses.name','=','فعال')->get();
-            return response()->json(['sections'=>$section,'statuses'=> $statuses]);
+            return response()->json(['sections' => $section, 'statuses' => $statuses]);
 
         }
 
