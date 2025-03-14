@@ -676,6 +676,11 @@ trait CircularTrait
 
     public function lastDataForEditVariable($variableID)
     {
+        $circular = EvalCircularVariable::with('circular')->find($variableID);
+        $circularID = $circular->circular->id;
+
+        $sectionWithIndicators = $this->requirementOfAddVariable($circularID);
+
         $result = EvalCircularSection::query()
             ->joinRelationship('evalCircular')
             ->joinRelationship('evalCircularIndicators.evalCircularVariable')
@@ -694,6 +699,8 @@ trait CircularTrait
             ])
             ->where('eval_circular_variables.id', $variableID)
             ->first();
+
+        $result['dropdown'] = $sectionWithIndicators;
         $property = $this->showPropertiesForEdit($variableID);
         return [
             'variable' => $result,
