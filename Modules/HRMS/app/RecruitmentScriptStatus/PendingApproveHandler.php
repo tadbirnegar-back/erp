@@ -33,7 +33,11 @@ class PendingApproveHandler implements StatusHandlerInterface
     public function deactivateScriptUser()
     {
         $disabledStatusForUser = User::GetAllStatuses()->firstWhere('name', '=', 'غیرفعال');
-        $scriptUser = $this->script->user;
+        $scriptUser = $this->script->load('user')->user;
+        if(is_null($scriptUser)){
+            dd($this->script, $this->script?->user);
+        }
+        \Log::info($scriptUser);
         $scriptUser->load('roles');
         if ($scriptUser->roles->isEmpty()) {
             $scriptUser->statuses()->attach($disabledStatusForUser->id);
