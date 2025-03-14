@@ -131,8 +131,8 @@ class ACCController extends Controller
                     $query->withoutGlobalScopes();
 
                 }])
-                    ->where('ounit_id', '=', $data['ounitID'])->orWhereNull('ounit_id')
-                    ->withoutGlobalScopes();
+                    ->where('ounit_id', '=', $data['ounitID'])->orWhereNull('ounit_id')//                    ->withoutGlobalScopes()
+                ;
             }, 'ancestorsAndSelf' => function ($query) {
                 $query->withoutGlobalScopes();
             }, 'accountCategory'])
@@ -285,7 +285,7 @@ class ACCController extends Controller
             $accs = json_decode($accs, true);
             foreach ($accs as $account) {
                 $acc = Account::withoutGlobalScopes()->find($account['id']);
-                $acc->new_chain_code = $account['chainCode'];
+                $acc->new_chain_code = $account['chainCode'] ?? null;
                 $acc->save();
             }
             DB::commit();

@@ -12,7 +12,6 @@ return new class extends Migration {
     {
         Schema::table('bnk_transactions', function (Blueprint $table) {
             $table->string('tracking_code')->nullable();
-            $table->string('bank_account_id')->nullable()->change();
 
         });
     }

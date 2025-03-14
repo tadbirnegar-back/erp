@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->double('withdrawal')->nullable();
             $table->double('transfer')->nullable();
             $table->nullableMorphs('transactionable');
-            $table->unsignedBigInteger('bank_account_id')->index();
+            $table->string('bank_account_id')->nullable()->index();
             $table->unsignedBigInteger('creator_id')->nullable()->index();
             $table->unsignedBigInteger('cheque_id')->nullable()->index();
             $table->unsignedBigInteger('card_id')->nullable()->index();
@@ -27,10 +27,10 @@ return new class extends Migration {
 
             $table->dateTime('create_date')->useCurrent();
 
-            $table->foreign('bank_account_id')->references('id')->on('bnk_bank_accounts')->onDelete('cascade');
+            $table->foreign('bank_account_id')->references('id')->on('bnk_bank_accounts')->onDelete('set null');
             $table->foreign('creator_id')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('cheque_id')->references('id')->on('bnk_cheques')->onDelete('cascade');
-            $table->foreign('card_id')->references('id')->on('bnk_account_cards')->onDelete('cascade');
+            $table->foreign('cheque_id')->references('id')->on('bnk_cheques')->onDelete('set null');
+            $table->foreign('card_id')->references('id')->on('bnk_account_cards')->onDelete('set null');
             $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade');
         });
     }

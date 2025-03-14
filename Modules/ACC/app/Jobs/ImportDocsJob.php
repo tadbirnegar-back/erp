@@ -48,7 +48,7 @@ class ImportDocsJob implements ShouldQueue
     {
         try {
             $pathToXlsx = File::find($this->fileID)->getRawOriginal('slug');
-//            dd($pathToXlsx->getRealPath());
+            $pathToXlsx = str_replace('uploads/', 'storage/app/public/', $pathToXlsx);//            dd($pathToXlsx->getRealPath());
             $rows = SimpleExcelReader::create($pathToXlsx)
                 ->getRows();
             $a = $rows->groupBy('year')
@@ -95,12 +95,12 @@ class ImportDocsJob implements ShouldQueue
                         'documentTypeID' => $docType,
                         'description' => $doc[0]['Doc Description'],
                         'ounitID' => $ounitID,
-                        'userID' => 1905,
+                        'userID' => 1907,
 
                     ];
-                    $stat = convertToDbFriendly($doc[0]['Doc Status']) == 'قطعی' ? $docStatus : $docDraftStatus;
+                    $stat = $docStatus;
                     $docObj = $this->storeDocument($docData);
-                    $this->attachStatusToDocument($docObj, $stat, 1905);
+                    $this->attachStatusToDocument($docObj, $stat, 1907);
                     $doc->each(function ($article) use ($doc, $ounitID, $docObj) {
                         if ($article['Account Code'] != '') {
                             $cat = AccountCategory::where('name', convertToDbFriendly($article['Ancestor_name_0']))->where('id', $article['Ancestor_code_0'])->first();
@@ -242,7 +242,9 @@ class ImportDocsJob implements ShouldQueue
                                 }
                             }
                             if (is_null($usedAccount)) {
-                                Log::error('error:', [$usedCodeInArticle, $accs, $article]);
+                                Log::error('error:', [$usedCodeInArticle,
+                                    $accs,
+                                    $article]);
                             }
 
                             $transaction = null;
@@ -250,7 +252,7 @@ class ImportDocsJob implements ShouldQueue
                                 $transactionData = [
                                     'trackingCode' => $article['Cheque Number'],
                                     'withdrawal' => $article['Bestankari'],
-                                    'userID' => 1905,
+                                    'userID' => 1907,
                                     'createDate' => now(),
                                 ];
                                 $transaction = $this->storeTransaction($transactionData);
