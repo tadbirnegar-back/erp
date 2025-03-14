@@ -1153,6 +1153,7 @@ trait CourseTrait
 //            ->where('courses.title', 'like', '%' . $title . '%')
             ->where('courses.course_type', CourseTypeEnum::MOKATEBEYI->value)
             ->distinct('courses.id')
+            ->distinct('course_exam.course_id')
             ->latest('course_exam_alias.id')
             ->get();
 //            ->paginate($perPage, $columns = ['*'], $pageName = 'page', $pageNum);

@@ -34,7 +34,8 @@ class HRMSDatabaseSeeder extends Seeder
 //            StatusSeeder::class,
 //            FreeZonePositionsSeeder::class,
 //            FreeZoneJobsSeeder::class,
-            FreeZoneScriptTypeSeeder::class,
+//            FreeZoneScriptTypeSeeder::class,
+            AddAccRcs::class,
         ]);
         // $this->call([]);
     }
