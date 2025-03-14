@@ -42,9 +42,9 @@ class ExamsController extends Controller
 
             $student = Auth::user()->load('student');
             $enrolled = $this->isEnrolledToDefinedCourse($courseId, $student);
-            if(is_null($enrolled)){
+            if (is_null($enrolled)) {
                 $isEnrolles = false;
-            }else{
+            } else {
                 $isEnrolles = true;
             }
             $completed = $this->isCourseNotCompleted($student);
@@ -197,7 +197,7 @@ class ExamsController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'خطا در دریافت سوالات و گزینه‌ها.',
-                'error' => $e->getMessage()
+                'error' => 'error'
             ], 500);
         }
     }

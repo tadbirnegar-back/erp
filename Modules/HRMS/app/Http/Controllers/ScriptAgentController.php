@@ -26,7 +26,7 @@ class ScriptAgentController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             // Handle the exception, e.g., log it or return an error response
-            return response()->json(['message' => 'خطا در ایجاد عامل حکمی', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ایجاد عامل حکمی', 'error' => 'error'], 500);
         }
     }
 
@@ -51,7 +51,7 @@ class ScriptAgentController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             // Handle the exception, e.g., log it or return an error response
-            return response()->json(['message' => 'خطا در ویرایش عامل حکمی', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش عامل حکمی', 'error' => 'error'], 500);
         }
     }
 
@@ -66,7 +66,7 @@ class ScriptAgentController extends Controller
             DB::commit();
             return response()->json(['message' => 'عامل حکمی با موفقیت حذف شد']);
         } catch (Exception $e) {
-            return response()->json(['message' => 'خطا در حذف عامل حکمی', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در حذف عامل حکمی', 'error' => 'error'], 500);
         }
     }
 

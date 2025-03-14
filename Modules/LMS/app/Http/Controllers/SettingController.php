@@ -50,7 +50,7 @@ class SettingController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Failed to save settings.',
-                'error' => $e->getMessage()
+                'error' => 'error'
             ], 500);
         }
     }

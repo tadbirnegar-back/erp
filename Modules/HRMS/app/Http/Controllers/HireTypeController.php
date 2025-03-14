@@ -33,7 +33,7 @@ class HireTypeController extends Controller
             return response()->json($hireType);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در ایجاد نوع استخدام', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ایجاد نوع استخدام', 'error' => 'error'], 500);
         }
 
 
@@ -53,15 +53,16 @@ class HireTypeController extends Controller
             return response()->json($hireType);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در بروزرسانی نوع استخدام', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در بروزرسانی نوع استخدام', 'error' => 'error'], 500);
         }
 
     }
 
     public function destroy($id)
     {
-        $job = HireType::findOr($id,function (){
-            return response()->json(['message'=>'موزدی یافت نشد'],404);});
+        $job = HireType::findOr($id, function () {
+            return response()->json(['message' => 'موزدی یافت نشد'], 404);
+        });
         $job = $this->deleteHireType($job);
         return response()->json(['message' => ' با موفقیت حذف شد']);
     }

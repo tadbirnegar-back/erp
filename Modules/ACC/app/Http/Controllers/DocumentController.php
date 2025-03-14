@@ -163,7 +163,7 @@ class DocumentController extends Controller
             return response()->json($document);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([$e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['error', 'error'], 500);
         }
 
     }
@@ -343,7 +343,7 @@ class DocumentController extends Controller
             return ArticlesListResource::collection($document->articles);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([$e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['error', 'error'], 500);
         }
 
     }
@@ -376,7 +376,7 @@ class DocumentController extends Controller
             return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json($e->getMessage(), 500);
+            return response()->json('error', 500);
         }
     }
 
@@ -405,7 +405,7 @@ class DocumentController extends Controller
             return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json($e->getMessage(), 500);
+            return response()->json('error', 500);
         }
     }
 
@@ -434,7 +434,7 @@ class DocumentController extends Controller
             return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json($e->getMessage(), 500);
+            return response()->json('error', 500);
         }
     }
 
@@ -470,7 +470,7 @@ class DocumentController extends Controller
             return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json($e->getMessage(), 500);
+            return response()->json('error', 500);
         }
     }
 
@@ -602,7 +602,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 5101)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 510001)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -629,7 +629,7 @@ class DocumentController extends Controller
             return response()->json($doc);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([$e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['error', 'error'], 500);
         }
 
     }
@@ -767,7 +767,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 5101)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 510001)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -794,7 +794,7 @@ class DocumentController extends Controller
             return response()->json($doc);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([$e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['error', 'error'], 500);
         }
 
     }
@@ -888,7 +888,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 5101)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 510001)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -914,7 +914,7 @@ class DocumentController extends Controller
             return response()->json($doc);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
+            return response()->json(['error' => 'error'], 422);
         }
     }
 
@@ -939,7 +939,7 @@ class DocumentController extends Controller
             return response()->json($document);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([$e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['error', 'error'], 500);
         }
 
     }

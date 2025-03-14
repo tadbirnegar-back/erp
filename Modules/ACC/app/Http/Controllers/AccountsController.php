@@ -16,6 +16,9 @@ use Modules\BNK\app\Models\BnkChequeStatus;
 use Modules\BNK\app\Models\Cheque;
 use Modules\BNK\app\Models\ChequeBook;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
+use Modules\PersonMS\app\Models\Legal;
+use Modules\PersonMS\app\Models\Natural;
+use Modules\PersonMS\app\Models\Person;
 use Validator;
 
 class AccountsController extends Controller
@@ -83,7 +86,7 @@ class AccountsController extends Controller
             return response()->json(['data' => $account]);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
     }
 
@@ -117,7 +120,7 @@ class AccountsController extends Controller
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['error' => 'error', 'error'], 500);
         }
 
         return response()->json($account);
@@ -153,7 +156,7 @@ class AccountsController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
     }
 
@@ -211,7 +214,7 @@ class AccountsController extends Controller
         $data = $request->all();
         $validate = Validator::make($data, [
             'personType' => 'required',
-            'nationalCode' => ['required', 'exists:persons,national_code'],
+            'nationalCode' => 'required',
             'ounitID' => 'required',
             'name' => 'sometimes',
             'firstName' => 'sometimes',
@@ -226,20 +229,78 @@ class AccountsController extends Controller
             DB::beginTransaction();
 
             if ($data['personType'] == 1) {
-                $naturalPerson = $this->naturalStore($data);
-                $person = $naturalPerson->person;
+                $person = Person::where('national_code', $data['nationalCode'])
+                    ->where('personable_type', Natural::class)
+                    ->first();
+                if (is_null($person)) {
+                    $naturalPerson = $this->naturalStore($data);
+                    $person = $naturalPerson->person;
+                }
             } else {
-                $legal = $this->legalStore($data);
-                $person = $legal->person;
+                $person = Person::where('national_code', $data['nationalCode'])
+                    ->where('personable_type', Legal::class)
+                    ->first();
+                if (is_null($person)) {
+                    $legalPerson = $this->legalStore($data);
+                    $person = $legalPerson->person;
+                }
             }
+
+            $largest = Account::where('chain_code', 'LIKE', '310001%')
+//                ->where('entity_type', $person->personable_type)
+                ->where('ounit_id', $data['ounitID'])
+                ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                ->first();
+
             $accData = [
-                
+                'entityID' => $person->id,
+                'entityType' => $person->personable_type,
+                'name' => $person->display_name . ' - ' . $person->national_code,
+                'ounitID' => $data['ounitID'],
+                'segmentCode' => addWithLeadingZeros($largest?->segment_code ?? '000', 1)
             ];
 
+            $parentAccount = Account::where('name', 'حسابهای پرداختنی تجاری')->where('chain_code', 310001)->first();
+
+            $this->storeAccount($accData, $parentAccount);
+
             DB::commit();
+            return response()->json(['success' => 'با موفقیت اضافه شد'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
+    }
+
+    public function personExistenceAndHasAccount(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'nationalCode' => 'required',
+            'ounitID' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['error' => $validate->errors()], 422);
+        }
+
+        $person = Person::where('national_code', $data['nationalCode'])
+            ->first();
+        $personExists = !is_null($person);
+        $personAccount = !is_null($person) ? $person->account()->where('entity_type', $person->personable_type)->where('ounit_id', $data['ounitID'])->with(['ancestors', 'accountCategory'])->first() : null;
+        $personName = $person?->display_name;
+
+
+        $result = [
+            'personExists' => $personExists,
+            'account' => !is_null($personAccount) ? [
+                'chain_code' => $personAccount->chain_code,
+                'ancestors' => $personAccount->ancestors->pluck('name'),
+                'category' => $personAccount->accountCategory->name,
+            ] : null,
+            'personName' => $personName,
+        ];
+
+        return response()->json($result);
     }
 }

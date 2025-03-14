@@ -70,7 +70,7 @@ class CourseController extends Controller
             return response()->json(['message' => "دوره با موفقیت ساخته شد"]);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => $exception->getMessage()] , 404);
+            return response()->json(['message' => $exception->getMessage()], 404);
         }
     }
 
@@ -98,7 +98,7 @@ class CourseController extends Controller
             return response()->json(['message' => 'دوره شما با موفقیت به روز رسانی شد'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 404);
+            return response()->json(['message' => 'error'], 404);
         }
 
 
@@ -141,7 +141,7 @@ class CourseController extends Controller
             }
             return response()->json($componentsToRenderWithData);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 403);
+            return response()->json(['message' => 'error'], 403);
         }
     }
 
@@ -398,13 +398,14 @@ class CourseController extends Controller
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
         return RelatedCourseListResource::collection($courses);
     }
+
     public function publishCourseDataShow($id)
     {
         try {
             $data = $this->showCourseDataForEnteshareDore($id);
             return new PublishCoursePreviewResource($data);
-        }catch (\Exception $e){
-            return response()->json(['message' => $e->getMessage()], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'error'], 404);
         }
 
     }
@@ -415,7 +416,7 @@ class CourseController extends Controller
         try {
             DB::beginTransaction();
             $course = Course::find($id);
-            if($course->access_date == null){
+            if ($course->access_date == null) {
                 StatusCourse::create([
                     'course_id' => $id,
                     'status_id' => $this->courseWaitPresentingStatus()->id,
@@ -430,7 +431,7 @@ class CourseController extends Controller
                 Course::find($id)->update([
                     'access_date' => now()
                 ]);
-            }else{
+            } else {
                 StatusCourse::create([
                     'course_id' => $id,
                     'status_id' => $this->courseWaitPresentingStatus()->id,

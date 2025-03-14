@@ -280,7 +280,7 @@ class BudgetController extends Controller
             return response()->json(['message' => 'وضعیت بودجه با موفقیت تغییر یافت'], 200);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
 
     }
@@ -337,7 +337,7 @@ class BudgetController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
 
     }
@@ -387,7 +387,7 @@ class BudgetController extends Controller
             return response()->json(['message' => 'با موفقیت بودجه متمم ایجاد شد', 'data' => $newBudget], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
     }
 
@@ -489,7 +489,7 @@ class BudgetController extends Controller
             return TafriqBudgetIncome::collection($subjectsWithLog);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
+            return response()->json(['error' => 'error', 'trace' => 'error'], 500);
         }
 
     }

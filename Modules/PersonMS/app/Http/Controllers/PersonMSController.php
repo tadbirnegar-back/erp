@@ -304,7 +304,7 @@ class PersonMSController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در ثبت رکورد جدید'], 500);
-//            return response()->json(['message' => $e->getMessage()], 500);
+//            return response()->json(['message' => 'error'], 500);
 
         }
 
@@ -381,7 +381,7 @@ class PersonMSController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'خطا در ثبت رکورد جدید'], 500);
-//            return response()->json(['message' => $e->getMessage()], 500);
+//            return response()->json(['message' => 'error'], 500);
 
         }
 
@@ -512,7 +512,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش اطلاعات شخصی', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش اطلاعات شخصی', 'error' => 'error'], 500);
         }
     }
 
@@ -581,7 +581,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
     }
 
@@ -701,7 +701,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش بستگان', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش بستگان', 'error' => 'error'], 500);
         }
     }
 
@@ -856,7 +856,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش سوابق دوره ها', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش سوابق دوره ها', 'error' => 'error'], 500);
         }
 
     }
@@ -901,7 +901,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در افزودن رزومه', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در افزودن رزومه', 'error' => 'error'], 500);
         }
 
     }
@@ -925,7 +925,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش رزومه', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش رزومه', 'error' => 'error'], 500);
         }
 
     }
@@ -1019,7 +1019,7 @@ class PersonMSController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ویرایش وضعیت نظام وظیفه', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در ویرایش وضعیت نظام وظیفه', 'error' => 'error'], 500);
         }
 
 
@@ -1042,7 +1042,7 @@ class PersonMSController extends Controller
             ]);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['mwssage' => [$e->getMessage(), $e->getTrace()],], 500);
+            return response()->json(['mwssage' => ['error', 'error'],], 500);
         }
     }
 

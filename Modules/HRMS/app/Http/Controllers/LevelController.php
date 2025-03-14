@@ -44,7 +44,7 @@ class LevelController extends Controller
             return response()->json($level);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => 'error'], 500);
         }
     }
 
@@ -83,7 +83,7 @@ class LevelController extends Controller
             return response()->json($level);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'خطا در پردازش درخواست', 'error' => 'error'], 500);
         }
 
     }

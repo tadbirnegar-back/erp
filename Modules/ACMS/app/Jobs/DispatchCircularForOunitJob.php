@@ -61,7 +61,7 @@ class DispatchCircularForOunitJob implements ShouldQueue
                 })
                 ->catch(function (Batch $batch, \Throwable $e) {
                     // Handle the exception
-                    \Log::error("An error occurred in the batch: " . $e->getMessage());
+                    \Log::error("An error occurred in the batch: " . 'error');
                 })
                 ->finally(function (Batch $batch) {
                     // This block runs regardless of success or failure
@@ -74,7 +74,7 @@ class DispatchCircularForOunitJob implements ShouldQueue
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail();
-            \Log::error($e->getMessage());
+            \Log::error('error');
         }
 
     }

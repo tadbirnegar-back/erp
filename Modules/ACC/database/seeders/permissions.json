@@ -124,5 +124,17 @@
         "slug": "/acc/cheque/free-cheque",
         "moduleName": "ACC",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "بررسی وجود شخص و حساب شخص",
+        "slug": "/acc/accounts/person-acc/check",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن حساب برای شخص",
+        "slug": "/acc/accounts/person-acc/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
     }
 ]

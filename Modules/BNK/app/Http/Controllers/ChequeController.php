@@ -48,7 +48,7 @@ class ChequeController extends Controller
             return response()->json(['data' => $chequeBook]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
 
     }
@@ -102,7 +102,7 @@ class ChequeController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
 
     }

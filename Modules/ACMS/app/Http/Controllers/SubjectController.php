@@ -74,7 +74,7 @@ class SubjectController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
     }
 
@@ -118,7 +118,7 @@ class SubjectController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
 
 
@@ -141,7 +141,7 @@ class SubjectController extends Controller
 
             return response()->json(['message' => 'باموفقیت بروزرسانی شد'], 200);
         } catch (Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
 
 

@@ -264,7 +264,7 @@ class ACCController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(), $e->getTrace()], 500);
+            return response()->json(['error' => 'error', 'error'], 500);
         }
 
 
@@ -292,7 +292,7 @@ class ACCController extends Controller
             return response()->json(['message' => 'با موفقیت بروزرسانی شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
     }
 }

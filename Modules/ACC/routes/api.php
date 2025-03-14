@@ -88,4 +88,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::delete('/acc/cheque/free-cheque', [DocumentController::class, 'resetChequeAndFreeByArticle']);
 
     Route::post('/acc/documents/balance-sheet-report', [DocumentController::class, 'financialBalanceReport']);
+
+    Route::post('/acc/accounts/person-acc/check', [AccountsController::class, 'personExistenceAndHasAccount']);
+
+    Route::post('/acc/accounts/person-acc/add', [AccountsController::class, 'storeCreditAccount']);
 });

@@ -59,7 +59,7 @@ class CircularController extends Controller
             return response()->json(['data' => $circular]);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 422);
+            return response()->json(['message' => 'error'], 422);
         }
     }
 
@@ -110,7 +110,7 @@ class CircularController extends Controller
             return response()->json(['message' => 'با موفقیت بروز شد'], 200);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
 
     }
@@ -140,7 +140,7 @@ class CircularController extends Controller
             return response()->json(['message' => 'بخشنامه حذف شد'], 200);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
 
     }
@@ -276,7 +276,7 @@ class CircularController extends Controller
                 })
                 ->catch(function (Batch $batch, \Throwable $e) {
                     // Handle the exception
-                    \Log::error("An error occurred in the batch: " . $e->getMessage());
+                    \Log::error("An error occurred in the batch: " . 'error');
                 })
                 ->finally(function (Batch $batch) {
                     // This block runs regardless of success or failure
@@ -295,7 +295,7 @@ class CircularController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'error'], 500);
         }
     }
 

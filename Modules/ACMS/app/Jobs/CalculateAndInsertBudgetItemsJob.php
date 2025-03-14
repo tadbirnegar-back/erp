@@ -46,7 +46,7 @@ class CalculateAndInsertBudgetItemsJob implements ShouldQueue
         } catch (\Exception $e) {
             \DB::rollBack();
             $this->fail();
-            \Log::error($e->getMessage());
+            \Log::error('error');
         }
     }
 }

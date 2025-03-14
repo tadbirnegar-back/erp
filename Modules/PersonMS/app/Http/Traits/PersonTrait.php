@@ -24,8 +24,8 @@ trait PersonTrait
 
         $naturalPerson = new Natural();
         $naturalPerson->fill([
-            'first_name' => $data['firstName'],
-            'last_name' => $data['lastName'],
+            'first_name' => convertToDbFriendly($data['firstName']),
+            'last_name' => convertToDbFriendly($data['lastName']),
             'mobile' => $data['mobile'] ?? null,
             'phone_number' => $data['phoneNumber'] ?? null,
             'father_name' => $data['fatherName'] ?? null,
@@ -54,7 +54,7 @@ trait PersonTrait
         $person = new Person();
         $person->fill([
             'display_name' => $naturalPerson->first_name . ' ' . $naturalPerson->last_name,
-            'national_code' => $data['nationalCode'],
+            'national_code' => convertToDbFriendly($data['nationalCode']),
             'profile_picture_id' => $data['avatar'] ?? null,
             'email' => $data['email'] ?? null,
             'phone' => $data['phone'] ?? null,
@@ -101,7 +101,7 @@ trait PersonTrait
 
         $person = new Person();
         $person->display_name = $legal->name;
-        $person->national_code = $data['national_code'] ?? null;
+        $person->national_code = $data['nationalCode'] ?? null;
         $person->profile_picture_id = $data['avatar'] ?? null;
         $person->phone = $data['phone'] ?? null;
 

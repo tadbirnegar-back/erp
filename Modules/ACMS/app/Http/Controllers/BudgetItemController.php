@@ -420,7 +420,7 @@ class BudgetItemController extends Controller
             return response()->json(['message' => 'با موفقیت ویرایش شد'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'error'], 500);
         }
 
     }
