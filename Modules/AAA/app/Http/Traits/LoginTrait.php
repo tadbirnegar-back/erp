@@ -11,9 +11,11 @@ trait LoginTrait
 {
     public function takePermissions($user)
     {
+//
         return User::query()
             ->joinRelationship('roles.permissions.modules.category')
             ->select([
+                'roles.id as role_id',
                 'permissions.id  as permission_id',
                 'permissions.name as permission_name',
                 'permissions.slug as permission_slug',

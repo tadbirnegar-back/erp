@@ -276,7 +276,7 @@ class LoginControllerV2 extends Controller
         $permissions = $this->takePermissions($user);
         $userInfo = $this->takeUserInfo($user);
 
-        $roles = $user->load('roles')->pluck('roles.name')->toArray();
+        $roles = $user->roles->pluck('name');
         $checkUsersPayment = $this->userHasDebt($user);
         $versions = $this->takeApplicationVersion();
 

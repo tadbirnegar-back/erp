@@ -46,4 +46,10 @@ class Permission extends Model
     {
         return $this->hasMany(Widget::class);
     }
+
+    public function modules()
+    {
+        return $this->belongsTo(Module::class, 'module_id');
+    }
+
 }
