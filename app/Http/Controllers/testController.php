@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Modules\AAA\app\Models\User;
-use Modules\ACMS\app\Models\Circular;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -36,17 +35,15 @@ class testController extends Controller
     {
 
 
-$id=11;
-
-$time= EvalCircular::find($id)
-    ->select([
-        'create_date'
-    ])->first();
 
 
-return[
-    $time->create_date
-];
+
+
+
+
+
+
+
 
 
 
