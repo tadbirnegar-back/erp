@@ -65,8 +65,7 @@ class CircularController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
+                'message' => 'خطای غیرمنتظره رخ داد'
             ], 500);
         }
     }
@@ -146,9 +145,7 @@ class CircularController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
         }
 
     }
@@ -174,9 +171,7 @@ class CircularController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
         }
 
     }
@@ -274,9 +269,7 @@ class CircularController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
         }
     }
 
@@ -310,9 +303,7 @@ class CircularController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
         }
 
     }
@@ -375,9 +366,7 @@ class CircularController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
         }
     }
 
@@ -409,9 +398,7 @@ class CircularController extends Controller
             DB::rollBack();
 
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
         }
     }
 
@@ -441,9 +428,7 @@ class CircularController extends Controller
         }catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-                ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
 
         }
     }
@@ -468,9 +453,7 @@ class CircularController extends Controller
         }catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-                ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
         }
     }
 
@@ -494,9 +477,7 @@ class CircularController extends Controller
         }catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'خطای غیرمنتظره رخ داد',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'خطای غیرمنتظره رخ داد'], 500);
         }
 
     }

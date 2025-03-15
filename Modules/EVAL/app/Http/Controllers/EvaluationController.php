@@ -41,29 +41,34 @@ class EvaluationController extends Controller
 
     public function evaluationStart($id)
     {
-        $waitToDoneStatus = $this->evaluationWaitToDoneStatus();
-        $eval = $this->indexForOnlyOneStatus($id, $waitToDoneStatus->id);
-        if ($eval) {
-            $user = Auth::user();
-            $user->load('activeDehyarRcs');
-            //check if user has same ounit as evaluation
-            $ounitsOfDehyari = $user->activeDehyarRcs->pluck('organization_unit_id')->toArray();
-            $evaluationOunit = $eval->target_ounit_id;
-            if (in_array($evaluationOunit, $ounitsOfDehyari)) {
-                $village = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
-                    $query->whereNot('unitable_type', StateOfc::class);
-                }])->find($eval->target_ounit_id);
-                $village->load('unitable');
-                $variables = $this->showVariables($village, $id);
-                $variableResource = SendVariablesResource::collection($variables);
-                return ['variables' => $variableResource, 'message' => 'سوالات ارزیابی شما با موفقیت ساخته شد', 'count' => $variables->count() , 'ancesstors' => $village];
-            } else {
-                return response()->json(['message' => "شما دهیار مورد نظر برای ارزیابی نیستید"], 403);
-            }
-        } else {
-            return response()->json(['message' => 'شما دسترسی به این قسمت را ندارید'], 403);
-        }
+        try {
 
+
+            $waitToDoneStatus = $this->evaluationWaitToDoneStatus();
+            $eval = $this->indexForOnlyOneStatus($id, $waitToDoneStatus->id);
+            if ($eval) {
+                $user = Auth::user();
+                $user->load('activeDehyarRcs');
+                //check if user has same ounit as evaluation
+                $ounitsOfDehyari = $user->activeDehyarRcs->pluck('organization_unit_id')->toArray();
+                $evaluationOunit = $eval->target_ounit_id;
+                if (in_array($evaluationOunit, $ounitsOfDehyari)) {
+                    $village = OrganizationUnit::with(['ancestorsAndSelf' => function ($query) {
+                        $query->whereNot('unitable_type', StateOfc::class);
+                    }])->find($eval->target_ounit_id);
+                    $village->load('unitable');
+                    $variables = $this->showVariables($village, $id);
+                    $variableResource = SendVariablesResource::collection($variables);
+                    return ['variables' => $variableResource, 'message' => 'سوالات ارزیابی شما با موفقیت ساخته شد', 'count' => $variables->count(), 'ancesstors' => $village];
+                } else {
+                    return response()->json(['message' => "شما دهیار مورد نظر برای ارزیابی نیستید"], 403);
+                }
+            } else {
+                return response()->json(['message' => 'شما دسترسی به این قسمت را ندارید'], 403);
+            }
+        }catch (\Exception $e) {
+            return response()->json(['message' => 'شما دسترسی به این قسمت را ندارید'], 403);
+            }
 
     }
 
@@ -118,7 +123,7 @@ class EvaluationController extends Controller
             return response()->json(['message' => 'باز ارزیابی شما با موفقیت ثبت گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message' => $e->getMessage()], 403);
+            return response()->json(['message' =>'متاسفانه باز نگری شما ثبت نشد'], 403);
         }
     }
 
@@ -137,7 +142,7 @@ class EvaluationController extends Controller
             $organizationUnits = OrganizationUnit::where('unitable_type', VillageOfc::class)
                 ->join('village_ofcs as village_alias', 'village_alias.id', '=', 'organization_units.unitable_id')
                 ->where('village_alias.hasLicense', true)
-                ->whereIntegerNotInRaw('id', $eliminatedVillagesQuery)
+                ->whereIntegerNotInRaw('organization_units.id', $eliminatedVillagesQuery)
                 ->select('organization_units.id')
                 ->distinct()
                 ->get();
@@ -178,8 +183,7 @@ class EvaluationController extends Controller
             return response()->json(['message' => 'بخشنامه ابلاغ گردید'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-//            return response()->json(['message' => 'متاسفانه ابلاغ بخشنامه با مشکل مواجه شد'], 404);
-            return response() -> json($e->getMessage(), 404);
+            return response()->json(['message' => 'متاسفانه ابلاغ بخشنامه با مشکل مواجه شد'], 404);
         }
 
     }
