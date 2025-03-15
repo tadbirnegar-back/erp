@@ -99,7 +99,7 @@ class EvaluationRevisedResource extends JsonResource
         ];
 
 
-        if ($bakhshdar && $bakhshdar['head_id'] == $userID) {
+        if ($bakhshdar && $bakhshdar['sum'] != null) {
             return [
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
@@ -110,7 +110,7 @@ class EvaluationRevisedResource extends JsonResource
             ];
         }
 
-        if ($farmandar && $farmandar['head_id'] == $userID) {
+        if ($farmandar && $farmandar['sum'] != null) {
             $previousEval = is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc';
             return [
                 'VillageOfc' => $data['dehyar'],
@@ -123,7 +123,7 @@ class EvaluationRevisedResource extends JsonResource
             ];
         }
 
-        if ($stateOfc && $stateOfc['head_id'] == $userID) {
+        if ($stateOfc && $stateOfc['sum'] != null) {
             $previousEval = is_null($data['city']['evaluation'][0]->variable_id) ? (is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc') : 'CityOfc';
             return [
                 'VillageOfc' => $data['dehyar'],

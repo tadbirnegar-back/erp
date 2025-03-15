@@ -248,6 +248,7 @@ trait EvaluationTrait
                 'eval_status_alias.created_at as eval_date',
                 'circular_alias.maximum_value as circular_max_value',
             ])
+            ->where('eval.eval_circular_id', $circularId)
             ->whereNotNull('variables.id')
             ->withoutGlobalScopes()
             ->get();
