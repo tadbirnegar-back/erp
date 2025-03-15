@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\AAA\app\Http\Controllers\Auth\LoginControllerV2;
 
 /*
     |--------------------------------------------------------------------------
@@ -53,4 +54,8 @@ Route::prefix('v1')->group(function () {
 
     Route::put('/setting/security', [\Modules\AAA\app\Http\Controllers\UserController::class, 'updatePassword'])->middleware('auth:api');
 
+});
+
+Route::prefix('v2')->group(function () {
+    Route::post('/login', [LoginControllerV2::class, 'loginGrant']);
 });
