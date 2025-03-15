@@ -264,7 +264,7 @@ class LoginController extends Controller
         unset($result['expires_in']);
 
 
-        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->orderBy('priority', 'asc') // Sort by 'priority' in ascending order
+        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->orderBy('priority', 'asc')
         ->with('moduleCategory')->get();
         foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
