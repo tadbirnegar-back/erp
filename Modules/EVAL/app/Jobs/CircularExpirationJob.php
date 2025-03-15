@@ -35,7 +35,7 @@ class CircularExpirationJob implements ShouldQueue
     public function handle(): void
     {
         $circular = EvalCircular::find($this->circularId);
-        $evaluations = EvalEvaluation::where('eval_circular_id',$this->circularId)->first();
+        $evaluations = EvalEvaluation::where('eval_circular_id',$this->circularId)->get();
 
         $date = Carbon::parse($circular->expired_date);
         if ( $date != null && $date->format('Y-m-d') == now()->format('Y-m-d')) {

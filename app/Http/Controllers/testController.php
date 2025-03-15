@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Modules\AAA\app\Models\User;
+use Modules\ACMS\app\Models\Circular;
 use Modules\EMS\app\Http\Traits\EnactmentTrait;
 use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
 use Modules\EMS\app\Http\Traits\MeetingTrait;
@@ -29,25 +30,53 @@ use Modules\PersonMS\app\Models\Person;
 class testController extends Controller
 {
     use PaymentRepository, ApprovingListTrait, EnactmentTrait, MeetingMemberTrait, RecruitmentScriptTrait, MeetingTrait;
-    use ExamsTrait,EvaluationTrait,CircularTrait;
+    use ExamsTrait, EvaluationTrait, CircularTrait;
 
     public function run()
     {
-        $startTime = microtime(true);
 
-        $a = User::all()->random(4);
 
-// $b = User::inRandomOrder()->limit(4)->get();
+$id=11;
 
-        $endTime = microtime(true);
-        $executionTime = $endTime - $startTime;
+$time= EvalCircular::find($id)
+    ->select([
+        'create_date'
+    ])->first();
 
-        return response()->json([
-            'data' => $a,
-            'execution_time' => $executionTime . ' seconds'
-        ]);
 
-//        $circularId = EvalCircular::find(4);
+return[
+    $time->create_date
+];
+
+
+
+
+
+
+
+//        $circularId = 11;
+//        $job = CircularExpirationJob::dispatch($circularId);
+//
+//        return response()->json([
+//            'message' => 'Job has been dispatched successfully!',
+//        ]);
+
+
+//        $startTime = microtime(true);
+//
+////        $a = User::all()->random(4);
+//
+//        $a = User::inRandomOrder()->limit(4)->get();
+//
+//        $endTime = microtime(true);
+//        $executionTime = $endTime - $startTime;
+//
+//        return response()->json([
+//            'data' => $a,
+//            'execution_time' => $executionTime . ' seconds'
+//        ]);
+//
+//        $circularId = EvalCircular::find(11);
 //
 //        $evaluations = EvalEvaluation::where('eval_circular_id', $circularId->id)->get();
 //
@@ -66,7 +95,7 @@ class testController extends Controller
 //                    'creator_id' => $evaluation->creator_id,
 //                ]);
 //            }
-//        }
+        }
 
 
         //        $evals = EvalEvaluation::query()2025-03-12 10:44:50
@@ -604,5 +633,5 @@ class testController extends Controller
 
 //         }
 
-    }
+
 }
