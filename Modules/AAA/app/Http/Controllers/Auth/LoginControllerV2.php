@@ -8,6 +8,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Passport\RefreshTokenRepository;
@@ -113,6 +114,7 @@ class LoginControllerV2 extends Controller
 
     public function refreshToken(Request $request)
     {
+
         $validator = Validator::make($request->cookie(), [
             'refresh_token' => 'required'
         ]);
