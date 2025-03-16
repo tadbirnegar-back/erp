@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Passport\RefreshTokenRepository;
@@ -264,7 +265,7 @@ class LoginController extends Controller
         unset($result['expires_in']);
 
 
-        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->orderBy('priority', 'asc') // Sort by 'priority' in ascending order
+        $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->orderBy('priority', 'asc')
         ->with('moduleCategory')->get();
         foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [

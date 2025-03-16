@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\AAA\app\Http\Controllers\Auth\LoginControllerV2;
 
 /*
     |--------------------------------------------------------------------------
@@ -53,4 +54,18 @@ Route::prefix('v1')->group(function () {
 
     Route::put('/setting/security', [\Modules\AAA\app\Http\Controllers\UserController::class, 'updatePassword'])->middleware('auth:api');
 
+});
+
+Route::prefix('v2')->group(function () {
+    Route::post('/getToken', [LoginControllerV2::class, 'getToken']);
+    Route::post('/refreshToken', [LoginControllerV2::class, 'refreshToken']);
+
+});
+
+
+Route::middleware(['auth:api'])->prefix('v2')->group(function () {
+    Route::get('/getPermissions', [LoginControllerV2::class, 'getPermission']);
+    Route::get('/getUserInfo', [LoginControllerV2::class, 'getUserInfo']);
+    Route::get('/checkPayed', [LoginControllerV2::class, 'checkPayed']);
+    Route::post('/loginWithOtp', [LoginControllerV2::class, 'loginWithOtp']);
 });
