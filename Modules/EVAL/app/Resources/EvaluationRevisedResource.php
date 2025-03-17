@@ -33,8 +33,6 @@ class EvaluationRevisedResource extends JsonResource
         return [$filteredData];
     }
 
-
-
     private function getAncesstorsPersonData($data, $type)
     {
         $firstData = $data->filter(function ($item) use ($type) {
@@ -60,7 +58,6 @@ class EvaluationRevisedResource extends JsonResource
 
         ];
     }
-
 
     private function componentToRender($userID)
     {
@@ -99,19 +96,24 @@ class EvaluationRevisedResource extends JsonResource
         ];
 
 
-        if ($bakhshdar && $bakhshdar['sum'] != null) {
+        $ounitType = $this->NotEvaluatedyet($userID);
+
+
+        if ($bakhshdar && $bakhshdar['sum'] != null && $ounitType == DistrictOfc::class) {
+
             return [
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
                 'canEvaluate' => false,
                 'role' => "DistrictOfc",
                 'previousEval' => "VillageOfc",
-                'NullObjects' => $this->nullObjects('VillageOfc', 'DistrictOfc'),
+                'NullObjects' => $this->nullObjects('VillageOfc', 'DistrictOfc' , $data , $ounitType),
             ];
         }
 
-        if ($farmandar && $farmandar['sum'] != null) {
+        if ($farmandar && $farmandar['sum'] != null && $ounitType == CityOfc::class) {
             $previousEval = is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc';
+
             return [
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
@@ -119,12 +121,13 @@ class EvaluationRevisedResource extends JsonResource
                 'canEvaluate' => false,
                 'role' => "CityOfc",
                 'previousEval' => $previousEval,
-                'NullObjects' => $this->nullObjects($previousEval, 'CityOfc'),
+                'NullObjects' => $this->nullObjects($previousEval, 'CityOfc' , $data , $ounitType),
             ];
         }
 
-        if ($stateOfc && $stateOfc['sum'] != null) {
+        if ($stateOfc && $stateOfc['sum'] != null && $ounitType == StateOfc::class) {
             $previousEval = is_null($data['city']['evaluation'][0]->variable_id) ? (is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc') : 'CityOfc';
+
             return [
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
@@ -133,22 +136,32 @@ class EvaluationRevisedResource extends JsonResource
                 'canEvaluate' => false,
                 'role' => "StateOfc",
                 'previousEval' => $previousEval,
-                'NullObjects' => $this->nullObjects($previousEval, 'StateOfc'),
+                'NullObjects' => $this->nullObjects($previousEval, 'StateOfc' , $data , $ounitType),
 
             ];
         }
 
-        $ounitType = $this->NotEvaluatedyet($userID);
+        if($ounitType == VillageOfc::class){
+            return [
+                'VillageOfc' => $data['dehyar'],
+                'canEvaluate' =>false,
+                'role' => "VillageOfc",
+                'previousEval' => "VillageOfc",
+                'NullObjects' => [],
+            ];
+        }
+
+
+        //-------------------------------------------------------Not Revised yet-----------------------------------------------------------------------------------------
 
         if ($ounitType == DistrictOfc::class) {
-
             return [
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
-                'canEvaluate' => true,
+                'canEvaluate' => $this->canEvaluate($data , $ounitType),
                 'role' => "DistrictOfc",
                 'previousEval' => "VillageOfc",
-                'NullObjects' => $this->nullObjects('VillageOfc', 'DistrictOfc'),
+                'NullObjects' => $this->nullObjects('VillageOfc', 'DistrictOfc' , $data , $ounitType),
             ];
         }
 
@@ -158,10 +171,10 @@ class EvaluationRevisedResource extends JsonResource
                 'VillageOfc' => $data['dehyar'],
                 'DistrictOfc' => $data['district'],
                 'CityOfc' => $data['city'],
-                'canEvaluate' => true,
+                'canEvaluate' => $this->canEvaluate($data , $ounitType),
                 'role' => "CityOfc",
                 'previousEval' => $previousEval,
-                'NullObjects' => $this->nullObjects($previousEval, 'CityOfc'),
+                'NullObjects' => $this->nullObjects($previousEval, 'CityOfc' , $data , $ounitType),
             ];
         }
 
@@ -169,40 +182,89 @@ class EvaluationRevisedResource extends JsonResource
             $previousEval = is_null($data['city']['evaluation'][0]->variable_id) ? (is_null($data['district']['evaluation'][0]->variable_id) ? 'VillageOfc' : 'DistrictOfc') : 'CityOfc';
             return [
                 'VillageOfc' => $data['dehyar'],
-                'DistrictOfc' => $data['district'], -
+                'DistrictOfc' => $data['district'],
                 'CityOfc' => $data['city'],
                 'StateOfc' => $data['state'],
                 'canEvaluate' => true,
                 'role' => "StateOfc",
                 'previousEval' => $previousEval,
-                'NullObjects' => $this->nullObjects($previousEval, 'StateOfc'),
+                'NullObjects' => $this->nullObjects($previousEval, 'StateOfc' , $data , $ounitType),
             ];
         }
     }
 
-
     private function NotEvaluatedyet($userID)
     {
-        $ounit = $this['ounits']->firstWhere('head_id', $userID);
-        return $ounit ? $ounit->unitable_type : 'none';
+        $ounitTypes = [StateOfc::class,CityOfc::class,DistrictOfc::class,VillageOfc::class];
+
+        foreach ($ounitTypes as $ounitType) {
+            $ounit = $this['ounits']->where('unitable_type' , $ounitType)->firstWhere('head_id', $userID);
+            if ($ounit) {
+                return $ounit->unitable_type;
+            }
+        }
+        return 'none';
     }
 
-
-    private function nullObjects($previous, $now)
+    private function nullObjects($previous, $now , $data , $ounitType)
     {
         $ounits = ['VillageOfc', 'DistrictOfc', 'CityOfc', 'StateOfc'];
 
-        $prevIndex = array_search($previous, $ounits);
-        $nowIndex = array_search($now, $ounits);
-
-        if ($prevIndex === false || $nowIndex === false) {
-            return [];
+        if($ounitType == DistrictOfc::class){
+            if($data['city']['evaluation'][0]->variable_id != null || $data['state']['evaluation'][0]->variable_id != null){
+                $arraysForState[] = "DistrictOfc";
+            }
         }
 
-        $start = min($prevIndex, $nowIndex);
-        $end = max($prevIndex, $nowIndex);
+        if($ounitType == CityOfc::class){
+            $prevIndex = array_search($previous, $ounits);
+            $nowIndex = array_search($now, $ounits);
 
-        return array_slice($ounits, $start + 1, $end - $start - 1);
+            $arraysForState = [];
+            if($data['state']['evaluation'][0]->variable_id != null){
+                $arraysForState[] = "CityOfc";
+            }
+
+            $start = min($prevIndex, $nowIndex);
+            $end = max($prevIndex, $nowIndex);
+
+            $sliced =  array_slice($ounits, $start + 1, $end - $start - 1);
+
+            return array_unique(array_merge($arraysForState , $sliced));
+        }
+
+
+        $arraysForState = [];
+
+        if($data['city']['evaluation'][0]->variable_id == null){
+            $arraysForState[] = "CityOfc";
+        }
+
+        if($data['district']['evaluation'][0]->variable_id == null){
+            $arraysForState[] = "DistrictOfc";
+        }
+
+        return array_unique($arraysForState);
+    }
+
+    private function canEvaluate($data , $ounitType)
+    {
+        $ounitTypes = [StateOfc::class,CityOfc::class,DistrictOfc::class,VillageOfc::class];
+
+        if($ounitType == DistrictOfc::class){
+            if($data['city']['evaluation'][0]->variable_id != null || $data['state']['evaluation'][0]->variable_id != null){
+                return false;
+            }else{
+                return true;
+            }
+        }
+        if($ounitType == CityOfc::class){
+            if($data['state']['evaluation'][0]->variable_id != null){
+                return false;
+            }else{
+                return true;
+            }
+        }
     }
 
 }
