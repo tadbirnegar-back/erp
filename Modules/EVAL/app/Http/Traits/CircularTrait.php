@@ -18,6 +18,9 @@ use Modules\EVAL\app\Models\EvalEvaluation;
 use Modules\EVAL\app\Models\EvalVariableTarget;
 use Modules\EvalMS\app\Models\Evaluation;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
+use Modules\HRMS\app\Models\Job;
+use Modules\HRMS\app\Models\Level;
+use Modules\HRMS\app\Models\Position;
 use Modules\LMS\app\Models\OucProperty;
 use Modules\LMS\app\Models\OucPropertyValue;
 use Modules\OUnitMS\app\Models\CityOfc;
@@ -65,7 +68,7 @@ trait CircularTrait
                 WHERE eval_circular_statuses.eval_circular_id = eval_circulars.id)');
             })
             ->join('statuses', 'statuses.id', '=', 'eval_circular_statuses.status_id')
-        ->whereRaw('MATCH(title) AGAINST(?)', [$searchTerm])
+            ->whereRaw('MATCH(title) AGAINST(?)', [$searchTerm])
             ->orWhere('title', 'LIKE', '%' . $searchTerm . '%')
             ->select([
                 'statuses.id as status_id',
@@ -131,7 +134,7 @@ trait CircularTrait
             ])
             ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
             ->where('statuses.name', EvaluationStatusEnum::DONE->value)
-            ->distinct();
+            ->distinct('eval_evaluations.id');
 
         $eval = $evalQuery->paginate($perPage, ['*'], 'page', $pageNumber);
 
@@ -155,42 +158,66 @@ trait CircularTrait
 
     public function listOfDistrictCompletedList(int $perPage = 10, int $pageNumber = 1, array $data = [], $user)
     {
-        $user = OrganizationUnit::whereIn('unitable_type',
-            [
-                DistrictOfc::class,
-                CityOfc::class,
-                StateOfc::class,
-            ])
+        $users = collect(OrganizationUnit::whereIn('unitable_type', [
+            DistrictOfc::class,
+            CityOfc::class,
+            StateOfc::class,
+        ])
             ->where('head_id', $user->id)
             ->with(['descendantsAndSelf' => function ($query) {
                 $query->where('unitable_type', VillageOfc::class);
             }])
-            ->get()
-            ->toArray();
-        $userOunits = [];
+            ->get());
 
-        foreach ($user as $person) {
-            $userOunits[] = $person['id'];
-        }
+        $districts = $users->filter(fn($item) => $item->unitable_type === DistrictOfc::class);
+        $cities = $users->filter(fn($item) => $item->unitable_type === CityOfc::class);
+        $states = $users->filter(fn($item) => $item->unitable_type === StateOfc::class);
 
-        $villageIds = collect($user)
-            ->pluck('descendants_and_self.*.id')
-            ->flatten()
-            ->toArray();
+        $districtIds = $districts->pluck('id')->toArray();
+        $cityIds = $cities->pluck('id')->toArray();
+        $stateIds = $states->pluck('id')->toArray();
+
+
+        $districtVillages = $districts->pluck('descendantsAndSelf.*.id')->flatten()->toArray();
+        $cityVillages = $cities->pluck('descendantsAndSelf.*.id')->flatten()->toArray();
+        $stateVillages = $states->pluck('descendantsAndSelf.*.id')->flatten()->toArray();
 
         $searchTerm = $data['name'] ?? null;
 
+
+        $stateNotRevision = $this->getDeclaredTypeForRevisionListNotEvaluated($stateIds , $searchTerm , $stateVillages , $perPage , $pageNumber);
+        $stateNotRevisioned = $this->getDeclaredTypeForRevisionListNotEvaluated($stateIds , $searchTerm , $stateVillages , $perPage , $pageNumber);
+
+        $cityNotRevisioned = $this->getDeclaredTypeForRevisionListNotEvaluated($cityIds , $searchTerm , $cityVillages , $perPage , $pageNumber);
+        $cityRevisioned = $this->getDeclaredTypeForRevisionListEvaluated($cityIds , $searchTerm , $cityVillages , $perPage , $pageNumber);
+
+
+        $districtNotRevision = $this->getDeclaredTypeForRevisionListNotEvaluated($districtIds , $searchTerm , $districtVillages , $perPage , $pageNumber);
+        $districtRevisioned = $this->getDeclaredTypeForRevisionListNotEvaluated($districtIds , $searchTerm , $districtVillages , $perPage , $pageNumber);
+
+        return $cityRevisioned;
+    }
+
+
+    private function getDeclaredTypeForRevisionListNotEvaluated($ounits , $searchTerm , $villageIds ,$perPage , $pageNumber)
+    {
+        $evalStatusWaitToDone = $this->evaluationWaitToDoneStatus();
+        $evalStatusDone = $this->evaluationDoneStatus();
         $evalQuery = EvalEvaluation::query()
-//            ->whereRaw('MATCH(eval_evaluations.title) AGAINST(?)', [$searchTerm])
-//            ->orWhere('eval_evaluations.title', 'LIKE', '%' . $searchTerm . '%')
-            ->joinRelationship('EvalEvaluationStatus.status')
+            ->join('evalEvaluation_status', function ($join) {
+                $join->on('evalEvaluation_status.eval_evaluation_id', '=', 'eval_evaluations.id')
+                    ->whereRaw('evalEvaluation_status.created_at =
+                (SELECT MAX(created_at) FROM evalEvaluation_status
+                WHERE evalEvaluation_status.eval_evaluation_id = eval_evaluations.id)');
+            })
+            ->join('statuses', 'statuses.id', '=', 'evalEvaluation_status.status_id')
             ->latest('evalEvaluation_status.id')
             ->joinRelationship('evalCircular')
             ->joinRelationship('targetOunits')
-            ->join('eval_evaluations as eval_head', function ($join) use ($userOunits) {
+            ->leftJoin('eval_evaluations as eval_head', function ($join) use ($ounits) {
                 $join->on('eval_head.target_ounit_id', '=', 'eval_evaluations.target_ounit_id')
                     ->on('eval_head.eval_circular_id', '=', 'eval_evaluations.eval_circular_id')
-                    ->whereIn('eval_head.evaluator_ounit_id', $userOunits);
+                    ->whereIn('eval_head.evaluator_ounit_id', $ounits);
             })
             ->where(function ($query) use ($searchTerm) {
                 if (($searchTerm)) {
@@ -203,15 +230,21 @@ trait CircularTrait
                 'eval_circulars.expired_date as expiredDate',
                 'organization_units.name as ounit_name',
                 'eval_evaluations.title as title',
+                'eval_evaluations.sum as sum',
                 'organization_units.head_id as head_id',
                 'eval_evaluations.evaluator_id as evaluator_id',
                 'eval_head.id as eval_head_id',
+                'statuses.id as status_id',
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
             ])
-        ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
-            ->where('statuses.name', EvalCircularStatusEnum::COMPLETED->value)
-            ->distinct();
+            ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
+            ->whereIn('eval_evaluations.evaluator_ounit_id', $villageIds)
+            ->where('statuses.name', EvaluationStatusEnum::DONE->value)
+            ->whereNotNull('eval_evaluations.sum')
+            ->distinct('eval_evaluations.id')
+            ->whereNull('eval_head.id');
         $eval = $evalQuery->paginate($perPage, ['*'], 'page', $pageNumber);
-
 
         $eval->getCollection()->transform(function ($item) {
             $expiredDate = $item->expiredDate ? Carbon::parse($item->expiredDate) : null;
@@ -221,15 +254,66 @@ trait CircularTrait
                 'title' => $item->title,
                 'deadline' => $deadLine,
                 'status' => EvaluationStatusEnum::WAIT_TO_DONE->value,
-                'status_class' => 'success',
+                'status_class' => 'primary',
                 'ounit_name' => $item->ounit_name,
+                'head_id' => $item->eval_head_id,
+                'sum' => $item->sum,
+                'status_id' => $item->status_id,
             ];
 
         });
-        $eval->setCollection($eval->getCollection()->unique('title')->values());
+        $eval->setCollection($eval->getCollection()->values());
 
         return $eval;
-
+    }
+    private function getDeclaredTypeForRevisionListEvaluated($ounits , $searchTerm , $villageIds ,$perPage , $pageNumber)
+    {
+        $evalStatusWaitToDone = $this->evaluationWaitToDoneStatus();
+        $evalStatusDone = $this->evaluationDoneStatus();
+        $statuses = [$evalStatusWaitToDone->id, $evalStatusDone->id];
+        $evalQuery = EvalEvaluation::query()
+            ->join('evalEvaluation_status', function ($join) {
+                $join->on('evalEvaluation_status.eval_evaluation_id', '=', 'eval_evaluations.id')
+                    ->whereRaw('evalEvaluation_status.created_at =
+                (SELECT MAX(created_at) FROM evalEvaluation_status
+                WHERE evalEvaluation_status.eval_evaluation_id = eval_evaluations.id)');
+            })
+            ->join('statuses', 'statuses.id', '=', 'evalEvaluation_status.status_id')
+            ->latest('evalEvaluation_status.id')
+            ->joinRelationship('evalCircular')
+            ->joinRelationship('targetOunits')
+            ->leftJoin('eval_evaluations as eval_head', function ($join) use ($ounits) {
+                $join->on('eval_head.target_ounit_id', '=', 'eval_evaluations.target_ounit_id')
+                    ->on('eval_head.eval_circular_id', '=', 'eval_evaluations.eval_circular_id')
+                    ->whereIn('eval_head.evaluator_ounit_id', $ounits);
+            })
+            ->where(function ($query) use ($searchTerm) {
+                if (($searchTerm)) {
+                    $query->whereRaw('MATCH(organization_units.name) AGAINST(?)', [$searchTerm])
+                        ->orWhere('organization_units.name', 'LIKE', '%' . $searchTerm . '%');
+                }
+            })
+            ->select([
+                'eval_evaluations.id as id',
+                'eval_circulars.expired_date as expiredDate',
+                'organization_units.name as ounit_name',
+                'eval_evaluations.title as title',
+                'eval_evaluations.sum as sum',
+                'organization_units.head_id as head_id',
+                'eval_evaluations.evaluator_id as evaluator_id',
+                'eval_head.id as eval_head_id',
+                'statuses.id as status_id',
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+            ])
+            ->whereIn('eval_evaluations.target_ounit_id', $villageIds)
+            ->whereIn('eval_evaluations.evaluator_ounit_id', $villageIds)
+            ->where('statuses.name', EvaluationStatusEnum::DONE->value)
+            ->whereNotNull('eval_evaluations.sum')
+            ->distinct('eval_evaluations.id')
+            ->whereNull('eval_head.id');
+        $eval = $evalQuery->get();
+        return $eval->pluck('id')->toArray();
     }
 
     public function singleCircularSidebar($circularID)
@@ -277,7 +361,7 @@ trait CircularTrait
             ->count();
 
         $countNotifiedEvals = EvalEvaluation::query()
-        ->where('parent_id', null)
+            ->where('parent_id', null)
             ->where('eval_circular_id', $circularID)
             ->count();
 
@@ -455,7 +539,7 @@ trait CircularTrait
     public function requirementOfAddVariable($circularID)
     {
         $dropDown = EvalCircular::query()
-        ->leftJoinRelationship('evalCircularSections.evalCircularIndicators')
+            ->leftJoinRelationship('evalCircularSections.evalCircularIndicators')
             ->select([
                 'eval_circular_sections.id as sectionID',
                 'eval_circular_sections.title as title',

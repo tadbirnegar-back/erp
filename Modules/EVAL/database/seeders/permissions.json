@@ -6,7 +6,7 @@
         "permissionTypeName": "sidebar"
     },
     {
-        "name": "لیست بخشنامه ها",
+        "name": "مدیریت بخشنامه ها",
         "slug": "/eval/circular/list",
         "moduleName": "EVAL",
         "permissionTypeName": "sidebar"
@@ -36,7 +36,7 @@
         "permissionTypeName": "operational"
     },
     {
-        "name": " لیست ارزیابی دهیاری ها",
+        "name": "ارزیابی های در انتظار",
         "slug": "/eval/participation/list",
         "moduleName": "EVAL",
         "permissionTypeName": "sidebar"
