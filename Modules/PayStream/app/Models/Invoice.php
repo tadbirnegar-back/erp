@@ -58,6 +58,12 @@ class Invoice extends Model
         return $this->hasMany(PsPayments::class, 'invoice_id', 'id');
     }
 
+    public function latestInvoiceStatus()
+    {
+        return $this->hasOneThrough(Status::class, InvoiceStatus::class, 'invoice_id', 'id', 'id', 'status_id')
+            ->latest('invoice_status.id');
+    }
+
     public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
     {
         return Status::all()->where('model', '=', self::class);

@@ -21,6 +21,7 @@ use Modules\FileMS\app\Models\File;
 use Modules\Gateway\app\Models\Payment;
 use Modules\HRMS\app\Http\Enums\FreezoneScriptTypeEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
+use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
@@ -45,7 +46,7 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasEagerLimit;
+    use HasApiTokens, HasFactory, Notifiable, HasEagerLimit , RecruitmentScriptTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -488,5 +489,28 @@ class User extends Authenticatable
             ['id', 'person_id'],
             ['person_id', 'id']
         );
+    }
+
+    public function activeDehyarRcs()
+    {
+        $scriptTypeDehyar = ScriptType::where('title', 'انتصاب دهیار')->first()->id;
+        $rcStatus = $this->activeRsStatus();
+        return $this->hasManyDeep(
+            RecruitmentScript::class,
+            [Person::class, WorkForce::class, Employee::class],
+            [
+                'id',
+                'person_id',
+                'id',
+                'employee_id'
+            ],
+            [
+                'person_id',
+                'id',
+                'workforceable_id',
+                'id'
+            ]
+        )->where('workforceable_type', Employee::class)
+            ->where('script_type_id', $scriptTypeDehyar);
     }
 }

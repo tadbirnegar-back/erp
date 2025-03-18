@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/subms",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\SubMS\\": "",
+            "Modules\\SubMS\\App\\": "app/",
+            "Modules\\SubMS\\Database\\Factories\\": "database/factories/",
+            "Modules\\SubMS\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\SubMS\\Tests\\": "tests/"
+        }
+    }
+}

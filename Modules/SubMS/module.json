@@ -1,0 +1,11 @@
+{
+    "name": "SubMS",
+    "alias": "subms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\SubMS\\app\\Providers\\SubMSServiceProvider"
+    ],
+    "files": []
+}
