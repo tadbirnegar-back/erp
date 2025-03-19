@@ -221,8 +221,10 @@ class EvaluationRevisedResource extends JsonResource
             $nowIndex = array_search($now, $ounits);
 
             $arraysForState = [];
-            if($data['state']['evaluation'][0]->variable_id != null){
-                $arraysForState[] = "CityOfc";
+            if($data['city']['evaluation'][0]->variable_id == null){
+                if($data['state']['evaluation'][0]->variable_id != null){
+                    $arraysForState[] = "CityOfc";
+                }
             }
 
             $start = min($prevIndex, $nowIndex);
