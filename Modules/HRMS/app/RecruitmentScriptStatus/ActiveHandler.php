@@ -136,6 +136,7 @@ class ActiveHandler implements StatusHandlerInterface
                 ->where('ounit_id', $this->script->organizationUnit->id)
                 ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
                 ->withoutGlobalScopes()
+                ->activeInactive()
                 ->first();
 
             $accData = [

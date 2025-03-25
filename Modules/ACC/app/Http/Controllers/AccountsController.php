@@ -121,6 +121,7 @@ class AccountsController extends Controller
                 ->where('ounit_id', $data['ounitID'])
                 ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
                 ->withoutGlobalScopes()
+                ->activeInactive()
                 ->first();
             $data['segmentCode'] = addWithLeadingZeros($largest?->segment_code ?? '000', 1);
 
@@ -264,6 +265,7 @@ class AccountsController extends Controller
                 ->where('ounit_id', $data['ounitID'])
                 ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
                 ->withoutGlobalScopes()
+                ->activeInactive()
                 ->first();
 
             $accData = [

@@ -66,7 +66,7 @@ trait AccountTrait
         $accountable = new $accountTypeToInsert();
         $accountable->save();
 
-        $status = is_null($status) ? $this->inactiveAccountStatus() : $this->activeAccountStatus();
+        $status = is_null($status) ? $this->importAccountStatus() : $this->activeAccountStatus();
 
         $preparationData = $this->accountImportDataPreparation($data, $accountable->id, $accountTypeToInsert, $parent, $status);
         $account = Account::create($preparationData->toArray()[0]);
@@ -169,6 +169,11 @@ trait AccountTrait
     public function inactiveAccountStatus()
     {
         return Account::GetAllStatuses()->where('name', AccountStatusEnum::INACTIVE->value)->first();
+    }
+
+    public function importAccountStatus()
+    {
+        return Account::GetAllStatuses()->where('name', AccountStatusEnum::IMPORTED->value)->first();
     }
 
     public function getNewChainCode(string $code)

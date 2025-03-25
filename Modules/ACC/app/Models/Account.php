@@ -5,6 +5,7 @@ namespace Modules\ACC\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Scopes\ActiveAccountOnlyScope;
 use Modules\ACC\Database\factories\AccountFactory;
 use Modules\BNK\app\Models\Cheque;
@@ -14,7 +15,7 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 
 class Account extends Model
 {
-    use HasRecursiveRelationships;
+    use HasRecursiveRelationships, AccountTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -42,6 +43,14 @@ class Account extends Model
     protected static function booted()
     {
         static::addGlobalScope(new ActiveAccountOnlyScope());
+    }
+
+    public function scopeActiveInactive($query)
+    {
+        return $query->whereIntegerInRaw('status_id', [
+            $this->activeAccountStatus()->id,
+            $this->inactiveAccountStatus()->id,
+        ]);
     }
 
     public function accountCategory(): BelongsTo

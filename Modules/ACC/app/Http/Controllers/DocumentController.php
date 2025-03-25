@@ -12,6 +12,7 @@ use Modules\ACC\app\Http\Enums\AccountCategoryTypeEnum;
 use Modules\ACC\app\Http\Enums\AccountLayerTypesEnum;
 use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
 use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
+use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
 use Modules\ACC\app\Models\Account;
@@ -36,7 +37,7 @@ use Validator;
 
 class DocumentController extends Controller
 {
-    use DocumentTrait, ArticleTrait, ChequeTrait, TransactionTrait;
+    use DocumentTrait, ArticleTrait, ChequeTrait, TransactionTrait,AccountTrait;
 
 
     /**
@@ -1086,7 +1087,11 @@ class DocumentController extends Controller
             ...($data['closing'] ?? false ? [DocumentTypeEnum::CLOSING->value] : []),
         ];
         $periodTypesString = implode(',', $periodTypes);
-
+$accountStatuses=[
+    $this->activeAccountStatus()->id,
+    $this->inactiveAccountStatus()->id,
+];
+$accountStatusesString=implode(',', $accountStatuses);
 
         $accountableType = AccountLayerTypesEnum::getLayerByID($data['balanceType']);
 
@@ -1095,6 +1100,7 @@ class DocumentController extends Controller
                     SELECT id, id as root_id
                     FROM acc_accounts
                     WHERE accountable_type ="' . addslashes($accountableType) . '"
+                    AND (status_id IN (' . $accountStatusesString . '))
                     AND (ounit_id = ' . $data['ounitID'] . ' OR ounit_id IS NULL)
                     UNION ALL
                     SELECT a.id, d.root_id

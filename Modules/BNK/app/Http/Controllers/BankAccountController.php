@@ -72,6 +72,7 @@ class BankAccountController extends Controller
                 ->where('ounit_id', $data['ounitID'])
                 ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
                 ->withoutGlobalScopes()
+                ->activeInactive()
                 ->first();
 
             $data = [

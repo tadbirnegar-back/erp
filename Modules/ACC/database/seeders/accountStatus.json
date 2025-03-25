@@ -6,5 +6,9 @@
     {
         "name": "غیرفعال",
         "className": "danger"
+    },
+    {
+        "name": "ایمپورت شده",
+        "className": "warning"
     }
 ]
