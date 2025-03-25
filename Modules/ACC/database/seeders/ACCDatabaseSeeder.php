@@ -11,20 +11,21 @@ class ACCDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-//        \DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
-        $this->call([
-//            BudgetImportSeederTest::class,
 
-            AccountCategoryTypeSeeder::class,
-            AccountCategorySeeder::class,
-            ModuleCategorySeeder::class,
-            ModuleSeeder::class,
-            PermissionsSeeder::class,
-            StatusSeeder::class,
-            DocumentStatusSeeder::class,
-            AccountImportSeeder::class,
-            Budget1403AccSeeder::class,
-            BankAccountsSeeder::class,
+        $this->call([
+
+            BudgetImportSeederTest::class,
+
+//            AccountCategoryTypeSeeder::class,
+//            AccountCategorySeeder::class,
+//            ModuleCategorySeeder::class,
+//            ModuleSeeder::class,
+//            PermissionsSeeder::class,
+//            StatusSeeder::class,
+//            DocumentStatusSeeder::class,
+//            AccountImportSeeder::class,
+//            Budget1403AccSeeder::class,
+//            BankAccountsSeeder::class,
 //            OrganizationUnitsTableSeeder::class,
 //            VillageOfcsTableSeeder::class,
 

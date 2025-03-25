@@ -23,7 +23,7 @@ class Article extends Model
         'account_id',
         'document_id',
         'transaction_id',
-
+        'priority',
     ];
 
     public $timestamps = false;

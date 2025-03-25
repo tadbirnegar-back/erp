@@ -10,8 +10,6 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
-use Modules\OUnitMS\app\Http\GlobalScope\ActiveScope;
-use Modules\OUnitMS\app\Http\Traits\OrganizationUnitTrait;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Models\Person;
@@ -45,9 +43,9 @@ class RecruitmentScript extends Model
 
     ];
 
-    public static function GetAllStatuses(): \Illuminate\Database\Eloquent\Collection
+    public static function GetAllStatuses()
     {
-        return Status::all()->where('model', '=', self::class);
+        return Status::where('model', '=', self::class);
     }
 
 //    public function latestStatus()
@@ -199,6 +197,22 @@ class RecruitmentScript extends Model
         )->withoutGlobalScopes()
             ->where('village.unitable_type', VillageOfc::class)
             ->distinct('unitable_id');
+    }
+
+    public function person()
+    {
+        return $this->hasOneDeep(Person::class, [
+            WorkForce::class,
+        ],
+            [
+                'workforceable_id',
+                'id',
+
+            ],
+            [
+                'employee_id',
+                'person_id',
+            ])->where('work_forces.workforceable_type', Employee::class);
     }
 
 }

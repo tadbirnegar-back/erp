@@ -65,8 +65,31 @@ class SubjectController extends Controller
                 'subjectID' => $subject->id,
                 'categoryID' => SubjectTypeEnum::from($subject->subject_type_id)->getCategoryEnum()->value,
             ];
+            //data to check subject exists
+//            $rawAccData = [
+//                'name' => $subject->name,
+//                'ounitID' => null,
+//                'segmentCode' => $subject->code,
+//                'chainCode' => $subject->code,
+//                'categoryID' => SubjectTypeEnum::from($subject->subject_type_id)->getCategoryEnum()->value,
+//            ];
 
-            $accBankAccount = $this->storeAccount($accData, $parentAcc);
+//            $existSubjectAcc = Account::where('name', $rawAccData['name'])
+//                ->where('chain_code', $rawAccData['chainCode'])
+//                ->where('category_id', $rawAccData['categoryID'])
+//                ->where('ounit_id', $rawAccData['ounitID'])
+//                ->where('segment_code', $rawAccData['segmentCode'])
+//                ->first();
+//
+//            if ($existSubjectAcc) {
+//                $existSubjectAcc->entity_type = $accData['entityType'];
+//                $existSubjectAcc->entity_id = $accData['entityID'];
+//                $existSubjectAcc->subject_id = $subject->id;
+//                $existSubjectAcc->status_id = 150;
+//                $existSubjectAcc->save();
+//            } else {
+            $accSubjectAccount = $this->storeAccount($accData, $parentAcc);
+//            }
 
 
             DB::commit();

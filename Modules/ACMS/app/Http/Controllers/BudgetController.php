@@ -91,12 +91,12 @@ class BudgetController extends Controller
             return response()->json(['error' => $validation->errors()], 422);
         }
 
-        $budgets = Budget::leftJoinRelationshipUsingAlias('children', function ($join) {
-            $join->as('budgets_alias')
-                ->on('budgets_alias.id', '=', 'bgt_budgets.parent_id')
-                ->whereNull('budgets_alias.id');
-        }
-        )->joinRelationship('statuses', [
+        $budgets = Budget::whereNotIn('bgt_budgets.id', function ($query) {
+            $query->select('bgt_budgets.parent_id')
+                ->from('bgt_budgets')
+                ->whereNotNull('bgt_budgets.parent_id');
+        })
+            ->joinRelationship('statuses', [
             'statuses' => function ($join) {
                 $join->on('bgtBudget_status.id', '=', DB::raw('(
                                 SELECT id

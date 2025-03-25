@@ -36,12 +36,14 @@ class Document extends Model
         'document_date',
         'create_date',
         'ounit_head_id',
+        'read_only',
     ];
 
     public $timestamps = false;
     protected $table = 'acc_documents';
     protected $casts = [
         'document_type_id' => DocumentTypeEnum::class,
+        'read_only' => 'boolean',
     ];
 
     public function DocumentDate(): Attribute

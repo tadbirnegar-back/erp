@@ -77,8 +77,7 @@ class Employee extends Model
             'id',               // Foreign key on Person table
             'id',               // Local key on Employee table
             'person_id'         // Local key on WorkForce table
-        );
-//            ->where('workforceable_type', Employee::class);
+        )->where('work_forces.workforceable_type', Employee::class);
     }
 
 //    public function latestStatus()

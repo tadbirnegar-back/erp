@@ -56,6 +56,7 @@ class AccountsController extends Controller
                 'acc_account_categories.id as categoryID',
                 'acc_account_categories.name as accountCategory',
             ])
+            ->orderBy('acc_accounts.chain_code')
             ->get();
         $accs = $accs->groupBy('accountCategory')->map(function ($item) {
             return $item->toHierarchy();
@@ -100,7 +101,7 @@ class AccountsController extends Controller
         $validate = Validator::make($data, [
             'ounitID' => 'required',
             'name' => 'required',
-            'segmentCode' => 'required',
+            'segmentCode' => 'sometimes',
             'categoryID' => 'sometimes',
             'parentID' => 'sometimes',
         ]);
@@ -116,6 +117,14 @@ class AccountsController extends Controller
             } else {
                 $parent = null;
             }
+            $largest = Account::where('chain_code', 'LIKE', $parent?->chain_code . '%')
+                ->where('ounit_id', $data['ounitID'])
+                ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                ->withoutGlobalScopes()
+                ->first();
+            $data['segmentCode'] = addWithLeadingZeros($largest?->segment_code ?? '000', 1);
+
+
             $account = $this->storeAccount($data, $parent);
             DB::commit();
         } catch (Exception $e) {
@@ -219,6 +228,7 @@ class AccountsController extends Controller
             'name' => 'sometimes',
             'firstName' => 'sometimes',
             'lastName' => 'sometimes',
+            'parentChainCode' => 'required',
         ]);
 
         if ($validate->fails()) {
@@ -246,23 +256,28 @@ class AccountsController extends Controller
                 }
             }
 
-            $largest = Account::where('chain_code', 'LIKE', '310001%')
-//                ->where('entity_type', $person->personable_type)
+            $pType = $data['personType'] == 1 ? '(حقیقی)' : '(حقوقی)';
+
+            $parentAccount = Account::where('chain_code', $data['parentChainCode'])->first();
+
+            $largest = Account::where('chain_code', 'LIKE', $data['parentChainCode'] . '%')
                 ->where('ounit_id', $data['ounitID'])
                 ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                ->withoutGlobalScopes()
                 ->first();
 
             $accData = [
                 'entityID' => $person->id,
                 'entityType' => $person->personable_type,
-                'name' => $person->display_name . ' - ' . $person->national_code,
+                'name' => $person->display_name . ' ' . $pType . ' - ' . $person->national_code,
                 'ounitID' => $data['ounitID'],
-                'segmentCode' => addWithLeadingZeros($largest?->segment_code ?? '000', 1)
+                'segmentCode' => addWithLeadingZeros($largest?->segment_code ?? '000', 1),
+                'chainCode' => $parentAccount->chain_code . addWithLeadingZeros($largest?->segment_code ?? '000', 1),
+                'categoryID' => $parentAccount->category_id,
             ];
 
-            $parentAccount = Account::where('name', 'حسابهای پرداختنی تجاری')->where('chain_code', 310001)->first();
 
-            $this->storeAccount($accData, $parentAccount);
+            $this->firstOrStoreAccount($accData, $parentAccount, 1);
 
             DB::commit();
             return response()->json(['success' => 'با موفقیت اضافه شد'], 200);
@@ -278,6 +293,7 @@ class AccountsController extends Controller
         $validate = Validator::make($data, [
             'nationalCode' => 'required',
             'ounitID' => 'required',
+            'parentChainCode' => 'required',
         ]);
 
         if ($validate->fails()) {
@@ -287,7 +303,10 @@ class AccountsController extends Controller
         $person = Person::where('national_code', $data['nationalCode'])
             ->first();
         $personExists = !is_null($person);
-        $personAccount = !is_null($person) ? $person->account()->where('entity_type', $person->personable_type)->where('ounit_id', $data['ounitID'])->with(['ancestors', 'accountCategory'])->first() : null;
+        $personAccount = !is_null($person) ? $person->account()->where('entity_type', $person->personable_type)
+            ->where('ounit_id', $data['ounitID'])
+            ->where('chain_code', 'LIKE', $data['parentChainCode'] . '%')
+            ->with(['ancestors', 'accountCategory'])->first() : null;
         $personName = $person?->display_name;
 
 

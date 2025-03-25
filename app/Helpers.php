@@ -76,8 +76,6 @@ function convertDateTimeJalaliPersianCharactersToGregorian(string $persianCharDa
 }
 
 
-
-
 function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
 {
     if ($value === null) {
@@ -258,9 +256,9 @@ function convertDateTimeGregorianToJalaliDateTimeButWithoutTime(string $value)
     return $dateOnly;
 }
 
-function addWithLeadingZeros($num1, $num2)
+function addWithLeadingZeros($num1, $num2, $length = 3)
 {
     $sum = intval($num1) + $num2;
 
-    return str_pad($sum, 3, "0", STR_PAD_LEFT);
+    return str_pad($sum, $length, "0", STR_PAD_LEFT);
 }

@@ -36,7 +36,7 @@ class BankAccountsSeeder extends Seeder
         $bankSaderat = Bank::firstOrCreate(['name' => $saderatBank]);
         $bankSepah = Bank::firstOrCreate(['name' => $sepahBank]);
         $moeinBanks = Account::where('accountable_type', SubAccount::class)
-            ->where('name', 'بانکها')->where('chain_code', '110005')->first();
+            ->where('name', 'بانکها')->where('chain_code', '11005')->first();
 
 //        dd($moeinBanks);
         \DB::beginTransaction();
@@ -67,13 +67,14 @@ class BankAccountsSeeder extends Seeder
 
                 $keshBankAccount = $this->storeBankAccount($keshData);
                 $acc = Account::where('accountable_type', SubAccount::class)
-                    ->where('chain_code', '110005')
+                    ->where('chain_code', '11005')
                     ->first();
 
-                $largest = Account::where('chain_code', 'LIKE', '110005%')
+                $largest = Account::where('chain_code', 'LIKE', '11005%')
                     ->where('entity_type', get_class($keshBankAccount))
                     ->where('ounit_id', $keshBankAccount->ounit_id)
                     ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                    ->withoutGlobalScopes()
                     ->first();
                 $data = [
                     'name' => ' حساب ' . $keshBankAccount->account_type_id->getLabel() . ' ' . $keshBankAccount->bank->name . ' ' . $keshBankAccount->account_number,
@@ -105,10 +106,11 @@ class BankAccountsSeeder extends Seeder
                     ->where('chain_code', '110005')
                     ->first();
 
-                $largest = Account::where('chain_code', 'LIKE', '110005%')
+                $largest = Account::where('chain_code', 'LIKE', '11005%')
                     ->where('entity_type', get_class($keshBankAccount))
                     ->where('ounit_id', $keshBankAccount->ounit_id)
                     ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                    ->withoutGlobalScopes()
                     ->first();
                 $data = [
                     'name' => ' حساب ' . $keshBankAccount->account_type_id->getLabel() . ' ' . $keshBankAccount->bank->name . ' ' . $keshBankAccount->account_number,
@@ -137,13 +139,14 @@ class BankAccountsSeeder extends Seeder
 
                 $keshBankAccount = $this->storeBankAccount($keshData);
                 $acc = Account::where('accountable_type', SubAccount::class)
-                    ->where('chain_code', '110005')
+                    ->where('chain_code', '11005')
                     ->first();
 
-                $largest = Account::where('chain_code', 'LIKE', '110005%')
+                $largest = Account::where('chain_code', 'LIKE', '11005%')
                     ->where('entity_type', get_class($keshBankAccount))
                     ->where('ounit_id', $keshBankAccount->ounit_id)
                     ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                    ->withoutGlobalScopes()
                     ->first();
                 $data = [
                     'name' => ' حساب ' . $keshBankAccount->account_type_id->getLabel() . ' ' . $keshBankAccount->bank->name . ' ' . $keshBankAccount->account_number,
@@ -172,13 +175,14 @@ class BankAccountsSeeder extends Seeder
 
                 $keshBankAccount = $this->storeBankAccount($keshData);
                 $acc = Account::where('accountable_type', SubAccount::class)
-                    ->where('chain_code', '110005')
+                    ->where('chain_code', '11005')
                     ->first();
 
-                $largest = Account::where('chain_code', 'LIKE', '110005%')
+                $largest = Account::where('chain_code', 'LIKE', '11005%')
                     ->where('entity_type', get_class($keshBankAccount))
                     ->where('ounit_id', $keshBankAccount->ounit_id)
                     ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                    ->withoutGlobalScopes()
                     ->first();
                 $data = [
                     'name' => ' حساب ' . $keshBankAccount->account_type_id->getLabel() . ' ' . $keshBankAccount->bank->name . ' ' . $keshBankAccount->account_number,

@@ -70,6 +70,7 @@ trait DocumentTrait
                 'creator_id' => $item['userID'],
                 'document_type_id' => $item['documentTypeID'] ?? 1,
                 'ounit_head_id' => $item['ounitHeadID'] ?? null,
+                'read_only' => $item['readOnly'] ?? false,
                 'description' => isset($item['description']) ? convertToDbFriendly($item['description']) : null,
             ];
         });

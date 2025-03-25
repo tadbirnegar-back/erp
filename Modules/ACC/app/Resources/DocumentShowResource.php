@@ -15,6 +15,7 @@ class DocumentShowResource extends JsonResource
             'id' => $this->id,
             'description' => $this->document_description,
             'document_date' => $this?->document_date,
+            'read_only' => $this->read_only,
             'status' => [
                 'name' => $this->status_name,
                 'class_name' => $this->status_class_name,

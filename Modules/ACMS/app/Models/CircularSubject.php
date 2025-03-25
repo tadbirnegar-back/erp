@@ -62,4 +62,10 @@ class CircularSubject extends Model
     {
         return $this->hasOne(CircularItem::class, 'subject_id');
     }
+
+    public function accountCode()
+    {
+        return $this->hasOne(Account::class, 'chain_code', 'code');
+
+    }
 }

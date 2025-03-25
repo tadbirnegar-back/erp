@@ -1,9 +1,15 @@
 <?php
 
-namespace Modules\ACC\database\seeders;
+namespace Modules\ACC\app\Jobs;
 
 use DB;
-use Illuminate\Database\Seeder;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Log;
+use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Models\Budget;
@@ -11,26 +17,45 @@ use Modules\ACMS\app\Models\BudgetItem;
 use Modules\ACMS\app\Models\BudgetStatus;
 use Modules\ACMS\app\Models\Circular;
 use Modules\ACMS\app\Models\OunitFiscalYear;
+use Modules\FileMS\app\Models\File;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
-class BudgetImportSeederTest extends Seeder
+class ImportBudgetItemsJob implements ShouldQueue
 {
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     use BudgetTrait;
 
+    private int $fileID;
+    private int $ounitID;
+    private string $fiscalYear;
+    private int $userID;
+
     /**
-     * Run the database seeds.
+     * Create a new job instance.
      */
-    public function run(): void
+    public function __construct(int $fileID, int $ounitID, string $fiscalYear, int $userID)
+    {
+        $this->fileID = $fileID;
+        $this->ounitID = $ounitID;
+        $this->fiscalYear = $fiscalYear;
+        $this->userID = $userID;
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
     {
         try {
             DB::beginTransaction();
-            $pathToXlsx = realpath(__DIR__ . '/امامکندی 039184_converted.xlsx');
+            $pathToXlsx = File::find($this->fileID)->getRawOriginal('slug');
             $pathToXlsx = str_replace('uploads/', 'storage/app/public/', $pathToXlsx);
 
-//            $excel = SimpleExcelReader::create($pathToXlsx)->getRows();
+//            $excel = SimpleExcelReader::create($pathToXlsx);
 
-            $ounitId = 5;
-            $circular = Circular::joinRelationship('fiscalYear')->where('fiscal_years.name', 1403)
+            $ounitId = $this->ounitID;
+            $circular = Circular::joinRelationship('fiscalYear')->where('fiscal_years.name', $this->fiscalYear)
                 ->addSelect(
                     'fiscal_years.name as fiscal_year_name',
                 )
@@ -41,7 +66,7 @@ class BudgetImportSeederTest extends Seeder
                 ->where('circular_id', $circular->id)
                 ->where('isSupplementary', false)
                 ->first();
-            $userID = 1905;
+            $userID = $this->userID;
 
             $minute = 1;
             do {
@@ -62,7 +87,9 @@ class BudgetImportSeederTest extends Seeder
                     $minute++;
                 }
             } while ($nextStatus !== null);
-            if ($circular->fiscal_year_name == 1403 && SimpleExcelReader::create($pathToXlsx)->hasSheet('متمم مصوب درآمدها')) {
+
+
+            if ($circular->fiscal_year_name == 1403 && SimpleExcelReader::create($pathToXlsx)->hasSheet('3') && SimpleExcelReader::create($pathToXlsx)->fromSheetName('3')->headersToSnakeCase()->getRows()->first()['کد_حساب'] != '') {
                 $newBudget = $budgetMain->replicate();
                 $newBudget->isSupplementary = true;
                 $newBudget->parent_id = $budgetMain->id;
@@ -86,18 +113,38 @@ class BudgetImportSeederTest extends Seeder
                     ];
                 });
                 BudgetItem::insert($newItems->toArray());
-            } else {
-                dd('sub is false', $budgetMain, SimpleExcelReader::create($pathToXlsx)->hasSheet('متمم مصوب درآمدها'));
+
+                do {
+                    $status = $newBudget->load('latestStatus')->latestStatus->name;
+                    $nextStatus = match ($status) {
+                        BudgetStatusEnum::PROPOSED->value => BudgetStatusEnum::PENDING_FOR_APPROVAL->value,
+                        BudgetStatusEnum::PENDING_FOR_APPROVAL->value => BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value,
+                        BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value => BudgetStatusEnum::FINALIZED->value,
+                        default => null,
+                    };
+
+                    if ($nextStatus !== null) {
+                        $status = Budget::GetAllStatuses()->where('name', $nextStatus)->first();
+                        $newBudget->statuses()->attach($status->id, [
+                            'creator_id' => $userID,
+                            'create_date' => now()->addMinutes($minute),
+                        ]);
+                        $minute++;
+                    }
+                } while ($nextStatus !== null);
             }
+//            else {
+//                dd('sub is false', $budgetMain, SimpleExcelReader::create($pathToXlsx)->hasSheet('3'));
+//            }
 
             $rows = SimpleExcelReader::create($pathToXlsx)
                 ->headersToSnakeCase()
-                ->fromSheetName('مصوب درآمدها')
+                ->fromSheetName('1')
                 ->getRows();
 
 
-            $rows->each(function ($row) use ($budgetMain) {
-                if ($row['کد_حساب'] != 'جمع') {
+            $rows->each(function ($row) use ($budgetMain,) {
+                if ($row['کد_حساب'] != 'جمع' && $row['نام_حساب'] != '') {
                     $item = BudgetItem::where('budget_id', $budgetMain->id)
                         ->joinRelationship('circularItem.subject')
                         ->where('bgt_circular_subjects.code', $row['کد_حساب'])
@@ -105,10 +152,10 @@ class BudgetImportSeederTest extends Seeder
                         ->addSelect('bgt_circular_items.percentage as ci_percent')
                         ->first();
                     if (is_null($item)) {
-                        dd($item, $row);
+                        Log::error('error: 153', [$row]);
                     }
-                    $item->proposed_amount = $row['بودجه_مصوب_1403'];
-                    //$item->percentage = $item->ci_percent;
+                    $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear];
+                    $item->percentage = $row['درصد_جاری'];
                     $item->save();
                 }
 
@@ -117,12 +164,12 @@ class BudgetImportSeederTest extends Seeder
 
             $rows = SimpleExcelReader::create($pathToXlsx)
                 ->headersToSnakeCase()
-                ->fromSheetName('مصوب هزینه ‌ها')
+                ->fromSheetName('2')
                 ->getRows();
 
 
             $rows->each(function ($row) use ($budgetMain) {
-                if ($row['کد_حساب'] != 'جمع') {
+                if ($row['کد_حساب'] != 'جمع' && $row['نام_حساب'] != '') {
 
                     $item = BudgetItem::where('budget_id', $budgetMain->id)
                         ->joinRelationship('circularItem.subject')
@@ -132,11 +179,11 @@ class BudgetImportSeederTest extends Seeder
                         ->first();
 
                     if (is_null($item)) {
-                        dd($row);
+                        Log::error('error: 180', [$row]);
                     }
 
-                    $item->proposed_amount = $row['بودجه_مصوب_1403'];
-                    //$item->percentage = $item->ci_percent;
+                    $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear];
+//                    $item->percentage = $row['درصد_جاری'];
                     $item->save();
 
                 }
@@ -144,7 +191,7 @@ class BudgetImportSeederTest extends Seeder
 
             $rows = SimpleExcelReader::create($pathToXlsx)
                 ->headersToSnakeCase()
-                ->fromSheetName('عمرانی مصوب (Merged)')
+                ->fromSheetName('5')
                 ->getRows();
 
 
@@ -159,20 +206,20 @@ class BudgetImportSeederTest extends Seeder
                         ->addSelect('bgt_circular_items.percentage as ci_percent')
                         ->first();
                     if (is_null($item)) {
-                        dd($row);
+                        Log::error('error: 207', [$row]);
                     }
-                    $item->proposed_amount = $row['بودجه_مصوب_1403'];
-                    //$item->percentage = $item->ci_percent;
+                    $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear];
+//                    $item->percentage = $row['درصد_جاری'];
                     $item->save();
                 }
 
             });
 
-            if (SimpleExcelReader::create($pathToXlsx)->hasSheet('متمم مصوب درآمدها')) {
+            if (SimpleExcelReader::create($pathToXlsx)->hasSheet('3') && SimpleExcelReader::create($pathToXlsx)->fromSheetName('3')->headersToSnakeCase()->getRows()->first()['کد_حساب'] != '') {
 
                 $rows = SimpleExcelReader::create($pathToXlsx)
                     ->headersToSnakeCase()
-                    ->fromSheetName('متمم مصوب درآمدها')
+                    ->fromSheetName('3')
                     ->getRows();
 
 
@@ -186,19 +233,22 @@ class BudgetImportSeederTest extends Seeder
                             ->addSelect('bgt_circular_items.percentage as ci_percent')
                             ->first();
 
-                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_1403'];
-                        //$item->percentage = $item->ci_percent;
+                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear];
+                        $item->percentage = $row['درصد_جاری'];
                         $item->save();
                     }
 
                 });
             }
 
-            if (SimpleExcelReader::create($pathToXlsx)->hasSheet('متمم مصوب هزینه ها')) {
+            if (SimpleExcelReader::create($pathToXlsx)->hasSheet('4') && SimpleExcelReader::create($pathToXlsx)
+                    ->fromSheetName('4')
+                    ->headersToSnakeCase()
+                    ->getRows()->first()['کد_حساب'] != '') {
 
                 $rows = SimpleExcelReader::create($pathToXlsx)
                     ->headersToSnakeCase()
-                    ->fromSheetName('متمم مصوب هزینه ها')
+                    ->fromSheetName('4')
                     ->getRows();
 
 
@@ -212,19 +262,25 @@ class BudgetImportSeederTest extends Seeder
                             ->addSelect('bgt_circular_items.percentage as ci_percent')
                             ->first();
 
-                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_1403'];
-                        //$item->percentage = $item->ci_percent;
+                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear];
+//                        $item->percentage = $row['درصد_جاری'];
                         $item->save();
                     }
 
                 });
             }
 
-            if (SimpleExcelReader::create($pathToXlsx)->hasSheet('عمرانی متمم مصوب (Merged)')) {
+            $row = SimpleExcelReader::create($pathToXlsx)
+                ->fromSheetName('6')
+                ->headersToSnakeCase()
+                ->getRows()
+                ->first();
+
+            if ($row !== null && isset($row['کد_حساب']) && $row['کد_حساب'] !== '') {
 
                 $rows = SimpleExcelReader::create($pathToXlsx)
                     ->headersToSnakeCase()
-                    ->fromSheetName('عمرانی متمم مصوب (Merged)')
+                    ->fromSheetName('6')
                     ->getRows();
 
 
@@ -240,8 +296,8 @@ class BudgetImportSeederTest extends Seeder
                             ->first();
 
 //                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_1403'];
-                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_پیشنهادی_1403'];
-                        //$item->percentage = $item->ci_percent;
+                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear];
+//                        $item->percentage = $row['درصد_جاری'];
                         $item->save();
                     }
 
@@ -250,8 +306,16 @@ class BudgetImportSeederTest extends Seeder
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            dd($e->getMessage(), $e->getTrace());
+            Log::error('error: 298', [$e->getMessage(), $e->getLine(), $e->getTrace()]);
+            $this->fail();
+//            dd($e->getMessage(), $e->getTrace());
         }
+    }
 
+    public function tags(): array
+    {
+        $person = User::with('person')->find($this->userID);
+        $ounit = OrganizationUnit::find($this->ounitID);
+        return ['ounit:' . $ounit->name, 'ounitID:' . $this->ounitID, 'financeManager:' . $person->person->display_name];
     }
 }

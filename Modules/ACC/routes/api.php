@@ -27,17 +27,20 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/acc/finalize-import', [ACCController::class, 'convertToNewAccount']);
 
+    Route::get('/acc/old-data/convert', [ACCController::class, 'getConfirmationForOldData']);
+    Route::post('/acc/import/docs', [ACCController::class, 'importDocs']);
+    Route::post('/acc/import/budget-items', [ACCController::class, 'importBudgets']);
+
 
 });
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
-    Route::post('/acc/import/docs', [ACCController::class, 'importDocs']);
     Route::post('/acc/account-swap', [ACCController::class, 'getOldDataToConvert']);
-    Route::get('/acc/old-data/convert', [ACCController::class, 'getConfirmationForOldData']);
 
 
     Route::post('/acc/swap/accounts', [ACCController::class, 'newActiveAccounts']);
     Route::post('/acc/convert-to-new-codes', [ACCController::class, 'setNewChainCodeToAccount']);
+    Route::get('/acc/import-check', [ACCController::class, 'importDocChecker']);
 
 
 });

@@ -2,6 +2,7 @@
 
 namespace Modules\ACC\app\Http\Traits;
 
+use DB;
 use Modules\ACC\app\Http\Enums\AccountStatusEnum;
 use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\DetailAccount;
@@ -37,20 +38,29 @@ trait AccountTrait
 
     public function firstOrStoreAccount(array $data, ?Account $parent = null, $status = null): Account
     {
+//        \DB::transaction(function () use ($data, $parent, $status,) {
+        \DB::beginTransaction();
         $accountTypeToInsert = self::$childTypeOfCurrentParent[$parent?->accountable_type];
 
         $account = Account::
-        where('segment_code', $data['segmentCode'])
+        where('name', $this->normalizeName(convertToDbFriendly($data['name'])))
             ->where('chain_code', $data['chainCode'])
-            ->where('ounit_id', $data['ounitID'])
-            ->where('parent_id', $parent?->id)
-            ->where('category_id', $data['categoryID'] ?? $parent?->category_id)
+//            ->where('ounit_id', $data['ounitID'])
+//            ->where('parent_id', $parent?->id)
+//            ->where('category_id', $data['categoryID'])
 //            ->where('accountable_type', $accountTypeToInsert)
-            ->withoutGlobalScopes()
-            ->first();
+            ->withoutGlobalScopes();
+        if (is_null($data['ounitID'])) {
+            $account = $account->whereNull('ounit_id');
+        } else {
+            $account = $account->where('ounit_id', $data['ounitID']);
+        }
+        $account = $account->lockForUpdate()->first();
 
-        if ($account) {
+        if (!is_null($account)) {
+            DB::commit();
             return $account;
+
         }
 
         $accountable = new $accountTypeToInsert();
@@ -60,8 +70,8 @@ trait AccountTrait
 
         $preparationData = $this->accountImportDataPreparation($data, $accountable->id, $accountTypeToInsert, $parent, $status);
         $account = Account::create($preparationData->toArray()[0]);
-
-
+        DB::commit();
+//        });
         return $account;
     }
 
@@ -131,7 +141,7 @@ trait AccountTrait
 //            }
 
             return [
-                'name' => convertToDbFriendly($item['name']),
+                'name' => $this->normalizeName(convertToDbFriendly($item['name'])),
                 'segment_code' => $item['segmentCode'],
                 'chain_code' => $item['chainCode'],
                 'accountable_id' => $accountableID,
@@ -182,5 +192,19 @@ trait AccountTrait
 
         };
     }
+
+    public function normalizeName($name)
+    {
+        // Convert to lowercase and trim extra spaces
+        $name = mb_strtolower(trim($name));
+        // Replace various punctuation characters with a space
+        $punctuation = ['-', 'ـ', ':', '_', '،', '‌'];
+
+        $name = str_replace($punctuation, ' ', $name);
+        // Replace multiple spaces with a single space
+        $name = preg_replace('/\s+/', ' ', $name);
+        return $name;
+    }
+
 }
 

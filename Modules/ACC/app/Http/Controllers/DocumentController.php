@@ -190,6 +190,7 @@ class DocumentController extends Controller
                 'acc_documents.create_date as create_date',
                 'acc_documents.ounit_head_id as ounit_head_id',
                 'acc_documents.creator_id as creator_id',
+                'acc_documents.read_only as read_only',
                 'statuses.name as status_name',
                 'statuses.class_name as status_class_name',
                 'village_ofcs.abadi_code as village_abadicode',
@@ -212,7 +213,9 @@ class DocumentController extends Controller
 
                     }, 'account' => function ($query) {
                         $query
-                            ->with('accountCategory', 'ancestorsAndSelf')
+                            ->with(['accountCategory', 'ancestorsAndSelf' => function ($query) {
+                                $query->withoutGlobalScopes();
+                            }])
                             ->withoutGlobalScopes();
                     }])
                     ->withoutGlobalScopes();
@@ -490,6 +493,20 @@ class DocumentController extends Controller
         try {
             DB::beginTransaction();
             $fiscalYear = FiscalYear::find($data['fiscalYearID']);
+
+            $draftDocsExist = Document::where('fiscal_year_id', $fiscalYear->id)
+                ->where('ounit_id', $data['ounitID'])
+                ->joinRelationship('statuses', ['statuses' => function ($join) {
+                    $join
+                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                        ->where('statuses.name', '=', DocumentStatusEnum::DRAFT->value);
+                }])
+                ->exists();
+
+            if ($draftDocsExist) {
+                return response()->json(['message' => 'شما سند پیشنویس دارید، ابتدا به قطعی کردن این اسناد اقدام کنید'], 400);
+            }
+
             $tempCategory = AccountCategoryTypeEnum::BUDGETARY->getAccCategoryValues();
             $subQuery = \DB::table('acc_articles')
                 ->selectRaw('
@@ -602,7 +619,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 510001)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 51001)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -649,7 +666,18 @@ class DocumentController extends Controller
         try {
             DB::beginTransaction();
             $fiscalYear = FiscalYear::find($data['fiscalYearID']);
+            $draftDocsExist = Document::where('fiscal_year_id', $fiscalYear->id)
+                ->where('ounit_id', $data['ounitID'])
+                ->joinRelationship('statuses', ['statuses' => function ($join) {
+                    $join
+                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                        ->where('statuses.name', '=', DocumentStatusEnum::DRAFT->value);
+                }])
+                ->exists();
 
+            if ($draftDocsExist) {
+                return response()->json(['message' => 'شما سند پیشنویس دارید، ابتدا به قطعی کردن این اسناد اقدام کنید'], 400);
+            }
             $balanceCategory = AccountCategoryTypeEnum::BALANCE_SHEET->getAccCategoryValues();
             $regularCategory = AccountCategoryTypeEnum::REGULATORY->getAccCategoryValues();
 
@@ -767,7 +795,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 510001)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 51001)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;
@@ -888,7 +916,7 @@ class DocumentController extends Controller
 
             if ($difference != 0) {
 
-                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 510001)->first();
+                $mazadAndKasriAccount = Account::where('name', AccCategoryEnum::SURPLUS_DEFICIT->getLabel())->where('chain_code', 51001)->first();
 
                 $priority = $articles->count() + 1;
                 $description = $mazadAndKasriAccount->name;

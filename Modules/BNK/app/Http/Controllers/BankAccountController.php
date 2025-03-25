@@ -64,13 +64,14 @@ class BankAccountController extends Controller
 //            $className = get_class($bank);
 
             $acc = Account::where('accountable_type', SubAccount::class)
-                ->where('chain_code', '110005')
+                ->where('chain_code', '11005')
                 ->first();
 
-            $largest = Account::where('chain_code', 'LIKE', '110005%')
+            $largest = Account::where('chain_code', 'LIKE', '11005%')
                 ->where('entity_type', get_class($bankAccount))
                 ->where('ounit_id', $data['ounitID'])
                 ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                ->withoutGlobalScopes()
                 ->first();
 
             $data = [

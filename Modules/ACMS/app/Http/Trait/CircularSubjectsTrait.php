@@ -10,7 +10,7 @@ trait CircularSubjectsTrait
     {
         $preparedData = $this->circularSubjectsDataPreparation($data);
 
-        $subject = CircularSubject::create($preparedData->toArray()[0]);
+        $subject = CircularSubject::firstOrCreate($preparedData->toArray()[0]);
 
         return $subject;
     }

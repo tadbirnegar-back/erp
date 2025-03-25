@@ -12,10 +12,12 @@ use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
+use Modules\ACC\app\Jobs\ImportBudgetItemsJob;
 use Modules\ACC\app\Jobs\ImportDocsJob;
 use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\Document;
 use Modules\ACC\app\Models\GlAccount;
+use Modules\ACC\app\Models\JobStatusTrack;
 use Modules\ACC\app\Models\OunitAccImport;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
@@ -43,8 +45,18 @@ class ACCController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        ImportDocsJob::dispatch($request->ounitID, $request->fileID);
 
+        $jobStatusTrack = JobStatusTrack::where('unique_id', $request->ounitID)->where('class_name', ImportDocsJob::class)->whereIn('status', ['pending', 'completed'])->exists();
+        if ($jobStatusTrack) {
+            return response()->json(['message' => 'Job already exists'], 400);
+        }
+        $user = Auth::user();
+        ImportDocsJob::dispatch($request->ounitID, $request->fileID, $user->id);
+        JobStatusTrack::create([
+            'unique_id' => $request->ounitID,
+            'class_name' => ImportDocsJob::class,
+            'file_id', $request->fileID,
+        ]);
         return response()->json(['message' => 'Job created successfully'], 200);
 
     }
@@ -72,11 +84,11 @@ class ACCController extends Controller
             'name' => $user->person->display_name,
             'villageCount' => $ounits,
             'video' => [
-                'slug' => $video->slug,
+                'slug' => $video?->slug,
             ],
             'file' => [
-                'link' => $letter->slug,
-                'title' => $letter->name,
+                'link' => $letter?->slug,
+                'title' => $letter?->name,
             ],
         ];
 
@@ -228,15 +240,39 @@ class ACCController extends Controller
             $doc['ounitID'] = $data['ounitID'];
             $doc['description'] = 'سند تبدیل سرفصل حساب ها به کدینگ جدید';
             $doc['documentTypeID'] = DocumentTypeEnum::NORMAL->value;
+            $doc['readOnly'] = true;
             $doc['userID'] = Auth::user()->id;
             $doc = $this->storeDocument($doc);
-            $status = $this->draftDocumentStatus();
+            $status = $this->confirmedDocumentStatus();
             $this->attachStatusToDocument($doc, $status, Auth::user()->id);
             $artsToInsert = [];
             $articles = collect($articles);
 
             $p = 1;
-            $articles->each(function ($art) use (&$artsToInsert, &$p) {
+//            $articles->each(function ($art) use (&$artsToInsert, &$p) {
+//                $artsToInsert[] = [
+//                    'description' => $art['name'],
+//                    'priority' => $p++,
+//                    'debtAmount' => $art['creditAmount'],
+//                    'creditAmount' => $art['debtAmount'],
+//                    'accountID' => $art['accountID'],
+//                ];
+//
+//                $artsToInsert[] = [
+//                    'description' => $art['newName'],
+//                    'priority' => $p++,
+//                    'debtAmount' => $art['debtAmount'],
+//                    'creditAmount' => $art['creditAmount'],
+//                    'accountID' => $art['newAccountID'],
+//                ];
+//            });
+// Process articles with new keys
+            // Articles with both 'newName' and 'newAccountID'
+            $articlesWithNew = $articles->filter(function ($art) {
+                return isset($art['newName']) && isset($art['newAccountID']);
+            });
+            $articlesWithNew->each(function ($art) use (&$artsToInsert, &$p) {
+                // Insert the original entry
                 $artsToInsert[] = [
                     'description' => $art['name'],
                     'priority' => $p++,
@@ -244,7 +280,7 @@ class ACCController extends Controller
                     'creditAmount' => $art['debtAmount'],
                     'accountID' => $art['accountID'],
                 ];
-
+                // Insert the new entry with new values
                 $artsToInsert[] = [
                     'description' => $art['newName'],
                     'priority' => $p++,
@@ -253,6 +289,83 @@ class ACCController extends Controller
                     'accountID' => $art['newAccountID'],
                 ];
             });
+
+
+            // Articles without 'newName' or 'newAccountID'
+            $articlesWithoutNew = $articles->filter(function ($art) {
+                return !isset($art['newName']) || !isset($art['newAccountID']);
+            });
+//
+            if ($articlesWithoutNew->isNotEmpty()) {
+
+                $incomeAcc = Account::where('chain_code', 16290)->where('category_id', AccCategoryEnum::INCOME->value)->first();
+
+                $haziAcc = Account::where('chain_code', 140210)->where('category_id', AccCategoryEnum::EXPENSE->value)->first();
+
+// Process articles without new keys
+                $articlesWithoutNew->each(function ($art) use (&$artsToInsert, &$p, $incomeAcc, $haziAcc) {
+                    $toName = $art['creditAmount'] > 0 ? $haziAcc : $incomeAcc;
+                    $artsToInsert[] = [
+                        'description' => $toName->name . ' - ' . $art['name'],
+                        'priority' => $p++,
+                        'debtAmount' => $art['creditAmount'],
+                        'creditAmount' => $art['debtAmount'],
+                        'accountID' => $toName->id,
+                    ];
+                });
+            }
+
+//            $creditNoCodes = $articlesWithoutNew->filter(function ($art) {
+//                return $art['creditAmount'] > 0;
+//            });
+//
+//            if ($creditNoCodes->isNotEmpty()) {
+//                $incomeAcc = Account::where('chain_code', 16290)->where('category_id', AccCategoryEnum::INCOME->value)->first();
+//
+//                $artsToInsert[] = [
+//                    'description' => $incomeAcc->name,
+//                    'priority' => $p++,
+//                    'debtAmount' => $creditNoCodes->sum('creditAmount'),
+//                    'creditAmount' => 0,
+//                    'accountID' => $incomeAcc->id,
+//                ];
+//
+////                $creditNoCodes->each(function ($art) use (&$artsToInsert, &$p, $incomeAcc) {
+////                    $artsToInsert[] = [
+////                        'description' => $incomeAcc->name,
+////                        'priority' => $p++,
+////                        'debtAmount' => $art['creditAmount'],
+////                        'creditAmount' => $art['debtAmount'],
+////                        'accountID' => $incomeAcc->id,
+////                    ];
+////                });
+//            }
+
+//            $debtNoCodes = $articlesWithoutNew->filter(function ($art) {
+//                return $art['debtAmount'] > 0;
+//            });
+//
+//            if ($debtNoCodes->isNotEmpty()) {
+//                $haziAcc = Account::where('chain_code', 140210)->where('category_id', AccCategoryEnum::EXPENSE->value)->first();
+//
+//                $artsToInsert[] = [
+//                    'description' => $haziAcc->name,
+//                    'priority' => $p++,
+//                    'debtAmount' => 0,
+//                    'creditAmount' => $debtNoCodes->sum('debtAmount'),
+//                    'accountID' => $haziAcc->id,
+//                ];
+//
+////                $creditNoCodes->each(function ($art) use (&$artsToInsert, &$p, $haziAcc) {
+////                    $artsToInsert[] = [
+////                        'description' => $haziAcc->name,
+////                        'priority' => $p++,
+////                        'debtAmount' => $art['creditAmount'],
+////                        'creditAmount' => $art['debtAmount'],
+////                        'accountID' => $haziAcc->id,
+////                    ];
+////                });
+//            }
 
             $this->bulkStoreArticle($artsToInsert, $doc);
             OunitAccImport::create([
@@ -292,7 +405,40 @@ class ACCController extends Controller
             return response()->json(['message' => 'با موفقیت بروزرسانی شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'error'], 500);
+            return response()->json(['error' => $e->getMessage(), $e->getTrace()], 500);
         }
+    }
+
+    public function importDocChecker(Request $request)
+    {
+        $jobStatusTrack = JobStatusTrack::where('unique_id', $request->ounitID)->where('class_name', ImportDocsJob::class)->latest('id')->first();
+
+        return response()->json(['data' => $jobStatusTrack]);
+    }
+
+    public function importBudgets(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'ounitID' => 'required',
+            'fileID' => 'required',
+            'fiscalYear' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+//        $jobStatusTrack = JobStatusTrack::where('unique_id', $request->ounitID)->where('class_name', ImportBudgetItemsJob::class)->whereIn('status', ['pending', 'completed'])->exists();
+//        if ($jobStatusTrack) {
+//            return response()->json(['message' => 'Job already exists'], 400);
+//        }
+        $user = Auth::user();
+        ImportBudgetItemsJob::dispatch($request->fileID, $request->ounitID, $request->fiscalYear, $user->id);
+        JobStatusTrack::create([
+            'unique_id' => $request->ounitID,
+            'class_name' => ImportBudgetItemsJob::class,
+        ]);
+        return response()->json(['message' => 'Job created successfully'], 200);
+
     }
 }
