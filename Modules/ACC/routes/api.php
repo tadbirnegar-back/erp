@@ -28,8 +28,12 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
     Route::post('/acc/finalize-import', [ACCController::class, 'convertToNewAccount']);
 
     Route::get('/acc/old-data/convert', [ACCController::class, 'getConfirmationForOldData']);
+
     Route::post('/acc/import/docs', [ACCController::class, 'importDocs']);
+
     Route::post('/acc/import/budget-items', [ACCController::class, 'importBudgets']);
+
+    Route::post('/acc/accounts/list-by-type', [AccountsController::class, 'accountIndexByType']);
 
 
 });
@@ -94,4 +98,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/acc/accounts/person-acc/check', [AccountsController::class, 'personExistenceAndHasAccount']);
 
     Route::post('/acc/accounts/person-acc/add', [AccountsController::class, 'storeCreditAccount']);
+    Route::post('/acc/documents/bookkeeping-report', [AccountsController::class, 'accountUsageReport']);
+    Route::post('/acc/accounts/acc-remaining-balance', [AccountsController::class, 'accountRemainingValue']);
 });

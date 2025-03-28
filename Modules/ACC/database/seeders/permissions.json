@@ -136,5 +136,17 @@
         "slug": "/acc/accounts/person-acc/add",
         "moduleName": "ACC",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "محاسبه باقی مانده برای سرفصل",
+        "slug": "/acc/accounts/acc-remaining-balance",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "گزارش دفاتر",
+        "slug": "/acc/documents/bookkeeping-report",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
     }
 ]

@@ -8,6 +8,7 @@ use DB;
 use Illuminate\Http\Request;
 use Modules\ACC\app\Http\Enums\AccCategoryEnum;
 use Modules\ACC\app\Http\Enums\AccountLayerTypesEnum;
+use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
 use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
@@ -133,11 +134,12 @@ class ACCController extends Controller
             ->where('acc_accounts.ounit_id', $data['ounitID'])
             ->join('acc_articles', 'acc_articles.account_id', '=', 'acc_accounts.id')
             ->join('acc_documents', 'acc_documents.id', '=', 'acc_articles.document_id')
-//            ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
-//            ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
-//            ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
-//            ->where('statuses.name', DocumentStatusEnum::CONFIRMED->value)
+            ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
+            ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+            ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+            ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
             ->where('acc_documents.ounit_id', $data['ounitID'])
+            ->where('acc_documents.fiscal_year_id', 1)
             ->with(['newCode' => function ($query) use ($data) {
                 $query->with(['ancestors' => function ($query) use ($data) {
                     $query->withoutGlobalScopes();
@@ -232,11 +234,19 @@ class ACCController extends Controller
             $doc['fiscalYearID'] = FiscalYear::where('name', 1403)->first()->id;
             $lastDocNumber = Document::where('fiscal_year_id', $doc['fiscalYearID'])
                 ->where('ounit_id', $data['ounitID'])
+                ->joinRelationship('statuses', ['statuses' => function ($join) {
+                    $join
+                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                        ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
+                }])
                 ->orderByRaw('CAST(document_number AS UNSIGNED) DESC')
                 ->first();
 
+            $date = $lastDocNumber->getRawOriginal('document_date');
+
+
             $doc['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 1;
-            $doc['documentDate'] = Jalalian::now()->toDateString();
+            $doc['documentDate'] = Jalalian::fromDateTime($date)->toDateString();;
             $doc['ounitID'] = $data['ounitID'];
             $doc['description'] = 'سند تبدیل سرفصل حساب ها به کدینگ جدید';
             $doc['documentTypeID'] = DocumentTypeEnum::NORMAL->value;
@@ -305,11 +315,19 @@ class ACCController extends Controller
 // Process articles without new keys
                 $articlesWithoutNew->each(function ($art) use (&$artsToInsert, &$p, $incomeAcc, $haziAcc) {
                     $toName = $art['creditAmount'] > 0 ? $haziAcc : $incomeAcc;
+                    // Insert the original entry
                     $artsToInsert[] = [
-                        'description' => $toName->name . ' - ' . $art['name'],
+                        'description' => $art['name'],
                         'priority' => $p++,
                         'debtAmount' => $art['creditAmount'],
                         'creditAmount' => $art['debtAmount'],
+                        'accountID' => $art['accountID'],
+                    ];
+                    $artsToInsert[] = [
+                        'description' => $toName->name . ' - ' . $art['name'],
+                        'priority' => $p++,
+                        'debtAmount' => $art['debtAmount'],
+                        'creditAmount' => $art['creditAmount'],
                         'accountID' => $toName->id,
                     ];
                 });

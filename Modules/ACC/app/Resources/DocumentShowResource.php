@@ -22,6 +22,7 @@ class DocumentShowResource extends JsonResource
             ],
             'fiscalYear' => $this->fiscalYear_name,
             'document_number' => $this->document_number,
+            'fiscal_year' => ['id'=>$this->fiscal_year_id],
             'ounit' => [
                 'head' => $this?->ounitHead?->display_name,
                 'abadi_code' => $this->village_abadicode,

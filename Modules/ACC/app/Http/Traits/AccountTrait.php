@@ -39,7 +39,7 @@ trait AccountTrait
     public function firstOrStoreAccount(array $data, ?Account $parent = null, $status = null): Account
     {
 //        \DB::transaction(function () use ($data, $parent, $status,) {
-        \DB::beginTransaction();
+//        \DB::beginTransaction();
         $accountTypeToInsert = self::$childTypeOfCurrentParent[$parent?->accountable_type];
 
         $account = Account::
@@ -55,10 +55,10 @@ trait AccountTrait
         } else {
             $account = $account->where('ounit_id', $data['ounitID']);
         }
-        $account = $account->lockForUpdate()->first();
+        $account = $account->first();
 
         if (!is_null($account)) {
-            DB::commit();
+//            DB::commit();
             return $account;
 
         }
@@ -70,7 +70,7 @@ trait AccountTrait
 
         $preparationData = $this->accountImportDataPreparation($data, $accountable->id, $accountTypeToInsert, $parent, $status);
         $account = Account::create($preparationData->toArray()[0]);
-        DB::commit();
+//        DB::commit();
 //        });
         return $account;
     }

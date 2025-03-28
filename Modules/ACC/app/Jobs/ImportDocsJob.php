@@ -219,13 +219,13 @@ class ImportDocsJob implements ShouldQueue
                                     }
 //                            if ($layer == $maxLayer) {
 ////                                dump($usedCodeInArticle, $childAccount, $article["Ancestor_code_$layer"], $data);
+                                $parentAccount = $childAccount;
 //
                                     if ($usedCodeInArticle == $childAccount->chain_code) {
                                         $usedAccount = $childAccount;
 //                                dd('dd', $usedAccount, $childAccount);
                                     }
                                 }
-                                $parentAccount = $childAccount;
 
                                 // For demonstration, we print the data array.
                                 // In a Laravel project you might do:

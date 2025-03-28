@@ -17,9 +17,10 @@ use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Models\WorkForce;
-use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
+use Spatie\SimpleExcel\SimpleExcelReader;
 
 class AddAccRcs extends Seeder
 {
@@ -33,10 +34,12 @@ class AddAccRcs extends Seeder
 
         try {
             \DB::beginTransaction();
-            $jobs = json_decode(file_get_contents(realpath(__DIR__ . '/AddAccRcs.json')), true);
 
-            $rcStatus = $this->pendingRsStatus();
-            $rcs = $jobs['به تفکیک دهیاری'];
+            $pathToXlsx = realpath(__DIR__ . '/مالی نهایی.xlsx');
+
+            $rcs = SimpleExcelReader::create($pathToXlsx)
+                ->getRows();
+            $rcStatus = $this->activeRsStatus();
 
             $activePosStatus = $this->activePositionStatus();
             $activeLevelStatus = $this->activeLevelStatus();
@@ -54,11 +57,16 @@ class AddAccRcs extends Seeder
             $job = Job::where('title', 'مسئول مالی')->where('status_id', $activeJobStatus->id)->first();
 
 
-            foreach ($rcs as $rc) {
+            $rcs->each(function ($rc) use ($hireType, $position, $level, $job, $scriptType, $rcStatus) {
 
-                $village = VillageOfc::with('organizationUnit')->where('abadi_code', $rc['کد آبادی'])->first();
+//                $village = VillageOfc::with('organizationUnit')->where('abadi_code', $rc['کد آبادی'])->first();
+                $village = OrganizationUnit::joinRelationship('village', function ($join) use ($rc) {
+                    $join->where('abadi_code', $rc['کد آبادی']);
+                })
+                    ->where('name', $rc['آبادی'])
+                    ->first();
 
-                $organID = $village->organizationUnit->id;
+                $organID = $village->id;
 
 
 //                $natural = Natural::where('mobile', ltrim($rc['شماره موبایل مسئول امور مالی دهیاری'], '0'))->first();
@@ -104,30 +112,37 @@ class AddAccRcs extends Seeder
                     ]);
                 }
 
+                $hasScript = RecruitmentScript::where('employee_id', $workforce->workforceable_id)
+                    ->where('organization_unit_id', $organID)
+                    ->where('script_type_id', $scriptType->id)
+                    ->whereHas('latestStatus', function ($query) use ($rcStatus) {
+                        $query->where('name', $rcStatus->name);
+                    })
+                    ->exists();
 
-                $recruitment = RecruitmentScript::create([
-                    'employee_id' => $workforce->workforceable_id,
-                    'organization_unit_id' => $organID,
-                    'script_type_id' => $scriptType->id,
-                    'hire_type_id' => $hireType->id,
-                    'position_id' => $position->id,
-                    'level_id' => $level->id,
-                    'job_id' => $job->id,
-                    'create_date' => now(),
-                    'start_date' => now(),
-                    'operator_id' => 1907
-                ]);
-//                if (!$recruitment) {
-//                    dd($recruitment?->user, $rc);
-//                }
+                if (!$hasScript) {
+                    $recruitment = RecruitmentScript::create([
+                        'employee_id' => $workforce->workforceable_id,
+                        'organization_unit_id' => $organID,
+                        'script_type_id' => $scriptType->id,
+                        'hire_type_id' => $hireType->id,
+                        'position_id' => $position->id,
+                        'level_id' => $level->id,
+                        'job_id' => $job->id,
+                        'create_date' => now(),
+                        'start_date' => now(),
+                        'operator_id' => 1907
+                    ]);
 
 
-                RecruitmentScriptStatus::create([
-                    'recruitment_script_id' => $recruitment->id,
-                    'status_id' => $rcStatus->id,
-                    'create_date' => now(),
-                ]);
-            }
+
+                    RecruitmentScriptStatus::create([
+                        'recruitment_script_id' => $recruitment->id,
+                        'status_id' => $rcStatus->id,
+                        'create_date' => now(),
+                    ]);
+                }
+            });
             \DB::commit();
         } catch (\Exception $e) {
             \DB::rollBack();

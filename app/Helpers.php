@@ -4,6 +4,12 @@ use Morilog\Jalali\CalendarUtils;
 
 function convertToDbFriendly($string)
 {
+    if ($string instanceof \DateTimeImmutable) {
+        // Log the problematic value (or row information if available)
+        \Log::info('Found DateTimeImmutable value', ['value' => $string->format('m/d')]);
+        // Convert to string
+        $string = $string->format('m/d');
+    }
     $replacements = [
         // Arabic to Persian (default)
         'ي' => 'ی',

@@ -7,9 +7,14 @@ use DB;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\ACC\app\Http\Enums\AccountLayerTypesEnum;
+use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
+use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\AccountCategory;
+use Modules\ACC\app\Models\Article;
+use Modules\ACC\app\Resources\AccountUsageResource;
 use Modules\BNK\app\Http\Enums\ChequeStatusEnum;
 use Modules\BNK\app\Models\BankAccount;
 use Modules\BNK\app\Models\BnkChequeStatus;
@@ -323,5 +328,197 @@ class AccountsController extends Controller
         ];
 
         return response()->json($result);
+    }
+
+    public function accountUsageReport(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'ounitID' => 'required',
+            'accountID' => 'required',
+            'fiscalYearID' => 'required',
+            'startDate' => 'sometimes',
+            'endDate' => 'sometimes',
+            'startDocNum' => 'sometimes',
+            'endDocNum' => 'sometimes',
+            'opening' => 'sometimes',
+            'closing' => 'sometimes',
+            'temporary' => 'sometimes',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 422);
+        }
+        try {
+            if (isset($data['startDate'])) {
+                $startDate = convertJalaliPersianCharactersToGregorian($data['startDate']);
+                $endDate = convertJalaliPersianCharactersToGregorian($data['endDate']);
+                $searchByDate = true;
+                $searchByDocNum = false;
+                $startDocNum = null;
+                $endDocNum = null;
+            } else {
+                $startDocNum = $data['startDocNum'];
+                $endDocNum = $data['endDocNum'];
+                $searchByDate = false;
+                $searchByDocNum = true;
+                $startDate = null;
+                $endDate = null;
+
+            }
+
+            $periodTypes = [
+                DocumentTypeEnum::NORMAL->value,
+                ...($data['temporary'] ?? false ? [DocumentTypeEnum::TEMPORARY->value] : []),
+                ...($data['opening'] ?? false ? [DocumentTypeEnum::OPENING->value] : []),
+                ...($data['closing'] ?? false ? [DocumentTypeEnum::CLOSING->value] : []),
+            ];
+
+            $results = DB::table(DB::raw('(
+                WITH RECURSIVE descendants AS (
+                    SELECT id, id as root_id
+                    FROM acc_accounts
+                    WHERE id ="' . $data['accountID'] . '"
+                    UNION ALL
+                    SELECT a.id, d.root_id
+                    FROM acc_accounts a
+                    INNER JOIN descendants d ON a.parent_id = d.id
+                    WHERE (a.ounit_id = ' . $data['ounitID'] . ' OR a.ounit_id IS NULL)
+                        )
+                SELECT * FROM descendants
+            ) as descendants'))
+                ->join('acc_articles', 'acc_articles.account_id', '=', 'descendants.id')
+                ->leftJoin('bnk_transactions', 'acc_articles.transaction_id', '=', 'bnk_transactions.id')
+                ->join('acc_documents', 'acc_documents.id', '=', 'acc_articles.document_id')
+                // Join the pivot table for statuses. This table contains the create_date and status_name.
+                ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
+                ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+                ->join('acc_accounts as root_account', 'root_account.id', '=', 'descendants.root_id')
+                // Ensure we only get the latest status per document
+                ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                // And only if that latest status has the name "active"
+                ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
+                ->where('acc_documents.ounit_id', $data['ounitID'])
+                ->where('acc_documents.fiscal_year_id', $data['fiscalYearID'])
+                ->whereIntegerInRaw('acc_documents.document_type_id', $periodTypes)
+                ->when($searchByDate, function ($query) use ($startDate, $endDate) {
+                    $query->whereBetween('acc_documents.document_date', [$startDate, $endDate]);
+                })
+                ->when($searchByDocNum, function ($query) use ($startDocNum, $endDocNum) {
+                    $query->whereBetween('acc_documents.document_number', [$startDocNum, $endDocNum]);
+                })
+                ->orderBy('acc_documents.document_date', 'asc')
+                ->select(
+                    [
+                        'descendants.root_id',
+                        'root_account.name',
+                        'root_account.chain_code',
+                        'acc_articles.credit_amount',
+                        'acc_articles.debt_amount',
+                        'acc_documents.description as doc_description',
+                        'acc_documents.document_number as document_number',
+                        'acc_documents.document_date as document_date',
+                        'bnk_transactions.tracking_code as tracking_code',
+
+                    ]
+                )
+                ->get();
+
+
+            $credit = 0;
+            $debt = 0;
+
+            $results->each(function ($row) use (&$credit, &$debt) {
+                $credit += $row->credit_amount;
+                $debt += $row->debt_amount;
+                $row->remaining = (int)abs($credit - $debt);
+
+            });
+
+
+            return AccountUsageResource::collection($results);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function accountIndexByType(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'balanceType' => 'required',
+            'ounitID' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 422);
+        }
+
+        $accountableType = AccountLayerTypesEnum::getLayerByID($data['balanceType']);
+
+        $accounts = Account::where('accountable_type', $accountableType)
+            ->withoutGlobalScopes()
+            ->activeInactive()
+            ->where(function ($query) use ($request) {
+                $query->where('ounit_id', $request->ounitID)
+                    ->orWhereNull('ounit_id');
+            })
+            ->get([
+                'id',
+                'chain_code',
+                'name',
+            ]);
+
+        return response()->json([
+            'data' => $accounts,
+        ]);
+    }
+
+    public function accountRemainingValue(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'accountID' => 'required',
+            'ounitID' => 'required',
+            'fiscalYearID' => 'required',
+            'docNum' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['error' => $validate->errors()], 422);
+        }
+        try {
+            $remaining = Article::joinRelationship('document', function ($join) use ($data) {
+                $join->where('ounit_id', '=', $data['ounitID'])
+                    ->where('fiscal_year_id', '=', $data['fiscalYearID'])
+                    ->where('document_number', '<=', $data['docNum'])
+                    ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
+                    ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
+
+            })
+                ->where('account_id', '=', $data['accountID'])
+                ->select([
+                    DB::raw('SUM(credit_amount) - SUM(debt_amount) as remaining'),
+                ])
+                ->first();
+
+            if ($remaining->remaining > 0) {
+                $status = 'بس';
+                $value = $remaining->remaining;
+
+            } else if ($remaining->remaining < 0) {
+                $status = 'بد';
+                $value = abs($remaining->remaining);
+            } else {
+                $status = '-';
+                $value = 0;
+            }
+
+            return response()->json(['value' => $value, 'status' => $status]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
