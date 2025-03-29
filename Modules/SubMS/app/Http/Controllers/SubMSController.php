@@ -23,12 +23,21 @@ class SubMSController extends Controller
 
         $isUserTargeted = $subscription->IsUserTargeted();
 
-        if(empty($isUserTargeted[0])){
-            return response() -> json(['isTargeted' => false]);
+        if (empty($isUserTargeted[0])) {
+            return response()->json(['isTargeted' => false]);
         }
 
         $subValidation = $subscription->checkSubscriptionExists($isUserTargeted[0]);
 
-        return response() -> json($subValidation);
+        return response()->json($subValidation);
+    }
+
+    public function paySubscription(Request $request)
+    {
+        $user = User::find(2174);
+
+        $subscription = new SubscriptionService($user);
+
+
     }
 }

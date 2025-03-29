@@ -46,4 +46,10 @@ class SubscriptionService
         $order = new OrderService($subscription, $this->setting->value, $villageCounts);
         return $order->checkOrderForSubscription();
     }
+
+
+    public function paySubscription()
+    {
+
+    }
 }
