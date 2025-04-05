@@ -38,7 +38,7 @@ class ActiveHandler implements StatusHandlerInterface
             $this->activateScriptUser();
             $this->setOldHeadAsPendingForTerminate();
             $this->updateHeadByNewScript();
-            $this->notifyNewUser();
+//            $this->notifyNewUser();
             $this->dispatchQueueForExpireScript();
             $this->createAccAccountForEmployee();
         });
@@ -131,24 +131,33 @@ class ActiveHandler implements StatusHandlerInterface
 
             $parentAccount = Account::where('chain_code', 31101)->where('accountable_type', SubAccount::class)->first();
 
-            $largest = Account::where('chain_code', 'LIKE', '31101%')
-//                ->where('entity_type', $person->personable_type)
+            $existingAccount = Account::where('parent_id', $parentAccount->id)
+                ->where('entity_id', $this->script->employee_id)
+                ->where('entity_type', Employee::class)
                 ->where('ounit_id', $this->script->organizationUnit->id)
-                ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
-                ->withoutGlobalScopes()
-                ->activeInactive()
-                ->first();
+                ->doesntExist();
 
-            $accData = [
-                'entityID' => $this->script->employee_id,
-                'entityType' => Employee::class,
-                'name' => 'حقوق پرداختنی' . ' ' . $this->script->person->display_name . ' - ' . $this->script->person->national_code,
-                'ounitID' => $this->script->organizationUnit->id,
-                'segmentCode' => addWithLeadingZeros($largest?->segment_code ?? '000', 1),
-                'chainCode' => $parentAccount->chain_code . addWithLeadingZeros($largest?->segment_code ?? '000', 1),
-                'categoryID' => $parentAccount->category_id,
-            ];
-            $this->firstOrStoreAccount($accData, $parentAccount, 1);
+
+            if ($existingAccount) {
+                $largest = Account::where('chain_code', 'LIKE', '31101%')
+//                ->where('entity_type', $person->personable_type)
+                    ->where('ounit_id', $this->script->organizationUnit->id)
+                    ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+                    ->withoutGlobalScopes()
+                    ->activeInactive()
+                    ->first();
+
+                $accData = [
+                    'entityID' => $this->script->employee_id,
+                    'entityType' => Employee::class,
+                    'name' => 'حقوق پرداختنی' . ' ' . $this->script->person->display_name . ' - ' . $this->script->person->national_code,
+                    'ounitID' => $this->script->organizationUnit->id,
+                    'segmentCode' => addWithLeadingZeros($largest?->segment_code ?? '000', 1),
+                    'chainCode' => $parentAccount->chain_code . addWithLeadingZeros($largest?->segment_code ?? '000', 1),
+                    'categoryID' => $parentAccount->category_id,
+                ];
+                $this->firstOrStoreAccount($accData, $parentAccount, 1);
+            }
         }
     }
 }

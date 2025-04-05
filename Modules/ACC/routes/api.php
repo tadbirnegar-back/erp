@@ -35,6 +35,12 @@ Route::middleware(['auth:api'])->prefix('v1')->name('api.')->group(function () {
 
     Route::post('/acc/accounts/list-by-type', [AccountsController::class, 'accountIndexByType']);
 
+    Route::post('/acc/documents/purge-old-doc', [DocumentController::class, 'purgeDocuments']);
+
+    Route::put('/acc/documents/old-doc/edit/{id}', [DocumentController::class, 'updateOldDocument']);
+
+    Route::post('/acc/documents/rearrange-doc-numbers', [DocumentController::class, 'rearrangeDocuments']);
+
 
 });
 
@@ -43,7 +49,9 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 
     Route::post('/acc/swap/accounts', [ACCController::class, 'newActiveAccounts']);
+
     Route::post('/acc/convert-to-new-codes', [ACCController::class, 'setNewChainCodeToAccount']);
+
     Route::get('/acc/import-check', [ACCController::class, 'importDocChecker']);
 
 
@@ -98,6 +106,13 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/acc/accounts/person-acc/check', [AccountsController::class, 'personExistenceAndHasAccount']);
 
     Route::post('/acc/accounts/person-acc/add', [AccountsController::class, 'storeCreditAccount']);
+
     Route::post('/acc/documents/bookkeeping-report', [AccountsController::class, 'accountUsageReport']);
+
     Route::post('/acc/accounts/acc-remaining-balance', [AccountsController::class, 'accountRemainingValue']);
+
+    Route::post('/acc/documents/mass-gov-dep', [DocumentController::class, 'bulkInsertDocsForOunits']);
+
+    Route::get('/acc/ounit-banks/list', [DocumentController::class, 'ounitsWithBankAccounts']);
+
 });

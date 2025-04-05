@@ -35,7 +35,7 @@ class AddAccRcs extends Seeder
         try {
             \DB::beginTransaction();
 
-            $pathToXlsx = realpath(__DIR__ . '/مالی نهایی.xlsx');
+            $pathToXlsx = realpath(__DIR__ . '/Fanni.xlsx');
 
             $rcs = SimpleExcelReader::create($pathToXlsx)
                 ->getRows();
@@ -46,15 +46,15 @@ class AddAccRcs extends Seeder
             $activeJobStatus = $this->activeJobStatus();
 
 
-            $scriptType = ScriptType::where('title', 'استخدام مسئول مالی دهیاری')->first();
-            $hireType = HireType::where('title', 'تمام وقت')->first();
+            $scriptType = ScriptType::where('title', 'استخدام مسئول فنی')->first();
+            $hireType = HireType::where('title', 'پاره وقت')->first();
 
 
-            $position = Position::where('name', 'مسئول مالی')->where('status_id', $activePosStatus->id)->first();
+            $position = Position::where('name', 'مسئول فنی')->where('status_id', $activePosStatus->id)->first();
 
             $level = Level::where('name', 'پایه')->where('status_id', $activeLevelStatus->id)->first();
 
-            $job = Job::where('title', 'مسئول مالی')->where('status_id', $activeJobStatus->id)->first();
+            $job = Job::where('title', 'مسئول فنی')->where('status_id', $activeJobStatus->id)->first();
 
 
             $rcs->each(function ($rc) use ($hireType, $position, $level, $job, $scriptType, $rcStatus) {
@@ -65,6 +65,9 @@ class AddAccRcs extends Seeder
                 })
                     ->where('name', $rc['آبادی'])
                     ->first();
+                if (is_null($village)) {
+                    dd($rc);
+                }
 
                 $organID = $village->id;
 
@@ -74,7 +77,7 @@ class AddAccRcs extends Seeder
                 $person = Person::where('national_code', $rc['کد ملی'])->first();
                 if (is_null($person)) {
                     $natural = Natural::create([
-                        'mobile' => ltrim($rc['شماره موبایل مسئول امور مالی دهیاری'], '0'),
+                        'mobile' => ltrim($rc['شماره موبایل مسئول امور فنی دهیاری'], '0'),
                         'first_name' => $rc['نام'],
                         'last_name' => $rc['نام خانوادگی'],
                         'gender_id' => 1
@@ -93,7 +96,7 @@ class AddAccRcs extends Seeder
                 $user = $person->user;
                 if (is_null($user)) {
                     $user = User::create([
-                        'mobile' => ltrim($rc['شماره موبایل مسئول امور مالی دهیاری'], '0'),
+                        'mobile' => ltrim($rc['شماره موبایل مسئول امور فنی دهیاری'], '0'),
                         'password' => bcrypt($rc['کد ملی']),
                         'person_id' => $person->id,
                         'created_at' => now(),
@@ -135,7 +138,6 @@ class AddAccRcs extends Seeder
                     ]);
 
 
-
                     RecruitmentScriptStatus::create([
                         'recruitment_script_id' => $recruitment->id,
                         'status_id' => $rcStatus->id,
@@ -147,6 +149,8 @@ class AddAccRcs extends Seeder
         } catch (\Exception $e) {
             \DB::rollBack();
             dd([$e->getMessage(),
+                $e->getLine(),
+                $e->getFile()
 //                $e->getTrace()
             ]);
 

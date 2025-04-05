@@ -35,6 +35,7 @@ class Account extends Model
         'entity_id',
         'entity_type',
         'new_chain_code',
+        'isFertile',
     ];
 
     public $timestamps = false;

@@ -2,7 +2,6 @@
 
 namespace Modules\ACC\app\Http\Traits;
 
-use DB;
 use Modules\ACC\app\Http\Enums\AccountStatusEnum;
 use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\DetailAccount;
@@ -111,6 +110,7 @@ trait AccountTrait
                 'status_id' => $status->id,
                 'entity_type' => $item['entityType'] ?? null,
                 'entity_id' => $item['entityID'] ?? null,
+                'isFertile' => $item['isFertile'] ?? null,
             ];
         });
 
@@ -154,6 +154,8 @@ trait AccountTrait
                 'entity_type' => $item['entityType'] ?? null,
                 'entity_id' => $item['entityID'] ?? null,
                 'new_chain_code' => $item['newChainCode'] ?? null,
+                'isFertile' => $item['isFertile'] ?? null,
+
 
             ];
         });
@@ -198,16 +200,23 @@ trait AccountTrait
         };
     }
 
-    public function normalizeName($name)
+    public function normalizeName($name, $exclude = [])
     {
         // Convert to lowercase and trim extra spaces
         $name = mb_strtolower(trim($name));
-        // Replace various punctuation characters with a space
+
+        // Original punctuation characters to replace
         $punctuation = ['-', 'ـ', ':', '_', '،', '‌'];
 
-        $name = str_replace($punctuation, ' ', $name);
+        // Exclude characters provided in $exclude from being replaced
+        $punctuationToReplace = array_diff($punctuation, $exclude);
+
+        // Replace punctuation characters with a space
+        $name = str_replace($punctuationToReplace, ' ', $name);
+
         // Replace multiple spaces with a single space
         $name = preg_replace('/\s+/', ' ', $name);
+
         return $name;
     }
 

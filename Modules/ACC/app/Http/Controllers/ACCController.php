@@ -28,6 +28,7 @@ use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
 use Modules\FileMS\app\Models\File;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Morilog\Jalali\Jalalian;
 use Validator;
@@ -130,7 +131,7 @@ class ACCController extends Controller
 
         $docs = Account::withoutGlobalScopes()
             ->whereIntegerNotInRaw('category_id', [AccCategoryEnum::INCOME->value, AccCategoryEnum::EXPENSE->value])
-//            ->where('status_id', '!=', 143)
+            ->where('acc_accounts.status_id', '=', 155)
             ->where('acc_accounts.ounit_id', $data['ounitID'])
             ->join('acc_articles', 'acc_articles.account_id', '=', 'acc_accounts.id')
             ->join('acc_documents', 'acc_documents.id', '=', 'acc_articles.document_id')
@@ -145,7 +146,9 @@ class ACCController extends Controller
                     $query->withoutGlobalScopes();
 
                 }])
-                    ->where('ounit_id', '=', $data['ounitID'])->orWhereNull('ounit_id')//                    ->withoutGlobalScopes()
+                    ->where('ounit_id', '=', $data['ounitID'])->orWhereNull('ounit_id')
+                    ->orderByDesc('ounit_id')
+                    //                    ->withoutGlobalScopes()
                 ;
             }, 'ancestorsAndSelf' => function ($query) {
                 $query->withoutGlobalScopes();
@@ -204,6 +207,10 @@ class ACCController extends Controller
                 $query->where('ounit_id', $request->ounitID)
                     ->orWhereNull('ounit_id');
             })
+            ->where(function ($query) {
+                $query->where('isFertile', false)
+                    ->orWhereNull('isFertile');
+            })
             ->with('ancestors')
             ->get([
                 'id',
@@ -211,6 +218,7 @@ class ACCController extends Controller
                 'name',
                 'parent_id',
                 'ounit_id',
+                'isFertile',
 
             ]);
 
@@ -252,6 +260,7 @@ class ACCController extends Controller
             $doc['documentTypeID'] = DocumentTypeEnum::NORMAL->value;
             $doc['readOnly'] = true;
             $doc['userID'] = Auth::user()->id;
+            $doc['ounitHeadID'] = OrganizationUnit::where('id', $doc['ounitID'])->first()?->head_id;
             $doc = $this->storeDocument($doc);
             $status = $this->confirmedDocumentStatus();
             $this->attachStatusToDocument($doc, $status, Auth::user()->id);

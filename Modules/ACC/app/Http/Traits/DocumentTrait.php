@@ -78,4 +78,19 @@ trait DocumentTrait
         return $data;
     }
 
+    public function getLatestDoc(int $ounitID, int $fiscalYearID)
+    {
+        $lastDocNumber = Document::where('fiscal_year_id', $fiscalYearID)
+            ->where('ounit_id', $ounitID)
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
+            }])
+            ->orderByRaw('CAST(document_number AS UNSIGNED) DESC')
+            ->first();
+
+        return $lastDocNumber;
+    }
+
 }

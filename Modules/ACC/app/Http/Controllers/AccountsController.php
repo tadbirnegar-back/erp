@@ -106,9 +106,7 @@ class AccountsController extends Controller
         $validate = Validator::make($data, [
             'ounitID' => 'required',
             'name' => 'required',
-            'segmentCode' => 'sometimes',
-            'categoryID' => 'sometimes',
-            'parentID' => 'sometimes',
+            'parentChainCode' => 'required',
         ]);
 
         if ($validate->fails()) {
@@ -117,12 +115,9 @@ class AccountsController extends Controller
 
         try {
             DB::beginTransaction();
-            if (isset($data['parentID'])) {
-                $parent = Account::find($data['parentID']);
-            } else {
-                $parent = null;
-            }
-            $largest = Account::where('chain_code', 'LIKE', $parent?->chain_code . '%')
+
+            $parentAccount = Account::where('chain_code', $data['parentChainCode'])->first();
+            $largest = Account::where('chain_code', 'LIKE', $data['parentChainCode'] . '%')
                 ->where('ounit_id', $data['ounitID'])
                 ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
                 ->withoutGlobalScopes()
@@ -131,7 +126,7 @@ class AccountsController extends Controller
             $data['segmentCode'] = addWithLeadingZeros($largest?->segment_code ?? '000', 1);
 
 
-            $account = $this->storeAccount($data, $parent);
+            $account = $this->storeAccount($data, $parentAccount);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -241,6 +236,18 @@ class AccountsController extends Controller
             return response()->json(['error' => $validate->errors()], 422);
         }
 
+
+        $prefix = match ($data['parentChainCode']) {
+            '31001' => 'حساب پرداختنی',
+            '11901' => 'علی الحساب',
+            '11003' => 'تنخواه گردان',
+            '11201' => 'حساب دریافتنی',
+            '31201' => '10 درصد حسن انجام کار',
+            '31204' => '5 درصد حسن انجام کار',
+            '31203' => 'سپرده مناقصه و مزایده',
+            default => '',
+        };
+
         try {
             DB::beginTransaction();
 
@@ -276,7 +283,7 @@ class AccountsController extends Controller
             $accData = [
                 'entityID' => $person->id,
                 'entityType' => $person->personable_type,
-                'name' => $person->display_name . ' ' . $pType . ' - ' . $person->national_code,
+                'name' => $prefix . ' ' . $person->display_name . ' ' . $pType . ' - ' . $person->national_code,
                 'ounitID' => $data['ounitID'],
                 'segmentCode' => addWithLeadingZeros($largest?->segment_code ?? '000', 1),
                 'chainCode' => $parentAccount->chain_code . addWithLeadingZeros($largest?->segment_code ?? '000', 1),
@@ -458,7 +465,7 @@ class AccountsController extends Controller
 
         $accounts = Account::where('accountable_type', $accountableType)
             ->withoutGlobalScopes()
-            ->activeInactive()
+//            ->activeInactive()
             ->where(function ($query) use ($request) {
                 $query->where('ounit_id', $request->ounitID)
                     ->orWhereNull('ounit_id');

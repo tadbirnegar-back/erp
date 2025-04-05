@@ -168,12 +168,13 @@ class ImportDocsJob implements ShouldQueue
 // Step 4: Insert each valid layer into the database.
                             $parentAccount = null;
                             $usedAccount = null;
-                            $usedCodeInArticle = $article["Account Code"];
+//                            $article["Account Code"] = str_replace('/\s+/', '', $article["Account Code"]);
+                            $usedCodeInArticle = preg_replace('/\s+/u', '', $article["Account Code"]);
                             $accs = [];
 
                             if (empty($article['Ancestor_code_0'])) {
 ////                                dd('it\'s true 1', $article);
-                                $usedAccount = Account::where('chain_code', $article['Account Code'])
+                                $usedAccount = Account::where('chain_code', $usedCodeInArticle)
                                     ->with('accountCategory')
 //                                    ->withoutGlobalScopes()
 //                                    ->where('category_id', $cat->id)
@@ -219,7 +220,7 @@ class ImportDocsJob implements ShouldQueue
                                     }
 //                            if ($layer == $maxLayer) {
 ////                                dump($usedCodeInArticle, $childAccount, $article["Ancestor_code_$layer"], $data);
-                                $parentAccount = $childAccount;
+                                    $parentAccount = $childAccount;
 //
                                     if ($usedCodeInArticle == $childAccount->chain_code) {
                                         $usedAccount = $childAccount;
@@ -258,7 +259,7 @@ class ImportDocsJob implements ShouldQueue
                             }
 
                             $transaction = null;
-                            if (!empty($article['Cheque Number']) || $article['Cheque Number'] != '0') {
+                            if ($article['Cheque Number'] != '' && $article['Cheque Number'] != '0') {
                                 $transactionData = [
                                     'trackingCode' => $article['Cheque Number'],
                                     'withdrawal' => $article['Bestankari'],

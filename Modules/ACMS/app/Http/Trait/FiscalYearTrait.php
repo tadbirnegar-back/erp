@@ -3,6 +3,7 @@
 namespace Modules\ACMS\app\Http\Trait;
 
 use Modules\ACMS\app\Models\FiscalYear;
+use Morilog\Jalali\Jalalian;
 
 trait FiscalYearTrait
 {
@@ -24,7 +25,7 @@ trait FiscalYearTrait
         $data = collect($data)->map(function ($item) {
 
             $startDate = convertJalaliPersianCharactersToGregorian($item['startDate']);
-            $finishDate = convertJalaliPersianCharactersToGregorian($item['finishDate']);
+            $finishDate = Jalalian::fromFormat('Y/m/d', $item['finishDate'])->getEndDayOfYear()->toCarbon()->toDateTimeString();
 
             return [
                 'name' => $item['fiscalYearName'],

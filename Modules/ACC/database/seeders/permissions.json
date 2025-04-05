@@ -148,5 +148,17 @@
         "slug": "/acc/documents/bookkeeping-report",
         "moduleName": "ACC",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "ثبت اعتبارات دولتی",
+        "slug": "/acc/documents/mass-gov-dep",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست دهیاری ها و حساب های بانکی",
+        "slug": "/acc/ounit-banks/list",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
     }
 ]

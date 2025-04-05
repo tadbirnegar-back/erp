@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Log;
 use Modules\AAA\app\Models\User;
+use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
 use Modules\ACMS\app\Http\Trait\BudgetTrait;
 use Modules\ACMS\app\Models\Budget;
@@ -24,7 +25,7 @@ use Spatie\SimpleExcel\SimpleExcelReader;
 class ImportBudgetItemsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    use BudgetTrait;
+    use BudgetTrait, AccountTrait;
 
     private int $fileID;
     private int $ounitID;
@@ -136,58 +137,68 @@ class ImportBudgetItemsJob implements ShouldQueue
 //            else {
 //                dd('sub is false', $budgetMain, SimpleExcelReader::create($pathToXlsx)->hasSheet('3'));
 //            }
-
-            $rows = SimpleExcelReader::create($pathToXlsx)
-                ->headersToSnakeCase()
-                ->fromSheetName('1')
-                ->getRows();
-
-
-            $rows->each(function ($row) use ($budgetMain,) {
-                if ($row['کد_حساب'] != 'جمع' && $row['نام_حساب'] != '') {
-                    $item = BudgetItem::where('budget_id', $budgetMain->id)
-                        ->joinRelationship('circularItem.subject')
-                        ->where('bgt_circular_subjects.code', $row['کد_حساب'])
-                        ->where('bgt_circular_subjects.name', $row['نام_حساب'])
-                        ->addSelect('bgt_circular_items.percentage as ci_percent')
-                        ->first();
-                    if (is_null($item)) {
-                        Log::error('error: 153', [$row]);
-                    }
-                    $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear];
-                    $item->percentage = $row['درصد_جاری'];
-                    $item->save();
-                }
+            if (SimpleExcelReader::create($pathToXlsx)
+                ->hasSheet('1')
+            ) {
+                $rows = SimpleExcelReader::create($pathToXlsx)
+                    ->headersToSnakeCase()
+                    ->fromSheetName('1')
+                    ->getRows();
 
 
-            });
+                $rows->each(function ($row) use ($budgetMain,) {
+                    if ($row['کد_حساب'] != 'جمع' && $row['نام_حساب'] != '') {
+                        $item = BudgetItem::where('budget_id', $budgetMain->id)
+                            ->joinRelationship('circularItem.subject')
+                            ->where('bgt_circular_subjects.code', $row['کد_حساب'])
+//                        ->where('bgt_circular_subjects.name', $row['نام_حساب'])
+                            ->addSelect('bgt_circular_items.percentage as ci_percent')
+                            ->first();
+                        if (is_null($item)) {
+                            Log::error('error: 153, sheet: 1', [$row]);
+                        }else{
+                            $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear];
+                            $item->percentage = $row['درصد_جاری'] ?? $row['سهم_جاری'];
+                            $item->save();
+                        }
 
-            $rows = SimpleExcelReader::create($pathToXlsx)
-                ->headersToSnakeCase()
-                ->fromSheetName('2')
-                ->getRows();
-
-
-            $rows->each(function ($row) use ($budgetMain) {
-                if ($row['کد_حساب'] != 'جمع' && $row['نام_حساب'] != '') {
-
-                    $item = BudgetItem::where('budget_id', $budgetMain->id)
-                        ->joinRelationship('circularItem.subject')
-                        ->where('bgt_circular_subjects.code', $row['کد_حساب'])
-                        ->where('bgt_circular_subjects.name', $row['نام_حساب'])
-                        ->addSelect('bgt_circular_items.percentage as ci_percent')
-                        ->first();
-
-                    if (is_null($item)) {
-                        Log::error('error: 180', [$row]);
                     }
 
-                    $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear];
+
+                });
+            }
+            if (SimpleExcelReader::create($pathToXlsx)
+                ->hasSheet('2')
+            ) {
+                $rows = SimpleExcelReader::create($pathToXlsx)
+                    ->headersToSnakeCase()
+                    ->fromSheetName('2')
+                    ->getRows();
+
+
+                $rows->each(function ($row) use ($budgetMain) {
+                    if ($row['کد_حساب'] != 'جمع' && $row['نام_حساب'] != '') {
+
+                        $item = BudgetItem::where('budget_id', $budgetMain->id)
+                            ->joinRelationship('circularItem.subject')
+                            ->where('bgt_circular_subjects.code', $row['کد_حساب'])
+//                        ->where('bgt_circular_subjects.name', $this->normalizeName($row['نام_حساب'],['،']))
+                            ->addSelect('bgt_circular_items.percentage as ci_percent')
+                            ->first();
+
+                        if (is_null($item)) {
+                            Log::error('error: 180, sheet: 2', [$row]);
+                        }else{
+                            $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear];
 //                    $item->percentage = $row['درصد_جاری'];
-                    $item->save();
+                            $item->save();
+                        }
 
-                }
-            });
+
+
+                    }
+                });
+            }
 
             $rows = SimpleExcelReader::create($pathToXlsx)
                 ->headersToSnakeCase()
@@ -196,21 +207,23 @@ class ImportBudgetItemsJob implements ShouldQueue
 
 
             $rows->each(function ($row) use ($budgetMain) {
-                if ($row['کد_حساب'] != 'جمع') {
+                if ($row['کد_حساب'] != 'جمع' || $row['کد_حساب'] != 'جمع_مالی') {
 
                     $new_str = substr($row['کد_حساب'], 0, -2);
                     $item = BudgetItem::where('budget_id', $budgetMain->id)
                         ->joinRelationship('circularItem.subject')
                         ->where('bgt_circular_subjects.code', $new_str)
-                        ->where('bgt_circular_subjects.name', $row['نام_حساب'])
+//                        ->where('bgt_circular_subjects.name', $row['نام_حساب'])
                         ->addSelect('bgt_circular_items.percentage as ci_percent')
                         ->first();
                     if (is_null($item)) {
-                        Log::error('error: 207', [$row]);
-                    }
-                    $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear];
+                        Log::error('error: 207,sheet: 5', [$row]);
+                    }else{
+                        $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear];;
 //                    $item->percentage = $row['درصد_جاری'];
-                    $item->save();
+                        $item->save();
+                    }
+
                 }
 
             });
@@ -229,13 +242,17 @@ class ImportBudgetItemsJob implements ShouldQueue
                         $item = BudgetItem::where('budget_id', $newBudget->id)
                             ->joinRelationship('circularItem.subject')
                             ->where('bgt_circular_subjects.code', $row['کد_حساب'])
-                            ->where('bgt_circular_subjects.name', $row['نام_حساب'])
+//                            ->where('bgt_circular_subjects.name', $row['نام_حساب'])
                             ->addSelect('bgt_circular_items.percentage as ci_percent')
                             ->first();
 
-                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear];
-                        $item->percentage = $row['درصد_جاری'];
-                        $item->save();
+                        if (is_null($item)) {
+                            Log::info('Item not found');
+                        } else {
+                            $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear];
+                            $item->percentage = $row['درصد_جاری'] ?? $row['سهم_جاری'];
+                            $item->save();
+                        }
                     }
 
                 });
@@ -253,19 +270,24 @@ class ImportBudgetItemsJob implements ShouldQueue
 
 
                 $rows->each(function ($row) use ($newBudget) {
-                    if ($row['کد_حساب'] != 'جمع') {
+                    if ($row['کد_حساب'] != 'جمع' && $row['کد_حساب'] != '') {
 
                         $item = BudgetItem::where('budget_id', $newBudget->id)
                             ->joinRelationship('circularItem.subject')
                             ->where('bgt_circular_subjects.code', $row['کد_حساب'])
-                            ->where('bgt_circular_subjects.name', $row['نام_حساب'])
+//                            ->where('bgt_circular_subjects.name', $row['نام_حساب'])
                             ->addSelect('bgt_circular_items.percentage as ci_percent')
                             ->first();
+                        if (is_null($item)) {
+                            Log::error('error: 266, sheet:4', [$row]);
+                        } else {
 
-                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear];
+                            $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear];
 //                        $item->percentage = $row['درصد_جاری'];
-                        $item->save();
+                            $item->save();
+                        }
                     }
+
 
                 });
             }
@@ -291,14 +313,20 @@ class ImportBudgetItemsJob implements ShouldQueue
                         $item = BudgetItem::where('budget_id', $newBudget->id)
                             ->joinRelationship('circularItem.subject')
                             ->where('bgt_circular_subjects.code', $new_str)
-                            ->where('bgt_circular_subjects.name', $row['نام_حساب'])
+//                            ->where('bgt_circular_subjects.name', $row['نام_حساب'])
                             ->addSelect('bgt_circular_items.percentage as ci_percent')
                             ->first();
 
-//                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_1403'];
-                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear];
+                        if (is_null($item)) {
+                            Log::error('error: 299', [$row]);
+                        } else {
+                            //                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_1403'];
+                            $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear];
 //                        $item->percentage = $row['درصد_جاری'];
-                        $item->save();
+                            $item->save();
+                        }
+
+
                     }
 
                 });

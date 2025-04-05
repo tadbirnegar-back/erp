@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
+use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\OunitAccImport;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\ACMS\app\Models\OunitFiscalYear;
@@ -234,6 +235,7 @@ class OrganizationUnit extends Model
             ->orderBy('meeting_date', 'asc'); // Order by meeting date
 
     }
+
     public function fullMeetingsByNowForFreeZone(): HasMany
     {
         // Fetch the max days for reception from settings
@@ -313,25 +315,24 @@ class OrganizationUnit extends Model
 
     public function meetingMembersAzad()
     {
-        $mtID = MeetingType::where('title' , MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+        $mtID = MeetingType::where('title', MeetingTypeEnum::FREE_ZONE->value)->first()->id;
         return $this->hasManyThrough(MeetingMember::class, Meeting::class,
             'ounit_id', 'meeting_id')
             ->where('isTemplate', '=', true)
-            ->where('meeting_type_id' , $mtID)
+            ->where('meeting_type_id', $mtID)
             ->with('mr', 'person.avatar');
     }
 
 
-
     public function meetingMembersHeyat()
     {
-        $mtID = MeetingType::where('title' , MeetingTypeEnum::OLGOO->value)->first()->id;
-        $mtIDFz = MeetingType::where('title' , MeetingTypeEnum::FREE_ZONE->value)->first()->id;
+        $mtID = MeetingType::where('title', MeetingTypeEnum::OLGOO->value)->first()->id;
+        $mtIDFz = MeetingType::where('title', MeetingTypeEnum::FREE_ZONE->value)->first()->id;
         return $this->hasManyThrough(MeetingMember::class, Meeting::class,
             'ounit_id', 'meeting_id')
             ->where('isTemplate', '=', true)
-            ->where('meeting_type_id' , $mtID)
-            ->whereNot('meeting_type_id' , $mtIDFz)
+            ->where('meeting_type_id', $mtID)
+            ->whereNot('meeting_type_id', $mtIDFz)
             ->with('mr', 'person.avatar');
     }
 
@@ -358,6 +359,11 @@ class OrganizationUnit extends Model
     public function ounitFiscalYears(): HasMany
     {
         return $this->hasMany(OunitFiscalYear::class, 'ounit_id');
+    }
+
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(Account::class, 'ounit_id');
     }
 
 

@@ -35,6 +35,7 @@ trait BankTrait
             ->where('ounit_id', $data['ounitID'])
             ->select([
                 $bankAccountTable . '.id as id',
+                $bankAccountTable . '.account_number as account_number',
                 $bankTable . '.name as bank_name',
                 $bankBranchTable . '.name as branch_name',
                 $bankBranchTable . '.branch_code as branch_code',

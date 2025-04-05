@@ -13,6 +13,7 @@ class BankAccountListResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'account_number' => $this->account_number,
             'branch' => [
                 'name' => $this?->branch_name,
                 'branch_code' => $this?->branch_code,
