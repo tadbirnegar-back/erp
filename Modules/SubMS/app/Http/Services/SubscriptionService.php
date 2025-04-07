@@ -3,6 +3,7 @@
 namespace Modules\SubMS\app\Http\Services;
 
 use Modules\AAA\app\Models\User;
+use Modules\CustomerMS\app\Models\Customer;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\SettingsMS\app\Models\Setting;
@@ -14,6 +15,8 @@ class SubscriptionService
 
     public User $user;
     private Setting $setting;
+
+    public Customer $customer;
 
     public function __construct($user)
     {
@@ -48,8 +51,12 @@ class SubscriptionService
     }
 
 
-    public function paySubscription()
+    public function payment($amount , $ounitIds)
     {
+        $subscription = Subscription::whereIn('ounit_id', $ounitIds)->where('expire_date', '>', now())->get();
 
+
+
+        return $subscription;
     }
 }

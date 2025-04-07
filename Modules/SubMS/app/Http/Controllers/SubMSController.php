@@ -38,6 +38,16 @@ class SubMSController extends Controller
 
         $subscription = new SubscriptionService($user);
 
+        $isUserTargeted = $subscription->IsUserTargeted();
+
+        if (empty($isUserTargeted[0])) {
+            return response()->json(['message' => 'شما دهیار هیچ دهیاری نیستید'] , 403);
+        }
+
+
+        $payment = $subscription->payment($request->amount, $isUserTargeted[0]);
+
+        return response()->json($payment);
 
     }
 }

@@ -17,4 +17,5 @@ use Modules\SubMS\app\Http\Controllers\SubMSController;
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 });
-    Route::get('/subscribers/check-target', [SubMsController::class, 'checkUserIsTargeted']);
+Route::get('/subscribers/check-target', [SubMsController::class, 'checkUserIsTargeted']);
+Route::post('/subscribers/pay', [SubMsController::class, 'paySubscription']);
