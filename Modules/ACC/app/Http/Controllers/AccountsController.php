@@ -117,12 +117,17 @@ class AccountsController extends Controller
             DB::beginTransaction();
 
             $parentAccount = Account::where('chain_code', $data['parentChainCode'])->first();
-            $largest = Account::where('chain_code', 'LIKE', $data['parentChainCode'] . '%')
-                ->where('ounit_id', $data['ounitID'])
-                ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
-                ->withoutGlobalScopes()
-                ->activeInactive()
-                ->first();
+//            $largest = Account::where('chain_code', 'LIKE', $data['parentChainCode'] . '%')
+////                ->where('ounit_id', $data['ounitID'])
+//                ->where(function ($query) use ($data) {
+//                    $query->where('ounit_id', $data['ounitID'])
+//                        ->orWhereNull('ounit_id');
+//                })
+//                ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+//                ->withoutGlobalScopes()
+//                ->activeInactive()
+//                ->first();
+            $largest = $this->latestAccountByChainCode($parentAccount->chain_code, $data['ounitID']);
             $data['segmentCode'] = addWithLeadingZeros($largest?->segment_code ?? '000', 1);
 
 
@@ -245,6 +250,10 @@ class AccountsController extends Controller
             '31201' => '10 درصد حسن انجام کار',
             '31204' => '5 درصد حسن انجام کار',
             '31203' => 'سپرده مناقصه و مزایده',
+            '31141' => 'کسورات قانونی (حق بیمه / مالیات پرداختنی)',
+            '31140' => '7% + 7،1/9% حق بیمه',
+            '31139' => '15 % + 15،1/9% حق بیمه',
+            '31138' => '6/6% حق بیمه',
             default => '',
         };
 
@@ -273,12 +282,18 @@ class AccountsController extends Controller
 
             $parentAccount = Account::where('chain_code', $data['parentChainCode'])->first();
 
-            $largest = Account::where('chain_code', 'LIKE', $data['parentChainCode'] . '%')
-                ->where('ounit_id', $data['ounitID'])
-                ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
-                ->withoutGlobalScopes()
-                ->activeInactive()
-                ->first();
+//            $largest = Account::where('chain_code', 'LIKE', $data['parentChainCode'] . '%')
+////                ->where('ounit_id', $data['ounitID'])
+//                ->where(function ($query) use ($data) {
+//                    $query->where('ounit_id', $data['ounitID'])
+//                        ->orWhereNull('ounit_id');
+//                })
+//                ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+//                ->withoutGlobalScopes()
+//                ->activeInactive()
+//                ->first();
+            $largest = $this->latestAccountByChainCode($parentAccount->chain_code, $data['ounitID']);
+
 
             $accData = [
                 'entityID' => $person->id,

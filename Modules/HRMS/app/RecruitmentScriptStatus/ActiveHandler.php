@@ -137,15 +137,20 @@ class ActiveHandler implements StatusHandlerInterface
                 ->where('ounit_id', $this->script->organizationUnit->id)
                 ->doesntExist();
 
-
+            $script = $this->script;
             if ($existingAccount) {
-                $largest = Account::where('chain_code', 'LIKE', '31101%')
-//                ->where('entity_type', $person->personable_type)
-                    ->where('ounit_id', $this->script->organizationUnit->id)
-                    ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
-                    ->withoutGlobalScopes()
-                    ->activeInactive()
-                    ->first();
+//                $largest = Account::where('chain_code', 'LIKE', '31101%')
+////                ->where('entity_type', $person->personable_type)
+////                    ->where('ounit_id', $this->script->organizationUnit->id)
+//                    ->where(function ($query) use ($script) {
+//                        $query->where('ounit_id', $script->organizationUnit->id)
+//                            ->orWhereNull('ounit_id');
+//                    })
+//                    ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+//                    ->withoutGlobalScopes()
+//                    ->activeInactive()
+//                    ->first();
+                $largest = $this->latestAccountByChainCode($parentAccount->chain_code, $this->script->organizationUnit->id);
 
                 $accData = [
                     'entityID' => $this->script->employee_id,

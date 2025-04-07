@@ -220,5 +220,23 @@ trait AccountTrait
         return $name;
     }
 
+    public function latestAccountByChainCode(string $chainCode, ?int $ounitID = null)
+    {
+        $largest = Account::where('chain_code', 'LIKE', $chainCode . '%')
+//                ->where('entity_type', $person->personable_type)
+//                    ->where('ounit_id', $this->script->organizationUnit->id)
+            ->where(function ($query) use ($ounitID) {
+                $query->where('ounit_id', $ounitID)
+                    ->orWhereNull('ounit_id');
+            })
+            ->orderByRaw('CAST(chain_code AS UNSIGNED) DESC')
+            ->withoutGlobalScopes()
+            ->activeInactive()
+            ->first();
+
+        return $largest;
+
+    }
+
 }
 

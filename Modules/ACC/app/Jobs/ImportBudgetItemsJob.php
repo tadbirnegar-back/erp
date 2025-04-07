@@ -70,24 +70,26 @@ class ImportBudgetItemsJob implements ShouldQueue
             $userID = $this->userID;
 
             $minute = 1;
-            do {
-                $status = $budgetMain->load('latestStatus')->latestStatus->name;
-                $nextStatus = match ($status) {
-                    BudgetStatusEnum::PROPOSED->value => BudgetStatusEnum::PENDING_FOR_APPROVAL->value,
-                    BudgetStatusEnum::PENDING_FOR_APPROVAL->value => BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value,
-                    BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value => BudgetStatusEnum::FINALIZED->value,
-                    default => null,
-                };
+            if ($circular->fiscal_year_name == 1403) {
+                do {
+                    $status = $budgetMain->load('latestStatus')->latestStatus->name;
+                    $nextStatus = match ($status) {
+                        BudgetStatusEnum::PROPOSED->value => BudgetStatusEnum::PENDING_FOR_APPROVAL->value,
+                        BudgetStatusEnum::PENDING_FOR_APPROVAL->value => BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value,
+                        BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value => BudgetStatusEnum::FINALIZED->value,
+                        default => null,
+                    };
 
-                if ($nextStatus !== null) {
-                    $status = Budget::GetAllStatuses()->where('name', $nextStatus)->first();
-                    $budgetMain->statuses()->attach($status->id, [
-                        'creator_id' => $userID,
-                        'create_date' => now()->addMinutes($minute),
-                    ]);
-                    $minute++;
-                }
-            } while ($nextStatus !== null);
+                    if ($nextStatus !== null) {
+                        $status = Budget::GetAllStatuses()->where('name', $nextStatus)->first();
+                        $budgetMain->statuses()->attach($status->id, [
+                            'creator_id' => $userID,
+                            'create_date' => now()->addMinutes($minute),
+                        ]);
+                        $minute++;
+                    }
+                } while ($nextStatus !== null);
+            }
 
 
             if ($circular->fiscal_year_name == 1403 && SimpleExcelReader::create($pathToXlsx)->hasSheet('3') && SimpleExcelReader::create($pathToXlsx)->fromSheetName('3')->headersToSnakeCase()->getRows()->first()['کد_حساب'] != '') {
@@ -156,8 +158,8 @@ class ImportBudgetItemsJob implements ShouldQueue
                             ->first();
                         if (is_null($item)) {
                             Log::error('error: 153, sheet: 1', [$row]);
-                        }else{
-                            $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear];
+                        } else {
+                            $item->proposed_amount = abs($row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear]);
                             $item->percentage = $row['درصد_جاری'] ?? $row['سهم_جاری'];
                             $item->save();
                         }
@@ -175,8 +177,8 @@ class ImportBudgetItemsJob implements ShouldQueue
                     ->fromSheetName('2')
                     ->getRows();
 
-
-                $rows->each(function ($row) use ($budgetMain) {
+                $a = array(210100, 210200, 210300, 210900, 210400, 220100, 220200, 220900, 230100, 240100, 250100, 250200, 260100, 310000, 320000, 330000, 340000);
+                $rows->each(function ($row) use ($budgetMain,$a) {
                     if ($row['کد_حساب'] != 'جمع' && $row['نام_حساب'] != '') {
 
                         $item = BudgetItem::where('budget_id', $budgetMain->id)
@@ -188,12 +190,16 @@ class ImportBudgetItemsJob implements ShouldQueue
 
                         if (is_null($item)) {
                             Log::error('error: 180, sheet: 2', [$row]);
-                        }else{
-                            $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear];
+                        } else {
+                            if (in_array($row['کد_حساب'], $a)) {
+                                $item->proposed_amount  =0;
+                            }else{
+                                $item->proposed_amount = abs($row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear]);
+                            }
+
 //                    $item->percentage = $row['درصد_جاری'];
                             $item->save();
                         }
-
 
 
                     }
@@ -218,8 +224,8 @@ class ImportBudgetItemsJob implements ShouldQueue
                         ->first();
                     if (is_null($item)) {
                         Log::error('error: 207,sheet: 5', [$row]);
-                    }else{
-                        $item->proposed_amount = $row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear];;
+                    } else {
+                        $item->proposed_amount = abs($row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear]);;
 //                    $item->percentage = $row['درصد_جاری'];
                         $item->save();
                     }
@@ -249,7 +255,7 @@ class ImportBudgetItemsJob implements ShouldQueue
                         if (is_null($item)) {
                             Log::info('Item not found');
                         } else {
-                            $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear];
+                            $item->proposed_amount = abs($row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear]);
                             $item->percentage = $row['درصد_جاری'] ?? $row['سهم_جاری'];
                             $item->save();
                         }
@@ -282,7 +288,7 @@ class ImportBudgetItemsJob implements ShouldQueue
                             Log::error('error: 266, sheet:4', [$row]);
                         } else {
 
-                            $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear];
+                            $item->proposed_amount = abs($row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear]);
 //                        $item->percentage = $row['درصد_جاری'];
                             $item->save();
                         }
@@ -321,7 +327,7 @@ class ImportBudgetItemsJob implements ShouldQueue
                             Log::error('error: 299', [$row]);
                         } else {
                             //                        $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_1403'];
-                            $item->proposed_amount = $row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear];
+                            $item->proposed_amount = abs($row['بودجه_اصلاح_و_متمم_مصوب_' . $this->fiscalYear] ?? $row['بودجه_اصلاح_و_متمم_پیشنهادی_' . $this->fiscalYear]);
 //                        $item->percentage = $row['درصد_جاری'];
                             $item->save();
                         }
@@ -344,6 +350,6 @@ class ImportBudgetItemsJob implements ShouldQueue
     {
         $person = User::with('person')->find($this->userID);
         $ounit = OrganizationUnit::find($this->ounitID);
-        return ['ounit:' . $ounit->name, 'ounitID:' . $this->ounitID, 'financeManager:' . $person->person->display_name];
+        return ['ounit:' . $ounit->name, 'ounitID:' . $this->ounitID, 'financeManager:' . $person->person->display_name, 'fiscal year:' . $this->fiscalYear];
     }
 }

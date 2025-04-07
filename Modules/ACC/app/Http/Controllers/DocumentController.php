@@ -654,7 +654,8 @@ class DocumentController extends Controller
     ')
                 ->join('acc_documents', 'acc_articles.document_id', '=', 'acc_documents.id')
                 ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
-                ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+                ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
                 ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
                 ->where('acc_documents.fiscal_year_id', '=', $fiscalYear->id)
                 ->where('acc_documents.document_type_id', '!=', DocumentTypeEnum::TEMPORARY->value)
@@ -858,7 +859,8 @@ class DocumentController extends Controller
     ')
                 ->join('acc_documents', 'acc_articles.document_id', '=', 'acc_documents.id')
                 ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
-                ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+                ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
                 ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
                 ->where('acc_documents.fiscal_year_id', '=', $fiscalYear->id)
                 ->where('acc_documents.document_type_id', '!=', DocumentTypeEnum::CLOSING->value)
@@ -981,23 +983,52 @@ class DocumentController extends Controller
             $fiscalYear = FiscalYear::find($data['fiscalYearID']);
             $lastYearFiscalYear = FiscalYear::where('name', $fiscalYear->name - 1)->first();
 
-            $lastYearClosingDoc = Account::joinRelationship('articles.document.statuses', [
-                'document' => function ($join) use ($data, $lastYearFiscalYear) {
-                    $join
-                        ->where('acc_documents.ounit_id', $data['ounitID']);
-                },
-                'statuses' => function ($join) {
-                    $join
-                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
-                        ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
-                }
-            ])
+//            $lastYearClosingDoc = Account::joinRelationship('articles.document.statuses', [
+//                'document' => function ($join) use ($data, $lastYearFiscalYear) {
+//                    $join
+//                        ->where('acc_documents.ounit_id', $data['ounitID']);
+//                },
+//                'statuses' => function ($join) {
+//                    $join
+//                        ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+//                        ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+//                }
+//            ])
+//                ->where('acc_documents.document_type_id', DocumentTypeEnum::CLOSING->value)
+//                ->where('acc_documents.fiscal_year_id', $lastYearFiscalYear->id)
+//                ->withoutGlobalScopes()
+//                ->select([
+//                    \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
+//                    \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
+//                    'acc_accounts.id as id',
+//                    'acc_accounts.name as name',
+//                    'acc_accounts.segment_code as code',
+//                    'acc_accounts.chain_code as chainedCode',
+//
+//                ])
+//                ->groupBy(
+//                    'acc_accounts.id',
+//                    'acc_accounts.name',
+//                    'acc_accounts.segment_code',
+//                    'acc_accounts.chain_code'
+//                )
+//                ->get();
+
+            $lastYearClosingDoc = Document::joinRelationship('statuses', ['statuses' => function ($join) {
+                $join
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+            }])
+                ->joinRelationship('articles.account')
                 ->where('acc_documents.document_type_id', DocumentTypeEnum::CLOSING->value)
                 ->where('acc_documents.fiscal_year_id', $lastYearFiscalYear->id)
+                ->where('acc_documents.ounit_id', $data['ounitID'])
                 ->withoutGlobalScopes()
                 ->select([
                     \DB::raw('SUM(acc_articles.debt_amount) as total_debt_amount'),
                     \DB::raw('SUM(acc_articles.credit_amount) as total_credit_amount'),
+//                    'acc_articles.debt_amount as total_debt_amount',
+//                    'acc_articles.credit_amount as total_credit_amount',
                     'acc_accounts.id as id',
                     'acc_accounts.name as name',
                     'acc_accounts.segment_code as code',

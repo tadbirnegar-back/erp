@@ -16,18 +16,20 @@ class ACCDatabaseSeeder extends Seeder
 
 //            BudgetImportSeederTest::class,
 
-            AccountCategoryTypeSeeder::class,
-            AccountCategorySeeder::class,
-            ModuleCategorySeeder::class,
-            ModuleSeeder::class,
-            PermissionsSeeder::class,
-            StatusSeeder::class,
-            DocumentStatusSeeder::class,
+//            AccountCategoryTypeSeeder::class,
+//            AccountCategorySeeder::class,
+//            ModuleCategorySeeder::class,
+//            ModuleSeeder::class,
+//            PermissionsSeeder::class,
+//            StatusSeeder::class,
+//            DocumentStatusSeeder::class,
 //            AccountImportSeeder::class,
 //            Budget1403AccSeeder::class,
 //            BankAccountsSeeder::class,
 //            OrganizationUnitsTableSeeder::class,
 //            VillageOfcsTableSeeder::class,
+            InsertAccountSeeder::class,
+            
 
         ]);
 
