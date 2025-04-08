@@ -2,6 +2,7 @@
 
 namespace Modules\BNK\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\ACC\app\Http\Enums\TransactionStatusEnum;
 use Modules\BNK\app\Models\Transaction;
 
@@ -55,11 +56,19 @@ trait TransactionTrait
 
     public function transactionActiveStatus()
     {
-        return Transaction::GetAllStatuses()->where('name', TransactionStatusEnum::ACTIVE->value)->first();
+        return Cache::rememberForever('active_transaction_status', function () {
+            return Transaction::GetAllStatuses()
+                ->where('name', TransactionStatusEnum::ACTIVE->value)
+                ->first();
+        });
     }
 
     public function transactionDeleteStatus()
     {
-        return Transaction::GetAllStatuses()->where('name', TransactionStatusEnum::DELETED->value)->first();
+        return Cache::rememberForever('delete_transaction_status', function () {
+            return Transaction::GetAllStatuses()
+                ->where('name', TransactionStatusEnum::DELETED->value)
+                ->first();
+        });
     }
 }

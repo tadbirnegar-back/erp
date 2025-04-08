@@ -2,6 +2,7 @@
 
 namespace Modules\BNK\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\BNK\app\Http\Enums\CardStatusEnum;
 use Modules\BNK\app\Models\BankAccountCard;
 
@@ -63,11 +64,19 @@ trait BankAccountCardTrait
 
     public function activeBankAccountCardStatus()
     {
-        return BankAccountCard::GetAllStatuses()->where('name', CardStatusEnum::ACTIVE->value)->first();
+        return Cache::rememberForever('bank_account_card_active_status', function () {
+            return BankAccountCard::GetAllStatuses()
+                ->where('name', CardStatusEnum::ACTIVE->value)
+                ->first();
+        });
     }
 
     public function cancellBankAccountCardStatus()
     {
-        return BankAccountCard::GetAllStatuses()->where('name', CardStatusEnum::CANCELED->value)->first();
+        return Cache::rememberForever('bank_account_card_canceled_status', function () {
+            return BankAccountCard::GetAllStatuses()
+                ->where('name', CardStatusEnum::CANCELED->value)
+                ->first();
+        });
     }
 }

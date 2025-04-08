@@ -92,11 +92,19 @@ trait BankTrait
 
     public function bankAccountDeactivateStatus()
     {
-        return BankAccount::GetAllStatuses()->where('name', '=', BankAccountStatusEnum::INACTIVE->value)->first();
+        return Cache::rememberForever('account_inactive_bank_status', function () {
+            return BankAccount::GetAllStatuses()
+                ->where('name', '=', BankAccountStatusEnum::INACTIVE->value)
+                ->first();
+        });
     }
 
     public function bankAccountActivateStatus()
     {
-        return BankAccount::GetAllStatuses()->where('name', '=', BankAccountStatusEnum::ACTIVE->value)->first();
+        return Cache::rememberForever('account_active_bank_status', function () {
+            return BankAccount::GetAllStatuses()
+                ->where('name', '=', BankAccountStatusEnum::ACTIVE->value)
+                ->first();
+        });
     }
 }
