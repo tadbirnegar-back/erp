@@ -4,6 +4,7 @@ namespace Modules\LMS\app\Http\Traits;
 
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Modules\AAA\app\Models\User;
 use Modules\FormGMS\app\Models\Option;
 use Modules\LMS\app\Http\Enums\AnswerSheetStatusEnum;
@@ -16,7 +17,7 @@ use Modules\SettingsMS\app\Models\Setting;
 trait AnswerSheetTrait
 {
 
-    public function storeAnswerSheet($examId, $student, $optionID, $data, $usedTime,)
+    public function storeAnswerSheet($examId, $student, $optionID, $data, $usedTime)
     {
         $score = $this->score($examId, $optionID);
         $status = $this->ScoreStatus($score);
@@ -301,17 +302,26 @@ trait AnswerSheetTrait
 
     public function answerSheetApprovedStatus()
     {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
+        return Cache::rememberForever('answer_sheet_approved_status', function () {
+            return AnswerSheet::GetAllStatuses()
+                ->firstWhere('name', AnswerSheetStatusEnum::APPROVED->value);
+        });
     }
 
     public function answerSheetTakingExamStatus()
     {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::TAKING_EXAM->value);
+        return Cache::rememberForever('answer_sheet_taking_exam_status', function () {
+            return AnswerSheet::GetAllStatuses()
+                ->firstWhere('name', AnswerSheetStatusEnum::TAKING_EXAM->value);
+        });
     }
 
     public function answerSheetDeclinedStatus()
     {
-        return AnswerSheet::GetAllStatuses()->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
+        return Cache::rememberForever('answer_sheet_declined_status', function () {
+            return AnswerSheet::GetAllStatuses()
+                ->firstWhere('name', AnswerSheetStatusEnum::DECLINED->value);
+        });
     }
 
 

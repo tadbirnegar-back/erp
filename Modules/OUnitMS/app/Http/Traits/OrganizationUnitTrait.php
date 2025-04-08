@@ -2,6 +2,7 @@
 
 namespace Modules\OUnitMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\OUnitMS\app\Http\Enums\StatusEnum;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\Department;
@@ -346,14 +347,18 @@ trait OrganizationUnitTrait
 
     public function getActiveStatuses()
     {
-        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', StatusEnum::Active->value);
-
+        return Cache::rememberForever('ounit_active_statuses', function () {
+            return OrganizationUnit::GetAllStatuses()
+                ->firstWhere('name', '=', StatusEnum::Active->value);
+        });
     }
 
     public function getInactiveStatuses()
     {
-        return OrganizationUnit::GetAllStatuses()->firstWhere('name', '=', StatusEnum::Inactive->value);
-
+        return Cache::rememberForever('ounit_inactive_statuses', function () {
+            return OrganizationUnit::GetAllStatuses()
+                ->firstWhere('name', '=', StatusEnum::Inactive->value);
+        });
     }
 
     public function softDeletingOunits(OrganizationUnit $ounit)

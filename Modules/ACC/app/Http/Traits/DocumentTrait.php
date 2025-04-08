@@ -2,6 +2,7 @@
 
 namespace Modules\ACC\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
 use Modules\ACC\app\Models\Document;
 use Modules\ACC\app\Models\DocumentStatus;
@@ -41,17 +42,28 @@ trait DocumentTrait
 
     public function draftDocumentStatus()
     {
-        return Document::GetAllStatuses()->where('name', DocumentStatusEnum::DRAFT->value)->first();
+        return Cache::rememberForever('document_draft_status', function () {
+            return Document::GetAllStatuses()
+                ->where('name', DocumentStatusEnum::DRAFT->value)
+                ->first();
+        });
     }
 
     public function confirmedDocumentStatus()
     {
-        return Document::GetAllStatuses()->where('name', DocumentStatusEnum::CONFIRMED->value)->first();
-    }
+        return Cache::rememberForever('document_confirmed_status', function () {
+            return Document::GetAllStatuses()
+                ->where('name', DocumentStatusEnum::CONFIRMED->value)
+                ->first();
+        });    }
 
     public function deleteDocumentStatus()
     {
-        return Document::GetAllStatuses()->where('name', DocumentStatusEnum::DELETED->value)->first();
+        return Cache::rememberForever('document_deleted_status', function () {
+            return Document::GetAllStatuses()
+                ->where('name', DocumentStatusEnum::DELETED->value)
+                ->first();
+        });
     }
 
     public function documentDataPreparation(array $data)

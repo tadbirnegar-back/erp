@@ -2,6 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\HRMS\app\Models\Job;
 
 trait JobTrait
@@ -57,12 +58,17 @@ trait JobTrait
 
     public function activeJobStatus()
     {
-        return Job::GetAllStatuses()->firstWhere('name', '=', $this->activeJobName);
+        return Cache::rememberForever('job_active_status', function () {
+            return Job::GetAllStatuses()
+                ->firstWhere('name', '=', $this->activeJobName);
+        });
     }
 
     public function inactiveJobStatus()
     {
-        return Job::GetAllStatuses()->firstWhere('name', '=', $this->inactiveJobName);
+        return Cache::rememberForever('job_inactive_status', function () {
+            return Job::GetAllStatuses()
+                ->firstWhere('name', '=', $this->inactiveJobName);
+        });
     }
-
 }
