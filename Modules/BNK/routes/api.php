@@ -38,6 +38,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::put('/bnk/cheque-book/edit/{id}', [ChequeController::class, 'update']);
 
+    Route::delete('/bnk/cheque-book/delete', [ChequeController::class, 'destroyChequeBook']);
+
     Route::post('/bnk/card/add', [CardController::class, 'store']);
 
     Route::put('/bnk/card/edit/{id}', [CardController::class, 'update']);

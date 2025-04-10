@@ -121,7 +121,12 @@ trait ChequeTrait
 
     public function deletedChequeStatus()
     {
-        return ChequeBook::GetAllStatuses()->where('name', ChequeStatusEnum::DELETED->value)->first();
+        return Cheque::GetAllStatuses()->where('name', ChequeStatusEnum::DELETED->value)->first();
+    }
+
+    public function inactiveChequeBookStatus()
+    {
+        return ChequeBook::GetAllStatuses()->where('name', ChequeBookStatusEnum::CANCELED->value)->first();
     }
 
 

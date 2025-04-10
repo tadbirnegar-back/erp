@@ -5,6 +5,7 @@ namespace Modules\BNK\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use DB;
 use Illuminate\Http\Request;
+use Mockery\Exception;
 use Modules\BNK\app\Http\Enums\ChequeStatusEnum;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Models\Cheque;
@@ -105,5 +106,36 @@ class ChequeController extends Controller
             return response()->json(['error' => 'error'], 500);
         }
 
+    }
+
+    public function destroyChequeBook(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'cbID' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            $chequeBook = ChequeBook::with(['cheques' => function ($query) {
+                $query->whereHas('latestStatus', function ($query) {
+                    $query->where('statuses.name', ChequeStatusEnum::BLANK->value);
+                });
+
+            }])->find($data['cbID']);
+            $chequeBook->statuses()->attach($this->inactiveChequeBookStatus()->id);
+
+            $chequeBook->cheques->each(function ($cheque) {
+                $cheque->statuses()->attach($this->deletedChequeStatus()->id);
+            });
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت حذف شد']);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

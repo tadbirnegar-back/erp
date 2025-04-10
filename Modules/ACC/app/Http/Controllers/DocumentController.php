@@ -33,6 +33,7 @@ use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
 use Modules\BNK\app\Models\BankAccount;
 use Modules\BNK\app\Models\Cheque;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Morilog\Jalali\Jalalian;
@@ -166,7 +167,7 @@ class DocumentController extends Controller
 
         $data['documentNumber'] = $lastDocNumber ? $lastDocNumber->document_number + 1 : 2;
         $data['documentDate'] = (Jalalian::now()->getYear() > $request->fiscalYear
-            ? (new Jalalian($request->fiscalYear, 1, 1))->getEndDayOfYear()->toDateString()
+            ? $lastDocNumber?->document_date ??(new Jalalian($request->fiscalYear, 1, 1))->getEndDayOfYear()->toDateString()
             : Jalalian::now()->toDateString());
         $data['ounitHeadID'] = OrganizationUnit::find($data['ounitID'])?->head_id;
         try {
@@ -1339,8 +1340,21 @@ class DocumentController extends Controller
                 });
             }
 
+            $ounit = OrganizationUnit::joinRelationship('head.person')->select('persons.display_name as head_name')->find($data['ounitID']);
 
-            return TarazLogResource::collection($results);
+            $rc = RecruitmentScript::where('organization_unit_id', $data['ounitID'])
+                ->whereHas('latestStatus', function ($query) {
+                    $query->where('statuses.name', '=', 'فعال');
+                })
+                ->joinRelationship('scriptType', function ($join) {
+                    $join->where('script_types.title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+                })->with('person')->first();
+
+
+            return TarazLogResource::collection($results)->additional([
+                'head_name' => $ounit->head_name,
+                'financial_manager' => $rc->person->display_name
+            ]);
         } catch (Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
