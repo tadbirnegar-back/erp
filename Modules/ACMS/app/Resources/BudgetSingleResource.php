@@ -25,9 +25,9 @@ class BudgetSingleResource extends JsonResource
                 'ancestors' => $this->ounit->ancestors->pluck('name')
             ],
             'file' => [
-                'name' => $this->circularFile->name,
-                'slug' => $this->circularFile->slug,
-                'size' => $this->circularFile->size,
+                'name' => $this->circularFile?->name,
+                'slug' => $this->circularFile?->slug,
+                'size' => $this->circularFile?->size,
             ],
             'status' => [
                 'name' => $this->latestStatus->name,

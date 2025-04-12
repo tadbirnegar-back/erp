@@ -52,7 +52,7 @@ class DispatchCircularForOunitJob implements ShouldQueue
             $budgetItemsJobs = [];
             $budgets->each(function ($budget) use (&$budgetItemsJobs) {
                 $job = new CalculateAndInsertBudgetItemsJob($budget, $this->circular->circularItems->toArray());
-                $budgetItemsJobs[] = $job->delay(now()->addSeconds(rand(1, 45)));
+                $budgetItemsJobs[] = $job->delay(now()->addSeconds(rand(30, 90)));
             });
             Bus::batch($budgetItemsJobs)
                 ->then(function (Batch $batch) {

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 
-use DB;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
@@ -47,7 +46,22 @@ class testController extends Controller
 
     public function run()
     {
+//        $a =
+//        try {
+//            DB::beginTransaction();
+//            $ba=Budget::whereDoesntHave('budgetItems')->get();
+//            dd($ba);
+//            $ba->each(function ($item) {
+//                $item->delete();
+//            });
+//            DB::commit();
+//            dd('done');
+//        }catch (\Exception $e) {
+//            DB::rollBack();
+//            dd($e->getMessage());
+//        }
 
+//dd($ba->pluck('name'));
 //        $user = User::with('employee','person')->where('mobile','9142883817')->first();
 //        dd($user);
 //        $a=Document::where('ounit_id',184)->whereHas('latestStatus',function ($query) {
@@ -55,15 +69,20 @@ class testController extends Controller
 //        })->first();
 //        dd($a);
 //        try {
-//            DB::beginTransaction();
+//            \DB::beginTransaction();
+////            $a = array('11150', '11210', '11220', '11230', '12140', '12191', '12192', '12194', '12195', '12196', '12210', '12230', '12140');
+//
+////            $a = array(12250, 13110, 13170, 13190, 13195, 13196, 13220, 15110, 15120, 21010);
+//            $a = array(16240);
 ////            $a = array('210100', '210200', '210300', '210900', '210400', '220100', '220200', '220900', '230100', '240100', '250100', '250200', '260100', '310000', '320000', '330000', '340000');
-//            $a = [
-//                '12110',
-//'12120',
-//'12160'
-//            ];
+////            $a = [
+////                '12110',
+////'12120',
+////'12160'
+////            ];
 //            $b = CircularSubject::whereIn('code', $a)->withoutGlobalScopes()->get();
-//            $c = CircularItem::where('circular_id',2)->whereIntegerInRaw('subject_id', $b->pluck('id')->toArray())->get();
+//            $c = CircularItem::where('circular_id', 2)->whereIntegerInRaw('subject_id', $b->pluck('id')->toArray())->get();
+//
 ////            dd($b->pluck('id'),$c->pluck('id'));
 //
 //            $bi = BudgetItem::whereIntegerInRaw('circular_item_id', $c->pluck('id')->toArray())->get();
@@ -71,7 +90,7 @@ class testController extends Controller
 //////            dd($bi->where('percentage', '!=', '0.00')->first());
 //            $bi->each(function ($item) {
 ////                $item->proposed_amount = 0;
-//                $item->percentage = 40;
+//                $item->percentage = 10;
 //
 //                $item->save();
 //            });
@@ -87,115 +106,24 @@ class testController extends Controller
 //////                $item->save();
 //////
 //////            }
-//            DB::commit();
+//            \DB::commit();
 //            dd('done');
 //        } catch (\Exception $e) {
-//            DB::rollBack();
+//            \DB::rollBack();
 ////
 //            dd($e->getMessage());
 //        }
-//        $accs = Document::whereIntegerInRaw('fiscal_year_id', [1, 7,])
-//            ->joinRelationship('articles.account')
-//            ->whereIntegerInRaw('acc_accounts.category_id', [6, 7])
-//            ->select([
-//                'acc_accounts.id as id',
-//            ])
-//        ->get();
-//        try {
-//            $subjects=CircularSubject::all(['code']);
-//            $accs = Account::whereIntegerInRaw('acc_accounts.chain_code',$subjects->pluck('code')->toArray())
-//                ->where('accountable_type', GlAccount::class)
-//            ->whereNull('subject_id')
-////                ->whereIn('accountable_type', [GlAccount::class])
-//                ->withoutGlobalScopes()
-////                ->where('status_id',155)
-////                ->whereIntegerInRaw('acc_accounts.category_id', [6, 7])
-////                ->joinRelationship('articles.document')
-////                ->whereIntegerInRaw('fiscal_year_id', [1, 7])
-////                ->distinct('acc_accounts.id')
-//                ->get(['id','chain_code']);
-////            dd($accs);
-////            dd($accs);
-//
-//            $a = [];
-//            DB::beginTransaction();
-//            $accs->each(function ($item) use (&$a) {
-//                $b = CircularSubject::where('code', $item->chain_code)->first();
-//                if (!is_null($b)) {
-//                    $item->subject_id = $b->id;
-//                    $item->entity_type = CircularSubject::class;
-//                    $item->entity_id = $b->id;
-//                    $item->save();
-//
-//                }
-////                if (!is_null($b)) {
-////                    $a[] = $item->chain_code;
-////                }
-//
-//            });
-//            DB::commit();
-//            dd(implode(',',$a),$a,$accs->count());
-//        } catch (\Exception $e) {
-//            DB::rollBack();
-//            dd($e->getMessage());
-//        }
 
 
-//        dd($accs);
-
-
-//        $rcStatus = $this->activeRsStatus();
-//        $rses = [862, 863,
-//        ];
-//        foreach ($rses as $rs) {
-//            RecruitmentScriptStatus::create([
-//                'recruitment_script_id' => $rs,
-//                'status_id' => $rcStatus->id,
-//                'create_date' => now(),
-//            ]);
-//        }
-//        $duplicates = RecruitmentScript::select(
-//   [         'employee_id',
-//            'organization_unit_id',
-//            'job_id',
-//            'script_type_id',
-//            'position_id',
-//            DB::raw('COUNT(*) as total')]
-//        )
-//            ->where('script_type_id', 32)
-//
-//            ->groupBy(
-//                'employee_id',
-//                'organization_unit_id',
-//                'job_id',
-//                'script_type_id',
-//                'position_id'
-//            )
-//            ->having('total', '>', 1)
-//            ->get();
-//        dd($duplicates);
-//        $startDate = Jalalian::fromFormat('Y/m/d', '1396/12/29')->getEndDayOfYear()->toCarbon()->toDateTimeString();
-//        dd($startDate);
-//        $a = Account::where('isFertile', true)->get();
-//        dd($a->pluck('name'),$a->pluck('accountable_type'));
-//        $a = Article::whereDoesntHave('document')->get();
-//        $a->eac
-//        dd($a);
-
-//        $accs = Account::where('category_id', 8)
-//            ->isRoot()
-//            ->with(['descendants'])
-//            ->get();
-//        dd($accs);
-//
-//        $user = User::where('mobile', '9148575393')->first();
+//        $user = User::where('mobile', '9141852837')->first();
 //        $recruitmentScripts = $user
 //            ->activeRecruitmentScripts()
+//            ->with(['organizationUnit'])
 //            ->whereHas('scriptType', function ($query) {
 //                $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
 //            })->get();
 ////
-//        $a=implode(',',($recruitmentScripts->pluck('organization_unit_id')->toArray()));
+//        $a = implode(',', ($recruitmentScripts->pluck('organizationUnit.name')->toArray()));
 //        dd($a);
 //
 //        try {
