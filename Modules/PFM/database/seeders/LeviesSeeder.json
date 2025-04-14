@@ -1,0 +1,114 @@
+[
+    {
+        "name": "عوارض سالیانه املاک و مستقلات(سطح روستا)",
+        "category": "اراضی",
+        "description": "A = P * M * B",
+        "has_app": true,
+        "bg_id": 22
+    },
+    {
+        "name": "عوارض تفکیک اراضی",
+        "category": "اراضی",
+        "description": "A = P * S * B",
+        "has_app": true,
+        "bg_id": 33
+    },
+    {
+        "name": "عوارض چشمه های معدنی",
+        "category": "اراضی",
+        "description": "",
+        "has_app": false,
+        "bg_id": 2
+    },
+    {
+        "name": "عوارض صدور مجوز حصارکشی(دیوارگذاری) برای املاک فاقد مستحدثات",
+        "category": "اراضی",
+        "description": "A = B * L * P",
+        "has_app": true,
+        "bg_id": 26
+    },
+    {
+        "name": "عوارض احداث زیربنا(در حد تراکم) مسکونی غیرمسکونی",
+        "category": "اراضی",
+        "description": "A = P * M * B",
+        "has_app": true,
+        "bg_id": 22
+    },
+    {
+        "name": "عوارض بر بالکن و پیش آمدگی",
+        "category": "اراضی",
+        "description": "A = P * M * B",
+        "has_app": true,
+        "bg_id": 24
+    },
+    {
+        "name": "عوارض مستحدثات واقع در محوطه املاک(آلاچیق،پارکینگ مسقف،استخر)",
+        "category": "اراضی",
+        "description": "P * M * B",
+        "has_app": true,
+        "bg_id": 32
+    },
+    {
+        "name": "عوارض تمدید پروانه های ساختمانی",
+        "category": "مستحدثات",
+        "description": "",
+        "has_app": false,
+        "bg_id": 27
+    },
+    {
+        "name": "عوارض تجدید پروانه ساختمانی",
+        "category": "مستحدثات",
+        "description": "",
+        "has_app": false,
+        "bg_id": 31
+    },
+    {
+        "name": "عوارض قطع درختان",
+        "category": "مستحدثات",
+        "description": "",
+        "has_app": false,
+        "bg_id": 34
+    },
+    {
+        "name": "عوارض بر مشاغل(دائم)",
+        "category": "مستحدثات",
+        "description": "",
+        "has_app": false,
+        "bg_id": 37
+    },
+    {
+        "name": "عوارض صدور مجوز احداث و نصب تأسیسات روستایی",
+        "category": "تأسیسات",
+        "description": "A = P * S * B",
+        "has_app": false,
+        "bg_id": 36
+    },
+    {
+        "name": "عوارض بر تابلوهای تبلیغاتی",
+        "category": "تبلیغات",
+        "description": "A = P * S * B * N",
+        "has_app": false,
+        "bg_id": 38
+    },
+    {
+        "name": "عوارض ارزش افزوده ناشی از الحاق به بافت و تغییر کاربری عرصه در اجرای طرح هادی روستایی",
+        "category": "ارزش افزوده ناشی از اجرای طرح های توسعه روستایی",
+        "description": "",
+        "has_app": false,
+        "bg_id": 28
+    },
+    {
+        "name": "عوارض ارزش افزوده ناشی از اجرای طرح های عمران روستایی",
+        "category": "ارزش افزوده ناشی از اجرای طرح های توسعه روستایی",
+        "description": "",
+        "has_app": false,
+        "bg_id": 25
+    },
+    {
+        "name" : "عناوین بهای خدمت",
+        "category": "بهای خدمت",
+        "description": "",
+        "has_app": false,
+        "bg_id": 43
+    }
+]

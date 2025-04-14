@@ -1,0 +1,10 @@
+[
+    {
+        "name": "فعال",
+        "className": "success"
+    },
+    {
+        "name": "غیر فعال",
+        "className": "danger"
+    }
+]

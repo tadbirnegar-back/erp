@@ -1,0 +1,14 @@
+[
+    {
+        "name": "در انتظار",
+        "className": "waiting"
+    },
+    {
+        "name": "پیشنهاد شده",
+        "className": "waiting"
+    },
+    {
+        "name": "مصوب شده",
+        "className": "waiting"
+    }
+]
