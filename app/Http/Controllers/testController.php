@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 
+use Modules\AAA\app\Models\User;
+use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
+use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Models\BudgetItem;
@@ -18,6 +21,7 @@ use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class testController extends Controller
 {
@@ -46,41 +50,21 @@ class testController extends Controller
 
     public function run()
     {
-//        $a =
-//        try {
-//            DB::beginTransaction();
-//            $ba=Budget::whereDoesntHave('budgetItems')->get();
-//            dd($ba);
-//            $ba->each(function ($item) {
-//                $item->delete();
-//            });
-//            DB::commit();
-//            dd('done');
-//        }catch (\Exception $e) {
-//            DB::rollBack();
-//            dd($e->getMessage());
-//        }
 
-//dd($ba->pluck('name'));
-//        $user = User::with('employee','person')->where('mobile','9142883817')->first();
-//        dd($user);
-//        $a=Document::where('ounit_id',184)->whereHas('latestStatus',function ($query) {
-//            $query->where('name',DocumentStatusEnum::DELETED->value);
-//        })->first();
-//        dd($a);
 //        try {
 //            \DB::beginTransaction();
-////            $a = array('11150', '11210', '11220', '11230', '12140', '12191', '12192', '12194', '12195', '12196', '12210', '12230', '12140');
+////            $new40darsad = array('11150', '11210', '11220', '11230', '12140', '12191', '12192', '12194', '12195', '12196', '12210', '12230', '12140');
 //
-////            $a = array(12250, 13110, 13170, 13190, 13195, 13196, 13220, 15110, 15120, 21010);
-//            $a = array(16240);
-////            $a = array('210100', '210200', '210300', '210900', '210400', '220100', '220200', '220900', '230100', '240100', '250100', '250200', '260100', '310000', '320000', '330000', '340000');
-////            $a = [
+////            $new40darsad = array(12250, 13110, 13170, 13190, 13195, 13196, 13220, 15110, 15120, 21010);
+////            $10darsad = array(16240);
+//            $zerodarsad = array(12193);
+////            $zero = array('210100', '210200', '210300', '210900', '210400', '220100', '220200', '220900', '230100', '240100', '250100', '250200', '260100', '310000', '320000', '330000', '340000');
+////            $40darsad = [
 ////                '12110',
 ////'12120',
 ////'12160'
 ////            ];
-//            $b = CircularSubject::whereIn('code', $a)->withoutGlobalScopes()->get();
+//            $b = CircularSubject::whereIn('code', $zerodarsad)->withoutGlobalScopes()->get();
 //            $c = CircularItem::where('circular_id', 2)->whereIntegerInRaw('subject_id', $b->pluck('id')->toArray())->get();
 //
 ////            dd($b->pluck('id'),$c->pluck('id'));
@@ -90,22 +74,22 @@ class testController extends Controller
 //////            dd($bi->where('percentage', '!=', '0.00')->first());
 //            $bi->each(function ($item) {
 ////                $item->proposed_amount = 0;
-//                $item->percentage = 10;
+//                $item->percentage = 0;
 //
 //                $item->save();
 //            });
-////
-//////            foreach ($a as $item) {
-//////                $item = BudgetItem::
-//////                    joinRelationship('circularItem.subject')
-//////                    ->where('bgt_circular_subjects.code', $item)
-////////                        ->where('bgt_circular_subjects.name', $row['نام_حساب'])
-//////                    ->addSelect('bgt_circular_items.percentage as ci_percent')
-//////                    ->first();
+//
+////            foreach ($zerodarsad as $item) {
+////                $item = BudgetItem::
+////                    joinRelationship('circularItem.subject')
+////                    ->where('bgt_circular_subjects.code', $item)
+//////                        ->where('bgt_circular_subjects.name', $row['نام_حساب'])
+////                    ->addSelect('bgt_circular_items.percentage as ci_percent')
+////                    ->first();
 //////                $item->proposed_amount = 0;
-//////                $item->save();
-//////
-//////            }
+////                $item->save();
+////
+////            }
 //            \DB::commit();
 //            dd('done');
 //        } catch (\Exception $e) {
@@ -115,7 +99,7 @@ class testController extends Controller
 //        }
 
 
-//        $user = User::where('mobile', '9141852837')->first();
+//        $user = User::where('mobile', '9148180075')->first();
 //        $recruitmentScripts = $user
 //            ->activeRecruitmentScripts()
 //            ->with(['organizationUnit'])
@@ -123,7 +107,7 @@ class testController extends Controller
 //                $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
 //            })->get();
 ////
-//        $a = implode(',', ($recruitmentScripts->pluck('organizationUnit.name')->toArray()));
+//        $a = implode(',', ($recruitmentScripts->pluck('employee_id')->toArray()));
 //        dd($a);
 //
 //        try {

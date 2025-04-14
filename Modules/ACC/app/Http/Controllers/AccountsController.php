@@ -511,16 +511,16 @@ class AccountsController extends Controller
         }
         try {
             $remaining = Article::joinRelationship('document', function ($join) use ($data) {
-                $join->where('ounit_id', '=', $data['ounitID'])
-                    ->where('fiscal_year_id', '=', $data['fiscalYearID'])
-                    ->where('document_number', '<=', $data['docNum'])
+                $join->where('ounit_id', '=', intval($data['ounitID']))
+                    ->where('fiscal_year_id', '=', intval($data['fiscalYearID']))
+                    ->where('document_number', '<=', intval($data['docNum']))
                     ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
                     ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
                     ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
                     ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
 
             })
-                ->where('account_id', '=', $data['accountID'])
+                ->where('account_id', '=', intval($data['accountID']))
                 ->select([
                     DB::raw('SUM(credit_amount) - SUM(debt_amount) as remaining'),
                 ])
