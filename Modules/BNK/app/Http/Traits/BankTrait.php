@@ -2,6 +2,7 @@
 
 namespace Modules\BNK\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\BNK\app\Http\Enums\BankAccountStatusEnum;
 use Modules\BNK\app\Models\Bank;
 use Modules\BNK\app\Models\BankAccount;
