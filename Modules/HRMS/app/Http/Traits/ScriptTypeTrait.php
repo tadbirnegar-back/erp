@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Modules\HRMS\app\Http\Enums\ProceduresEnum;
 use Modules\HRMS\app\Models\ConfirmationTypeScriptType;
 use Modules\HRMS\app\Models\ScriptType;
@@ -104,6 +105,9 @@ trait ScriptTypeTrait
 
     public function inactiveScriptTypeScript()
     {
-        return ScriptType::GetAllStatuses()->firstWhere('name', $this->inactiveScriptTypeStatus);
+        return Cache::rememberForever('script_type_inactive_status', function () {
+            return ScriptType::GetAllStatuses()
+                ->firstWhere('name', $this->inactiveScriptTypeStatus);
+        });
     }
 }

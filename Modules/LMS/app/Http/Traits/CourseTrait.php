@@ -3,6 +3,7 @@
 namespace Modules\LMS\app\Http\Traits;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Job;
@@ -941,7 +942,7 @@ trait CourseTrait
             ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
             ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
             ->where(function ($query) use ($level, $position, $job) {
-                if(!empty($level)){
+                if (!empty($level)) {
                     $query->where(function ($subQuery) use ($level) {
                         $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
                             ->where('employee_feat_alias.propertyble_type', Level::class);
@@ -1055,7 +1056,7 @@ trait CourseTrait
             ->whereIn('target_ounit_cat_alias.ounit_cat_id', $ounitCats)
             ->leftJoin('course_employees_features as employee_feat_alias', 'employee_feat_alias.course_target_id', '=', 'targets_alias.id')
             ->where(function ($query) use ($level, $position, $job) {
-                if(!empty($level)){
+                if (!empty($level)) {
                     $query->where(function ($subQuery) use ($level) {
                         $subQuery->whereIntegerInRaw('employee_feat_alias.propertyble_id', $level)
                             ->where('employee_feat_alias.propertyble_type', Level::class);
@@ -1132,7 +1133,7 @@ trait CourseTrait
                 $join->on('answer_sheet_alias.exam_id', '=', 'exam_alias.id');
                 if ($student) {
                     $join->where('answer_sheet_alias.student_id', $student->id);
-                }else{
+                } else {
                     $join->where('answer_sheet_alias.student_id', '');
                 }
             })
@@ -1269,40 +1270,52 @@ trait CourseTrait
         return $courses;
     }
 
-    public
-    function courseCanceledStatus()
+    public function courseCanceledStatus()
     {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::CANCELED->value);
+        return Cache::rememberForever('canceled_course_status', function () {
+            return Course::GetAllStatuses()
+                ->firstWhere('name', CourseStatusEnum::CANCELED->value);
+        });
     }
 
-    public
-    function courseEndedStatus()
+    public function courseEndedStatus()
     {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::ENDED->value);
+        return Cache::rememberForever('course_ended_status', function () {
+            return Course::GetAllStatuses()
+                ->firstWhere('name', CourseStatusEnum::ENDED->value);
+        });
     }
 
-    public
-    function coursePishnevisStatus()
+    public function coursePishnevisStatus()
     {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
+        return Cache::rememberForever('course_pishnevis_status', function () {
+            return Course::GetAllStatuses()
+                ->firstWhere('name', CourseStatusEnum::PISHNEVIS->value);
+        });
     }
 
-    public
-    function courseDeletedStatus()
+    public function courseDeletedStatus()
     {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::DELETED->value);
+        return Cache::rememberForever('course_deleted_status', function () {
+            return Course::GetAllStatuses()
+                ->firstWhere('name', CourseStatusEnum::DELETED->value);
+        });
     }
 
-    public
-    function coursePresentingStatus()
+    public function coursePresentingStatus()
     {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+        return Cache::rememberForever('course_presenting_status', function () {
+            return Course::GetAllStatuses()
+                ->firstWhere('name', CourseStatusEnum::PRESENTING->value);
+        });
     }
 
-    public
-    function courseWaitPresentingStatus()
+    public function courseWaitPresentingStatus()
     {
-        return Course::GetAllStatuses()->firstWhere('name', CourseStatusEnum::WAITING_TO_PRESENT->value);
+        return Cache::rememberForever('course_waiting_to_present_status', function () {
+            return Course::GetAllStatuses()
+                ->firstWhere('name', CourseStatusEnum::WAITING_TO_PRESENT->value);
+        });
     }
 
 

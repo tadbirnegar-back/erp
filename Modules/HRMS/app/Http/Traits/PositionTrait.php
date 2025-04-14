@@ -2,6 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Models\Position;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -123,12 +124,18 @@ trait PositionTrait
 
     public function activePositionStatus()
     {
-        return Position::GetAllStatuses()->firstWhere('name', '=', $this->activePositionStatus);
+        return Cache::rememberForever('position_active_status', function () {
+            return Position::GetAllStatuses()
+                ->firstWhere('name', '=', $this->activePositionStatus);
+        });
     }
 
     public function inactivePositionStatus()
     {
-        return Position::GetAllStatuses()->firstWhere('name', '=', $this->inactivePositionStatus);
+        return Cache::rememberForever('position_inactive_status', function () {
+            return Position::GetAllStatuses()
+                ->firstWhere('name', '=', $this->inactivePositionStatus);
+        });
     }
 
 

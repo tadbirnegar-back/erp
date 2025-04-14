@@ -2,6 +2,7 @@
 
 namespace Modules\ACC\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\ACC\app\Http\Enums\AccountStatusEnum;
 use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\DetailAccount;
@@ -165,17 +166,29 @@ trait AccountTrait
 
     public function activeAccountStatus()
     {
-        return Account::GetAllStatuses()->where('name', AccountStatusEnum::ACTIVE->value)->first();
+        return Cache::rememberForever('account_active_status', function () {
+            return Account::GetAllStatuses()
+                ->where('name', AccountStatusEnum::ACTIVE->value)
+                ->first();
+        });
     }
 
     public function inactiveAccountStatus()
     {
-        return Account::GetAllStatuses()->where('name', AccountStatusEnum::INACTIVE->value)->first();
+        return Cache::rememberForever('account_inactive_status', function () {
+            return Account::GetAllStatuses()
+                ->where('name', AccountStatusEnum::INACTIVE->value)
+                ->first();
+        });
     }
 
     public function importAccountStatus()
     {
-        return Account::GetAllStatuses()->where('name', AccountStatusEnum::IMPORTED->value)->first();
+        return Cache::rememberForever('account_import_status', function () {
+            return Account::GetAllStatuses()
+                ->where('name', AccountStatusEnum::IMPORTED->value)
+                ->first();
+        });
     }
 
     public function getNewChainCode(string $code)

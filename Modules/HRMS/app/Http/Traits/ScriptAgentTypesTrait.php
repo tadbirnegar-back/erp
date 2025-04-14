@@ -2,12 +2,13 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\HRMS\app\Models\ScriptAgentType;
 
 trait ScriptAgentTypesTrait
 {
-    private string $ScriptAgentTypeActiveName='فعال';
-    private string $ScriptAgentTypeInactiveName='حذف شده';
+    private string $ScriptAgentTypeActiveName = 'فعال';
+    private string $ScriptAgentTypeInactiveName = 'حذف شده';
 
     public function createScriptAgentType(array $data): ScriptAgentType
     {
@@ -29,7 +30,7 @@ trait ScriptAgentTypesTrait
     {
 //        $status = $this->activeScriptAgentTypeStatus();
 
-        return ScriptAgentType::whereHas('status', function ($query){
+        return ScriptAgentType::whereHas('status', function ($query) {
             $query->where('name', '=', $this->ScriptAgentTypeActiveName);
         })->get();
     }
@@ -54,9 +55,17 @@ trait ScriptAgentTypesTrait
 
     public function activeScriptAgentTypeStatus()
     {
-        return ScriptAgentType::GetAllStatuses()->firstWhere('name', '=', $this->ScriptAgentTypeActiveName);
-    }    public function inactiveScriptAgentTypeStatus()
+        return Cache::rememberForever('script_agent_type_active_status', function () {
+            return ScriptAgentType::GetAllStatuses()
+                ->firstWhere('name', '=', $this->ScriptAgentTypeActiveName);
+        });
+    }
+
+    public function inactiveScriptAgentTypeStatus()
     {
-        return ScriptAgentType::GetAllStatuses()->firstWhere('name', '=', $this->ScriptAgentTypeInactiveName);
+        return Cache::rememberForever('script_agent_type_inactive_status', function () {
+            return ScriptAgentType::GetAllStatuses()
+                ->firstWhere('name', '=', $this->ScriptAgentTypeInactiveName);
+        });
     }
 }

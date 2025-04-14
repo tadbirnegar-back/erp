@@ -2,6 +2,7 @@
 
 namespace Modules\BNK\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\BNK\app\Http\Enums\ChequeBookStatusEnum;
 use Modules\BNK\app\Http\Enums\ChequeStatusEnum;
 use Modules\BNK\app\Models\Cheque;
@@ -106,27 +107,43 @@ trait ChequeTrait
 
     public function whiteChequeStatus()
     {
-        return Cheque::GetAllStatuses()->where('name', ChequeStatusEnum::BLANK->value)->first();
+        return Cache::rememberForever('cheque_blank_status', function () {
+            return Cheque::GetAllStatuses()
+                ->where('name', '=', ChequeStatusEnum::BLANK->value)
+                ->first();
+        });
     }
 
     public function issuedChequeStatus()
     {
-        return Cheque::GetAllStatuses()->where('name', ChequeStatusEnum::ISSUE->value)->first();
+        return Cache::rememberForever('cheque_issue_status', function () {
+            return Cheque::GetAllStatuses()
+                ->where('name', '=', ChequeStatusEnum::ISSUE->value)
+                ->first();
+        });
     }
 
     public function activeChequeBook()
     {
-        return ChequeBook::GetAllStatuses()->where('name', ChequeBookStatusEnum::ACTIVE->value)->first();
+        return Cache::rememberForever('active_cheque_book', function () {
+            return ChequeBook::GetAllStatuses()
+                ->where('name', '=', ChequeBookStatusEnum::ACTIVE->value)
+                ->first();
+        });
     }
 
     public function deletedChequeStatus()
     {
-        return Cheque::GetAllStatuses()->where('name', ChequeStatusEnum::DELETED->value)->first();
+        return Cache::rememberForever('cheque_deleted_status', function () {
+            return Cheque::GetAllStatuses()->where('name', ChequeStatusEnum::DELETED->value)->first();
+        });
     }
 
     public function inactiveChequeBookStatus()
     {
-        return ChequeBook::GetAllStatuses()->where('name', ChequeBookStatusEnum::CANCELED->value)->first();
+        return Cache::rememberForever('canceled_cheque_status', function () {
+            return ChequeBook::GetAllStatuses()->where('name', ChequeBookStatusEnum::CANCELED->value)->first();
+        });
     }
 
 

@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\LMS\app\Http\Enums\ContentStatusEnum;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
 use Modules\LMS\app\Http\GlobalScope\ContentScope;
@@ -171,11 +172,17 @@ trait ContentTrait
 
     public function contentActiveStatus()
     {
-        return Content::GetAllStatuses()->firstWhere('name', ContentStatusEnum::ACTIVE->value);
+        return Cache::rememberForever('content_active_status', function () {
+            return Content::GetAllStatuses()
+                ->firstWhere('name', ContentStatusEnum::ACTIVE->value);
+        });
     }
 
     public function contentInActiveStatus()
     {
-        return Content::GetAllStatuses()->firstWhere('name', ContentStatusEnum::IN_ACTIVE->value);
+        return Cache::rememberForever('content_inactive_status', function () {
+            return Content::GetAllStatuses()
+                ->firstWhere('name', ContentStatusEnum::IN_ACTIVE->value);
+        });
     }
 }

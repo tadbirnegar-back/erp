@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\LMS\app\Http\Enums\QuestionsEnum;
 use Modules\LMS\app\Models\Course;
 use Modules\LMS\app\Models\Option;
@@ -273,12 +274,18 @@ trait QuestionsTrait
 
     public function questionActiveStatus()
     {
-        return Question::GetAllStatuses()->firstWhere('name', QuestionsEnum::ACTIVE->value);
+        return Cache::rememberForever('question_active_status', function () {
+            return Question::GetAllStatuses()
+                ->firstWhere('name', QuestionsEnum::ACTIVE->value);
+        });
     }
 
     public function questionInActiveStatus()
     {
-        return Question::GetAllStatuses()->firstWhere('name', QuestionsEnum::EXPIRED->value);
+        return Cache::rememberForever('question_inactive_status', function () {
+            return Question::GetAllStatuses()
+                ->firstWhere('name', QuestionsEnum::EXPIRED->value);
+        });
     }
 
 

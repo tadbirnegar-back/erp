@@ -2,6 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\HRMS\app\Models\Skill;
 
 trait SkillTrait
@@ -56,12 +57,18 @@ trait SkillTrait
 
     public function activeSkillStatus()
     {
-        return Skill::GetAllStatuses()->firstWhere('name', '=', $this->skillActiveName);
+        return Cache::rememberForever('skill_active_status', function () {
+            return Skill::GetAllStatuses()
+                ->firstWhere('name', '=', $this->skillActiveName);
+        });
     }
 
     public function inactiveSkillStatus()
     {
-        return Skill::GetAllStatuses()->firstWhere('name', '=', $this->skillInactiveName);
+        return Cache::rememberForever('skill_inactive_status', function () {
+            return Skill::GetAllStatuses()
+                ->firstWhere('name', '=', $this->skillInactiveName);
+        });
     }
 
 }

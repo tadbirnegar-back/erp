@@ -5,6 +5,7 @@ namespace Modules\EMS\app\Http\Traits;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Modules\AAA\app\Models\User;
 use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
 use Modules\EMS\app\Http\Enums\MeetingTypeEnum;
@@ -1027,26 +1028,41 @@ trait EnactmentTrait
 
     public function enactmentPendingSecretaryStatus()
     {
-        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value);
+        return Cache::rememberForever('enactment_pending_secretary_review_status', function () {
+            return Enactment::GetAllStatuses()
+                ->firstWhere('name', EnactmentStatusEnum::PENDING_SECRETARY_REVIEW->value);
+        });
     }
 
     public function enactmentHeyaatStatus()
     {
-        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value);
+        return Cache::rememberForever('enactment_pending_board_review_status', function () {
+            return Enactment::GetAllStatuses()
+                ->firstWhere('name', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value);
+        });
     }
 
     public function enactmentPendingForHeyaatDateStatus()
     {
-        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::PENDING_FOR_BOARD_DATE->value);
+        return Cache::rememberForever('enactment_pending_for_board_date_status', function () {
+            return Enactment::GetAllStatuses()
+                ->firstWhere('name', EnactmentStatusEnum::PENDING_FOR_BOARD_DATE->value);
+        });
     }
 
     public function enactmentCompleteStatus()
     {
-        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::COMPLETED->value);
+        return Cache::rememberForever('enactment_completed_status', function () {
+            return Enactment::GetAllStatuses()
+                ->firstWhere('name', EnactmentStatusEnum::COMPLETED->value);
+        });
     }
 
     public function enactmentCancelStatus()
     {
-        return Enactment::GetAllStatuses()->firstWhere('name', EnactmentStatusEnum::CANCELED->value);
+        return Cache::rememberForever('enactment_canceled_status', function () {
+            return Enactment::GetAllStatuses()
+                ->firstWhere('name', EnactmentStatusEnum::CANCELED->value);
+        });
     }
 }
