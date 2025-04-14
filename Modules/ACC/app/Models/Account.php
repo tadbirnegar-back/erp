@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Scopes\ActiveAccountOnlyScope;
 use Modules\ACC\Database\factories\AccountFactory;
+use Modules\ACMS\app\Models\CircularSubject;
 use Modules\BNK\app\Models\Cheque;
 use Modules\BNK\app\Models\ChequeBook;
 use Modules\StatusMS\app\Models\Status;
@@ -72,6 +73,11 @@ class Account extends Model
     public function descendantsArticles()
     {
         return $this->hasManyOfDescendantsAndSelf(Article::class, 'account_id');
+    }
+
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(CircularSubject::class,'subject_id');
     }
 
     public static function getTableName()

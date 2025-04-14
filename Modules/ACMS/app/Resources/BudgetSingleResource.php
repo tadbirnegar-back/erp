@@ -25,9 +25,9 @@ class BudgetSingleResource extends JsonResource
                 'ancestors' => $this->ounit->ancestors->pluck('name')
             ],
             'file' => [
-                'name' => $this->circularFile->name,
-                'slug' => $this->circularFile->slug,
-                'size' => $this->circularFile->size,
+                'name' => $this->circularFile?->name,
+                'slug' => $this->circularFile?->slug,
+                'size' => $this->circularFile?->size,
             ],
             'status' => [
                 'name' => $this->latestStatus->name,
@@ -38,15 +38,15 @@ class BudgetSingleResource extends JsonResource
             'operationalItemCount' => $this->operational_sum->count,
             'history' => BudgetTimelineStatusEnum::generateTimeline($this),
             'generalStatistic' => [
-                "totalIncome" => ($this->income_sum->jari_income_total + $this->income_sum->operational_income_total),
-                "totalExpense" => ($this->eco_sum->economic_total + $this->operational_sum->operational_total),
-                "difference" => (($this->income_sum->jari_income_total + $this->income_sum->operational_income_total) - ($this->eco_sum->economic_total + $this->operational_sum->operational_total)),
-                "currentIncome" => $this->income_sum->jari_income_total,
-                "currentExpense" => $this->eco_sum->economic_total,
-                "currentDifference" => ($this->income_sum->jari_income_total - $this->eco_sum->economic_total),
-                "infrastructureIncome" => $this->income_sum->operational_income_total,
-                "infrastructureExpense" => $this->operational_sum->operational_total,
-                "infrastructureDifference" => ($this->income_sum->operational_income_total - $this->operational_sum->operational_total),
+                "totalIncome" => round($this->income_sum->jari_income_total + $this->income_sum->operational_income_total),
+                "totalExpense" => round($this->eco_sum->economic_total + $this->operational_sum->operational_total),
+                "difference" => round(($this->income_sum->jari_income_total + $this->income_sum->operational_income_total) - ($this->eco_sum->economic_total + $this->operational_sum->operational_total)),
+                "currentIncome" => round($this->income_sum->jari_income_total),
+                "currentExpense" => round($this->eco_sum->economic_total),
+                "currentDifference" => round($this->income_sum->jari_income_total - $this->eco_sum->economic_total),
+                "infrastructureIncome" => round($this->income_sum->operational_income_total),
+                "infrastructureExpense" => round($this->operational_sum->operational_total),
+                "infrastructureDifference" => round($this->income_sum->operational_income_total - $this->operational_sum->operational_total),
             ],
             'archive' => $this->ancestors->isEmpty() ? [] : $this->ancestors->map(function ($ancestor) {
 

@@ -266,7 +266,7 @@ class BudgetItemController extends Controller
 
                     \DB::raw('SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount'),
 
-                    \DB::raw('SUM(COALESCE(current_year_budget_item.proposed_amount,0)) as current_year_proposed_amount'),
+                    \DB::raw('SUM(DISTINCT COALESCE(current_year_budget_item.proposed_amount,0)) as current_year_proposed_amount'),
 
                     'next_year_budget_item.id as next_year_budget_item_id',
                     'next_year_budget_item.proposed_amount as next_year_proposed_amount',

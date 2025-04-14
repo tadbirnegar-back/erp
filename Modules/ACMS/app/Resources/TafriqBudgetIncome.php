@@ -28,14 +28,14 @@ class TafriqBudgetIncome extends JsonResource
         return [
             'name' => $this->name,
             'code' => $this->code,
-            'enacted' => $this->next_year_proposed_amount,
+            'enacted' => round($this->next_year_proposed_amount),
             'ancestors' => $this->ancestors,
             'percentage' => $this->next_year_percentage,
-            'total_amount' => $this->total_amount,
-            'total_operational_amount' => $operational,
-            'total_economic_amount' => $economic,
-            'extra' => $extra,
-            'deficit' => $deficit,
+            'total_amount' => round($this->total_amount),
+            'total_operational_amount' => round($operational),
+            'total_economic_amount' => round($economic),
+            'extra' => round($extra),
+            'deficit' => round($deficit),
         ];
     }
 }

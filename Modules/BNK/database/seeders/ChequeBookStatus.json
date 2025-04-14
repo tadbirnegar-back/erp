@@ -12,6 +12,10 @@
         "className": "danger"
     },
     {
+        "name": "غیرفعال",
+        "className": "danger"
+    },
+    {
         "name": "تمام شده",
         "className": "danger"
     },

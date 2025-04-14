@@ -58,5 +58,11 @@
         "slug": "/bnk/get-first-available-cheque",
         "moduleName": "BNK",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف دسته چک",
+        "slug": "/bnk/cheque-book/delete",
+        "moduleName": "BNK",
+        "permissionTypeName": "operational"
     }
 ]

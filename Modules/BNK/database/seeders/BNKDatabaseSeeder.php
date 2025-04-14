@@ -12,14 +12,14 @@ class BNKDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            ModuleCategorySeeder::class,
-            ModuleSeeder::class,
+//            ModuleCategorySeeder::class,
+//            ModuleSeeder::class,
             PermissionsSeeder::class,
-            BankAccountStatusSeeder::class,
-            ChequeStatusSeeder::class,
+//            BankAccountStatusSeeder::class,
+//            ChequeStatusSeeder::class,
             ChequeBookStatusSeeder::class,
-            CardStatusSeeder::class,
-            TransactionStatusSeeder::class,
+//            CardStatusSeeder::class,
+//            TransactionStatusSeeder::class,
         ]);
     }
 }

@@ -160,5 +160,11 @@
         "slug": "/acc/ounit-banks/list",
         "moduleName": "ACC",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "کپی سندبه سایر دهیاری ها",
+        "slug": "/acc/documents/clone-to-ounit",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
     }
 ]

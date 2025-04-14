@@ -10,6 +10,8 @@ use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\SubAccount;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\BNK\app\Http\Enums\BankAccountTypeEnum;
+use Modules\BNK\app\Http\Enums\ChequeBookStatusEnum;
+use Modules\BNK\app\Http\Enums\ChequeStatusEnum;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Models\Bank;
 use Modules\BNK\app\Models\BankAccount;
@@ -107,7 +109,11 @@ class BankAccountController extends Controller
     public function show($id)
     {
 
-        $bankAccount = BankAccount::with(['bankBranch.bank.logo', 'latestStatus', 'chequeBooks.latestStatus', 'chequeBooks.cheques.latestStatus', 'accountCards.latestStatus', 'ounit' => function ($query) {
+        $bankAccount = BankAccount::with(['bankBranch.bank.logo', 'latestStatus', 'chequeBooks'=>function ($query) {
+            $query->whereDoesntHave('latestStatus', function ($query) {
+                $query->where('statuses.name', '=', ChequeBookStatusEnum::CANCELED);
+            })->with(['latestStatus','cheques.latestStatus']);
+        },  'accountCards.latestStatus', 'ounit' => function ($query) {
             $query->with(['village', 'ancestors' => function ($query) {
                 $query->where('unitable_type', '!=', StateOfc::class);
             }]);
