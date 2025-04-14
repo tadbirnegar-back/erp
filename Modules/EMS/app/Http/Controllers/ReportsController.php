@@ -18,6 +18,7 @@ use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingType;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\DistrictOfc;
+use Modules\OUnitMS\app\Models\FreeZone;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -153,9 +154,29 @@ class ReportsController extends Controller
 
         $user->load('activeFreeZoneRecruitmentScript.ounit.ancestorsAndSelf');
 
-        $ounits = $this->findDistrictsByFreeZone($user->activeFreeZoneRecruitmentScript);
+        if ($user->activeFreeZoneRecruitmentScript->isEmpty()){
+            $user->load('recruitmentScriptsFreeZon');
+            $districtIds = $user->recruitmentScriptsFreeZon->pluck('organization_unit_id')->unique()->flatten();
+            $rsUnits = OrganizationUnit::whereIn('id', $districtIds)
+                ->with('ancestorsAndSelf')
+                ->get();
 
-        $rsUnits = $user->activeFreeZoneRecruitmentScript->pluck('ounit')->unique()->flatten();
+        }else{
+            $ounits = $this->findDistrictsByFreeZone($user->activeFreeZoneRecruitmentScript);
+            $response = $user->activeFreeZoneRecruitmentScript;
+
+            $districtIds = collect($response)->flatMap(function ($item) {
+                return collect($item['getDistrictFromFreeZoneRc'])->pluck('id');
+            })->all();
+
+
+            $rsUnits = $user->activeFreeZoneRecruitmentScript->pluck('ounit')->unique()->flatten();
+        }
+
+
+        if(isset($request->ounitID)){
+            $districtIds = [$request->ounitID];
+        }
 
         $user->load('person.avatar', 'mr');
 
@@ -164,7 +185,7 @@ class ReportsController extends Controller
         $meetings = Meeting::whereHas('meetingMembers', function ($query) use ($employeeId) {
             $query->where('employee_id', $employeeId);
         })
-            ->whereIn('ounit_id', $ounits)
+            ->whereIn('ounit_id', $districtIds)
             ->where('isTemplate', false)
             ->whereBelongsTo($meetingType, 'meetingType')
             ->whereBetween('meeting_date', [$startDate, $endDate])
