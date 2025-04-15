@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
@@ -14,7 +15,7 @@ use Modules\PFM\app\Resources\IndexCircularsResource;
 use Modules\PFM\app\Resources\ShowCircularForUpdate;
 use Modules\PFM\app\Resources\ShowCircularResource;
 
-class PfmCircularController extends Controller
+class CircularController extends Controller
 
 
 {
@@ -34,7 +35,7 @@ class PfmCircularController extends Controller
             return response()->json(['message' => 'بخشنامه با موفقیت ساخته شد'], 200);
         } catch (\Exception $e) {
             Db::rollBack();
-            return response()->json(['message' => 'متاسفانه بخشنامه ساخته نشد'], 400);
+            return response()->json(['message' => 'ایجاد بخشنامه با مشکل مواجه شد'], 400);
         }
 
     }
@@ -48,6 +49,7 @@ class PfmCircularController extends Controller
     public function show($id)
     {
         $data = $this->showCircular($id);
+
 
         if (!$data) {
             return response()->json(['message' => 'بخشنامه یافت نشد'], 404);
@@ -78,8 +80,28 @@ class PfmCircularController extends Controller
 
     public function generateBooklets($id)
     {
-        $data = $this->publishCircular($id);
-        return response()->json(['data' => $data], 200);
+        $user = User::find(2174);
+        try {
+            Artisan::call('pfm:dispatch-circular', [
+                'circularId' => $id,
+                'userId' => $user->id
+            ]);
+//            $this->publishCircular($id);
+            return response()->json(['message' => 'بخشنامه با موفقیت ابلاغ گردید'], 200);
+        }catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+    }
+
+    public function delete($id)
+    {
+        try {
+            $this->deleteCircular($id);
+            return response()->json(['message' => 'بخشنامه با موفقیت حذف شد'], 200);
+        }catch (\Exception $e) {
+            return response()->json(['message' => 'حذف بخشنامه با مشکل مواجه شد'], 500);
+        }
     }
 
 

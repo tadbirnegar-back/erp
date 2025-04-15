@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pfm_booklet_status', function (Blueprint $table) {
+        Schema::create('pfm_booklet_statuses', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('booklet_id');
             $table->unsignedBigInteger('status_id');
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('booklet_status');
+        Schema::dropIfExists('booklet_statuses');
     }
 };

@@ -4,11 +4,11 @@ namespace Modules\PFM\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\PFM\Database\factories\LevyCircularFactory;
+use Modules\PFM\Database\factories\BookletStatusFactory;
 use Modules\StatusMS\app\Models\Status;
 
 
-class LevyCircular extends Model
+class BookletStatus extends Model
 {
     use HasFactory;
 
@@ -16,16 +16,19 @@ class LevyCircular extends Model
      * The attributes that are mass assignable.
      */
 
-    protected $table = 'pfm_levy_circular';
+    protected $fillable = [
+        'booklet_id',
+        'status_id',
+        'created_date',
+        'creator_id',
+    ];
 
-    protected $fillable = ['circular_id', 'levy_id', 'created_date'];
+    protected $table = 'pfm_booklet_statuses';
+
+
 
     public $timestamps = false;
 
-    public function levy()
-    {
-        return $this->belongsTo(Levy::class);
-    }
      public static function getTableName()
      {
             return with(new static)->getTable();

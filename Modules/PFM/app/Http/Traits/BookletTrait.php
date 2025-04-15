@@ -6,6 +6,7 @@ namespace Modules\PFM\app\Http\Traits;
 use Modules\PFM\app\Http\Enums\BookletStatusEnum;
 use Modules\PFM\app\Http\Enums\LevyStatusEnum;
 use Modules\PFM\app\Models\Booklet;
+use Modules\PFM\app\Models\BookletStatus;
 use Modules\PFM\app\Models\Levy;
 
 trait BookletTrait
@@ -62,6 +63,37 @@ trait BookletTrait
             'countOfPishnahadShodeStatus' => $countOfPishnahadShodeStatus,
         ];
     }
+    public function attachPishnahadShodeStatus($id, $user)
+    {
+        BookletStatus::create([
+            'booklet_id' => $id,
+            'status_id' => $this->PishnahadShodeStatus()->id,
+            'created_date' => now(),
+            'creator_id' => $user,
+        ]);
+    }
+
+    public function attachMosavabStatus($id, $user)
+    {
+        BookletStatus::create([
+            'booklet_id' => $id,
+            'status_id' => $this->MosavabStatus()->id,
+            'created_date' => now(),
+            'creator_id' => $user,
+        ]);
+    }
+
+    public function attachDarEntazarStatus($id, $user)
+    {
+        BookletStatus::create([
+            'booklet_id' => $id,
+            'status_id' => $this->DarEntazarStatus()->id,
+            'created_date' => now(),
+            'creator_id' => $user,
+        ]);
+    }
+
+
 
     public function MosavabStatus()
     {

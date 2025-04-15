@@ -4,6 +4,7 @@ namespace Modules\PFM\app\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\PFM\app\Console\DispatchPfmCircularCommand;
 
 class PFMServiceProvider extends ServiceProvider
 {
@@ -30,6 +31,9 @@ class PFMServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->register(RouteServiceProvider::class);
+        $this->commands([
+            DispatchPfmCircularCommand::class,
+        ]);
     }
 
     /**

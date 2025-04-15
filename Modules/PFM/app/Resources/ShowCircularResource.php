@@ -39,12 +39,7 @@ class ShowCircularResource extends JsonResource
                 "waiting" => $bookletsStatus['countOfDarEntazarStatus'],
                 "published" => $bookletsStatus['countOfPishnahadShodeStatus'],
             ],
-            'levies' => collect($data['levies'])->map(function ($levy) {
-                return [
-                    'id' => $levy['id'],
-                    'name' => $levy['name'],
-                ];
-            })->values(),
+            'levies' => $data['levies'],
         ];
     }
 }

@@ -13,16 +13,11 @@ return new class extends Migration
     {
         Schema::create('pfm_levy_items', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('prop_application_id');
-            $table->unsignedBigInteger('levy_id');
+            $table->unsignedBigInteger('circular_levy_id');
             $table->longText('name');
             $table->dateTime('created_date');
 
-            $table->foreign('prop_application_id')->references('id')->on('pfm_prop_applications')
-                ->onDelete('cascade')
-                ->onUpdate('cascade');
-
-            $table->foreign('levy_id')->references('id')->on('pfm_circular_levies')
+            $table->foreign('circular_levy_id')->references('id')->on('pfm_levy_circular')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
         });

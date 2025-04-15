@@ -3,11 +3,17 @@
 namespace Modules\PFM\app\Http\Traits;
 
 
+use Carbon\Carbon;
+use Illuminate\Bus\Batch;
+use Illuminate\Support\Facades\Bus;
+use Log;
+use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\AddressMS\app\Models\Village;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PFM\app\Http\Enums\PfmCircularStatusesEnum;
+use Modules\PFM\app\Jobs\PublishPfmCircularJob;
 use Modules\PFM\app\Models\Booklet;
 use Modules\PFM\app\Models\PfmCirculars;
 use Modules\PFM\app\Models\PfmCircularStatus;
@@ -36,9 +42,8 @@ trait PfmCircularTrait
 
         $this->FillLevies($circular->id);
 
-        $check = $this->attachDraftStatus($circular->id, $user);
+        $this->attachDraftStatus($circular->id, $user->id);
 
-        return $check;
     }
 
     public function indexCirculars()
@@ -71,7 +76,6 @@ trait PfmCircularTrait
                 $join->whereRaw('pfm_circular_statuses.created_date = (SELECT MAX(created_date) FROM pfm_circular_statuses WHERE pfm_circular_id = pfm_circulars.id)');
             }])
             ->joinRelationship('file')
-            ->with('levies')
             ->select([
                 'pfm_circulars.id',
                 'pfm_circulars.name as circular_name',
@@ -90,12 +94,25 @@ trait PfmCircularTrait
             ->where('pfm_circulars.id', $id)
             ->get();
 
+        $levies = PfmCirculars::join('pfm_levy_circular as levy_circular', 'pfm_circulars.id', '=', 'levy_circular.circular_id')
+            ->join('pfm_levies as levies', 'levy_circular.levy_id', '=', 'levies.id')
+            ->select([
+                'levy_circular.id as levy_id',
+                'levies.name as levy_name',
+            ])
+            ->distinct('pfm_circulars.id')
+            ->where('pfm_circulars.id', $id)
+            ->get();
+
+        $query[0]['levies'] = $levies;
+
+
         $countOfVillages = $this->takeValidVillagesCount();
         $bookletsWithStatuses = $this->bookletsWithStatuses($id);
         return [
             'data' => $query->first(),
             'countOfVillages' => $countOfVillages,
-            'reportOfPublishedBooklets' => $bookletsWithStatuses
+            'reportOfPublishedBooklets' => $bookletsWithStatuses,
         ];
     }
 
@@ -144,15 +161,36 @@ trait PfmCircularTrait
         $circular->save();
     }
 
-    public function publishCircular($id)
+    public function publishCircular($circularId)
     {
-        $includedOunitsForBooklet = $this->ounitsIncludedForPublish($id)->chunk(150);
+        $includedOunitsForBooklet = $this->ounitsIncludedForPublish($circularId)->chunk(150)->values();
+        $user = User::find(2174);
+        $jobs = [];
 
-        foreach ($includedOunitsForBooklet as group) {
+        $ounitIds = [];
 
-    }
+        foreach ($includedOunitsForBooklet as $ounit) {
+            foreach ($ounit->values() as $item) {
+                $delayInSeconds = rand(1, 45);
+                $jobs[] = (new PublishPfmCircularJob($circularId, $user->id, $item['ounitID']))
+                    ->delay(Carbon::now()->addSeconds($delayInSeconds));
+            }
+        }
 
-        return $includedOunitsForBooklet;
+        Bus::batch($jobs)
+            ->then(function (Batch $batch) {
+                Log::info("All jobs in the batch have completed successfully.");
+            })
+            ->catch(function (Batch $batch, \Throwable $e) {
+                Log::error("An error occurred in the batch: " . 'error');
+            })
+            ->finally(function (Batch $batch) {
+                Log::info("Batch processing is complete.");
+            })
+            ->name('PublishPfmCircularJob')
+            ->onQueue('default')
+            ->dispatchAfterResponse();
+
     }
 
     public function takeValidVillagesCount()
@@ -168,9 +206,18 @@ trait PfmCircularTrait
                     ->where('pfm_circular_booklets.pfm_circular_id', $id);
             })
             ->where('pfm_circular_booklets.id', null)
+            ->select([
+                'organization_units.id as ounitID',
+            ])
             ->get();
 
         return $data;
+    }
+
+    public function deleteCircular($id)
+    {
+        $pfmCircular = PfmCirculars::find($id);
+        $pfmCircular->delete();
     }
 
     //Global Status Actions
@@ -180,7 +227,7 @@ trait PfmCircularTrait
             'pfm_circular_id' => $id,
             'status_id' => $this->publishedStatus()->id,
             'created_date' => now(),
-            'creator_id' => $user->id,
+            'creator_id' => $user,
         ]);
     }
 
@@ -190,7 +237,7 @@ trait PfmCircularTrait
             'pfm_circular_id' => $id,
             'status_id' => $this->draftStatus()->id,
             'created_date' => now(),
-            'creator_id' => $user->id,
+            'creator_id' => $user,
         ]);
     }
 
