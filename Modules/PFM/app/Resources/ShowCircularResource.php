@@ -31,6 +31,7 @@ class ShowCircularResource extends JsonResource
             'file' => [
                 "file_slug" => $data['file_slug'],
                 "size" => Number::fileSize($data['file_size'], 2, 3),
+                'type' => $data['extension_name'],
             ],
             "booklets_data" => [
                 "percentage" => $data['booklets_count'] / $this->resource['countOfVillages'] * 100,

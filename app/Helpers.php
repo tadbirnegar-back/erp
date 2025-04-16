@@ -286,3 +286,10 @@ function addWithLeadingZeros($num1, $num2, $length = 3)
 
     return str_pad($sum, $length, "0", STR_PAD_LEFT);
 }
+
+
+function convertGregorianYearToJalaliYear($gregorianYear)
+{
+    $jalaliYear = CalendarUtils::strftime('Y', strtotime($gregorianYear));
+    return $jalaliYear;
+}

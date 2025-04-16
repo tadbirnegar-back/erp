@@ -17,9 +17,14 @@ return new class extends Migration
             $table->unsignedBigInteger('status_id');
             $table->dateTime('created_date');
             $table->unsignedBigInteger('creator_id');
+            $table->unsignedBigInteger('file_id')->nullable();
+            $table->longText('description')->nullable();
 
 
 
+            $table->foreign('file_id')->references('id')->on('files')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
 
             $table->foreign('creator_id')->references('id')->on('users')
                 ->onDelete('cascade')

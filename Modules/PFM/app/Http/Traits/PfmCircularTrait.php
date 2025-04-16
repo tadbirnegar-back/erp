@@ -46,7 +46,7 @@ trait PfmCircularTrait
 
     }
 
-    public function indexCirculars()
+    public function indexCirculars($data)
     {
         $query = PfmCirculars::joinRelationship('fiscalYear')
             ->joinRelationship('statuses', ['statuses' => function ($join) {
@@ -64,6 +64,9 @@ trait PfmCircularTrait
                 'pfm_circular_statuses.created_date as status_created_date',
             ])
             ->distinct('pfm_circulars.id')
+            ->when(isset($data['title']) , function ($query) use ($data) {
+                $query->where('pfm_circulars.name', 'like', '%' . $data['title'] . '%');
+            })
             ->get();
 
         return $query;
@@ -75,7 +78,7 @@ trait PfmCircularTrait
             ->joinRelationship('statuses', ['statuses' => function ($join) {
                 $join->whereRaw('pfm_circular_statuses.created_date = (SELECT MAX(created_date) FROM pfm_circular_statuses WHERE pfm_circular_id = pfm_circulars.id)');
             }])
-            ->joinRelationship('file')
+            ->joinRelationship('file.extension')
             ->select([
                 'pfm_circulars.id',
                 'pfm_circulars.name as circular_name',
@@ -88,6 +91,8 @@ trait PfmCircularTrait
                 'pfm_circular_statuses.created_date as status_created_date',
                 'files.slug as file_slug',
                 'files.size as file_size',
+                'extensions.name as extension_name',
+
             ])
             ->distinct('pfm_circulars.id')
             ->withCount('booklets')
@@ -216,8 +221,12 @@ trait PfmCircularTrait
 
     public function deleteCircular($id)
     {
-        $pfmCircular = PfmCirculars::find($id);
-        $pfmCircular->delete();
+        $lastStatus = PfmCircularStatus::where('pfm_circular_id', $id)->orderBy('created_date', 'desc')->first();
+        $DraftStatusId = $this->draftStatus()->id;
+        if ($lastStatus->status_id == $DraftStatusId) {
+            $pfmCircular = PfmCirculars::find($id);
+            $pfmCircular->delete();
+        }
     }
 
     //Global Status Actions

@@ -40,9 +40,10 @@ class CircularController extends Controller
 
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $data = $this->indexCirculars();
+        $data = $request->all();
+        $data = $this->indexCirculars($data);
         return IndexCircularsResource::collection($data);
     }
 
