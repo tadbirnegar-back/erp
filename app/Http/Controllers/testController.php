@@ -4,16 +4,12 @@ namespace App\Http\Controllers;
 
 
 use Modules\AAA\app\Models\User;
-use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
-use Modules\ACMS\app\Models\BudgetItem;
-use Modules\ACMS\app\Models\CircularItem;
-use Modules\ACMS\app\Models\CircularSubject;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
@@ -21,7 +17,6 @@ use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class testController extends Controller
 {
@@ -50,6 +45,88 @@ class testController extends Controller
 
     public function run()
     {
+//        $accs = Account::where('accountable_type', GlAccount::class)
+//            ->where('status_id', 155)
+//            ->whereIn('acc_accounts.category_id', [6, 7])
+//            ->whereHas('articles')
+//            ->withoutGlobalScopes()
+//            ->get(['id', 'chain_code']);
+////        dd($accs);
+//        try {
+//            \DB::beginTransaction();
+//            $a = [];
+//            $accs->each(function ($acc) use (&$a) {
+//                $sb = CircularSubject::withoutGlobalScopes()->with('account')->where('code', $acc->chain_code)->first();
+//                if ($sb && $sb?->account->id != $acc->id) {
+//                    $a[] = $acc->id;
+//////                    $articles = Article::joinRelationship('document', function ($join) {
+//////                        $join->where('fiscal_year_id', 1);
+//////                    })->where('account_id', $acc->id)->update(['account_id' => $sb->account->id]);
+////
+//////                        dd($articles);
+//////                    $articles->each(function ($article) use ($sb) {
+//////                            dd($article,$sb->account);
+//////
+//////                    });
+//                }
+//
+//            });
+//            dd($a);
+//////dd(implode(',',$a));
+//            \DB::commit();
+//            dd('dd');
+//        } catch (\Exception $e) {
+//            \DB::rollBack();
+//        }
+
+
+//// Collect IDs from accounts
+//        $accountIds = $accs->pluck('id');
+//
+//// Prepare a collection to hold articles
+//        $articles = collect();
+//
+//// Chunk the IDs into groups (e.g., 500 per chunk)
+//        $accountIds->chunk(50)->each(function ($chunkIds) use (&$articles) {
+//            $chunkArticles = Article::joinRelationship('document', function ($join) {
+//                $join->where('fiscal_year_id', 1);
+//            })
+//                ->whereIntegerInRaw('account_id', $chunkIds->toArray())
+//                ->get();
+//
+//            // Merge current chunk results into the main collection
+//            $articles = $articles->merge($chunkArticles);
+//            dd($articles);
+//        });
+//
+//        dd($articles);
+//        dd($articles->pluck('id'));
+//        $articles = Account::withoutGlobalScopes()
+//            ->where('acc_accounts.accountable_type', GlAccount::class)
+//            ->withoutGlobalScopes()
+////                ->whereNull('acc_accounts.ounit_id')
+//            ->whereIn('acc_accounts.category_id', [6, 7])
+//            ->where('acc_accounts.status_id', 155)
+//        ->joinRelationship('articles.document', [
+//            'document'=>function ($join) {
+//                $join
+//                    ->where('fiscal_year_id', '=', 1);
+//            }
+//        ])
+//
+//            ->toRawSql();
+
+//        $articles = Document::joinRelationship('articles.account', [
+//            'account' => function ($join) {
+//                $join->where('acc_accounts.accountable_type', GlAccount::class)
+//                    ->whereIn('acc_accounts.category_id', [6, 7])
+//                    ->where('acc_accounts.status_id', 155);
+//            }
+//        ])
+//            ->select('acc_articles.account_id')
+//            ->where('fiscal_year_id', '=', 1)
+//        ->get();
+//        dd($articles);
 
 //        try {
 //            \DB::beginTransaction();
@@ -98,16 +175,26 @@ class testController extends Controller
 //            dd($e->getMessage());
 //        }
 
-
-//        $user = User::where('mobile', '9148180075')->first();
-//        $recruitmentScripts = $user
-//            ->activeRecruitmentScripts()
-//            ->with(['organizationUnit'])
-//            ->whereHas('scriptType', function ($query) {
-//                $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
-//            })->get();
+//
+//        $user = User::whereIntegerInRaw('mobile', ['9148005144',])->with([
+//            'activeRecruitmentScripts' => function ($query) {
+//                $query->with(['organizationUnit'])
+//                    ->whereHas('scriptType', function ($query) {
+//                        $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+//                    });
+//            }
+//
+//        ])->get();
+////        dd($user);
+//        $recruitmentScripts = $user->pluck('activeRecruitmentScripts')->flatten(1);
+////        $recruitmentScripts = $user
+////            ->activeRecruitmentScripts()
+////            ->with(['organizationUnit'])
+////            ->whereHas('scriptType', function ($query) {
+////                $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+////            })->get();
 ////
-//        $a = implode(',', ($recruitmentScripts->pluck('employee_id')->toArray()));
+//        $a = implode(',', ($recruitmentScripts->pluck('organization_unit_id')->toArray()));
 //        dd($a);
 //
 //        try {

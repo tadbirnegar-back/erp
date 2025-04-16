@@ -166,5 +166,30 @@
         "slug": "/acc/documents/clone-to-ounit",
         "moduleName": "ACC",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "قطعی کردن تمام اسناد",
+        "slug": "/acc/documents/confirm-all",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست عناوین پیشنهادی",
+        "slug": "/acc/documents/description/list",
+        "moduleName": "ACC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن عنوان سند",
+        "slug": "/acc/documents/description/add",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف عنوان سند",
+        "slug": "/acc/documents/description/delete/{id}",
+        "moduleName": "ACC",
+        "permissionTypeName": "operational"
     }
+
 ]

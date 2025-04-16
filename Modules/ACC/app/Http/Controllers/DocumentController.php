@@ -1574,10 +1574,7 @@ class DocumentController extends Controller
                 ->first();
             if ($document) {
                 $this->attachStatusToDocument($document, $status, Auth::user()->id);
-            }
-
             //==============================
-
             $docs = Account::withoutGlobalScopes()
                 ->whereIntegerNotInRaw('category_id', [AccCategoryEnum::INCOME->value, AccCategoryEnum::EXPENSE->value])
                 ->where('acc_accounts.status_id', '=', 155)
@@ -1640,6 +1637,11 @@ class DocumentController extends Controller
                     'total' => $item->total,
                 ];
             });
+            }else{
+                $response = [];
+            }
+
+
 
 
             DB::commit();
@@ -1691,6 +1693,7 @@ class DocumentController extends Controller
                 if ($ounit->documents->isEmpty()) {
                     $newDocument = $document->replicate();
                     $newDocument->ounit_id = $ounit->id;
+                    $newDocument->ounit_head_id = $ounit?->head_id;
                     $newDocument->create_date = now();
                     $newDocument->read_only = false;
                     $lastDocNumber = $this->getLatestDoc($ounit->id, $document->fiscal_year_id);
@@ -1722,6 +1725,36 @@ class DocumentController extends Controller
             DB::commit();
             return response()->json(['message' => 'با موفقیت انجام شد', 'closedOunits' => $closedOunits]);
 
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function bulkChangeDocStatusToConfirmed(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'documentIDs' => ['required', 'json'],
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['error' => $validate->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            $docIDs = json_decode($data['documentIDs'], true);
+            $documents = Document::whereIntegerInRaw('id', $docIDs)->get();
+            $user = Auth::user();
+            $confStatus = $this->confirmedDocumentStatus();
+            $documents->each(function ($document) use ($confStatus,$user) {
+                $this->attachStatusToDocument($document, $confStatus, $user->id);
+            });
+
+            DB::commit();
+
+            return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
