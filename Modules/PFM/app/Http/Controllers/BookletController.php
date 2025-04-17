@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\PFM\app\Http\Traits\BookletTrait;
 use Modules\PFM\app\Resources\ListOfBookletsResource;
+use Modules\PFM\app\Resources\ShowBookletResource;
 
 class BookletController extends Controller
 {
@@ -25,7 +26,6 @@ class BookletController extends Controller
 //        $user = Auth::user();
         $user = User::find(2174);
         $data = $this->listOfBooklets($data, $user, $pageNum, $perPage);
-        return response() -> json($data);
 
         return ListOfBookletsResource::collection($data);
     }
@@ -33,7 +33,12 @@ class BookletController extends Controller
     public function show($id)
     {
         $user = User::find(2174);
-        $query = $this-> showBooklet($id, $user);
+        $query = $this->showBooklet($id, $user);
         return response() -> json($query);
+        if ($query['status'] == 200) {
+            return new ShowBookletResource($query);
+        } else {
+            return response()->json(['message' => $query['message']], $query['status']);
+        }
     }
 }

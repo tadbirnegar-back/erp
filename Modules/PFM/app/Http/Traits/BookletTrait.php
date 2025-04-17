@@ -113,12 +113,16 @@ trait BookletTrait
 
     public function showBooklet($id, $user)
     {
+
+
+
         $query = Booklet::query()
             ->joinRelationship('statuses', ['statuses' => function ($join) {
                 $join->whereRaw('pfm_booklet_statuses.created_date = (SELECT MAX(created_date) FROM pfm_booklet_statuses WHERE booklet_id = pfm_circular_booklets.id)');
             }])
             ->select([
                 'pfm_circular_booklets.id',
+                'pfm_booklet_statuses.id as status_id',
                 'statuses.name as status_name',
                 'statuses.class_name as status_class',
                 'pfm_booklet_statuses.created_date as status_created_date',
@@ -138,6 +142,14 @@ trait BookletTrait
         $statusName = $query->first()->status_name;
         $ounitId = $query->first()->ounit_id;
 
+
+        $user->load(['activeRecruitmentScripts' => function ($query) use ($ounitId) {
+            $query->where('organization_unit_id', $ounitId);
+        }]);
+
+        return $user;
+
+
         if ($statusName == BookletStatusEnum::RAD_SHODE->value) {
             return ['message' => 'شما به این دفترچه دسترسی ندارید', 'status' => 403];
         }
@@ -149,7 +161,7 @@ trait BookletTrait
 
         $circularData = $this->getCircularDatasInBooklet($circularId);
 
-        return ['circular_data' => $circularData, 'booklet_data' => $query, 'timeLine' => $timeLine, 'declined' => $declined , 'status' => 200];
+        return ['circular_data' => $circularData, 'booklet_data' => $query->first(), 'timeLine' => $timeLine, 'declined' => $declined , 'status' => 200];
     }
 
     private function getCircularDatasInBooklet($id)
@@ -175,7 +187,6 @@ trait BookletTrait
 
             ])
             ->distinct('pfm_circulars.id')
-            ->withCount('booklets')
             ->where('pfm_circulars.id', $id)
             ->get();
 
@@ -199,24 +210,24 @@ trait BookletTrait
     {
         return [
             BookletStatusEnum::MOSAVAB->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'Done'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'Done']
+                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done' , 'class' => 'success'],
+                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'Done' , 'class' => 'success'],
+                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'Done' , 'class' => 'success']
             ],
             BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'NotDone'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'NotDone'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone']
+                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'NotDone' , 'class' => 'primary'],
+                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'NotDone' , 'class' => 'gray'],
+                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone' , 'class' => 'gray']
             ],
             BookletStatusEnum::DAR_ENTEZAR_SHURA->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'NotDone'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone']
+                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done' , 'class' => 'success'],
+                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'NotDone' , 'class' => 'primary'],
+                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone' , 'class' => 'gray']
             ],
             BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'Done'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone']
+                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done' , 'class' => 'success'],
+                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'Done' , 'class' => 'success'],
+                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone' , 'class' => 'primary']
             ],
         ];
     }
@@ -229,25 +240,29 @@ trait BookletTrait
             ->join('statuses as declines_statuses', 'declines_statuses.id', '=', 'booklet_statuses.status_id')
             ->select([
                 'declines_statuses.name as status_name',
-                'booklet_statuses.created_date as date'
+                'booklet_statuses.created_date as date',
+                'booklet_statuses.booklet_id as booklet_id'
             ])
-            ->distinct('pfm_circular_booklets.id')
             ->where('pfm_circular_booklets.ounit_id', $ounitId)
             ->where('pfm_circular_booklets.pfm_circular_id', $circularId)
             ->where('statuses.name', BookletStatusEnum::RAD_SHODE->value)
-            ->get();
+            ->get()->groupBy('booklet_id');
 
 
-        $statusesArray = $query->pluck('status_name')->toArray();
-        if(empty($statusesArray))
-        {
-            return [];
-        }
 
-        $lengthOfArray =  count($statusesArray);
-        $myIndex = $lengthOfArray - 2;
-        $timeLine =  $this->getTimeLineDeclined()[$statusesArray[$myIndex]];
-        return [$query , $timeLine];
+
+        $data = [];
+
+        $query->map(function ($items) use (&$data) {
+            $sorted = $items->sortBy('created_date');
+
+            $OneToLastStatus =  $sorted->count() >= 2 ? [$sorted[$sorted->count() - 2]] : [];
+            $timeline = $this->getTimeLineDeclined()[$OneToLastStatus[0]['status_name']];
+            $data[] = ['statuses' => $sorted , 'timeLine' => $timeline];
+
+        });
+
+        return $data;
     }
 
     public function getTimeLineDeclined()
