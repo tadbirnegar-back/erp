@@ -4,6 +4,7 @@ namespace Modules\ACC\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
+use Cache;
 use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -377,6 +378,18 @@ class DocumentController extends Controller
             }
 
             DB::commit();
+
+
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("last_year_confirmed_documents_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("three_months_two_years_ago_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("nine_month_last_year_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+            }
+
+
             $document->load(['articles' => function ($query) {
                 $query
                     ->orderBy('priority', 'asc')
@@ -500,9 +513,15 @@ class DocumentController extends Controller
                     'total' => $item->total,
                 ];
             });
-
-
             DB::commit();
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("last_year_confirmed_documents_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("three_months_two_years_ago_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("nine_month_last_year_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+            }
             return response()->json($response);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -567,6 +586,14 @@ class DocumentController extends Controller
             $status = $this->confirmedDocumentStatus();
             $this->attachStatusToDocument($document, $status, Auth::user()->id);
             DB::commit();
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("last_year_confirmed_documents_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("three_months_two_years_ago_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("nine_month_last_year_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+            }
             return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -634,6 +661,14 @@ class DocumentController extends Controller
 
             });
             DB::commit();
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("last_year_confirmed_documents_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("three_months_two_years_ago_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("nine_month_last_year_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+            }
             return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1074,7 +1109,7 @@ class DocumentController extends Controller
 
 
             $doc['documentNumber'] = 1;
-            $doc['documentDate'] = (new Jalalian($fiscalYear->name, 1, 1))->getEndDayOfYear()->toDateString();
+            $doc['documentDate'] = (new Jalalian($fiscalYear->name, 1, 1))->toDateString();
             $doc['ounitID'] = $data['ounitID'];
             $doc['description'] = 'سند افتتاحیه';
             $doc['documentTypeID'] = DocumentTypeEnum::OPENING->value;
@@ -1574,31 +1609,42 @@ class DocumentController extends Controller
                 ->first();
             if ($document) {
                 $this->attachStatusToDocument($document, $status, Auth::user()->id);
-            //==============================
-            $docs = Account::withoutGlobalScopes()
-                ->whereIntegerNotInRaw('category_id', [AccCategoryEnum::INCOME->value, AccCategoryEnum::EXPENSE->value])
-                ->where('acc_accounts.status_id', '=', 155)
-                ->where('acc_accounts.ounit_id', $data['ounitID'])
-                ->join('acc_articles', 'acc_articles.account_id', '=', 'acc_accounts.id')
-                ->join('acc_documents', 'acc_documents.id', '=', 'acc_articles.document_id')
-                ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
-                ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
-                ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
-                ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
-                ->where('acc_documents.ounit_id', $data['ounitID'])
-                ->where('acc_documents.fiscal_year_id', 1)
-                ->with(['newCode' => function ($query) use ($data) {
-                    $query->with(['ancestors' => function ($query) use ($data) {
-                        $query->withoutGlobalScopes();
+                //==============================
+                $docs = Account::withoutGlobalScopes()
+                    ->whereIntegerNotInRaw('category_id', [AccCategoryEnum::INCOME->value, AccCategoryEnum::EXPENSE->value])
+                    ->where('acc_accounts.status_id', '=', 155)
+                    ->where('acc_accounts.ounit_id', $data['ounitID'])
+                    ->join('acc_articles', 'acc_articles.account_id', '=', 'acc_accounts.id')
+                    ->join('acc_documents', 'acc_documents.id', '=', 'acc_articles.document_id')
+                    ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
+                    ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
+                    ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
+                    ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value)
+                    ->where('acc_documents.ounit_id', $data['ounitID'])
+                    ->where('acc_documents.fiscal_year_id', 1)
+                    ->with(['newCode' => function ($query) use ($data) {
+                        $query->with(['ancestors' => function ($query) use ($data) {
+                            $query->withoutGlobalScopes();
 
-                    }])
-                        ->where('ounit_id', '=', $data['ounitID'])->orWhereNull('ounit_id')//                    ->withoutGlobalScopes()
-                    ;
-                }, 'ancestorsAndSelf' => function ($query) {
-                    $query->withoutGlobalScopes();
-                }, 'accountCategory'])
-                ->select(
-                    [
+                        }])
+                            ->where('ounit_id', '=', $data['ounitID'])->orWhereNull('ounit_id')//                    ->withoutGlobalScopes()
+                        ;
+                    }, 'ancestorsAndSelf' => function ($query) {
+                        $query->withoutGlobalScopes();
+                    }, 'accountCategory'])
+                    ->select(
+                        [
+                            'acc_accounts.id',
+                            'acc_accounts.name',
+                            'acc_accounts.chain_code',
+                            'acc_accounts.new_chain_code',
+                            'acc_accounts.parent_id',
+                            'acc_accounts.category_id',
+
+                            DB::raw('SUM(acc_articles.credit_amount) - SUM(acc_articles.debt_amount) AS total'),
+                        ]
+                    )
+                    ->groupBy(
                         'acc_accounts.id',
                         'acc_accounts.name',
                         'acc_accounts.chain_code',
@@ -1606,42 +1652,29 @@ class DocumentController extends Controller
                         'acc_accounts.parent_id',
                         'acc_accounts.category_id',
 
-                        DB::raw('SUM(acc_articles.credit_amount) - SUM(acc_articles.debt_amount) AS total'),
-                    ]
-                )
-                ->groupBy(
-                    'acc_accounts.id',
-                    'acc_accounts.name',
-                    'acc_accounts.chain_code',
-                    'acc_accounts.new_chain_code',
-                    'acc_accounts.parent_id',
-                    'acc_accounts.category_id',
 
-
-                )
-                ->having('total', '!=', 0)
-                ->get();
-            $response = $docs->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'ancestors' => $item->ancestorsAndSelf->isNotEmpty() ? $item->ancestorsAndSelf->map(function ($ancestor) {
-                        return [
-                            'id' => $ancestor->id,
-                            'name' => $ancestor->name,
-                            'chain_code' => $ancestor->chain_code,
-                            'type' => AccountLayerTypesEnum::from($ancestor->accountable_type)->getLabel(),
-                        ];
-                    }) : [],
-                    'newCode' => $item->newCode,
-                    'category' => $item->accountCategory?->name,
-                    'total' => $item->total,
-                ];
-            });
-            }else{
+                    )
+                    ->having('total', '!=', 0)
+                    ->get();
+                $response = $docs->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'ancestors' => $item->ancestorsAndSelf->isNotEmpty() ? $item->ancestorsAndSelf->map(function ($ancestor) {
+                            return [
+                                'id' => $ancestor->id,
+                                'name' => $ancestor->name,
+                                'chain_code' => $ancestor->chain_code,
+                                'type' => AccountLayerTypesEnum::from($ancestor->accountable_type)->getLabel(),
+                            ];
+                        }) : [],
+                        'newCode' => $item->newCode,
+                        'category' => $item->accountCategory?->name,
+                        'total' => $item->total,
+                    ];
+                });
+            } else {
                 $response = [];
             }
-
-
 
 
             DB::commit();
@@ -1723,6 +1756,14 @@ class DocumentController extends Controller
 
 
             DB::commit();
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("last_year_confirmed_documents_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("three_months_two_years_ago_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("nine_month_last_year_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+            }
             return response()->json(['message' => 'با موفقیت انجام شد', 'closedOunits' => $closedOunits]);
 
         } catch (Exception $e) {
@@ -1748,7 +1789,7 @@ class DocumentController extends Controller
             $documents = Document::whereIntegerInRaw('id', $docIDs)->get();
             $user = Auth::user();
             $confStatus = $this->confirmedDocumentStatus();
-            $documents->each(function ($document) use ($confStatus,$user) {
+            $documents->each(function ($document) use ($confStatus, $user) {
                 $this->attachStatusToDocument($document, $confStatus, $user->id);
             });
 
