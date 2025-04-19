@@ -11,15 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pfm_circular_tariffs', function (Blueprint $table) {
+        Schema::create('pfm_levy_tariffs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('item_id');
             $table->unsignedBigInteger('booklet_id');
+            $table->unsignedBigInteger('app_id');
             $table->bigInteger('value');
             $table->unsignedBigInteger('creator_id');
             $table->dateTime('created_date');
 
-            $table->foreign('item_id')->references('id')->on('pfm_circular_items')
+
+            $table->foreign('app_id')->references('id')->on('pfm_prop_applications')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
+
+            $table->foreign('item_id')->references('id')->on('pfm_levy_items')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
 

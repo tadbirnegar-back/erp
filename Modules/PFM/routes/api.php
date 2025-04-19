@@ -35,3 +35,6 @@ Route::get('/pfm/levy-items/index/{id}', [LevyItemsController::class, 'index']);
 //End points of masoule fani
 Route::post('/pfm/booklets/list', [BookletController::class, 'index']);
 Route::get('/pfm/booklet/show/{id}', [BookletController::class, 'show']);
+
+//Tariffs
+Route::post('/pfm/booklet-items/{id}', [BookletController::class, 'showItems']);

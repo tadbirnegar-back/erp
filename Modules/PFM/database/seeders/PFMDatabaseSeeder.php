@@ -16,7 +16,8 @@ class PFMDatabaseSeeder extends Seeder
 //            PfmCircularStatusesSeeder::class,
 //            LevyStatusSeeder::class,
 //            LeviesSeeder::class,
-            BookletStatusesSeeder::class,
+//            BookletStatusesSeeder::class,
+            FullFillApplicationsSeeder::class,
         ]);
     }
 }

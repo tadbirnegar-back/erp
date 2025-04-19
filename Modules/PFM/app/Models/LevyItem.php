@@ -26,6 +26,11 @@ class LevyItem extends Model
 
     public $timestamps = false;
 
+    public function tarrifs()
+    {
+        return $this->hasMany(Tarrifs::class , 'item_id' , 'id');
+    }
+
     public static function getTableName()
     {
         return with(new static)->getTable();

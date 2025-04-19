@@ -34,11 +34,23 @@ class BookletController extends Controller
     {
         $user = User::find(2174);
         $query = $this->showBooklet($id, $user);
-        return response() -> json($query);
         if ($query['status'] == 200) {
             return new ShowBookletResource($query);
         } else {
             return response()->json(['message' => $query['message']], $query['status']);
         }
+    }
+
+
+    public function showItems(Request $request , $levyId)
+    {
+        $data = $request->all();
+        $bookletId = $data['booklet_id'];
+        $res = $this->showTable($levyId , $bookletId);
+        return response()->json($res);
+    }
+    public function store(Request $request , $id)
+    {
+
     }
 }

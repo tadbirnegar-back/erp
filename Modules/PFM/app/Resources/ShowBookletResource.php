@@ -17,6 +17,7 @@ class ShowBookletResource extends JsonResource
         $circular = $this->resource['circular_data'];
         $booklet = $this->resource['booklet_data'];
         $declined = $this->resource['declined'];
+        $timeLine = $this->resource['timeLine'];
         return [
             'circular' => [
                 'id' => $circular['id'],
@@ -48,6 +49,7 @@ class ShowBookletResource extends JsonResource
             ],
             'levies' => $circular['levies'],
             'declined' => $declined,
+            'timeLine' => $timeLine,
 
 
         ];

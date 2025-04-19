@@ -4,15 +4,21 @@ namespace Modules\PFM\app\Http\Traits;
 
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\PFM\app\Http\Enums\ApplicationsForTablesEnum;
 use Modules\PFM\app\Http\Enums\BookletStatusEnum;
 use Modules\PFM\app\Http\Enums\LevyStatusEnum;
 use Modules\PFM\app\Models\Booklet;
 use Modules\PFM\app\Models\BookletStatus;
 use Modules\PFM\app\Models\Levy;
+use Modules\PFM\app\Models\LevyCircular;
+use Modules\PFM\app\Models\LevyItem;
 use Modules\PFM\app\Models\PfmCirculars;
+use Modules\PFM\app\Models\PropApplication;
+use Modules\PFM\app\Models\Tarrifs;
 
 trait BookletTrait
 {
@@ -115,7 +121,6 @@ trait BookletTrait
     {
 
 
-
         $query = Booklet::query()
             ->joinRelationship('statuses', ['statuses' => function ($join) {
                 $join->whereRaw('pfm_booklet_statuses.created_date = (SELECT MAX(created_date) FROM pfm_booklet_statuses WHERE booklet_id = pfm_circular_booklets.id)');
@@ -143,11 +148,16 @@ trait BookletTrait
         $ounitId = $query->first()->ounit_id;
 
 
-        $user->load(['activeRecruitmentScripts' => function ($query) use ($ounitId) {
-            $query->where('organization_unit_id', $ounitId);
+        $scriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
+
+        $user->load(['activeRecruitmentScripts' => function ($query) use ($ounitId, $scriptType) {
+            $query->where('organization_unit_id', $ounitId)
+                ->where('script_type_id', $scriptType->id);
         }]);
 
-        return $user;
+        if ($user->activeRecruitmentScripts->count() == 0) {
+            return ['message' => 'شما به این دفترچه دسترسی ندارید', 'status' => 403];
+        }
 
 
         if ($statusName == BookletStatusEnum::RAD_SHODE->value) {
@@ -156,12 +166,12 @@ trait BookletTrait
 
         $timeLine = $this->getTimeLine()[$statusName];
 
-        $declined =  $this->declinedBooklets($circularId, $ounitId);
+        $declined = $this->declinedBooklets($circularId, $ounitId);
 
 
         $circularData = $this->getCircularDatasInBooklet($circularId);
 
-        return ['circular_data' => $circularData, 'booklet_data' => $query->first(), 'timeLine' => $timeLine, 'declined' => $declined , 'status' => 200];
+        return ['circular_data' => $circularData, 'booklet_data' => $query->first(), 'timeLine' => $timeLine, 'declined' => $declined, 'status' => 200];
     }
 
     private function getCircularDatasInBooklet($id)
@@ -210,24 +220,24 @@ trait BookletTrait
     {
         return [
             BookletStatusEnum::MOSAVAB->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done' , 'class' => 'success'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'Done' , 'class' => 'success'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'Done' , 'class' => 'success']
+                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
+                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value],
+                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value]
             ],
             BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'NotDone' , 'class' => 'primary'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'NotDone' , 'class' => 'gray'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone' , 'class' => 'gray']
+                ['class' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
+                ['class' => 'gray', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value],
+                ['class' => 'gray', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value]
             ],
             BookletStatusEnum::DAR_ENTEZAR_SHURA->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done' , 'class' => 'success'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'NotDone' , 'class' => 'primary'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone' , 'class' => 'gray']
+                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
+                ['class' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
+                ['class' => 'gray', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value]
             ],
             BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'Done' , 'class' => 'success'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'Done' , 'class' => 'success'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'NotDone' , 'class' => 'primary']
+                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
+                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value],
+                ['class' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value]
             ],
         ];
     }
@@ -249,16 +259,14 @@ trait BookletTrait
             ->get()->groupBy('booklet_id');
 
 
-
-
         $data = [];
 
         $query->map(function ($items) use (&$data) {
             $sorted = $items->sortBy('created_date');
 
-            $OneToLastStatus =  $sorted->count() >= 2 ? [$sorted[$sorted->count() - 2]] : [];
+            $OneToLastStatus = $sorted->count() >= 2 ? [$sorted[$sorted->count() - 2]] : [];
             $timeline = $this->getTimeLineDeclined()[$OneToLastStatus[0]['status_name']];
-            $data[] = ['statuses' => $sorted , 'timeLine' => $timeline];
+            $data[] = ['statuses' => $sorted, 'timeLine' => $timeline];
 
         });
 
@@ -286,6 +294,69 @@ trait BookletTrait
         ];
     }
 
+    public function showTable($levyId, $bookletId)
+    {
+        $bookletId = Booklet::find($bookletId);
+        $circularId = $bookletId->pfm_circular_id;
+        $levyCirculars = LevyCircular::where('levy_id', $levyId)->where('circular_id', $circularId)->first();
+
+        $shuruh = LevyItem::where('circular_levy_id', $levyCirculars->id)->get();
+        $levy = Levy::find($levyId);
+
+        $levyName = $levy->name;
+
+        $applications = '';
+        $multipleAppsIDs = [];
+        switch ($levyName) {
+            case ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_SINGLES->value:
+                $applications = ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_SINGLES->values();
+                $multipleAppsIDs = ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_MULTIPLES->values();
+
+
+                break;
+        }
+
+
+        $applicationsInsideTable = [];
+
+        foreach ($applications as $app) {
+            $applicationsInsideTable[] = PropApplication::find($app);
+        }
+
+        $addMultiples = function ($items) use (&$addMultiples) {
+            $result = [];
+
+            foreach ($items as $value) {
+                if (is_array($value)) {
+                    $result[] = $addMultiples($value);
+                } else {
+                    $result[] = PropApplication::find($value);
+                }
+            }
+
+            return $result;
+        };
+
+        $structuredMultiples = $addMultiples($multipleAppsIDs);
+
+        $karbariHa = array_merge($applicationsInsideTable, $structuredMultiples);
+
+
+
+        $tariffs = [];
+        $shuruh->map(function ($item) use (&$bookletId, &$tariffs) {
+            $data = Tarrifs::Where('item_id', $item->id)->where('booklet_id', $bookletId->id)->first();
+            if (!is_null($data)) {
+                $tariffs[] = [
+                    'app_id' => $data->app_id,
+                    'item_id' => $data->item_id,
+                    'value' => $data->value,
+                ];
+            }
+        });
+        return [$tariffs , $karbariHa , $shuruh];
+
+    }
 
     //Attaching statuses
 

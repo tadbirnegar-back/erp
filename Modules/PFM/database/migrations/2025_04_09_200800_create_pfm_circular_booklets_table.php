@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('pfm_circular_booklets', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('p1')->nullable();
-            $table->bigInteger('p2')->nullable();
-            $table->bigInteger('p3')->nullable();
+            $table->bigInteger('p_residential')->nullable();
+            $table->bigInteger('p_commercial')->nullable();
+            $table->bigInteger('p_administrative')->nullable();
             $table->unsignedBigInteger('ounit_id');
             $table->unsignedBigInteger('pfm_circular_id');
             $table->dateTime('created_date');
