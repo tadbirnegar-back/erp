@@ -34,6 +34,11 @@ class Position extends Model
         return $this->belongsToMany(Employee::class, 'recruitment_scripts');
     }
 
+    public function recruitmentScripts(): BelongsToMany
+    {
+        return $this->belongsToMany(RecruitmentScript::class, 'recruitment_scripts')->as('rc');
+    }
+
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);

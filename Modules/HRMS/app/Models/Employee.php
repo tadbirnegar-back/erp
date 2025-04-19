@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\Database\factories\EmployeeFactory;
 use Modules\PersonMS\app\Models\Person;
 use Modules\StatusMS\app\Models\Status;
@@ -66,6 +67,13 @@ class Employee extends Model
     public function recruitmentScripts(): HasMany
     {
         return $this->hasMany(RecruitmentScript::class, 'employee_id');
+    }
+
+    public function activeRecruitmentScripts(): HasMany
+    {
+        return $this->hasMany(RecruitmentScript::class, 'employee_id')->whereHas('latestStatus', function ($query) {
+            $query->where('name', '=', RecruitmentScriptStatusEnum::ACTIVE->value);
+        });
     }
 
     public function person()

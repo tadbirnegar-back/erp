@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
@@ -42,13 +43,21 @@ trait EmployeeTrait
 
     public function employeeIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $employeeQuery = Employee::with('person.avatar', 'status', 'positions')->distinct();
+        $employeeQuery = Employee::with([
+            'person.avatar',
+            'status',
+            'positions',
+            'activeRecruitmentScripts.position'
+        ])->distinct();
 
         $searchTerm = $data['name'] ?? null;
         $position = $data['positionID'] ?? null;
         $scriptType = $data['scriptTypeID'] ?? null;
         $status = $data['statusID'] ?? null;
+        $pageNumber = $data['page'] ?? 1;
+        $perPage = $data['perPage'] ?? 10;
 
+// 🔍 Filtering
         $employeeQuery->when($searchTerm, function ($query, $searchTerm) {
             $query->whereHas('person', function ($query) use ($searchTerm) {
                 $query->whereRaw('MATCH(display_name) AGAINST(?)', [$searchTerm])
@@ -60,9 +69,10 @@ trait EmployeeTrait
                     $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
                 }, 'person.user', 'person.avatar']);
         });
+
         $employeeQuery->when($position, function ($query, $position) {
-            $query->whereHas('latestRecruitmentScript', function ($query) use ($position) {
-                $query->where('position_id', '=', $position);
+            $query->whereHas('activeRecruitmentScripts.position', function ($q) use ($position) {
+                $q->where('positions.id', $position);
             });
         });
 
@@ -71,18 +81,50 @@ trait EmployeeTrait
                 $query->where('script_type_id', '=', $scriptType);
             });
         });
+
         $employeeQuery->when($status, function ($query, $status) {
             $query->whereHas('status', function ($query) use ($status) {
                 $query->where('statuses.id', '=', $status);
             });
         });
+
         $employeeQuery->orderBy('id', 'desc');
+
+// 📦 Pagination
         $result = $employeeQuery->paginate($perPage, page: $pageNumber);
 
+// 🛠 Replace `positions` with ones from `activeRecruitmentScripts`
+        $result->getCollection()->transform(function ($employee) {
+            $recruitmentPositions = $employee->activeRecruitmentScripts
+                ->pluck('position')
+                ->unique('id')
+                ->values();
+
+            $positionsFormatted = $recruitmentPositions->map(function ($position) use ($employee) {
+                return [
+                    'id' => $position->id,
+                    'name' => $position->name,
+                    'status_id' => $position->status_id,
+                    'ounit_cat' => $position->ounit_cat,
+                    'pivot' => [
+                        'employee_id' => $employee->id,
+                        'position_id' => $position->id,
+                    ],
+                ];
+            });
+
+            $employee->setRelation('positions', $positionsFormatted);
+
+            return $employee;
+        });
+
         return $result;
+
+
     }
 
-    public function getEmployeesByPersonName(string $searchTerm)
+    public
+    function getEmployeesByPersonName(string $searchTerm)
     {
         return WorkForce::where('workforceable_type', Employee::class)
             ->whereHas('person', function ($query) use ($searchTerm) {
@@ -100,7 +142,8 @@ trait EmployeeTrait
     }
 
 
-    public function employeeStore(array $data)
+    public
+    function employeeStore(array $data)
     {
 
 
@@ -141,13 +184,15 @@ trait EmployeeTrait
 
     }
 
-    public function activeEmployeeStatus()
+    public
+    function activeEmployeeStatus()
     {
         return Employee::GetAllStatuses()
             ->firstWhere('name', '=', self::$activeEmployeeStatus);
     }
 
-    public function employeeUpdate(array $data, Employee $employee)
+    public
+    function employeeUpdate(array $data, Employee $employee)
     {
 
 
@@ -187,12 +232,14 @@ trait EmployeeTrait
 
     }
 
-    public function employeeShow(int $id)
+    public
+    function employeeShow(int $id)
     {
         return Employee::with('workForce')->findOrFail($id);
     }
 
-    public function isEmployee(int $personID)
+    public
+    function isEmployee(int $personID)
     {
 
         $employee = Employee::whereHas('workforce', function ($query) use ($personID) {
@@ -201,19 +248,22 @@ trait EmployeeTrait
         return $employee;
     }
 
-    public function hasEmployee(Person $person)
+    public
+    function hasEmployee(Person $person)
     {
         return $person->employee;
     }
 
-    public function addEmployeeScriptTypes()
+    public
+    function addEmployeeScriptTypes()
     {
         $result = IssueTime::firstWhere('title', 'شروع به همکاری')->with('scriptTypes');
 
         return $result->scriptTypes;
     }
 
-    public function loadLatestActiveScript(Employee $employee)
+    public
+    function loadLatestActiveScript(Employee $employee)
     {
         return $employee->load(['latestRecruitmentScript' => function ($query) {
             $query->where('expire_date', '>', now())
@@ -223,7 +273,8 @@ trait EmployeeTrait
         }]);
     }
 
-    public function getCompatibleIssueTimesByName(string $name = null)
+    public
+    function getCompatibleIssueTimesByName(string $name = null)
     {
         $compatibleIssueTimes = $this->compatibleIssueTimes[$name];
         $issueTimes = IssueTime::whereIn('title', $compatibleIssueTimes)
@@ -236,7 +287,8 @@ trait EmployeeTrait
         return $issueTimes->pluck('scriptTypes')->flatten();
     }
 
-    public function getCompatibleIssueTimesForNewScript(string $name, int $employeeID)
+    public
+    function getCompatibleIssueTimesForNewScript(string $name, int $employeeID)
     {
         $compatibleIssueTimes = $this->compatibleIssueTimesForNewScript[$name];
 
@@ -259,7 +311,8 @@ trait EmployeeTrait
             ->flatten();
     }
 
-    public function getCompatibleParentScriptsBySubOrigin(int $employeeID)
+    public
+    function getCompatibleParentScriptsBySubOrigin(int $employeeID)
     {
         $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->whereHas('scriptType', function ($q) {
             $q->where('origin_id', ScriptTypeOriginEnum::Sub->value);
@@ -268,7 +321,8 @@ trait EmployeeTrait
         return $recruitmentScripts;
     }
 
-    public function getScriptAgentCombos(HireType $hireType, ScriptType $scriptType)
+    public
+    function getScriptAgentCombos(HireType $hireType, ScriptType $scriptType)
     {
         $hireTypeId = $hireType->id;
         $scriptTypeId = $scriptType->id;
@@ -287,7 +341,8 @@ trait EmployeeTrait
         return $scriptAgents;
     }
 
-    public function changeParentRecruitmentScriptStatus(Employee $employee, int $parentID, IssueTime $issueTime)
+    public
+    function changeParentRecruitmentScriptStatus(Employee $employee, int $parentID, IssueTime $issueTime)
     {
         $parentScript = $employee->recruitmentScripts()->where('id', $parentID)->with('issueTime')->first();
 
