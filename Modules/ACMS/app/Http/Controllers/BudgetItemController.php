@@ -79,11 +79,13 @@ class BudgetItemController extends Controller
                     }
                 ])
                 ->where('statuses.name', BudgetStatusEnum::FINALIZED->value)
-                ->whereNotIn('bgt_budgets.id', function ($query) {
-                    $query->select('bgt_budgets.parent_id')
-                        ->from('bgt_budgets')
-                        ->whereNotNull('bgt_budgets.parent_id');
-                })
+                ->where('bgt_budgets.isSupplementary', false)
+                ->orderByDesc('id')
+//                ->whereNotIn('bgt_budgets.id', function ($query) {
+//                    $query->select('bgt_budgets.parent_id')
+//                        ->from('bgt_budgets')
+//                        ->whereNotNull('bgt_budgets.parent_id');
+//                })
                 ->first();
 
         }
