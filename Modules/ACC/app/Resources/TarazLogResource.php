@@ -25,7 +25,7 @@ class TarazLogResource extends JsonResource
             $remainingDebt = 0;
         }
         return [
-            'name' => $this->name,
+            'name' => $this->name.($this->status_id == 155 ? ' (غیرفعال) ' : ''),
             'chainCode' => $this->chain_code,
             'openingCredit' => $this->opening_credit,
             'periodCredit' => $this->period_credit,

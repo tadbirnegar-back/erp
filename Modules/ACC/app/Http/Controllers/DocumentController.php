@@ -1366,6 +1366,7 @@ class DocumentController extends Controller
                         'descendants.root_id',
                         'root_account.name',
                         'root_account.chain_code',
+                        'root_account.status_id',
 
                         // Sums for document_type_id = 1 & 2 & 4 (combined)
                         DB::raw("SUM(CASE WHEN acc_documents.document_type_id IN ({$periodTypesString}) THEN acc_articles.credit_amount ELSE 0 END) as period_credit"),
@@ -1377,7 +1378,7 @@ class DocumentController extends Controller
 
                     ]
                 )
-                ->groupBy('descendants.root_id', 'root_account.name', 'root_account.chain_code')
+                ->groupBy('descendants.root_id', 'root_account.name', 'root_account.chain_code', 'root_account.status_id')
                 ->orderBy('root_account.category_id', 'asc')
                 ->get();
             $showType = $data['showType'];

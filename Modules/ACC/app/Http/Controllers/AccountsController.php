@@ -489,13 +489,21 @@ class AccountsController extends Controller
                 'id',
                 'chain_code',
                 'name',
+                'status_id'
             ]);
 
-        return response()->json([
-            'data' => $accounts,
-        ]);
-    }
+        $accounts = $accounts->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' =>$item->chain_code.' - '. $item->name .($item->status_id == 155 ? ' (غیرفعال) ' : ''),
+            ];
 
+        });
+
+            return response()->json([
+                'data' => $accounts,
+            ]);
+    }
     public function accountRemainingValue(Request $request)
     {
         $data = $request->all();
