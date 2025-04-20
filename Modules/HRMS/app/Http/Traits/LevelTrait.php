@@ -2,6 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Modules\HRMS\app\Models\Level;
 use Modules\HRMS\app\Models\Position;
@@ -70,11 +71,17 @@ trait LevelTrait
 
     public function activeLevelStatus()
     {
-        return Level::GetAllStatuses()->firstWhere('name', '=', $this->activeLevelName);
+        return Cache::rememberForever('level_active_status', function () {
+            return Level::GetAllStatuses()
+                ->firstWhere('name', '=', $this->activeLevelName);
+        });
     }
 
     public function inactiveLevelStatus()
     {
-        return Level::GetAllStatuses()->firstWhere('name', '=', $this->inactiveLevelName);
+        return Cache::rememberForever('level_inactive_status', function () {
+            return Level::GetAllStatuses()
+                ->firstWhere('name', '=', $this->inactiveLevelName);
+        });
     }
 }

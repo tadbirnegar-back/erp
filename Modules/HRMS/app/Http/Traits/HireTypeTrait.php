@@ -2,6 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\HRMS\app\Models\HireType;
 
 trait HireTypeTrait
@@ -55,11 +56,17 @@ trait HireTypeTrait
 
     public function activeHireTypeStatus()
     {
-        return HireType::GetAllStatuses()->firstWhere('name', '=', $this->activeHireName);
+        return Cache::rememberForever('hire_type_active_status', function () {
+            return HireType::GetAllStatuses()
+                ->firstWhere('name', '=', $this->activeHireName);
+        });
     }
 
     public function inactiveHireTypeStatus()
     {
-        return HireType::GetAllStatuses()->firstWhere('name', '=', $this->inactiveHireName);
+        return Cache::rememberForever('hire_type_inactive_status', function () {
+            return HireType::GetAllStatuses()
+                ->firstWhere('name', '=', $this->inactiveHireName);
+        });
     }
 }

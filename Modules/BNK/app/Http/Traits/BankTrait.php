@@ -2,6 +2,7 @@
 
 namespace Modules\BNK\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\BNK\app\Http\Enums\BankAccountStatusEnum;
 use Modules\BNK\app\Models\Bank;
 use Modules\BNK\app\Models\BankAccount;
@@ -92,11 +93,19 @@ trait BankTrait
 
     public function bankAccountDeactivateStatus()
     {
-        return BankAccount::GetAllStatuses()->where('name', '=', BankAccountStatusEnum::INACTIVE->value)->first();
+        return Cache::rememberForever('account_inactive_bank_status', function () {
+            return BankAccount::GetAllStatuses()
+                ->where('name', '=', BankAccountStatusEnum::INACTIVE->value)
+                ->first();
+        });
     }
 
     public function bankAccountActivateStatus()
     {
-        return BankAccount::GetAllStatuses()->where('name', '=', BankAccountStatusEnum::ACTIVE->value)->first();
+        return Cache::rememberForever('account_active_bank_status', function () {
+            return BankAccount::GetAllStatuses()
+                ->where('name', '=', BankAccountStatusEnum::ACTIVE->value)
+                ->first();
+        });
     }
 }

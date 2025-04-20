@@ -24,13 +24,13 @@ class TafriqBudgetExpanse extends JsonResource
         return [
             'name' => $this->name,
             'code' => $this->code,
-            'enacted' => $this->next_year_proposed_amount,
+            'enacted' => round($this->next_year_proposed_amount),
             'ancestors' => $this->ancestors,
             'percentage' => $this->next_year_percentage,
-            'total_operational_amount' => abs($this->total_operational_amount),
-            'total_economic_amount' => abs($this->total_economic_amount),
-            'extra' => $extra,
-            'deficit' => $deficit,
+            'total_operational_amount' => round(abs($this->total_operational_amount)),
+            'total_economic_amount' => round(abs($this->total_economic_amount)),
+            'extra' => round($extra),
+            'deficit' => round($deficit),
         ];
     }
 }

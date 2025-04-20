@@ -254,6 +254,7 @@ class AccountsController extends Controller
             '31140' => '7% + 7،1/9% حق بیمه',
             '31139' => '15 % + 15،1/9% حق بیمه',
             '31138' => '6/6% حق بیمه',
+            '31206' => 'ودایع دریافتی',
             default => '',
         };
 
@@ -438,6 +439,7 @@ class AccountsController extends Controller
                         'acc_articles.credit_amount',
                         'acc_articles.debt_amount',
                         'acc_documents.description as doc_description',
+                        'acc_documents.id as doc_id',
                         'acc_documents.document_number as document_number',
                         'acc_documents.document_date as document_date',
                         'bnk_transactions.tracking_code as tracking_code',
@@ -489,13 +491,21 @@ class AccountsController extends Controller
                 'id',
                 'chain_code',
                 'name',
+                'status_id'
             ]);
 
-        return response()->json([
-            'data' => $accounts,
-        ]);
-    }
+        $accounts = $accounts->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' =>$item->chain_code.' - '. $item->name .($item->status_id == 155 ? ' (غیرفعال) ' : ''),
+            ];
 
+        });
+
+            return response()->json([
+                'data' => $accounts,
+            ]);
+    }
     public function accountRemainingValue(Request $request)
     {
         $data = $request->all();
@@ -511,16 +521,16 @@ class AccountsController extends Controller
         }
         try {
             $remaining = Article::joinRelationship('document', function ($join) use ($data) {
-                $join->where('ounit_id', '=', $data['ounitID'])
-                    ->where('fiscal_year_id', '=', $data['fiscalYearID'])
-                    ->where('document_number', '<=', $data['docNum'])
+                $join->where('ounit_id', '=', intval($data['ounitID']))
+                    ->where('fiscal_year_id', '=', intval($data['fiscalYearID']))
+                    ->where('document_number', '<=', intval($data['docNum']))
                     ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
                     ->join('statuses', 'accDocument_status.status_id', '=', 'statuses.id')
                     ->whereRaw('accDocument_status.create_date = (SELECT MAX(create_date) FROM accDocument_status WHERE document_id = acc_documents.id)')
                     ->where('statuses.name', '!=', DocumentStatusEnum::DELETED->value);
 
             })
-                ->where('account_id', '=', $data['accountID'])
+                ->where('account_id', '=', intval($data['accountID']))
                 ->select([
                     DB::raw('SUM(credit_amount) - SUM(debt_amount) as remaining'),
                 ])

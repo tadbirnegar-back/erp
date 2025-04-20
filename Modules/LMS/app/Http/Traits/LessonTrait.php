@@ -2,6 +2,7 @@
 
 namespace Modules\LMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Modules\FileMS\app\Models\File;
 use Modules\LMS\app\Http\Enums\LessonStatusEnum;
@@ -223,11 +224,17 @@ trait LessonTrait
 
     public function lessonActiveStatus()
     {
-        return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::ACTIVE->value);
+        return Cache::rememberForever('lesson_active_status', function () {
+            return Lesson::GetAllStatuses()
+                ->firstWhere('name', LessonStatusEnum::ACTIVE->value);
+        });
     }
 
     public function lessonInActiveStatus()
     {
-        return Lesson::GetAllStatuses()->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
+        return Cache::rememberForever('lesson_inactive_status', function () {
+            return Lesson::GetAllStatuses()
+                ->firstWhere('name', LessonStatusEnum::IN_ACTIVE->value);
+        });
     }
 }

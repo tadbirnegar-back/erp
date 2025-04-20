@@ -2,6 +2,7 @@
 
 namespace Modules\EMS\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\EMS\app\Http\Enums\EnactmentTitleStatusEnum;
 use Modules\EMS\app\Models\EnactmentTitle;
 
@@ -42,12 +43,20 @@ trait EnactmentTitleTrait
 
     public function enactmentTitleActiveStatus()
     {
-        return EnactmentTitle::GetAllStatuses()->where('name', '=', EnactmentTitleStatusEnum::ACTIVE->value)->first();
+        return Cache::rememberForever('enactment_title_active_status', function () {
+            return EnactmentTitle::GetAllStatuses()
+                ->where('name', '=', EnactmentTitleStatusEnum::ACTIVE->value)
+                ->first();
+        });
     }
 
     public function enactmentTitleDeleteStatus()
     {
-        return EnactmentTitle::GetAllStatuses()->where('name', '=', EnactmentTitleStatusEnum::DELETED->value)->first();
+        return Cache::rememberForever('enactment_title_deleted_status', function () {
+            return EnactmentTitle::GetAllStatuses()
+                ->where('name', '=', EnactmentTitleStatusEnum::DELETED->value)
+                ->first();
+        });
     }
 
 }

@@ -90,21 +90,17 @@ class Budget extends Model
     public function circularFile()
     {
         return $this->hasOneDeep(File::class, [
-            BudgetItem::class,
-            CircularItem::class,
             Circular::class,
         ],
             [
-                'budget_id',
-                'id',
                 'id',
                 'id'
+
             ],
             [
-                'id',
-                'circular_item_id',
                 'circular_id',
-                'file_id'
+                'file_id',
+
             ]);
     }
 

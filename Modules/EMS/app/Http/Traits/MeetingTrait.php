@@ -3,6 +3,7 @@
 namespace Modules\EMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Modules\EMS\app\Http\Enums\MeetingStatusEnum;
 use Modules\EMS\app\Models\Meeting;
 use Modules\EMS\app\Models\MeetingStatus;
@@ -102,12 +103,18 @@ trait MeetingTrait
 
     public function meetingApprovedStatus()
     {
-        return Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::APPROVED->value);
+        return Cache::rememberForever('approved_meeting_status', function () {
+            return Meeting::GetAllStatuses()
+                ->firstWhere('name', MeetingStatusEnum::APPROVED->value);
+        });
     }
 
     public function meetingCancelStatus()
     {
-        return Meeting::GetAllStatuses()->firstWhere('name', MeetingStatusEnum::CANCELED->value);
+        return Cache::rememberForever('canceled_meeting_status' , function () {
+            return Meeting::GetAllStatuses()
+                ->firstWhere('name' , MeetingStatusEnum::CANCELED->value);
+        });
     }
 
 

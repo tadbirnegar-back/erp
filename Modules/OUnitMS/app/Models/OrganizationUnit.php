@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AAA\app\Models\User;
 use Modules\ACC\app\Models\Account;
+use Modules\ACC\app\Models\Document;
 use Modules\ACC\app\Models\OunitAccImport;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\ACMS\app\Models\OunitFiscalYear;
@@ -364,6 +365,11 @@ class OrganizationUnit extends Model
     public function accounts(): HasMany
     {
         return $this->hasMany(Account::class, 'ounit_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class, 'ounit_id');
     }
 
 

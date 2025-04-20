@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\ACC\app\Http\Controllers\ACCController;
 use Modules\ACC\app\Http\Controllers\AccountsController;
+use Modules\ACC\app\Http\Controllers\DescriptionController;
 use Modules\ACC\app\Http\Controllers\DocumentController;
 use Modules\ACMS\app\Http\Controllers\ACMSController;
 
@@ -103,6 +104,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/acc/documents/balance-sheet-report', [DocumentController::class, 'financialBalanceReport']);
 
+    Route::post('/acc/documents/clone-to-ounit', [DocumentController::class, 'duplicateDocument']);
+
     Route::post('/acc/accounts/person-acc/check', [AccountsController::class, 'personExistenceAndHasAccount']);
 
     Route::post('/acc/accounts/person-acc/add', [AccountsController::class, 'storeCreditAccount']);
@@ -114,5 +117,13 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/acc/documents/mass-gov-dep', [DocumentController::class, 'bulkInsertDocsForOunits']);
 
     Route::get('/acc/ounit-banks/list', [DocumentController::class, 'ounitsWithBankAccounts']);
+
+    Route::put('/acc/documents/confirm-all', [DocumentController::class, 'bulkChangeDocStatusToConfirmed']);
+
+    Route::get('/acc/documents/description/list', [DescriptionController::class, 'index']);
+
+    Route::put('/acc/documents/description/add', [DescriptionController::class, 'bulkUpsert']);
+
+    Route::delete('/acc/documents/description/delete/{id}', [DescriptionController::class, 'destroy']);
 
 });

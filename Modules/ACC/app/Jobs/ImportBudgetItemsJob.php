@@ -92,7 +92,7 @@ class ImportBudgetItemsJob implements ShouldQueue
             }
 
 
-            if ($circular->fiscal_year_name == 1403 && SimpleExcelReader::create($pathToXlsx)->hasSheet('3') && SimpleExcelReader::create($pathToXlsx)->fromSheetName('3')->headersToSnakeCase()->getRows()->first()['کد_حساب'] != '') {
+            if (SimpleExcelReader::create($pathToXlsx)->hasSheet('3') && SimpleExcelReader::create($pathToXlsx)->fromSheetName('3')->headersToSnakeCase()->getRows()->first()['کد_حساب'] != '') {
                 $newBudget = $budgetMain->replicate();
                 $newBudget->isSupplementary = true;
                 $newBudget->parent_id = $budgetMain->id;
@@ -177,8 +177,8 @@ class ImportBudgetItemsJob implements ShouldQueue
                     ->fromSheetName('2')
                     ->getRows();
 
-                $a = array(210100, 210200, 210300, 210900, 210400, 220100, 220200, 220900, 230100, 240100, 250100, 250200, 260100, 310000, 320000, 330000, 340000);
-                $rows->each(function ($row) use ($budgetMain,$a) {
+//                $a = array('210100', '210200', '210300', '210900', '210400', '220100', '220200', '220900', '230100', '240100', '250100', '250200', '260100', '310000', '320000', '330000', '340000');
+                $rows->each(function ($row) use ($budgetMain) {
                     if ($row['کد_حساب'] != 'جمع' && $row['نام_حساب'] != '') {
 
                         $item = BudgetItem::where('budget_id', $budgetMain->id)
@@ -191,11 +191,11 @@ class ImportBudgetItemsJob implements ShouldQueue
                         if (is_null($item)) {
                             Log::error('error: 180, sheet: 2', [$row]);
                         } else {
-                            if (in_array($row['کد_حساب'], $a)) {
-                                $item->proposed_amount  =0;
-                            }else{
+//                            if (in_array($row['کد_حساب'], $a)) {
+//                                $item->proposed_amount = 0;
+//                            } else {
                                 $item->proposed_amount = abs($row['بودجه_مصوب_' . $this->fiscalYear] ?? $row['پیشنهادی_' . $this->fiscalYear]);
-                            }
+//                            }
 
 //                    $item->percentage = $row['درصد_جاری'];
                             $item->save();

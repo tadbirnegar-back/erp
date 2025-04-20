@@ -28,8 +28,7 @@ class ACCDatabaseSeeder extends Seeder
 //            BankAccountsSeeder::class,
 //            OrganizationUnitsTableSeeder::class,
 //            VillageOfcsTableSeeder::class,
-            InsertAccountSeeder::class,
-            
+//            InsertAccountSeeder::class,
 
         ]);
 

@@ -46,16 +46,16 @@ class ArticlesListResource extends JsonResource
 
         if ($this->relationLoaded('account')) {
             $result['account'] = [
-                'id' => $this->account->id,
-                'name' => $this->account->name,
-                'type' => AccountLayerTypesEnum::from($this->account->accountable_type)->getLabel(),
-                'chain_code' => $this->account->chain_code,
-                'isBankAccount' => $this->account->accountable_type == DetailAccount::class && $this->account->entity_type == BankAccount::class,
+                'id' => $this->account?->id,
+                'name' => $this->account?->name,
+                'type' => AccountLayerTypesEnum::tryFrom($this->account?->accountable_type)?->getLabel() ?? null,
+                'chain_code' => $this->account?->chain_code,
+                'isBankAccount' => $this->account?->accountable_type == DetailAccount::class && $this->account?->entity_type == BankAccount::class,
                 'category' => [
-                    'name' => $this->account->accountCategory->name,
-                    'code' => $this->account->accountCategory->id,
+                    'name' => $this->account?->accountCategory->name,
+                    'code' => $this->account?->accountCategory->id,
                 ],
-                'ancestors' => $this->account->ancestorsAndSelf->isNotEmpty() ? $this->account->ancestorsAndSelf->map(function ($ancestor) {
+                'ancestors' => $this->account?->ancestorsAndSelf->isNotEmpty() ? $this->account->ancestorsAndSelf->map(function ($ancestor) {
                     return [
                         'id' => $ancestor->id,
                         'name' => $ancestor->name,

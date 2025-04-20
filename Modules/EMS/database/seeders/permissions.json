@@ -172,5 +172,11 @@
         "slug": "/mes/freezone/list",
         "moduleName": "EMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "گزارش مصوبه منطقه آزاد",
+        "slug": "/mes/reports-freezone/member",
+        "moduleName": "EMS",
+        "permissionTypeName": "sidebar"
     }
 ]

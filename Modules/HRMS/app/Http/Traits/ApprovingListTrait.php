@@ -4,6 +4,7 @@ namespace Modules\HRMS\app\Http\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\ConfirmationType;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -185,12 +186,18 @@ trait ApprovingListTrait
 
     public static function approvedStatus()
     {
-        return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$approvedStatus);
+        return Cache::rememberForever('approved_status', function () {
+            return ScriptApprovingList::GetAllStatuses()
+                ->firstWhere('name', '=', self::$approvedStatus);
+        });
     }
 
     public static function notApprovedStatus()
     {
-        return ScriptApprovingList::GetAllStatuses()->firstWhere('name', '=', self::$notApprovedStatus);
+        return Cache::rememberForever('not_approved_status', function () {
+            return ScriptApprovingList::GetAllStatuses()
+                ->firstWhere('name', '=', self::$notApprovedStatus);
+        });
     }
 
     public function declineScript(RecruitmentScript $script, User $user, bool $isAdmin = false, string $reason = null)

@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Models\FileScript;
@@ -265,27 +266,42 @@ trait RecruitmentScriptTrait
 
     public function rejectedRsStatus()
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::REJECTED->value);
+        return Cache::rememberForever('rs_rejected_status', function () {
+            return RecruitmentScript::GetAllStatuses()
+                ->firstWhere('name', '=', RecruitmentScriptStatusEnum::REJECTED->value);
+        });
     }
 
     public function terminatedRsStatus()
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::TERMINATED->value);
+        return Cache::rememberForever('rs_terminated_status', function () {
+            return RecruitmentScript::GetAllStatuses()
+                ->firstWhere('name', '=', RecruitmentScriptStatusEnum::TERMINATED->value);
+        });
     }
 
     public function endOfServiceRsStatus()
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::SERVICE_ENDED->value);
+        return Cache::rememberForever('rs_end_of_service_status', function () {
+            return RecruitmentScript::GetAllStatuses()
+                ->firstWhere('name', '=', RecruitmentScriptStatusEnum::SERVICE_ENDED->value);
+        });
     }
 
     public function cancelRsStatus()
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::CANCELED->value);
+        return Cache::rememberForever('rs_cancel_status', function () {
+            return RecruitmentScript::GetAllStatuses()
+                ->firstWhere('name', '=', RecruitmentScriptStatusEnum::CANCELED->value);
+        });
     }
 
     public function pendingTerminateRsStatus()
     {
-        return RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value);
+        return Cache::rememberForever('rs_pending_terminate_status', function () {
+            return RecruitmentScript::GetAllStatuses()
+                ->firstWhere('name', '=', RecruitmentScriptStatusEnum::PENDING_FOR_TERMINATE->value);
+        });
     }
 
     public function getComponentsToRenderSinglePage(RecruitmentScript $script, User $user)

@@ -5,6 +5,7 @@ namespace Modules\ACMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Modules\ACC\app\Http\Enums\DocumentStatusEnum;
 use Modules\ACC\app\Http\Enums\DocumentTypeEnum;
 use Modules\ACMS\app\Http\Enums\BudgetStatusEnum;
@@ -56,6 +57,7 @@ class BudgetItemController extends Controller
 
         $nextYearFiscal = FiscalYear::where('name', $nextYear)->first();
         $lastYearFiscal = FiscalYear::where('name', $lastYear)->first();
+        $currentYearFiscal = FiscalYear::where('name', $currentYear)->first();
 
         $a = Jalalian::fromFormat('Y/m/d', $lastYear . '/10/01');
         $lastYearStartOfQuarter = $a->toCarbon()->startOfDay()->toDateTimeString();
@@ -77,11 +79,13 @@ class BudgetItemController extends Controller
                     }
                 ])
                 ->where('statuses.name', BudgetStatusEnum::FINALIZED->value)
-                ->whereNotIn('bgt_budgets.id', function ($query) {
-                    $query->select('bgt_budgets.parent_id')
-                        ->from('bgt_budgets')
-                        ->whereNotNull('bgt_budgets.parent_id');
-                })
+                ->where('bgt_budgets.isSupplementary', false)
+                ->orderByDesc('id')
+//                ->whereNotIn('bgt_budgets.id', function ($query) {
+//                    $query->select('bgt_budgets.parent_id')
+//                        ->from('bgt_budgets')
+//                        ->whereNotNull('bgt_budgets.parent_id');
+//                })
                 ->first();
 
         }
@@ -219,27 +223,6 @@ class BudgetItemController extends Controller
                     $query->withoutGlobalScopes();
                 }])
                 ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
-                ->leftJoinRelationship('account',
-                    function ($join) use ($budget, $lastYearFiscal) {
-                        $join->leftJoin('acc_articles', 'acc_articles.account_id', '=', 'acc_accounts.id')
-                            ->join('acc_documents', function ($join) use ($lastYearFiscal, $budget) {
-                                $join->on('acc_articles.document_id', '=', 'acc_documents.id')
-                                    ->where('acc_documents.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
-                                    ->where('fiscal_year_id', $lastYearFiscal?->id)
-                                    ->where('acc_documents.ounit_id', $budget->ounit_id);
-                            })
-                            ->join('accDocument_status', function ($join) {
-                                $join->on('accDocument_status.document_id', '=', 'acc_documents.id')
-                                    ->whereRaw('accDocument_status.create_date = (
-                                                 SELECT MAX(create_date)
-                                                 FROM accDocument_status
-                                                 WHERE document_id = acc_documents.id
-                                             )');
-                            })
-                            ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
-                            ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
-                    }
-                )
                 ->whereNotIn('bgt_circular_subjects.id', function ($query) {
                     $query->select('bgt_circular_subjects.parent_id')
                         ->from('bgt_circular_subjects')
@@ -264,9 +247,9 @@ class BudgetItemController extends Controller
                     'bgt_circular_subjects.id',
                     'bgt_circular_subjects.parent_id',
 
-                    \DB::raw('SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount'),
+//                    \DB::raw('SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount'),
 
-                    \DB::raw('SUM(COALESCE(current_year_budget_item.proposed_amount,0)) as current_year_proposed_amount'),
+                    \DB::raw('SUM(DISTINCT COALESCE(current_year_budget_item.proposed_amount,0)) as current_year_proposed_amount'),
 
                     'next_year_budget_item.id as next_year_budget_item_id',
                     'next_year_budget_item.proposed_amount as next_year_proposed_amount',
@@ -280,102 +263,157 @@ class BudgetItemController extends Controller
                     'next_year_budget_item.proposed_amount',
                     'next_year_budget_item.percentage')
                 ->get();
-            $threeMonthsLastYear = CircularSubject::withoutGlobalScopes()
-                ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
-                ->leftJoinRelationshipUsingAlias('accounts', function ($join) use ($lastYearStartOfQuarter, $lastYearEndOfQuarter, $budget) {
-                    $join->as('3_months_last_year_acc')
-                        ->leftJoin('acc_articles as 3_months_last_year_art', '3_months_last_year_art.account_id', '=', '3_months_last_year_acc.id')
-                        ->join('acc_documents as 3_months_last_year_doc', function ($join) use ($lastYearStartOfQuarter, $lastYearEndOfQuarter, $budget) {
-                            $join->on('3_months_last_year_art.document_id', '=', '3_months_last_year_doc.id')
-                                ->where('3_months_last_year_doc.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
-                                ->where('3_months_last_year_doc.ounit_id', $budget->ounit_id)
-                                ->whereBetween('3_months_last_year_doc.document_date', [$lastYearStartOfQuarter, $lastYearEndOfQuarter])
+
+            $lastYearConfirmedDocuments = Cache::remember("last_year_confirmed_documents_ounit_{$budget->ounit_id}_year_{$lastYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $lastYearFiscal) {
+                return CircularSubject::withoutGlobalScopes()
+                    ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
+                    ->leftJoinRelationship('account',
+                        function ($join) use ($budget, $lastYearFiscal) {
+                            $join->leftJoin('acc_articles', 'acc_articles.account_id', '=', 'acc_accounts.id')
+                                ->join('acc_documents', function ($join) use ($lastYearFiscal, $budget) {
+                                    $join->on('acc_articles.document_id', '=', 'acc_documents.id')
+                                        ->where('acc_documents.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
+                                        ->where('fiscal_year_id', $lastYearFiscal?->id)
+                                        ->where('acc_documents.ounit_id', $budget->ounit_id);
+                                })
                                 ->join('accDocument_status', function ($join) {
-                                    $join->on('accDocument_status.document_id', '=', '3_months_last_year_doc.id')
+                                    $join->on('accDocument_status.document_id', '=', 'acc_documents.id')
                                         ->whereRaw('accDocument_status.create_date = (
                                                  SELECT MAX(create_date)
                                                  FROM accDocument_status
-                                                 WHERE document_id = 3_months_last_year_doc.id
+                                                 WHERE document_id = acc_documents.id
                                              )');
                                 })
                                 ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
                                 ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
-                        });
-                }
-                )
-                ->whereNotIn('bgt_circular_subjects.id', function ($query) {
-                    $query->select('bgt_circular_subjects.parent_id')
-                        ->from('bgt_circular_subjects')
-                        ->whereNotNull('bgt_circular_subjects.parent_id');
-                })
-                ->select([
-                    'bgt_circular_subjects.code as code',
-                    'bgt_circular_subjects.name as name',
-                    'bgt_circular_subjects.id',
-                    'bgt_circular_subjects.parent_id',
+                        }
+                    )
+                    ->whereNotIn('bgt_circular_subjects.id', function ($query) {
+                        $query->select('bgt_circular_subjects.parent_id')
+                            ->from('bgt_circular_subjects')
+                            ->whereNotNull('bgt_circular_subjects.parent_id');
+                    })
+                    ->select([
+                        'bgt_circular_subjects.code as code',
+                        'bgt_circular_subjects.name as name',
+                        'bgt_circular_subjects.id',
+                        'bgt_circular_subjects.parent_id',
 
-                    \DB::raw('SUM(COALESCE(3_months_last_year_art.credit_amount,0)) - SUM(COALESCE(3_months_last_year_art.debt_amount,0)) as three_months_last_year_proposed_amount'),
+                        \DB::raw('SUM(COALESCE(acc_articles.credit_amount,0)) - SUM(COALESCE(acc_articles.debt_amount,0)) as total_amount'),
+
+                    ])
+                    ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name',
+                        'bgt_circular_subjects.id',
+                        'bgt_circular_subjects.parent_id',
+
+                    )
+                    ->get();
+            });
 
 
-                ])
-                ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name',
-                    'bgt_circular_subjects.id',
-                    'bgt_circular_subjects.parent_id',
+            $threeMonthsLastYear = Cache::remember("three_months_two_years_ago_ounit_{$budget->ounit_id}_year_{$lastYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $lastYearFiscal, $lastYearStartOfQuarter, $lastYearEndOfQuarter) {
 
-                )
-                ->get();
+                return CircularSubject::withoutGlobalScopes()
+                    ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
+                    ->leftJoinRelationshipUsingAlias('accounts', function ($join) use ($lastYearStartOfQuarter, $lastYearEndOfQuarter, $budget) {
+                        $join->as('3_months_last_year_acc')
+                            ->leftJoin('acc_articles as 3_months_last_year_art', '3_months_last_year_art.account_id', '=', '3_months_last_year_acc.id')
+                            ->join('acc_documents as 3_months_last_year_doc', function ($join) use ($lastYearStartOfQuarter, $lastYearEndOfQuarter, $budget) {
+                                $join->on('3_months_last_year_art.document_id', '=', '3_months_last_year_doc.id')
+                                    ->where('3_months_last_year_doc.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
+                                    ->where('3_months_last_year_doc.ounit_id', $budget->ounit_id)
+                                    ->whereBetween('3_months_last_year_doc.document_date', [$lastYearStartOfQuarter, $lastYearEndOfQuarter])
+                                    ->join('accDocument_status', function ($join) {
+                                        $join->on('accDocument_status.document_id', '=', '3_months_last_year_doc.id')
+                                            ->whereRaw('accDocument_status.create_date = (
+                                                 SELECT MAX(create_date)
+                                                 FROM accDocument_status
+                                                 WHERE document_id = 3_months_last_year_doc.id
+                                             )');
+                                    })
+                                    ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id')
+                                    ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value);
+                            });
+                    }
+                    )
+                    ->whereNotIn('bgt_circular_subjects.id', function ($query) {
+                        $query->select('bgt_circular_subjects.parent_id')
+                            ->from('bgt_circular_subjects')
+                            ->whereNotNull('bgt_circular_subjects.parent_id');
+                    })
+                    ->select([
+                        'bgt_circular_subjects.code as code',
+                        'bgt_circular_subjects.name as name',
+                        'bgt_circular_subjects.id',
+                        'bgt_circular_subjects.parent_id',
 
-            $nineMonthsLastYear = CircularSubject::withoutGlobalScopes()
-                ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
-                ->leftJoinRelationshipUsingAlias('account',
-                    function ($join) use ($startOfCurrentYear, $endOf9thMonthOfCurrentYear, $budget) {
-                        $join->as('9_months_current_year_acc')
-                            ->leftJoin('acc_articles as 9_months_last_year_art', '9_months_last_year_art.account_id', '=', '9_months_current_year_acc.id')
-                            ->join('acc_documents as 9_months_current_year_doc', function ($join) use ($startOfCurrentYear, $endOf9thMonthOfCurrentYear, $budget) {
-                                $join->on('9_months_last_year_art.document_id', '=', '9_months_current_year_doc.id')
-                                    ->where('9_months_current_year_doc.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
-                                    ->where('9_months_current_year_doc.ounit_id', $budget->ounit_id)
-                                    ->whereBetween('9_months_current_year_doc.document_date', [$startOfCurrentYear, $endOf9thMonthOfCurrentYear]);
-                            })->join('accDocument_status', function ($join) {
-                                $join->on('accDocument_status.document_id', '=', '9_months_current_year_doc.id')
-                                    ->whereRaw('accDocument_status.create_date = (
+                        \DB::raw('SUM(COALESCE(3_months_last_year_art.credit_amount,0)) - SUM(COALESCE(3_months_last_year_art.debt_amount,0)) as three_months_last_year_proposed_amount'),
+
+
+                    ])
+                    ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name',
+                        'bgt_circular_subjects.id',
+                        'bgt_circular_subjects.parent_id',
+
+                    )
+                    ->get();
+
+            });
+
+            $nineMonthsLastYear = Cache::remember("nine_month_last_year_ounit_{$budget->ounit_id}_year_{$currentYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $startOfCurrentYear, $endOf9thMonthOfCurrentYear) {
+               return CircularSubject::withoutGlobalScopes()
+                    ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
+                    ->leftJoinRelationshipUsingAlias('account',
+                        function ($join) use ($startOfCurrentYear, $endOf9thMonthOfCurrentYear, $budget) {
+                            $join->as('9_months_current_year_acc')
+                                ->leftJoin('acc_articles as 9_months_last_year_art', '9_months_last_year_art.account_id', '=', '9_months_current_year_acc.id')
+                                ->join('acc_documents as 9_months_current_year_doc', function ($join) use ($startOfCurrentYear, $endOf9thMonthOfCurrentYear, $budget) {
+                                    $join->on('9_months_last_year_art.document_id', '=', '9_months_current_year_doc.id')
+                                        ->where('9_months_current_year_doc.document_type_id', '=', DocumentTypeEnum::NORMAL->value)
+                                        ->where('9_months_current_year_doc.ounit_id', $budget->ounit_id)
+                                        ->whereBetween('9_months_current_year_doc.document_date', [$startOfCurrentYear, $endOf9thMonthOfCurrentYear]);
+                                })->join('accDocument_status', function ($join) {
+                                    $join->on('accDocument_status.document_id', '=', '9_months_current_year_doc.id')
+                                        ->whereRaw('accDocument_status.create_date = (
                                                  SELECT MAX(create_date)
                                                  FROM accDocument_status
                                                  WHERE document_id = 9_months_current_year_doc.id
                                              )');
-                            })
-                            ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id');
-                    }
-                )
-                ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
-                ->whereNotIn('bgt_circular_subjects.id', function ($query) {
-                    $query->select('bgt_circular_subjects.parent_id')
-                        ->from('bgt_circular_subjects')
-                        ->whereNotNull('bgt_circular_subjects.parent_id');
-                })
-                ->select([
-                    'bgt_circular_subjects.code as code',
-                    'bgt_circular_subjects.name as name',
-                    'bgt_circular_subjects.id',
-                    'bgt_circular_subjects.parent_id',
+                                })
+                                ->join('statuses', 'statuses.id', '=', 'accDocument_status.status_id');
+                        }
+                    )
+                    ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
+                    ->whereNotIn('bgt_circular_subjects.id', function ($query) {
+                        $query->select('bgt_circular_subjects.parent_id')
+                            ->from('bgt_circular_subjects')
+                            ->whereNotNull('bgt_circular_subjects.parent_id');
+                    })
+                    ->select([
+                        'bgt_circular_subjects.code as code',
+                        'bgt_circular_subjects.name as name',
+                        'bgt_circular_subjects.id',
+                        'bgt_circular_subjects.parent_id',
 
 
-                    \DB::raw('SUM(COALESCE(9_months_last_year_art.credit_amount,0)) - SUM(COALESCE(9_months_last_year_art.debt_amount,0)) as nine_months_current_year_proposed_amount'),
+                        \DB::raw('SUM(COALESCE(9_months_last_year_art.credit_amount,0)) - SUM(COALESCE(9_months_last_year_art.debt_amount,0)) as nine_months_current_year_proposed_amount'),
 
-                ])
-                ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name',
-                    'bgt_circular_subjects.id',
-                    'bgt_circular_subjects.parent_id',
+                    ])
+                    ->groupBy('bgt_circular_subjects.code', 'bgt_circular_subjects.name',
+                        'bgt_circular_subjects.id',
+                        'bgt_circular_subjects.parent_id',
 
-                )
-                ->get();
+                    )
+                    ->get();
+
+            });
 // Index by circular subject ID
             $subjects = $subjectsWithLog->keyBy('id');
             $threeMonths = $threeMonthsLastYear->keyBy('id');
             $nineMonths = $nineMonthsLastYear->keyBy('id');
-
+            $totalLastYear = $lastYearConfirmedDocuments->keyBy('id');
 // Merge the aggregates into the main subjects collection
-            $finalResults = $subjects->map(function ($subject) use ($threeMonths, $nineMonths) {
+            $finalResults = $subjects->map(function ($subject) use ($threeMonths, $nineMonths, $totalLastYear) {
                 // If a subject is missing in the 3-month or 9-month data, default to 0
                 $subject->three_months_last_year_proposed_amount = $threeMonths->has($subject->id)
                     ? $threeMonths->get($subject->id)->three_months_last_year_proposed_amount
@@ -383,6 +421,11 @@ class BudgetItemController extends Controller
                 $subject->nine_months_current_year_proposed_amount = $nineMonths->has($subject->id)
                     ? $nineMonths->get($subject->id)->nine_months_current_year_proposed_amount
                     : 0;
+
+                $subject->total_amount =
+                    $totalLastYear->has($subject->id)
+                        ? $totalLastYear->get($subject->id)->total_amount
+                        : 0;
                 return $subject;
             })->values();
         }

@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Modules\HRMS\app\Models\ScriptAgent;
 use Modules\HRMS\app\Models\ScriptAgentCombo;
 
@@ -84,11 +85,17 @@ $scriptAgent->load('scriptAgentType','scriptTypes.pivot.hireType');
 
     public function activeScriptAgentStatus()
     {
-        return ScriptAgent::GetAllStatuses()->firstWhere('name', $this->activeStatus);
+        return Cache::rememberForever('script_agent_active_status', function () {
+            return ScriptAgent::GetAllStatuses()
+                ->firstWhere('name', $this->activeStatus);
+        });
     }
 
     public function inactiveScriptAgentStatus()
     {
-        return ScriptAgent::GetAllStatuses()->firstWhere('name', $this->inactiveStatus);
+        return Cache::rememberForever('script_agent_inactive_status', function () {
+            return ScriptAgent::GetAllStatuses()
+                ->firstWhere('name', $this->inactiveStatus);
+        });
     }
 }
