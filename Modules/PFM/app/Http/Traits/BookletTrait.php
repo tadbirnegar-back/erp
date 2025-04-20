@@ -501,35 +501,35 @@ trait BookletTrait
     //Get statuses
     public function MosavabStatus()
     {
-        Cache::rememberForever('booklet_mosavab_status', function () {
+        return Cache::rememberForever('booklet_mosavab_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::MOSAVAB->value);
         });
     }
 
     public function DarEntazarSabtStatus()
     {
-        Cache::rememberForever('booklet_dar_entazar_sabt_status', function () {
+        return Cache::rememberForever('booklet_dar_entazar_sabt_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value);
         });
     }
 
     public function EntezareHeyateTatbighStatus()
     {
-        Cache::rememberForever('booklet_entezare_heyate_tatbigh_status', function () {
+        return Cache::rememberForever('booklet_entezare_heyate_tatbigh_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value);
         });
     }
 
     public function EntezarShuraStatus()
     {
-        Cache::rememberForever('booklet_entezar_shura_status', function () {
+        return Cache::rememberForever('booklet_entezar_shura_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZAR_SHURA->value);
         });
     }
 
     public function RadShodeStatus()
     {
-        Cache::rememberForever('booklet_rad_shode_status', function () {
+        return Cache::rememberForever('booklet_rad_shode_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::RAD_SHODE->value);
         });
     }

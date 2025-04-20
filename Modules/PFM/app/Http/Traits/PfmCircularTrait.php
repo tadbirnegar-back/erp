@@ -253,14 +253,14 @@ trait PfmCircularTrait
 
     public function publishedStatus()
     {
-        Cache::rememberForever('pfm_circular_published_status', function () {
+        return Cache::rememberForever('pfm_circular_published_status', function () {
             return PfmCirculars::GetAllStatuses()->firstWhere('name', PfmCircularStatusesEnum::PUBLISHED->value);
         });
     }
 
     public function draftStatus()
     {
-        Cache::rememberForever('pfm_circular_draft_status', function () {
+        return Cache::rememberForever('pfm_circular_draft_status', function () {
             return PfmCirculars::GetAllStatuses()->firstWhere('name', PfmCircularStatusesEnum::DRAFT->value);
         });
     }
