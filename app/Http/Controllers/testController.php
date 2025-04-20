@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Support\Facades\Cache;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
@@ -43,6 +44,16 @@ class testController extends Controller
 
     public function run()
     {
+        for ($i = 1; $i <= 3; $i++) {
+            $ounit = 612;
+            $fy = 7;
+            Cache::forget("last_year_confirmed_documents_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
+
+            Cache::forget("three_months_two_years_ago_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
+
+            Cache::forget("nine_month_last_year_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
+
+        }
 //        $accs = Account::where('accountable_type', GlAccount::class)
 //            ->where('status_id', 155)
 //            ->whereIn('acc_accounts.category_id', [6, 7])
@@ -163,7 +174,7 @@ class testController extends Controller
 //        }
 
 //
-//        $user = User::whereIntegerInRaw('mobile', ['9148005144',])->with([
+//        $user = User::whereIntegerInRaw('mobile', ['9144834285',])->with([
 //            'activeRecruitmentScripts' => function ($query) {
 //                $query->with(['organizationUnit'])
 //                    ->whereHas('scriptType', function ($query) {
@@ -172,16 +183,10 @@ class testController extends Controller
 //            }
 //
 //        ])->get();
-////        dd($user);
+//
 //        $recruitmentScripts = $user->pluck('activeRecruitmentScripts')->flatten(1);
-////        $recruitmentScripts = $user
-////            ->activeRecruitmentScripts()
-////            ->with(['organizationUnit'])
-////            ->whereHas('scriptType', function ($query) {
-////                $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
-////            })->get();
-////
-//        $a = implode(',', ($recruitmentScripts->pluck('organization_unit_id')->toArray()));
+//
+//        $a = implode(',', ($recruitmentScripts->pluck('employee_id')->toArray()));
 //        dd($a);
 //
     }

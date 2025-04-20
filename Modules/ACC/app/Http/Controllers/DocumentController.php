@@ -1502,6 +1502,14 @@ class DocumentController extends Controller
                 $status = $this->draftDocumentStatus();
                 $this->attachStatusToDocument($document, $status, $doc['userID']);
                 $this->bulkStoreArticle($doc['articles'], $document);
+                for ($i = 1; $i <= 3; $i++) {
+                    Cache::forget("last_year_confirmed_documents_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                    Cache::forget("three_months_two_years_ago_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                    Cache::forget("nine_month_last_year_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                }
             });
             DB::commit();
             return response()->json(['message' => 'اسناد با موفقیت ایجاد شدند'], 200);
@@ -1679,6 +1687,14 @@ class DocumentController extends Controller
 
 
             DB::commit();
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("last_year_confirmed_documents_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("three_months_two_years_ago_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("nine_month_last_year_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+            }
             return response()->json($response);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1788,6 +1804,7 @@ class DocumentController extends Controller
             DB::beginTransaction();
             $docIDs = json_decode($data['documentIDs'], true);
             $documents = Document::whereIntegerInRaw('id', $docIDs)->get();
+            $document = $documents->first();
             $user = Auth::user();
             $confStatus = $this->confirmedDocumentStatus();
             $documents->each(function ($document) use ($confStatus, $user) {
@@ -1795,6 +1812,14 @@ class DocumentController extends Controller
             });
 
             DB::commit();
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("last_year_confirmed_documents_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("three_months_two_years_ago_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+                Cache::forget("nine_month_last_year_ounit_{$document->ounit_id}_year_{$document->fiscal_year_id}_subject_type_{$i}");
+
+            }
 
             return response()->json(['message' => 'با موفقیت انجام شد']);
         } catch (Exception $e) {
