@@ -29,12 +29,11 @@ class CircularController extends Controller
             $data = $request->all();
             $user = Auth::user();
             $this->storeCircular($data, $user);
-
             Db::commit();
             return response()->json(['message' => 'بخشنامه با موفقیت ساخته شد'], 200);
         } catch (\Exception $e) {
             Db::rollBack();
-            return response()->json(['message' => 'ایجاد بخشنامه با مشکل مواجه شد'], 400);
+            return response()->json(['message' => $e->getMessage()], 400);
         }
 
     }
