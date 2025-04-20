@@ -13,6 +13,7 @@ class AccountUsageResource extends JsonResource
     {
         return [
             'docNum' => $this->document_number,
+            'docID' => $this->doc_id,
             'docDate' => convertGregorianToJalali($this->document_date),
             'docDescription' => $this->doc_description,
             'debtAmount' => $this->debt_amount,

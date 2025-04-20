@@ -254,6 +254,7 @@ class AccountsController extends Controller
             '31140' => '7% + 7،1/9% حق بیمه',
             '31139' => '15 % + 15،1/9% حق بیمه',
             '31138' => '6/6% حق بیمه',
+            '31206' => 'ودایع دریافتی',
             default => '',
         };
 
@@ -438,6 +439,7 @@ class AccountsController extends Controller
                         'acc_articles.credit_amount',
                         'acc_articles.debt_amount',
                         'acc_documents.description as doc_description',
+                        'acc_documents.id as doc_id',
                         'acc_documents.document_number as document_number',
                         'acc_documents.document_date as document_date',
                         'bnk_transactions.tracking_code as tracking_code',
