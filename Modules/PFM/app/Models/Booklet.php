@@ -21,7 +21,7 @@ class Booklet extends Model
     protected $table = 'pfm_circular_booklets';
 
     protected $fillable = [
-        'p1', 'p2', 'p3', 'ounit_id', 'pfm_circular_id', 'created_date'
+        'p_residential', 'p_commercial', 'p_administrative', 'ounit_id', 'pfm_circular_id', 'created_date'
     ];
 
     public function ounit()

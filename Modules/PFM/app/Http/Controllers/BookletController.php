@@ -3,12 +3,15 @@
 namespace Modules\PFM\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DB;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\PFM\app\Http\Traits\BookletTrait;
+use Modules\PFM\app\Models\Booklet;
 use Modules\PFM\app\Resources\ListOfBookletsResource;
 use Modules\PFM\app\Resources\ShowBookletResource;
 
@@ -41,16 +44,78 @@ class BookletController extends Controller
         }
     }
 
-
-    public function showItems(Request $request , $levyId)
+    public function showItems(Request $request, $levyId)
     {
         $data = $request->all();
         $bookletId = $data['booklet_id'];
-        $res = $this->showTable($levyId , $bookletId);
+        $query = Booklet::joinRelationship('statuses', ['statuses' => function ($join) {
+            $join->whereRaw('pfm_booklet_statuses.created_date = (SELECT MAX(created_date) FROM pfm_booklet_statuses WHERE booklet_id = pfm_circular_booklets.id)');
+        }])
+            ->select([
+                'statuses.name as status_name',
+            ])
+            ->where('pfm_circular_booklets.id', $bookletId)
+            ->get();
+        $status = $query->first()->status_name;
+        $res = $this->showTable($levyId, $bookletId, $status);
         return response()->json($res);
     }
-    public function store(Request $request , $id)
+
+    public function store(Request $request, $id)
     {
 
+    }
+
+    public function showPrices($id)
+    {
+        $data = Booklet::select(['pfm_circular_booklets.p_residential', 'pfm_circular_booklets.p_commercial', 'pfm_circular_booklets.p_administrative'])->find($id);
+        return response()->json($data);
+    }
+
+    public function storePrices(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $booklet = Booklet::find($id);
+            $booklet->p_residential = $data['p_residential'];
+            $booklet->p_commercial = $data['p_commercial'];
+            $booklet->p_administrative = $data['p_administrative'];
+            $booklet->save();
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت ثبت شد']);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'خطا در ثبت مقادیر دفترچه'], 500);
+        }
+
+    }
+
+    public function submitBooklet($id)
+    {
+        try {
+            DB::beginTransaction();
+            $user = User::find(2174);
+            $this->submitting($id, $user);
+            DB::commit();
+            return response()->json(['message' => 'ثبت دفترچه با موفقیت انجام گردید.']);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'خطا در ثبت دفترچه'], 500);
+        }
+
+    }
+
+    public function declineBooklet( Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+            $user = User::find(2174);
+            $data = $request->all();
+            $this->attachRadShodeStatus($id, $user , $data['description'] , $data['fileID']);
+            DB::commit();
+            return response()->json(['message' => 'انصاف دفترچه با موفقیت انجام گردید.']);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'خطا در انصاف دفترچه'], 500);
+        }
     }
 }

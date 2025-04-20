@@ -42,9 +42,9 @@ class ShowBookletResource extends JsonResource
                     'class_name' => $booklet['status_class'],
                 ],
                 'dealing_values' => [
-                    'commercial' => $booklet['p1'],
+                    'commercial' => $booklet['p3'],
                     'administrative' => $booklet['p2'],
-                    'residential' => $booklet['p3'],
+                    'residential' => $booklet['p1'],
                 ]
             ],
             'levies' => $circular['levies'],

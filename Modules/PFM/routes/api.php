@@ -38,3 +38,8 @@ Route::get('/pfm/booklet/show/{id}', [BookletController::class, 'show']);
 
 //Tariffs
 Route::post('/pfm/booklet-items/{id}', [BookletController::class, 'showItems']);
+Route::get('/pfm/booklet-prices/{id}', [BookletController::class, 'showPrices']);
+Route::post('/pfm/booklet-prices/{id}', [BookletController::class, 'storePrices']);
+
+Route::get('/pfm/booklet/submit/{id}', [BookletController::class, 'submitBooklet']);
+Route::post('/pfm/booklet/decline/{id}', [BookletController::class, 'declineBooklet']);

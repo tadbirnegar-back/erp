@@ -21,6 +21,8 @@ class BookletStatus extends Model
         'status_id',
         'created_date',
         'creator_id',
+        'description',
+        'file_id',
     ];
 
     protected $table = 'pfm_booklet_statuses';

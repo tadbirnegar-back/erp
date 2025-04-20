@@ -132,9 +132,9 @@ trait BookletTrait
                 'statuses.class_name as status_class',
                 'pfm_booklet_statuses.created_date as status_created_date',
                 'pfm_circular_booklets.pfm_circular_id as circular_id',
-                'pfm_circular_booklets.p1 as p1',
-                'pfm_circular_booklets.p2 as p2',
-                'pfm_circular_booklets.p3 as p3',
+                'pfm_circular_booklets.p_residential as p1',
+                'pfm_circular_booklets.p_commercial as p2',
+                'pfm_circular_booklets.p_administrative as p3',
                 'pfm_circular_booklets.pfm_circular_id as circular_id',
                 'pfm_circular_booklets.ounit_id as ounit_id'
             ])
@@ -294,79 +294,145 @@ trait BookletTrait
         ];
     }
 
-    public function showTable($levyId, $bookletId)
+    public function showTable($levyId, $bookletId, $status)
     {
         $bookletId = Booklet::find($bookletId);
         $circularId = $bookletId->pfm_circular_id;
         $levyCirculars = LevyCircular::where('levy_id', $levyId)->where('circular_id', $circularId)->first();
+        if ($status == BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value) {
+            $canEdit = true;
+        } else {
+            $canEdit = false;
+        }
 
         $shuruh = LevyItem::where('circular_levy_id', $levyCirculars->id)->get();
         $levy = Levy::find($levyId);
 
-        $levyName = $levy->name;
+        if ($levy->has_app) {
+            $levyName = $levy->name;
 
-        $applications = '';
-        $multipleAppsIDs = [];
-        switch ($levyName) {
-            case ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_SINGLES->value:
-                $applications = ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_SINGLES->values();
-                $multipleAppsIDs = ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_MULTIPLES->values();
+            $applications = '';
+            $multipleAppsIDs = [];
+            switch ($levyName) {
+                case ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_SINGLES->value:
+                    $applications = ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_SINGLES->values();
+                    $multipleAppsIDs = ApplicationsForTablesEnum::AMLAK_MOSTAGHELAT_MULTIPLES->values();
+                    break;
+                case ApplicationsForTablesEnum::TAFKIK_ARAZI_SINGLES->value:
+                    $applications = ApplicationsForTablesEnum::TAFKIK_ARAZI_SINGLES->values();
+                    $multipleAppsIDs = ApplicationsForTablesEnum::TAFKIK_ARAZI_MULTIPLES->values();
+                    break;
+                case ApplicationsForTablesEnum::PARVANEH_HESAR_SINGLES->value:
+                    $applications = ApplicationsForTablesEnum::PARVANEH_HESAR_SINGLES->values();
+                    $multipleAppsIDs = ApplicationsForTablesEnum::PARVANEH_HESAR_MULTIPLES->values();
+                    break;
+                case ApplicationsForTablesEnum::PARVANE_ZIRBANA_SINGLES->value:
+                    $applications = ApplicationsForTablesEnum::PARVANE_ZIRBANA_SINGLES->values();
+                    $multipleAppsIDs = ApplicationsForTablesEnum::PARVANE_ZIRBANA_MULTIPLES->values();
+                    break;
+                case ApplicationsForTablesEnum::PARVANE_BALKON_SINGLES->value:
+                    $applications = ApplicationsForTablesEnum::PARVANE_BALKON_SINGLES->values();
+                    $multipleAppsIDs = ApplicationsForTablesEnum::PARVANE_BALKON_MULTIPLES->values();
+                    break;
+                case ApplicationsForTablesEnum::PARVANEH_MOSTAHADESAT_SINGLES->value:
+                    $applications = ApplicationsForTablesEnum::PARVANEH_MOSTAHADESAT_SINGLES->values();
+                    $multipleAppsIDs = ApplicationsForTablesEnum::PARVANEH_MOSTAHADESAT_MULTIPLES->values();
+                    break;
+            }
 
 
-                break;
-        }
+            $applicationsInsideTable = [];
 
+            foreach ($applications as $app) {
+                $applicationsInsideTable[] = PropApplication::find($app);
+            }
 
-        $applicationsInsideTable = [];
+            $addMultiples = function ($items) use (&$addMultiples) {
+                $result = [];
 
-        foreach ($applications as $app) {
-            $applicationsInsideTable[] = PropApplication::find($app);
-        }
-
-        $addMultiples = function ($items) use (&$addMultiples) {
-            $result = [];
-
-            foreach ($items as $value) {
-                if (is_array($value)) {
-                    $result[] = $addMultiples($value);
-                } else {
-                    $result[] = PropApplication::find($value);
+                foreach ($items as $value) {
+                    if (is_array($value)) {
+                        $result[] = $addMultiples($value);
+                    } else {
+                        $result[] = PropApplication::find($value);
+                    }
                 }
-            }
 
-            return $result;
-        };
+                return $result;
+            };
 
-        $structuredMultiples = $addMultiples($multipleAppsIDs);
+            $structuredMultiples = $addMultiples($multipleAppsIDs);
 
-        $karbariHa = array_merge($applicationsInsideTable, $structuredMultiples);
-
+            $karbariHa = array_merge($applicationsInsideTable, $structuredMultiples);
 
 
-        $tariffs = [];
-        $shuruh->map(function ($item) use (&$bookletId, &$tariffs) {
-            $data = Tarrifs::Where('item_id', $item->id)->where('booklet_id', $bookletId->id)->first();
-            if (!is_null($data)) {
-                $tariffs[] = [
-                    'app_id' => $data->app_id,
-                    'item_id' => $data->item_id,
-                    'value' => $data->value,
-                ];
-            }
-        });
-        return [$tariffs , $karbariHa , $shuruh];
+            $tariffs = [];
+            $shuruh->map(function ($item) use (&$bookletId, &$tariffs) {
+                $data = Tarrifs::Where('item_id', $item->id)->where('booklet_id', $bookletId->id)->first();
+                if (!is_null($data)) {
+                    $tariffs[] = [
+                        'app_id' => $data->app_id,
+                        'item_id' => $data->item_id,
+                        'value' => $data->value,
+                    ];
+                }
+            });
+            return ['tarrifs' => $tariffs, 'applications' => $karbariHa, 'shuruh' => $shuruh, 'tableModel' => 'Model1', 'canEdit' => $canEdit];
+        } else {
+            $tariffs = [];
+            $shuruh->map(function ($item) use (&$bookletId, &$tariffs) {
+                $data = Tarrifs::Where('item_id', $item->id)->where('booklet_id', $bookletId->id)->first();
+                if (!is_null($data)) {
+                    $tariffs[] = [
+                        'item_id' => $data->item_id,
+                        'value' => $data->value,
+                    ];
+                }
+            });
+            return ['tarrifs' => $tariffs, 'shuruh' => $shuruh, 'tableModel' => 'Model2', 'canEdit' => $canEdit];
+        }
+
 
     }
 
-    //Attaching statuses
+    public function submitting($id, $user)
+    {
+        $query = Booklet::joinRelationship('statuses', ['statuses' => function ($join) {
+            $join->whereRaw('pfm_booklet_statuses.created_date = (SELECT MAX(created_date) FROM pfm_booklet_statuses WHERE booklet_id = pfm_circular_booklets.id)');
+        }])
+            ->select([
+                'statuses.name as status_name',
+            ])
+            ->where('pfm_circular_booklets.id', $id)
+            ->get();
+        $status = $query->first()->status_name;
+        $nextStatus = match ($status) {
+            BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => $this->EntezarShuraStatus()->id,
+            BookletStatusEnum::DAR_ENTEZAR_SHURA->value => $this->EntezareHeyateTatbighStatus()->id,
+            BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => $this->MosavabStatus()->id,
+            default => null,
+        };
 
-    public function attachRadShodeStatus($id, $user)
+        if ($nextStatus) {
+            BookletStatus::create([
+                'booklet_id' => $id,
+                'status_id' => $nextStatus,
+                'created_date' => now(),
+                'creator_id' => $user->id,
+            ]);
+        }
+    }
+
+    //Attaching statuses
+    public function attachRadShodeStatus($id, $user , $descrption = null , $fileID = null)
     {
         BookletStatus::create([
             'booklet_id' => $id,
             'status_id' => $this->RadShodeStatus()->id,
             'created_date' => now(),
             'creator_id' => $user,
+            'description' => $descrption,
+            'file_id' => $fileID,
         ]);
     }
 

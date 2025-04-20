@@ -143,5 +143,20 @@
         "name": "محل نگهداری دام",
         "main_prop_type": "p_residential",
         "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "مجتمع مسکونی(چند واحدی)",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "کشاورزی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "مرغداری",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
     }
 ]
