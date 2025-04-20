@@ -1,0 +1,8 @@
+[
+    {
+        "name": "افزودن بخشنامه",
+        "slug": "/pfm/circular/store",
+        "moduleName": "LMS",
+        "permissionTypeName": "sidebar"
+    }
+]
