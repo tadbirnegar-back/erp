@@ -27,6 +27,7 @@ trait LoginTrait
                 'module_categories.name as module_cat_name',
                 'module_categories.icon as module_cat_icon',
                 'module_categories.priority as module_cat_priority',
+                'module_categories.id as module_cat_id',
             ])
             ->where('users.id' , $user->id)
             ->where('permissions.permission_type_id', PermissionTypesEnum::SIDEBAR->value)
@@ -37,6 +38,7 @@ trait LoginTrait
                 return [
                     'category_name' => $categoryName,
                     'category_icon' => $modules->first()->module_cat_icon,
+                    'category_id' => $modules->first()->module_cat_id,
                     'modules' => $modules->groupBy('module_name')
                         ->map(function ($permissions, $moduleName) {
                             return [
