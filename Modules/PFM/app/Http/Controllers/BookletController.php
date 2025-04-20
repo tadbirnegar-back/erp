@@ -75,7 +75,7 @@ class BookletController extends Controller
 
         $user = User::find(2174);
 
-        $appIds->each(function ($appId) use ($itemId, $bookletId , $value , $user) {
+        collect($appIds)->each(function ($appId) use ($itemId, $bookletId , $value , $user) {
             Tarrifs::create([
                 'item_id' => $itemId,
                 'booklet_id' => $bookletId,
