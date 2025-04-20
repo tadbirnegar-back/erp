@@ -27,8 +27,7 @@ class CircularController extends Controller
             DB::beginTransaction();
 
             $data = $request->all();
-//            $user = Auth::user();
-            $user = User::find(2174);
+            $user = Auth::user();
             $this->storeCircular($data, $user);
 
             Db::commit();
@@ -81,7 +80,7 @@ class CircularController extends Controller
 
     public function generateBooklets($id)
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         try {
             Artisan::call('pfm:dispatch-circular', [
                 'circularId' => $id,

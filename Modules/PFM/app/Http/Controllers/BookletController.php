@@ -28,8 +28,7 @@ class BookletController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
         $perPage = $data['perPage'] ?? 10;
 
-//        $user = Auth::user();
-        $user = User::find(2174);
+        $user = Auth::user();
         $data = $this->listOfBooklets($data, $user, $pageNum, $perPage);
 
         return ListOfBookletsResource::collection($data);
@@ -37,7 +36,7 @@ class BookletController extends Controller
 
     public function show($id)
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         $query = $this->showBooklet($id, $user);
         if ($query['status'] == 200) {
             return new ShowBookletResource($query);
@@ -73,7 +72,8 @@ class BookletController extends Controller
 
         $itemId = $data['itemID'];
 
-        $user = User::find(2174);
+        $user = Auth::user();
+
 
         collect($appIds)->each(function ($appId) use ($itemId, $bookletId , $value , $user) {
             Tarrifs::create([
@@ -117,7 +117,7 @@ class BookletController extends Controller
     {
         try {
             DB::beginTransaction();
-            $user = User::find(2174);
+            $user = Auth::user();
             $this->submitting($id, $user);
             DB::commit();
             return response()->json(['message' => 'ثبت دفترچه با موفقیت انجام گردید.']);
@@ -131,7 +131,7 @@ class BookletController extends Controller
     {
         try {
             DB::beginTransaction();
-            $user = User::find(2174);
+            $user = Auth::user();
             $data = $request->all();
             $this->attachRadShodeStatus($id, $user->id, $data['description'] ?? null, $data['fileID'] ?? null);
             $this->douplicateBooklet($id, $user->id);

@@ -2,6 +2,7 @@
 
 namespace Modules\PFM\app\Http\Traits;
 
+use Illuminate\Support\Facades\Cache;
 use Modules\PFM\app\Http\Enums\LevyStatusEnum;
 use Modules\PFM\app\Models\Levy;
 use Modules\PFM\app\Models\LevyCircular;
@@ -16,13 +17,13 @@ trait LevyTrait
         $levies = Levy::where('status_id', $activeStatus->id)->get();
         $data = [];
 
-        foreach ($levies as $levy) {
+        $levies->map(function ($levy) use (&$data , $circularId) {
             $data[] = [
-                'circular_id' => $circularId,
                 'levy_id' => $levy->id,
+                'circular_id' => $circularId,
                 'created_date' => now(),
             ];
-        }
+        });
 
         LevyCircular::insert($data);
     }
@@ -30,11 +31,15 @@ trait LevyTrait
 
     public function ActiveStatus()
     {
-        return Levy::GetAllStatuses()->firstWhere('name', LevyStatusEnum::ACTIVE->value);
+        Cache::rememberForever('levy_active_status', function () {
+            return Levy::GetAllStatuses()->firstWhere('name', LevyStatusEnum::ACTIVE->value);
+        });
     }
 
     public function NotActiveStatus()
     {
-        return Levy::GetAllStatuses()->firstWhere('name', LevyStatusEnum::NOT_ACTIVE->value);
+        Cache::rememberForever('levy_not_active_status', function () {
+            return Levy::GetAllStatuses()->firstWhere('name', LevyStatusEnum::NOT_ACTIVE->value);
+        });
     }
 }

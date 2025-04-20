@@ -24,6 +24,7 @@ trait LevyItemTrait
 
     public function deleteItems($id)
     {
+        LevyItem::lockForUpdate()->where('id', $id)->first();
         LevyItem::find($id)->delete();
     }
 

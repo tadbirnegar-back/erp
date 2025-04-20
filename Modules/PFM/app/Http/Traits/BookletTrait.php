@@ -4,6 +4,7 @@ namespace Modules\PFM\app\Http\Traits;
 
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -138,7 +139,6 @@ trait BookletTrait
                 'pfm_circular_booklets.pfm_circular_id as circular_id',
                 'pfm_circular_booklets.ounit_id as ounit_id'
             ])
-            ->distinct('pfm_circular_booklets.id')
             ->where('pfm_circular_booklets.id', $id)
             ->get();
 
@@ -501,27 +501,37 @@ trait BookletTrait
     //Get statuses
     public function MosavabStatus()
     {
-        return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::MOSAVAB->value);
+        Cache::rememberForever('booklet_mosavab_status', function () {
+            return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::MOSAVAB->value);
+        });
     }
 
     public function DarEntazarSabtStatus()
     {
-        return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value);
+        Cache::rememberForever('booklet_dar_entazar_sabt_status', function () {
+            return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value);
+        });
     }
 
     public function EntezareHeyateTatbighStatus()
     {
-        return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value);
+        Cache::rememberForever('booklet_entezare_heyate_tatbigh_status', function () {
+            return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value);
+        });
     }
 
     public function EntezarShuraStatus()
     {
-        return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZAR_SHURA->value);
+        Cache::rememberForever('booklet_entezar_shura_status', function () {
+            return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZAR_SHURA->value);
+        });
     }
 
     public function RadShodeStatus()
     {
-        return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::RAD_SHODE->value);
+        Cache::rememberForever('booklet_rad_shode_status', function () {
+            return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::RAD_SHODE->value);
+        });
     }
 
 }

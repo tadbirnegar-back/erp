@@ -6,6 +6,7 @@ namespace Modules\PFM\app\Http\Traits;
 use Carbon\Carbon;
 use Illuminate\Bus\Batch;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
 use Log;
 use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Models\FiscalYear;
@@ -252,12 +253,16 @@ trait PfmCircularTrait
 
     public function publishedStatus()
     {
-        return PfmCirculars::GetAllStatuses()->firstWhere('name', PfmCircularStatusesEnum::PUBLISHED->value);
+        Cache::rememberForever('pfm_circular_published_status', function () {
+            return PfmCirculars::GetAllStatuses()->firstWhere('name', PfmCircularStatusesEnum::PUBLISHED->value);
+        });
     }
 
     public function draftStatus()
     {
-        return PfmCirculars::GetAllStatuses()->firstWhere('name', PfmCircularStatusesEnum::DRAFT->value);
+        Cache::rememberForever('pfm_circular_draft_status', function () {
+            return PfmCirculars::GetAllStatuses()->firstWhere('name', PfmCircularStatusesEnum::DRAFT->value);
+        });
     }
 
 }
