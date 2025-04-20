@@ -57,7 +57,7 @@ Route::prefix('v1')->group(function () {
 });
 
 Route::prefix('v2')->group(function () {
-    Route::post('/getToken', [LoginControllerV2::class, 'getToken']);
+    Route::post('/login', [LoginControllerV2::class, 'getToken']);
     Route::post('/refreshToken', [LoginControllerV2::class, 'refreshToken']);
 
 });
