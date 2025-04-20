@@ -21,6 +21,7 @@ trait LoginTrait
                 'permissions.slug as permission_slug',
                 'permissions.priority as permission_priority',
                 'modules.icon as module_icon',
+                'modules.id as module_id',
                 'modules.name as module_name',
                 'modules.priority as module_priority',
                 'module_categories.name as module_cat_name',
@@ -41,6 +42,7 @@ trait LoginTrait
                             return [
                                 'module_name' => $moduleName,
                                 'module_icon' => $permissions->first()->module_icon,
+                                'module_id' => $permissions->first()->module_id,
                                 'permissions' => $permissions->map(function ($permission) {
                                     return [
                                         'id' => $permission->permission_id,
