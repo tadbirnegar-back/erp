@@ -424,7 +424,7 @@ trait BookletTrait
     }
 
     //Attaching statuses
-    public function attachRadShodeStatus($id, $user , $descrption = null , $fileID = null)
+    public function attachRadShodeStatus($id, $user, $descrption = null, $fileID = null)
     {
         BookletStatus::create([
             'booklet_id' => $id,
@@ -474,6 +474,27 @@ trait BookletTrait
             'created_date' => now(),
             'creator_id' => $user,
         ]);
+    }
+
+    public function douplicateBooklet($id, $user)
+    {
+        $oldBooklet = Booklet::find($id);
+        $oldBooklet->load('tariffs');
+
+        $newBooklet = new Booklet();
+        $newBooklet->p_residential = $oldBooklet->p_residential;
+        $newBooklet->p_commercial = $oldBooklet->p_commercial;
+        $newBooklet->p_administrative = $oldBooklet->p_administrative;
+        $newBooklet->ounit_id = $oldBooklet->ounit_id;
+        $newBooklet->pfm_circular_id = $oldBooklet->pfm_circular_id;
+        $newBooklet->created_date = now();
+        $newBooklet->save();
+
+        foreach ($oldBooklet->tariffs as $tariff) {
+            $newTariff = $tariff->replicate();
+            $newTariff->booklet_id = $newBooklet->id;
+            $newTariff->save();
+        }
     }
 
 

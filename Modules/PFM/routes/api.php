@@ -43,3 +43,5 @@ Route::post('/pfm/booklet-prices/{id}', [BookletController::class, 'storePrices'
 
 Route::get('/pfm/booklet/submit/{id}', [BookletController::class, 'submitBooklet']);
 Route::post('/pfm/booklet/decline/{id}', [BookletController::class, 'declineBooklet']);
+
+Route::post('/pfm/booklet/tariff/store', [BookletController::class, 'store']);

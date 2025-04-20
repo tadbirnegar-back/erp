@@ -29,6 +29,11 @@ class Booklet extends Model
         return $this->belongsTo(OrganizationUnit::class, 'ounit_id');
     }
 
+    public function tariffs()
+    {
+        return $this->hasMany(Tarrifs::class, 'booklet_id');
+    }
+
 
     public function circular()
     {

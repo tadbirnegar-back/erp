@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Models\User;
 use Modules\PFM\app\Http\Traits\BookletTrait;
 use Modules\PFM\app\Models\Booklet;
+use Modules\PFM\app\Models\Levy;
+use Modules\PFM\app\Models\Tarrifs;
 use Modules\PFM\app\Resources\ListOfBookletsResource;
 use Modules\PFM\app\Resources\ShowBookletResource;
 
@@ -61,8 +63,28 @@ class BookletController extends Controller
         return response()->json($res);
     }
 
-    public function store(Request $request, $id)
+    public function store(Request $request)
     {
+        $data = $request->all();
+
+        $bookletId = $data['bookletID'];
+        $value = $data['value'];
+        $appIds = json_decode($data['applicationIDs']);
+
+        $itemId = $data['itemID'];
+
+        $user = User::find(2174);
+
+        $appIds->each(function ($appId) use ($itemId, $bookletId , $value , $user) {
+            Tarrifs::create([
+                'item_id' => $itemId,
+                'booklet_id' => $bookletId,
+                'app_id' => $appId,
+                'value' => $value,
+                'creator_id' => $user->id,
+                'created_date' => now(),
+            ]);
+        });
 
     }
 
@@ -105,17 +127,18 @@ class BookletController extends Controller
 
     }
 
-    public function declineBooklet( Request $request, $id)
+    public function declineBooklet(Request $request, $id)
     {
         try {
             DB::beginTransaction();
             $user = User::find(2174);
             $data = $request->all();
-            $this->attachRadShodeStatus($id, $user , $data['description'] , $data['fileID']);
+            $this->attachRadShodeStatus($id, $user->id, $data['description'] ?? null, $data['fileID'] ?? null);
+            $this->douplicateBooklet($id, $user->id);
             DB::commit();
-            return response()->json(['message' => 'انصاف دفترچه با موفقیت انجام گردید.']);
+            return response()->json(['message' => 'رد دفترچه با موفقیت انجام گردید.']);
         } catch (Exception $e) {
-            return response()->json(['message' => 'خطا در انصاف دفترچه'], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 }
