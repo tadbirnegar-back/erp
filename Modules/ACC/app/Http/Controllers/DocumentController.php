@@ -1757,6 +1757,7 @@ class DocumentController extends Controller
                         $newArticle->document_id = $newDocument->id;
                         $newArticle->transaction_id = null;
                         if ($article->account->ounit_id == $newDocument->ounit_id) {
+                            $newArticle->save();
                             return;
                         } elseif ($article->account->ounit_id != null) {
                             $newArticle->account_id = null;
