@@ -1,0 +1,110 @@
+[
+    {
+        "name": "افزودن بخشنامه",
+        "slug": "/pfm/circular/store",
+        "moduleName": "PFM",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست بخشنامه ها",
+        "slug": "/pfm/circulars/list",
+        "moduleName": "PFM",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "نمایش بخشنامه",
+        "slug": "/pfm/circular/show/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ویرایش بخشنامه",
+        "slug": "/pfm/circular/update/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "نمایش بخشنامه برای ویرایش",
+        "slug": "/pfm/circular/update/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تولید دفترچه ها",
+        "slug": "/pfm/circulars/publish/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف بخشنامه",
+        "slug": "/pfm/circular/delete/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن شرح",
+        "slug": "/pfm/levy-items/store/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "حذف شرح",
+        "slug": "/pfm/levy-items/delete/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده شرح ها",
+        "slug": "/pfm/levy-items/index/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست دفترچه ها",
+        "slug": "/pfm/booklets/list",
+        "moduleName": "PFM",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "نمایش دفترچه",
+        "slug": "/pfm/booklet/show/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "نمایش جداول",
+        "slug": "/pfm/booklet-items/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "نمایش هزینه ها",
+        "slug": "/pfm/booklet-prices/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ثبت هزینه ها",
+        "slug": "/pfm/booklet-prices/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ثبت دفترچه",
+        "slug": "/pfm/booklet/submit/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "رد دفترچه",
+        "slug": "/pfm/booklet/decline/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ذخیره تعرفه ها",
+        "slug": "/pfm/booklet/tariff/store",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    }
+]

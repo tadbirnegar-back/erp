@@ -1,0 +1,11 @@
+{
+    "name": "PFM",
+    "alias": "pfm",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\PFM\\app\\Providers\\PFMServiceProvider"
+    ],
+    "files": []
+}

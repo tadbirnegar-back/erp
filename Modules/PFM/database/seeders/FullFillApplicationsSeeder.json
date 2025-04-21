@@ -1,0 +1,162 @@
+[
+    {
+        "name": "مسکونی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "1"
+    },
+    {
+        "name": "تجاری متمرکز",
+        "main_prop_type": "p_commercial",
+        "adjustment_coefficient": "1"
+    },
+    {
+        "name": "تجاری مسکونی",
+        "main_prop_type": "p_commercial",
+        "adjustment_coefficient": "1"
+    },
+    {
+        "name": "اداری",
+        "main_prop_type": "p_administrative",
+        "adjustment_coefficient": "1"
+    },
+    {
+        "name": "خدماتی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "آموزشی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "فرهنگی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "بهداشتی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "درمانی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "تفریحی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "ورزشی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "گردشگری",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "هتلداری",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.7"
+    },
+    {
+        "name": "صنعتی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.6"
+    },
+    {
+        "name": "کارگاهی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.6"
+    },
+    {
+        "name": "حمل و نقل",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.6"
+    },
+    {
+        "name": "انبار",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.6"
+    },
+    {
+        "name": "پارکینگ(توقف گاه)",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.6"
+    },
+    {
+        "name": "باغات",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "اراضی مزروعی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "دامداری",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "دامپروری",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "پرورش طیور و آبزیان",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "پرورش گل و گیاه",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "اراضی مزروعی دیمی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.2"
+    },
+    {
+        "name": "اراضی ملی و سایر املاک",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.2"
+    },
+    {
+        "name": "تأسیسات",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.6"
+    },
+    {
+        "name": "احداث اصطبل",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "محل نگهداری دام",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "مجتمع مسکونی(چند واحدی)",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "کشاورزی",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    },
+    {
+        "name": "مرغداری",
+        "main_prop_type": "p_residential",
+        "adjustment_coefficient": "0.3"
+    }
+]
