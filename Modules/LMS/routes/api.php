@@ -102,4 +102,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('/lms/course/update-show/{id}', [CourseController::class, 'updateDataShow']);
     Route::post('/lms/course/related-courses-list', [CourseController::class, 'relatedCoursesList']);
     Route::get('/lms/course/related-comprehensive-list', [CourseController::class, 'relatedComprehensiveCoursesList']);
+    Route::get('/lms/course/license/{id}' , [CourseController::class, 'showLicense']);
+    Route::post('/lms/store/certificate/{id}', [CourseController::class, 'storeCertificate']);
 });

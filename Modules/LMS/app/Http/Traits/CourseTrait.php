@@ -308,10 +308,6 @@ trait CourseTrait
                 $AllowToDos['canDegree'] = true;
             }
 
-            if ($course->latestStatus->name == $this::$canceled) {
-                //
-            }
-
             $AdditionalData["enrolled"] = $isEnrolled;
         }
         $AllowToDos['canTrainingExam'] = false;
@@ -338,6 +334,16 @@ trait CourseTrait
                 }
             }
         }
+
+        if($AllowToDos['joined']){
+            if($this->hasAttemptedAndPassedExam($user->student, $course->id)){
+                $AllowToDos['canDegree'] = true;
+            }
+        }else{
+            $AllowToDos['canDegree'] = false;
+        }
+
+
         return ["course" => $course, "componentsInfo" => $componentsWithData, "usersInfo" => $user, "Permissons" => $AllowToDos, "AdditionalData" => $AdditionalData ?? null];
     }
 
@@ -832,6 +838,22 @@ trait CourseTrait
         })->where('id', $courseId)->first();
 
         return is_null($isComplete);
+    }
+
+
+    public function report($id)
+    {
+        $duration = Course::join('chapters', 'courses.id', '=', 'chapters.course_id')
+            ->join('lessons', 'chapters.id', '=', 'lessons.chapter_id')
+            ->join('lesson_study_log', 'lessons.id', '=', 'lesson_study_log.lesson_id')
+            ->join('contents', 'lessons.id', '=', 'contents.lesson_id')
+            ->join('files' , 'files.id', '=', 'contents.file_id')
+            ->select(['files.duration' , 'files.id'])
+            ->where('courses.id', $id)
+            ->distinct('files.id')
+            ->get();
+
+        return $duration;
     }
 
 

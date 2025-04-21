@@ -21,9 +21,11 @@ use Modules\LMS\app\Http\Traits\CourseCourseTrait;
 use Modules\LMS\app\Http\Traits\CourseEmployeeFeatureTrait;
 use Modules\LMS\app\Http\Traits\CourseTargetTrait;
 use Modules\LMS\app\Http\Traits\CourseTrait;
+use Modules\LMS\app\Http\Traits\ReportingTrait;
 use Modules\LMS\app\Jobs\CourseAccessDateJob;
 use Modules\LMS\app\Jobs\CourseExpirationJob;
 use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\Enroll;
 use Modules\LMS\app\Models\StatusCourse;
 use Modules\LMS\app\Resources\AllCoursesListResource;
 use Modules\LMS\app\Resources\CourseListResource;
@@ -45,6 +47,7 @@ use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PayStream\app\Models\Online;
+use Modules\PersonMS\app\Models\Person;
 
 class CourseController extends Controller
 {
@@ -73,7 +76,7 @@ class CourseController extends Controller
             return response()->json(['message' => "دوره با موفقیت ساخته شد"]);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json(['message' => $exception->getMessage()] , 404);
+            return response()->json(['message' => $exception->getMessage()], 404);
         }
     }
 
@@ -139,7 +142,7 @@ class CourseController extends Controller
                 return response()->json(['message' => 'دوره مورد نظر یافت نشد'], 403);
             }
 
-            if($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value){
+            if ($course->course_type['value'] == CourseTypeEnum::MOKATEBEYI->value) {
                 $isEnrolled = $this->isEnrolledToDefinedCourse($course->id, $user);
                 if (empty($isEnrolled->isEnrolled[0])) {
                     $purchase = new PurchaseCourse($course, $user);
@@ -169,7 +172,6 @@ class CourseController extends Controller
         $result = $this->courseIndex($perPage, $pageNum, $data);
         return CourseListResource::collection($result);
     }
-
 
     public function registerCourse($id)
     {
@@ -291,7 +293,6 @@ class CourseController extends Controller
 
     }
 
-
     public function courseListAll()
     {
         $query = Course::query();
@@ -302,7 +303,6 @@ class CourseController extends Controller
 
         return response()->json($response);
     }
-
 
     public function liveSearchOunit(Request $request)
     {
@@ -413,6 +413,7 @@ class CourseController extends Controller
         $courses = $this->getRelatedLists($title, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree, $perPage, $pageNum);
         return RelatedCourseListResource::collection($courses);
     }
+
     public function relatedComprehensiveCoursesList()
     {
         $user = Auth::user();
@@ -448,9 +449,7 @@ class CourseController extends Controller
             ->toArray();
 
 
-
         $allData = [];
-
 
 
         foreach ($relatedOrgans as $unit) {
@@ -498,24 +497,24 @@ class CourseController extends Controller
         $courses = $this->getRelatedComprehensiveLists($user, $allOunits, $levels, $positions, $jobs, $isTourism, $isFarm, $isAttachedToCity, $degree);
         return RelatedCourseListComprehensiveResource::collection($courses);
     }
+
     public function publishCourseDataShow($id)
     {
         try {
             $data = $this->showCourseDataForEnteshareDore($id);
             return new PublishCoursePreviewResource($data);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 404);
         }
 
     }
-
 
     public function makeCoursePublish($id)
     {
         try {
             DB::beginTransaction();
             $course = Course::find($id);
-            if($course->access_date == null){
+            if ($course->access_date == null) {
                 StatusCourse::create([
                     'course_id' => $id,
                     'status_id' => $this->courseWaitPresentingStatus()->id,
@@ -530,7 +529,7 @@ class CourseController extends Controller
                 Course::find($id)->update([
                     'access_date' => now()
                 ]);
-            }else{
+            } else {
                 StatusCourse::create([
                     'course_id' => $id,
                     'status_id' => $this->courseWaitPresentingStatus()->id,
@@ -584,11 +583,105 @@ class CourseController extends Controller
     public function courseTypeList()
     {
         $data = [
-            ["value" => CourseTypeEnum::AMUZESHI->value , "label" => "دوره آموزشی" , 'description' => "یادگیری و ارتقاء مهارت‌ها"],
-            ["value" => CourseTypeEnum::MOKATEBEYI->value , "label" => "دوره آزمون جامع(مکاتبه ای)" , 'description' => "ارزیابی از طریق آزمون"]
+            ["value" => CourseTypeEnum::AMUZESHI->value, "label" => "دوره آموزشی", 'description' => "یادگیری و ارتقاء مهارت‌ها"],
+            ["value" => CourseTypeEnum::MOKATEBEYI->value, "label" => "دوره آزمون جامع(مکاتبه ای)", 'description' => "ارزیابی از طریق آزمون"]
         ];
         return response()->json($data);
 
+    }
+
+    public function showLicense($id)
+    {
+        $course = Course::find($id);
+        $user = Auth::user();
+        $student = $user->load('student');
+        $approvedStatus = $this->answerSheetApprovedStatus();
+
+        if(is_null($student->student))
+        {
+            return response()->json(['message' => 'شما دسترسی به این دوره را ندارید'], 403);
+        }
+
+
+        $exams = Course::with(['answerSheets' => function ($query) use ($approvedStatus, $student) {
+            $query->where('status_id', $approvedStatus->id);
+            $query->where('student_id', $student->student->id);
+        }])->find($id);
+
+
+        $user->load(['enrolls' => function ($query) use ($course) {
+            $query->where('course_id', $course->id);
+        }]);
+
+
+
+        $enroll = $user->enrolls->first();
+
+
+        if ($exams->answerSheets->count() > 0) {
+            $person = Person::where('id', $user->person_id)->first();
+
+            $rcs = $user->load('activeRecruitmentScripts.position');
+            $rcs = $rcs->activeRecruitmentScripts;
+            $rcs = $rcs->pluck('position');
+            $positions = $rcs->pluck('name')->unique();
+
+            $answerSheet = $exams->answerSheets->first();
+
+            $year = now()->format('Y');
+            $convertedYear = convertYearJalali($year);
+
+//            $thisDate = convertDateTimeGregorianToJalaliDateTime(now());
+
+            $report = $this->report($id);
+            $totalDuration = collect($report)->sum('duration');
+
+            $currentDate = now()->format('Y-m-d');
+            $date = convertDateTimeGregorianToJalaliDateTime($currentDate);
+            $dateOnly = explode(' ', $date)[0];
+
+
+
+            $justDate = strtok($date, ' '); // Get only the date part (e.g., ۱۴۰۴/۰۲/۰۱)
+
+            list($year, $month, $day) = explode('/', $justDate);
+
+            $year = mb_substr($year, -2);
+
+            $shortDate = $year . $month . $day;
+
+            $enrollId = changeNumbersToPersian($enroll->id);
+
+            return response()->json([
+                'totalDuration' => $totalDuration,
+                'person_name' => $person->display_name,
+                'code_melli' => $person->national_code,
+                'score' => $answerSheet->score,
+                'convertedYear' => $convertedYear,
+                'positions' => $positions,
+                'course_title' => $course->title,
+                'date' => $dateOnly,
+                'documnet_number' => "$shortDate/$enrollId",
+            ]);
+        } else {
+            return response()->json(['message' => "شما دسترسی به این گواهی را ندارید"], 403);
+        }
+
+
+    }
+
+    public function storeCertificate(Request $request , $id)
+    {
+        $user = Auth::user();
+        $data = $request->all();
+        $user->load(['enrolls' => function ($query) use ($id) {
+            $query->where('course_id', $id);
+        }]);
+        $enroll = $user->enrolls->first();
+        return response()->json($enroll);
+        $enroll->certificate_file_id = $data['file_id'];
+        $enroll->save();
+        return response()->json(['message' => 'با موفقیت ساخته شد']);
     }
 
 }

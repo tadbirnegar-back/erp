@@ -268,3 +268,50 @@ function addWithLeadingZeros($num1, $num2, $length = 3)
 
     return str_pad($sum, $length, "0", STR_PAD_LEFT);
 }
+
+function changeNumbersToEnglish($number)
+{
+    $replaces = [
+        '۰' => '0',
+        '۱' => '1',
+        '۲' => '2',
+        '۳' => '3',
+        '۴' => '4', // Both '۴' and '٤' are replaced with '4'
+        '٥' => '5',
+        '۶' => '6',
+        '۷' => '7',
+        '۸' => '8',
+        '۹' => '9',
+    ];
+    return strtr($number, $replaces);
+
+}
+
+function changeNumbersToPersian($number)
+{
+    $replaces = [
+        '0' => '۰',
+        '1' => '۱',
+        '2' => '۲',
+        '3' => '۳',
+        '4' => '۴', // Both '۴' and '٤' are replaced with '4'
+        '5' => '٥',
+        '6' => '۶',
+        '7' => '۷',
+        '8' => '۸',
+        '9' => '۹',
+    ];
+    return strtr($number, $replaces);
+
+}
+
+function convertYearJalali(string $gregorianDate)
+{
+    // Convert the Gregorian date to a Jalali date
+    $jalaliDate = CalendarUtils::strftime('Y', strtotime($gregorianDate));
+
+    // Convert numbers to Persian characters
+    $persianCharJalaliDate = CalendarUtils::convertNumbers($jalaliDate, false);
+
+    return $persianCharJalaliDate;
+}
