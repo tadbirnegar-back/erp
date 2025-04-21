@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Log;
 use Modules\AAA\app\Models\User;
+use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\AddressMS\app\Models\Village;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -18,20 +19,21 @@ use Modules\PFM\app\Jobs\PublishPfmCircularJob;
 use Modules\PFM\app\Models\Booklet;
 use Modules\PFM\app\Models\PfmCirculars;
 use Modules\PFM\app\Models\PfmCircularStatus;
+use Morilog\Jalali\Jalalian;
 
 trait PfmCircularTrait
 
 {
 
-    use LevyTrait, BookletTrait;
+    use LevyTrait, BookletTrait , FiscalYearTrait;
 
     public function storeCircular($data, $user)
     {
-        $fiscalYear = FiscalYear::firstOrCreate(['name' => $data['year']], [
-            'name' => changeNumbersToEnglish($data['year']),
-            'start_date' => convertPersianToGregorianBothHaveTimeAndDont($data['start_date']),
-            'finish_date' => convertPersianToGregorianBothHaveTimeAndDont($data['end_date']),
-        ]);
+//        $fiscalYear = $this->createFiscalYear($data);
+        $startDate = convertJalaliPersianCharactersToGregorian($data['startDate']);
+        return $startDate;
+        $finishDate = Jalalian::fromFormat('Y/m/d', $data['finishDate'])->getEndDayOfYear()->toCarbon()->toDateTimeString();
+        return [$startDate, $finishDate];
 
         $circular = PfmCirculars::create([
             'name' => $data['name'],

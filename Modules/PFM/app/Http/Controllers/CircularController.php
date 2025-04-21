@@ -28,7 +28,7 @@ class CircularController extends Controller
 
             $data = $request->all();
             $user = Auth::user();
-            $this->storeCircular($data, $user);
+            return $this->storeCircular($data, $user);
             Db::commit();
             return response()->json(['message' => 'بخشنامه با موفقیت ساخته شد'], 200);
         } catch (\Exception $e) {
