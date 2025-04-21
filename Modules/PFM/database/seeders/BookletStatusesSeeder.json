@@ -1,0 +1,22 @@
+[
+    {
+        "name": "در انتظار ثبت مقادیر",
+        "className": "primary"
+    },
+    {
+        "name": "در انتظار تایید شورا روستا",
+        "className": "primary"
+    },
+    {
+        "name": "در انتظار هیئت تطبیق",
+        "className": "primary"
+    },
+    {
+        "name": "تصویب شده",
+        "className": "success"
+    },
+    {
+        "name": "رد شده",
+        "className": "danger"
+    }
+]

@@ -52,6 +52,24 @@ function convertToDbFriendly($string)
     return str_replace(array_keys($combinedReplacements), array_values($combinedReplacements), $string);
 }
 
+function changeNumbersToEnglish($number)
+{
+    $replaces = [
+        '۰' => '0',
+        '۱' => '1',
+        '۲' => '2',
+        '۳' => '3',
+        '۴' => '4', // Both '۴' and '٤' are replaced with '4'
+        '٥' => '5',
+        '۶' => '6',
+        '۷' => '7',
+        '۸' => '8',
+        '۹' => '9',
+    ];
+    return strtr($number, $replaces);
+
+}
+
 function convertJalaliPersianCharactersToGregorian(string $perisanCharDate)
 {
     $englishJalaliDateString = CalendarUtils::convertNumbers($perisanCharDate, true);
@@ -267,4 +285,11 @@ function addWithLeadingZeros($num1, $num2, $length = 3)
     $sum = intval($num1) + $num2;
 
     return str_pad($sum, $length, "0", STR_PAD_LEFT);
+}
+
+
+function convertGregorianYearToJalaliYear($gregorianYear)
+{
+    $jalaliYear = CalendarUtils::strftime('Y', strtotime($gregorianYear));
+    return $jalaliYear;
 }

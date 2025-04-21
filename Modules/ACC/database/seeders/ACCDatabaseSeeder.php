@@ -24,7 +24,7 @@ class ACCDatabaseSeeder extends Seeder
 //            StatusSeeder::class,
 //            DocumentStatusSeeder::class,
 //            AccountImportSeeder::class,
-            Budget1403AccSeeder::class,
+//            Budget1403AccSeeder::class,
 //            BankAccountsSeeder::class,
 //            OrganizationUnitsTableSeeder::class,
 //            VillageOfcsTableSeeder::class,
