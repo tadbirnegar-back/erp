@@ -321,4 +321,12 @@ class Course extends Model
 
         );
     }
+
+    public function contents()
+    {
+        return $this->hasManyDeep(Content::class, [Chapter::class, Lesson::class],
+            ['course_id', 'chapter_id', 'lesson_id'],
+            ['id', 'id', 'id']
+        );
+    }
 }

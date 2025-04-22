@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Modules\AAA\app\Models\User;
+use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Models\Job;
@@ -595,79 +596,25 @@ class CourseController extends Controller
         $course = Course::find($id);
         $user = Auth::user();
         $student = $user->load('student');
-        $approvedStatus = $this->answerSheetApprovedStatus();
 
         if(is_null($student->student))
         {
             return response()->json(['message' => 'شما دسترسی به این دوره را ندارید'], 403);
         }
 
-
-        $exams = Course::with(['answerSheets' => function ($query) use ($approvedStatus, $student) {
-            $query->where('status_id', $approvedStatus->id);
-            $query->where('student_id', $student->student->id);
-        }])->find($id);
-
-
         $user->load(['enrolls' => function ($query) use ($course) {
             $query->where('course_id', $course->id);
         }]);
 
-
-
         $enroll = $user->enrolls->first();
 
-
-        if ($exams->answerSheets->count() > 0) {
-            $person = Person::where('id', $user->person_id)->first();
-
-            $rcs = $user->load('activeRecruitmentScripts.position');
-            $rcs = $rcs->activeRecruitmentScripts;
-            $rcs = $rcs->pluck('position');
-            $positions = $rcs->pluck('name')->unique();
-
-            $answerSheet = $exams->answerSheets->first();
-
-            $year = now()->format('Y');
-            $convertedYear = convertYearJalali($year);
-
-//            $thisDate = convertDateTimeGregorianToJalaliDateTime(now());
-
-            $report = $this->report($id);
-            $totalDuration = collect($report)->sum('duration');
-
-            $currentDate = now()->format('Y-m-d');
-            $date = convertDateTimeGregorianToJalaliDateTime($currentDate);
-            $dateOnly = explode(' ', $date)[0];
-
-
-
-            $justDate = strtok($date, ' '); // Get only the date part (e.g., ۱۴۰۴/۰۲/۰۱)
-
-            list($year, $month, $day) = explode('/', $justDate);
-
-            $year = mb_substr($year, -2);
-
-            $shortDate = $year . $month . $day;
-
-            $enrollId = changeNumbersToPersian($enroll->id);
-
-            return response()->json([
-                'totalDuration' => $totalDuration,
-                'person_name' => $person->display_name,
-                'code_melli' => $person->national_code,
-                'score' => $answerSheet->score,
-                'convertedYear' => $convertedYear,
-                'positions' => $positions,
-                'course_title' => $course->title,
-                'date' => $dateOnly,
-                'documnet_number' => "$shortDate/$enrollId",
-            ]);
-        } else {
-            return response()->json(['message' => "شما دسترسی به این گواهی را ندارید"], 403);
+        if(!is_null($enroll->certificate_file_id))
+        {
+            $file = File::find($enroll->certificate_file_id);
+            return response() -> json(['slug' => $file->slug , ]);
+        }else{
+            return response() -> json(['message' => 'گواهی برای شما صادر نشده'] , 204);
         }
-
-
     }
 
     public function storeCertificate(Request $request , $id)
@@ -678,7 +625,6 @@ class CourseController extends Controller
             $query->where('course_id', $id);
         }]);
         $enroll = $user->enrolls->first();
-        return response()->json($enroll);
         $enroll->certificate_file_id = $data['file_id'];
         $enroll->save();
         return response()->json(['message' => 'با موفقیت ساخته شد']);

@@ -262,6 +262,17 @@ function convertDateTimeGregorianToJalaliDateTimeButWithoutTime(string $value)
     return $dateOnly;
 }
 
+function convertDateTimeGregorianToJalaliDateTimeButWithoutTimeWithDash(string $value)
+{
+    // Convert to Jalali with time (H:i:s)
+    $jalali = CalendarUtils::strftime('Y-m-d', strtotime($value)); // 1395-02-19 12:30:45
+    $jalaliPersianNumbers = CalendarUtils::convertNumbers($jalali); // ۱۳۹۵-۰۲-۱۹ ۱۲:۳۰:۴۵
+
+    $dateOnly = substr($jalaliPersianNumbers, 0, 10); // ۱۳۹۵-۰۲-۱۹
+
+    return $dateOnly;
+}
+
 function addWithLeadingZeros($num1, $num2, $length = 3)
 {
     $sum = intval($num1) + $num2;
