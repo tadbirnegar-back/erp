@@ -78,7 +78,7 @@ class CertificationsListResource extends JsonResource
             })
             ->pluck('file.duration');
 
-        return $durationsWithConsumeLog->sum();
+        return $durationsWithConsumeLog->sum() / 3600;
 
     }
 }
