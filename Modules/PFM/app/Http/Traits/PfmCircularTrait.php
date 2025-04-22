@@ -98,6 +98,7 @@ trait PfmCircularTrait
             ->where('pfm_circulars.id', $id)
             ->get();
 
+
         $levies = PfmCirculars::join('pfm_levy_circular as levy_circular', 'pfm_circulars.id', '=', 'levy_circular.circular_id')
             ->join('pfm_levies as levies', 'levy_circular.levy_id', '=', 'levies.id')
             ->select([

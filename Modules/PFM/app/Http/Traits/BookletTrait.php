@@ -27,7 +27,7 @@ trait BookletTrait
     {
 
         $MosavabStatus = $this->MosavabStatus();
-        $DarEntazarSabtStatus = $this->DarEntazarStatus();
+        $DarEntazarSabtStatus = $this->DarEntazarSabtStatus();
         $DarEntazarShuraStatus = $this->EntezarShuraStatus();
         $DarEntazarHeyaatStatus = $this->EntezareHeyateTatbighStatus();
         $PishnahadShodeStatus = $this->RadShodeStatus();

@@ -49,6 +49,7 @@ class CircularController extends Controller
     {
         $data = $this->showCircular($id);
 
+        return response()->json($data);
 
         if (!$data) {
             return response()->json(['message' => 'بخشنامه یافت نشد'], 404);
