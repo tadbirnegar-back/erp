@@ -23,9 +23,8 @@ class CertificationController extends Controller
         $data = $request->all();
         $perPage = $data['perPage'] ?? 10;
         $pageNum = $data['pageNum'] ?? 1;
-        $activeRsStatus = $this->activeRsStatus();
         $approvedAnswerSheetStatus = $this->answerSheetApprovedStatus();
-        $query = Course::join('enrolls', 'courses.id', '=', 'enrolls.course_id')
+        $query =Enroll::join('courses', 'enrolls.course_id', '=', 'courses.id')
             ->where('enrolls.certificate_file_id', null)
             ->join('orders', 'enrolls.id', '=', 'orders.orderable_id')
             ->where('orders.orderable_type', '=', Enroll::class)
@@ -37,10 +36,7 @@ class CertificationController extends Controller
                     ->on('answer_sheets.student_id', '=', 'customers.customerable_id');
             })
             ->where('answer_sheets.status_id', $approvedAnswerSheetStatus->id)
-
-
-            //get the watch time
-
+            ->where('enrolls.first_completed_date' , '!=' , null)
 
             ->select([
                 'courses.id as course_id',

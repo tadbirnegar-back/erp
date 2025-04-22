@@ -9,6 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Mockery\Exception;
 use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Http\Enums\OunitCategoryEnum;
@@ -619,15 +620,16 @@ class CourseController extends Controller
 
     public function storeCertificate(Request $request , $id)
     {
-        $user = Auth::user();
-        $data = $request->all();
-        $user->load(['enrolls' => function ($query) use ($id) {
-            $query->where('course_id', $id);
-        }]);
-        $enroll = $user->enrolls->first();
-        $enroll->certificate_file_id = $data['file_id'];
-        $enroll->save();
-        return response()->json(['message' => 'با موفقیت ساخته شد']);
+        try {
+            $data = $request->all();
+            $enroll = Enroll::find($id);
+            $enroll->certificate_file_id = $data['file_id'];
+            $enroll->save();
+            return response()->json(['message' => 'با موفقیت ساخته شد'] , 200);
+        }catch (Exception $e){
+            return response()->json(['message' => $e->getMessage()] , 404);
+        }
+
     }
 
 }
