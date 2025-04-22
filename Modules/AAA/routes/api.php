@@ -59,7 +59,7 @@ Route::prefix('v1')->group(function () {
 Route::prefix('v2')->group(function () {
     Route::post('/login', [LoginControllerV2::class, 'getToken']);
     Route::post('/refresh-token', [LoginControllerV2::class, 'refreshToken']);
-
+    Route::post('/login-with-otp', [LoginControllerV2::class, 'loginWithOtp']);
 });
 
 
@@ -67,5 +67,4 @@ Route::middleware(['auth:api'])->prefix('v2')->group(function () {
     Route::get('/get-permissions', [LoginControllerV2::class, 'getPermission']);
     Route::get('/get-user-info', [LoginControllerV2::class, 'getUserInfo']);
     Route::get('/check-payed', [LoginControllerV2::class, 'checkPayed']);
-    Route::post('/login-with-otp', [LoginControllerV2::class, 'loginWithOtp']);
 });

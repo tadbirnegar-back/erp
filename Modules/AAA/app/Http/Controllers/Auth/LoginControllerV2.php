@@ -188,11 +188,11 @@ class LoginControllerV2 extends Controller
         $result = json_decode($response->getBody(), true);
 
         if (array_key_exists('error', $result)) {
-            return response()->json(['message' => 'کد وارد شده نادرست است'], 401);
+            return response()->json(['message' => 'کد وارد شده نادرست است'], 403);
         }
 
         if (!$response->ok()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
 
