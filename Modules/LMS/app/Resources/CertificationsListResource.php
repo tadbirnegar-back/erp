@@ -31,6 +31,7 @@ class CertificationsListResource extends JsonResource
             'course_title' => $this->course_title,
             'score' => $this->score,
             'enroll_id' => changeNumbersToPersian($this->enroll_id),
+            'enroll_eng_id' => $this->enroll_id,
             'student_id' => $this->student_id,
             'user_data' => $this->getUserData($this->student_id),
             'positions' => $this->getPositions($this->student_id),
