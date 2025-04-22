@@ -612,7 +612,7 @@ class CourseController extends Controller
         if(!is_null($enroll->certificate_file_id))
         {
             $file = File::find($enroll->certificate_file_id);
-            return response() -> json(['slug' => $file->slug , ]);
+            return response() -> json(['slug' => $file->slug , 'name' => $file -> name]);
         }else{
             return response() -> json(['message' => 'گواهی برای شما صادر نشده'] , 204);
         }
