@@ -29,18 +29,14 @@ trait PfmCircularTrait
 
     public function storeCircular($data, $user)
     {
-//        $fiscalYear = $this->createFiscalYear($data);
-        $startDate = convertJalaliPersianCharactersToGregorian($data['startDate']);
-        return $startDate;
-        $finishDate = Jalalian::fromFormat('Y/m/d', $data['finishDate'])->getEndDayOfYear()->toCarbon()->toDateTimeString();
-        return [$startDate, $finishDate];
-
         $circular = PfmCirculars::create([
             'name' => $data['name'],
-            'fiscal_year_id' => $fiscalYear->id,
+            'fiscal_year_id' => $data['fiscalYearID'],
             'description' => $data['description'],
             'file_id' => $data['file_id'],
             'created_date' => now(),
+            'start_date' => convertPersianToGregorianBothHaveTimeAndDont($data['startDate']),
+            'end_date' => convertPersianToGregorianBothHaveTimeAndDont($data['endDate']),
         ]);
 
         $this->FillLevies($circular->id);
