@@ -38,7 +38,9 @@ class ShowCircularResource extends JsonResource
                 "count" => $data['booklets_count'],
                 "approved" => $bookletsStatus['countOfMosavabStatus'],
                 "waiting" => $bookletsStatus['countOfDarEntazarStatus'],
-                "published" => $bookletsStatus['countOfPishnahadShodeStatus'],
+                "suggested" => $bookletsStatus['countOfPishnahadShodeStatus'],
+                'remainVillages' => $this->resource['countOfVillages'] - $data['booklets_count'],
+                'allVillages' => $this->resource['countOfVillages'],
             ],
             'levies' => $data['levies'],
         ];

@@ -27,9 +27,12 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/pfm/circular/update/{id}', [CircularController::class, 'showForUpdate']);
     Route::post('/pfm/circulars/publish/{id}', [CircularController::class, 'generateBooklets']);
     Route::get('/pfm/circular/delete/{id}', [CircularController::class, 'delete']);
+
+
     Route::post('/pfm/levy-items/store/{id}', [LevyItemsController::class, 'store']);
     Route::get('/pfm/levy-items/delete/{id}', [LevyItemsController::class, 'delete']);
     Route::get('/pfm/levy-items/index/{id}', [LevyItemsController::class, 'index']);
+    Route::post('/pfm/levy-items/update/{id}', [LevyItemsController::class, 'update']);
 
     //End points of masoule fani
     Route::post('/pfm/booklets/list', [BookletController::class, 'index']);

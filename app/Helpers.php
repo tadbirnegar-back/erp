@@ -111,6 +111,17 @@ function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
     return $jalaliPersianNumbers;
 }
 
+function convertDateTimeGregorianToJalaliDateTimeOnlyDatePart(?string $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali);
+    return explode(' ', $jalaliPersianNumbers)[0];
+}
+
 function convertDateTimeHaveDashJalaliPersianCharactersToGregorian(string $persianCharDateTime)
 {
     // Convert Persian numbers to English numbers

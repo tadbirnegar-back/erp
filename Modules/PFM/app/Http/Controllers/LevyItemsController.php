@@ -42,4 +42,18 @@ class LevyItemsController extends Controller
         $data = $this->indexItems($id);
         return response()->json($data);
     }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            \DB::beginTransaction();
+            $data = $request->all();
+            $this->updateItems($data['text'], $id);
+            \DB::commit();
+            return response()->json(['message' => 'اطلاعات با موفقیت ثبت شد']);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['message' => 'ویرایش انجام نگرفت']);
+        }
+    }
 }
