@@ -164,7 +164,7 @@ trait BookletTrait
             return ['message' => 'شما به این دفترچه دسترسی ندارید', 'status' => 403];
         }
 
-        $timeLine = $this->getTimeLine()[$statusName];
+        $timeLine = BookletStatusEnum::getTimeLine(BookletStatusEnum::from($statusName));
 
         $declined = $this->declinedBooklets($circularId, $ounitId);
 

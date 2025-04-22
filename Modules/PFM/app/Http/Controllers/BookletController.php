@@ -108,7 +108,7 @@ class BookletController extends Controller
             return response()->json(['message' => 'با موفقیت ثبت شد']);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مقادیر دفترچه'], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
 
     }
