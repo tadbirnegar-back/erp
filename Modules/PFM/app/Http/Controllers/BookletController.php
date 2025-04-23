@@ -25,6 +25,21 @@ class BookletController extends Controller
     {
         $data = $request->all();
 
+        $data['isThisYear'] = false;
+        $pageNum = $data['pageNum'] ?? 1;
+        $perPage = $data['perPage'] ?? 10;
+
+        $user = Auth::user();
+        $data = $this->listOfBooklets($data, $user, $pageNum, $perPage);
+
+        return ListOfBookletsResource::collection($data);
+    }
+
+    public function indexThisYear(Request $request)
+    {
+        $data = $request->all();
+
+        $data['isThisYear'] = true;
         $pageNum = $data['pageNum'] ?? 1;
         $perPage = $data['perPage'] ?? 10;
 
@@ -75,7 +90,7 @@ class BookletController extends Controller
         $user = Auth::user();
 
 
-        collect($appIds)->each(function ($appId) use ($itemId, $bookletId , $value , $user) {
+        collect($appIds)->each(function ($appId) use ($itemId, $bookletId, $value, $user) {
             Tarrifs::create([
                 'item_id' => $itemId,
                 'booklet_id' => $bookletId,

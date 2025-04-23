@@ -10,30 +10,17 @@ enum BookletStatusEnum: string
     case DAR_ENTEZAR_SHURA = 'در انتظار تایید شورا روستا';
     case DAR_ENTEZARE_HEYATE_TATBIGH = 'در انتظار هیئت تطبیق';
 
-    public static function getTimeLine(self $status): array
+    /**
+     * Get the timeline for declined statuses.
+     */
+    public static function getTimeLineDeclined(string $statusName): array
     {
-        return match ($status) {
-            self::MOSAVAB => [
-                ['class' => 'success', 'name' => self::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'success', 'name' => self::DAR_ENTEZAR_SHURA->value],
-                ['class' => 'success', 'name' => self::DAR_ENTEZARE_HEYATE_TATBIGH->value]
-            ],
-            self::DAR_ENTEZAR_SABTE_MAGHADIR => [
-                ['class' => 'primary', 'name' => self::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'gray', 'name' => self::DAR_ENTEZAR_SHURA->value],
-                ['class' => 'gray', 'name' => self::DAR_ENTEZARE_HEYATE_TATBIGH->value]
-            ],
-            self::DAR_ENTEZAR_SHURA => [
-                ['class' => 'success', 'name' => self::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'primary', 'name' => self::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'gray', 'name' => self::DAR_ENTEZARE_HEYATE_TATBIGH->value]
-            ],
-            self::DAR_ENTEZARE_HEYATE_TATBIGH => [
-                ['class' => 'success', 'name' => self::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'success', 'name' => self::DAR_ENTEZAR_SHURA->value],
-                ['class' => 'primary', 'name' => self::DAR_ENTEZARE_HEYATE_TATBIGH->value]
-            ],
-            default => []
-        };
+        $timeline = [
+            self::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['danger', 'secondary', 'secondary'],
+            self::DAR_ENTEZAR_SHURA->value => ['success', 'danger', 'secondary'],
+            self::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['success', 'success', 'danger'],
+        ];
+
+        return $timeline[$statusName] ?? [];
     }
 }

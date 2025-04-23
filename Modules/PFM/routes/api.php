@@ -36,6 +36,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
     //End points of masoule fani
     Route::post('/pfm/booklets/list', [BookletController::class, 'index']);
+    Route::post('/pfm/booklets/list/this-year', [BookletController::class, 'indexThisYear']);
     Route::get('/pfm/booklet/show/{id}', [BookletController::class, 'show']);
 
     //Tariffs

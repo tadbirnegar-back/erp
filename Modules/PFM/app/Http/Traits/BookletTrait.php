@@ -105,8 +105,8 @@ trait BookletTrait
             ->distinct('pfm_circular_booklets.id')
             ->whereIn('pfm_circular_booklets.ounit_id', $ounits)
             ->whereNot('statuses.name', BookletStatusEnum::RAD_SHODE->value)
-            ->when(isset($data['title']), function ($query) use ($data) {
-                $query->where('organization_units.name', 'like', '%' . $data['title'] . '%');
+            ->when(isset($data['name']), function ($query) use ($data) {
+                $query->where('organization_units.name', 'like', '%' . $data['name'] . '%');
             })
             ->when($data['isThisYear'], function ($query) {
                 $query->join('pfm_circulars', 'pfm_circular_booklets.pfm_circular_id', '=', 'pfm_circulars.id')
@@ -164,7 +164,8 @@ trait BookletTrait
             return ['message' => 'شما به این دفترچه دسترسی ندارید', 'status' => 403];
         }
 
-        $timeLine = BookletStatusEnum::getTimeLine(BookletStatusEnum::from($statusName));
+        $timeLine = $this->getTimeLine($id)[$statusName];
+
 
         $declined = $this->declinedBooklets($circularId, $ounitId);
 
@@ -216,28 +217,37 @@ trait BookletTrait
         return $query->first();
     }
 
-    public function getTimeLine()
+    public function getTimeLine($id)
     {
+        $darEntezareSabtDate = BookletStatus::where('booklet_id', $id)->where('status_id', $this->DarEntazarSabtStatus()->id)->first()?->created_date;
+        $darEntezareSabtOnlyDate = explode(' ', $darEntezareSabtDate)[0];
+
+        $darEntezarShuraDate = BookletStatus::where('booklet_id', $id)->where('status_id', $this->EntezarShuraStatus()->id)->first()?->created_date;
+        $darEntezarShuraOnlyDate = explode(' ', $darEntezarShuraDate)[0];
+
+        $darEntezareHeyateTatbighDate = BookletStatus::where('booklet_id', $id)->where('status_id', $this->EntezareHeyateTatbighStatus()->id)->first()?->created_date;
+        $darEntezareHeyateTatbighOnlyDate = explode(' ', $darEntezareHeyateTatbighDate)[0];
+
         return [
             BookletStatusEnum::MOSAVAB->value => [
-                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value],
-                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value]
+                ['class_name' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value, 'date' => $darEntezareSabtOnlyDate, 'active' => false],
+                ['class_name' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value, 'date' => $darEntezarShuraOnlyDate, 'active' => false],
+                ['class_name' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value, 'date' => $darEntezareHeyateTatbighOnlyDate, 'active' => false],
             ],
             BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => [
-                ['class' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'gray', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value],
-                ['class' => 'gray', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value]
+                ['class_name' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value, 'date' => $darEntezareSabtOnlyDate, 'active' => true],
+                ['class_name' => 'secondary', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value, 'date' => $darEntezarShuraOnlyDate, 'active' => false],
+                ['class_name' => 'secondary', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value, 'date' => $darEntezareHeyateTatbighOnlyDate, 'active' => false],
             ],
             BookletStatusEnum::DAR_ENTEZAR_SHURA->value => [
-                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'gray', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value]
+                ['class_name' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value, 'date' => $darEntezareSabtOnlyDate, 'active' => false],
+                ['class_name' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value, 'date' => $darEntezarShuraOnlyDate, 'active' => true],
+                ['class_name' => 'secondary', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value, 'date' => $darEntezareHeyateTatbighOnlyDate, 'active' => false],
             ],
             BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => [
-                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
-                ['class' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value],
-                ['class' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value]
+                ['class_name' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value, 'date' => $darEntezareSabtOnlyDate, 'active' => false],
+                ['class_name' => 'success', 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value, 'date' => $darEntezarShuraOnlyDate, 'active' => false],
+                ['class_name' => 'primary', 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value, 'date' => $darEntezareHeyateTatbighOnlyDate, 'active' => true],
             ],
         ];
     }
@@ -256,42 +266,64 @@ trait BookletTrait
             ->where('pfm_circular_booklets.ounit_id', $ounitId)
             ->where('pfm_circular_booklets.pfm_circular_id', $circularId)
             ->where('statuses.name', BookletStatusEnum::RAD_SHODE->value)
+            ->distinct('declines_statuses.name')
             ->get()->groupBy('booklet_id');
-
 
         $data = [];
 
         $query->map(function ($items) use (&$data) {
-            $sorted = $items->sortBy('created_date');
+            $sorted = $items->sortBy('date');
+            $bookletId = $sorted->first()->booklet_id;
 
-            $OneToLastStatus = $sorted->count() >= 2 ? [$sorted[$sorted->count() - 2]] : [];
-            $timeline = $this->getTimeLineDeclined()[$OneToLastStatus[0]['status_name']];
-            $data[] = ['statuses' => $sorted, 'timeLine' => $timeline];
+            Log::info($bookletId);
+            // Get the last two statuses (declined ones) for timeline
+            $OneToLastStatus = [];
+            if ($sorted->count() >= 2) {
+                $OneToLastStatus[] = $sorted[$sorted->count() - 2];
+                $OneToLastStatus[] = $sorted[$sorted->count() - 1];
+            }
 
+            // Fetch different statuses and created dates for this specific booklet
+            $darEntezareSabt = BookletStatus::where('booklet_id', $bookletId)
+                ->where('status_id', $this->DarEntazarSabtStatus()->id)
+                ->first()?->created_date;
+
+            $darEntezarShura = BookletStatus::where('booklet_id', $bookletId)
+                ->where('status_id', $this->EntezarShuraStatus()->id)
+                ->first()?->created_date;
+
+            $darEntezareHeyateTatbigh = BookletStatus::where('booklet_id', $bookletId)
+                ->where('status_id', $this->EntezareHeyateTatbighStatus()->id)
+                ->first()?->created_date;
+
+            // Extract only the date part
+            $darEntezareSabtDateOnly = $darEntezareSabt ? explode(' ', $darEntezareSabt)[0] : null;
+            $darEntezarShuraDateOnly = $darEntezarShura ? explode(' ', $darEntezarShura)[0] : null;
+            $darEntezareHeyateTatbighDateOnly = $darEntezareHeyateTatbigh ? explode(' ', $darEntezareHeyateTatbigh)[0] : null;
+
+            // Fetch radShode status
+            $radShode = BookletStatus::with('file.extension')
+                ->where('booklet_id', $bookletId)
+                ->where('status_id', $this->RadShodeStatus()->id)
+                ->first();
+
+            $statuses = [
+                ['date' => $darEntezareSabtDateOnly, 'name' => BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value],
+                ['date' => $darEntezarShuraDateOnly, 'name' => BookletStatusEnum::DAR_ENTEZAR_SHURA->value],
+                ['date' => $darEntezareHeyateTatbighDateOnly, 'name' => BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value],
+            ];
+
+            $timeline = BookletStatusEnum::getTimeLineDeclined($OneToLastStatus[0]['status_name'] ?? null);
+
+            $data[] = [
+                'booklet_id' => $bookletId,
+                'statuses' => $statuses,
+                'timeLine' => $timeline,
+                'radShode' => $radShode
+            ];
         });
 
         return $data;
-    }
-
-    public function getTimeLineDeclined()
-    {
-        return [
-            BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'danger'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'gray'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'gray']
-            ],
-            BookletStatusEnum::DAR_ENTEZAR_SHURA->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'success'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'danger'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'gray']
-            ],
-            BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => [
-                BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['sub_status' => 'success'],
-                BookletStatusEnum::DAR_ENTEZAR_SHURA->value => ['sub_status' => 'success'],
-                BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['sub_status' => 'danger']
-            ],
-        ];
     }
 
     public function showTable($levyId, $bookletId, $status)

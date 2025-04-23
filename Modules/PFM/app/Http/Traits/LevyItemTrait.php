@@ -29,6 +29,7 @@ trait LevyItemTrait
             ->select([
                 'levy_items.id as item_id',
                 'levy_items.name as item_name',
+                'pfm_levy_circular.circular_id as circularID',
             ])
             ->distinct('levy_items.id')
             ->where('pfm_levy_circular.id', $id)
@@ -39,5 +40,10 @@ trait LevyItemTrait
     public function updateItems($text, $itemID)
     {
         LevyItem::find($itemID)->update(['name' => $text]);
+    }
+
+    public function findCircularID($id)
+    {
+        return LevyCircular::find($id);
     }
 }
