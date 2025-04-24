@@ -266,7 +266,7 @@ class LoginController extends Controller
 
 
         $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->orderBy('priority', 'asc')
-        ->with('moduleCategory')->get();
+            ->with('moduleCategory')->get();
         foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
                 'label' => $permission?->name,
@@ -313,10 +313,10 @@ class LoginController extends Controller
 
         $version = VcmVersions::orderBy('id', 'desc')->first();
 
-        if(is_null($version)){
+        if (is_null($version)) {
             $versionTxt = '1.0.0';
-        }else{
-            $versionTxt = $version->high_version.'.'.$version->mid_version.'.'.$version->low_version;
+        } else {
+            $versionTxt = $version->high_version . '.' . $version->mid_version . '.' . $version->low_version;
         }
         $result['version'] = ["version" => $versionTxt];
         $result['userInfo'] = [
@@ -453,10 +453,10 @@ class LoginController extends Controller
 
         $version = VcmVersions::orderBy('id', 'desc')->first();
 
-        if(is_null($version)){
+        if (is_null($version)) {
             $versionTxt = '1.0.0';
-        }else{
-            $versionTxt = $version->high_version.'.'.$version->mid_version.'.'.$version->low_version;
+        } else {
+            $versionTxt = $version->high_version . '.' . $version->mid_version . '.' . $version->low_version;
         }
         $result['version'] = ["version" => $versionTxt];
         $result['userInfo'] = [
