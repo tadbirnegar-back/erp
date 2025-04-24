@@ -5,27 +5,19 @@ namespace Modules\AAA\app\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\Token;
-use Modules\AAA\app\Http\Enums\PermissionTypesEnum;
-use Modules\AAA\app\Http\Repositories\OtpRepository;
 use Modules\AAA\app\Http\Traits\LoginTrait;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
-use Modules\AAA\app\Notifications\OtpNotification;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
-use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
-use Modules\PersonMS\app\Models\Natural;
-use Modules\VCM\app\Models\VcmVersions;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class LoginControllerV2 extends Controller
@@ -71,7 +63,7 @@ class LoginControllerV2 extends Controller
         }
 
 
-        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+        $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
         $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
 
@@ -144,7 +136,7 @@ class LoginControllerV2 extends Controller
             $accessToken = Token::find($token_id);
             $user = User::where('mobile', '=', $accessToken->user_id)->first();
 
-            $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+            $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
             $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, $request->secure(), true, true, 'none');
 
@@ -196,7 +188,7 @@ class LoginControllerV2 extends Controller
         }
 
 
-        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+        $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
         $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
 
