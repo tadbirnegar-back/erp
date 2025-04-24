@@ -256,7 +256,7 @@ class LoginController extends Controller
         }
 
 
-        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+        $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
         $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
 
@@ -401,7 +401,7 @@ class LoginController extends Controller
         $accessToken = Token::find($token_id);
         $user = User::where('mobile', '=', $accessToken->user_id)->first();
 
-        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+        $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
         $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
 
@@ -532,7 +532,7 @@ class LoginController extends Controller
         }
 
 
-        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+        $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
         $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
 
@@ -659,7 +659,7 @@ class LoginController extends Controller
         }
 
         // Set refresh token cookie
-        $domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+        $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
         $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
 
         unset($result['refresh_token'], $result['token_type'], $result['expires_in']);
