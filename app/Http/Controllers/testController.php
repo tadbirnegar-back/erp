@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Support\Facades\Cache;
 use Modules\AAA\app\Models\User;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
@@ -16,7 +17,6 @@ use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Morilog\Jalali\Jalalian;
 
 class testController extends Controller
 {
@@ -45,38 +45,7 @@ class testController extends Controller
 
     public function run()
     {
-        dd(User::first());
-//        $budgetMain = Budget::where('id', 306)
-//
-//            ->first();
-//        $userID = User::where('mobile', '=', '9148005144')->first()->id;
-//        $minute = 1;
-//
-//        do {
-//            $status = $budgetMain->load('latestStatus')->latestStatus->name;
-//            $nextStatus = match ($status) {
-//                BudgetStatusEnum::PROPOSED->value => BudgetStatusEnum::PENDING_FOR_APPROVAL->value,
-//                BudgetStatusEnum::PENDING_FOR_APPROVAL->value => BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value,
-//                BudgetStatusEnum::PENDING_FOR_HEYAAT_APPROVAL->value => BudgetStatusEnum::FINALIZED->value,
-//                default => null,
-//            };
-//
-//            if ($nextStatus !== null) {
-//                $status = Budget::GetAllStatuses()->where('name', $nextStatus)->first();
-//                $budgetMain->statuses()->attach($status->id, [
-//                    'creator_id' => $userID,
-//                    'create_date' => now()->addMinutes($minute),
-//                ]);
-//                $minute++;
-//            }
-//        } while ($nextStatus !== null);
-//        $formula = '$a + $b * $c / max($d, 1)';
-//        $params = ['a' => 10, 'b' => 3, 'c' => 2, 'd' => 0];
-//
-//        extract($params, EXTR_SKIP);
-//        $result = eval('return ' . $formula . ';');
-//
-//        echo $result;  // 16
+//        dd(User::first());
 //        for ($i = 1; $i <= 3; $i++) {
 //            $ounit = 612;
 //            $fy = 7;
