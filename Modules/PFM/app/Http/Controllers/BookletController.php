@@ -64,6 +64,8 @@ class BookletController extends Controller
     {
         $data = $request->all();
         $bookletId = $data['booklet_id'];
+
+
         $query = Booklet::joinRelationship('statuses', ['statuses' => function ($join) {
             $join->whereRaw('pfm_booklet_statuses.created_date = (SELECT MAX(created_date) FROM pfm_booklet_statuses WHERE booklet_id = pfm_circular_booklets.id)');
         }])

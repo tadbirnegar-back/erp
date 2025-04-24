@@ -201,21 +201,14 @@ trait BookletTrait
             ->where('pfm_circulars.id', $id)
             ->get();
 
-        $levies = PfmCirculars::join('pfm_levy_circular as levy_circular', 'pfm_circulars.id', '=', 'levy_circular.circular_id')
-            ->join('pfm_levies as levies', 'levy_circular.levy_id', '=', 'levies.id')
-            ->select([
-                'levy_circular.id as levy_id',
-                'levies.name as levy_name',
-            ])
-            ->distinct('pfm_circulars.id')
-            ->where('pfm_circulars.id', $id)
-            ->get();
+        $levies = Levy::select(['id as levy_id', 'name as levy_name'])->get();
 
         $query[0]['levies'] = $levies;
 
 
         return $query->first();
     }
+
 
     public function getTimeLine($id)
     {

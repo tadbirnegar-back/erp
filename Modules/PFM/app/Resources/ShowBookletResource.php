@@ -47,7 +47,7 @@ class ShowBookletResource extends JsonResource
                     'residential' => $booklet['p1'],
                 ]
             ],
-            'levies' => $circular['levies'],
+            'levies' =>$circular['levies'],
             'declined' => $declined,
             'timeLine' => $timeLine,
 
