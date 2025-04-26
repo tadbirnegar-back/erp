@@ -6,6 +6,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Number;
 use Modules\ACMS\app\Http\Enums\CircularStatusEnum;
 use Modules\PFM\app\Http\Enums\BookletStatusEnum;
+use Modules\PFM\app\Http\Enums\PfmCircularStatusesEnum;
 
 class ShowBookletResource extends JsonResource
 {
@@ -27,7 +28,7 @@ class ShowBookletResource extends JsonResource
                 'status' => [
                     'name' => $circular['status_name'],
                     'class_name' => $circular['status_class'],
-                    'created_date' => $circular['status_name'] == CircularStatusEnum::APPROVED ? $circular['status_created_date'] : null,
+                    'created_date' => $circular['status_name'] == PfmCircularStatusesEnum::PUBLISHED->value ? $circular['status_created_date'] : null,
                 ],
                 'file' => [
                     "file_slug" => url($circular['file_slug']),

@@ -25,7 +25,7 @@ class Tarrifs extends Model
         'created_date',
     ];
 
-    protected $table = 'pfm_levy_tariffs';
+    protected $table = 'pfm_circular_tariffs';
 
     public $timestamps = false;
 

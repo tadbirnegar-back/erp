@@ -363,6 +363,10 @@ trait BookletTrait
                     $applications = ApplicationsForTablesEnum::PARVANEH_MOSTAHADESAT_SINGLES->values();
                     $multipleAppsIDs = ApplicationsForTablesEnum::PARVANEH_MOSTAHADESAT_MULTIPLES->values();
                     break;
+                case ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_SINGLES->value:
+                    $applications = ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_SINGLES->values();
+                    $multipleAppsIDs = ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_SINGLES->values();
+                    break;
             }
 
 
@@ -371,6 +375,7 @@ trait BookletTrait
             foreach ($applications as $app) {
                 $applicationsInsideTable[] = PropApplication::find($app);
             }
+
 
             $addMultiples = function ($items) use (&$addMultiples) {
                 $result = [];
@@ -392,17 +397,21 @@ trait BookletTrait
 
 
             $tariffs = [];
-            $shuruh->map(function ($item) use (&$bookletId, &$tariffs) {
-                $data = Tarrifs::Where('item_id', $item->id)->where('booklet_id', $bookletId->id)->first();
-                if (!is_null($data)) {
-                    $tariffs[] = [
-                        'app_id' => $data->app_id,
-                        'item_id' => $data->item_id,
-                        'value' => $data->value,
-                    ];
+            $shuruh->map(function ($item) use (&$bookletId, &$tariffs, &$test) {
+                $data = Tarrifs::where('item_id', $item->id)->where('booklet_id', $bookletId->id)->select('app_id', 'item_id', 'value')->get();
+                if ($data != []) {
+                    Log::info('here');
+                    $data->each(function ($item) use (&$tariffs) {
+                        $tariffs[] = [
+                            'app_id' => $item->app_id,
+                            'item_id' => $item->item_id,
+                            'value' => $item->value,
+                        ];
+                    });
                 }
             });
-            return ['tarrifs' => $tariffs, 'applications' => $karbariHa, 'shuruh' => $shuruh, 'tableModel' => 'Model1', 'canEdit' => $canEdit];
+
+            return ['tarrifs' => $tariffs, 'applications' => $karbariHa, 'shuruh' => $shuruh, 'tableModel' => 'Model1', 'canEdit' => $canEdit, 'levy_name' => $levy->name];
         } else {
             $tariffs = [];
             $shuruh->map(function ($item) use (&$bookletId, &$tariffs) {
@@ -411,16 +420,24 @@ trait BookletTrait
                     $tariffs[] = [
                         'item_id' => $data->item_id,
                         'value' => $data->value,
+                        'app_id' => 200000,
                     ];
                 }
             });
-            return ['tarrifs' => $tariffs, 'shuruh' => $shuruh, 'tableModel' => 'Model2', 'canEdit' => $canEdit];
+            $applications = [
+                [
+                    'id' => 200000,
+                    'name' => 'مقدار یا ضریب B'
+                ]
+            ];
+            return ['tarrifs' => $tariffs, 'applications' => $applications, 'shuruh' => $shuruh, 'tableModel' => 'Model2', 'canEdit' => $canEdit , 'levy_name' => $levy -> name];
         }
 
 
     }
 
-    public function submitting($id, $user)
+    public
+    function submitting($id, $user)
     {
         $query = Booklet::joinRelationship('statuses', ['statuses' => function ($join) {
             $join->whereRaw('pfm_booklet_statuses.created_date = (SELECT MAX(created_date) FROM pfm_booklet_statuses WHERE booklet_id = pfm_circular_booklets.id)');
@@ -448,8 +465,9 @@ trait BookletTrait
         }
     }
 
-    //Attaching statuses
-    public function attachRadShodeStatus($id, $user, $descrption = null, $fileID = null)
+//Attaching statuses
+    public
+    function attachRadShodeStatus($id, $user, $descrption = null, $fileID = null)
     {
         BookletStatus::create([
             'booklet_id' => $id,
@@ -461,7 +479,8 @@ trait BookletTrait
         ]);
     }
 
-    public function attachMosavabStatus($id, $user)
+    public
+    function attachMosavabStatus($id, $user)
     {
         BookletStatus::create([
             'booklet_id' => $id,
@@ -471,7 +490,8 @@ trait BookletTrait
         ]);
     }
 
-    public function attachDarEntazarStatus($id, $user)
+    public
+    function attachDarEntazarStatus($id, $user)
     {
         BookletStatus::create([
             'booklet_id' => $id,
@@ -481,7 +501,8 @@ trait BookletTrait
         ]);
     }
 
-    public function attachEntezareHeyateTatbighStatus($id, $user)
+    public
+    function attachEntezareHeyateTatbighStatus($id, $user)
     {
         BookletStatus::create([
             'booklet_id' => $id,
@@ -491,7 +512,8 @@ trait BookletTrait
         ]);
     }
 
-    public function attachEntezarShuraStatus($id, $user)
+    public
+    function attachEntezarShuraStatus($id, $user)
     {
         BookletStatus::create([
             'booklet_id' => $id,
@@ -501,7 +523,8 @@ trait BookletTrait
         ]);
     }
 
-    public function douplicateBooklet($id, $user)
+    public
+    function douplicateBooklet($id, $user)
     {
         $oldBooklet = Booklet::find($id);
         $oldBooklet->load('tariffs');
@@ -520,39 +543,46 @@ trait BookletTrait
             $newTariff->booklet_id = $newBooklet->id;
             $newTariff->save();
         }
+
+        $this->attachDarEntazarStatus($newBooklet->id, $user->id);
     }
 
 
-    //Get statuses
-    public function MosavabStatus()
+//Get statuses
+    public
+    function MosavabStatus()
     {
         return Cache::rememberForever('booklet_mosavab_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::MOSAVAB->value);
         });
     }
 
-    public function DarEntazarSabtStatus()
+    public
+    function DarEntazarSabtStatus()
     {
         return Cache::rememberForever('booklet_dar_entazar_sabt_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZAR_SABTE_MAGHADIR->value);
         });
     }
 
-    public function EntezareHeyateTatbighStatus()
+    public
+    function EntezareHeyateTatbighStatus()
     {
         return Cache::rememberForever('booklet_entezare_heyate_tatbigh_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZARE_HEYATE_TATBIGH->value);
         });
     }
 
-    public function EntezarShuraStatus()
+    public
+    function EntezarShuraStatus()
     {
         return Cache::rememberForever('booklet_entezar_shura_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::DAR_ENTEZAR_SHURA->value);
         });
     }
 
-    public function RadShodeStatus()
+    public
+    function RadShodeStatus()
     {
         return Cache::rememberForever('booklet_rad_shode_status', function () {
             return Booklet::GetAllStatuses()->firstWhere('name', BookletStatusEnum::RAD_SHODE->value);

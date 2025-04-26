@@ -43,12 +43,23 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/pfm/booklet-prices/{id}', [BookletController::class, 'storePrices']);
     Route::get('/pfm/booklet/submit/{id}', [BookletController::class, 'submitBooklet']);
     Route::post('/pfm/booklet/decline/{id}', [BookletController::class, 'declineBooklet']);
-    Route::post('/pfm/booklet/tariff/store', [BookletController::class, 'store']);
+    Route::post('/pfm/booklet/tariff/store/{id}', [BookletController::class, 'store']);
+    Route::post('/pfm/booklet-prices/store/with-out-app/{id}' , [BookletController::class, 'storeWithoutApp']);
 
     // Bills
+    Route::get('/pfm/bills/village-data', [BillsController::class, 'billsVillageData']);
+    Route::get('/pfm/bills/bank-data/{id}', [BillsController::class, 'bankAccounts']);
+    Route::post('pfm/bills/booklet-data/{id}' , [BillsController::class, 'BookletData']);
+    Route::get('/pfm/bills/export/bill/{id}', [BillsController::class, 'leviesList']);
+    Route::post('/pfm/bills/levy-items/index/{id}', [BillsController::class, 'levyItemsList']);
+    Route::post('/pfm/bills/filled-data/index/{id}', [BillsController::class, 'getFilledData']);
 });
 Route::get('/pfm/bills/village-data', [BillsController::class, 'billsVillageData']);
 Route::get('/pfm/bills/bank-data/{id}', [BillsController::class, 'bankAccounts']);
-Route::get('/pfm/bills/export/bill', [BillsController::class, 'leviesList']);
+Route::post('pfm/bills/booklet-data/{id}' , [BillsController::class, 'BookletData']);
+Route::get('/pfm/bills/export/bill/{id}', [BillsController::class, 'leviesList']);
+Route::post('/pfm/bills/levy-items/index/{id}', [BillsController::class, 'levyItemsList']);
+Route::post('/pfm/bills/filled-data/index/{id}', [BillsController::class, 'getFilledData']);
+
 
 

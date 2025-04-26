@@ -13,12 +13,12 @@ class PFMDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PfmCircularStatusesSeeder::class,
-            LevyStatusSeeder::class,
-            LeviesSeeder::class,
-            BookletStatusesSeeder::class,
+//            PfmCircularStatusesSeeder::class,
+//            LevyStatusSeeder::class,
+//            LeviesSeeder::class,
+//            BookletStatusesSeeder::class,
             FullFillApplicationsSeeder::class,
-            PermissionSeeder::class,
+//            PermissionSeeder::class,
         ]);
     }
 }

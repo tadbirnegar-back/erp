@@ -79,29 +79,46 @@ class BookletController extends Controller
         return response()->json($res);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $id)
     {
         $data = $request->all();
 
-        $bookletId = $data['bookletID'];
-        $value = $data['value'];
-        $appIds = json_decode($data['applicationIDs']);
-
-        $itemId = $data['itemID'];
-
-        $user = Auth::user();
+        try {
+            DB::beginTransaction();
+            $tariffs = json_decode($data['tariffs']);
 
 
-        collect($appIds)->each(function ($appId) use ($itemId, $bookletId, $value, $user) {
-            Tarrifs::create([
-                'item_id' => $itemId,
-                'booklet_id' => $bookletId,
-                'app_id' => $appId,
-                'value' => $value,
-                'creator_id' => $user->id,
-                'created_date' => now(),
-            ]);
-        });
+            foreach ($tariffs as $tariff) {
+                $value = $tariff->value;
+                $appIds = json_decode($tariff->headerIDs);
+
+                $itemId = $tariff->sideID;
+
+                $user = Auth::user();
+
+                foreach ($appIds as $appId) {
+                    Tarrifs::updateOrCreate(
+                        [
+                            'item_id' => $itemId,
+                            'booklet_id' => $id,
+                            'app_id' => $appId,
+                        ],
+                        [
+                            'value' => $value,
+                            'creator_id' => $user->id,
+                            'created_date' => now(),
+                        ]
+                    );
+
+                }
+            }
+            DB::commit();
+            return response()->json('با موفقیت ثبت شد');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
 
     }
 
@@ -157,5 +174,45 @@ class BookletController extends Controller
         } catch (Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    public function storeWithoutApp(Request $request, $id)
+    {
+        $data = $request->all();
+
+        try {
+            DB::beginTransaction();
+            $tariffs = json_decode($data['tariffs']);
+
+
+            foreach ($tariffs as $tariff) {
+                $value = $tariff->value;
+
+                $itemId = $tariff->sideID;
+
+
+                $user = Auth::user();
+
+                Tarrifs::updateOrCreate(
+                    [
+                        'item_id' => $itemId,
+                        'booklet_id' => $id,
+                    ],
+                    [
+                        'value' => $value,
+                        'creator_id' => $user->id,
+                        'created_date' => now(),
+                    ]
+                );
+
+
+            }
+            DB::commit();
+            return response()->json('با موفقیت ثبت شد');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
     }
 }
