@@ -1723,10 +1723,21 @@ class DocumentController extends Controller
 
             $ounits = OrganizationUnit::with(['documents' => function ($query) use ($document) {
                 $query->where('fiscal_year_id', $document->fiscal_year_id)
-                    ->where(function ($query) {
-                        $query->where('document_type_id', DocumentTypeEnum::CLOSING->value)
-                            ->orWhere('document_type_id', DocumentTypeEnum::TEMPORARY->value);
-                    })
+                    ->select('acc_documents.*')
+                    ->join('accDocument_status', 'accDocument_status.document_id', '=', 'acc_documents.id')
+                    ->join('statuses',          'accDocument_status.status_id',    '=', 'statuses.id')
+
+                    ->whereRaw('accDocument_status.create_date = (
+                         SELECT MAX(create_date)
+                         FROM accDocument_status
+                         WHERE document_id = acc_documents.id
+                      )')
+                    ->where('statuses.name', '=', DocumentStatusEnum::CONFIRMED->value)
+
+                    ->whereIn('document_type_id', [
+                        DocumentTypeEnum::CLOSING->value,
+                        DocumentTypeEnum::TEMPORARY->value,
+                    ])
                     ->with(['articles.account' => function ($query) {
                         $query
                             ->withoutGlobalScopes()
