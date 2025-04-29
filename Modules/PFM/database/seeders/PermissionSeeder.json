@@ -106,5 +106,47 @@
         "slug": "/pfm/booklet/tariff/store",
         "moduleName": "PFM",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "ذخیره تعرفه های بدون کاربری",
+        "slug": "/pfm/booklet-prices/store/with-out-app/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات روستا",
+        "slug": "/pfm/bills/village-data",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات حساب بنکی",
+        "slug": "/pfm/bills/bank-data/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات دفترچه",
+        "slug": "/pfm/bills/booklet-data/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "نمایش عوارضات ها",
+        "slug": "/pfm/bills/export/bill/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات شروح",
+        "slug": "/pfm/bills/levy-items/index/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "گرفتن مقادیر دفترچه",
+        "slug": "/pfm/bills/filled-data/index/{id}",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
     }
 ]

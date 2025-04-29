@@ -4,26 +4,38 @@ namespace Modules\PFM\app\Http\Traits;
 
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Modules\AAA\app\Http\Traits\UserTrait;
+use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\PersonMS\app\Http\Traits\PersonTrait;
+use Modules\PersonMS\app\Models\Person;
 use Modules\PFM\app\Http\Enums\ApplicationsForTablesEnum;
 use Modules\PFM\app\Http\Enums\BookletStatusEnum;
 use Modules\PFM\app\Http\Enums\LeviesListEnum;
 use Modules\PFM\app\Http\Enums\LevyStatusEnum;
+use Modules\PFM\app\Models\Bill;
+use Modules\PFM\app\Models\BillTariff;
 use Modules\PFM\app\Models\Booklet;
 use Modules\PFM\app\Models\BookletStatus;
 use Modules\PFM\app\Models\Levy;
+use Modules\PFM\app\Models\LevyBill;
 use Modules\PFM\app\Models\LevyCircular;
 use Modules\PFM\app\Models\LevyItem;
 use Modules\PFM\app\Models\PfmCirculars;
 use Modules\PFM\app\Models\PropApplication;
 use Modules\PFM\app\Models\Tarrifs;
+use Modules\PFM\Services\CardToCardPayment;
+use Modules\PFM\Services\PaymentService;
 
 trait BillsTrait
 {
+    use PersonTrait, UserTrait;
+
     public function getDatasOfFilledData($levy, $data)
     {
 
@@ -36,6 +48,8 @@ trait BillsTrait
             LeviesListEnum::ZIRBANA_MASKONI->value,
             LeviesListEnum::BALKON_PISH_AMADEGI->value,
             LeviesListEnum::MOSTAHADESAT_MAHOVATEH->value,
+            LeviesListEnum::SUDURE_MOJAVEZE_EHDAS->value,
+            LeviesListEnum::TABLIGHAT->value,
         ])) {
             $appID = $data['appID'];
             $bookletID = $data['bookletID'];
@@ -53,7 +67,188 @@ trait BillsTrait
                     $filledData['areaPrice'] = $areaPrice;
                     break;
             }
-        }else if()
+        } else if ($levy->name == LeviesListEnum::ARZESHE_AFZODEH_OMRAN->value) {
+            $itemID = $data['itemID'];
+            $bookletID = $data['bookletID'];
+
+            $tarrifs = Tarrifs::where('item_id', $itemID)->where('booklet_id', $bookletID)->select('value')->first();
+            $filledData['coefficient'] = $tarrifs->value;
+        }
         return $filledData;
     }
+
+    public function sendBillWithData($data)
+    {
+        $nationalCode = $data['national_code'];
+
+        $person = Person::where('national_code', $nationalCode)->first();
+
+        if (!$person) {
+            $personType = $data['personType'];
+            if ($personType == 1) {
+                $naturalAndPerson = $this->naturalStore($data);
+                $person = $naturalAndPerson->person;
+                $personID = $naturalAndPerson->person->id;
+                $data['personID'] = $personID;
+            } else {
+                $legalAndPerson = $this->legalStore($data);
+                $person = $legalAndPerson->person;
+                $personID = $legalAndPerson->person->id;
+                $data['personID'] = $personID;
+            }
+        }
+
+        $bill = $this->storeOneBill($data);
+
+        $user = User::find(2174);
+        $payment = new PaymentService($bill->id, $user, $data['price'], $data['maxDays'], $data['discountAmount'], $person);
+        $payment->makeUserCustomer();
+        $payment->generateBill();
+
+
+    }
+
+    public function storeOneBill($data)
+    {
+        $tableDatas = json_decode($data['tableDatas']);
+
+        $appID = $data['app_id'] ?? null;
+
+        $tariff = Tarrifs::where('booklet_id', $data['booklet_id'])->where('item_id', $data['item_id'])->where('app_id', $appID)->first();
+
+        $bill = Bill::create([
+            'bank_account_id' => $data['bank_account_id'],
+        ]);
+
+        foreach ($tableDatas as $tableData) {
+            LevyBill::create([
+                'levy_id' => $data['levy_id'],
+                'bill_id' => $bill->id,
+                'key' => $tableData->key,
+                'value' => $tableData->value,
+            ]);
+        }
+
+
+        BillTariff::create([
+            'bill_id' => $bill->id,
+            'tariff_id' => $tariff->id,
+        ]);
+
+        return $bill;
+
+    }
+
+    public function generateBillsList($pageNum, $perPage)
+    {
+        $query = Bill::query()
+            ->join('orders', function ($join) {
+                $join->on('orders.orderable_id', '=', 'pfm_bills.id')
+                    ->where('orders.orderable_type', '=', Bill::class);
+            })
+            ->join('process_status', function ($join) {
+                $join->on('process_status.order_id', '=', 'orders.id')
+                    ->whereRaw('process_status.created_date = (SELECT MAX(created_date) FROM process_status WHERE order_id = orders.id)');
+            })
+            ->join('financial_status', function ($join) {
+                $join->on('financial_status.order_id', '=', 'orders.id')
+                    ->whereRaw('financial_status.created_date = (SELECT MAX(created_date) FROM financial_status WHERE order_id = orders.id)');
+            })
+            ->join('statuses as status_fin', 'financial_status.status_id', '=', 'status_fin.id')
+            ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
+            ->join('customers', 'orders.customer_id', '=', 'customers.id')
+            ->join('persons', 'customers.person_id', '=', 'persons.id')
+            ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
+            ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
+            ->join('invoices', 'orders.id', '=', 'invoices.order_id')
+            ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
+            ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
+            ->select([
+                'pfm_bills.id as bill_id',
+                'status_fin.name as financial_status_name',
+                'status_fin.class_name as financial_status_class_name',
+                'status_pro.name as process_status_name',
+                'status_pro.class_name as process_status_class_name',
+                'persons.display_name as customer_name',
+                'pfm_levies.name as levy_name',
+                'orders.create_date as create_date',
+                'persons.national_code as national_code',
+                'orders.total_price as total_price',
+                'discounts.value as discount_value',
+            ])
+            ->paginate($perPage, ['*'], 'page', $pageNum);
+
+        return $query;
+    }
+
+    public function getBillData($id)
+    {
+        $query = Bill::query()
+            ->join('orders', function ($join) {
+                $join->on('orders.orderable_id', '=', 'pfm_bills.id')
+                    ->where('orders.orderable_type', '=', Bill::class);
+            })
+            ->join('process_status', function ($join) {
+                $join->on('process_status.order_id', '=', 'orders.id')
+                    ->whereRaw('process_status.created_date = (SELECT MAX(created_date) FROM process_status WHERE order_id = orders.id)');
+            })
+            ->join('financial_status', function ($join) {
+                $join->on('financial_status.order_id', '=', 'orders.id')
+                    ->whereRaw('financial_status.created_date = (SELECT MAX(created_date) FROM financial_status WHERE order_id = orders.id)');
+            })
+            ->join('statuses as status_fin', 'financial_status.status_id', '=', 'status_fin.id')
+            ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
+            ->join('customers', 'orders.customer_id', '=', 'customers.id')
+            ->join('persons', 'customers.person_id', '=', 'persons.id')
+            ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
+            ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
+            ->join('invoices', 'orders.id', '=', 'invoices.order_id')
+            ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
+            ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
+            ->join('pfm_bill_tariff', 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
+            ->join('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
+            ->join('pfm_circular_booklets', 'pfm_circular_tariffs.booklet_id', '=', 'pfm_circular_booklets.id')
+            ->join('organization_units', 'pfm_circular_booklets.ounit_id', '=', 'organization_units.id')
+            ->select([
+                'pfm_bills.id as bill_id',
+                'status_fin.name as financial_status_name',
+                'status_fin.class_name as financial_status_class_name',
+                'status_pro.name as process_status_name',
+                'status_pro.class_name as process_status_class_name',
+                'persons.display_name as customer_name',
+                'pfm_levies.name as levy_name',
+                'persons.national_code as national_code',
+                'orders.total_price as total_price',
+                'discounts.value as discount_value',
+                'invoices.due_date as due_date',
+                'organization_units.name as ounit_name',
+            ])
+            ->where('pfm_bills.id', $id)
+            ->first();
+
+        return $query;
+    }
+
+    public function billConfirmation($data, $id, $user)
+    {
+        $query = Bill::query()
+            ->join('orders', function ($join) {
+                $join->on('orders.orderable_id', '=', 'pfm_bills.id')
+                    ->where('orders.orderable_type', '=', Bill::class);
+            })
+            ->join('invoices', 'orders.id', '=', 'invoices.order_id')
+            ->select([
+                'invoices.id as invoice_id',
+            ])
+            ->where('pfm_bills.id', $id)
+            ->first();
+
+
+        $invoiceID = $query->invoice_id;
+        $payment = new CardToCardPayment($invoiceID, $data['fileID'], $data['refNumber'], $user);
+        $payment->makeCardToCard();
+
+    }
+
+
 }

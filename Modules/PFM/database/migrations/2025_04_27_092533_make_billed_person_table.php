@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pfm_levy_tariffs', function (Blueprint $table) {
-            $table->dropForeign('pfm_levy_tariffs_app_id_foreign');
-            $table->integer('app_id')->nullable()->change();
+        Schema::create('billed_person', function (Blueprint $table) {
+            $table->id();
         });
     }
 
@@ -22,6 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('billed_person');
     }
 };

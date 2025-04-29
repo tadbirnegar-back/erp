@@ -2,10 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Modules\PFM\app\Http\Controllers\BillsController;
 use Modules\PFM\app\Http\Controllers\BookletController;
 use Modules\PFM\app\Http\Controllers\CircularController;
 use Modules\PFM\app\Http\Controllers\LevyItemsController;
+use Modules\PFM\app\Http\Controllers\BillsController;
 
 /*
     |--------------------------------------------------------------------------
@@ -44,22 +44,22 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/pfm/booklet/submit/{id}', [BookletController::class, 'submitBooklet']);
     Route::post('/pfm/booklet/decline/{id}', [BookletController::class, 'declineBooklet']);
     Route::post('/pfm/booklet/tariff/store/{id}', [BookletController::class, 'store']);
-    Route::post('/pfm/booklet-prices/store/with-out-app/{id}' , [BookletController::class, 'storeWithoutApp']);
+    Route::post('/pfm/booklet-prices/store/with-out-app/{id}', [BookletController::class, 'storeWithoutApp']);
 
     // Bills
     Route::get('/pfm/bills/village-data', [BillsController::class, 'billsVillageData']);
     Route::get('/pfm/bills/bank-data/{id}', [BillsController::class, 'bankAccounts']);
-    Route::post('pfm/bills/booklet-data/{id}' , [BillsController::class, 'BookletData']);
+    Route::post('/pfm/bills/booklet-data/{id}', [BillsController::class, 'BookletData']);
     Route::get('/pfm/bills/export/bill/{id}', [BillsController::class, 'leviesList']);
     Route::post('/pfm/bills/levy-items/index/{id}', [BillsController::class, 'levyItemsList']);
     Route::post('/pfm/bills/filled-data/index/{id}', [BillsController::class, 'getFilledData']);
+    Route::post('/pfm/bills/check-national-code', [BillsController::class, 'checkNationalCode']);
+    Route::post('/pfm/bills/send-bill', [BillsController::class, 'sendBill']);
+    Route::post('/pfm/bills/list', [BillsController::class, 'billsList']);
+    Route::get('/pfm/bills/show-bill/{id}', [BillsController::class, 'showBill']);
+    Route::post('/pfm/bills/confirm-bill/{id}', [BillsController::class, 'confirmBill']);
+    Route::post('/pfm/bills/cancel-bill/{id}' , [BillsController::class, 'cancelBill']);
 });
-Route::get('/pfm/bills/village-data', [BillsController::class, 'billsVillageData']);
-Route::get('/pfm/bills/bank-data/{id}', [BillsController::class, 'bankAccounts']);
-Route::post('pfm/bills/booklet-data/{id}' , [BillsController::class, 'BookletData']);
-Route::get('/pfm/bills/export/bill/{id}', [BillsController::class, 'leviesList']);
-Route::post('/pfm/bills/levy-items/index/{id}', [BillsController::class, 'levyItemsList']);
-Route::post('/pfm/bills/filled-data/index/{id}', [BillsController::class, 'getFilledData']);
 
 
 

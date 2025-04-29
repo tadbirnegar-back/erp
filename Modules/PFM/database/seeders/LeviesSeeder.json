@@ -87,7 +87,7 @@
         "name": "عوارض بر تابلوهای تبلیغاتی",
         "category": "تبلیغات",
         "description": "A = P * S * B * N",
-        "has_app": false,
+        "has_app": true,
         "bg_id": 38
     },
     {
