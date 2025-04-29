@@ -409,7 +409,7 @@ class BillsController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = User::find(2174);
+            $user = \Auth::user();
             $this->billConfirmation($data , $id , $user);
             DB::commit();
             return response()->json($data);
@@ -425,7 +425,7 @@ class BillsController extends Controller
             DB::beginTransaction();
             $order = Order::where('orderable_id', $id)->where('orderable_type', Bill::class)->first();
 
-            $user = User::find(2174);
+            $user = \Auth::user();
 
             $status = $this->orderProcCanceled();
             ProcessStatus::create([
