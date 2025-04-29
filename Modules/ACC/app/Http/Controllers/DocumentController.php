@@ -1753,6 +1753,7 @@ class DocumentController extends Controller
             $ounits->each(function ($ounit) use ($document, $draft, &$closedOunits, $importStatus) {
                 if ($ounit->documents->isEmpty()) {
                     $newDocument = $document->replicate();
+                    $newDocument->document_type_id = DocumentTypeEnum::NORMAL->value;
                     $newDocument->ounit_id = $ounit->id;
                     $newDocument->ounit_head_id = $ounit?->head_id;
                     $newDocument->create_date = now();
