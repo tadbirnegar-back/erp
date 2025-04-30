@@ -7,7 +7,6 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Passport\RefreshTokenRepository;
@@ -19,7 +18,6 @@ use Modules\AAA\app\Notifications\OtpNotification;
 use Modules\AddressMS\app\Traits\AddressTrait;
 use Modules\Gateway\app\Http\Traits\PaymentRepository;
 use Modules\OUnitMS\app\Http\Traits\VerifyInfoRepository;
-use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\VCM\app\Models\VcmVersions;
@@ -258,7 +256,7 @@ class LoginController extends Controller
 
         $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
-        $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
+        $cookie = new Cookie('refresh_token', $result['refresh_token'], now()->addDays(7), null, $domain, \request()->secure(), true, true, 'none');
 
         unset($result['refresh_token']);
         unset($result['token_type']);
@@ -266,7 +264,7 @@ class LoginController extends Controller
 
 
         $sidebarPermissions = $user->permissions()->where('permission_type_id', '=', 1)->orderBy('priority', 'asc')
-        ->with('moduleCategory')->get();
+            ->with('moduleCategory')->get();
         foreach ($sidebarPermissions as $permission) {
             $sidebarItems[$permission->moduleCategory->name]['subPermission'][] = [
                 'label' => $permission?->name,
@@ -313,10 +311,10 @@ class LoginController extends Controller
 
         $version = VcmVersions::orderBy('id', 'desc')->first();
 
-        if(is_null($version)){
+        if (is_null($version)) {
             $versionTxt = '1.0.0';
-        }else{
-            $versionTxt = $version->high_version.'.'.$version->mid_version.'.'.$version->low_version;
+        } else {
+            $versionTxt = $version->high_version . '.' . $version->mid_version . '.' . $version->low_version;
         }
         $result['version'] = ["version" => $versionTxt];
         $result['userInfo'] = [
@@ -356,20 +354,36 @@ class LoginController extends Controller
     public function refreshToken(Request $request)
     {
         $validator = Validator::make($request->cookie(), [
-            'refresh_token' => 'required'
+            'refresh_token' => ['required', 'string']
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 401);
         }
+        $refreshToken = $request->cookie('refresh_token');
+        if (!$request->hasCookie('refresh_token') || empty($refreshToken)) {
+            return response()->json([
+                'error' => 'Missing or empty refresh_token cookie'
+            ], 401);
+        }
 
-        $baseUrl = url('/');
-        $response = Http::post("{$baseUrl}/oauth/token", [
-            'refresh_token' => $request->cookie('refresh_token'),
-            'client_id' => config('passport.password_grant_client.id'),
-            'client_secret' => config('passport.password_grant_client.secret'),
-            'grant_type' => 'refresh_token'
-        ]);
+        try {
+
+
+            $baseUrl = url('/');
+            $response = Http::post("{$baseUrl}/oauth/token", [
+                'refresh_token' => $request->cookie('refresh_token'),
+                'client_id' => config('passport.password_grant_client.id'),
+                'client_secret' => config('passport.password_grant_client.secret'),
+                'grant_type' => 'refresh_token'
+            ]);
+        } catch (\Exception $e) {
+            // Could be a network error, DNS failure, etc.
+            return response()->json([
+                'error' => 'Unable to communicate with auth server',
+                'details' => $e->getMessage()
+            ], 401);
+        }
 
         if (is_null($response)) {
             return response()->json(['error' => 'error'], 401);
@@ -403,7 +417,7 @@ class LoginController extends Controller
 
         $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
-        $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
+        $cookie = new Cookie('refresh_token', $result['refresh_token'], now()->addDays(7), null, $domain, \request()->secure(), true, true, 'none');
 
         unset($result['refresh_token']);
         unset($result['token_type']);
@@ -453,10 +467,10 @@ class LoginController extends Controller
 
         $version = VcmVersions::orderBy('id', 'desc')->first();
 
-        if(is_null($version)){
+        if (is_null($version)) {
             $versionTxt = '1.0.0';
-        }else{
-            $versionTxt = $version->high_version.'.'.$version->mid_version.'.'.$version->low_version;
+        } else {
+            $versionTxt = $version->high_version . '.' . $version->mid_version . '.' . $version->low_version;
         }
         $result['version'] = ["version" => $versionTxt];
         $result['userInfo'] = [
@@ -534,7 +548,7 @@ class LoginController extends Controller
 
         $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
 
-        $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
+        $cookie = new Cookie('refresh_token', $result['refresh_token'], now()->addDays(7), null, $domain, \request()->secure(), true, true, 'none');
 
         unset($result['refresh_token']);
         unset($result['token_type']);
@@ -660,7 +674,7 @@ class LoginController extends Controller
 
         // Set refresh token cookie
         $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
-        $cookie = new Cookie('refresh_token', $result['refresh_token'], Carbon::now()->addSeconds($result['expires_in']), null, $domain, \request()->secure(), true, true, 'none');
+        $cookie = new Cookie('refresh_token', $result['refresh_token'], now()->addDays(7), null, $domain, \request()->secure(), true, true, 'none');
 
         unset($result['refresh_token'], $result['token_type'], $result['expires_in']);
 
