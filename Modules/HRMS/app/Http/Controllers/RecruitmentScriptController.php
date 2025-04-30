@@ -94,7 +94,7 @@ class RecruitmentScriptController extends Controller
         $result = $this->rsIndex($data);
 
         $filterData = $data['pageNum'] == 1 ? [
-            'scriptStatus' => RecruitmentScript::GetAllStatuses(),
+            'scriptStatus' => RecruitmentScript::GetAllStatuses()->get(),
             'scriptTypes' => $this->getListOfScriptTypes(),
         ] : null;
 
@@ -114,7 +114,7 @@ class RecruitmentScriptController extends Controller
         $result = $this->rsIndex($data);
 
         $filterData = $data['pageNum'] == 1 ? [
-            'scriptStatus' => RecruitmentScript::GetAllStatuses(),
+            'scriptStatus' => RecruitmentScript::GetAllStatuses()->get(),
             'scriptTypes' => $this->getListOfScriptTypes(),
         ] : null;
 
@@ -510,7 +510,7 @@ class RecruitmentScriptController extends Controller
         $result = $this->rsIndex($data);
 
         $filterData = $data['pageNum'] == 1 ? [
-            'scriptStatus' => RecruitmentScript::GetAllStatuses(),
+            'scriptStatus' => RecruitmentScript::GetAllStatuses()->get(),
             'scriptTypes' => $this->getListOfScriptTypes(),
         ] : null;
 
