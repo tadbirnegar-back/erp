@@ -204,6 +204,11 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
     }
 
     //حق بیمه
+    public function getInsuranceRight()
+    {
+        return 0;
+    }
+
     public function getTotalSalary()
     {
         return 0;
