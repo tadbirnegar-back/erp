@@ -15,6 +15,10 @@ class DocumentShowResource extends JsonResource
             'id' => $this->id,
             'description' => $this->document_description,
             'document_date' => $this?->document_date,
+            'documentType' => isset($this->document_type_id) ? [
+                'name' => $this->document_type_id->getLabel(),
+                'id' => $this->document_type_id->value,
+            ] : null,
             'read_only' => $this->read_only,
             'status' => [
                 'name' => $this->status_name,
@@ -22,7 +26,7 @@ class DocumentShowResource extends JsonResource
             ],
             'fiscalYear' => $this->fiscalYear_name,
             'document_number' => $this->document_number,
-            'fiscal_year' => ['id'=>$this->fiscal_year_id],
+            'fiscal_year' => ['id' => $this->fiscal_year_id],
             'ounit' => [
                 'head' => $this?->ounitHead?->display_name,
                 'abadi_code' => $this->village_abadicode,

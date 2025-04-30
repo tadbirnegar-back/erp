@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Support\Facades\Cache;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
@@ -45,20 +46,25 @@ class testController extends Controller
     {
 //        dd(User::first());
 
-//        $ounits = [292, 289,
+//        $ounits = [444
 //        ];
 //        foreach ($ounits as $ounit) {
 //            for ($i = 1; $i <= 3; $i++) {
-//                $fy = 1;
-//                Cache::forget("last_year_confirmed_documents_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
+//                $fys = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+//                foreach ($fys as $fy) {
+//                    Cache::forget("last_year_confirmed_documents_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
 //
-//                Cache::forget("three_months_two_years_ago_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
+//                    Cache::forget("three_months_two_years_ago_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
 //
-//                Cache::forget("nine_month_last_year_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
+//                    Cache::forget("nine_month_last_year_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
+//                }
+//
 //
 //            }
 //
 //        }
+//        dd($ounits);
+
 //        $accs = Account::where('accountable_type', GlAccount::class)
 //            ->where('status_id', 155)
 //            ->whereIn('acc_accounts.category_id', [6, 7])
