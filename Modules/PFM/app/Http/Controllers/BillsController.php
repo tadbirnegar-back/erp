@@ -39,7 +39,7 @@ use Modules\PFM\app\Resources\ShowBillResource;
 
 class BillsController extends Controller
 {
-    use BillsTrait , OrderTrait;
+    use BillsTrait, OrderTrait;
 
     public function billsVillageData()
     {
@@ -78,7 +78,7 @@ class BillsController extends Controller
         $circular = PfmCirculars::where('fiscal_year_id', $fiscalYearID)->first();
 
         if ($circular) {
-            $booklet = Booklet::where('pfm_circular_id', $circular->id)->where('ounit_id', $id)->get();
+            $booklet = Booklet::where('pfm_circular_id', $circular->id)->where('ounit_id', $id)->first();
         } else {
             $booklet = null;
         }
@@ -201,6 +201,54 @@ class BillsController extends Controller
                     }
                     $data[] = $subData;
                     break;
+                case ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_SINGLES->value:
+                    $subData = [];
+                    $subData['id'] = $hasAppLevy->id;
+                    $subData['name'] = $hasAppLevy->name;
+                    $applications = ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_SINGLES->values();
+                    foreach ($applications as $application) {
+                        $appData = PropApplication::select('id', 'name')->where('id', $application)->first();
+                        $subData['applications'][] = $appData;
+                    }
+                    $multipleAppsIDs = ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_MULTIPLES->values();
+                    foreach ($multipleAppsIDs as $multipleAppId) {
+                        if (is_array($multipleAppId)) {
+                            foreach ($multipleAppId as $appId) {
+                                $appData = PropApplication::select('id', 'name')->where('id', $appId)->first();
+                                $subData['applications'][] = $appData;
+                            }
+                        } else {
+                            $appData = PropApplication::select('id', 'name')->where('id', $multipleAppId)->first();
+                            $subData['applications'][] = $appData;
+                        }
+
+                    }
+                    $data[] = $subData;
+                    break;
+                case ApplicationsForTablesEnum::TABLIGHAT_MOHITY_SINGLES->value:
+                    $subData = [];
+                    $subData['id'] = $hasAppLevy->id;
+                    $subData['name'] = $hasAppLevy->name;
+                    $applications = ApplicationsForTablesEnum::TABLIGHAT_MOHITY_SINGLES->values();
+                    foreach ($applications as $application) {
+                        $appData = PropApplication::select('id', 'name')->where('id', $application)->first();
+                        $subData['applications'][] = $appData;
+                    }
+                    $multipleAppsIDs = ApplicationsForTablesEnum::TABLIGHAT_MOHITY_MULTIPLES->values();
+                    foreach ($multipleAppsIDs as $multipleAppId) {
+                        if (is_array($multipleAppId)) {
+                            foreach ($multipleAppId as $appId) {
+                                $appData = PropApplication::select('id', 'name')->where('id', $appId)->first();
+                                $subData['applications'][] = $appData;
+                            }
+                        } else {
+                            $appData = PropApplication::select('id', 'name')->where('id', $multipleAppId)->first();
+                            $subData['applications'][] = $appData;
+                        }
+
+                    }
+                    $data[] = $subData;
+                    break;
                 case ApplicationsForTablesEnum::PARVANE_BALKON_SINGLES->value:
                     $subData = [];
                     $subData['id'] = $hasAppLevy->id;
@@ -225,6 +273,7 @@ class BillsController extends Controller
                     }
                     $data[] = $subData;
                     break;
+
                 case ApplicationsForTablesEnum::PARVANEH_MOSTAHADESAT_SINGLES->value:
                     $subData = [];
                     $subData['id'] = $hasAppLevy->id;
@@ -274,14 +323,14 @@ class BillsController extends Controller
                 case LeviesListEnum::AMLAK_MOSTAGHELAT->value:
                     $levy['key'] = 'amlak';
                     break;
-                case LeviesListEnum::TABLIGHAT->value:
-                    $levy['key'] = 'tablighat';
-                    break;
                 case LeviesListEnum::ZIRBANA_MASKONI->value:
                     $levy['key'] = 'zirbana_maskuni';
                     break;
                 case LeviesListEnum::DIVAR_KESHI->value:
                     $levy['key'] = 'divar';
+                    break;
+                case LeviesListEnum::TABLIGHAT->value:
+                    $levy['key'] = 'tablighat';
                     break;
                 case LeviesListEnum::SUDURE_MOJAVEZE_EHDAS->value:
                     $levy['key'] = 'sudure_mojavez';
@@ -383,7 +432,7 @@ class BillsController extends Controller
             return response()->json(['message' => 'قبض با موفقیت صادر شد']);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return response()->json(['message' => 'متاسفانه قبض صادر نشد']);
+            return response()->json(['message' => $e->getMessage()], 404);
         }
     }
 
@@ -404,16 +453,16 @@ class BillsController extends Controller
         return new ShowBillResource($data);
     }
 
-    public function confirmBill(Request $request,$id)
+    public function confirmBill(Request $request, $id)
     {
         try {
             DB::beginTransaction();
             $data = $request->all();
             $user = \Auth::user();
-            $this->billConfirmation($data , $id , $user);
+            $this->billConfirmation($data, $id, $user);
             DB::commit();
             return response()->json($data);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'متاسفانه صدور قبض با مشکل مواجه شد']);
         }
@@ -435,7 +484,7 @@ class BillsController extends Controller
                 'status_id' => $status->id,
             ]);
             DB::commit();
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'لغو قبض به درستی انجام نشد']);
         }

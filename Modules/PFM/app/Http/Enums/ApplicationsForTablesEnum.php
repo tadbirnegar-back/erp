@@ -29,7 +29,7 @@ enum ApplicationsForTablesEnum: string
     case SUDURE_MOJAVEZE_EHDAS_MULTIPLES = "noNeed7";
 
 
-    case TABLIGHAT_MOHITY_SINGLES = "عوارض بر مشاغل(دائم)";
+    case TABLIGHAT_MOHITY_SINGLES = "عوارض بر تابلوهای تبلیغاتی";
     case TABLIGHAT_MOHITY_MULTIPLES = "noNeed8";
 
     public function values(): array

@@ -14,7 +14,7 @@ class Legal extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = ['name'];
     public $timestamps = false;
 
     protected static function newFactory(): LegalFactory

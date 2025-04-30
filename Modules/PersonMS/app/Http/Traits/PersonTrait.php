@@ -19,6 +19,37 @@ trait PersonTrait
         return $person;
     }
 
+    public function optionalPersonAndNatualAndLegalUpdate(array $data, Person $person)
+    {
+
+
+        if($person->personable_type == Natural::class){
+            $lastNatural = Natural::where('id', $person->personable_id)->first();
+            $lastNatural->update([
+                'first_name' => $data['firstName'] ?? $lastNatural->first_name,
+                'last_name' => $data['lastName'] ?? $lastNatural->last_name,
+                'mobile' => $data['mobile'] ?? $lastNatural->mobile,
+
+            ]);
+            $person->update([
+                'display_name' => (isset($data['firstName']) && isset($data['lastName'])) ? ($data['firstName'] . ' ' . $data['lastName']) : $person->display_name,
+                'national_code' => $data['nationalCode'] ?? $person->national_code,
+                'phone' => $data['phone'] ?? $person->phone,
+            ]);
+
+        }else{
+            $lastLegal = Legal::where('id', $person->personable_id)->first();
+            $lastLegal->update([
+                'name' => $data['name'] ?? $person->display_name,
+            ]);
+            $person->update([
+                'display_name' => $data['name'] ?? $person->display_name,
+                'phone' => $data['phone'] ?? $person->phone,
+            ]);
+
+        }
+    }
+
     public function naturalStore(array $data): Natural
     {
 

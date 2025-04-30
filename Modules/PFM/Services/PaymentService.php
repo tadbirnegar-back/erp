@@ -55,7 +55,7 @@ class PaymentService
                 'person_id' => $personID,
                 'customerable_type' => BilledPerson::class,
                 'customerable_id' => $billedPerson->id,
-                'creator_id' => $this->person->id,
+                'creator_id' => $this->user->id,
                 'status_id' => $activeCustomerStatus->id,
                 'create_date' =>now(),
             ]);

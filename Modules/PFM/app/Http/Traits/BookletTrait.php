@@ -365,7 +365,7 @@ trait BookletTrait
                     break;
                 case ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_SINGLES->value:
                     $applications = ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_SINGLES->values();
-                    $multipleAppsIDs = ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_SINGLES->values();
+                    $multipleAppsIDs = ApplicationsForTablesEnum::SUDURE_MOJAVEZE_EHDAS_MULTIPLES->values();
                     break;
                 case ApplicationsForTablesEnum::TABLIGHAT_MOHITY_SINGLES->value:
                     $applications = ApplicationsForTablesEnum::TABLIGHAT_MOHITY_SINGLES->values();

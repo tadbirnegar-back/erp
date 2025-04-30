@@ -11,38 +11,104 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
+use Modules\Gateway\app\Models\Payment;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\StatusMS\app\Models\Status;
 
 class testController extends Controller
 {
-    use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
-    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait;
+//    use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
+//    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait;
 
     /**
      * Execute the job.
      */
-    function updateDescendants($parent, $children)
-    {
-        // Optional: update the parent if needed
-        // $parent->field = 'newValue';
-        // $parent->save();
-
-        foreach ($children as $child) {
-            // Update the child
-
-
-            // Check if the child has its own children
-            if ($child->children && $child->children->isNotEmpty()) {
-                $this->updateDescendants($child, $child->children);
-            }
-        }
-    }
+//    function updateDescendants($parent, $children)
+//    {
+//        // Optional: update the parent if needed
+//        // $parent->field = 'newValue';
+//        // $parent->save();
+//
+//        foreach ($children as $child) {
+//            // Update the child
+//
+//
+//            // Check if the child has its own children
+//            if ($child->children && $child->children->isNotEmpty()) {
+//                $this->updateDescendants($child, $child->children);
+//            }
+//        }
+//    }
 
     public function run()
     {
+        $status = Status::where('model', Payment::class)->where('name', 'پرداخت شده')->first();
+
+        $query = OrganizationUnit::join('village_ofcs', function ($join) {
+            $join->on('village_ofcs.id', '=', 'organization_units.unitable_id')
+                ->where('organization_units.unitable_type', VillageOfc::class);
+        })
+            ->join('payments', 'payments.organization_unit_id', '=', 'organization_units.id')
+            ->join('organization_units as town', 'town.id', 'organization_units.parent_id')
+            ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
+            ->join('organization_units as city', 'city.id', 'district.parent_id')
+            ->select([
+                'village_ofcs.id as village_id',
+                'payments.id as payment_id',
+                'payments.amount as payment_amount',
+                'payments.create_date as payment_date',
+                'payments.transactionid as txID',
+                'village_ofcs.national_uid as national_uid',
+                'village_ofcs.ofc_code as code_posti',
+                'organization_units.name as ounit_name',
+                'district.name as district_name',
+                'city.name as city_name'
+            ])
+            ->withoutGlobalScopes()
+            ->where('organization_units.unitable_type', VillageOfc::class)
+            ->where('payments.status_id', $status->id)
+            ->orderBy('payment_id')
+            ->get();
+
+        echo "<table border='1'>
+    <thead>
+        <tr>
+            <th>نام روستا</th>
+            <th>شماره تراکنش</th>
+            <th>مقدار پرداختی</th>
+            <th>تاریخ</th>
+            <th>کد تراکنش</th>
+            <th>شناسه ملی</th>
+            <th>کدپستی</th>
+            <th>آدرس</th>
+        </tr>
+    </thead>
+    <tbody>";
+
+        foreach ($query as $item) {
+            $date = convertDateTimeGregorianToJalaliDateTime($item->payment_date);
+            echo "<tr>
+        <td>{$item->ounit_name}</td>
+        <td>{$item->payment_id}</td>
+        <td>{$item->payment_amount}</td>
+        <td>{$date}</td>
+        <td>{$item->txID}</td>
+        <td>{$item->national_uid}</td>
+        <td>{$item->code_posti}</td>
+        <td>" . $item->city_name . "، " . $item->district_name . "، " . $item->ounit_name . "</td>
+    </tr>";
+        }
+
+
+        echo "</tbody></table>";
+
+
 //        $accs = Account::where('accountable_type', GlAccount::class)
 //            ->where('status_id', 155)
 //            ->whereIn('acc_accounts.category_id', [6, 7])

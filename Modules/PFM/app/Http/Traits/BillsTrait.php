@@ -38,8 +38,6 @@ trait BillsTrait
 
     public function getDatasOfFilledData($levy, $data)
     {
-
-
         $filledData = [];
         if (in_array($levy->name, [
             LeviesListEnum::AMLAK_MOSTAGHELAT->value,
@@ -52,7 +50,14 @@ trait BillsTrait
             LeviesListEnum::TABLIGHAT->value,
         ])) {
             $appID = $data['appID'];
-            $bookletID = $data['bookletID'];
+            $fiscalYearID = $data['fiscal_year_id'];
+            $ounitID = $data['ounit_id'];
+
+            $circular = PfmCirculars::where('fiscal_year_id', $fiscalYearID)->first();
+            $booklet = Booklet::where('pfm_circular_id', $circular->id)->where('ounit_id', $ounitID)->first();
+
+            $bookletID = $booklet->id;
+
             $itemID = $data['itemID'];
 
             $booklet = Booklet::find($bookletID);
@@ -67,21 +72,32 @@ trait BillsTrait
                     $filledData['areaPrice'] = $areaPrice;
                     break;
             }
-        } else if ($levy->name == LeviesListEnum::ARZESHE_AFZODEH_OMRAN->value) {
+        } else if (in_array($levy->name, [
+            LeviesListEnum::ARZESHE_AFZODEH_OMRAN->value,
+            LeviesListEnum::BAHAYE_KHEDMAT->value,
+        ])) {
             $itemID = $data['itemID'];
-            $bookletID = $data['bookletID'];
+            $fiscalYearID = $data['fiscal_year_id'];
+            $ounitID = $data['ounit_id'];
 
+            $circular = PfmCirculars::where('fiscal_year_id', $fiscalYearID)->first();
+            $booklet = Booklet::where('pfm_circular_id', $circular->id)->where('ounit_id', $ounitID)->first();
+
+            $bookletID = $booklet->id;
             $tarrifs = Tarrifs::where('item_id', $itemID)->where('booklet_id', $bookletID)->select('value')->first();
-            $filledData['coefficient'] = $tarrifs->value;
+            $filledData['areaPrice'] = 0;
+            $filledData['coefficient'] = 0;
+            $filledData['approvedTariff'] = $tarrifs->value;
         }
         return $filledData;
     }
 
     public function sendBillWithData($data)
     {
-        $nationalCode = $data['national_code'];
+        $nationalCode = $data['nationalCode'];
 
         $person = Person::where('national_code', $nationalCode)->first();
+
 
         if (!$person) {
             $personType = $data['personType'];
@@ -96,15 +112,22 @@ trait BillsTrait
                 $personID = $legalAndPerson->person->id;
                 $data['personID'] = $personID;
             }
+        } else {
+            $personType = $data['personType'];
+            if ($personType == 1) {
+                $this->optionalPersonAndNatualAndLegalUpdate($data, $person);
+            } else {
+                $this->optionalPersonAndNatualAndLegalUpdate($data, $person);
+            }
         }
 
         $bill = $this->storeOneBill($data);
 
-        $user = User::find(2174);
+
+        $user = Auth::user();
         $payment = new PaymentService($bill->id, $user, $data['price'], $data['maxDays'], $data['discountAmount'], $person);
         $payment->makeUserCustomer();
         $payment->generateBill();
-
 
     }
 
@@ -112,9 +135,17 @@ trait BillsTrait
     {
         $tableDatas = json_decode($data['tableDatas']);
 
+
         $appID = $data['app_id'] ?? null;
 
+        $circular = PfmCirculars::where('fiscal_year_id', $data['fiscal_year_id'])->first();
+        $booklet = Booklet::where('pfm_circular_id', $circular->id)->where('ounit_id', $data['ounit_id'])->first();
+
+        $data['booklet_id'] = $booklet->id;
+
+
         $tariff = Tarrifs::where('booklet_id', $data['booklet_id'])->where('item_id', $data['item_id'])->where('app_id', $appID)->first();
+
 
         $bill = Bill::create([
             'bank_account_id' => $data['bank_account_id'],
@@ -136,7 +167,6 @@ trait BillsTrait
         ]);
 
         return $bill;
-
     }
 
     public function generateBillsList($pageNum, $perPage)
