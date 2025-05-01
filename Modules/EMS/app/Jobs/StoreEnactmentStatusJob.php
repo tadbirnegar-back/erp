@@ -43,7 +43,7 @@ class StoreEnactmentStatusJob implements ShouldQueue
                     $query->whereDoesntHave('enactmentReviews', function ($subQuery) {
                         $subQuery->where('enactment_id', $this->encId);
                     })->whereHas('roles', function ($q) {
-                        $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
+                        $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value, RolesEnum::OZV_HEYAT_FREEZONE]);
                     });
 
                 },])->find($this->encId);
@@ -52,7 +52,7 @@ class StoreEnactmentStatusJob implements ShouldQueue
 
             $AllMainPersons = $enactment->load(['members' => function ($query) {
                 $query->whereHas('roles', function ($q) {
-                    $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
+                    $q->whereIn('name', [RolesEnum::OZV_HEYAAT->value, RolesEnum::OZV_HEYAT_FREEZONE]);
                 });
             }]);
             $AllMainCount = $AllMainPersons->members->count();
@@ -81,34 +81,33 @@ class StoreEnactmentStatusJob implements ShouldQueue
                         'enactment_id' => $this->encId,
                     ]);
 
-                    $reviewStatuses = $enactment->enactmentReviews()
-                        ->whereHas('user.roles', function ($query) {
-                            $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value , RolesEnum::OZV_HEYAT_FREEZONE]);
-                        })->with('status')->get();
-
-                    if ($reviewStatuses->count() == $AllMainCount) {
-                        $result = $reviewStatuses->groupBy('status.id')
-                            ->map(fn($statusGroup) => [
-                                'status' => $statusGroup->first(),
-                                'count' => $statusGroup->count()
-                            ])
-                            ->sortByDesc('count')
-                            ->values();
-
-                        if ($result->count() == 2 && isset($result[0]) && isset($result[1]) && $result[0]['count'] == $result[1]['count']) {
-                            $finalStatus = null;
-                        } else {
-                            $finalStatus = $result[0]['status']->status;
-                        }
-
-                        if (!is_null($finalStatus)) {
-                            $enactment->final_status_id = $finalStatus->id;
-                            $enactment->save();
-                        }
-
-                    }
 
                 }
+
+                $reviewStatuses = $enactment->enactmentReviews()
+                    ->whereHas('user.roles', function ($query) {
+                        $query->whereIn('name', [RolesEnum::OZV_HEYAAT->value, RolesEnum::OZV_HEYAT_FREEZONE]);
+                    })->with('status')->get();
+
+
+                    $result = $reviewStatuses->groupBy('status.id')
+                        ->map(fn($statusGroup) => [
+                            'status' => $statusGroup->first(),
+                            'count' => $statusGroup->count()
+                        ])
+                        ->sortByDesc('count')
+                        ->values();
+
+
+                        $finalStatus = $result[0]['status']->status;
+
+
+                    if (!is_null($finalStatus)) {
+                        $enactment->final_status_id = $finalStatus->id;
+                        $enactment->save();
+                    }
+
+
             }
             \DB::commit();
             $this->delete();
@@ -119,5 +118,11 @@ class StoreEnactmentStatusJob implements ShouldQueue
             $this->fail($e);
         }
 
+    }
+
+    public function tags(): array
+    {
+
+        return ['enactmentID:' . $this->encId,];
     }
 }

@@ -11,9 +11,15 @@ use Modules\ACC\app\Models\Account;
 use Modules\AddressMS\app\Models\Address;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Models\CourseRecord;
+use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\Isar;
+use Modules\HRMS\app\Models\MilitaryService;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\Relative;
+use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\LMS\app\Models\Teacher;
 use Modules\PersonMS\Database\factories\PersonFactory;
@@ -184,6 +190,36 @@ class Person extends Model
     public function account()
     {
         return $this->hasOne(Account::class, 'entity_id');
+    }
+
+    public function isar(): HasOne
+    {
+        return $this->hasOne(Isar::class, 'person_id');
+    }
+
+    public function militaryService(): HasOne
+    {
+        return $this->hasOne(MilitaryService::class, 'person_id');
+    }
+
+    public function relatives(): HasMany
+    {
+        return $this->hasMany(Relative::class, 'person_id');
+    }
+
+    public function resumes(): HasMany
+    {
+        return $this->hasMany(Resume::class, 'person_id');
+    }
+
+    public function educationalRecords(): HasMany
+    {
+        return $this->hasMany(EducationalRecord::class, 'person_id');
+    }
+
+    public function courseRecords(): HasMany
+    {
+        return $this->hasMany(CourseRecord::class, 'person_id');
     }
 
 

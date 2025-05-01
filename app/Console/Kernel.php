@@ -4,7 +4,6 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -13,11 +12,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('horizon')
-            ->everySecond()
-            ->runInBackground()
-            ->withoutOverlapping();
-        Log::info('Queue worker started' . ' on ' . date('Y-m-d H:i:s'));
+        $schedule->command('passport:purge')
+            ->everySixHours()
+            ->runInBackground();
     }
 
     /**

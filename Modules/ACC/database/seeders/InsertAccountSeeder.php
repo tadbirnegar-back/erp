@@ -18,13 +18,14 @@ class InsertAccountSeeder extends Seeder
     {
         try {
             $names = [
-                'ودایع دریافتی'
+                'سایر اسناد پرداختنی'
             ];
 
 //            DB::beginTransaction();
-            $chainCode = 312;
+            $chainCode = 31002;
             $ounitId = null;
-            $length = 2;
+            $length = 3;
+//          $data['isFertile'] = true;
 
             foreach ($names as $name) {
                 $parentAccount = Account::where('chain_code', $chainCode)->first();
@@ -35,7 +36,6 @@ class InsertAccountSeeder extends Seeder
 //                dd($largest,$parentAccount,$data);
                 $data['name'] = $name;
                 $data['ounitID'] = $ounitId;
-                $data['isFertile'] = true;
 //                $data['categoryID'] = 8;
 
 
