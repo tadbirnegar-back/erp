@@ -413,6 +413,11 @@ class LoginController extends Controller
         $token_id = $token_header_array['jti'];
 
         $accessToken = Token::find($token_id);
+
+        if (is_null($accessToken)) {
+            return response()->json(['message' => 'token not found'], 401);
+        }
+
         $user = User::where('mobile', '=', $accessToken->user_id)->first();
 
         $domain = ($request->getHost() != 'localhost') ? $request->getHost() : false;
