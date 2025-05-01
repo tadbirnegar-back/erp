@@ -461,10 +461,10 @@ class BillsController extends Controller
             $user = \Auth::user();
             $this->billConfirmation($data, $id, $user);
             DB::commit();
-            return response()->json($data);
+            return response()->json(['message' => 'پرداخت قبض تایید شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'متاسفانه صدور قبض با مشکل مواجه شد']);
+            return response()->json(['message' => 'متاسفانه صدور قبض با مشکل مواجه شد'] , 404);
         }
     }
 

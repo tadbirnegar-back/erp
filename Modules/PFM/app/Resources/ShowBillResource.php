@@ -16,18 +16,23 @@ class ShowBillResource extends JsonResource
         return [
             "bill_id" => $this->bill_id,
             'status' => [
-                "name" => ($this->process_status_name == OrderStatusEnum::PROC_EXPIRED || $this -> process_status_name ==  OrderStatusEnum::PROC_CANCELED) ? $this->process_status_name : $this ->financial_status_name,
-                "class" => ($this->process_status_name == OrderStatusEnum::PROC_EXPIRED || $this -> process_status_name ==  OrderStatusEnum::PROC_CANCELED) ? $this->process_status_class_name : $this ->financial_status_class_name,
+                "name" => ($this->process_status_name == OrderStatusEnum::PROC_EXPIRED || $this -> process_status_name ===  "لغو شده") ? $this->process_status_name : $this ->financial_status_name,
+                "class" => ($this->process_status_name == OrderStatusEnum::PROC_EXPIRED || $this -> process_status_name ===  "لغو شده") ? $this->process_status_class_name : $this ->financial_status_class_name,
             ],
             'person_name' => $this->customer_name,
             'levy_name' => $this->levy_name,
-            'due_date' => $this->due_date,
+            'due_date' => EngNumbersToPersian(howManyDaysRemain($this->due_date)),
             'national_code' => $this->national_code,
             'total_price' => $this->total_price,
             'discount_value' => $this->discount_value,
             'discounted_price' => $this->total_price - ($this->total_price * $this->discount_value / 100),
             'ounit_name' => $this->ounit_name,
             'params' => $this->getParams($this->bill_id),
+            'bank'=>[
+                'name'=>$this->bank_name,
+                'account_number'=>$this->account_number,
+            ],
+            'create_date'=>$this->create_date,
         ];
     }
 

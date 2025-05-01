@@ -206,6 +206,15 @@ function persianNumbersToEng(string $persianNumber)
     return $englishDigits[$index];
 }
 
+function EngNumbersToPersian(string $englishNumber)
+{
+    $persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۱۰', '۱۱', '۱۲'];
+    $englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+
+    $index = array_search($englishNumber, $englishDigits);
+    return $persianDigits[$index];
+}
+
 function removeLeftZero($number)
 {
     $parts = explode(' ', $number);
@@ -303,4 +312,13 @@ function convertGregorianYearToJalaliYear($gregorianYear)
 {
     $jalaliYear = CalendarUtils::strftime('Y', strtotime($gregorianYear));
     return $jalaliYear;
+}
+
+
+function howManyDaysRemain($date)
+{
+    $date = new DateTime($date);
+    $today = new DateTime();
+    $interval = $date->diff($today);
+    return $interval->format('%a');
 }

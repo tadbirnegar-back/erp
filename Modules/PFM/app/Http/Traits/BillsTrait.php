@@ -239,6 +239,9 @@ trait BillsTrait
             ->join('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
             ->join('pfm_circular_booklets', 'pfm_circular_tariffs.booklet_id', '=', 'pfm_circular_booklets.id')
             ->join('organization_units', 'pfm_circular_booklets.ounit_id', '=', 'organization_units.id')
+            ->join('bnk_bank_accounts' , 'pfm_bills.bank_account_id', '=', 'bnk_bank_accounts.id')
+            ->join('bnk_bank_branches' , 'bnk_bank_accounts.branch_id', '=', 'bnk_bank_branches.id')
+            ->join('bnk_banks' , 'bnk_bank_branches.bank_id', '=', 'bnk_banks.id')
             ->select([
                 'pfm_bills.id as bill_id',
                 'status_fin.name as financial_status_name',
@@ -252,6 +255,9 @@ trait BillsTrait
                 'discounts.value as discount_value',
                 'invoices.due_date as due_date',
                 'organization_units.name as ounit_name',
+                'bnk_banks.name as bank_name',
+                'bnk_bank_accounts.account_number as account_number',
+                'orders.create_date as create_date',
             ])
             ->where('pfm_bills.id', $id)
             ->first();

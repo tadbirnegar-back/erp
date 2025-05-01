@@ -1,0 +1,11 @@
+{
+    "name": "BDM",
+    "alias": "bdm",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\BDM\\app\\Providers\\BDMServiceProvider"
+    ],
+    "files": []
+}

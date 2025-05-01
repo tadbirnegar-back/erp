@@ -23,7 +23,6 @@ class CourseAccessDateJob implements ShouldQueue
      */
     public function __construct(int $course)
     {
-        \Log::info($course);
         $this->courseId = $course;
     }
 
@@ -42,8 +41,6 @@ class CourseAccessDateJob implements ShouldQueue
                 'create_date' => now(),
                 'description' => null
             ]);
-        }else {
-            \Log::info('not');
         }
     }
 }
