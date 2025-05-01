@@ -298,6 +298,28 @@ class OUnitMSController extends Controller
 
     }
 
+    public function citiesIndexPublic()
+    {
+        $cities = OrganizationUnit::where('unitable_type', CityOfc::class)->select(['id', 'name'])->get();
+        return response()->json($cities);
+    }
+
+    public function districtsIndexPublic($id)
+    {
+        $districts = OrganizationUnit::where('unitable_type', DistrictOfc::class)->where('parent_id' , $id)->select(['id', 'name'])->get();
+        return response()->json($districts);
+    }
+
+    public function villageIndexPublic($id)
+    {
+
+        $towns = OrganizationUnit::where('unitable_type', TownOfc::class)->where('parent_id' , $id)->select(['id', 'name'])->get();
+
+        $townIds = $towns->pluck('id')->toArray();
+
+        $villages = OrganizationUnit::where('unitable_type', VillageOfc::class)->whereIn('parent_id' , $townIds)->select(['id', 'name'])->get();
+        return response()->json($villages);
+    }
 
 }
 

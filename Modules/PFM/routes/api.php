@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\PFM\app\Http\Controllers\ApplicationsController;
 use Modules\PFM\app\Http\Controllers\BookletController;
 use Modules\PFM\app\Http\Controllers\CircularController;
 use Modules\PFM\app\Http\Controllers\LevyItemsController;
@@ -62,4 +63,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 });
 
 
+Route::prefix('v1')->group(function () {
+    Route::get('/pfm/applications/list', [ApplicationsController::class, 'index']);
+});
 

@@ -17,4 +17,6 @@ use Modules\BDM\app\Http\Controllers\LicenseController;
 
 Route::prefix('v1')->group(function () {
     Route::get('/bdm/license-types/list' , [LicenseController::class, 'licenseTypesList']);
+    Route::get('/bdm/license-ownership-types/list' , [LicenseController::class, 'licenseOwnershipTypesList']);
+    ROute::get('/bdm/transfer-types/list' , [LicenseController::class, 'transferTypesList']);
 });

@@ -7,6 +7,7 @@ use Modules\HRMS\app\Http\Controllers\HireTypeController;
 use Modules\HRMS\app\Http\Controllers\HRMConfigController;
 use Modules\HRMS\app\Http\Controllers\JobController;
 use Modules\HRMS\app\Http\Controllers\LevelController;
+use Modules\HRMS\app\Http\Controllers\MilitaryServicesController;
 use Modules\HRMS\app\Http\Controllers\NewScriptController;
 use Modules\HRMS\app\Http\Controllers\PositionController;
 use Modules\HRMS\app\Http\Controllers\RecruitmentScriptController;
@@ -174,4 +175,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
     Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
 
+});
+
+Route::prefix('v1')->group(function () {
+    Route::get('/hrm/military-service/list', [MilitaryServicesController::class, 'index']);
+    Route::get('/hrm/military-service/exemption-types', [MilitaryServicesController::class, 'exemptionTypes']);
 });
