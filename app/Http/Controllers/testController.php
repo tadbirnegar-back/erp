@@ -54,22 +54,22 @@ class testController extends Controller
 //        $enactments = Enactment::joinRelationship('statuses', ['statuses' => function ($join) {
 //            $join
 //                ->whereRaw('enactment_status.create_date = (SELECT MAX(create_date) FROM enactment_status WHERE enactment_id = enactments.id)')
-//                ->where('statuses.name', '=', EnactmentStatusEnum::PENDING_BOARD_REVIEW->value);
+//                ->where('statuses.name', '=', EnactmentStatusEnum::PENDING_FOR_BOARD_DATE->value);
 //        }])
 //            ->with(['onlyHeyaatMeeting'])
 //            ->get();
 //
 //        $mts = [];
-//
+
 //        $enactments->each(function ($enactment) use (&$mts) {
-////            if (!in_array($enactment->onlyHeyaatMeeting->id, $mts)) {
-////                $meetingDate3 = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($enactment->onlyHeyaatMeeting->meeting_date);
-////
-////                $alertDate = Carbon::parse($meetingDate3)->subDays(1);
-////
-////                StoreMeetingJob::dispatch($enactment->onlyHeyaatMeeting->id)->delay($alertDate);
-////                $mts[] = $enactment->onlyHeyaatMeeting->id;
-////            }
+//            if (!in_array($enactment->onlyHeyaatMeeting->id, $mts)) {
+//                $meetingDate3 = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($enactment->onlyHeyaatMeeting->meeting_date);
+//
+//                $alertDate = Carbon::parse($meetingDate3)->subDays(1);
+//
+//                StoreMeetingJob::dispatch($enactment->onlyHeyaatMeeting->id)->delay($alertDate);
+//                $mts[] = $enactment->onlyHeyaatMeeting->id;
+//            }
 //
 //            $meetingDate1 = $enactment->onlyHeyaatMeeting->getRawOriginal('meeting_date');
 //            $meetingDate2 = $enactment->onlyHeyaatMeeting->getRawOriginal('meeting_date');
@@ -80,11 +80,12 @@ class testController extends Controller
 //            StoreEnactmentStatusJob::dispatch($enactment->id)->delay($delayHeyat);
 //            StoreEnactmentStatusKarshenasJob::dispatch($enactment->id)->delay($delayKarshenas);
 //            $delayPending = Carbon::parse($meetingDate3);
-//
-////            PendingForHeyaatStatusJob::dispatch($enactment->id)->delay($delayPending);
-//
-//
+
+//            PendingForHeyaatStatusJob::dispatch($enactment->id)->delay($delayPending);
+
+
 //        });
+//        dd('done');
 //
 //        dd($enactments);
 //        $enacts = [2615, 2553, 2552, 2551, 2547, 2546, 2545, 2544, 2543, 2542, 2492, 2485, 2483, 2482, 2481, 2480, 2479, 2478, 2477, 2476, 2475, 2474, 2473, 2456, 2431, 2430, 2429, 2427, 2426, 2424, 2423, 2422, 2421, 2420, 2419, 2418, 2415, 2414, 2413, 2412, 2254, 2253, 2252, 2251, 2242, 2241, 2240, 2239, 2238, 2237,2238,2237,2236,2235,2234,];

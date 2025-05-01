@@ -100,8 +100,8 @@ return [
 
     'trim' => [
         'recent' => 60,
-        'pending' => 60,
-        'completed' => 60,
+        'pending' => 1000000000,
+        'completed' => 10080,
         'recent_failed' => 10080,
         'failed' => 10080,
         'monitored' => 10080,
@@ -166,7 +166,7 @@ return [
     |
     */
 
-    'memory_limit' => 1024,
+    'memory_limit' => 2048,
 
     /*
     |--------------------------------------------------------------------------
@@ -217,7 +217,7 @@ return [
         'production' => [
             'supervisor-1' => [
                 'connection' => 'redis',
-                'queue' => ['high', 'default', 'High'],
+                'queue' => ['high', 'default'],
                 'balance' => 'auto',
                 'autoScalingStrategy' => 'time',
                 'maxProcesses' => 15,
