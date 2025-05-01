@@ -2,21 +2,23 @@
 
 namespace Modules\HRMS\app\Calculations;
 
-use Modules\HRMS\app\Http\Enums\HireTypeEnum;
+use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 
 class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
 {
     private ScriptType $scriptType;
-    private HireTypeEnum $hireType;
+    private HireType $hireType;
     private OrganizationUnit $organizationUnit;
+    private $baseSalary;
 
-    public function __construct(ScriptType $scriptType, HireTypeEnum $hireType, OrganizationUnit $organizationUnit)
+    public function __construct(ScriptType $scriptType, HireType $hireType, OrganizationUnit $organizationUnit)
     {
         $this->scriptType = $scriptType;
         $this->hireType = $hireType;
         $this->organizationUnit = $organizationUnit;
+        $this->baseSalary = $this->getBaseSalary();
     }
 
     public function calculate()
@@ -27,8 +29,11 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
     //پایه
     public function getBaseSalary()
     {
-        $baseSalary = 0;
-        return $baseSalary;
+        if (is_null($this->baseSalary)) {
+            $baseSalary = 8000000;
+            $this->baseSalary = $baseSalary;
+        }
+        return $this->baseSalary;
     }
 
     public function getBaseYears()
@@ -38,43 +43,44 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
     }
 
     //فوق العاده های مستمر
-    public function getVillageDegreeExtra($baseSalary)
+    public function getVillageDegreeExtra()
     {
-        $degree = $this->organizationUnit->village->degree;
+        $degree = (int)$this->organizationUnit->village->degree;
         $percentage = match ($degree) {
             1, 2 => 0.1,
             3, 4 => 0.15,
             5, 6 => 0.2,
+//            default => 0.25,
         };
 
         $formula = '$baseSalary * $percentage';
-        $params = ['baseSalary' => $baseSalary, 'percentage' => $percentage];
+        $params = ['baseSalary' => $this->baseSalary, 'percentage' => $percentage];
 
         $result = $this->evalFormula($formula, $params);
 
         return $result;
     }
 
-    public function getBigVillageExtra($baseSalary)
+    public function getBigVillageExtra()
     {
         $formula = '$baseSalary * $percentage';
         $population = $this->organizationUnit->village->population_1395 >= 10000 ? $this->organizationUnit->village->population_1395 : 0;
-        $params = ['baseSalary' => $baseSalary, 'percentage' => $population];
+        $params = ['baseSalary' => $this->baseSalary, 'percentage' => $population];
 
         $result = $this->evalFormula($formula, $params);
 
         return $result;
     }
 
-    public function getVillageSupervisorExtra($baseSalary)
+    public function getVillageSupervisorExtra()
     {
-        return $this->getVillageDegreeExtra($baseSalary);
+        return $this->getVillageDegreeExtra();
     }
 
-    public function getEducationExtra($baseSalary)
+    public function getEducationExtra()
     {
         $formula = '$baseSalary * $percentage';
-        $params = ['baseSalary' => $baseSalary, 'percentage' => 0];
+        $params = ['baseSalary' => $this->baseSalary, 'percentage' => 0];
 
         $result = $this->evalFormula($formula, $params);
 
@@ -113,8 +119,9 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
         return 0;
     }
 
-    public function getMissionExtra($minimum)
+    public function getMissionExtra()
     {
+        $minimum = 10000;
         $formula = '$minimum * $percentage';
         $params = ['minimum' => $minimum, 'percentage' => 50];
 
@@ -127,34 +134,34 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
         return 0;
     }
 
-    public function getEidiArticle15Extra($baseSalary)
+    public function getEidiArticle15Extra()
     {
         $formula = '($baseSalary * 2) * $days / 365';
-        $params = ['baseSalary' => $baseSalary, 'days' => 30];
+        $params = ['baseSalary' => $this->baseSalary, 'days' => 30];
 
         return $this->evalFormula($formula, $params);
     }
 
-    public function getEndOfWorkExtra($baseSalary)
+    public function getEndOfWorkExtra()
     {
         $formula = '$baseSalary * $ExperienceYears';
-        $params = ['baseSalary' => $baseSalary, 'ExperienceYears' => 1];
+        $params = ['baseSalary' => $this->baseSalary, 'ExperienceYears' => 1];
 
         return $this->evalFormula($formula, $params);
     }
 
-    public function getEducationArticle18($baseSalary)
+    public function getEducationArticle18()
     {
         $formula = '$baseSalary * 1.176 * $educationTime';
-        $params = ['baseSalary' => $baseSalary, 'educationTime' => 1];
+        $params = ['baseSalary' => $this->baseSalary, 'educationTime' => 1];
 
         return $this->evalFormula($formula, $params);
     }
 
-    public function getEvaluationArticle8($baseSalary)
+    public function getEvaluationArticle8()
     {
         $formula = '$baseSalary * 0.1';
-        $params = ['baseSalary' => $baseSalary];
+        $params = ['baseSalary' => $this->baseSalary];
 
         return $this->evalFormula($formula, $params);
     }

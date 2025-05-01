@@ -4,6 +4,7 @@ namespace Modules\HRMS\database\seeders;
 
 use Illuminate\Database\Seeder;
 use Modules\HRMS\app\Http\Enums\FreezoneScriptTypeEnum;
+use Modules\HRMS\app\Models\ScriptAgent;
 
 class HRMSDatabaseSeeder extends Seeder
 {
@@ -35,7 +36,8 @@ class HRMSDatabaseSeeder extends Seeder
 //            FreeZonePositionsSeeder::class,
 //            FreeZoneJobsSeeder::class,
 //            FreeZoneScriptTypeSeeder::class,
-            AddAccRcs::class,
+//            AddAccRcs::class,
+            ScriptAgentSeeder::class,
         ]);
         // $this->call([]);
     }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Support\Facades\Cache;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
@@ -12,10 +11,19 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
+use Modules\HRMS\app\Http\Enums\FormulaEnum;
+use Modules\HRMS\app\Http\Enums\HireTypeEnum;
+use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Models\HireType;
+use Modules\HRMS\app\Models\ScriptType;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\TownOfc;
+use Modules\PersonMS\app\Models\Natural;
+use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
@@ -44,6 +52,38 @@ class testController extends Controller
 
     public function run()
     {
+        $a = ScriptTypesEnum::VILLAGER;
+        $b = HireTypeEnum::PART_TIME;
+        $st = ScriptType::where('title', $a->value)->first();
+        $ht = HireType::where('title', $b->value)->first();
+        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
+        $ounit = OrganizationUnit::with(['ancestors' => function ($query) {
+            $query->where('unitable_type', '!=', TownOfc::class);
+        }])->find(5);
+
+        dump(
+            $ounit->ancestors[0],
+            $ounit->ancestors[1],
+            $ounit->ancestors[2]
+        );
+
+        $person = Person::where('personable_type', Natural::class)->first();
+        dump($person->personable);
+
+        $x = new $class($st, $ht, $ounit);
+        $formulas = collect(FormulaEnum::cases());
+
+        $res = $formulas->map(function ($formula) use ($x) {
+            $fn = $formula->getFnName();
+            $res = $x->$fn();
+            return [
+                'default_value' => $res,
+                'label' => $formula->getLabel(),
+            ];
+
+        });
+
+//        dd($res);
 //        dd(User::first());
 
 //        $ounits = [444
