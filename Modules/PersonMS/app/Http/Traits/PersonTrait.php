@@ -2,6 +2,7 @@
 
 namespace Modules\PersonMS\app\Http\Traits;
 
+use Modules\HRMS\app\Models\ExemptionType;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
@@ -23,7 +24,7 @@ trait PersonTrait
     {
 
 
-        if($person->personable_type == Natural::class){
+        if ($person->personable_type == Natural::class) {
             $lastNatural = Natural::where('id', $person->personable_id)->first();
             $lastNatural->update([
                 'first_name' => $data['firstName'] ?? $lastNatural->first_name,
@@ -37,7 +38,7 @@ trait PersonTrait
                 'phone' => $data['phone'] ?? $person->phone,
             ]);
 
-        }else{
+        } else {
             $lastLegal = Legal::where('id', $person->personable_id)->first();
             $lastLegal->update([
                 'name' => $data['name'] ?? $person->display_name,
@@ -270,5 +271,130 @@ trait PersonTrait
                 });
 
         })->with(['latestRecruitmentScript.issueTime'])->first();
+    }
+
+    public function personUpdateOrInsert($data)
+    {
+        if ($data['personType'] == 1) {
+            $person = Person::where('personable_type', Natural::class)->where('national_code', $data['nationalCode'])->first();
+        }else{
+            $person = Person::where('personable_type', Legal::class)->where('national_code', $data['nationalCode'])->first();
+        }
+
+        if($person){
+            if($person->personable_type == Natural::class){
+                $natural = Natural::where('id', $person->personable_id)->first();
+                $natural->first_name = $data['first_name'] ?? $natural->first_name;
+                $natural->last_name = $data['last_name'] ?? $natural->last_name;
+                $natural->mobile = $data['mobile'] ?? $natural->mobile;
+                $natural->phone_number = $data['phone_number'] ?? $natural->phone_number;
+                $natural->father_name = $data['father_name'] ?? $natural->father_name;
+                $natural->birth_date = $data['birth_date'] ?? $natural->birth_date;
+                $natural->bc_code = $data['bc_code'] ?? $natural->bc_code;
+                $natural->job = $data['job'] ?? $natural->job;
+                $natural->isMarried = $data['is_married'] ?? $natural->isMarried;
+                $natural->level_of_spouse_education = $data['level_of_spouse_education'] ?? $natural->level_of_spouse_education;
+                $natural->spouse_first_name = $data['spouse_first_name'] ?? $natural->spouse_first_name;
+                $natural->spouse_last_name = $data['spouse_last_name'] ?? $natural->spouse_last_name;
+                $natural->home_address_id = $data['home_address_id'] ?? $natural->home_address_id;
+                $natural->job_address_id = $data['job_address_id'] ?? $natural->job_address_id;
+                $natural->gender_id = $data['gender_id'] ?? $natural->gender_id;
+                $natural->bc_issue_date = $data['bc_issue_date'] ?? $natural->bc_issue_date;
+                $natural->bc_issue_location = $data['bc_issue_location'] ?? $natural->bc_issue_location;
+                $natural->birth_location = $data['birth_location'] ?? $natural->birth_location;
+                $natural->bc_serial = $data['bc_serial'] ?? $natural->bc_serial;
+                $natural->religion_id = $data['religion_id'] ?? $natural->religion_id;
+                $natural->religion_type_id = $data['religion_type_id'] ?? $natural->religion_type_id;
+                $natural->save();
+
+                $person->display_name = $natural->first_name ? ($natural->first_name . ' ' . $natural->last_name) : $person->display_name;
+                $person->national_code = $data['national_code'] ?? $person->national_code;
+                $person->profile_picture_id = $data['avatar'] ?? $person->profile_picture_id;
+                $person->email = $data['email'] ?? $person->email;
+                $person->phone = $data['phone'] ?? $person->phone;
+                $person->save();
+
+
+                if($natural->gender_id == 1)
+                {
+                    
+                }
+
+            }else{
+                $legal = Legal::where('id', $person->personable_id)->first();
+                $legal->name = $data['name'] ?? $legal->name;
+                $legal->registration_number = $data['registration_number'] ?? $legal->registration_number;
+                $legal->foundation_date = $data['foundation_date'] ?? $legal->foundation_date;
+                $legal->legal_type_id = $data['legal_type_id'] ?? $legal->legal_type_id;
+                $legal->address_id = $data['business_address_id'] ?? $legal->address_id;
+                $legal->save();
+
+                $person->display_name = $legal->first_name ? ($legal->first_name . ' ' . $legal->last_name) : $person->display_name;
+                $person->national_code = $data['national_code'] ?? $person->national_code;
+                $person->profile_picture_id = $data['avatar'] ?? $person->profile_picture_id;
+                $person->email = $data['email'] ?? $person->email;
+                $person->phone = $data['phone'] ?? $person->phone;
+                $person->save();
+            }
+        }else{
+            if($data['personType'] == 1){
+                $natural = new Natural();
+                $natural->first_name = $data['first_name'];
+                $natural->last_name = $data['last_name'];
+                $natural->mobile = $data['mobile'] ?? null;
+                $natural->phone_number = $data['phone_number'] ?? null;
+                $natural->father_name = $data['father_name'] ?? null;
+                $natural->birth_date = $data['birth_date'] ?? null;
+                $natural->bc_code = $data['bc_code'] ?? null;
+                $natural->job = $data['job'] ?? null;
+                $natural->isMarried = $data['is_married'] ?? null;
+                $natural->level_of_spouse_education = $data['level_of_spouse_education'] ?? null;
+                $natural->spouse_first_name = $data['spouse_first_name'] ?? null;
+                $natural->spouse_last_name = $data['spouse_last_name'] ?? null;
+                $natural->home_address_id = $data['home_address_id'] ?? null;
+                $natural->job_address_id = $data['job_address_id'] ?? null;
+                $natural->gender_id = $data['gender_id'];
+                $natural->bc_issue_date = $data['bc_issue_date'] ?? null;
+                $natural->bc_issue_location = $data['bc_issue_location'] ?? null;
+                $natural->birth_location = $data['birth_location'] ?? null;
+                $natural->bc_serial = $data['bc_serial'] ?? null;
+                $natural->religion_id = $data['religion_id'] ?? null;
+                $natural->religion_type_id = $data['religion_type_id'] ?? null;
+                $natural->save();
+
+                $person = new Person();
+                $person->display_name = $natural->first_name ? ($natural->first_name . ' ' . $natural->last_name) : $person->display_name;
+                $person->national_code = $data['national_code'];
+                $person->profile_picture_id = $data['avatar'] ?? null;
+                $person->email = $data['email'] ?? null;
+                $person->phone = $data['phone'] ?? null;
+
+                $natural->person()->save($person);
+                $status = $this->activePersonStatus();
+
+                $natural->person->status()->attach($status->id);
+            }else{
+                $legal = new Legal();
+                $legal->name = $data['name'];
+                $legal->registration_number = $data['registration_number'] ?? null;
+                $legal->foundation_date = $data['foundation_date'] ?? null;
+                $legal->legal_type_id = $data['legal_type_id'] ?? null;
+                $legal->address_id = $data['business_address_id'] ?? null;
+                $legal->save();
+
+                $person = new Person();
+                $person->display_name = $legal->name;
+                $person->national_code = $data['national_code'];
+                $person->profile_picture_id = $data['avatar'] ?? null;
+                $person->phone = $data['phone'] ?? null;
+
+                $legal->person()->save($person);
+                $status = $this->activePersonStatus();
+                $legal->person->status()->attach($status->id);
+
+            }
+        }
+
+        return $person;
     }
 }
