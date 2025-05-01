@@ -41,17 +41,13 @@ class LicenseController extends Controller
         $data = $request->all();
 
         $persons = json_decode($data['persons']);
-        $personIds = [];
         foreach ($persons as $person) {
             $createdOrUpdatedPerson = $this->personUpdateOrInsert($person);
-            $personIds[] = $createdOrUpdatedPerson->id;
-            MilitaryService::create([
-                'person_id' => $createdOrUpdatedPerson->id,
-                'exemption_type_id' => $data['exemptionTypeID'],
-                'military_service_status_id' => $data['militaryServiceStatusID'],
-                
-            ]);
+            $personId = $createdOrUpdatedPerson->id;
+            $this -> insertLicenses($personId, $data);
         }
+
+
 
 
     }
