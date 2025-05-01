@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Carbon\Carbon;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
@@ -11,19 +12,16 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
-use Modules\HRMS\app\Http\Enums\FormulaEnum;
-use Modules\HRMS\app\Http\Enums\HireTypeEnum;
-use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
+use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
+use Modules\EMS\app\Jobs\PendingForHeyaatStatusJob;
+use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
+use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
+use Modules\EMS\app\Jobs\StoreMeetingJob;
+use Modules\EMS\app\Models\Enactment;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\HRMS\app\Models\HireType;
-use Modules\HRMS\app\Models\ScriptType;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\TownOfc;
-use Modules\PersonMS\app\Models\Natural;
-use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
@@ -52,38 +50,54 @@ class testController extends Controller
 
     public function run()
     {
-        $a = ScriptTypesEnum::VILLAGER;
-        $b = HireTypeEnum::PART_TIME;
-        $st = ScriptType::where('title', $a->value)->first();
-        $ht = HireType::where('title', $b->value)->first();
-        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-        $ounit = OrganizationUnit::with(['ancestors' => function ($query) {
-            $query->where('unitable_type', '!=', TownOfc::class);
-        }])->find(5);
 
-        dump(
-            $ounit->ancestors[0],
-            $ounit->ancestors[1],
-            $ounit->ancestors[2]
-        );
+//        $enactments = Enactment::joinRelationship('statuses', ['statuses' => function ($join) {
+//            $join
+//                ->whereRaw('enactment_status.create_date = (SELECT MAX(create_date) FROM enactment_status WHERE enactment_id = enactments.id)')
+//                ->where('statuses.name', '=', EnactmentStatusEnum::PENDING_FOR_BOARD_DATE->value);
+//        }])
+//            ->with(['onlyHeyaatMeeting'])
+//            ->get();
+//
+//        $mts = [];
 
-        $person = Person::where('personable_type', Natural::class)->first();
-        dump($person->personable);
+//        $enactments->each(function ($enactment) use (&$mts) {
+//            if (!in_array($enactment->onlyHeyaatMeeting->id, $mts)) {
+//                $meetingDate3 = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($enactment->onlyHeyaatMeeting->meeting_date);
+//
+//                $alertDate = Carbon::parse($meetingDate3)->subDays(1);
+//
+//                StoreMeetingJob::dispatch($enactment->onlyHeyaatMeeting->id)->delay($alertDate);
+//                $mts[] = $enactment->onlyHeyaatMeeting->id;
+//            }
+//
+//            $meetingDate1 = $enactment->onlyHeyaatMeeting->getRawOriginal('meeting_date');
+//            $meetingDate2 = $enactment->onlyHeyaatMeeting->getRawOriginal('meeting_date');
+//            $meetingDate3 = $enactment->onlyHeyaatMeeting->getRawOriginal('meeting_date');
+//
+//            $delayHeyat = Carbon::parse($meetingDate1)->setTime(23, 50, 0);
+//            $delayKarshenas = Carbon::parse($meetingDate2)->setTime(23, 50, 0);
+//            StoreEnactmentStatusJob::dispatch($enactment->id)->delay($delayHeyat);
+//            StoreEnactmentStatusKarshenasJob::dispatch($enactment->id)->delay($delayKarshenas);
+//            $delayPending = Carbon::parse($meetingDate3);
 
-        $x = new $class($st, $ht, $ounit);
-        $formulas = collect(FormulaEnum::cases());
+//            PendingForHeyaatStatusJob::dispatch($enactment->id)->delay($delayPending);
 
-        $res = $formulas->map(function ($formula) use ($x) {
-            $fn = $formula->getFnName();
-            $res = $x->$fn();
-            return [
-                'default_value' => $res,
-                'label' => $formula->getLabel(),
-            ];
 
-        });
-
-//        dd($res);
+//        });
+//        dd('done');
+//
+//        dd($enactments);
+//        $enacts = [2615, 2553, 2552, 2551, 2547, 2546, 2545, 2544, 2543, 2542, 2492, 2485, 2483, 2482, 2481, 2480, 2479, 2478, 2477, 2476, 2475, 2474, 2473, 2456, 2431, 2430, 2429, 2427, 2426, 2424, 2423, 2422, 2421, 2420, 2419, 2418, 2415, 2414, 2413, 2412, 2254, 2253, 2252, 2251, 2242, 2241, 2240, 2239, 2238, 2237,2238,2237,2236,2235,2234,];
+//
+////        $enacts = [2425];
+//
+//        foreach ($enacts as $enact) {
+//
+//            StoreEnactmentStatusJob::dispatch($enact)->onQueue('High');
+//            StoreEnactmentStatusKarshenasJob::dispatch($enact)->onQueue('default');
+//            echo "enactment $enact\n";
+//        }
 //        dd(User::first());
 
 //        $ounits = [444
