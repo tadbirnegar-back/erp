@@ -80,4 +80,10 @@ class StoreEnactmentStatusKarshenasJob implements ShouldQueue
             $this->fail($e);
         }
     }
+
+    public function tags(): array
+    {
+
+        return ['enactmentID:' . $this->encId,];
+    }
 }
