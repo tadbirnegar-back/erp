@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bdm_building_dossiers', function (Blueprint $table) {
+        Schema::create('geographic_cordinates', function (Blueprint $table) {
             $table->id();
-            $table->dateTime('created_date');
+            $table->longText('west')->nullable();
+            $table->longText('east')->nullable();
+            $table->longText('north')->nullable();
+            $table->longText('south')->nullable();
+            $table->integer('type_id')->nullable();
         });
     }
 
@@ -22,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bdm_building_dossier');
+        Schema::dropIfExists('');
     }
 };

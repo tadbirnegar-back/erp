@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bdm_owners', function (Blueprint $table) {
+        Schema::create('bdm_dossier_lawyers', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('person_id');
-            $table->boolean('is_main_owner');
             $table->unsignedBigInteger('dossier_id');
+            $table->unsignedBigInteger('lawyer_id');
 
-            $table->foreign('person_id')->references('id')->on('persons')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('dossier_id')->references('id')->on('bdm_building_dossiers')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('lawyer_id')->references('id')->on('bdm_lawyers')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bdm_owners');
+        Schema::dropIfExists('');
     }
 };

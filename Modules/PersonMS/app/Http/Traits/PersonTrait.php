@@ -278,55 +278,56 @@ trait PersonTrait
 
     public function personUpdateOrInsert($data)
     {
-        if ($data['personType'] == 1) {
-            $person = Person::where('personable_type', Natural::class)->where('national_code', $data['nationalCode'])->first();
+        if ($data->personType == 1) {
+            $person = Person::where('personable_type', Natural::class)->where('national_code', $data->nationalCode)->first();
         } else {
-            $person = Person::where('personable_type', Legal::class)->where('national_code', $data['nationalCode'])->first();
+            $person = Person::where('personable_type', Legal::class)->where('national_code', $data->nationalCode)->first();
         }
 
         if ($person) {
             if ($person->personable_type == Natural::class) {
                 $natural = Natural::where('id', $person->personable_id)->first();
-                $natural->first_name = $natural->first_name == null ? $data['first_name'] : $natural->first_name;
-                $natural->last_name = $natural->last_name == null ? $data['last_name'] : $natural->last_name;
-                $natural->mobile = $natural->mobile == null ? $data['mobile'] : $natural->mobile;
-                $natural->phone_number = $natural->phone_number == null ? $data['phone_number'] : $natural->phone_number;
-                $natural->father_name = $natural->father_name == null ? $data['father_name'] : $natural->father_name;
-                $natural->birth_date = $natural->birth_date == null ? $data['birth_date'] : $natural->birth_date;
-                $natural->bc_code = $natural->bc_code == null ? $data['bc_code'] : $natural->bc_code;
-                $natural->job = $natural->job == null ? $data['job'] : $natural->job;
-                $natural->isMarried = $natural->isMarried == null ? $data['is_married'] : $natural->isMarried;
-                $natural->level_of_spouse_education = $natural->level_of_spouse_education == null ? $data['level_of_spouse_education'] : $natural->level_of_spouse_education;
-                $natural->spouse_first_name = $natural->spouse_first_name == null ? $data['spouse_first_name'] : $natural->spouse_first_name;
-                $natural->spouse_last_name = $natural->spouse_last_name == null ? $data['spouse_last_name'] : $natural->spouse_last_name;
-                $natural->home_address_id = $natural->home_address_id == null ? $data['home_address_id'] : $natural->home_address_id;
-                $natural->job_address_id = $natural->job_address_id == null ? $data['job_address_id'] : $natural->job_address_id;
-                $natural->gender_id = $natural->gender_id == null ? $data['gender_id'] : $natural->gender_id;
-                $natural->bc_issue_date = $natural->bc_issue_date == null ? $data['bc_issue_date'] : $natural->bc_issue_date;
-                $natural->bc_issue_location = $natural->bc_issue_location == null ? $data['bc_issue_location'] : $natural->bc_issue_location;
-                $natural->birth_location = $natural->birth_location == null ? $data['birth_location'] : $natural->birth_location;
-                $natural->bc_serial = $natural->bc_serial == null ? $data['bc_serial'] : $natural->bc_serial;
-                $natural->religion_id = $natural->religion_id == null ? $data['religion_id'] : $natural->religion_id;
-                $natural->religion_type_id = $natural->religion_type_id == null ? $data['religion_type_id'] : $natural->religion_type_id;
+                $natural->first_name = $natural->first_name == null ? ($data->first_name ?? null) : $natural->first_name;
+                $natural->last_name = $natural->last_name == null ? ($data->last_name ?? null) : $natural->last_name;
+                $natural->mobile = $natural->mobile == null ? ($data->mobile ?? null) : $natural->mobile;
+                $natural->phone_number = $natural->phone_number == null ? ($data->phone_number ?? null) : $natural->phone_number;
+                $natural->father_name = $natural->father_name == null ? ($data->father_name ?? null) : $natural->father_name;
+                $natural->birth_date = $natural->birth_date == null ? ($data->birth_date ?? null) : $natural->birth_date;
+                $natural->bc_code = $natural->bc_code == null ? ($data->bc_code ?? null) : $natural->bc_code;
+                $natural->job = $natural->job == null ? ($data->job ?? null) : $natural->job;
+                $natural->isMarried = $natural->isMarried == null ? ($data->is_married ?? null) : $natural->isMarried;
+                $natural->level_of_spouse_education = $natural->level_of_spouse_education == null ? ($data->level_of_spouse_education ?? null) : $natural->level_of_spouse_education;
+                $natural->spouse_first_name = $natural->spouse_first_name == null ? ($data->spouse_first_name ?? null) : $natural->spouse_first_name;
+                $natural->spouse_last_name = $natural->spouse_last_name == null ? ($data->spouse_last_name ?? null) : $natural->spouse_last_name;
+                $natural->home_address_id = $natural->home_address_id == null ? ($data->home_address_id ?? null) : $natural->home_address_id;
+                $natural->job_address_id = $natural->job_address_id == null ? ($data->job_address_id ?? null) : $natural->job_address_id;
+                $natural->gender_id = $natural->gender_id == null ? ($data->gender_id ?? null) : $natural->gender_id;
+                $natural->bc_issue_date = $natural->bc_issue_date == null ? ($data->bc_issue_date ?? null) : $natural->bc_issue_date;
+                $natural->bc_issue_location = $natural->bc_issue_location == null ? ($data->bc_issue_location ?? null) : $natural->bc_issue_location;
+                $natural->birth_location = $natural->birth_location == null ? ($data->birth_location ?? null) : $natural->birth_location;
+                $natural->bc_serial = $natural->bc_serial == null ? ($data->bc_serial ?? null) : $natural->bc_serial;
+                $natural->religion_id = $natural->religion_id == null ? ($data->religion_id ?? null) : $natural->religion_id;
+                $natural->religion_type_id = $natural->religion_type_id == null ? ($data->religion_type_id ?? null) : $natural->religion_type_id;
                 $natural->save();
 
                 $person->display_name = $person->display_name == null ? ($natural->first_name ? ($natural->first_name . ' ' . $natural->last_name) : $person->display_name) : $person->display_name;
-                $person->national_code = $person->national_code == null ? $data['national_code'] : $person->national_code;
-                $person->profile_picture_id = $person->profile_picture_id == null ? $data['avatar'] : $person->profile_picture_id;
-                $person->email = $person->email == null ? $data['email'] : $person->email;
-                $person->phone = $person->phone == null ? $data['phone'] : $person->phone;
-                $person->signature_file_id = $person->signature_file_id == null ? $data['signatureFile'] : $person->signature_file_id;
+                $person->national_code = $person->national_code == null ? $data->nationalCode : $person->national_code;
+                $person->profile_picture_id = $person->profile_picture_id == null ? $data->avatar : $person->profile_picture_id;
+                $person->email = $person->email == null ? $data->email : $person->email;
+                $person->phone = $person->phone == null ? $data->phone : $person->phone;
+                $person->signature_file_id = $person->signature_file_id == null ? $data->signatureFile : $person->signature_file_id;
                 $person->save();
 
 
-                if($natural->gender_id == 1) {
-                    MilitaryService::create([
-                        'person_id' => $person->id,
-                        'exemption_type_id' => $data['exemptionTypeID'],
-                        'military_service_status_id' => $data['militaryServiceStatusID'],
-                        'work_force_id' => null,
-                        'issue_date' => $data['issueDate'] ?? now(),
-                    ]);
+                if ($natural->gender_id == 1) {
+                    $militaryService = MilitaryService::where('person_id', $person->id)->first();
+                    $newMilitaryService = new MilitaryService();
+                    $newMilitaryService->exemption_type_id = ($militaryService->exemptionType == null) ? ($data->exemptionTypeID ?? null) : $militaryService->exemptionType->id;
+                    $newMilitaryService->military_service_status_id = ($militaryService->militaryServiceStatus == null) ? ($data->militaryServiceStatusID ?? null) : $militaryService->militaryServiceStatus->id;
+                    $newMilitaryService->work_force_id = null;
+                    $newMilitaryService->issue_date = ($militaryService->issueDate == null) ? ($data->issueDate ?? null) : $militaryService->issueDate;
+                    $newMilitaryService->person_id = $person->id;
+                    $newMilitaryService->save();
                 }
 
             } else {
@@ -339,7 +340,7 @@ trait PersonTrait
                 $legal->save();
 
                 $person->display_name = $person->display_name == null ? ($legal->first_name ? ($legal->first_name . ' ' . $legal->last_name) : $person->display_name) : $person->display_name;
-                $person->national_code = $person->national_code == null ? $data['national_code'] : $person->national_code;
+                $person->national_code = $person->national_code == null ? $data->nationalCode : $person->national_code;
                 $person->profile_picture_id = $person->profile_picture_id == null ? $data['avatar'] : $person->profile_picture_id;
                 $person->email = $person->email == null ? $data['email'] : $person->email;
                 $person->phone = $person->phone == null ? $data['phone'] : $person->phone;
@@ -347,47 +348,49 @@ trait PersonTrait
                 $person->save();
             }
         } else {
-            if ($data['personType'] == 1) {
+            if ($data->personType == 1) {
                 $natural = new Natural();
-                $natural->first_name = $data['first_name'];
-                $natural->last_name = $data['last_name'];
-                $natural->mobile = $data['mobile'] ?? null;
-                $natural->phone_number = $data['phone_number'] ?? null;
-                $natural->father_name = $data['father_name'] ?? null;
-                $natural->birth_date = $data['birth_date'] ?? null;
-                $natural->bc_code = $data['bc_code'] ?? null;
-                $natural->job = $data['job'] ?? null;
-                $natural->isMarried = $data['is_married'] ?? null;
-                $natural->level_of_spouse_education = $data['level_of_spouse_education'] ?? null;
-                $natural->spouse_first_name = $data['spouse_first_name'] ?? null;
-                $natural->spouse_last_name = $data['spouse_last_name'] ?? null;
-                $natural->home_address_id = $data['home_address_id'] ?? null;
-                $natural->job_address_id = $data['job_address_id'] ?? null;
-                $natural->gender_id = $data['gender_id'];
-                $natural->bc_issue_date = $data['bc_issue_date'] ?? null;
-                $natural->bc_issue_location = $data['bc_issue_location'] ?? null;
-                $natural->birth_location = $data['birth_location'] ?? null;
-                $natural->bc_serial = $data['bc_serial'] ?? null;
-                $natural->religion_id = $data['religion_id'] ?? null;
-                $natural->religion_type_id = $data['religion_type_id'] ?? null;
+                $natural->first_name = $data->first_name ?? null;
+                $natural->last_name = $data->last_name ?? null;
+                $natural->mobile = $data->mobile ?? null;
+                $natural->phone_number = $data->phone_number ?? null;
+                $natural->father_name = $data->father_name ?? null;
+                $natural->birth_date = $data->birth_date ?? null;
+                $natural->bc_code = $data->bc_code ?? null;
+                $natural->job = $data->job ?? null;
+                $natural->isMarried = $data->is_married ?? null;
+                $natural->level_of_spouse_education = $data->level_of_spouse_education ?? null;
+                $natural->spouse_first_name = $data->spouse_first_name ?? null;
+                $natural->spouse_last_name = $data->spouse_last_name ?? null;
+                $natural->home_address_id = $data->home_address_id ?? null;
+                $natural->job_address_id = $data->job_address_id ?? null;
+                $natural->gender_id = $data->gender_id ?? 1;
+                $natural->bc_issue_date = $data->bc_issue_date ?? null;
+                $natural->bc_issue_location = $data->bc_issue_location ?? null;
+                $natural->birth_location = $data->birth_location ?? null;
+                $natural->bc_serial = $data->bc_serial ?? null;
+                $natural->religion_id = $data->religion_id ?? null;
+                $natural->religion_type_id = $data->religion_type_id ?? null;
                 $natural->save();
 
                 $person = new Person();
                 $person->display_name = $natural->first_name ? ($natural->first_name . ' ' . $natural->last_name) : $person->display_name;
-                $person->national_code = $data['national_code'];
-                $person->profile_picture_id = $data['avatar'] ?? null;
-                $person->email = $data['email'] ?? null;
-                $person->phone = $data['phone'] ?? null;
-                $person->signature_file_id = $data['signatureFile'] ?? null;
+                $person->national_code = $data->nationalCode;
+                $person->profile_picture_id = $data->avatar ?? null;
+                $person->personable_type = Natural::class;
+                $person->personable_id = $natural->id;
+                $person->email = $data->email ?? null;
+                $person->phone = $data->phone ?? null;
+                $person->signature_file_id = $data->signatureFile ?? null;
 
                 $person->save();
-                if($natural->gender_id == 1) {
+                if ($natural->gender_id == 1) {
                     MilitaryService::create([
                         'person_id' => $person->id,
-                        'exemption_type_id' => $data['exemptionTypeID'],
-                        'military_service_status_id' => $data['militaryServiceStatusID'],
+                        'exemption_type_id' => $data->exemptionTypeID,
+                        'military_service_status_id' => $data->militaryServiceStatusID,
                         'work_force_id' => null,
-                        'issue_date' => $data['issueDate'] ?? now(),
+                        'issue_date' => $data->issueDate ?? now(),
                     ]);
                 }
 
@@ -423,10 +426,9 @@ trait PersonTrait
     public function insertLicenses($personId, $data)
     {
         $nationalLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->id())->where('person_id', $personId)->first();
-        if(!$nationalLicense)
-        {
+        if (!$nationalLicense) {
             $license = new PersonLicense();
-            $license->file_id = $data['national_card_file'] ?? null;
+            $license->file_id = $data->national_card_file_id ?? null;
             $license->person_id = $personId;
             $license->license_type = PersonLicensesEnums::NATIONAL_ID_CARD->id();
             $license->page_number = 1;
@@ -435,10 +437,9 @@ trait PersonTrait
 
 
         $birthLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::BIRTH_CERTIFICATE->id())->where('person_id', $personId)->first();
-        if(!$birthLicense)
-        {
+        if (!$birthLicense) {
             $license = new PersonLicense();
-            $license->file_id = $data['birth_certificate_file'] ?? null;
+            $license->file_id = $data->birth_certificate_file_id ?? null;
             $license->person_id = $personId;
             $license->license_type = PersonLicensesEnums::BIRTH_CERTIFICATE->id();
             $license->page_number = 1;

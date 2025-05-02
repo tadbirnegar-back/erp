@@ -37,6 +37,33 @@ trait UserTrait
 
     }
 
+    public function storeUserOrUpdate(array $data)
+    {
+        $user = User::where('mobile', '=', $data['mobile'])->first();
+        if(!$user){
+            $userWithSameEmail = User::where('email', '=', $data['email'])->first();
+            if($userWithSameEmail)
+            {
+                return ['status' => 404 , 'type' => 'email'];
+            }
+            $user = new User();
+            $user->mobile = $data['mobile'];
+            $user->email = $data['email'] ?? null;
+            $user->username = $data['username'] ?? null;
+            $user->person_id = $data['personID'];
+            $user->password = bcrypt($data['password']);
+            $user->save();
+            if (isset($data['roles'])) {
+                $user->roles()->sync($data['roles']);
+            }
+            $status = $this->activeUserStatus();
+            $user->statuses()->attach($status->id);
+            return ['user' => $user , 'status' => 200];
+        }else{
+            return ['status' => 404 , 'type' => 'mobile'];
+        }
+    }
+
     public function showUser(User $user)
     {
         $user->load('person.avatar', 'person.personable', 'person.status', 'status', 'roles');

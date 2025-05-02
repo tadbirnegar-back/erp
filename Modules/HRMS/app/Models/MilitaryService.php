@@ -16,7 +16,13 @@ class MilitaryService extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'person_id',
+        'exemption_type_id',
+        'military_service_status_id',
+        'work_force_id',
+        'issue_date',
+    ];
 
     public $timestamps = false;
 
