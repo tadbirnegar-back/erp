@@ -59,5 +59,39 @@ enum PermitStatusesEnum: string
 
     }
 
+    public function id(): int
+    {
+        return match ($this) {
+            self::first => 1,
+            self::second => 2,
+            self::third => 3,
+            self::fourth => 4,
+            self::fifth => 5,
+            self::sixth => 6,
+            self::seventh => 7,
+            self::eighth => 8,
+            self::ninth => 9,
+            self::tenth => 10,
+            self::eleventh => 11,
+            self::twelfth => 12,
+            self::thirteenth => 13,
+            self::fourteenth => 14,
+            self::fifteenth => 15,
+            self::sixteenth => 16,
+            self::seventeenth => 17,
+            self::eighteenth => 18,
+            self::nineteenth => 19,
+            self::twentieth => 20,
+            self::twentyfirst => 21,
+        };
+    }
+    public static function listWithIds(): array
+    {
+        return array_map(fn($case) => [
+            'id' => $case->id(),
+            'name' => $case->value,
+        ], self::cases());
+    }
+
 
 }

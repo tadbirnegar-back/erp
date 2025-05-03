@@ -11,11 +11,13 @@ use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\BDM\app\Http\Enums\BdmOwnershipTypesEnum;
 use Modules\BDM\app\Http\Enums\BdmTypesEnum;
+use Modules\BDM\app\Http\Enums\PermitStatusesEnum;
 use Modules\BDM\app\Http\Enums\TransferTypesEnum;
 use Modules\BDM\app\Http\Traits\DossierTrait;
 use Modules\BDM\app\Http\Traits\EstateTrait;
 use Modules\BDM\app\Http\Traits\LawyersTrait;
 use Modules\BDM\app\Http\Traits\OwnersTrait;
+use Modules\BDM\app\Resources\LicensesListResource;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Models\ExemptionType;
@@ -124,6 +126,7 @@ class LicenseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
         $perPage = $data['perPage'] ?? 10;
 
+//        return response()->json(convertPersianToGregorianBothHaveTimeAndDont($data['createdDate']));
         $user = User::find(2174);
 
         $user->load('employee');
@@ -144,10 +147,19 @@ class LicenseController extends Controller
 
         $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
 
-        $dossiers = $this->dossiersList($ounits , $perPage , $pageNum);
+        $dossiers = $this->dossiersList($ounits , $perPage , $pageNum , $data);
 
-        return response()->json($dossiers);
+        return response()->json(LicensesListResource::collection($dossiers));
 
 
+
+    }
+
+    public function onlyLicenseTypesList()
+    {
+        $bdmTypes = BdmTypesEnum::listWithIds();
+        $permitStatuses = PermitStatusesEnum::listWithIds();
+
+        return response()->json(['bdm_types' => array_values($bdmTypes) , 'permit_statuses' => array_values($permitStatuses)]);
     }
 }

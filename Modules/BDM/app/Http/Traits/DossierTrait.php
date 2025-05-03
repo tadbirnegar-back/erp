@@ -38,7 +38,7 @@ trait DossierTrait
         return $dossier;
     }
 
-    public function dossiersList($ounits , $perPage , $pageNum)
+    public function dossiersList($ounits , $perPage , $pageNum , $data)
     {
         $query = BuildingDossier::query()
             ->join('bdm_building_dossier_status', function ($join) {
@@ -78,6 +78,26 @@ trait DossierTrait
                 'bdm_building_dossiers.created_date as created_date',
                 'naturals.mobile as mobile',
             ])
+            ->when(isset($data['villageID']) , function ($query) use ($data) {
+                $query->where('bdm_estates.ounit_id' , $data['villageID']);
+            })
+            ->when(isset($data['districtID']) , function ($query) use ($data) {
+                $query->where('district.id' , $data['districtID']);
+            })
+            ->when(isset($data['bdmTypeID']) , function ($query) use ($data) {
+                $query->where('bdm_building_dossiers.bdm_type_id' , $data['bdmTypeID']);
+            })
+            ->when(isset($data['permitStatusID']) , function ($query) use ($data) {
+                $query->where('status_permit.id' , $data['permitStatusID']);
+            })
+            ->when(isset($data['dossierStatusID']) , function ($query) use ($data) {
+                $query->where('status_dos.id' , $data['dossierStatusID']);
+            })
+            ->when(isset($data['createdDate']) , function ($query) use ($data) {
+                $query->whereRaw("DATE(bdm_building_dossiers.created_date) = ?", [
+                    date('Y-m-d', strtotime(convertPersianToGregorianBothHaveTimeAndDont($data['createdDate'])))
+                ]);
+            })
             ->whereIn('bdm_estates.ounit_id' , $ounits)
             ->paginate($perPage, ['*'], 'page', $pageNum);
         return $query;
