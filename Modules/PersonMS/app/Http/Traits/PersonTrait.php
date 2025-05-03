@@ -446,7 +446,6 @@ trait PersonTrait
             $license->file_id = $data->national_card_file_id ?? null;
             $license->person_id = $personId;
             $license->license_type = PersonLicensesEnums::NATIONAL_ID_CARD->id();
-            $license->page_number = 1;
             $license->save();
         }
 
