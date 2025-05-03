@@ -4,8 +4,8 @@ namespace Modules\PersonMS\app\Http\Enums;
 
 enum PersonLicensesEnums: string
 {
-    case BIRTH_CERTIFICATE = "شناسنامه";
-    case NATIONAL_ID_CARD = "کارت ملی";
+    case BIRTH_CERTIFICATE = "صفحه اول شناسنامه";
+    case NATIONAL_ID_CARD = "رو کارت ملی";
 
     public function id(): int
     {
