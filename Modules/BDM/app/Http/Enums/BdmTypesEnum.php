@@ -24,4 +24,16 @@ enum BdmTypesEnum: string
             'name' => $case->value,
         ], self::cases());
     }
+
+    public static function getNameById(int $id): ?string
+    {
+        foreach (self::cases() as $case) {
+            if ($case->id() === $id) {
+                return $case->value;
+            }
+        }
+
+        return null;
+    }
+
 }
