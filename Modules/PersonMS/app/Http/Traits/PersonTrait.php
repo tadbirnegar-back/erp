@@ -292,7 +292,7 @@ trait PersonTrait
                 $natural->mobile = $natural->mobile == null ? ($data->mobile ?? null) : $natural->mobile;
                 $natural->phone_number = $natural->phone_number == null ? ($data->phone_number ?? null) : $natural->phone_number;
                 $natural->father_name = $natural->father_name == null ? ($data->father_name ?? null) : $natural->father_name;
-                $natural->birth_date = $natural->birth_date == null ? ($data->birth_date ?? null) : $natural->birth_date;
+                $natural->birth_date = $natural->birth_date == null ? (convertPersianToGregorianBothHaveTimeAndDont($data->birth_date) ?? null) : $natural->birth_date;
                 $natural->bc_code = $natural->bc_code == null ? ($data->bc_code ?? null) : $natural->bc_code;
                 $natural->job = $natural->job == null ? ($data->job ?? null) : $natural->job;
                 $natural->isMarried = $natural->isMarried == null ? ($data->is_married ?? null) : $natural->isMarried;
@@ -355,7 +355,7 @@ trait PersonTrait
                 $natural->mobile = $data->mobile ?? null;
                 $natural->phone_number = $data->phone_number ?? null;
                 $natural->father_name = $data->father_name ?? null;
-                $natural->birth_date = $data->birth_date ?? null;
+                $natural->birth_date = convertPersianToGregorianBothHaveTimeAndDont($data->birth_date) ?? null;
                 $natural->bc_code = $data->bc_code ?? null;
                 $natural->job = $data->job ?? null;
                 $natural->isMarried = $data->is_married ?? null;

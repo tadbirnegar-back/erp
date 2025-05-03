@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('bdm_building_dossiers', function (Blueprint $table) {
             $table->id();
+            $table->longText('tracking_code');
             $table->dateTime('created_date');
         });
     }

@@ -77,7 +77,6 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 
 Route::prefix('v1')->group(function () {
-    Route::get('/oms/cityofc/public-list', [OUnitMSController::class, 'citiesIndexPublic']);
     Route::get('/oms/districtofc/list/{id}', [OUnitMSController::class, 'districtsIndexPublic']);
     Route::get('/oms/villageofc/list/{id}', [OUnitMSController::class, 'villageIndexPublic']);
 });
