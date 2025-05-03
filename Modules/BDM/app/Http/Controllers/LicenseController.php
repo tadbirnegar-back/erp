@@ -52,7 +52,7 @@ class LicenseController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $dossier = $this->makeDossier($data['ounitID'], $data['ownershipTypeID']);
+            $dossier = $this->makeDossier($data['ounitID'], $data['ownershipTypeID'] , $data['bdmTypeID']);
 
             $password = '';
             $mobile = '';

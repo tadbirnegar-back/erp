@@ -10,17 +10,19 @@ use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
 use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Models\DossierStatus;
 use Modules\BDM\app\Models\PermitStatus;
+use Modules\PersonMS\app\Models\Natural;
 use Modules\VCM\app\Models\VcmVersions;
 
 trait DossierTrait
 {
     use PermitTrait;
 
-    public function makeDossier($ounitID, $ownershipTypeID)
+    public function makeDossier($ounitID, $ownershipTypeID , $bdmTypeID)
     {
         $dossier = BuildingDossier::create([
             'tracking_code' => null,
             'created_date' => now(),
+            'bdm_type_id' => $bdmTypeID,
         ]);
 
         //Year , Month , Day , OunitID , OwnershipTypeID , dossierID
@@ -49,14 +51,34 @@ trait DossierTrait
             })
             ->join('statuses as status_dos', 'bdm_building_dossier_status.status_id', '=', 'status_dos.id')
             ->join('statuses as status_permit', 'bdm_building_permit_status.status_id', '=', 'status_permit.id')
+            ->join('bdm_owners', function ($join) {
+                $join->on('bdm_building_dossiers.id', '=', 'bdm_owners.dossier_id')
+                    ->where('is_main_owner', '=', true);
+            })
+            ->join('persons as main_owner', 'bdm_owners.person_id', '=', 'main_owner.id')
+            ->join('naturals' , function ($join) {
+                $join->on('main_owner.personable_id', '=', 'naturals.id')
+                    ->where('main_owner.personable_type', '=', Natural::class);
+            })
+            ->join('bdm_estates' , 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->join('organization_units as village', 'bdm_estates.ounit_id', '=', 'village.id')
+            ->join('organization_units as town', 'village.parent_id', '=', 'town.id')
+            ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
             ->select([
                 'bdm_building_dossiers.id as dossier_id',
                 'status_dos.name as dossier_status_name',
                 'status_dos.class_name as dossier_status_class_name',
                 'status_permit.name as permit_status_name',
                 'status_permit.class_name as permit_status_class_name',
+                'bdm_building_dossiers.tracking_code as tracking_code',
+                'main_owner.display_name as main_owner_name',
+                'bdm_building_dossiers.bdm_type_id as bdm_type_id',
+                'village.name as village_name',
+                'district.name as district_name',
+                'bdm_building_dossiers.created_date as created_date',
+                'naturals.mobile as mobile',
             ])
-//            ->distinct('bdm_building_dossiers.id')
+            ->whereIn('bdm_estates.ounit_id' , $ounits)
             ->paginate($perPage, ['*'], 'page', $pageNum);
         return $query;
 
