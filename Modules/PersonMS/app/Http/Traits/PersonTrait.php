@@ -328,7 +328,7 @@ trait PersonTrait
                         $newMilitaryService->issue_date = ($militaryService->issueDate == null) ? (convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? null) : $militaryService->issueDate;
                         $newMilitaryService->person_id = $person->id;
                         $newMilitaryService->save();
-                    }else{
+                    } else {
                         $militaryService = new MilitaryService();
                         $militaryService->exemption_type_id = ($data->exemptionTypeID ?? null);
                         $militaryService->military_service_status_id = ($data->militaryServiceStatusID ?? null);
@@ -351,13 +351,19 @@ trait PersonTrait
                 $person->display_name = $person->display_name == null ? ($legal->first_name ? ($legal->first_name . ' ' . $legal->last_name) : $person->display_name) : $person->display_name;
                 $person->national_code = $person->national_code == null ? $data->nationalCode : $person->national_code;
                 $person->profile_picture_id = $person->profile_picture_id == null ? ($data['avatar'] ?? null) : $person->profile_picture_id;
-                $person->email = $person->email == null ? $data['email'] : $person->email;
                 $person->phone = $person->phone == null ? $data['phone'] : $person->phone;
                 $person->signature_file_id = $person->signature_file_id == null ? $data['signatureFile'] : $person->signature_file_id;
                 $person->save();
             }
         } else {
-            if ($data->personType == Legal::class) {
+            if ($data->personType == 1) {
+                if (isset($data->mobile)) {
+                    $natural = Natural::where('mobile', '=', $data->mobile)->first();
+
+                    if ($natural) {
+                        return ['type' => 'mobile'];
+                    }
+                }
                 $natural = new Natural();
                 $natural->first_name = $data->first_name ?? null;
                 $natural->last_name = $data->last_name ?? null;
@@ -388,7 +394,6 @@ trait PersonTrait
                 $person->profile_picture_id = $data->avatar ?? null;
                 $person->personable_type = Natural::class;
                 $person->personable_id = $natural->id;
-                $person->email = $data->email ?? null;
                 $person->phone = $data->phone ?? null;
                 $person->signature_file_id = $data->signatureFile ?? null;
 
@@ -396,7 +401,7 @@ trait PersonTrait
                 if ($natural->gender_id == 1) {
                     MilitaryService::create([
                         'person_id' => $person->id,
-                        'exemption_type_id' => $data->exemptionTypeID,
+                        'exemption_type_id' => $data->exemptionTypeID ?? null,
                         'military_service_status_id' => $data->militaryServiceStatusID,
                         'work_force_id' => null,
                         'issue_date' => convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? now(),
@@ -432,7 +437,8 @@ trait PersonTrait
         return $person;
     }
 
-    public function insertLicenses($personId, $data)
+    public
+    function insertLicenses($personId, $data)
     {
         $nationalLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->id())->where('person_id', $personId)->first();
         if (!$nationalLicense) {

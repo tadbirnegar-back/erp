@@ -41,11 +41,14 @@ trait UserTrait
     {
         $user = User::where('mobile', '=', $data['mobile'])->first();
         if(!$user){
-            $userWithSameEmail = User::where('email', '=', $data['email'])->first();
-            if($userWithSameEmail)
-            {
-                return ['status' => 404 , 'type' => 'email'];
+            if(isset($data['email'])){
+                $userWithSameEmail = User::where('email', '=', $data['email'])->first();
+                if($userWithSameEmail)
+                {
+                    return ['status' => 404 , 'type' => 'email'];
+                }
             }
+
             $user = new User();
             $user->mobile = $data['mobile'];
             $user->email = $data['email'] ?? null;
