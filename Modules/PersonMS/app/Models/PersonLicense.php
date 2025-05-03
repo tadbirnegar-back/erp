@@ -20,7 +20,6 @@ class PersonLicense extends Model
         'file_id',
         'person_id',
         'license_type',
-        'page_number',
     ];
 
     public $timestamps = false;
