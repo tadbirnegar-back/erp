@@ -49,15 +49,19 @@ class LicenseController extends Controller
 
     public function create(Request $request)
     {
+        return response() -> json($request);
         try {
             DB::beginTransaction();
             $data = $request->all();
             $dossier = $this->makeDossier($data['ounitID'], $data['ownershipTypeID']);
+
             $password = '';
             $mobile = '';
             //store owners and partners
             $persons = json_decode($data['persons']);
+
             foreach ($persons as $key => $person) {
+
                 $createdOrUpdatedPerson = $this->personUpdateOrInsert($person);
                 $personId = $createdOrUpdatedPerson->id;
                 $this->insertLicenses($personId, $person);
@@ -111,36 +115,36 @@ class LicenseController extends Controller
 
     }
 
-    public function licenseList(Request $request)
-    {
-        $data = $request->all();
-        $pageNum = $data['pageNum'] ?? 1;
-        $perPage = $data['perPage'] ?? 10;
-
-        $user = User::find(2174);
-
-        $user->load('employee');
-        $employeeID = $user->employee->id;
-
-
-        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
-
-
-        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
-            ->whereHas('latestStatus' , function ($query) {
-                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
-            })->get();
-
-        if($recruitmentScripts->count() == 0){
-            return response()->json(['message' => 'شما مسئول فنی نیستید'] , 404);
-        }
-
-        $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
-
-        $dossiers = $this->dossiersList($ounits , $pageNum , $perPage);
-
-        return response()->json($dossiers);
-
-
-    }
+//    public function licenseList(Request $request)
+//    {
+//        $data = $request->all();
+//        $pageNum = $data['pageNum'] ?? 1;
+//        $perPage = $data['perPage'] ?? 10;
+//
+//        $user = User::find(2174);
+//
+//        $user->load('employee');
+//        $employeeID = $user->employee->id;
+//
+//
+//        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
+//
+//
+//        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
+//            ->whereHas('latestStatus' , function ($query) {
+//                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
+//            })->get();
+//
+//        if($recruitmentScripts->count() == 0){
+//            return response()->json(['message' => 'شما مسئول فنی نیستید'] , 404);
+//        }
+//
+//        $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
+//
+//        $dossiers = $this->dossiersList($ounits , $perPage , $pageNum);
+//
+//        return response()->json($dossiers);
+//
+//
+//    }
 }

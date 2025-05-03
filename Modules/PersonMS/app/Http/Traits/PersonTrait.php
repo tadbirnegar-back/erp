@@ -312,9 +312,8 @@ trait PersonTrait
 
                 $person->display_name = $person->display_name == null ? ($natural->first_name ? ($natural->first_name . ' ' . $natural->last_name) : $person->display_name) : $person->display_name;
                 $person->national_code = $person->national_code == null ? $data->nationalCode : $person->national_code;
-                $person->profile_picture_id = $person->profile_picture_id == null ? $data->avatar : $person->profile_picture_id;
-                $person->email = $person->email == null ? $data->email : $person->email;
-                $person->phone = $person->phone == null ? $data->phone : $person->phone;
+                $person->profile_picture_id = $person->profile_picture_id == null ? (isset($data->avatar) ? $data->avatar : null) : $person->profile_picture_id;
+                $person->phone = $person->phone == null ? ($data->phone ?? null) : $person->phone;
                 $person->signature_file_id = $person->signature_file_id == null ? $data->signatureFile : $person->signature_file_id;
                 $person->save();
 
@@ -351,14 +350,14 @@ trait PersonTrait
 
                 $person->display_name = $person->display_name == null ? ($legal->first_name ? ($legal->first_name . ' ' . $legal->last_name) : $person->display_name) : $person->display_name;
                 $person->national_code = $person->national_code == null ? $data->nationalCode : $person->national_code;
-                $person->profile_picture_id = $person->profile_picture_id == null ? $data['avatar'] : $person->profile_picture_id;
+                $person->profile_picture_id = $person->profile_picture_id == null ? ($data['avatar'] ?? null) : $person->profile_picture_id;
                 $person->email = $person->email == null ? $data['email'] : $person->email;
                 $person->phone = $person->phone == null ? $data['phone'] : $person->phone;
                 $person->signature_file_id = $person->signature_file_id == null ? $data['signatureFile'] : $person->signature_file_id;
                 $person->save();
             }
         } else {
-            if ($data->personType == 1) {
+            if ($data->personType == Legal::class) {
                 $natural = new Natural();
                 $natural->first_name = $data->first_name ?? null;
                 $natural->last_name = $data->last_name ?? null;

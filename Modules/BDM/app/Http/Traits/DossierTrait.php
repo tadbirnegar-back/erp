@@ -36,16 +36,16 @@ trait DossierTrait
         return $dossier;
     }
 
-    public function dossiersList($data)
+    public function dossiersList($ounits , $perPage , $pageNum)
     {
         $query = BuildingDossier::query()
             ->join('bdm_building_dossier_status', function ($join) {
                 $join->on('bdm_building_dossiers.id', '=', 'bdm_building_dossier_status.dossier_id')
-                    ->whereRaw('bdm_building_dossier_status.created_date = (SELECT MAX(created_date) FROM bdm_building_dossier_status WHERE dossier_id = bdm_building_dossiers.id)');
+                    ->whereRaw('bdm_building_dossier_status.id = (SELECT MAX(id) FROM bdm_building_dossier_status WHERE dossier_id = bdm_building_dossiers.id)');
             })
             ->join('bdm_building_permit_status', function ($join) {
                 $join->on('bdm_building_dossiers.id', '=', 'bdm_building_permit_status.dossier_id')
-                    ->whereRaw('bdm_building_permit_status.created_date = (SELECT MAX(created_date) FROM bdm_building_permit_status WHERE dossier_id = bdm_building_dossiers.id)');
+                    ->whereRaw('bdm_building_permit_status.id = (SELECT MAX(id) FROM bdm_building_permit_status WHERE dossier_id = bdm_building_dossiers.id)');
             })
             ->join('statuses as status_dos', 'bdm_building_dossier_status.status_id', '=', 'status_dos.id')
             ->join('statuses as status_permit', 'bdm_building_permit_status.status_id', '=', 'status_permit.id')
@@ -56,8 +56,8 @@ trait DossierTrait
                 'status_permit.name as permit_status_name',
                 'status_permit.class_name as permit_status_class_name',
             ])
-            ->distinct('bdm_building_dossiers.id')
-            ->get();
+//            ->distinct('bdm_building_dossiers.id')
+            ->paginate($perPage, ['*'], 'page', $pageNum);
         return $query;
 
     }
