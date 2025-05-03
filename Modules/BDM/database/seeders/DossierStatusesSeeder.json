@@ -1,0 +1,14 @@
+[
+    {
+        "name": "در حال تکمیل",
+        "className": "primary"
+    },
+    {
+        "name": "تکمیل شده",
+        "className": "success"
+    },
+    {
+        "name": "منقضی شده",
+        "className": "danger"
+    }
+]

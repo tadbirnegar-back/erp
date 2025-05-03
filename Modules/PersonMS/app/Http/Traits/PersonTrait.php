@@ -321,13 +321,23 @@ trait PersonTrait
 
                 if ($natural->gender_id == 1) {
                     $militaryService = MilitaryService::where('person_id', $person->id)->first();
-                    $newMilitaryService = new MilitaryService();
-                    $newMilitaryService->exemption_type_id = ($militaryService->exemptionType == null) ? ($data->exemptionTypeID ?? null) : $militaryService->exemptionType->id;
-                    $newMilitaryService->military_service_status_id = ($militaryService->militaryServiceStatus == null) ? ($data->militaryServiceStatusID ?? null) : $militaryService->militaryServiceStatus->id;
-                    $newMilitaryService->work_force_id = null;
-                    $newMilitaryService->issue_date = ($militaryService->issueDate == null) ? ($data->issueDate ?? null) : $militaryService->issueDate;
-                    $newMilitaryService->person_id = $person->id;
-                    $newMilitaryService->save();
+                    if ($militaryService) {
+                        $newMilitaryService = new MilitaryService();
+                        $newMilitaryService->exemption_type_id = ($militaryService->exemptionType == null) ? ($data->exemptionTypeID ?? null) : $militaryService->exemptionType->id;
+                        $newMilitaryService->military_service_status_id = ($militaryService->militaryServiceStatus == null) ? ($data->militaryServiceStatusID ?? null) : $militaryService->militaryServiceStatus->id;
+                        $newMilitaryService->work_force_id = null;
+                        $newMilitaryService->issue_date = ($militaryService->issueDate == null) ? (convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? null) : $militaryService->issueDate;
+                        $newMilitaryService->person_id = $person->id;
+                        $newMilitaryService->save();
+                    }else{
+                        $militaryService = new MilitaryService();
+                        $militaryService->exemption_type_id = ($data->exemptionTypeID ?? null);
+                        $militaryService->military_service_status_id = ($data->militaryServiceStatusID ?? null);
+                        $militaryService->work_force_id = null;
+                        $militaryService->issue_date = (convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? null);
+                        $militaryService->person_id = $person->id;
+                        $militaryService->save();
+                    }
                 }
 
             } else {
@@ -390,7 +400,7 @@ trait PersonTrait
                         'exemption_type_id' => $data->exemptionTypeID,
                         'military_service_status_id' => $data->militaryServiceStatusID,
                         'work_force_id' => null,
-                        'issue_date' => $data->issueDate ?? now(),
+                        'issue_date' => convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? now(),
                     ]);
                 }
 

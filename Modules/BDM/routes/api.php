@@ -15,6 +15,13 @@ use Modules\BDM\app\Http\Controllers\LicenseController;
     |
 */
 
+
+Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
+});
+
+
+
+Route::post('/bdm/licenses/list' , [LicenseController::class, 'licenseList']);
 Route::prefix('v1')->group(function () {
     Route::get('/bdm/license-types/list' , [LicenseController::class, 'licenseTypesList']);
     Route::post('/bdm/licenses/create' , [LicenseController::class, 'create']);

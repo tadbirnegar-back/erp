@@ -1,0 +1,86 @@
+[
+    {
+        "name": "تشکیل پرونده ساخت و ساز",
+        "className": "primary"
+    },
+    {
+        "name": "بررسی اولیه توسط مسئول فنی",
+        "className": "primary"
+    },
+    {
+        "name": "تایید دهیار جهت ارسال به بنیاد مسکن",
+        "className": "primary"
+    },
+    {
+        "name": "استعلام از بنیاد مسکن",
+        "className": "success"
+    },
+    {
+        "name": "بررسی فنی استعلام بنیاد مسکن",
+        "className": "danger"
+    },
+    {
+        "name": "بررسی مالکیت زمین توسط شورای روستا",
+        "className": "primary"
+    },
+    {
+        "name": "صدور دستور تهیه نقشه ساختمانی",
+        "className": "primary"
+    },
+    {
+        "name": "معرفی مهندسین پروژه",
+        "className": "primary"
+    },
+    {
+        "name": "تهیه و تنظیم نقشه‌های معماری و سازه",
+        "className": "warning"
+    },
+    {
+        "name": "بررسی فنی نقشه‌های ساختمانی",
+        "className": "info"
+    },
+    {
+        "name": "ثبت تعهدات مهندسین پروژه",
+        "className": "danger"
+    },
+    {
+        "name": "محاسبه و صدور قبض عوارض پروانه ساختمانی",
+        "className": "primary"
+    },
+    {
+        "name": "پرداخت عوارض پروانه ساختمانی",
+        "className": "success"
+    },
+    {
+        "name": "تأییدیه پرداخت‌ها توسط مسئول مالی",
+        "className": "warning"
+    },
+    {
+        "name": "تأیید نهایی و صدور پروانه",
+        "className": "success"
+    },
+    {
+        "name": "اجرای فونداسیون و پی‌ریزی ساختمان",
+        "className": "danger"
+    },
+    {
+        "name": "اجرای اسکلت و عملیات سازه‌ای",
+        "className": "info"
+    },
+    {
+        "name": "اجرای عملیات سفت‌کاری و نازک‌کاری",
+        "className": "warning"
+    },
+    {
+        "name": "ارائه گزارش نهایی ناظر",
+        "className": "danger"
+    },
+    {
+        "name": "درخواست صدور گواهی پایان کار",
+        "className": "primary"
+    },
+    {
+        "name": "صدور گواهی پایان کار",
+        "className": "success"
+    }
+]

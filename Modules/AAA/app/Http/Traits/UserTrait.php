@@ -60,7 +60,11 @@ trait UserTrait
             $user->statuses()->attach($status->id);
             return ['user' => $user , 'status' => 200];
         }else{
-            return ['status' => 404 , 'type' => 'mobile'];
+            if($data['personID'] == $user->person_id){
+                return ['user' => $user , 'status' => 200];
+            }else{
+                return ['status' => 404 , 'type' => 'mobile'];
+            }
         }
     }
 
