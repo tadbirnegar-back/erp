@@ -7,6 +7,7 @@ use DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\BDM\app\Http\Enums\BdmOwnershipTypesEnum;
@@ -126,8 +127,7 @@ class LicenseController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
         $perPage = $data['perPage'] ?? 10;
 
-//        return response()->json(convertPersianToGregorianBothHaveTimeAndDont($data['createdDate']));
-        $user = \Auth::user();
+        $user = Auth::user();
 
         $user->load('employee');
         $employeeID = $user->employee->id;
@@ -165,7 +165,7 @@ class LicenseController extends Controller
 
     public function relatedDistrictList()
     {
-        $user = \Auth::user();
+        $user = Auth::user();
         $user->load('employee');
         $employeeID = $user->employee->id;
 
@@ -196,7 +196,7 @@ class LicenseController extends Controller
     public function relatedVillagesList(Request $request)
     {
         $data = $request->all();
-        $user = \Auth::user();
+        $user = Auth::user();
         $user->load('employee');
         $employeeID = $user->employee->id;
 
