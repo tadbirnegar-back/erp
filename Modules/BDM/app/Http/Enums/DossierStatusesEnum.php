@@ -9,5 +9,4 @@ enum DossierStatusesEnum : string
     case EXPIRED = 'منقضی شده';
 
 
-
 }

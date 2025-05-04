@@ -12,12 +12,14 @@ use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\BDM\app\Http\Enums\BdmOwnershipTypesEnum;
 use Modules\BDM\app\Http\Enums\BdmTypesEnum;
+use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
 use Modules\BDM\app\Http\Enums\PermitStatusesEnum;
 use Modules\BDM\app\Http\Enums\TransferTypesEnum;
 use Modules\BDM\app\Http\Traits\DossierTrait;
 use Modules\BDM\app\Http\Traits\EstateTrait;
 use Modules\BDM\app\Http\Traits\LawyersTrait;
 use Modules\BDM\app\Http\Traits\OwnersTrait;
+use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Resources\LicensesListResource;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
@@ -33,6 +35,7 @@ use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PFM\app\Models\Application;
+use Modules\StatusMS\app\Models\Status;
 
 class LicenseController extends Controller
 {
@@ -149,7 +152,7 @@ class LicenseController extends Controller
 
         $dossiers = $this->dossiersList($ounits , $perPage , $pageNum , $data);
 
-        return response()->json(LicensesListResource::collection($dossiers));
+        return LicensesListResource::collection($dossiers);
 
 
 
@@ -185,8 +188,9 @@ class LicenseController extends Controller
 
         $bdmTypes = BdmTypesEnum::listWithIds();
         $permitStatuses = PermitStatusesEnum::listWithIds();
+        $bdmStatuses = Status::where('model' , BuildingDossier::class)->select(['id' , 'name'])->get();
 
-        return response()->json(['bdm_types' => array_values($bdmTypes) , 'permit_statuses' => array_values($permitStatuses),'districts' => $query] , 200  );
+        return response()->json(['bdm_types' => array_values($bdmTypes) , 'permit_statuses' => array_values($permitStatuses),'districts' => $query , 'bdm_statuses' => $bdmStatuses] , 200  );
     }
 
     public function relatedDistrictList()
@@ -252,5 +256,14 @@ class LicenseController extends Controller
             ->get();
 
         return response()->json($query);
+    }
+
+    public function showDossier($id)
+    {
+
+        $getFooterDatas = $this -> getFooterDatas($id);
+
+        return response()->json($getFooterDatas);
+
     }
 }
