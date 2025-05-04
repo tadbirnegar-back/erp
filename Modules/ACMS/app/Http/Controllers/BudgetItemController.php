@@ -264,8 +264,10 @@ class BudgetItemController extends Controller
                     'next_year_budget_item.percentage')
                 ->get();
 
-            $lastYearConfirmedDocuments = Cache::remember("last_year_confirmed_documents_ounit_{$budget->ounit_id}_year_{$lastYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $lastYearFiscal) {
-                return CircularSubject::withoutGlobalScopes()
+            $lastYearConfirmedDocuments =
+//                Cache::remember("last_year_confirmed_documents_ounit_{$budget->ounit_id}_year_{$lastYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $lastYearFiscal) {
+//                return
+                    CircularSubject::withoutGlobalScopes()
                     ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
                     ->leftJoinRelationship('account',
                         function ($join) use ($budget, $lastYearFiscal) {
@@ -308,12 +310,14 @@ class BudgetItemController extends Controller
 
                     )
                     ->get();
-            });
+//            });
 
 
-            $threeMonthsLastYear = Cache::remember("three_months_two_years_ago_ounit_{$budget->ounit_id}_year_{$lastYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $lastYearFiscal, $lastYearStartOfQuarter, $lastYearEndOfQuarter) {
+            $threeMonthsLastYear =
+//                Cache::remember("three_months_two_years_ago_ounit_{$budget->ounit_id}_year_{$lastYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $lastYearFiscal, $lastYearStartOfQuarter, $lastYearEndOfQuarter) {
 
-                return CircularSubject::withoutGlobalScopes()
+//                return
+                    CircularSubject::withoutGlobalScopes()
                     ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
                     ->leftJoinRelationshipUsingAlias('accounts', function ($join) use ($lastYearStartOfQuarter, $lastYearEndOfQuarter, $budget) {
                         $join->as('3_months_last_year_acc')
@@ -358,10 +362,12 @@ class BudgetItemController extends Controller
                     )
                     ->get();
 
-            });
+//            });
 
-            $nineMonthsLastYear = Cache::remember("nine_month_last_year_ounit_{$budget->ounit_id}_year_{$currentYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $startOfCurrentYear, $endOf9thMonthOfCurrentYear) {
-               return CircularSubject::withoutGlobalScopes()
+            $nineMonthsLastYear =
+//                Cache::remember("nine_month_last_year_ounit_{$budget->ounit_id}_year_{$currentYearFiscal->id}_subject_type_{$request->subjectTypeID}", now()->addDays(3), function () use ($request, $budget, $startOfCurrentYear, $endOf9thMonthOfCurrentYear) {
+//               return
+                   CircularSubject::withoutGlobalScopes()
                     ->where('bgt_circular_subjects.subject_type_id', SubjectTypeEnum::tryFrom($request->subjectTypeID)->value)
                     ->leftJoinRelationshipUsingAlias('account',
                         function ($join) use ($startOfCurrentYear, $endOf9thMonthOfCurrentYear, $budget) {
@@ -406,7 +412,7 @@ class BudgetItemController extends Controller
                     )
                     ->get();
 
-            });
+//            });
 // Index by circular subject ID
             $subjects = $subjectsWithLog->keyBy('id');
             $threeMonths = $threeMonthsLastYear->keyBy('id');
