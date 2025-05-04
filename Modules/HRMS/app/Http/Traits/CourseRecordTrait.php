@@ -7,13 +7,14 @@ use Modules\HRMS\app\Models\CourseRecord;
 trait CourseRecordTrait
 {
 
-    public function courseRecordStore(array $data,int $workforceID): CourseRecord
+    public function courseRecordStore(array $data, ?int $workforceID): CourseRecord
     {
         $courseRecord = new CourseRecord();
         $courseRecord->title = $data['title'];
         $courseRecord->duration = $data['duration'];
         $courseRecord->location = $data['location'];
-        $courseRecord->workforce_id = $workforceID;
+        $courseRecord->workforce_id = $workforceID ?? null;
+        $courseRecord->person_id = $data['personID'] ?? null;
         $courseRecord->start_date = $data['startDate'];
         $courseRecord->end_date = $data['endDate'];
         $courseRecord->save();
@@ -28,13 +29,12 @@ trait CourseRecordTrait
 
     public function courseRecordUpdate(CourseRecord $courseRecord, array $data): ?CourseRecord
     {
-            $courseRecord->title = $data['title'];
-            $courseRecord->duration = $data['duration'];
-            $courseRecord->location = $data['location'];
-            $courseRecord->workforce_id = $data['workforceID'];
-            $courseRecord->start_date = $data['startDate'];
-            $courseRecord->end_date = $data['endDate'];
-            $courseRecord->save();
+        $courseRecord->title = $data['title'];
+        $courseRecord->duration = $data['duration'];
+        $courseRecord->location = $data['location'];
+        $courseRecord->start_date = $data['startDate'];
+        $courseRecord->end_date = $data['endDate'];
+        $courseRecord->save();
 
         return $courseRecord;
     }

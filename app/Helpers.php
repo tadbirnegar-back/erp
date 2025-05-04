@@ -217,7 +217,7 @@ function removeLeftZero($number)
     }
 }
 
-function DateformatToHumanReadableJalali($date, $showClock = true)
+function DateformatToHumanReadableJalali($date, $showClock = true,$split='/')
 {
     // Check if the date string contains time
     $dateTimeParts = explode(' ', $date);
@@ -225,7 +225,7 @@ function DateformatToHumanReadableJalali($date, $showClock = true)
     $timePart = isset($dateTimeParts[1]) ? $dateTimeParts[1] : null;
 
     // Split the date part by '/'
-    $parts = explode('/', $datePart);
+    $parts = explode($split, $datePart);
 
     $monthNumber = $parts[1]; // Get the second part as the month number
     $day = $parts[2];

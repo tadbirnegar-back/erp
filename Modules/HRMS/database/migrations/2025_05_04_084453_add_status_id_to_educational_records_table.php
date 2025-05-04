@@ -11,11 +11,14 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('educational_records', function (Blueprint $table) {
+            $table->unsignedInteger('status_id')->after('relation_type_id');
+            $table->unsignedBigInteger('approver_id')->nullable();
+            $table->dateTime('create_date')->useCurrent();
+            $table->dateTime('approve_date')->nullable();
 
-            $table->unsignedBigInteger('person_id')->nullable();
-            $table->unsignedBigInteger('work_force_id')->change()->nullable();
+            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
 
-            $table->foreign('person_id')->references('id')->on('persons')->onDelete('set null')->onUpdate('cascade');
+            $table->foreign('approver_id')->references('id')->on('users')->onDelete('set null')->onUpdate('cascade');
         });
     }
 

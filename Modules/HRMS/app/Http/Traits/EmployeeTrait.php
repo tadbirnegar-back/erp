@@ -3,13 +3,16 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
+use Modules\HRMS\app\Http\Enums\HireTypeEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
+use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\IssueTime;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Models\WorkForce;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 
 trait EmployeeTrait
@@ -268,7 +271,7 @@ trait EmployeeTrait
         return $recruitmentScripts;
     }
 
-    public function getScriptAgentCombos(HireType $hireType, ScriptType $scriptType)
+    public function getScriptAgentCombos(HireType $hireType, ScriptType $scriptType, ?OrganizationUnit $ounit = null)
     {
         $hireTypeId = $hireType->id;
         $scriptTypeId = $scriptType->id;
@@ -276,11 +279,20 @@ trait EmployeeTrait
             $query->where('script_type_id', $scriptTypeId);
 
         }]);
-        $scriptAgents = $hireType->scriptAgents;
 
-        $scriptAgents->each(function ($scriptAgent) {
+        $a = ScriptTypesEnum::tryFrom($scriptType->title);
+        $b = HireTypeEnum::tryFrom($hireType->title);
+        $scriptAgents = $hireType->scriptAgents;
+        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
+        $calculator = new $class($scriptType, $hireType, $ounit);
+
+        $scriptAgents->each(function ($scriptAgent)use ($calculator) {
             if (!is_null($scriptAgent->pivot->formula)) {
-                $scriptAgent->pivot->default_value = FormulaEnum::from($scriptAgent->pivot->formula)->getPrice();
+
+                $formula = FormulaEnum::from($scriptAgent->pivot->formula);
+                $fn = $formula->getFnName();
+
+                $scriptAgent->pivot->default_value = $calculator->$fn();
             }
         });
 

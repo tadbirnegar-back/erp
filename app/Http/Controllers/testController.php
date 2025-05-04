@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 
-use Carbon\Carbon;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
@@ -12,16 +11,21 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
-use Modules\EMS\app\Http\Enums\EnactmentStatusEnum;
-use Modules\EMS\app\Jobs\PendingForHeyaatStatusJob;
-use Modules\EMS\app\Jobs\StoreEnactmentStatusJob;
-use Modules\EMS\app\Jobs\StoreEnactmentStatusKarshenasJob;
-use Modules\EMS\app\Jobs\StoreMeetingJob;
-use Modules\EMS\app\Models\Enactment;
+use Modules\HRMS\app\Http\Enums\FormulaEnum;
+use Modules\HRMS\app\Http\Enums\HireTypeEnum;
+use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Models\HireType;
+use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\app\Resources\RecruitmentScriptContractResource;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\TownOfc;
+use Modules\PersonMS\app\Models\Natural;
+use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
@@ -50,6 +54,58 @@ class testController extends Controller
 
     public function run()
     {
+        $script = RecruitmentScript::with(
+            [
+                'person' => function ($query) {
+                    $query->with(['natural', 'isar', 'militaryService' => function ($query) {
+                        $query->with(['exemptionType', 'militaryServiceStatus']);
+                    }]);
+
+                },
+                'ounit.ancestors' => function ($query) {
+                    $query->where('unitable_type', '!=', TownOfc::class);
+                },
+                'scriptAgents.scriptAgentType',
+                'latestEducationRecord',
+                'position'
+            ]
+        )
+            ->withCount('heirs')
+            ->find(5273);
+//        dd($script);
+        return RecruitmentScriptContractResource::make($script);
+
+
+        $a = ScriptTypesEnum::VILLAGER;
+        $b = HireTypeEnum::PART_TIME;
+        $st = ScriptType::where('title', $a->value)->first();
+        $ht = HireType::where('title', $b->value)->first();
+        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
+        $ounit = OrganizationUnit::with(['ancestors' => function ($query) {
+            $query->where('unitable_type', '!=', TownOfc::class);
+        }])->find(5);
+
+        dump(
+            $ounit->ancestors[0],
+            $ounit->ancestors[1],
+            $ounit->ancestors[2]
+        );
+
+        $person = Person::where('personable_type', Natural::class)->first();
+        dump($person->personable);
+
+        $x = new $class($st, $ht, $ounit);
+        $formulas = collect(FormulaEnum::cases());
+
+        $res = $formulas->map(function ($formula) use ($x) {
+            $fn = $formula->getFnName();
+            $res = $x->$fn();
+            return [
+                'default_value' => $res,
+                'label' => $formula->getLabel(),
+            ];
+
+        });
 
 //        $enactments = Enactment::joinRelationship('statuses', ['statuses' => function ($join) {
 //            $join

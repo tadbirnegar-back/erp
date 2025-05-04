@@ -35,6 +35,8 @@ trait RelativeTrait
         $relative->level_of_educational_id = $data['levelOfEducationalID'] ?? null;
         $relative->relative_type_id = $data['relativeTypeID'] ?? null;
         $relative->work_force_id = $data['workForceID'];
+        $relative->person_id = $data['personID'] ?? null;
+
 
         $relative->save();
 
@@ -48,7 +50,7 @@ trait RelativeTrait
         return $rels;
     }
 
-    private function relativeDataPreparation(array|Collection $relatives, int $workForceID)
+    private function relativeDataPreparation(array|Collection $relatives, ?int $workForceID)
     {
         if (is_array($relatives)) {
             $relatives = collect($relatives);
@@ -60,7 +62,9 @@ trait RelativeTrait
             'mobile' => $data['mobile'] ?? null,
             'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
             'relative_type_id' => $data['relativeTypeID'] ?? null,
-            'work_force_id' => $workForceID,
+            'work_force_id' => $workForceID ?? null,
+            'person_id' => $data['personID'] ?? null,
+
         ]);
 
 

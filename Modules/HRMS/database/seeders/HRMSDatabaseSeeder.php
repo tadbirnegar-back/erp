@@ -3,8 +3,6 @@
 namespace Modules\HRMS\database\seeders;
 
 use Illuminate\Database\Seeder;
-use Modules\HRMS\app\Http\Enums\FreezoneScriptTypeEnum;
-use Modules\HRMS\app\Models\ScriptAgent;
 
 class HRMSDatabaseSeeder extends Seeder
 {
@@ -16,7 +14,7 @@ class HRMSDatabaseSeeder extends Seeder
         $this->call([
 //            ModuleCategorySeeder::class,
 //            ModuleSeeder::class,
-//            PermissionSeeder::class,
+            PermissionSeeder::class,
 //            LevelOfEducationSeeder::class,
 //            LevelStatusSeeder::class,
 //            MilitaryServiceStatusSeeder::class,

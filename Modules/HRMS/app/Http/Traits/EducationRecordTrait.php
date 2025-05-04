@@ -8,7 +8,7 @@ use Modules\HRMS\app\Models\EducationalRecord;
 
 trait EducationRecordTrait
 {
-    public function EducationalRecordStore(array|Collection $dataToInsert, int $workForceID)
+    public function EducationalRecordStore(array|Collection $dataToInsert, ?int $workForceID)
     {
         if (!isset($dataToInsert[0]) || !is_array($dataToInsert[0])) {
             $dataToInsert = [$dataToInsert];
@@ -26,13 +26,12 @@ trait EducationRecordTrait
 
     public function educationUpsert(array|Collection $dataToUpdate, int $workForceID)
     {
-        Log::info($dataToUpdate);
         $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToUpdate, $workForceID);
         EducationalRecord::upsert($preparedData->toArray(), ['id']);
     }
 
 
-    private function EducationalRecordDataPreparation(array|Collection $educations, int $workForceID)
+    private function EducationalRecordDataPreparation(array|Collection $educations, ?int $workForceID)
     {
         if (is_array($educations)) {
             $educations = collect($educations);
@@ -44,7 +43,8 @@ trait EducationRecordTrait
             'start_date' => $data['startDate'] ?? null,
             'end_date' => $data['endDate'] ?? null,
             'average' => $data['average'] ?? null,
-            'work_force_id' => $workForceID,
+            'work_force_id' => $workForceID ?? null,
+            'person_id' => $data['personID'] ?? null,
             'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
         ]);
         return $recordsToInsert;

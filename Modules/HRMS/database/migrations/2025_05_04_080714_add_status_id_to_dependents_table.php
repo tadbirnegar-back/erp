@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('dependents', function (Blueprint $table) {
+
+            $table->unsignedInteger('status_id')->after('relation_type_id');
+            $table->unsignedBigInteger('approver_id')->nullable();
+            $table->dateTime('create_date')->useCurrent();
+            $table->dateTime('approve_date')->nullable();
+
+            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
+
+            $table->foreign('approver_id')->references('id')->on('users')->onDelete('set null')->onUpdate('cascade');
+
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('dependents', function (Blueprint $table) {
+
+        });
+    }
+};

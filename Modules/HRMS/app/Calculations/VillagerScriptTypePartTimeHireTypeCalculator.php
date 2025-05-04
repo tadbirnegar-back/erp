@@ -30,7 +30,7 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
     public function getBaseSalary()
     {
         if (is_null($this->baseSalary)) {
-            $baseSalary = 8000000;
+            $baseSalary = 3463656;
             $this->baseSalary = $baseSalary;
         }
         return $this->baseSalary;
@@ -195,7 +195,7 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
 
     public function getAllowanceForConsumableItems()
     {
-        return 14000000;
+        return 22000000;
     }
 
     //حقوق ثابت

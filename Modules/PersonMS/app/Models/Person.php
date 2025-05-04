@@ -4,6 +4,7 @@ namespace Modules\PersonMS\app\Models;
 
 use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AAA\app\Models\User as AAAUser;
@@ -222,5 +223,10 @@ class Person extends Model
         return $this->hasMany(CourseRecord::class, 'person_id');
     }
 
+    public function natural(): BelongsTo
+    {
+        return $this->belongsTo(Natural::class, 'personable_id', 'id');
+    }
+    
 
 }

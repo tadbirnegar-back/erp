@@ -31,6 +31,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::get('/hrm/employee/list/filter', [EmployeeController::class, 'employeeListFilter']);
     Route::get('/hrm/setting', [HRMConfigController::class, 'configList']);
     Route::post('/hrm/erc/list', [RecruitmentScriptController::class, 'indexExpiredScripts']);
+    Route::post('/hrm/recruitment/contract', [RecruitmentScriptController::class, 'getContract']);
 
 });
 

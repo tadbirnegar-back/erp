@@ -214,5 +214,11 @@
         "slug": "/hrm/rc/ptp/terminate/{id}",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "قرارداد حکم",
+        "slug": "/hrm/recruitment/contract",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
     }
 ]

@@ -8,14 +8,15 @@ trait IsarTrait
 {
 //write CRUD for isars table
 
-    public function isarStore(array $data, int $workForceID)
+    public function isarStore(array $data, ?int $workForceID)
     {
         $isar = new Isar();
-        $isar->isar_status_id = $data['isarStatusID']??null;
-        $isar->relative_type_id = $data['relativeTypeID']??null;
-        $isar->length = $data['length']??null;
-        $isar->percentage = $data['percentage']??null;
-        $isar->work_force_id = $workForceID;
+        $isar->isar_status_id = $data['isarStatusID'] ?? null;
+        $isar->relative_type_id = $data['relativeTypeID'] ?? null;
+        $isar->length = $data['length'] ?? null;
+        $isar->percentage = $data['percentage'] ?? null;
+        $isar->work_force_id = $workForceID ?? null;
+        $isar->person_id = $data['personID'] ?? null;
         $isar->save();
 
         return $isar;
@@ -28,11 +29,10 @@ trait IsarTrait
 
     public function isarUpdate(Isar $isar, array $data): ?Isar
     {
-        $isar->isar_status_id = $data['isarStatusID']??null;
-        $isar->relative_type_id = $data['relativeTypeID']??null;
-        $isar->length = $data['length']??null;
-        $isar->percentage = $data['percentage']??null;
-        $isar->work_force_id = $data['workForceID'];
+        $isar->isar_status_id = $data['isarStatusID'] ?? null;
+        $isar->relative_type_id = $data['relativeTypeID'] ?? null;
+        $isar->length = $data['length'] ?? null;
+        $isar->percentage = $data['percentage'] ?? null;
         $isar->save();
 
         return $isar;
