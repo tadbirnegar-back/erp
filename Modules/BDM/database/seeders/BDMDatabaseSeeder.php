@@ -12,8 +12,9 @@ class BDMDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-//             DossierStatusesSeeder::class,
+            DossierStatusesSeeder::class,
             PermitStatusesSeeder::class,
+            PermissionsSeeder::class,
         ]);
     }
 }

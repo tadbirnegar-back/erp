@@ -1,8 +1,26 @@
 [
     {
-        "name": "افزودن بخشنامه",
-        "slug": "/pfm/circular/store",
-        "moduleName": "PFM",
+        "name": "لیست پرونده ها",
+        "slug": "/bdm/licenses/list",
+        "moduleName": "BDM",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست بخشداری های مرتبط با فنی",
+        "slug": "/bdm/related-district/list",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست روستای های مرتبط با فنی",
+        "slug": "/bdm/related-villages/list",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات مورد نیاز لیست",
+        "slug": "/bdm/list-filter/pre_data",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
     }
 ]
