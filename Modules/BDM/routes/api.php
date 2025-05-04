@@ -18,7 +18,6 @@ use Modules\BDM\app\Http\Controllers\LicenseController;
 
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/bdm/licenses/list' , [LicenseController::class, 'licenseList']);
-    Route::get('/bdm/related-district/list' , [LicenseController::class, 'relatedDistrictList']);
     Route::post('/bdm/related-villages/list' , [LicenseController::class, 'relatedVillagesList']);
     Route::get('/bdm/list-filter/pre_data' , [LicenseController::class, 'onlyLicenseTypesList']);
 });

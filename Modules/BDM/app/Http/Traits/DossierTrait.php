@@ -17,7 +17,7 @@ trait DossierTrait
 {
     use PermitTrait;
 
-    public function makeDossier($ounitID, $ownershipTypeID , $bdmTypeID)
+    public function makeDossier($ounitID, $ownershipTypeID, $bdmTypeID)
     {
         $dossier = BuildingDossier::create([
             'tracking_code' => null,
@@ -38,7 +38,7 @@ trait DossierTrait
         return $dossier;
     }
 
-    public function dossiersList($ounits , $perPage , $pageNum , $data)
+    public function dossiersList($ounits, $perPage, $pageNum, $data)
     {
         $query = BuildingDossier::query()
             ->join('bdm_building_dossier_status', function ($join) {
@@ -56,11 +56,11 @@ trait DossierTrait
                     ->where('is_main_owner', '=', true);
             })
             ->join('persons as main_owner', 'bdm_owners.person_id', '=', 'main_owner.id')
-            ->join('naturals' , function ($join) {
+            ->join('naturals', function ($join) {
                 $join->on('main_owner.personable_id', '=', 'naturals.id')
                     ->where('main_owner.personable_type', '=', Natural::class);
             })
-            ->join('bdm_estates' , 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
             ->join('organization_units as village', 'bdm_estates.ounit_id', '=', 'village.id')
             ->join('organization_units as town', 'village.parent_id', '=', 'town.id')
             ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
@@ -78,27 +78,31 @@ trait DossierTrait
                 'bdm_building_dossiers.created_date as created_date',
                 'naturals.mobile as mobile',
             ])
-            ->when(isset($data['villageID']) , function ($query) use ($data) {
-                $query->where('bdm_estates.ounit_id' , $data['villageID']);
+            ->when(isset($data['villageID']), function ($query) use ($data) {
+                $query->where('bdm_estates.ounit_id', $data['villageID']);
             })
-            ->when(isset($data['districtID']) , function ($query) use ($data) {
-                $query->where('district.id' , $data['districtID']);
+            ->when(isset($data['districtID']), function ($query) use ($data) {
+                $query->where('district.id', $data['districtID']);
             })
-            ->when(isset($data['bdmTypeID']) , function ($query) use ($data) {
-                $query->where('bdm_building_dossiers.bdm_type_id' , $data['bdmTypeID']);
+            ->when(isset($data['bdmTypeID']), function ($query) use ($data) {
+                $query->where('bdm_building_dossiers.bdm_type_id', $data['bdmTypeID']);
             })
-            ->when(isset($data['permitStatusID']) , function ($query) use ($data) {
-                $query->where('status_permit.id' , $data['permitStatusID']);
+            ->when(isset($data['permitStatusID']), function ($query) use ($data) {
+                $query->where('status_permit.id', $data['permitStatusID']);
             })
-            ->when(isset($data['dossierStatusID']) , function ($query) use ($data) {
-                $query->where('status_dos.id' , $data['dossierStatusID']);
+            ->when(isset($data['dossierStatusID']), function ($query) use ($data) {
+                $query->where('status_dos.id', $data['dossierStatusID']);
             })
-            ->when(isset($data['createdDate']) , function ($query) use ($data) {
+            ->when(isset($data['createdDate']), function ($query) use ($data) {
                 $query->whereRaw("DATE(bdm_building_dossiers.created_date) = ?", [
                     date('Y-m-d', strtotime(convertPersianToGregorianBothHaveTimeAndDont($data['createdDate'])))
                 ]);
             })
-            ->whereIn('bdm_estates.ounit_id' , $ounits)
+            ->when(isset($data['title']), function ($query) use ($data) {
+                $query->where('bdm_building_dossiers.tracking_code', 'like', '%' . $data['title'] . '%')
+                    ->orWhere('main_owner.display_name', 'like', '%' . $data['title'] . '%');
+            })
+            ->whereIn('bdm_estates.ounit_id', $ounits)
             ->paginate($perPage, ['*'], 'page', $pageNum);
         return $query;
 

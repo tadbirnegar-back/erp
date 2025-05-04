@@ -157,10 +157,36 @@ class LicenseController extends Controller
 
     public function onlyLicenseTypesList()
     {
+
+
+        $user = Auth::user();
+        $user->load('employee');
+        $employeeID = $user->employee->id;
+
+        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
+
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
+            ->whereHas('latestStatus' , function ($query) {
+                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
+            })->get();
+
+        $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
+
+        $query = OrganizationUnit::query()
+            ->join('organization_units as town', 'organization_units.parent_id', '=', 'town.id')
+            ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
+            ->select([
+                'district.id as id',
+                'district.name as name',
+            ])
+            ->withoutGlobalScopes()
+            ->whereIn('organization_units.id' , $ounits)
+            ->get();
+
         $bdmTypes = BdmTypesEnum::listWithIds();
         $permitStatuses = PermitStatusesEnum::listWithIds();
 
-        return response()->json(['bdm_types' => array_values($bdmTypes) , 'permit_statuses' => array_values($permitStatuses)]);
+        return response()->json(['bdm_types' => array_values($bdmTypes) , 'permit_statuses' => array_values($permitStatuses),'districts' => $query] , 200  );
     }
 
     public function relatedDistrictList()
