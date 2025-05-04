@@ -440,7 +440,7 @@ trait PersonTrait
     public
     function insertLicenses($personId, $data)
     {
-        $nationalLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->id())->where('person_id', $personId)->first();
+        $nationalLicense = PersonLicense::where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->id())->where('person_id', $personId)->first();
         if (!$nationalLicense) {
             $license = new PersonLicense();
             $license->file_id = $data->national_card_file_id ?? null;
@@ -456,7 +456,6 @@ trait PersonTrait
             $license->file_id = $data->birth_certificate_file_id ?? null;
             $license->person_id = $personId;
             $license->license_type = PersonLicensesEnums::BIRTH_CERTIFICATE->id();
-            $license->page_number = 1;
             $license->save();
         }
 

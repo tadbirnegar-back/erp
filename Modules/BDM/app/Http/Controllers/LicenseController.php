@@ -127,7 +127,7 @@ class LicenseController extends Controller
         $perPage = $data['perPage'] ?? 10;
 
 //        return response()->json(convertPersianToGregorianBothHaveTimeAndDont($data['createdDate']));
-        $user = User::find(2174);
+        $user = \Auth::user();
 
         $user->load('employee');
         $employeeID = $user->employee->id;
@@ -161,5 +161,70 @@ class LicenseController extends Controller
         $permitStatuses = PermitStatusesEnum::listWithIds();
 
         return response()->json(['bdm_types' => array_values($bdmTypes) , 'permit_statuses' => array_values($permitStatuses)]);
+    }
+
+    public function relatedDistrictList()
+    {
+        $user = \Auth::user();
+        $user->load('employee');
+        $employeeID = $user->employee->id;
+
+        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
+
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
+            ->whereHas('latestStatus' , function ($query) {
+                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
+            })->get();
+
+        $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
+
+        $query = OrganizationUnit::query()
+            ->join('organization_units as town', 'organization_units.parent_id', '=', 'town.id')
+            ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
+            ->select([
+                'district.id as id',
+                'district.name as name',
+            ])
+            ->withoutGlobalScopes()
+            ->whereIn('organization_units.id' , $ounits)
+            ->get();
+
+        return response()->json($query);
+
+    }
+
+    public function relatedVillagesList(Request $request)
+    {
+        $data = $request->all();
+        $user = \Auth::user();
+        $user->load('employee');
+        $employeeID = $user->employee->id;
+
+        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
+
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
+            ->whereHas('latestStatus' , function ($query) {
+                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
+            })->get();
+
+
+        $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
+
+
+        $query = OrganizationUnit::query()
+            ->join('organization_units as town', 'organization_units.parent_id', '=', 'town.id')
+            ->join('districts as district', 'town.parent_id', '=', 'district.id')
+            ->select([
+                'organization_units.id as id',
+                'organization_units.name as name',
+            ])
+            ->withoutGlobalScopes()
+            ->whereIn('organization_units.id' , $ounits)
+            ->when(isset($data['districtID']) , function ($query) use ($data) {
+                $query->where('district.id' , $data['districtID']);
+            })
+            ->get();
+
+        return response()->json($query);
     }
 }
