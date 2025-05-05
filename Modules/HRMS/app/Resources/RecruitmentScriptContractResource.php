@@ -13,6 +13,7 @@ class RecruitmentScriptContractResource extends JsonResource
     {
         $agents = $this->scriptAgents->groupBy('scriptAgentType.title');
         return [
+            'contractDays'=>$this->contract_days,
             'ounit' => [
                 'name' => $this->ounit->name,
                 'ancestors' => [

@@ -2,22 +2,26 @@
 
 namespace Modules\HRMS\app\Calculations;
 
+use Modules\HRMS\app\Http\Enums\RelationTypeEnum;
 use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\PersonMS\app\Models\Person;
 
 class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
 {
     private ScriptType $scriptType;
     private HireType $hireType;
     private OrganizationUnit $organizationUnit;
+    private Person $person;
     private $baseSalary;
 
-    public function __construct(ScriptType $scriptType, HireType $hireType, OrganizationUnit $organizationUnit)
+    public function __construct(ScriptType $scriptType, HireType $hireType, OrganizationUnit $organizationUnit, Person $person)
     {
         $this->scriptType = $scriptType;
         $this->hireType = $hireType;
         $this->organizationUnit = $organizationUnit;
+        $this->person = $person;
         $this->baseSalary = $this->getBaseSalary();
     }
 
@@ -38,7 +42,7 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
 
     public function getBaseYears()
     {
-        $baseYears = 0;
+        $baseYears = 508435;
         return $baseYears;
     }
 
@@ -58,18 +62,18 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
 
         $result = $this->evalFormula($formula, $params);
 
-        return $result;
+        return floor($result);
     }
 
     public function getBigVillageExtra()
     {
         $formula = '$baseSalary * $percentage';
-        $population = $this->organizationUnit->village->population_1395 >= 10000 ? $this->organizationUnit->village->population_1395 : 0;
+        $population = $this->organizationUnit->village->population_1395 >= 10000 ? 0.2 : 0;
         $params = ['baseSalary' => $this->baseSalary, 'percentage' => $population];
 
         $result = $this->evalFormula($formula, $params);
 
-        return $result;
+        return floor($result);
     }
 
     public function getVillageSupervisorExtra()
@@ -79,12 +83,21 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
 
     public function getEducationExtra()
     {
+        $educationRecord = $this->person->latestEducationRecord;
+
+        $percentage = match ($educationRecord->levelOfEducation->name) {
+            'دیپلم', 'کاردانی' => 0.05,
+            'کارشناسی' => 0.1,
+            'کارشناسی ارشد' => 0.15,
+            'دکتری' => 0.2,
+            default => 0,
+        };
         $formula = '$baseSalary * $percentage';
-        $params = ['baseSalary' => $this->baseSalary, 'percentage' => 0];
+        $params = ['baseSalary' => $this->baseSalary, 'percentage' => $percentage];
 
         $result = $this->evalFormula($formula, $params);
 
-        return $result;
+        return floor($result);
     }
 
     public function getIsarExtra()
@@ -180,12 +193,23 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
 
     public function getMarriageExtra()
     {
-        return 5000000;
+        $natural = $this->person->natural;
+        if ($natural->isMarried) {
+            return 5000000;
+        }
+        return 0;
     }
 
     public function getChildrenBonusExtra()
     {
-        return 0;
+        $childrenCount = $this->person->dependents()
+            ->where('relation_type_id', RelationTypeEnum::CHILD->value)
+            ->count();
+
+        $formula = '$baseSalary * $childrenCount * 3';
+        $params = ['baseSalary' => $this->baseSalary, 'childrenCount' => $childrenCount];
+
+        return $this->evalFormula($formula, $params);
     }
 
     public function getRightOfHomeExtra()

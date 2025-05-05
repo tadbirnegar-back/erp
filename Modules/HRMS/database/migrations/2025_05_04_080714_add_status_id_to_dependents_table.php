@@ -10,16 +10,17 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::table('dependents', function (Blueprint $table) {
 
-            $table->unsignedInteger('status_id')->after('relation_type_id');
+            $table->unsignedBigInteger('status_id')->nullable()->after('relation_type_id');
             $table->unsignedBigInteger('approver_id')->nullable();
             $table->dateTime('create_date')->useCurrent();
             $table->dateTime('approve_date')->nullable();
 
-            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('status_id')->references('id')->on('statuses')->onDelete('set null')->onUpdate('set null');
 
-            $table->foreign('approver_id')->references('id')->on('users')->onDelete('set null')->onUpdate('cascade');
+            $table->foreign('approver_id')->references('id')->on('users')->onDelete('set null')->onUpdate('set null');
 
         });
     }

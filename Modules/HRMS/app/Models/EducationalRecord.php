@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\HRMS\Database\factories\EducationalRecordFactory;
+use Modules\StatusMS\app\Models\Status;
 
 class EducationalRecord extends Model
 {
@@ -30,5 +31,10 @@ class EducationalRecord extends Model
     public function workForce(): BelongsTo
     {
         return $this->belongsTo(WorkForce::class, 'work_force_id');
+    }
+
+    public static function GetAllStatuses()
+    {
+        return Status::where('model', self::class);
     }
 }

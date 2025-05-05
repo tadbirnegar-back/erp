@@ -3,7 +3,8 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Modules\HRMS\app\Http\Enums\EducationalRecordStatusEnum;
 use Modules\HRMS\app\Models\EducationalRecord;
 
 trait EducationRecordTrait
@@ -98,7 +99,20 @@ trait EducationRecordTrait
     public function EducationHardDelete(array $EduIds)
     {
         EducationalRecord::whereIn('id', $EduIds)->Delete();
-        Log::info($EduIds);
+    }
+
+    public function pendingApproveEducationalRecordStatus()
+    {
+        return Cache::rememberForever('educational_record_pending_approve_status', function () {
+            return EducationalRecord::GetAllStatuses()->firstWhere('name', EducationalRecordStatusEnum::PENDING_APPROVE->value);
+        });
+    }
+
+    public function approvedEducationalRecordStatus()
+    {
+        return Cache::rememberForever('educational_record_approved_status', function () {
+            return EducationalRecord::GetAllStatuses()->firstWhere('name', EducationalRecordStatusEnum::APPROVED->value);
+        });
     }
 
 }

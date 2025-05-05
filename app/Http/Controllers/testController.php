@@ -54,6 +54,9 @@ class testController extends Controller
 
     public function run()
     {
+
+        $p = Person::find(1908);
+        dd($p->latestEducationRecord->levelOfEducation);
         $script = RecruitmentScript::with(
             [
                 'person' => function ($query) {

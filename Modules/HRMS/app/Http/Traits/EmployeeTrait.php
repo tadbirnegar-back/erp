@@ -284,7 +284,7 @@ trait EmployeeTrait
         $b = HireTypeEnum::tryFrom($hireType->title);
         $scriptAgents = $hireType->scriptAgents;
         $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-        $calculator = new $class($scriptType, $hireType, $ounit);
+        $calculator = new $class($scriptType, $hireType, $ounit,\Auth::user()->person);
 
         $scriptAgents->each(function ($scriptAgent)use ($calculator) {
             if (!is_null($scriptAgent->pivot->formula)) {
