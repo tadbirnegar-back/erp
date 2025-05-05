@@ -8,6 +8,7 @@ use Modules\AAA\app\Models\User;
 use Modules\BDM\app\Http\Enums\GeographicalCordinatesTypesEnum;
 use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Models\Estate;
+use Modules\BDM\app\Models\EstateAppSuggest;
 use Modules\BDM\app\Models\GeographicalCordinate;
 use Modules\VCM\app\Models\VcmVersions;
 
@@ -28,11 +29,19 @@ trait EstateTrait
             'deal_number' => $data['dealNumber'] ?? null,
             'building_number' => $data['buildingNumber'],
             'dossier_id' => $dossierID,
-            'app_id' => $data['appID'],
             'area' => $data['area'],
             'created_date' => isset($data['created_date']) ? convertPersianToGregorianBothHaveTimeAndDont($data['created_date']) : null,
             'request_date' => convertPersianToGregorianBothHaveTimeAndDont($data['request_date']),
         ]);
+
+        $appIds = json_decode($data['apps']);
+        foreach ($appIds as $appId) {
+            EstateAppSuggest::create([
+                'estate_id' => $dossierID,
+                'app_id' => $appId,
+            ]);
+        }
+
 
         $typeID = GeographicalCordinatesTypesEnum::SUBMITTED->id();
 
@@ -43,5 +52,17 @@ trait EstateTrait
             'south' => $data['south'],
             'type_id' => $typeID,
         ]);
+    }
+
+    public function getGeoLocations($dossierID)
+    {
+        $query = GeographicalCordinate::where('dossier_id' , $dossierID)->first();
+        return $query;
+    }
+
+    public function getArea($dossierID)
+    {
+        $query = Estate::where('dossier_id' , $dossierID)->first();
+        return $query->area;
     }
 }

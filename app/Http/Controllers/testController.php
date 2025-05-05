@@ -50,6 +50,7 @@ class testController extends Controller
     {
         $status = Status::where('model', Payment::class)->where('name', 'پرداخت شده')->first();
 
+
         $query = OrganizationUnit::join('village_ofcs', function ($join) {
             $join->on('village_ofcs.id', '=', 'organization_units.unitable_id')
                 ->where('organization_units.unitable_type', VillageOfc::class);
@@ -64,8 +65,7 @@ class testController extends Controller
                 'payments.amount as payment_amount',
                 'payments.create_date as payment_date',
                 'payments.transactionid as txID',
-                'village_ofcs.national_uid as national_uid',
-                'village_ofcs.ofc_code as code_posti',
+                'village_ofcs.ofc_code as national_code',
                 'organization_units.name as ounit_name',
                 'district.name as district_name',
                 'city.name as city_name'
@@ -76,6 +76,7 @@ class testController extends Controller
             ->orderBy('payment_id')
             ->get();
 
+
         echo "<table border='1'>
     <thead>
         <tr>
@@ -85,7 +86,6 @@ class testController extends Controller
             <th>تاریخ</th>
             <th>کد تراکنش</th>
             <th>شناسه ملی</th>
-            <th>کدپستی</th>
             <th>آدرس</th>
         </tr>
     </thead>
@@ -99,8 +99,7 @@ class testController extends Controller
         <td>{$item->payment_amount}</td>
         <td>{$date}</td>
         <td>{$item->txID}</td>
-        <td>{$item->national_uid}</td>
-        <td>{$item->code_posti}</td>
+        <td>{$item->national_code}</td>
         <td>" . $item->city_name . "، " . $item->district_name . "، " . $item->ounit_name . "</td>
     </tr>";
         }

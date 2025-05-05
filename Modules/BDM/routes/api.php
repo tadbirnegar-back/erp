@@ -2,7 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\BDM\app\Http\Controllers\BDMController;
 use Modules\BDM\app\Http\Controllers\LicenseController;
+use Modules\BDM\app\Http\Controllers\EstateController;
 
 /*
     |--------------------------------------------------------------------------
@@ -24,7 +26,10 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 
 
 Route::get('/bdm/dossier/{id}' , [LicenseController::class, 'showDossier']);
-
+Route::post('/bdm/estate/update/{id}' , [BDMController::class, 'updateEstate']);
+Route::get('/bdm/license/submit/{id}' , [LicenseController::class, 'submitLicense']);
+Route::post('/bdm/upload/files/{id}' , [LicenseController::class, 'uploadFiles']);
+Route::get('/bdm/estates/pre-data/{id}' , [EstateController::class, 'getEstatesPreData']);
 
 Route::prefix('v1')->group(function () {
     Route::get('/bdm/license-types/list' , [LicenseController::class, 'licenseTypesList']);

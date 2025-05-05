@@ -6,13 +6,18 @@ namespace Modules\BDM\app\Http\Traits;
 use Carbon\Carbon;
 use Modules\AAA\app\Http\Enums\PermissionTypesEnum;
 use Modules\AAA\app\Models\User;
+use Modules\BDM\app\Http\Enums\DocumentsNameEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
+use Modules\BDM\app\Http\Enums\PermitStatusesEnum;
 use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Models\DossierStatus;
+use Modules\BDM\app\Models\Form;
+use Modules\BDM\app\Models\LicenseDocument;
 use Modules\BDM\app\Models\PermitStatus;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
+use Modules\StatusMS\app\Models\Status;
 use Modules\VCM\app\Models\VcmVersions;
 
 trait DossierTrait
@@ -133,29 +138,6 @@ trait DossierTrait
             'creator_id' => $userID,
         ]);
 
-        $permitStatuses = $this->preparePermitStatuses($id, $userID);
-        PermitStatus::insert($permitStatuses);
-
-    }
-
-    private function preparePermitStatuses($dossierId, $userId)
-    {
-        $now = now();
-
-        return [
-            [
-                'dossier_id' => $dossierId,
-                'status_id' => $this->firstStatus()->id,
-                'created_date' => $now,
-                'creator_id' => $userId,
-            ],
-            [
-                'dossier_id' => $dossierId,
-                'status_id' => $this->secondStatus()->id,
-                'created_date' => $now,
-                'creator_id' => $userId,
-            ],
-        ];
     }
 
     public function waitToDoneStatus()
@@ -173,6 +155,15 @@ trait DossierTrait
         return BuildingDossier::GetAllStatuses()->firstWhere('name', DossierStatusesEnum::EXPIRED->value);
     }
 
+    public function getTimelineData($dossierID)
+    {
+        $status = $this->findCurrentPermitStatusOfDossier($dossierID);
+        $percent = $this->getPercentOfDossier($status->permit_status_name);
+        $uploadedFiles = $this->getUploadedFiles($status->permit_status_name , $dossierID);
+        $doneStatuses = $this->doneStatuses($dossierID);
+        return ['status' => $status, 'percent' => $percent, 'doneStatuses' => $doneStatuses , 'uploadedFiles' => $uploadedFiles];
+    }
+
     public function findCurrentPermitStatusOfDossier($id)
     {
         $query = BuildingDossier::join('bdm_building_permit_status', function ($join) {
@@ -183,9 +174,28 @@ trait DossierTrait
             ->select([
                 'bdm_building_dossiers.id as dossier_id',
                 'status_permit.name as permit_status_name',
+                'status_permit.class_name as permit_status_class_name',
+                'bdm_building_permit_status.created_date as permit_status_created_date',
             ])
             ->find($id);
 
+        return $query;
+    }
+
+    public function doneStatuses($dossierID)
+    {
+        $query = BuildingDossier::join('bdm_building_permit_status', function ($join) {
+            $join->on('bdm_building_dossiers.id', '=', 'bdm_building_permit_status.dossier_id');
+        })
+            ->join('statuses as status_permit', 'bdm_building_permit_status.status_id', '=', 'status_permit.id')
+            ->select([
+                'bdm_building_permit_status.id as permit_status_id',
+                'bdm_building_dossiers.id as dossier_id',
+                'status_permit.name as permit_status_name',
+                'bdm_building_permit_status.created_date as permit_status_created_date',
+            ])
+            ->where('bdm_building_dossiers.id', $dossierID)
+            ->get();
         return $query;
     }
 
@@ -193,12 +203,12 @@ trait DossierTrait
     {
         $estateData = $this->getEstates($id);
         $ownersData = $this->getOwners($id);
-        return ['estate' => $estateData , 'owners' => $ownersData];
+        return ['estate' => $estateData, 'owners' => $ownersData];
     }
 
     public function getEstates($dossierID)
     {
-        $query = BuildingDossier::join('bdm_estates' , 'bdm_building_dossiers.id' , '=' , 'bdm_estates.dossier_id')
+        $query = BuildingDossier::join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
             ->join('organization_units as village', 'bdm_estates.ounit_id', '=', 'village.id')
             ->join('organization_units as town', 'village.parent_id', '=', 'town.id')
             ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
@@ -226,14 +236,15 @@ trait DossierTrait
 
     public function getOwners($dossierID)
     {
-        $query = BuildingDossier::join('bdm_owners' , 'bdm_building_dossiers.id' , '=' , 'bdm_owners.dossier_id')
-            ->join('persons' , 'bdm_owners.person_id' , '=' , 'persons.id')
-            ->join('naturals' , function ($join) {
+        $query = BuildingDossier::join('bdm_owners', 'bdm_building_dossiers.id', '=', 'bdm_owners.dossier_id')
+            ->join('persons', 'bdm_owners.person_id', '=', 'persons.id')
+            ->join('naturals', function ($join) {
                 $join->on('persons.personable_id', '=', 'naturals.id')
                     ->where('persons.personable_type', '=', Natural::class);
             })
-            ->join('military_services' ,'persons.id', '=', 'military_services.person_id')
-            ->join('military_service_statuses' , 'military_services.military_service_status_id' , '=' , 'military_service_statuses.id')
+            ->join('military_services', 'persons.id', '=', 'military_services.person_id')
+            ->join('military_service_statuses', 'military_services.military_service_status_id', '=', 'military_service_statuses.id')
+            ->join('files', 'persons.signature_file_id', '=', 'files.id')
             ->select([
                 'persons.id as person_id',
                 'bdm_building_dossiers.id as dossier_id',
@@ -250,16 +261,133 @@ trait DossierTrait
                 'naturals.bc_issue_location as bc_issue_location',
                 'naturals.bc_issue_date as bc_issue_date',
                 'military_service_statuses.name as military_service_status_name',
+                'files.slug as signature_file_slug',
             ])
-            ->where('bdm_building_dossiers.id' , $dossierID)
+            ->where('bdm_building_dossiers.id', $dossierID)
             ->get();
         $persons = $query->pluck('person_id')->toArray();
-        $licenses = Person::join('person_licenses' , function ($join) {
-            $join->on('person_licenses.person_id', '=', 'person.id')
-                ->whereIn('person_licenses.license_type_id' , PersonLicensesEnums::listWithIds());
+        $licenses = Person::join('person_licenses', function ($join) {
+            $join->on('person_licenses.person_id', '=', 'persons.id')
+                ->whereIn('person_licenses.license_type', [PersonLicensesEnums::NATIONAL_ID_CARD->value, PersonLicensesEnums::BIRTH_CERTIFICATE->value]);
         })
-            ->join('files' , 'person_licenses.file_id' , '=' , 'files.id')
+            ->join('files', 'person_licenses.file_id', '=', 'files.id')
+            ->select([
+                'persons.id as person_id',
+                'person_licenses.license_type as license_type',
+                'files.slug as file_slug',
+            ])->whereIn('persons.id', $persons)
+            ->get();
+        $finalResult = $query->map(function ($item) use ($licenses) {
+            $item->licenses = $licenses->filter(function ($license) use ($item) {
+                return $license->person_id == $item->person_id;
+            })->map(function ($license) {
+                return [
+                    'license_type' => $license->license_type,
+                    'file_slug' => $license->file_slug,
+                ];
+            })->values()->toArray();
 
-        return ;
+            return $item;
+        });
+
+        return $finalResult;
     }
+
+    public function getPercentOfDossier($permitStatusName)
+    {
+        foreach (PermitStatusesEnum::cases() as $case) {
+            if ($case->value == $permitStatusName) {
+                $stepNumber = $case->id();
+                $totalSteps = count(PermitStatusesEnum::cases());
+                return round(($stepNumber / $totalSteps) * 100, 2);
+            }
+        }
+
+        return null;
+    }
+
+    public function upgradeOneLevel($id)
+    {
+        $user = User::find(2174);
+        $currentStatus = $this->findCurrentPermitStatusOfDossier($id);
+        $statusName = $currentStatus->permit_status_name;
+
+        $currentStatusName = $currentStatus->permit_status_name;
+
+        $currentEnum = PermitStatusesEnum::tryFrom($currentStatusName);
+        if ($currentEnum) {
+            $currentId = $currentEnum->id();
+            $nextEnum = array_filter(PermitStatusesEnum::cases(), fn($case) => $case->id() === $currentId + 1);
+            $nextEnum = reset($nextEnum);
+
+        }
+        $nextStatus = Status::where('name', $nextEnum)->where('model', PermitStatus::class)->first();
+
+
+        PermitStatus::create([
+            'dossier_id' => $id,
+            'status_id' => $nextStatus->id,
+            'created_date' => now(),
+            'creator_id' => $user->id,
+        ]);
+        return $nextStatus->name;
+
+    }
+
+    public function uploadFilesByStatus($id , $fileID , $fileName , $user)
+    {
+        $lastStatus = $this->findCurrentPermitStatusOfDossier($id);
+        $lastStatusName = $lastStatus->permit_status_name;
+
+        if($lastStatusName == PermitStatusesEnum::fourth->value){
+            $this->uploadFilesToForms($id , $fileID , $fileName , $user);
+        }
+
+    }
+
+    public function uploadFilesToForms($dossierID , $fileID , $fileName , $user)
+    {
+        $form = Form::create([
+            'file_id' => $fileID,
+            'creator_id' => $user->id,
+            'created_date' => now(),
+        ]);
+
+        LicenseDocument::create([
+            'dossier_id' => $dossierID,
+            'documentable_id' => $form->id,
+            'documentable_type' => Form::class,
+            'name' => $fileName,
+        ]);
+    }
+
+    public function getUploadedFiles($statusName , $dossierID)
+    {
+        $files = [];
+
+        if($statusName == PermitStatusesEnum::fifth->value){
+            $query = BuildingDossier::join('bdm_license_documents', function ($join) {
+                $join->on('bdm_building_dossiers.id', '=', 'bdm_license_documents.dossier_id')
+                    ->where('bdm_license_documents.documentable_type', '=', Form::class)
+                    ->where('bdm_license_documents.name', '=', DocumentsNameEnum::FORM_ALEF_ONE_TWO->value);
+            })
+                ->join('bdm_forms', function ($join) use ($dossierID) {
+                    $join->on('bdm_license_documents.documentable_id', '=', 'bdm_forms.id');
+                })
+                ->join('files', 'bdm_forms.file_id', '=', 'files.id')
+                ->join('extensions', 'files.extension_id', '=', 'extensions.id')
+                ->select([
+                    'files.slug as file_slug',
+                    'bdm_license_documents.name as name',
+                    'files.size as size',
+                    'extensions.name as extension_name',
+                ])
+                ->first();
+
+            $files[] = $query;
+        }
+        return $files;
+
+    }
+
 }

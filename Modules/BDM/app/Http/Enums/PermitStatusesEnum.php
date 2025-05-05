@@ -24,7 +24,7 @@ enum PermitStatusesEnum: string
     case fifteenth = 'تأیید نهایی و صدور پروانه';
     case sixteenth = 'اجرای فونداسیون و پی‌ریزی ساختمان';
     case seventeenth = 'اجرای اسکلت و عملیات سازه‌ای';
-    case eighteenth = 'اجرای عملیات سفت‌کاری و نازک‌کاری';
+    case eighteenth = 'اجرای عملیات سفت‌کاری و نازک‌ کاری';
     case nineteenth = 'ارائه گزارش نهایی ناظر';
     case twentieth = 'درخواست صدور گواهی پایان کار';
     case twentyfirst = 'صدور گواهی پایان کار';

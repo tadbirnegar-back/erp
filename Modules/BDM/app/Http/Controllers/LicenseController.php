@@ -260,10 +260,35 @@ class LicenseController extends Controller
 
     public function showDossier($id)
     {
-
+        $getTimeLineData = $this -> getTimelineData($id);
         $getFooterDatas = $this -> getFooterDatas($id);
 
-        return response()->json($getFooterDatas);
+        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas]);
 
+    }
+
+    public function submitLicense($id)
+    {
+        try {
+            DB::beginTransaction();
+            $status = $this->upgradeOneLevel($id);
+            DB::commit();
+            return response()->json(['status' => $status]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function uploadFiles(Request $request,$id)
+    {
+        $data = $request->all();
+        $files = json_decode($data['files']);
+        $user = User::find(2174);
+        foreach ($files as $file) {
+            $fileID = $file->id;
+            $fileName = $file->name;
+            $this->uploadFilesByStatus($id , $fileID , $fileName , $user);
+        }
     }
 }
