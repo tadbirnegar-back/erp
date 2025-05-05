@@ -4,11 +4,11 @@ namespace Modules\BDM\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\BDM\Database\factories\GeographicalCordinateFactory;
+use Modules\BDM\Database\factories\EstateAppSetFactory;
 use Modules\StatusMS\app\Models\Status;
 
 
-class GeographicalCordinate extends Model
+class EstateAppSet extends Model
 {
     use HasFactory;
 
@@ -16,15 +16,11 @@ class GeographicalCordinate extends Model
      * The attributes that are mass assignable.
      */
 
-    protected $table = 'bdm_geographic_cordinates';
+    protected $table = 'bdm_estate_app_sets';
 
     protected $fillable = [
-        'west',
-        'east',
-        'north',
-        'south',
-        'type_id',
-        'dossier_id',
+        'estate_id',
+        'app_id',
     ];
 
     public $timestamps = false;

@@ -30,6 +30,7 @@ Route::post('/bdm/estate/update/{id}' , [BDMController::class, 'updateEstate']);
 Route::get('/bdm/license/submit/{id}' , [LicenseController::class, 'submitLicense']);
 Route::post('/bdm/upload/files/{id}' , [LicenseController::class, 'uploadFiles']);
 Route::get('/bdm/estates/pre-data/{id}' , [EstateController::class, 'getEstatesPreData']);
+Route::post('/bdm/estate/full-fill/{id}' , [EstateController::class, 'FullFillEstate']);
 
 Route::prefix('v1')->group(function () {
     Route::get('/bdm/license-types/list' , [LicenseController::class, 'licenseTypesList']);

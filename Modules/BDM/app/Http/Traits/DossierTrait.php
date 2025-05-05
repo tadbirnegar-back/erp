@@ -339,7 +339,7 @@ trait DossierTrait
         $lastStatus = $this->findCurrentPermitStatusOfDossier($id);
         $lastStatusName = $lastStatus->permit_status_name;
 
-        if($lastStatusName == PermitStatusesEnum::fourth->value){
+        if($lastStatusName == PermitStatusesEnum::fourth->value || $lastStatusName == PermitStatusesEnum::sixth->value || $lastStatusName == PermitStatusesEnum::eighth->value){
             $this->uploadFilesToForms($id , $fileID , $fileName , $user);
         }
 

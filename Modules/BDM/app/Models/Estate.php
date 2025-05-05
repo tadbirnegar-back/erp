@@ -35,6 +35,20 @@ class Estate extends Model
         'area',
         'created_date',
         'request_date',
+        'allow_floor',
+        'allow_floor_height',
+        'allow_height',
+        'area_after_observe',
+        'area_before_observe',
+        'density_percent',
+        'floor_area',
+        'form_date',
+        'form_number',
+        'form_trace_code',
+        'occupation_amount',
+        'occupation_percent',
+        'tree_count',
+        'propery_sketch_file_id',
     ];
 
     public $timestamps = false;
