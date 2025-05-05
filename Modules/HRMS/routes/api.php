@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\HRMS\app\Http\Controllers\ApprovingListController;
+use Modules\HRMS\app\Http\Controllers\EducationalRecordController;
 use Modules\HRMS\app\Http\Controllers\EmployeeController;
 use Modules\HRMS\app\Http\Controllers\HireTypeController;
 use Modules\HRMS\app\Http\Controllers\HRMConfigController;
@@ -32,6 +33,8 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::get('/hrm/setting', [HRMConfigController::class, 'configList']);
     Route::post('/hrm/erc/list', [RecruitmentScriptController::class, 'indexExpiredScripts']);
     Route::post('/hrm/recruitment/contract', [RecruitmentScriptController::class, 'getContract']);
+    Route::post('/hrm/educational-record/add', [EducationalRecordController::class, 'store']);
+    Route::post('/hrm/educational-record/approve', [EducationalRecordController::class, 'approveEducationalRecord']);
 
 });
 

@@ -4,24 +4,41 @@ namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Modules\EMS\app\Models\Attachmentable;
 use Modules\HRMS\app\Http\Enums\EducationalRecordStatusEnum;
 use Modules\HRMS\app\Models\EducationalRecord;
 
 trait EducationRecordTrait
 {
-    public function EducationalRecordStore(array|Collection $dataToInsert, ?int $workForceID)
+    public function EducationalRecordStore(array|Collection $dataToInsert, ?int $personID)
     {
         if (!isset($dataToInsert[0]) || !is_array($dataToInsert[0])) {
             $dataToInsert = [$dataToInsert];
         }
 
-        $preparedData = $this->EducationalRecordDataPreparation($dataToInsert, $workForceID);
+        $preparedData = $this->EducationalRecordDataPreparation($dataToInsert, $personID);
+
         $educationalRecord = EducationalRecord::insert($preparedData->toArray()[0]);
 
         $records = EducationalRecord::orderBy('id', 'desc')->take(count($dataToInsert))->get();
 
 
         return $records;
+
+    }
+
+    public function EducationalRecordSingleStore(array|Collection $dataToInsert, ?int $personID)
+    {
+        if (!isset($dataToInsert[0]) || !is_array($dataToInsert[0])) {
+            $dataToInsert = [$dataToInsert];
+        }
+
+        $preparedData = $this->EducationalRecordDataPreparation($dataToInsert, $personID);
+
+        $educationalRecord = EducationalRecord::create($preparedData->toArray()[0]);
+        $educationalRecord->load('levelOfEducation');
+
+        return $educationalRecord;
 
     }
 
@@ -32,7 +49,7 @@ trait EducationRecordTrait
     }
 
 
-    private function EducationalRecordDataPreparation(array|Collection $educations, ?int $workForceID)
+    private function EducationalRecordDataPreparation(array|Collection $educations, int $personID)
     {
         if (is_array($educations)) {
             $educations = collect($educations);
@@ -44,8 +61,8 @@ trait EducationRecordTrait
             'start_date' => $data['startDate'] ?? null,
             'end_date' => $data['endDate'] ?? null,
             'average' => $data['average'] ?? null,
-            'work_force_id' => $workForceID ?? null,
-            'person_id' => $data['personID'] ?? null,
+            'person_id' => $personID,
+            'status_id' => $data['statusID'] ?? null,
             'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
         ]);
         return $recordsToInsert;
@@ -93,6 +110,20 @@ trait EducationRecordTrait
         $dataToUpsert = $this->EducationalRecordDataPreparation($data, $workForceID);
         $result = EducationalRecord::upsert($dataToUpsert->toArray(), ['id']);
         return $result;
+    }
+
+    public function attachEducationalRecordFiles(EducationalRecord $educationalRecord, array $files)
+    {
+        $attachments = collect($files)->map(function ($file) use ($educationalRecord) {
+            return [
+                'attachment_id' => $file['fileID'],
+                'title' => $file['title'] ?? null,
+                'attachmentable_id' => $educationalRecord->id,
+                'attachmentable_type' => EducationalRecord::class,
+            ];
+        })->toArray();
+
+        Attachmentable::insert($attachments);
     }
 
 

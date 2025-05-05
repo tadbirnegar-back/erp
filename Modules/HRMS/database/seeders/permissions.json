@@ -220,5 +220,17 @@
         "slug": "/hrm/recruitment/contract",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن سوابق تحصیلی",
+        "slug": "/hrm/educational-record/add",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید سوابق تحصیلی",
+        "slug": "/hrm/educational-record/approve",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
     }
 ]
