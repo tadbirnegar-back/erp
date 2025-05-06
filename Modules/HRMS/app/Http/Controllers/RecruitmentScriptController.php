@@ -22,6 +22,7 @@ use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\DeclineRsNotification;
 use Modules\HRMS\app\Notifications\NewRsNotification;
+use Modules\HRMS\app\Resources\RecruitmentScriptContractResource;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\DistrictOfc;
 use Modules\OUnitMS\app\Models\StateOfc;
@@ -653,6 +654,41 @@ class RecruitmentScriptController extends Controller
             return response()->json(['message' => 'خطا در قطع همکاری حکم'], 500);
 
         }
+    }
+
+    public function getContract(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'scriptID' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+        $script = RecruitmentScript::with(
+            [
+                'person' => function ($query) {
+                    $query->with(['natural', 'isar', 'militaryService' => function ($query) {
+                        $query->with(['exemptionType', 'militaryServiceStatus']);
+                    }]);
+
+                },
+                'ounit.ancestors' => function ($query) {
+                    $query->where('unitable_type', '!=', TownOfc::class);
+                },
+                'scriptAgents.scriptAgentType',
+                'latestEducationRecord.levelOfEducation',
+                'position'
+            ]
+        )
+            ->withCount('heirs')
+            ->find($data['scriptID']);
+
+        if (is_null($script)) {
+            return response()->json(['message' => 'حکم مورد نظر یافت نشد'], 404);
+        }
+        return RecruitmentScriptContractResource::make($script);
     }
 
 }

@@ -12,7 +12,8 @@ return new class extends Migration {
     {
         Schema::table('military_services', function (Blueprint $table) {
             $table->unsignedBigInteger('person_id')->nullable();
-
+            $table->unsignedBigInteger('work_force_id')->change()->nullable();
+            
             $table->foreign('person_id')->references('id')->on('persons')->onDelete('set null')->onUpdate('cascade');
         });
     }

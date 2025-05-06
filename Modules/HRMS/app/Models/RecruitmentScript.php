@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Modules\AAA\app\Models\User;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Http\Enums\RelationTypeEnum;
 use Modules\HRMS\Database\factories\RecruitmentScriptFactory;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -214,5 +215,82 @@ class RecruitmentScript extends Model
                 'person_id',
             ])->where('work_forces.workforceable_type', Employee::class);
     }
+
+    public function educationRecords()
+    {
+        return $this->hasManyDeep(EducationalRecord::class, [
+            Employee::class,
+            WorkForce::class,
+            Person::class,
+        ],
+            foreignKeys: [
+                'id',
+                'workforceable_id',
+                'id',
+                'person_id',
+            ],
+            localKeys: [
+                'employee_id',
+                'id',
+                'person_id',
+                'id',
+            ],
+
+
+        )->where('work_forces.workforceable_type', Employee::class);
+    }
+
+    public function latestEducationRecord()
+    {
+        return $this->hasOneDeep(EducationalRecord::class, [
+            Employee::class,
+            WorkForce::class,
+            Person::class,
+        ],
+            foreignKeys: [
+                'id',
+                'workforceable_id',
+                'id',
+                'person_id',
+            ],
+            localKeys: [
+                'employee_id',
+                'id',
+                'person_id',
+                'id',
+            ],
+
+
+        )
+            ->where('work_forces.workforceable_type', Employee::class)
+            ->orderByDesc('id');
+    }
+
+    public function heirs()
+    {
+        return $this->hasManyDeep(Dependent::class, [
+            Employee::class,
+            WorkForce::class,
+            Person::class,
+        ],
+            foreignKeys: [
+                'id',
+                'workforceable_id',
+                'id',
+                'main_person_id',
+            ],
+            localKeys: [
+                'employee_id',
+                'id',
+                'person_id',
+                'id',
+            ],
+
+
+        )
+            ->where('work_forces.workforceable_type', Employee::class)
+            ->where('dependents.relation_type_id', RelationTypeEnum::CHILD->value);
+    }
+
 
 }

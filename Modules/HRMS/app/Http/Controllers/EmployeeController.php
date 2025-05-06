@@ -37,6 +37,7 @@ use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\RegisterNotification;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\Religion;
@@ -120,7 +121,7 @@ class EmployeeController extends Controller
             if (isset($data['educations'])) {
                 $edus = json_decode($data['educations'], true);
 
-                $educations = $this->EducationalRecordStore($edus, $workForce->id);
+                $educations = $this->EducationalRecordStore($edus, $workForce->person_id);
 
             }
 
@@ -211,7 +212,7 @@ class EmployeeController extends Controller
             //additional info insertion
 
 
-            $educations = $this->EducationalRecordStore($data, $workForce->id);
+            $educations = $this->EducationalRecordStore($data, $workForce->person_id);
 
 
 //
@@ -341,7 +342,7 @@ class EmployeeController extends Controller
             //additional info insertion
 
 
-            $educations = $this->EducationalRecordStore($data, $workForce->id);
+            $educations = $this->EducationalRecordStore($data, $workForce->person_id);
 
 
 //
@@ -658,8 +659,9 @@ class EmployeeController extends Controller
 
         $hireType = HireType::find($data['hireTypeID']);
         $scriptType = ScriptType::find($data['scriptTypeID']);
+        $ounit = OrganizationUnit::find($data['ounitID']);
 
-        $result = $this->getScriptAgentCombos($hireType, $scriptType);
+        $result = $this->getScriptAgentCombos($hireType, $scriptType, $ounit);
 
         return response()->json($result);
     }

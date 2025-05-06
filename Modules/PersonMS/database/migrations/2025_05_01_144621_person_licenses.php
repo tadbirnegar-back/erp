@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('file_id');
             $table->unsignedBigInteger('person_id');
             $table->integer('license_type');
-            $table->string('page_number');
 
 
             $table->foreign('file_id')->references('id')->on('files')->onDelete('cascade')->onUpdate('cascade');

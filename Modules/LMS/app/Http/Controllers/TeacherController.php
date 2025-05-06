@@ -64,7 +64,7 @@ class TeacherController extends Controller
 
             if (isset($data['educations'])) {
                 $edus = json_decode($data['educations'], true);
-                $this->educationUpsert($edus, $workforce->id);
+                $this->educationUpsert($edus, $workforce->person_id);
             }
 
             if (isset($data['deletedEducations'])) {

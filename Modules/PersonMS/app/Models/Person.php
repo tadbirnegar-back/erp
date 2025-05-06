@@ -4,6 +4,7 @@ namespace Modules\PersonMS\app\Models;
 
 use AjCastro\EagerLoadPivotRelations\EagerLoadPivotTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AAA\app\Models\User as AAAUser;
@@ -12,6 +13,7 @@ use Modules\AddressMS\app\Models\Address;
 use Modules\CustomerMS\app\Models\Customer;
 use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Models\CourseRecord;
+use Modules\HRMS\app\Models\Dependent;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\Isar;
@@ -222,5 +224,21 @@ class Person extends Model
         return $this->hasMany(CourseRecord::class, 'person_id');
     }
 
+    public function natural(): BelongsTo
+    {
+        return $this->belongsTo(Natural::class, 'personable_id', 'id');
+    }
+
+    public function dependents(): HasMany
+    {
+        return $this->hasMany(Dependent::class, 'main_person_id');
+    }
+
+    public function latestEducationRecord()
+    {
+        return $this->hasOne(EducationalRecord::class, 'person_id')
+            ->orderByDesc('level_of_educational_id')
+            ->orderByDesc('id');
+    }
 
 }
