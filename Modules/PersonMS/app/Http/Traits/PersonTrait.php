@@ -2,7 +2,6 @@
 
 namespace Modules\PersonMS\app\Http\Traits;
 
-use Modules\HRMS\app\Models\ExemptionType;
 use Modules\HRMS\app\Models\MilitaryService;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
 use Modules\PersonMS\app\Models\Legal;
@@ -440,24 +439,22 @@ trait PersonTrait
     public
     function insertLicenses($personId, $data)
     {
-        $nationalLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->id())->where('person_id', $personId)->first();
+        $nationalLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->value)->where('person_id', $personId)->first();
         if (!$nationalLicense) {
             $license = new PersonLicense();
             $license->file_id = $data->national_card_file_id ?? null;
             $license->person_id = $personId;
-            $license->license_type = PersonLicensesEnums::NATIONAL_ID_CARD->id();
-            $license->page_number = 1;
+            $license->license_type = PersonLicensesEnums::NATIONAL_ID_CARD->value;
             $license->save();
         }
 
 
-        $birthLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::BIRTH_CERTIFICATE->id())->where('person_id', $personId)->first();
+        $birthLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::BIRTH_CERTIFICATE->value)->where('person_id', $personId)->first();
         if (!$birthLicense) {
             $license = new PersonLicense();
             $license->file_id = $data->birth_certificate_file_id ?? null;
             $license->person_id = $personId;
-            $license->license_type = PersonLicensesEnums::BIRTH_CERTIFICATE->id();
-            $license->page_number = 1;
+            $license->license_type = PersonLicensesEnums::BIRTH_CERTIFICATE->value;
             $license->save();
         }
 

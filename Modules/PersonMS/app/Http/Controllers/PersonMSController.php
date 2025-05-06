@@ -760,7 +760,7 @@ class PersonMSController extends Controller
         $data = $request->all();
         try {
             DB::beginTransaction();
-            $educationalRecord = $this->educationalRecordStore($data, $person->workForce->id);
+            $educationalRecord = $this->educationalRecordStore($data, $person->id);
 
             DB::commit();
             return response()->json(['message' => 'سوابق تحصیلی با موفقیت ویرایش شد', 'data' => $educationalRecord]);
@@ -1011,7 +1011,7 @@ class PersonMSController extends Controller
                 $data['workForceID'] = $person->workForce->id;
                 $isar = $this->isarUpdate($isar, $data);
             } elseif ($data['hasIsar'] == 1) {
-                $isar = $this->isarStore($data, $person->workForce->id);
+                $isar = $this->isarStore($data, $person->id);
             }
 
             DB::commit();

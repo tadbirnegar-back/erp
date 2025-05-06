@@ -42,9 +42,9 @@ trait EducationRecordTrait
 
     }
 
-    public function educationUpsert(array|Collection $dataToUpdate, int $workForceID)
+    public function educationUpsert(array|Collection $dataToUpdate, int $personID)
     {
-        $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToUpdate, $workForceID);
+        $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToUpdate, $personID);
         EducationalRecord::upsert($preparedData->toArray(), ['id']);
     }
 
@@ -69,7 +69,7 @@ trait EducationRecordTrait
     }
 
 
-    private function EducationalRecordDataPreparationForUpsert(array|Collection $educations, int $workForceID)
+    private function EducationalRecordDataPreparationForUpsert(array|Collection $educations, int $personID)
     {
         if (is_array($educations)) {
             $educations = collect($educations);
@@ -81,7 +81,7 @@ trait EducationRecordTrait
             'start_date' => convertJalaliPersianCharactersToGregorian($data['startDate']) ?? null,
             'end_date' => convertJalaliPersianCharactersToGregorian($data['endDate']) ?? null,
             'average' => $data['average'] ?? null,
-            'work_force_id' => $data['workForceID'] ?? $workForceID,
+            'person_id' => $personID,
             'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
         ]);
         return $recordsToInsert;
@@ -95,7 +95,6 @@ trait EducationRecordTrait
         $educationalRecord->start_date = $data['startDate'];
         $educationalRecord->end_date = $data['endDate'] ?? null;
         $educationalRecord->average = $data['average'] ?? null;
-        $educationalRecord->work_force_id = $data['workForceID'];
         $educationalRecord->level_of_educational_id = $data['levelOfEducationalID'] ?? null;
 
         $educationalRecord->save();

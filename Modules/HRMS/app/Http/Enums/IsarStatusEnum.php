@@ -2,7 +2,7 @@
 
 namespace Modules\HRMS\app\Http\Enums;
 
-enum EducationalRecordStatusEnum: string
+enum IsarStatusEnum: string
 {
     case PENDING_APPROVE = 'در انتظار تایید';
     case APPROVED = 'تایید شده';

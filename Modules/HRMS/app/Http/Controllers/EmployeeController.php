@@ -121,7 +121,7 @@ class EmployeeController extends Controller
             if (isset($data['educations'])) {
                 $edus = json_decode($data['educations'], true);
 
-                $educations = $this->EducationalRecordStore($edus, $workForce->id);
+                $educations = $this->EducationalRecordStore($edus, $workForce->person_id);
 
             }
 
@@ -212,7 +212,7 @@ class EmployeeController extends Controller
             //additional info insertion
 
 
-            $educations = $this->EducationalRecordStore($data, $workForce->id);
+            $educations = $this->EducationalRecordStore($data, $workForce->person_id);
 
 
 //
@@ -342,7 +342,7 @@ class EmployeeController extends Controller
             //additional info insertion
 
 
-            $educations = $this->EducationalRecordStore($data, $workForce->id);
+            $educations = $this->EducationalRecordStore($data, $workForce->person_id);
 
 
 //
