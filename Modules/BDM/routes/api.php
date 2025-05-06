@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\BDM\app\Http\Controllers\BDMController;
+use Modules\BDM\app\Http\Controllers\EngineerController;
 use Modules\BDM\app\Http\Controllers\LicenseController;
 use Modules\BDM\app\Http\Controllers\EstateController;
 
@@ -32,7 +33,10 @@ Route::post('/bdm/upload/files/{id}' , [LicenseController::class, 'uploadFiles']
 Route::get('/bdm/estates/pre-data/{id}' , [EstateController::class, 'getEstatesPreData']);
 Route::post('/bdm/estate/full-fill/{id}' , [EstateController::class, 'FullFillEstate']);
 
+
 Route::prefix('v1')->group(function () {
     Route::get('/bdm/license-types/list' , [LicenseController::class, 'licenseTypesList']);
     Route::post('/bdm/licenses/create' , [LicenseController::class, 'create']);
+    Route::post('/bdm/engineer/request' , [EngineerController::class, 'requestEngineer']);
+    Route::get('/bdm/engineers-request/pre-data' , [EngineerController::class, 'engineersRequestPreData']);
 });

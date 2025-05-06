@@ -218,7 +218,6 @@ trait DossierTrait
                 'bdm_estates.ownership_type_id as ownership_type_id',
                 'bdm_estates.area as area',
                 'bdm_estates.postal_code as postal_code',
-                'bdm_estates.app_id as app_id',
                 'bdm_estates.building_number as building_number',
                 'bdm_estates.ounit_number as ounit_number',
                 'bdm_estates.main as main',
