@@ -239,7 +239,7 @@ class EmployeeController extends Controller
                 $scriptType = ScriptType::where('title', 'انتصاب دهیار')->first();
                 $job = Job::where('title', 'دهیار')->first();
 
-                $result = $this->getScriptAgentCombos($hireType, $scriptType);
+//                $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
 
                 foreach ($rs as &$script) {
@@ -250,18 +250,18 @@ class EmployeeController extends Controller
 //                        $file->save();
 //                    });
 
-                    $sas = $result->map(function ($item) {
-                        return [
-                            'scriptAgentID' => $item->id,
-                            'defaultValue' => $item->pivot->default_value ?? 0,
-                        ];
-                    });
-                    $encodedSas = json_encode($sas->toArray());
+//                    $sas = $result->map(function ($item) {
+//                        return [
+//                            'scriptAgentID' => $item->id,
+//                            'defaultValue' => $item->pivot->default_value ?? 0,
+//                        ];
+//                    });
+//                    $encodedSas = json_encode($sas->toArray());
                     $script['hireTypeID'] = $hireType->id;
                     $script['scriptTypeID'] = $scriptType->id;
                     $script['jobID'] = $job->id;
                     $script['operatorID'] = $user->id;
-                    $script['scriptAgents'] = $encodedSas;
+//                    $script['scriptAgents'] = $encodedSas;
                     $script['positionID'] = Position::where('name', 'دهیار')->first()->id;
 
                 }
@@ -369,7 +369,7 @@ class EmployeeController extends Controller
                 $scriptType = ScriptType::where('title', 'انتصاب سرپرست دهیاری')->first();
                 $job = Job::where('title', 'سرپرست دهیاری')->first();
 
-                $result = $this->getScriptAgentCombos($hireType, $scriptType);
+//                $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
 
                 foreach ($rs as &$script) {
@@ -380,18 +380,18 @@ class EmployeeController extends Controller
 //                        $file->save();
 //                    });
 
-                    $sas = $result->map(function ($item) {
-                        return [
-                            'scriptAgentID' => $item->id,
-                            'defaultValue' => $item->pivot->default_value ?? 1000,
-                        ];
-                    });
-                    $encodedSas = json_encode($sas->toArray());
+//                    $sas = $result->map(function ($item) {
+//                        return [
+//                            'scriptAgentID' => $item->id,
+//                            'defaultValue' => $item->pivot->default_value ?? 1000,
+//                        ];
+//                    });
+//                    $encodedSas = json_encode($sas->toArray());
                     $script['hireTypeID'] = $hireType->id;
                     $script['scriptTypeID'] = $scriptType->id;
                     $script['jobID'] = $job->id;
                     $script['operatorID'] = $user->id;
-                    $script['scriptAgents'] = $encodedSas;
+//                    $script['scriptAgents'] = $encodedSas;
                 }
                 $pendingRsStatus =
 //                    $scriptType->employeeStatus->name == self::$pendingEmployeeStatus
@@ -661,8 +661,8 @@ class EmployeeController extends Controller
         $scriptType = ScriptType::find($data['scriptTypeID']);
         $ounit = OrganizationUnit::find($data['ounitID']);
 
-        $result = $this->getScriptAgentCombos($hireType, $scriptType, $ounit);
-
+//        $result = $this->getScriptAgentCombos($hireType, $scriptType, $ounit);
+        $result = array();
         return response()->json($result);
     }
 

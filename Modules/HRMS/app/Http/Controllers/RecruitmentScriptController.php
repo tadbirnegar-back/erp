@@ -136,7 +136,7 @@ class RecruitmentScriptController extends Controller
 
         if ($user->hasPermissionForRoute($requestedRoute) || $script->employee->person->id == $user->person->id) {
 
-            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position.levels', 'level', 'scriptAgents', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason.person.avatar', 'rejectReason.attachment');
+            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position.levels', 'level', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason.person.avatar', 'rejectReason.attachment');
         } else {
             return response()->json(['message' => 'شما به این بخش دسترسی ندارید'], 403);
         }
@@ -569,7 +569,7 @@ class RecruitmentScriptController extends Controller
             $scriptType = ScriptType::where('title', 'انتصاب دهیار')->first();
             $job = Job::where('title', 'دهیار')->first();
 
-            $result = $this->getScriptAgentCombos($hireType, $scriptType);
+//            $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
 
 //        foreach ($rs as &$script) {
@@ -580,18 +580,18 @@ class RecruitmentScriptController extends Controller
 //                        $file->save();
 //                    });
 
-            $sas = $result->map(function ($item) {
-                return [
-                    'scriptAgentID' => $item->id,
-                    'defaultValue' => $item->pivot->default_value ?? 0,
-                ];
-            });
-            $encodedSas = json_encode($sas->toArray());
+//            $sas = $result->map(function ($item) {
+//                return [
+//                    'scriptAgentID' => $item->id,
+//                    'defaultValue' => $item->pivot->default_value ?? 0,
+//                ];
+//            });
+//            $encodedSas = json_encode($sas->toArray());
             $data['hireTypeID'] = $hireType->id;
             $data['scriptTypeID'] = $scriptType->id;
             $data['jobID'] = $job->id;
             $data['operatorID'] = $user->id;
-            $data['scriptAgents'] = $encodedSas;
+//            $data['scriptAgents'] = $encodedSas;
             $data['positionID'] = Position::where('name', 'دهیار')->first()->id;
 //        }
             $pendingRsStatus =
@@ -677,7 +677,6 @@ class RecruitmentScriptController extends Controller
                 'ounit.ancestors' => function ($query) {
                     $query->where('unitable_type', '!=', TownOfc::class);
                 },
-                'scriptAgents.scriptAgentType',
                 'latestEducationRecord.levelOfEducation',
                 'position'
             ]

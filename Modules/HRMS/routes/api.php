@@ -119,7 +119,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::delete('/hrm/script-agents/delete/{id}', [\Modules\HRMS\app\Http\Controllers\ScriptAgentController::class, 'destroy']);
 
 
-    Route::post('/hrm/employee/script-combos/', [EmployeeController::class, 'agentCombos']);
+//    Route::post('/hrm/employee/script-combos/', [EmployeeController::class, 'agentCombos']);
 
     Route::post('/hrm/employee/script-types/', [EmployeeController::class, 'employeeScriptTypes']);
 

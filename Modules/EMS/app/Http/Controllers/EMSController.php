@@ -213,14 +213,14 @@ class EMSController extends Controller
             $job = Job::where('title', $mrInfo[0]['job'])->first();
             $position = Position::where('name', $mrInfo[0]['position'])->first();
 
-            $result = $this->getScriptAgentCombos($hireType, $scriptType);
-            $sas = $result->map(function ($item) {
-                return [
-                    'scriptAgentID' => $item->id,
-                    'defaultValue' => $item->pivot->default_value ?? 0,
-                ];
-            });
-            $encodedSas = json_encode($sas->toArray());
+//            $result = $this->getScriptAgentCombos($hireType, $scriptType);
+//            $sas = $result->map(function ($item) {
+//                return [
+//                    'scriptAgentID' => $item->id,
+//                    'defaultValue' => $item->pivot->default_value ?? 0,
+//                ];
+//            });
+//            $encodedSas = json_encode($sas->toArray());
 
             foreach ($scripts as $script) {
 
@@ -243,7 +243,7 @@ class EMSController extends Controller
                     'operatorID' => $user->id,
                     'startDate' => $script["startDate"] ?? now(),
                     'expireDate' => $expireDate,
-                    'scriptAgents' => $encodedSas,
+//                    'scriptAgents' => $encodedSas,
                     'files' => $script["files"] ?? null, // Match file by index or set as null if not found
                 ];
 

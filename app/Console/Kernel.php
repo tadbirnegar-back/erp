@@ -12,7 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('passport:purge')
+        $schedule->command('passport:purge --hours=6')
             ->everySixHours()
             ->runInBackground();
     }
