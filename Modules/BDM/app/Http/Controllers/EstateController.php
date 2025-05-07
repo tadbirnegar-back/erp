@@ -41,4 +41,6 @@ class EstateController extends Controller
         }
 
     }
+
+
 }

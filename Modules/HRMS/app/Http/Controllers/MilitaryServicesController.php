@@ -16,4 +16,10 @@ class MilitaryServicesController extends Controller
         $data = ExemptionType::get();
         return response()->json($data);
     }
+
+    public function militaryServicesStatuses()
+    {
+        $data = MilitaryServiceStatus::get();
+        return response()->json($data);
+    }
 }

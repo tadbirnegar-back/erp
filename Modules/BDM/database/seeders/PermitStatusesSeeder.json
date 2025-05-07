@@ -13,11 +13,11 @@
     },
     {
         "name": "استعلام از بنیاد مسکن",
-        "className": "success"
+        "className": "primary"
     },
     {
         "name": "بررسی فنی استعلام بنیاد مسکن",
-        "className": "danger"
+        "className": "primary"
     },
     {
         "name": "بررسی مالکیت زمین توسط شورای روستا",
@@ -33,15 +33,15 @@
     },
     {
         "name": "تهیه و تنظیم نقشه‌های معماری و سازه",
-        "className": "warning"
+        "className": "primary"
     },
     {
         "name": "بررسی فنی نقشه‌های ساختمانی",
-        "className": "info"
+        "className": "primary"
     },
     {
         "name": "ثبت تعهدات مهندسین پروژه",
-        "className": "danger"
+        "className": "primary"
     },
     {
         "name": "محاسبه و صدور قبض عوارض پروانه ساختمانی",
@@ -49,31 +49,31 @@
     },
     {
         "name": "پرداخت عوارض پروانه ساختمانی",
-        "className": "success"
+        "className": "primary"
     },
     {
         "name": "تأییدیه پرداخت‌ها توسط مسئول مالی",
-        "className": "warning"
+        "className": "primary"
     },
     {
         "name": "تأیید نهایی و صدور پروانه",
-        "className": "success"
+        "className": "primary"
     },
     {
         "name": "اجرای فونداسیون و پی‌ریزی ساختمان",
-        "className": "danger"
+        "className": "primary"
     },
     {
         "name": "اجرای اسکلت و عملیات سازه‌ای",
-        "className": "info"
+        "className": "primary"
     },
     {
         "name": "اجرای عملیات سفت‌کاری و نازک‌ کاری",
-        "className": "warning"
+        "className": "primary"
     },
     {
         "name": "ارائه گزارش نهایی ناظر",
-        "className": "danger"
+        "className": "primary"
     },
     {
         "name": "درخواست صدور گواهی پایان کار",
@@ -81,6 +81,10 @@
     },
     {
         "name": "صدور گواهی پایان کار",
-        "className": "success"
+        "className": "primary"
+    },
+    {
+        "name": "بررسی نقشه - رد شده",
+        "className": "danger"
     }
 ]

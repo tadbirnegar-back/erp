@@ -4,11 +4,11 @@ namespace Modules\BDM\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\BDM\Database\factories\PermitStatusFactory;
+use Modules\BDM\Database\factories\BuildingFactory;
 use Modules\StatusMS\app\Models\Status;
 
 
-class PermitStatus extends Model
+class Building extends Model
 {
     use HasFactory;
 
@@ -16,15 +16,23 @@ class PermitStatus extends Model
      * The attributes that are mass assignable.
      */
 
-    protected $table = 'bdm_building_permit_status';
+    protected $table = 'bdm_building';
 
     protected $fillable = [
-        'dossier_id',
-        'status_id',
-        'created_date',
-        'creator_id',
-        'description',
-        'file_id',
+        'app_id',
+        'floor_type_id',
+        'floor_number_id',
+        'all_corbelling_area',
+        'floor_height',
+        'building_area',
+        'storage_area',
+        'stairs_area',
+        'elevator_shaft',
+        'parking_area',
+        'corbelling_area',
+        'duct_area',
+        'other_parts_area',
+        'is_existed',
     ];
 
     public $timestamps = false;

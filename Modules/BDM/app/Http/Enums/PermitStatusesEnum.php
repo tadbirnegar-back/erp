@@ -28,6 +28,7 @@ enum PermitStatusesEnum: string
     case nineteenth = 'ارائه گزارش نهایی ناظر';
     case twentieth = 'درخواست صدور گواهی پایان کار';
     case twentyfirst = 'صدور گواهی پایان کار';
+    case failed = 'بررسی نقشه - رد شده';
 
 
     public function whichNumber(): string
@@ -83,14 +84,19 @@ enum PermitStatusesEnum: string
             self::nineteenth => 19,
             self::twentieth => 20,
             self::twentyfirst => 21,
+            self::failed => 22,
         };
     }
+
     public static function listWithIds(): array
     {
-        return array_map(fn($case) => [
-            'id' => $case->id(),
-            'name' => $case->value,
-        ], self::cases());
+        return array_map(
+            fn($case) => [
+                'id' => $case->id(),
+                'name' => $case->value,
+            ],
+            array_filter(self::cases(), fn($case) => $case->value != self::failed->value)
+        );
     }
 
 

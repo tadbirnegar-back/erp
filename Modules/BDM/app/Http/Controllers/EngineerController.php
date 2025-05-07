@@ -8,14 +8,18 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\BDM\app\Http\Traits\EngineerTrait;
+use Modules\BDM\app\Models\Engineer;
+use Modules\BDM\app\Models\EngineerBuilding;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
 use Modules\HRMS\app\Models\LevelOfEducation;
 use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
+use Modules\PersonMS\app\Models\Natural;
+use Modules\PersonMS\app\Models\Person;
 
 class EngineerController extends Controller
 {
-    use PersonTrait, UserTrait , EducationRecordTrait , EngineerTrait;
+    use PersonTrait, UserTrait, EducationRecordTrait, EngineerTrait;
 
     public function engineersRequestPreData()
     {
@@ -42,12 +46,55 @@ class EngineerController extends Controller
             $data['personID'] = $personId;
             $data['password'] = $data['nationalCode'];
             $user = $this->storeUserOrUpdate($data);
-            $this->EducationalRecordStore($data,$createdOrUpdatedPerson->id);
-            $this->storeEngineer($data , $personId);
+            $userID = $user['user']->id;
+            $this->attachRoleForEngineer($userID);
+            $this->EducationalRecordStore($data, $createdOrUpdatedPerson->id);
+            $this->storeEngineer($data, $personId);
             return response()->json(['data' => [
                 'national_code' => $data['password'],
                 'mobile' => $data['mobile'],
             ]]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+
+    }
+
+    public function detectEngineer(Request $request)
+    {
+        $data = $request->all();
+
+        $nationalCode = $data['nationalCode'];
+
+        $person = Person::join('bdm_engineers', 'bdm_engineers.person_id', '=', 'persons.id')
+            ->join('naturals', function ($join) {
+                $join->on('persons.personable_id', '=', 'naturals.id')
+                    ->where('persons.personable_type', '=', Natural::class);
+            })
+            ->where('national_code', $nationalCode)
+            ->select([
+                'bdm_engineers.id as id',
+                'naturals.first_name as firstName',
+                'naturals.last_name as lastName',
+                'naturals.mobile as mobile',
+            ])->first();
+        return response()->json($person);
+
+    }
+
+    public function addEngineers(Request $request, $id)
+    {
+        try {
+            $data = $request->all();
+
+            $engineers = json_decode($data['engineer_ids']);
+            foreach ($engineers as $engineer) {
+                EngineerBuilding::create([
+                    'engineer_id' => $engineer,
+                    'dossier_id' => $id,
+                ]);
+            }
+            return response()->json(['message' => "افزودن مهندسان با موفیت انجام شد"]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }

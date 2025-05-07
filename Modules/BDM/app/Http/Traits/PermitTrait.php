@@ -93,6 +93,11 @@ trait PermitTrait
         return PermitStatus::GetAllStatuses()->firstWhere('name', PermitStatusesEnum::seventeenth->value);
     }
 
+    public function failedStatus()
+    {
+        return PermitStatus::GetAllStatuses()->firstWhere('name', PermitStatusesEnum::failed->value);
+    }
+
     public function eighteenthStatus()
     {
         return PermitStatus::GetAllStatuses()->firstWhere('name', PermitStatusesEnum::eighteenth->value);

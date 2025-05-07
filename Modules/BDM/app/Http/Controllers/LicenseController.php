@@ -20,6 +20,7 @@ use Modules\BDM\app\Http\Traits\EstateTrait;
 use Modules\BDM\app\Http\Traits\LawyersTrait;
 use Modules\BDM\app\Http\Traits\OwnersTrait;
 use Modules\BDM\app\Models\BuildingDossier;
+use Modules\BDM\app\Models\PermitStatus;
 use Modules\BDM\app\Resources\LicensesListResource;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
@@ -58,7 +59,7 @@ class LicenseController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $dossier = $this->makeDossier($data['ounitID'], $data['ownershipTypeID'] , $data['bdmTypeID']);
+            $dossier = $this->makeDossier($data['ounitID'], $data['ownershipTypeID'], $data['bdmTypeID']);
 
             $password = '';
             $mobile = '';
@@ -68,8 +69,7 @@ class LicenseController extends Controller
             foreach ($persons as $key => $person) {
 
                 $createdOrUpdatedPerson = $this->personUpdateOrInsert($person);
-                if(isset($createdOrUpdatedPerson['type']))
-                {
+                if (isset($createdOrUpdatedPerson['type'])) {
                     return response()->json(['message' => 'شماره موبایل قبلا در سامانه ثبت شده'], 404);
                 }
                 $personId = $createdOrUpdatedPerson->id;
@@ -103,6 +103,7 @@ class LicenseController extends Controller
             foreach ($lawyers as $lawyer) {
                 $createdOrUpdatedLawyer = $this->personUpdateOrInsert($lawyer);
                 $personId = $createdOrUpdatedLawyer->id;
+                $this->insertLicenses($personId, $lawyer);
                 $this->insertLawyers($personId, $dossier->id);
             }
 
@@ -136,24 +137,23 @@ class LicenseController extends Controller
         $employeeID = $user->employee->id;
 
 
-        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
+        $scriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
 
 
-        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
-            ->whereHas('latestStatus' , function ($query) {
-                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id', $scriptType->id)
+            ->whereHas('latestStatus', function ($query) {
+                $query->where('name', RecruitmentScriptStatusEnum::ACTIVE->value);
             })->get();
 
-        if($recruitmentScripts->count() == 0){
-            return response()->json(['message' => 'شما مسئول فنی نیستید'] , 404);
+        if ($recruitmentScripts->count() == 0) {
+            return response()->json(['message' => 'شما مسئول فنی نیستید'], 404);
         }
 
         $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
 
-        $dossiers = $this->dossiersList($ounits , $perPage , $pageNum , $data);
+        $dossiers = $this->dossiersList($ounits, $perPage, $pageNum, $data);
 
         return LicensesListResource::collection($dossiers);
-
 
 
     }
@@ -166,11 +166,11 @@ class LicenseController extends Controller
         $user->load('employee');
         $employeeID = $user->employee->id;
 
-        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
+        $scriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
 
-        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
-            ->whereHas('latestStatus' , function ($query) {
-                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id', $scriptType->id)
+            ->whereHas('latestStatus', function ($query) {
+                $query->where('name', RecruitmentScriptStatusEnum::ACTIVE->value);
             })->get();
 
         $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
@@ -183,14 +183,14 @@ class LicenseController extends Controller
                 'district.name as name',
             ])
             ->withoutGlobalScopes()
-            ->whereIn('organization_units.id' , $ounits)
+            ->whereIn('organization_units.id', $ounits)
             ->get();
 
         $bdmTypes = BdmTypesEnum::listWithIds();
         $permitStatuses = PermitStatusesEnum::listWithIds();
-        $bdmStatuses = Status::where('model' , BuildingDossier::class)->select(['id' , 'name'])->get();
+        $bdmStatuses = Status::where('model', BuildingDossier::class)->select(['id', 'name'])->get();
 
-        return response()->json(['bdm_types' => array_values($bdmTypes) , 'permit_statuses' => array_values($permitStatuses),'districts' => $query , 'bdm_statuses' => $bdmStatuses] , 200  );
+        return response()->json(['bdm_types' => array_values($bdmTypes), 'permit_statuses' => array_values($permitStatuses), 'districts' => $query, 'bdm_statuses' => $bdmStatuses], 200);
     }
 
     public function relatedDistrictList()
@@ -199,11 +199,11 @@ class LicenseController extends Controller
         $user->load('employee');
         $employeeID = $user->employee->id;
 
-        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
+        $scriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
 
-        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
-            ->whereHas('latestStatus' , function ($query) {
-                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id', $scriptType->id)
+            ->whereHas('latestStatus', function ($query) {
+                $query->where('name', RecruitmentScriptStatusEnum::ACTIVE->value);
             })->get();
 
         $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
@@ -216,7 +216,7 @@ class LicenseController extends Controller
                 'district.name as name',
             ])
             ->withoutGlobalScopes()
-            ->whereIn('organization_units.id' , $ounits)
+            ->whereIn('organization_units.id', $ounits)
             ->get();
 
         return response()->json($query);
@@ -230,11 +230,11 @@ class LicenseController extends Controller
         $user->load('employee');
         $employeeID = $user->employee->id;
 
-        $scriptType = ScriptType::where('title' , ScriptTypesEnum::MASOULE_FAANI->value)->first();
+        $scriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
 
-        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id' , $scriptType->id)
-            ->whereHas('latestStatus' , function ($query) {
-                $query->where('name' , RecruitmentScriptStatusEnum::ACTIVE->value);
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id', $scriptType->id)
+            ->whereHas('latestStatus', function ($query) {
+                $query->where('name', RecruitmentScriptStatusEnum::ACTIVE->value);
             })->get();
 
 
@@ -249,9 +249,9 @@ class LicenseController extends Controller
                 'organization_units.name as name',
             ])
             ->withoutGlobalScopes()
-            ->whereIn('organization_units.id' , $ounits)
-            ->when(isset($data['districtID']) , function ($query) use ($data) {
-                $query->where('district.id' , $data['districtID']);
+            ->whereIn('organization_units.id', $ounits)
+            ->when(isset($data['districtID']), function ($query) use ($data) {
+                $query->where('district.id', $data['districtID']);
             })
             ->get();
 
@@ -260,8 +260,9 @@ class LicenseController extends Controller
 
     public function showDossier($id)
     {
-        $getTimeLineData = $this -> getTimelineData($id);
-        $getFooterDatas = $this -> getFooterDatas($id);
+        $getTimeLineData = $this->getTimelineData($id);
+        $getFooterDatas = $this->getFooterDatas($id);
+
 
         return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas]);
 
@@ -280,7 +281,7 @@ class LicenseController extends Controller
         }
     }
 
-    public function uploadFiles(Request $request,$id)
+    public function uploadFiles(Request $request, $id)
     {
         $data = $request->all();
         $files = json_decode($data['files']);
@@ -288,7 +289,54 @@ class LicenseController extends Controller
         foreach ($files as $file) {
             $fileID = $file->id;
             $fileName = $file->name;
-            $this->uploadFilesByStatus($id , $fileID , $fileName , $user);
+            $this->uploadFilesByStatus($id, $fileID, $fileName, $user);
+        }
+    }
+
+    public function declineDossier( Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $this->makeDossierDeclined($data,$id);
+            DB::commit();
+            return response()->json(['message' => "رد پرونده با موفقیت انجام پذیرفت"]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function getPersonData($id)
+    {
+        $person = Person::find($id);
+        $person->load('personable');
+        return response()->json($person);
+    }
+
+    public function updatePerson($id, Request $request)
+    {
+        $data = $request->all();
+        $person = Person::find($id);
+
+        $person->display_name = $data['firstName'] . ' ' . $data['lastName'];
+
+        $person->load('personable');
+        $natural = $person->personable;
+        $natural->first_name = $data['firstName'];
+        $natural->last_name = $data['lastName'];
+        $natural->gender_id = $data['gender'];
+        $natural->father_name = $data['fatherName'];
+        $natural->birth_date = $data['dateOfBirth'];
+        $natural->bc_code = $data['bcCode'];
+        $natural->birth_location = $data['birthLocation'];
+        $natural->bc_serial = $data['bcSerial'];
+        $natural->bc_issue_date = $data['issueDate'];
+        $natural->bc_issue_location = $data['issueLocation'];
+
+        $militaryService = MilitaryService::where('person_id', $id)->first();
+        if($militaryService){
+            $militaryService->military_service_status_id = $data['militaryServiceStatusID'];
         }
     }
 }

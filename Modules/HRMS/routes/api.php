@@ -183,4 +183,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
 
 Route::prefix('v1')->group(function () {
     Route::get('/hrm/military-service/exemption-types', [MilitaryServicesController::class, 'exemptionTypes']);
+    Route::get('/hrm/military-services/statuses', [MilitaryServicesController::class, 'militaryServicesStatuses']);
+
 });

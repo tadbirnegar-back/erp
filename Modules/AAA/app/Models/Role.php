@@ -19,7 +19,7 @@ class Role extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = ['name' , 'status_id'];
     public $timestamps = false;
 
     protected static function newFactory(): RoleFactory

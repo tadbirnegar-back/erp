@@ -2,13 +2,13 @@
 
 namespace Modules\AAA\app\Http\Traits;
 
+use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\Position;
 use Modules\PersonMS\app\Models\Person;
 
 trait UserTrait
 {
-
 
     public function isPersonUserCheck(Person $person): ?User
     {
@@ -178,6 +178,13 @@ trait UserTrait
         $user->roles()->sync($result->toArray());
 
         return true;
+    }
+    public function attachRoleForEngineer($userID)
+    {
+        $statusID = Role::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+        $role = Role::where('name' , 'مهندس ساختمان')->firstOrCreate(['name' => 'مهندس ساختمان' , 'status_id' => $statusID]);
+        $user = User::find($userID);
+        $user->roles()->attach($role->id);
     }
 
 }

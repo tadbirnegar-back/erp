@@ -6,6 +6,7 @@ use Modules\BDM\app\Http\Controllers\BDMController;
 use Modules\BDM\app\Http\Controllers\EngineerController;
 use Modules\BDM\app\Http\Controllers\LicenseController;
 use Modules\BDM\app\Http\Controllers\EstateController;
+use Modules\BDM\app\Http\Controllers\StructuresController;
 
 /*
     |--------------------------------------------------------------------------
@@ -32,8 +33,14 @@ Route::get('/bdm/license/submit/{id}' , [LicenseController::class, 'submitLicens
 Route::post('/bdm/upload/files/{id}' , [LicenseController::class, 'uploadFiles']);
 Route::get('/bdm/estates/pre-data/{id}' , [EstateController::class, 'getEstatesPreData']);
 Route::post('/bdm/estate/full-fill/{id}' , [EstateController::class, 'FullFillEstate']);
+Route::post('/bdm/decline-dossier/{id}' , [LicenseController::class, 'declineDossier']);
+Route::post('/bdm/engineer/detector' , [EngineerController::class, 'detectEngineer']);
+Route::post('/bdm/add-engineers/{id}' , [EngineerController::class, 'addEngineers']);
+Route::get('/bdm/get-person-data/{id}' , [LicenseController::class, 'getPersonData']);
+Route::post('/bdm/update-person/{id}' , [LicenseController::class, 'updatePerson']);
+Route::post('/bdm/store-structures/{id}' , [StructuresController::class, 'storeStructures']);
 
-
+Route::get('/bdm/pre-data-structures/list/{id}' , [StructuresController::class, 'preDataStructures']);
 Route::prefix('v1')->group(function () {
     Route::get('/bdm/license-types/list' , [LicenseController::class, 'licenseTypesList']);
     Route::post('/bdm/licenses/create' , [LicenseController::class, 'create']);

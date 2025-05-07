@@ -321,7 +321,7 @@ trait PersonTrait
                 if ($natural->gender_id == 1) {
                     $militaryService = MilitaryService::where('person_id', $person->id)->first();
                     if ($militaryService) {
-                        $newMilitaryService = new MilitaryService();
+                        $newMilitaryService = MilitaryService::where('person_id', $person->id)->first();
                         $newMilitaryService->exemption_type_id = ($militaryService->exemptionType == null) ? ($data->exemptionTypeID ?? null) : $militaryService->exemptionType->id;
                         $newMilitaryService->military_service_status_id = ($militaryService->militaryServiceStatus == null) ? ($data->militaryServiceStatusID ?? null) : $militaryService->militaryServiceStatus->id;
                         $newMilitaryService->work_force_id = null;
@@ -399,13 +399,16 @@ trait PersonTrait
 
                 $person->save();
                 if ($natural->gender_id == 1) {
-                    MilitaryService::create([
-                        'person_id' => $person->id,
-                        'exemption_type_id' => $data->exemptionTypeID ?? null,
-                        'military_service_status_id' => $data->militaryServiceStatusID,
-                        'work_force_id' => null,
-                        'issue_date' => convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? now(),
-                    ]);
+                    $militaryService = MilitaryService::where('person_id', $person->id)->first();
+                    if (!$militaryService) {
+                        MilitaryService::create([
+                            'person_id' => $person->id,
+                            'exemption_type_id' => $data->exemptionTypeID ?? null,
+                            'military_service_status_id' => $data->militaryServiceStatusID,
+                            'work_force_id' => null,
+                            'issue_date' => convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? now(),
+                        ]);
+                    }
                 }
 
                 $status = $this->activePersonStatus();
@@ -450,7 +453,7 @@ trait PersonTrait
         }
 
 
-        $birthLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::BIRTH_CERTIFICATE->value)->where('person_id', $personId)->first();
+        $birthLicense = PersonLicense::where('license_type', PersonLicensesEnums::BIRTH_CERTIFICATE->value)->where('person_id', $personId)->first();
         if (!$birthLicense) {
             $license = new PersonLicense();
             $license->file_id = $data->birth_certificate_file_id ?? null;

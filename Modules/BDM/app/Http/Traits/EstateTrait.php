@@ -20,7 +20,7 @@ trait EstateTrait
 {
     public function makeEstate($data , $dossierID)
     {
-        Estate::create([
+        $estate = Estate::create([
             'ounit_id' => $data['ounitID'],
             'ownership_type_id' => $data['ownershipTypeID'],
             'part' => $data['part'],
@@ -41,7 +41,7 @@ trait EstateTrait
         $appIds = json_decode($data['apps']);
         foreach ($appIds as $appId) {
             EstateAppSuggest::create([
-                'estate_id' => $dossierID,
+                'estate_id' => $estate->id,
                 'app_id' => $appId,
             ]);
         }
