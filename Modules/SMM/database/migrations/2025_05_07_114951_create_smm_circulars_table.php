@@ -20,7 +20,6 @@ return new class extends Migration {
 
             $table->unsignedDouble('min_wage', 20, 2)->nullable();
             $table->unsignedDouble('marriage_benefit', 20, 2)->nullable();
-            $table->unsignedDouble('child_benefit', 20, 2)->nullable();
             $table->unsignedDouble('rent_benefit', 20, 2)->nullable();
             $table->unsignedDouble('grocery_benefit', 20, 2)->nullable();
 

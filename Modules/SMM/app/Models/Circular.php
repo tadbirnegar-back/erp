@@ -27,7 +27,6 @@ class Circular extends Model
         'fiscal_year_id',
         'min_wage',
         'marriage_benefit',
-        'child_benefit',
         'rent_benefit',
         'grocery_benefit',
     ];

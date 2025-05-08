@@ -19,7 +19,6 @@ class SmmCircularShowResource extends JsonResource
             'description' => $this->description,
             'minWage' => $this->min_wage,
             'marriageBenefit' => $this->marriage_benefit,
-            'childBenefit' => $this->child_benefit,
             'rentBenefit' => $this->rent_benefit,
             'groceryBenefit' => $this->grocery_benefit,
             'file' => [

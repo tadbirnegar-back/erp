@@ -73,7 +73,6 @@ class CircularController extends Controller
             'fiscalYearID' => 'required',
             'minWage' => 'sometimes|numeric',
             'marriageBenefit' => 'sometimes|numeric',
-            'childBenefit' => 'sometimes|numeric',
             'rentBenefit' => 'sometimes|numeric',
             'groceryBenefit' => 'sometimes|numeric',
         ]);
@@ -176,7 +175,6 @@ class CircularController extends Controller
         $validator = Validator::make($data, [
             'minWage' => 'required|numeric',
             'marriageBenefit' => 'required|numeric',
-            'childBenefit' => 'required|numeric',
             'rentBenefit' => 'required|numeric',
             'groceryBenefit' => 'required|numeric',
         ]);

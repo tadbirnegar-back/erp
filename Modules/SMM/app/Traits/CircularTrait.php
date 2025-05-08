@@ -56,7 +56,6 @@ trait CircularTrait
                 'fiscal_year_id' => $item['fiscalYearID'],
                 'min_wage' => $item['minWage'] ?? null,
                 'marriage_benefit' => $item['marriageBenefit'] ?? null,
-                'child_benefit' => $item['childBenefit'] ?? null,
                 'rent_benefit' => $item['rentBenefit'] ?? null,
                 'grocery_benefit' => $item['groceryBenefit'] ?? null,
             ];

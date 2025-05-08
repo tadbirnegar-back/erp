@@ -11,21 +11,12 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
-use Modules\HRMS\app\Http\Enums\FormulaEnum;
-use Modules\HRMS\app\Http\Enums\HireTypeEnum;
-use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\HRMS\app\Models\HireType;
-use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\ScriptType;
-use Modules\HRMS\app\Resources\RecruitmentScriptContractResource;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\TownOfc;
-use Modules\PersonMS\app\Models\Natural;
-use Modules\PersonMS\app\Models\Person;
+use Modules\OUnitMS\app\Models\VillageOfc;
 
 class testController extends Controller
 {
@@ -41,74 +32,86 @@ class testController extends Controller
         // $parent->field = 'newValue';
         // $parent->save();
 
-        foreach ($children as $child) {
-            // Update the child
-
-
-            // Check if the child has its own children
-            if ($child->children && $child->children->isNotEmpty()) {
-                $this->updateDescendants($child, $child->children);
-            }
-        }
+//        foreach ($children as $child) {
+//            // Update the child
+//
+//
+//            // Check if the child has its own children
+//            if ($child->children && $child->children->isNotEmpty()) {
+//                $this->updateDescendants($child, $child->children);
+//            }
+//        }
     }
 
-    public function run()
+
+    function run()
     {
-
-        $p = Person::find(1908);
-        dd($p->latestEducationRecord->levelOfEducation);
-        $script = RecruitmentScript::with(
-            [
-                'person' => function ($query) {
-                    $query->with(['natural', 'isar', 'militaryService' => function ($query) {
-                        $query->with(['exemptionType', 'militaryServiceStatus']);
-                    }]);
-
-                },
-                'ounit.ancestors' => function ($query) {
-                    $query->where('unitable_type', '!=', TownOfc::class);
-                },
-                'scriptAgents.scriptAgentType',
-                'latestEducationRecord',
-                'position'
-            ]
-        )
-            ->withCount('heirs')
-            ->find(5273);
-//        dd($script);
-        return RecruitmentScriptContractResource::make($script);
-
-
-        $a = ScriptTypesEnum::VILLAGER;
-        $b = HireTypeEnum::PART_TIME;
-        $st = ScriptType::where('title', $a->value)->first();
-        $ht = HireType::where('title', $b->value)->first();
-        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-        $ounit = OrganizationUnit::with(['ancestors' => function ($query) {
-            $query->where('unitable_type', '!=', TownOfc::class);
-        }])->find(5);
-
-        dump(
-            $ounit->ancestors[0],
-            $ounit->ancestors[1],
-            $ounit->ancestors[2]
-        );
-
-        $person = Person::where('personable_type', Natural::class)->first();
-        dump($person->personable);
-
-        $x = new $class($st, $ht, $ounit);
-        $formulas = collect(FormulaEnum::cases());
-
-        $res = $formulas->map(function ($formula) use ($x) {
-            $fn = $formula->getFnName();
-            $res = $x->$fn();
-            return [
-                'default_value' => $res,
-                'label' => $formula->getLabel(),
-            ];
-
-        });
+        $a = OrganizationUnit::joinRelationship('village')
+            ->with('ancestors')
+            ->where('unitable_type', VillageOfc::class)
+            ->where('village_ofcs.hasLicense', 1)
+            ->select([
+                'organization_units.id',
+                'organization_units.parent_id',
+                'organization_units.name as village_name',
+                'village_ofcs.abadi_code as village_abadi_code'
+            ])
+            ->get();
+        dump($a);
+//        $p = Person::find(1908);
+//        dd($p->latestEducationRecord->levelOfEducation);
+//        $script = RecruitmentScript::with(
+//            [
+//                'person' => function ($query) {
+//                    $query->with(['natural', 'isar', 'militaryService' => function ($query) {
+//                        $query->with(['exemptionType', 'militaryServiceStatus']);
+//                    }]);
+//
+//                },
+//                'ounit.ancestors' => function ($query) {
+//                    $query->where('unitable_type', '!=', TownOfc::class);
+//                },
+//                'scriptAgents.scriptAgentType',
+//                'latestEducationRecord',
+//                'position'
+//            ]
+//        )
+//            ->withCount('heirs')
+//            ->find(5273);
+////        dd($script);
+//        return RecruitmentScriptContractResource::make($script);
+//
+//
+//        $a = ScriptTypesEnum::VILLAGER;
+//        $b = HireTypeEnum::PART_TIME;
+//        $st = ScriptType::where('title', $a->value)->first();
+//        $ht = HireType::where('title', $b->value)->first();
+//        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
+//        $ounit = OrganizationUnit::with(['ancestors' => function ($query) {
+//            $query->where('unitable_type', '!=', TownOfc::class);
+//        }])->find(5);
+//
+//        dump(
+//            $ounit->ancestors[0],
+//            $ounit->ancestors[1],
+//            $ounit->ancestors[2]
+//        );
+//
+//        $person = Person::where('personable_type', Natural::class)->first();
+//        dump($person->personable);
+//
+//        $x = new $class($st, $ht, $ounit);
+//        $formulas = collect(FormulaEnum::cases());
+//
+//        $res = $formulas->map(function ($formula) use ($x) {
+//            $fn = $formula->getFnName();
+//            $res = $x->$fn();
+//            return [
+//                'default_value' => $res,
+//                'label' => $formula->getLabel(),
+//            ];
+//
+//        });
 
 //        $enactments = Enactment::joinRelationship('statuses', ['statuses' => function ($join) {
 //            $join
