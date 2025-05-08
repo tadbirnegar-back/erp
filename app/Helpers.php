@@ -6,7 +6,6 @@ function convertToDbFriendly($string)
 {
     if ($string instanceof \DateTimeImmutable) {
         // Log the problematic value (or row information if available)
-        \Log::info('Found DateTimeImmutable value', ['value' => $string->format('m/d')]);
         // Convert to string
         $string = $string->format('m/d');
     }
@@ -217,7 +216,7 @@ function removeLeftZero($number)
     }
 }
 
-function DateformatToHumanReadableJalali($date, $showClock = true,$split='/')
+function DateformatToHumanReadableJalali($date, $showClock = true, $split = '/')
 {
     // Check if the date string contains time
     $dateTimeParts = explode(' ', $date);
