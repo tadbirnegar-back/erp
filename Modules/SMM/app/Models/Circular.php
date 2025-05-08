@@ -59,7 +59,7 @@ class Circular extends Model
     {
         return $query->join('smmCircular_status', 'smm_circulars.id', '=', 'smmCircular_status.circular_id')
             ->join('statuses', 'smmCircular_status.status_id', '=', 'statuses.id')
-            ->whereRaw('smmCircular_status.create_date = (SELECT MAX(create_date) FROM smmCircular_status WHERE document_id = smm_circular.id)');
+            ->whereRaw('smmCircular_status.create_date = (SELECT MAX(create_date) FROM smmCircular_status WHERE circular_id = smm_circulars.id)');
 
     }
 

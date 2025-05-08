@@ -16,7 +16,7 @@ use Modules\SMM\app\Http\Controllers\CircularController;
 
 Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(function () {
 
-    Route::get('/smm/circulars/list', [CircularController::class, 'index']);
+    Route::post('/smm/circulars/list', [CircularController::class, 'index']);
 
     Route::get('/smm/circulars/{id}', [CircularController::class, 'show']);
 

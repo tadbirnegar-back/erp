@@ -1,6 +1,7 @@
 [
     {
-        "name": "SMM",
-        "category_name": "حقوق و دستمزد"
+        "name": "حقوق و دستمزد",
+        "category_name": "مدیریت منابع انسانی",
+        "icon": "SMMIcon"
     }
 ]

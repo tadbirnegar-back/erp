@@ -23,11 +23,16 @@ class SmmCircularShowResource extends JsonResource
             'rentBenefit' => $this->rent_benefit,
             'groceryBenefit' => $this->grocery_benefit,
             'file' => [
+                'id' => $this->file_id,
                 'title' => $this->file_name,
                 'slug' => url('/') . '/' . $this->file_slug,
                 'size' => Number::fileSize($this->file_size),
+                'type' => $this->extension_name,
             ],
-            'fiscalYear' => $this->fiscal_year->name,
+            'fiscalYear' => [
+                'id' => $this->fiscal_year_id,
+                'name' => $this->fiscal_year_name
+            ],
             'status' => [
                 'statusName' => $this->status_name,
                 'statusClassName' => $this->status_class_name,

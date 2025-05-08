@@ -25,7 +25,7 @@ class CircularController extends Controller
     public function index(Request $request): AnonymousResourceCollection|JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|string',
+            'name' => 'sometimes|string',
             'perPage' => 'sometimes|numeric',
             'pageNum' => 'sometimes|numeric',
         ]);
@@ -36,7 +36,7 @@ class CircularController extends Controller
         }
         $perPage = $request->get('perPage') ?? 10;
         $pageNum = $request->get('pageNum') ?? 1;
-        $searchTerm = $request->get('title') ?? null;
+        $searchTerm = $request->get('name') ?? null;
 
         $index = Circular::joinRelationship('fiscalYear')
             ->latestStatus()
@@ -54,7 +54,7 @@ class CircularController extends Controller
                     $query->whereRaw('MATCH(title) AGAINST(? IN BOOLEAN MODE)', [$searchTerm]);
                 });
             })
-            ->orderByDesc('smmCirculars.id')
+            ->orderByDesc('smm_circulars.id')
             ->paginate($perPage, ['*'], 'page', $pageNum);
 
         return SmmCircularListResource::collection($index);
@@ -99,19 +99,22 @@ class CircularController extends Controller
     /**
      * Show the specified resource.
      */
-    public function show($id): JsonResponse
+    public function show($id)
     {
         $circular = Circular::joinRelationship('fiscalYear')
-            ->joinRelationship('file')
+            ->joinRelationship('file.extension')
             ->latestStatus()
             ->addSelect([
                 'statuses.name as status_name',
                 'statuses.class_name as status_class_name',
                 'smmCircular_status.create_date as status_create_date',
+                'fiscal_years.id as fiscal_year_id',
                 'fiscal_years.name as fiscal_year_name',
                 'files.name as file_name',
+                'files.id as file_id',
                 'files.slug as file_slug',
                 'files.size as file_size',
+                'extensions.name as extension_name',
             ])
             ->findOrFail($id);
 
