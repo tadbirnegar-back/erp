@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Modules\AAA\app\Http\Enums\PermissionTypesEnum;
 use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Models\FiscalYear;
+use Modules\BDM\app\Http\Enums\BdmOwnershipTypesEnum;
 use Modules\BDM\app\Http\Enums\DocumentsNameEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
 use Modules\BDM\app\Http\Enums\EngineersTypeEnum;
@@ -34,14 +35,16 @@ use Modules\PFM\app\Http\Traits\BillsTrait;
 use Modules\PFM\app\Models\Bill;
 use Modules\PFM\app\Models\BillTariff;
 use Modules\PFM\app\Models\Levy;
+use Modules\PFM\app\Models\LevyBill;
 use Modules\PFM\app\Models\LevyItem;
 use Modules\PFM\app\Models\PfmCirculars;
+use Modules\PFM\Services\PaymentService;
 use Modules\StatusMS\app\Models\Status;
 use Modules\VCM\app\Models\VcmVersions;
 
 trait DossierTrait
 {
-    use PermitTrait , BillsTrait;
+    use PermitTrait, BillsTrait;
 
     public function makeDossier($ounitID, $ownershipTypeID, $bdmTypeID)
     {
@@ -171,7 +174,6 @@ trait DossierTrait
     {
         $status = $this->findCurrentPermitStatusOfDossier($dossierID);
         $currentStatusName = $status->permit_status_name;
-
         if ($currentStatusName == PermitStatusesEnum::failed->value) {
             $nextStatusData = [
                 'permit_status_name' => PermitStatusesEnum::ninth->value,
@@ -268,6 +270,8 @@ trait DossierTrait
             ->join('organization_units as town', 'village.parent_id', '=', 'town.id')
             ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
             ->join('organization_units as city', 'district.parent_id', '=', 'city.id')
+            ->join('bdm_estate_app_suggests', 'bdm_estates.id', '=', 'bdm_estate_app_suggests.estate_id')
+            ->join('pfm_prop_applications', 'bdm_estate_app_suggests.app_id', '=', 'pfm_prop_applications.id')
             ->select([
                 'bdm_estates.id as estate_id',
                 'bdm_estates.ownership_type_id as ownership_type_id',
@@ -278,12 +282,15 @@ trait DossierTrait
                 'bdm_estates.main as main',
                 'bdm_estates.minor as minor',
                 'bdm_estates.part as part',
+                'pfm_prop_applications.name',
                 'city.name as city_name',
                 'district.name as district_name',
                 'village.name as village_name',
                 'bdm_estates.address as address',
             ])
             ->find($dossierID);
+
+        $query->ownership_type_name = BdmOwnershipTypesEnum::getNameById($query->ownership_type_id);
 
         return $query;
     }
@@ -319,6 +326,9 @@ trait DossierTrait
             ])
             ->where('bdm_building_dossiers.id', $dossierID)
             ->get();
+        $query->map(function ($item) {
+            $item->type = 'شریک';
+        });
         $persons = $query->pluck('person_id')->toArray();
         $licenses = Person::join('person_licenses', function ($join) {
             $join->on('person_licenses.person_id', '=', 'persons.id')
@@ -378,6 +388,10 @@ trait DossierTrait
             ])
             ->where('bdm_building_dossiers.id', $dossierID)
             ->get();
+
+        $query->map(function ($item) {
+            $item->type = 'وکیل';
+        });
         $persons = $query->pluck('person_id')->toArray();
         $licenses = Person::join('person_licenses', function ($join) {
             $join->on('person_licenses.person_id', '=', 'persons.id')
@@ -728,26 +742,27 @@ trait DossierTrait
     public function getButtons()
     {
         return [
-            PermitStatusesEnum::second->value => ['submit'],
-            PermitStatusesEnum::third->value => [],
-            PermitStatusesEnum::fourth->value => ['upload'],
-            PermitStatusesEnum::fifth->value => ['completeEstate', 'submit'],
-            PermitStatusesEnum::sixth->value => ['upload', 'submit'],
-            PermitStatusesEnum::seventh->value => [],
-            PermitStatusesEnum::eighth->value => ['addEngineers'],
-            PermitStatusesEnum::ninth->value => ['submit', 'upload'],
-            PermitStatusesEnum::tenth->value => ['decline', 'completeAndSubmit'],
-            PermitStatusesEnum::eleventh->value => ['upload'],
-            PermitStatusesEnum::twelfth->value => ['editPromises', 'publishBill'],
-            PermitStatusesEnum::thirteenth->value => ['payment'],
+
+            PermitStatusesEnum::first->value => ['submit', 'archive'],
+            PermitStatusesEnum::second->value => [],
+            PermitStatusesEnum::third->value => ['upload'],
+            PermitStatusesEnum::fourth->value => ['completeEstate', 'submit'],
+            PermitStatusesEnum::fifth->value => ['upload', 'submit'],
+            PermitStatusesEnum::sixth->value => [],
+            PermitStatusesEnum::seventh->value => ['addEngineers'],
+            PermitStatusesEnum::eighth->value => ['submit', 'upload'],
+            PermitStatusesEnum::ninth->value => ['decline', 'completeAndSubmit'],
+            PermitStatusesEnum::tenth->value => ['upload'],
+            PermitStatusesEnum::eleventh->value => ['editPromises', 'publishBill'],
+            PermitStatusesEnum::twelfth->value => ['payment'],
+            PermitStatusesEnum::thirteenth->value => [],
             PermitStatusesEnum::fourteenth->value => [],
             PermitStatusesEnum::fifteenth->value => [],
             PermitStatusesEnum::sixteenth->value => [],
             PermitStatusesEnum::seventeenth->value => [],
             PermitStatusesEnum::eighteenth->value => [],
-            PermitStatusesEnum::nineteenth->value => [],
-            PermitStatusesEnum::twentieth->value => ['submit'],
-            PermitStatusesEnum::twentyfirst->value => [],
+            PermitStatusesEnum::nineteenth->value => ['submit'],
+            PermitStatusesEnum::twentieth->value => [],
         ];
     }
 
@@ -1135,10 +1150,10 @@ trait DossierTrait
 
     public function getBankAccs($dossierID)
     {
-        $query = BuildingDossier::join('bdm_estates' , 'bdm_estates.dossier_id', '=', 'bdm_building_dossiers.id')
-            ->join('bnk_bank_accounts' , 'bnk_bank_accounts.ounit_id' , '=' , 'bdm_estates.ounit_id')
-            ->join('bnk_bank_branches' , 'bnk_bank_branches.id' , '=' , 'bnk_bank_accounts.branch_id')
-            ->join('bnk_banks' , 'bnk_banks.id' , '=' , 'bnk_bank_branches.bank_id')
+        $query = BuildingDossier::join('bdm_estates', 'bdm_estates.dossier_id', '=', 'bdm_building_dossiers.id')
+            ->join('bnk_bank_accounts', 'bnk_bank_accounts.ounit_id', '=', 'bdm_estates.ounit_id')
+            ->join('bnk_bank_branches', 'bnk_bank_branches.id', '=', 'bnk_bank_accounts.branch_id')
+            ->join('bnk_banks', 'bnk_banks.id', '=', 'bnk_bank_branches.bank_id')
             ->select([
                 'bdm_building_dossiers.id as dossier_id',
                 'bnk_banks.name as bank_name',
@@ -1149,21 +1164,56 @@ trait DossierTrait
         return $query;
     }
 
-    public function publishingDossierBill($data , $id)
+    public function getPermitStatusesList()
+    {
+        $query = Status::where('model', PermitStatus::class)->select(['id', 'name'])->get();
+
+        $data = [];
+
+        foreach ($query as $item) {
+            $state  = PermitStatusesEnum::whichNumberStatic($item->name);
+            $description = PermitStatusesEnum::getDescriptionByName($item->name);
+            if($state != null){
+                $data[] =[
+                    'id' => $item->id,
+                    'title' => $state.': '.$item->name,
+                    'description' => $description
+                ];
+            }
+        }
+        return $data;
+    }
+
+    public function publishingDossierBill($data, $id)
     {
         $bill = Bill::create([
             'bank_account_id' => $data['bank_account_id'],
         ]);
 
-        $levy = Levy::where('name' , LeviesListEnum::MOSTAHADESAT_MAHOVATEH->value)->first();
+        $levy = Levy::where('name', LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value)->first();
 
-        BillTariff::create([
+        LevyBill::create([
+            'levy_id' => $levy->id,
             'bill_id' => $bill->id,
-            'tariff_id' => $tariff->id,
         ]);
+        $owner = BuildingDossier::join('bdm_owners', 'bdm_building_dossiers.id', '=', 'bdm_owners.dossier_id')
+            ->select([
+                'bdm_owners.person_id',
+            ])
+            ->where('bdm_owners.is_main_owner', '=', true)
+            ->find($id);
+        $personID = $owner->person_id;
+        $person = Person::find($personID);
+        $user = User::find(2174);
 
+        if (!isset($data['discountAmount'])) {
+            $data['discountAmount'] = 0;
+        }
+
+        $payment = new PaymentService($bill->id, $user, $data['price'], $data['maxDays'], $data['discountAmount'], $person);
+        $payment->makeUserCustomer();
+        $payment->generateBill();
         return $bill;
     }
-
 
 }

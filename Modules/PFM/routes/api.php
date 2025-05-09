@@ -62,3 +62,5 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/pfm/bills/cancel-bill/{id}' , [BillsController::class, 'cancelBill']);
 });
 
+Route::post('/pfm/bills/list', [BillsController::class, 'billsList']);
+Route::get('/pfm/bills/show-bill/{id}', [BillsController::class, 'showBill']);

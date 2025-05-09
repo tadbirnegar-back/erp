@@ -23,7 +23,8 @@ class EstateController extends Controller
         $getArea = $this->getArea($id);
         $getBdmType = $this->getBdmType($id);
         $getGeoLocationsList = $this->getGeoLocationList();
-        return response()->json(['estateConditions' => $listOfEstateConditions, 'geoLocations' => $getGeoLocations, 'fileds' => $listOfFieldConditions, 'bdmType' => $getBdmType, 'geoLocationList' => $getGeoLocationsList, 'area' => $getArea]);
+        $getTrackingCode = BuildingDossier::find($id)->tracking_code;
+        return response()->json(['estateConditions' => $listOfEstateConditions, 'geoLocations' => $getGeoLocations, 'fileds' => $listOfFieldConditions, 'bdmType' => $getBdmType, 'geoLocationList' => $getGeoLocationsList, 'area' => $getArea , 'trackingCode' => $getTrackingCode]);
     }
 
     public function FullFillEstate(Request $request, $id)

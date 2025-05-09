@@ -29,4 +29,9 @@ enum BdmOwnershipTypesEnum: string
             'name' => $case->value,
         ], self::cases());
     }
+
+    public static function getNameById(int $id): string
+    {
+        return array_values(self::listWithIds())[$id - 1]['name'];
+    }
 }

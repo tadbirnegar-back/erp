@@ -32,7 +32,7 @@ class PaymentService
     public User $user;
     public int $discountAmount;
     public int $maxDays;
-    public function __construct($billID , $user , $price , $maxDays , $discountAmount , $person)
+    public function __construct($billID , $user , $price , $maxDays , $discountAmount = 0 , $person)
     {
         $this->billID = $billID;
         $this->person = $person;
@@ -66,7 +66,7 @@ class PaymentService
     {
         $this->makeOrder();
         $this->makeInvoice();
-        $this->setDiscount();
+//        $this->setDiscount();
     }
 
 

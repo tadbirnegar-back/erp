@@ -187,10 +187,11 @@ class LicenseController extends Controller
             ->get();
 
         $bdmTypes = BdmTypesEnum::listWithIds();
-        $permitStatuses = PermitStatusesEnum::listWithIds();
+        $permitStatuses = Status::where('model', PermitStatus::class)->select(['id', 'name'])->get();
+
         $bdmStatuses = Status::where('model', BuildingDossier::class)->select(['id', 'name'])->get();
 
-        return response()->json(['bdm_types' => array_values($bdmTypes), 'permit_statuses' => array_values($permitStatuses), 'districts' => $query, 'bdm_statuses' => $bdmStatuses], 200);
+        return response()->json(['bdm_types' => array_values($bdmTypes), 'permit_statuses' => $permitStatuses, 'districts' => $query, 'bdm_statuses' => $bdmStatuses], 200);
     }
 
     public function relatedDistrictList()
@@ -262,9 +263,9 @@ class LicenseController extends Controller
     {
         $getTimeLineData = $this->getTimelineData($id);
         $getFooterDatas = $this->getFooterDatas($id);
+        $permitStatusesList = $this->getPermitStatusesList();
 
-
-        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas]);
+        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas , 'permitStatusesList' => $permitStatusesList]);
 
     }
 
@@ -285,7 +286,7 @@ class LicenseController extends Controller
     {
         $data = $request->all();
         $files = json_decode($data['files']);
-        $user = User::find(2174);
+        $user = Auth::user();
         foreach ($files as $file) {
             $fileID = $file->id;
             $fileName = $file->name;
@@ -354,7 +355,15 @@ class LicenseController extends Controller
 
     public function publishDossierBill(Request $request ,$id)
     {
+        try {
+        DB::beginTransaction();
         $data = $request->all();
         $this->publishingDossierBill($data,$id);
+        DB::commit();
+        return response()->json(['message' => 'قبض با موفقیت صادر شد']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 }

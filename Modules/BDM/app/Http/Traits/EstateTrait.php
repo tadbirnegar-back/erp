@@ -19,7 +19,7 @@ use Modules\VCM\app\Models\VcmVersions;
 
 trait EstateTrait
 {
-    public function makeEstate($data , $dossierID)
+    public function makeEstate($data, $dossierID)
     {
         $estate = Estate::create([
             'ounit_id' => $data['ounitID'],
@@ -39,13 +39,11 @@ trait EstateTrait
             'request_date' => convertPersianToGregorianBothHaveTimeAndDont($data['request_date']),
         ]);
 
-        $appIds = json_decode($data['apps']);
-        foreach ($appIds as $appId) {
-            EstateAppSuggest::create([
-                'estate_id' => $estate->id,
-                'app_id' => $appId,
-            ]);
-        }
+
+        EstateAppSuggest::create([
+            'estate_id' => $estate->id,
+            'app_id' => $data['appID'],
+        ]);
 
 
         $typeID = GeographicalCordinatesTypesEnum::SUBMITTED->id();
@@ -61,7 +59,7 @@ trait EstateTrait
 
     public function getGeoLocations($dossierID)
     {
-        $query = GeographicalCordinate::where('dossier_id' , $dossierID)->first();
+        $query = GeographicalCordinate::where('dossier_id', $dossierID)->first();
         return $query;
     }
 
@@ -79,7 +77,7 @@ trait EstateTrait
 
     public function getArea($dossierID)
     {
-        $query = Estate::where('dossier_id' , $dossierID)->first();
+        $query = Estate::where('dossier_id', $dossierID)->first();
         return $query->area;
     }
 
@@ -91,9 +89,9 @@ trait EstateTrait
         return $bdmType;
     }
 
-    public function insertEstateDatas($dossierID , $data)
+    public function insertEstateDatas($dossierID, $data)
     {
-        $estate = Estate::where('dossier_id' , $dossierID)->first();
+        $estate = Estate::where('dossier_id', $dossierID)->first();
         $estate->update([
             'allow_floor' => $data['allow_floor'],
             'allow_floor_height' => $data['allow_floor_height'],
@@ -110,12 +108,12 @@ trait EstateTrait
             'tree_count' => $data['tree_count'] ?? null,
             'propery_sketch_file_id' => $data['propery_sketch_file_id'],
         ]);
-        $this->insertUMTDatas($estate->id , $data);
-        $this->insertAppSets($estate->id , $data);
-        $this->insertGeoLocations($dossierID , $data);
+        $this->insertUMTDatas($estate->id, $data);
+        $this->insertAppSets($estate->id, $data);
+        $this->insertGeoLocations($dossierID, $data);
     }
 
-    public function insertUMTDatas($estateID , $data)
+    public function insertUMTDatas($estateID, $data)
     {
         $utms = json_decode($data['utms']);
         foreach ($utms as $utm) {
@@ -128,7 +126,7 @@ trait EstateTrait
         }
     }
 
-    public function insertAppSets($estateID , $data)
+    public function insertAppSets($estateID, $data)
     {
         $appIds = json_decode($data['apps']);
         foreach ($appIds as $appId) {
@@ -139,7 +137,7 @@ trait EstateTrait
         }
     }
 
-    public function insertGeoLocations($dossierID , $data)
+    public function insertGeoLocations($dossierID, $data)
     {
         $geoLocations = json_decode($data['geoLocations']);
         foreach ($geoLocations as $geoLocation) {

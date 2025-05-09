@@ -24,25 +24,26 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/bdm/licenses/list' , [LicenseController::class, 'licenseList']);
     Route::post('/bdm/related-villages/list' , [LicenseController::class, 'relatedVillagesList']);
     Route::get('/bdm/list-filter/pre_data' , [LicenseController::class, 'onlyLicenseTypesList']);
+    Route::get('/bdm/dossier/{id}' , [LicenseController::class, 'showDossier']);
+    Route::post('/bdm/estate/update/{id}' , [BDMController::class, 'updateEstate']);
+    Route::get('/bdm/license/submit/{id}' , [LicenseController::class, 'submitLicense']);
+    Route::post('/bdm/upload/files/{id}' , [LicenseController::class, 'uploadFiles']);
+    Route::get('/bdm/estates/pre-data/{id}' , [EstateController::class, 'getEstatesPreData']);
+    Route::post('/bdm/estate/full-fill/{id}' , [EstateController::class, 'FullFillEstate']);
+    Route::post('/bdm/decline-dossier/{id}' , [LicenseController::class, 'declineDossier']);
+    Route::post('/bdm/engineer/detector' , [EngineerController::class, 'detectEngineer']);
+    Route::post('/bdm/add-engineers/{id}' , [EngineerController::class, 'addEngineers']);
+    Route::get('/bdm/engineers-type/list' , [EngineerController::class, 'engineersTypeList']);
+    Route::get('/bdm/get-person-data/{id}' , [LicenseController::class, 'getPersonData']);
+    Route::post('/bdm/update-person/{id}' , [LicenseController::class, 'updatePerson']);
+    Route::post('/bdm/store-structures/{id}' , [StructuresController::class, 'storeStructures']);
+    Route::get('/bdm/pre-data-structures/list/{id}' , [StructuresController::class, 'preDataStructures']);
+    Route::get('/bdm/send-dossier-bill/{id}' , [LicenseController::class, 'sendDossierBill']);
+    Route::post('/bdm/publish-dossier-bill/{id}' , [LicenseController::class, 'publishDossierBill']);
 });
 
-
-Route::get('/bdm/dossier/{id}' , [LicenseController::class, 'showDossier']);
-Route::post('/bdm/estate/update/{id}' , [BDMController::class, 'updateEstate']);
-Route::get('/bdm/license/submit/{id}' , [LicenseController::class, 'submitLicense']);
-Route::post('/bdm/upload/files/{id}' , [LicenseController::class, 'uploadFiles']);
-Route::get('/bdm/estates/pre-data/{id}' , [EstateController::class, 'getEstatesPreData']);
-Route::post('/bdm/estate/full-fill/{id}' , [EstateController::class, 'FullFillEstate']);
-Route::post('/bdm/decline-dossier/{id}' , [LicenseController::class, 'declineDossier']);
-Route::post('/bdm/engineer/detector' , [EngineerController::class, 'detectEngineer']);
-Route::post('/bdm/add-engineers/{id}' , [EngineerController::class, 'addEngineers']);
-Route::get('/bdm/engineers-type/list' , [EngineerController::class, 'engineersTypeList']);
-Route::get('/bdm/get-person-data/{id}' , [LicenseController::class, 'getPersonData']);
-Route::post('/bdm/update-person/{id}' , [LicenseController::class, 'updatePerson']);
-Route::post('/bdm/store-structures/{id}' , [StructuresController::class, 'storeStructures']);
-Route::get('/bdm/pre-data-structures/list/{id}' , [StructuresController::class, 'preDataStructures']);
-Route::get('/bdm/send-dossier-bill/{id}' , [LicenseController::class, 'sendDossierBill']);
 Route::post('/bdm/publish-dossier-bill/{id}' , [LicenseController::class, 'publishDossierBill']);
+
 Route::prefix('v1')->group(function () {
     Route::get('/bdm/license-types/list' , [LicenseController::class, 'licenseTypesList']);
     Route::post('/bdm/licenses/create' , [LicenseController::class, 'create']);
