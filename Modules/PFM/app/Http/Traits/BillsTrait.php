@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
@@ -285,6 +286,5 @@ trait BillsTrait
         $payment->makeCardToCard();
 
     }
-
 
 }

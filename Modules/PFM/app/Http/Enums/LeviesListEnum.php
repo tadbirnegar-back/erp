@@ -20,4 +20,5 @@ enum LeviesListEnum: string
     case ARZESHE_AFZODEH_HADI = "عوارض ارزش افزوده ناشی از الحاق به بافت و تغییر کاربری عرصه در اجرای طرح هادی روستایی";
     case ARZESHE_AFZODEH_OMRAN = "عوارض ارزش افزوده ناشی از اجرای طرح های عمران روستایی";
     case BAHAYE_KHEDMAT = "عناوین بهای خدمت";
+    case SUDURE_PARVANEH_SAKHTEMAN = "عوارض صدور پروانه های ساختمانی";
 }

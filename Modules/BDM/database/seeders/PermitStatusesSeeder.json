@@ -86,5 +86,9 @@
     {
         "name": "بررسی نقشه - رد شده",
         "className": "danger"
+    },
+    {
+        "name": "رد تعهدات",
+        "className": "danger"
     }
 ]

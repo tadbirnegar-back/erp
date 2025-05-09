@@ -30,6 +30,7 @@ enum PermitStatusesEnum: string
     case twentyfirst = 'صدور گواهی پایان کار';
     case failed = 'بررسی نقشه - رد شده';
 
+    case rejectObligations = 'رد تعهدات';
 
     public function whichNumber(): string
     {
@@ -85,6 +86,7 @@ enum PermitStatusesEnum: string
             self::twentieth => 20,
             self::twentyfirst => 21,
             self::failed => 22,
+            self::rejectObligations => 23,
         };
     }
 

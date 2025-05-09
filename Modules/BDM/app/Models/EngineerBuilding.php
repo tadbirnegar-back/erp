@@ -21,6 +21,7 @@ class EngineerBuilding extends Model
     protected $fillable = [
         'engineer_id',
         'dossier_id',
+        'engineer_type_id'
     ];
 
     public $timestamps = false;

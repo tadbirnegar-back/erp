@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\ACMS\app\Models\FiscalYear;
+use Modules\BDM\app\Http\Enums\FloorNumbersEnum;
 use Modules\BDM\app\Http\Traits\DossierTrait;
 use Modules\BDM\app\Http\Traits\StructuresTrait;
 use Modules\PFM\app\Http\Enums\LeviesListEnum;
@@ -35,11 +36,21 @@ class StructuresController extends Controller
 
     public function preDataStructures($id)
     {
-        $levy = Levy::where('name' , LeviesListEnum::DIVAR_KESHI->value)->first();
         $fiscalYear = FiscalYear::orderBy('name', 'desc')->first();
         $circular = PfmCirculars::where('fiscal_year_id' , $fiscalYear->id)->first();
-        $circularLevy = LevyCircular::where('levy_id' , $levy->id)->where('circular_id' , $circular->id)->first();
-        $levyItems = LevyItem::where('circular_levy_id' , $circularLevy->id)->select(['id' , 'name'])->get();
-        return response()->json(["participationTypes" => $levyItems , "data" => $this->getStructures($id)]);
+
+
+        $levyDivar = Levy::where('name' , LeviesListEnum::DIVAR_KESHI->value)->first();
+        $circularLevy = LevyCircular::where('levy_id' , $levyDivar->id)->where('circular_id' , $circular->id)->first();
+        $levyItemsDivar = LevyItem::where('circular_levy_id' , $circularLevy->id)->select(['id' , 'name'])->get();
+
+        //Levy zir bana
+        $levyZirBana = Levy::where('name' , LeviesListEnum::ZIRBANA_MASKONI->value)->first();
+        $circularLevyZirbana = LevyCircular::where('levy_id' , $levyZirBana->id)->where('circular_id' , $circular->id)->first();
+        $levyItemsZirBana = LevyItem::where('circular_levy_id' , $circularLevyZirbana->id)->select(['id' , 'name'])->get();
+
+        $floorNumbers = FloorNumbersEnum::listWithIds();
+
+        return response()->json(["participationTypes" => $levyItemsDivar ,"levyItemsZirbana" => $levyItemsZirBana , "floorNumbers" => $floorNumbers ,"data" => $this->getStructures($id)]);
     }
 }

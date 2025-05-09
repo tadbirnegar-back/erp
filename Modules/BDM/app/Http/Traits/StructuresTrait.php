@@ -50,6 +50,7 @@ trait StructuresTrait
                 $partitioning = Partitioning::create([
                     'height' => $partitioning->height,
                     'partitioning_type_id' => $partitioning->partitioning_type_id,
+                    'app_id' => $partitioning->app_id,
                 ]);
                 Structure::create([
                     'dossier_id' => $dossierID,
@@ -66,6 +67,7 @@ trait StructuresTrait
                     'height' => $parking->height,
                     'length' => $parking->length,
                     'width' => $parking->width,
+                    'app_id' => $parking->app_id,
                 ]);
                 $structure = Structure::where('structureable_id' , $parking->id)
                     ->where('structureable_type' , Parking::class)
@@ -76,6 +78,7 @@ trait StructuresTrait
                         'dossier_id' => $dossierID,
                         'structureable_id' => $parking->id,
                         'structureable_type' => Parking::class,
+                        'app_id' => $parking->app_id,
                     ]);
                 }else{
                     $structure->update([
@@ -94,6 +97,7 @@ trait StructuresTrait
                     'height' => $pool->height,
                     'width' => $pool->width,
                     'length' => $pool->length,
+                    'app_id' => $pool->app_id,
                 ]);
                 $structure = Structure::where('structureable_id' , $pool->id)
                     ->where('structureable_type' , Pool::class)
@@ -123,6 +127,7 @@ trait StructuresTrait
                     'height' => $pavilion->height,
                     'width' => $pavilion->width,
                     'length' => $pavilion->length,
+                    'app_id' => $pavilion->app_id,
                 ]);
                 $structure = Structure::where('structureable_id' , $pavilion->id)
                     ->where('structureable_type' , Pavilion::class)

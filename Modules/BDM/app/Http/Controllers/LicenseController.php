@@ -339,4 +339,22 @@ class LicenseController extends Controller
             $militaryService->military_service_status_id = $data['militaryServiceStatusID'];
         }
     }
+
+    public function sendDossierBill($id)
+    {
+        $buildings  = $this->getBuildingBills($id);
+        $partitioning = $this->getPartitioningBills($id);
+        $pavilion = $this->getPavilionBills($id);
+        $parking = $this->getParkingBills($id);
+        $pool = $this->getPoolBills($id);
+        $banks = $this->getBankAccs($id);
+        $allTotalPrice = $buildings['total_price'] + $partitioning['total_price'] + $pavilion['total_price'] + $parking['total_price'] + $pool['total_price'];
+        return response()->json(["buildings" => $buildings , "partitioning" => $partitioning , "pavilion" => $pavilion , "parking" => $parking , "pool" => $pool , "allTotalPrice" => $allTotalPrice , 'banks' => $banks]);
+    }
+
+    public function publishDossierBill(Request $request ,$id)
+    {
+        $data = $request->all();
+        $this->publishingDossierBill($data,$id);
+    }
 }

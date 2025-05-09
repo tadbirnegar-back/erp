@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\AAA\app\Http\Traits\UserTrait;
+use Modules\BDM\app\Http\Enums\EngineersTypeEnum;
 use Modules\BDM\app\Http\Traits\EngineerTrait;
 use Modules\BDM\app\Models\Engineer;
 use Modules\BDM\app\Models\EngineerBuilding;
@@ -90,8 +91,9 @@ class EngineerController extends Controller
             $engineers = json_decode($data['engineer_ids']);
             foreach ($engineers as $engineer) {
                 EngineerBuilding::create([
-                    'engineer_id' => $engineer,
+                    'engineer_id' => $engineer->id,
                     'dossier_id' => $id,
+                    'engineer_type_id' => $engineer->engineer_type_id,
                 ]);
             }
             return response()->json(['message' => "افزودن مهندسان با موفیت انجام شد"]);
@@ -99,5 +101,11 @@ class EngineerController extends Controller
             return response()->json(['message' => $e->getMessage()], 400);
         }
 
+    }
+
+    public function engineersTypeList()
+    {
+        $list = EngineersTypeEnum::listWithIds();
+        return response()->json($list);
     }
 }

@@ -7,6 +7,7 @@ use Modules\AAA\app\Http\Enums\PermissionTypesEnum;
 use Modules\AAA\app\Models\User;
 use Modules\BDM\app\Http\Enums\BdmTypesEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
+use Modules\BDM\app\Http\Enums\FloorNumbersEnum;
 use Modules\BDM\app\Http\Enums\GeographicalCordinatesTypesEnum;
 use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Models\Estate;
@@ -68,6 +69,13 @@ trait EstateTrait
     {
         return GeographicalCordinatesTypesEnum::listWithIds();
     }
+
+    public function getFloorNumbers($dossierID)
+    {
+        $query = FloorNumbersEnum::listWithIds();
+        return $query;
+    }
+
 
     public function getArea($dossierID)
     {
