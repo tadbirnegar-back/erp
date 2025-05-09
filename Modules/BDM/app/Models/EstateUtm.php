@@ -23,6 +23,7 @@ class EstateUtm extends Model
         'x',
         'y',
         'zone',
+        'is_center',
     ];
 
     public $timestamps = false;

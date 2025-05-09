@@ -260,7 +260,8 @@ trait DossierTrait
         $lawyers = $this->getLawyers($id);
         $structures = $this->getStructures($id);
         $engineers = $this->getEngineers($id);
-        return ['estate' => $estateData, 'owners' => $ownersData, 'lawyers' => $lawyers, "structures" => $structures, 'engineers' => $engineers];
+        $payments = $this->getPayments($id);
+        return ['estate' => $estateData, 'owners' => $ownersData, 'lawyers' => $lawyers, "structures" => $structures, 'engineers' => $engineers , 'payments' => $payments];
     }
 
     public function getEstates($dossierID)
@@ -811,6 +812,16 @@ trait DossierTrait
         return $engineers;
     }
 
+    public function getPayments($id)
+    {
+        $Dossier = BuildingDossier::find($id);
+        if($Dossier->bill_id != null){
+            $billID = $Dossier->bill_id;
+            return $this->getBillData($billID);
+        }else{
+            return null;
+        }
+    }
 
     public function getBuildingBills($id)
     {
@@ -1191,6 +1202,10 @@ trait DossierTrait
         ]);
 
         $levy = Levy::where('name', LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value)->first();
+
+        $dosser = BuildingDossier::find($id);
+        $dosser->bill_id = $bill->id;
+        $dosser->save();
 
         LevyBill::create([
             'levy_id' => $levy->id,

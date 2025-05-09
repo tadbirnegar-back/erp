@@ -9,12 +9,14 @@ use Modules\BDM\app\Http\Enums\BdmTypesEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
 use Modules\BDM\app\Http\Enums\FloorNumbersEnum;
 use Modules\BDM\app\Http\Enums\GeographicalCordinatesTypesEnum;
+use Modules\BDM\app\Http\Enums\PlaceTypesEnum;
 use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Models\Estate;
 use Modules\BDM\app\Models\EstateAppSet;
 use Modules\BDM\app\Models\EstateAppSuggest;
 use Modules\BDM\app\Models\EstateUtm;
 use Modules\BDM\app\Models\GeographicalCordinate;
+use Modules\PFM\app\Models\Application;
 use Modules\VCM\app\Models\VcmVersions;
 
 trait EstateTrait
@@ -54,6 +56,7 @@ trait EstateTrait
             'north' => $data['north'],
             'south' => $data['south'],
             'type_id' => $typeID,
+            'dossier_id' => $dossierID,
         ]);
     }
 
@@ -66,6 +69,11 @@ trait EstateTrait
     public function getGeoLocationList()
     {
         return GeographicalCordinatesTypesEnum::listWithIds();
+    }
+
+    public function getAppsList()
+    {
+        return Application::select('id', 'name')->get();
     }
 
     public function getFloorNumbers($dossierID)
@@ -107,10 +115,24 @@ trait EstateTrait
             'occupation_percent' => $data['occupation_percent'],
             'tree_count' => $data['tree_count'] ?? null,
             'propery_sketch_file_id' => $data['propery_sketch_file_id'],
+            'place_type_id' => $data['place_type_id'],
+            'building_status_id' => $data['estate_status_id'],
+            'field_status_id' => $data['field_status_id'],
         ]);
         $this->insertUMTDatas($estate->id, $data);
         $this->insertAppSets($estate->id, $data);
         $this->insertGeoLocations($dossierID, $data);
+        if (isset($data['deletedUtms'])) {
+            $this->deleteUTMs($estate->id, $data['deletedUtms']);
+        }
+    }
+
+    public function deleteUTMs($estateID, $utms)
+    {
+        $utms = json_decode($utms);
+        foreach ($utms as $utm) {
+            EstateUtm::find($utm)->delete();
+        }
     }
 
     public function insertUMTDatas($estateID, $data)
@@ -122,6 +144,7 @@ trait EstateTrait
                 'x' => $utm->x,
                 'y' => $utm->y,
                 'zone' => $utm->zone,
+                'is_center' => $utm->is_center,
             ]);
         }
     }
@@ -129,6 +152,11 @@ trait EstateTrait
     public function insertAppSets($estateID, $data)
     {
         $appIds = json_decode($data['apps']);
+        $appID = $appIds[0];
+        $estateBefore = EstateAppSet::find($appID);
+        if ($estateBefore) {
+            $estateBefore->delete();
+        }
         foreach ($appIds as $appId) {
             EstateAppSet::create([
                 'estate_id' => $estateID,
@@ -141,14 +169,31 @@ trait EstateTrait
     {
         $geoLocations = json_decode($data['geoLocations']);
         foreach ($geoLocations as $geoLocation) {
-            GeographicalCordinate::create([
-                'west' => $geoLocation->west,
-                'east' => $geoLocation->east,
-                'north' => $geoLocation->north,
-                'south' => $geoLocation->south,
-                'type_id' => $geoLocation->type_id,
-                'dossier_id' => $dossierID,
-            ]);
+            GeographicalCordinate::updateOrCreate(
+                [
+                    'type_id' => $geoLocation->type_id,
+                    'dossier_id' => $dossierID,
+                ],
+                [
+                    'west' => $geoLocation->west,
+                    'east' => $geoLocation->east,
+                    'north' => $geoLocation->north,
+                    'south' => $geoLocation->south,
+                ]
+            );
+
         }
+    }
+
+    public function getPreviousData($dossierID)
+    {
+        $estate = Estate::where('dossier_id', $dossierID)->first();
+        if ($estate->form_number != null) {
+            $utms = EstateUtm::where('estate_id', $estate->id)->get();
+            $geoLocations = GeographicalCordinate::where('dossier_id', $dossierID)->get();
+            return ['estate' => $estate, 'utms' => $utms, 'geoLocations' => $geoLocations];
+        }
+        return null;
+
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\BDM\app\Http\Enums\EstateConditionsEnum;
 use Modules\BDM\app\Http\Enums\FieldConditionsEnum;
+use Modules\BDM\app\Http\Enums\PlaceTypesEnum;
 use Modules\BDM\app\Http\Traits\EstateTrait;
 use Modules\BDM\app\Models\BuildingDossier;
 
@@ -23,8 +24,11 @@ class EstateController extends Controller
         $getArea = $this->getArea($id);
         $getBdmType = $this->getBdmType($id);
         $getGeoLocationsList = $this->getGeoLocationList();
+        $placeOfEstate = PlaceTypesEnum::listWithIds();
+        $appsList = $this->getAppsList();
         $getTrackingCode = BuildingDossier::find($id)->tracking_code;
-        return response()->json(['estateConditions' => $listOfEstateConditions, 'geoLocations' => $getGeoLocations, 'fileds' => $listOfFieldConditions, 'bdmType' => $getBdmType, 'geoLocationList' => $getGeoLocationsList, 'area' => $getArea , 'trackingCode' => $getTrackingCode]);
+        $lastData = $this->getPreviousData($id);
+        return response()->json(['latestData' => $lastData,'estateConditions' => $listOfEstateConditions, 'geoLocations' => $getGeoLocations, 'fileds' => $listOfFieldConditions, 'bdmType' => $getBdmType, 'geoLocationList' => $getGeoLocationsList, 'area' => $getArea , 'trackingCode' => $getTrackingCode , 'placeOfEstate' => $placeOfEstate , 'apps' => $appsList]);
     }
 
     public function FullFillEstate(Request $request, $id)
@@ -35,7 +39,7 @@ class EstateController extends Controller
 
             $this->insertEstateDatas($id, $data);
             \DB::commit();
-            return response()->json(['message' => "دوره با موفقیت به روز رسانی شد"]);
+            return response()->json(['message' => "اطلاعات ملک با موفقیت تکمیل شد"]);
         }catch (\Exception $e){
             \DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 400);

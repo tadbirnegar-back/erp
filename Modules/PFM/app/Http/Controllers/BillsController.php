@@ -450,7 +450,6 @@ class BillsController extends Controller
     public function showBill($id)
     {
         $data = $this->getBillData($id);
-        return response()->json($data);
         return new ShowBillResource($data);
     }
 

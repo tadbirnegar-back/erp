@@ -214,56 +214,113 @@ trait BillsTrait
 
     public function getBillData($id)
     {
-        $query = Bill::query()
-            ->join('orders', function ($join) {
-                $join->on('orders.orderable_id', '=', 'pfm_bills.id')
-                    ->where('orders.orderable_type', '=', Bill::class);
-            })
-            ->join('process_status', function ($join) {
-                $join->on('process_status.order_id', '=', 'orders.id')
-                    ->whereRaw('process_status.created_date = (SELECT MAX(created_date) FROM process_status WHERE order_id = orders.id)');
-            })
-            ->join('financial_status', function ($join) {
-                $join->on('financial_status.order_id', '=', 'orders.id')
-                    ->whereRaw('financial_status.created_date = (SELECT MAX(created_date) FROM financial_status WHERE order_id = orders.id)');
-            })
-            ->join('statuses as status_fin', 'financial_status.status_id', '=', 'status_fin.id')
-            ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
-            ->join('customers', 'orders.customer_id', '=', 'customers.id')
-            ->join('persons', 'customers.person_id', '=', 'persons.id')
-            ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
+        $levy = Bill::join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
             ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
-            ->join('invoices', 'orders.id', '=', 'invoices.order_id')
-            ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
-            ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
-            ->join('pfm_bill_tariff', 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
-            ->join('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
-            ->join('pfm_circular_booklets', 'pfm_circular_tariffs.booklet_id', '=', 'pfm_circular_booklets.id')
-            ->join('organization_units', 'pfm_circular_booklets.ounit_id', '=', 'organization_units.id')
-            ->join('bnk_bank_accounts' , 'pfm_bills.bank_account_id', '=', 'bnk_bank_accounts.id')
-            ->join('bnk_bank_branches' , 'bnk_bank_accounts.branch_id', '=', 'bnk_bank_branches.id')
-            ->join('bnk_banks' , 'bnk_bank_branches.bank_id', '=', 'bnk_banks.id')
             ->select([
-                'pfm_bills.id as bill_id',
-                'status_fin.name as financial_status_name',
-                'status_fin.class_name as financial_status_class_name',
-                'status_pro.name as process_status_name',
-                'status_pro.class_name as process_status_class_name',
-                'persons.display_name as customer_name',
-                'pfm_levies.name as levy_name',
-                'persons.national_code as national_code',
-                'orders.total_price as total_price',
-                'discounts.value as discount_value',
-                'invoices.due_date as due_date',
-                'organization_units.name as ounit_name',
-                'bnk_banks.name as bank_name',
-                'bnk_bank_accounts.account_number as account_number',
-                'orders.create_date as create_date',
+                'pfm_levies.name'
             ])
-            ->where('pfm_bills.id', $id)
-            ->first();
+            ->find($id);
+        if ($levy->name == LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value) {
+            $query = Bill::join('bdm_building_dossiers', 'pfm_bills.id', '=', 'bdm_building_dossiers.bill_id')
+                ->join('orders', function ($join) {
+                    $join->on('orders.orderable_id', '=', 'pfm_bills.id')
+                        ->where('orders.orderable_type', '=', Bill::class);
+                })
+                ->join('process_status', function ($join) {
+                    $join->on('process_status.order_id', '=', 'orders.id')
+                        ->whereRaw('process_status.created_date = (SELECT MAX(created_date) FROM process_status WHERE order_id = orders.id)');
+                })
+                ->join('financial_status', function ($join) {
+                    $join->on('financial_status.order_id', '=', 'orders.id')
+                        ->whereRaw('financial_status.created_date = (SELECT MAX(created_date) FROM financial_status WHERE order_id = orders.id)');
+                })
+                ->join('statuses as status_fin', 'financial_status.status_id', '=', 'status_fin.id')
+                ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
+                ->join('customers', 'orders.customer_id', '=', 'customers.id')
+                ->join('persons', 'customers.person_id', '=', 'persons.id')
+                ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
+                ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
+                ->join('invoices', 'orders.id', '=', 'invoices.order_id')
+                ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
+                ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
+                ->join('bnk_bank_accounts', 'pfm_bills.bank_account_id', '=', 'bnk_bank_accounts.id')
+                ->join('bnk_bank_branches', 'bnk_bank_accounts.branch_id', '=', 'bnk_bank_branches.id')
+                ->join('bnk_banks', 'bnk_bank_branches.bank_id', '=', 'bnk_banks.id')
+                ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+                ->join('organization_units', 'bdm_estates.ounit_id', '=', 'organization_units.id')
+                ->select([
+                    'pfm_bills.id as bill_id',
+                    'status_fin.name as financial_status_name',
+                    'status_fin.class_name as financial_status_class_name',
+                    'status_pro.name as process_status_name',
+                    'status_pro.class_name as process_status_class_name',
+                    'persons.display_name as customer_name',
+                    'pfm_levies.name as levy_name',
+                    'persons.national_code as national_code',
+                    'orders.total_price as total_price',
+                    'discounts.value as discount_value',
+                    'invoices.due_date as due_date',
+                    'organization_units.name as ounit_name',
+                    'bnk_banks.name as bank_name',
+                    'bnk_bank_accounts.account_number as account_number',
+                    'orders.create_date as create_date',
+                ])
+                ->find($id);
+            return $query;
 
-        return $query;
+        } else {
+            $query = Bill::query()
+                ->join('orders', function ($join) {
+                    $join->on('orders.orderable_id', '=', 'pfm_bills.id')
+                        ->where('orders.orderable_type', '=', Bill::class);
+                })
+                ->join('process_status', function ($join) {
+                    $join->on('process_status.order_id', '=', 'orders.id')
+                        ->whereRaw('process_status.created_date = (SELECT MAX(created_date) FROM process_status WHERE order_id = orders.id)');
+                })
+                ->join('financial_status', function ($join) {
+                    $join->on('financial_status.order_id', '=', 'orders.id')
+                        ->whereRaw('financial_status.created_date = (SELECT MAX(created_date) FROM financial_status WHERE order_id = orders.id)');
+                })
+                ->join('statuses as status_fin', 'financial_status.status_id', '=', 'status_fin.id')
+                ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
+                ->join('customers', 'orders.customer_id', '=', 'customers.id')
+                ->join('persons', 'customers.person_id', '=', 'persons.id')
+                ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
+                ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
+                ->join('invoices', 'orders.id', '=', 'invoices.order_id')
+                ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
+                ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
+                ->join('pfm_bill_tariff', 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
+                ->join('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
+                ->join('pfm_circular_booklets', 'pfm_circular_tariffs.booklet_id', '=', 'pfm_circular_booklets.id')
+                ->join('organization_units', 'pfm_circular_booklets.ounit_id', '=', 'organization_units.id')
+                ->join('bnk_bank_accounts', 'pfm_bills.bank_account_id', '=', 'bnk_bank_accounts.id')
+                ->join('bnk_bank_branches', 'bnk_bank_accounts.branch_id', '=', 'bnk_bank_branches.id')
+                ->join('bnk_banks', 'bnk_bank_branches.bank_id', '=', 'bnk_banks.id')
+                ->select([
+                    'pfm_bills.id as bill_id',
+                    'status_fin.name as financial_status_name',
+                    'status_fin.class_name as financial_status_class_name',
+                    'status_pro.name as process_status_name',
+                    'status_pro.class_name as process_status_class_name',
+                    'persons.display_name as customer_name',
+                    'pfm_levies.name as levy_name',
+                    'persons.national_code as national_code',
+                    'orders.total_price as total_price',
+                    'discounts.value as discount_value',
+                    'invoices.due_date as due_date',
+                    'organization_units.name as ounit_name',
+                    'bnk_banks.name as bank_name',
+                    'bnk_bank_accounts.account_number as account_number',
+                    'orders.create_date as create_date',
+                ])
+                ->where('pfm_bills.id', $id)
+                ->first();
+
+            return $query;
+        }
+
     }
 
     public function billConfirmation($data, $id, $user)

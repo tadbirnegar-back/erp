@@ -49,6 +49,9 @@ class Estate extends Model
         'occupation_percent',
         'tree_count',
         'propery_sketch_file_id',
+        'place_type_id',
+        'building_status_id',
+        'field_status_id',
     ];
 
     public $timestamps = false;
