@@ -44,7 +44,7 @@ trait PfmCircularTrait
 
         $this->attachDraftStatus($circular->id, $user->id);
 
-        $this->attachLastCircularItems($circular->id);
+//        $this->attachLastCircularItems($circular->id);
 
     }
 
