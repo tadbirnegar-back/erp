@@ -21,6 +21,11 @@ enum EstateConditionsEnum : string
         };
     }
 
+    public static function getNameById(int $id): string
+    {
+        return array_values(self::listWithIds())[$id - 1]['name'];
+    }
+
     public static function listWithIds(): array
     {
         return array_map(fn($case) => [

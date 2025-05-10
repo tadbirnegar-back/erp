@@ -4,7 +4,7 @@ namespace Modules\BDM\app\Http\Enums;
 
 enum GeographicalCordinatesTypesEnum: string
 {
-    case SUBMITTED = 'ارسال شده';
+    case SUBMITTED = 'ابعاد مندرج در سند';
     case ARZ_GOZAR = 'عرض موجود گذر';
     case ABADE_MELK_PAS_AZ_ESLAH = 'ابعاد ملک پس از اصلاح';
     case ARZE_MOSAVABE_GOZAR = 'عرض مصوب گذر';
@@ -23,6 +23,11 @@ enum GeographicalCordinatesTypesEnum: string
             self::VAZIYATE_HUDUDE_HAMSAYEGI => 5,
 
         };
+    }
+
+    public static function getNameById(int $id): string
+    {
+        return array_values(self::listWithIds())[$id - 1]['name'];
     }
 
     public static function listWithIds(): array

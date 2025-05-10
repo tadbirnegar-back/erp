@@ -17,6 +17,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PFM\app\Http\Enums\PfmCircularStatusesEnum;
 use Modules\PFM\app\Jobs\PublishPfmCircularJob;
 use Modules\PFM\app\Models\Booklet;
+use Modules\PFM\app\Models\LevyCircular;
 use Modules\PFM\app\Models\PfmCirculars;
 use Modules\PFM\app\Models\PfmCircularStatus;
 use Morilog\Jalali\Jalalian;
@@ -25,7 +26,7 @@ trait PfmCircularTrait
 
 {
 
-    use LevyTrait, BookletTrait , FiscalYearTrait;
+    use LevyTrait, BookletTrait, FiscalYearTrait;
 
     public function storeCircular($data, $user)
     {
@@ -43,9 +44,24 @@ trait PfmCircularTrait
 
         $this->attachDraftStatus($circular->id, $user->id);
 
+        $this->attachLastCircularItems($circular->id);
+
     }
 
-    public function indexCirculars($data , $perPage , $pageNum)
+//    public function attachLastCircularItems($id)
+//    {
+//        $activeID = $this->ActiveStatus()->id;
+//        if ($id != 0 || $id != 1) {
+//            $lastCircular = PfmCirculars::where('id', $id - 1)->first();
+//            LevyCircular::where('circular_id', $lastCircular->id)
+//                ->whereHas('levy', function ($query) use ($lastCircular) {
+//                    $query->where('status_id', $activeID);
+//                })
+//                ->get();
+//        }
+//    }
+
+    public function indexCirculars($data, $perPage, $pageNum)
     {
         $query = PfmCirculars::joinRelationship('fiscalYear')
             ->joinRelationship('statuses', ['statuses' => function ($join) {
@@ -63,7 +79,7 @@ trait PfmCircularTrait
                 'pfm_circular_statuses.created_date as status_created_date',
             ])
             ->distinct('pfm_circulars.id')
-            ->when(isset($data['name']) , function ($query) use ($data) {
+            ->when(isset($data['name']), function ($query) use ($data) {
                 $query->where('pfm_circulars.name', 'like', '%' . $data['name'] . '%');
             })
             ->paginate($perPage, ['*'], 'page', $pageNum);

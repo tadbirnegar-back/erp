@@ -3,10 +3,13 @@
 namespace Modules\BDM\app\Http\Traits;
 
 
+use Illuminate\Support\Number;
 use Modules\AAA\app\Http\Enums\PermissionTypesEnum;
 use Modules\AAA\app\Models\User;
 use Modules\BDM\app\Http\Enums\BdmTypesEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
+use Modules\BDM\app\Http\Enums\EstateConditionsEnum;
+use Modules\BDM\app\Http\Enums\FieldConditionsEnum;
 use Modules\BDM\app\Http\Enums\FloorNumbersEnum;
 use Modules\BDM\app\Http\Enums\GeographicalCordinatesTypesEnum;
 use Modules\BDM\app\Http\Enums\PlaceTypesEnum;
@@ -16,6 +19,7 @@ use Modules\BDM\app\Models\EstateAppSet;
 use Modules\BDM\app\Models\EstateAppSuggest;
 use Modules\BDM\app\Models\EstateUtm;
 use Modules\BDM\app\Models\GeographicalCordinate;
+use Modules\FileMS\app\Models\File;
 use Modules\PFM\app\Models\Application;
 use Modules\VCM\app\Models\VcmVersions;
 
@@ -123,11 +127,11 @@ trait EstateTrait
         $this->insertAppSets($estate->id, $data);
         $this->insertGeoLocations($dossierID, $data);
         if (isset($data['deletedUtms'])) {
-            $this->deleteUTMs($estate->id, $data['deletedUtms']);
+            $this->deleteUTMs($data['deletedUtms']);
         }
     }
 
-    public function deleteUTMs($estateID, $utms)
+    public function deleteUTMs($utms)
     {
         $utms = json_decode($utms);
         foreach ($utms as $utm) {
@@ -153,14 +157,14 @@ trait EstateTrait
     {
         $appIds = json_decode($data['apps']);
         $appID = $appIds[0];
-        $estateBefore = EstateAppSet::find($appID);
-        if ($estateBefore) {
-            $estateBefore->delete();
-        }
-        foreach ($appIds as $appId) {
+        $app = EstateAppSet::where('estate_id', $estateID)->first();
+        if($app){
+            $app->app_id = $appID;
+            $app->save();
+        }else{
             EstateAppSet::create([
                 'estate_id' => $estateID,
-                'app_id' => $appId,
+                'app_id' => $appID,
             ]);
         }
     }
@@ -189,8 +193,29 @@ trait EstateTrait
     {
         $estate = Estate::where('dossier_id', $dossierID)->first();
         if ($estate->form_number != null) {
+            $estate->estate_status_name = EstateConditionsEnum::getNameById($estate->building_status_id);
+            $estate->field_status_name = FieldConditionsEnum::getNameById($estate->field_status_id);
+            $estate->file = File::with('extension')->find($estate->propery_sketch_file_id);
+            $estate->file->size_humanReadable = $estate->file->size;
+
+            $settedApp = EstateAppSet::where('estate_id', $estate->id)->first();
+
+            $settedApp->name = Application::find($settedApp->app_id)->name;
+
+            $estate->app_data = $settedApp;
+
+            $estate->place_type_name = PlaceTypesEnum::getNameById($estate->place_type_id);
+
+            $estate->form_date = convertDateTimeGregorianToJalaliDateTime($estate->form_date);
+
             $utms = EstateUtm::where('estate_id', $estate->id)->get();
-            $geoLocations = GeographicalCordinate::where('dossier_id', $dossierID)->get();
+            $geoLocations = GeographicalCordinate::where('dossier_id', $dossierID)
+                ->orderBy('type_id')
+                ->get();
+            $geoLocations->map(function ($item) {
+                $item->type_name = GeographicalCordinatesTypesEnum::getNameById($item->type_id);
+            });
+
             return ['estate' => $estate, 'utms' => $utms, 'geoLocations' => $geoLocations];
         }
         return null;
