@@ -56,6 +56,8 @@ enum PermitStatusesEnum: string
             self::nineteenth => 'مرحله نوزدهم',
             self::twentieth => 'مرحله بیستم',
             self::twentyfirst => 'مرحله بیست و یکم',
+            self::failed => 'مرحله نهم',
+            self::rejectObligations => 'مرحله یازدهم',
         };
 
 

@@ -192,6 +192,11 @@ trait BillsTrait
             ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
             ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
             ->join('invoices', 'orders.id', '=', 'invoices.order_id')
+//            ->leftJoin('bdm_building_dossiers', function ($join){
+//                $join->on('bdm_building_dossiers.id', '=', 'pfm_bills.dossier_id')
+//                    ->where('pfm_levies.name', LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value)
+//                    ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id');
+//            })
             ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
             ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
             ->select([

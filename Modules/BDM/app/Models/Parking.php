@@ -22,6 +22,7 @@ class Parking extends Model
         'height',
         'length',
         'width',
+        'app_id',
     ];
 
     public $timestamps = false;

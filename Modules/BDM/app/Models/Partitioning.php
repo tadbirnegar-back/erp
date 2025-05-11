@@ -21,6 +21,7 @@ class Partitioning extends Model
     protected $fillable = [
         'partitioning_type_id',
         'height',
+        'app_id',
     ];
 
     public $timestamps = false;

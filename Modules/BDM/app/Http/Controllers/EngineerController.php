@@ -79,25 +79,37 @@ class EngineerController extends Controller
                 'naturals.last_name as lastName',
                 'naturals.mobile as mobile',
             ])->first();
-        return response()->json($person);
+
+        if($person){
+            return response()->json($person);
+        }else{
+            return response()->json(['message' => 'این شخص به عنوان مهندس در سامانه ثبت نشده است'], 404);
+        }
 
     }
 
     public function addEngineers(Request $request, $id)
     {
         try {
+            \DB::beginTransaction();
             $data = $request->all();
-
             $engineers = json_decode($data['engineer_ids']);
             foreach ($engineers as $engineer) {
-                EngineerBuilding::create([
-                    'engineer_id' => $engineer->id,
-                    'dossier_id' => $id,
-                    'engineer_type_id' => $engineer->engineer_type_id,
-                ]);
+                EngineerBuilding::updateOrCreate(
+                    [
+                        'dossier_id' => $id,
+                        'engineer_type_id' => $engineer->engineer_type_id,
+                    ],
+                    [
+                        'engineer_id' => $engineer->id,
+                    ]
+                );
+
             }
+            \DB::commit();
             return response()->json(['message' => "افزودن مهندسان با موفیت انجام شد"]);
         } catch (\Exception $e) {
+            \DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 400);
         }
 

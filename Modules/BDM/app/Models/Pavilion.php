@@ -22,6 +22,7 @@ class Pavilion extends Model
         'height',
         'width',
         'length',
+        'app_id',
     ];
 
     public $timestamps = false;

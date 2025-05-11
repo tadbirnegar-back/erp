@@ -4,6 +4,7 @@ namespace Modules\BDM\app\Http\Traits;
 
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Http\Enums\PermissionTypesEnum;
 use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Models\FiscalYear;
@@ -32,6 +33,7 @@ use Modules\PersonMS\app\Models\Person;
 use Modules\PFM\app\Http\Enums\ApplicationsCoefficientEnum;
 use Modules\PFM\app\Http\Enums\LeviesListEnum;
 use Modules\PFM\app\Http\Traits\BillsTrait;
+use Modules\PFM\app\Models\Application;
 use Modules\PFM\app\Models\Bill;
 use Modules\PFM\app\Models\BillTariff;
 use Modules\PFM\app\Models\Levy;
@@ -179,18 +181,63 @@ trait DossierTrait
                 'permit_status_name' => PermitStatusesEnum::ninth->value,
                 'permit_status_class_name' => 'primary',
             ];
-            $buttons = $this->getButtons()[$nextStatusData['permit_status_name']];
+            $nextStatusForButtons = PermitStatusesEnum::eighth->value;
+            $buttons = $this->getButtons()[$nextStatusForButtons];
 
-            $percent = $this->getPercentOfDossier($nextStatusData['permit_status_name']);
+            if ($currentStatusName == PermitStatusesEnum::fifth->value) {
+                $doc = LicenseDocument::where('dossier_id', $dossierID)->where('documentable_type', Form::class)
+                    ->where('name', DocumentsNameEnum::MALEKIYATE_ZAMIN->value)
+                    ->first();
+                if ($doc) {
+                    $buttons = ['submit', 'upload'];
+                } else {
+                    $buttons = ['notActiveSubmit', 'upload'];
+                }
+            }
+
+            if ($currentStatusName == PermitStatusesEnum::eighth->value) {
+                $doc = LicenseDocument::where('dossier_id', $dossierID)->where('documentable_type', Plan::class)
+                    ->where('name', DocumentsNameEnum::PLAN->value)
+                    ->first();
+                if ($doc) {
+                    $buttons = ['submit', 'upload'];
+                } else {
+                    $buttons = ['notActiveSubmit', 'upload'];
+                }
+            }
+
+            $percent = $this->getPercentOfDossier($nextStatusForButtons);
             $uploadedFiles = $this->getUploadedFiles($nextStatusData['permit_status_name'], $dossierID);
             $doneStatuses = $this->doneStatuses($dossierID);
             return ['status' => $nextStatusData, 'percent' => $percent, 'doneStatuses' => $doneStatuses, 'uploadedFiles' => $uploadedFiles, "buttons" => $buttons];
         } elseif ($currentStatusName == PermitStatusesEnum::rejectObligations->value) {
             $nextStatusData = [
-                'permit_status_name' => PermitStatusesEnum::eleventh->value,
+                'permit_status_name' => PermitStatusesEnum::tenth->value,
                 'permit_status_class_name' => 'primary',
             ];
             $buttons = $this->getButtons()[$nextStatusData['permit_status_name']];
+
+            if ($currentStatusName == PermitStatusesEnum::fifth->value) {
+                $doc = LicenseDocument::where('dossier_id', $dossierID)->where('documentable_type', Form::class)
+                    ->where('name', DocumentsNameEnum::MALEKIYATE_ZAMIN->value)
+                    ->first();
+                if ($doc) {
+                    $buttons = ['submit', 'upload'];
+                } else {
+                    $buttons = ['notActiveSubmit', 'upload'];
+                }
+            }
+
+            if ($currentStatusName == PermitStatusesEnum::eighth->value) {
+                $doc = LicenseDocument::where('dossier_id', $dossierID)->where('documentable_type', Plan::class)
+                    ->where('name', DocumentsNameEnum::PLAN->value)
+                    ->first();
+                if ($doc) {
+                    $buttons = ['submit', 'upload'];
+                } else {
+                    $buttons = ['notActiveSubmit', 'upload'];
+                }
+            }
 
             $percent = $this->getPercentOfDossier($nextStatusData['permit_status_name']);
             $uploadedFiles = $this->getUploadedFiles($nextStatusData['permit_status_name'], $dossierID);
@@ -208,6 +255,28 @@ trait DossierTrait
                 'permit_status_class_name' => 'primary',
             ];
             $buttons = $this->getButtons()[$status->permit_status_name];
+
+            if ($currentStatusName == PermitStatusesEnum::fifth->value) {
+                $doc = LicenseDocument::where('dossier_id', $dossierID)->where('documentable_type', Form::class)
+                    ->where('name', DocumentsNameEnum::MALEKIYATE_ZAMIN->value)
+                    ->first();
+                if ($doc) {
+                    $buttons = ['submit', 'upload'];
+                } else {
+                    $buttons = ['notActiveSubmit', 'upload'];
+                }
+            }
+
+            if ($currentStatusName == PermitStatusesEnum::eighth->value) {
+                $doc = LicenseDocument::where('dossier_id', $dossierID)->where('documentable_type', Plan::class)
+                    ->where('name', DocumentsNameEnum::PLAN->value)
+                    ->first();
+                if ($doc) {
+                    $buttons = ['submit', 'upload'];
+                } else {
+                    $buttons = ['notActiveSubmit', 'upload'];
+                }
+            }
 
             $percent = $this->getPercentOfDossier($status->permit_status_name);
             $uploadedFiles = $this->getUploadedFiles($status->permit_status_name, $dossierID);
@@ -261,7 +330,7 @@ trait DossierTrait
         $structures = $this->getStructures($id);
         $engineers = $this->getEngineers($id);
         $payments = $this->getPayments($id);
-        return ['estate' => $estateData, 'owners' => $ownersData, 'lawyers' => $lawyers, "structures" => $structures, 'engineers' => $engineers , 'payments' => $payments];
+        return ['estate' => $estateData, 'owners' => $ownersData, 'lawyers' => $lawyers, "structures" => $structures, 'engineers' => $engineers, 'payments' => $payments];
     }
 
     public function getEstates($dossierID)
@@ -437,7 +506,7 @@ trait DossierTrait
 
     public function upgradeOneLevel($id)
     {
-        $user = User::find(2174);
+        $user = \Auth::user();
         $currentStatus = $this->findCurrentPermitStatusOfDossier($id);
 
         $currentStatusName = $currentStatus->permit_status_name;
@@ -477,6 +546,17 @@ trait DossierTrait
                 'created_date' => now(),
                 'creator_id' => $user->id,
             ]);
+
+
+            if ($currentStatusName == PermitStatusesEnum::twentieth->value) {
+                DossierStatus::create([
+                    'dossier_id' => $id,
+                    'status_id' => $this->doneStatus()->id,
+                    'created_date' => now(),
+                    'creator_id' => $user->id,
+                ]);
+            }
+
             return $nextStatus->name;
         }
 
@@ -624,7 +704,7 @@ trait DossierTrait
         $statusName = $status->permit_status_name;
 
 
-        $user = User::find(2174);
+        $user = Auth::user();
         if ($statusName == PermitStatusesEnum::ninth->value) {
             PermitStatus::create([
                 'dossier_id' => $dossierID,
@@ -684,6 +764,12 @@ trait DossierTrait
             ])
             ->where('bdm_structures.dossier_id', $dossierID)
             ->get();
+        $building->map(function ($item) {
+            $item->floor_number_name = FloorNumbersEnum::getNameById($item->floor_number_id);
+            $item->floor_type_name = LevyItem::find((int)$item->floor_type_id)->name;
+
+            $item->app_name = Application::find($item->app_id)->name;
+        });
 
         $pool = Structure::join('bdm_pools', function ($join) {
             $join->on('bdm_pools.id', '=', 'bdm_structures.structureable_id')
@@ -695,9 +781,16 @@ trait DossierTrait
                 'bdm_pools.height',
                 'bdm_pools.width',
                 'bdm_pools.length',
+                'bdm_pools.app_id',
             ])
             ->where('bdm_structures.dossier_id', $dossierID)
             ->get();
+        if($pool){
+            $pool->map(function ($item) {
+                $item->app_name = Application::find($item->app_id)->name;
+                $item->type = "استخر";
+            });
+        }
         $pavilion = Structure::join('bdm_pavilion', function ($join) {
             $join->on('bdm_pavilion.id', '=', 'bdm_structures.structureable_id')
                 ->where('bdm_structures.structureable_type', '=', Pavilion::class);
@@ -708,9 +801,16 @@ trait DossierTrait
                 'bdm_pavilion.height',
                 'bdm_pavilion.width',
                 'bdm_pavilion.length',
+                'bdm_pavilion.app_id',
             ])
             ->where('bdm_structures.dossier_id', $dossierID)
             ->get();
+        if($pavilion){
+            $pavilion->map(function ($item) {
+                $item->app_name = Application::find($item->app_id)->name;
+                $item->type = "آلاچیق";
+            });
+        }
 
         $parking = Structure::join('bdm_parking', function ($join) {
             $join->on('bdm_parking.id', '=', 'bdm_structures.structureable_id')
@@ -722,9 +822,16 @@ trait DossierTrait
                 'bdm_parking.height',
                 'bdm_parking.length',
                 'bdm_parking.width',
+                'bdm_parking.app_id',
             ])
             ->where('bdm_structures.dossier_id', $dossierID)
             ->get();
+        if($parking){
+            $parking->map(function ($item) {
+                $item->app_name = Application::find($item->app_id)->name;
+                $item->type = "پارکینگ";
+            });
+        }
         $partitioning = Structure::join('bdm_partitioning', function ($join) {
             $join->on('bdm_partitioning.id', '=', 'bdm_structures.structureable_id')
                 ->where('bdm_structures.structureable_type', '=', Partitioning::class);
@@ -734,21 +841,28 @@ trait DossierTrait
                 'bdm_partitioning.id as partitioning_id',
                 'bdm_partitioning.height',
                 'bdm_partitioning.partitioning_type_id',
+                'bdm_partitioning.app_id',
             ])
             ->where('bdm_structures.dossier_id', $dossierID)
             ->get();
+        if($partitioning){
+
+            $partitioning->map(function ($item) {
+                $item->app_name = Application::find($item->app_id)->name;
+                $item->partitioning_type_name = LevyItem::find((int)$item->partitioning_type_id)->name;
+            });
+        }
         return ["buildings" => $building, "pools" => $pool, "pavilions" => $pavilion, "parkings" => $parking, "partitionings" => $partitioning];
     }
 
     public function getButtons()
     {
         return [
-
             PermitStatusesEnum::first->value => ['submit', 'archive'],
             PermitStatusesEnum::second->value => [],
             PermitStatusesEnum::third->value => ['upload'],
             PermitStatusesEnum::fourth->value => ['completeEstate', 'submit'],
-            PermitStatusesEnum::fifth->value => ['upload', 'submit'],
+            PermitStatusesEnum::fifth->value => ['submit', 'upload'],
             PermitStatusesEnum::sixth->value => [],
             PermitStatusesEnum::seventh->value => ['addEngineers'],
             PermitStatusesEnum::eighth->value => ['submit', 'upload'],
@@ -815,10 +929,10 @@ trait DossierTrait
     public function getPayments($id)
     {
         $Dossier = BuildingDossier::find($id);
-        if($Dossier->bill_id != null){
+        if ($Dossier->bill_id != null) {
             $billID = $Dossier->bill_id;
             return $this->getBillData($billID);
-        }else{
+        } else {
             return null;
         }
     }
@@ -892,10 +1006,13 @@ trait DossierTrait
         });
 
         $totalPrice = $building->sum('price');
-
+        $totalArea = $building->sum('building_area');
+        $totalHeight = $building->sum('floor_height');
         return [
             'buildings' => $building,
             'total_price' => $totalPrice,
+            'total_area' => $totalArea,
+            'total_height' => $totalHeight,
         ];
     }
 
@@ -959,7 +1076,7 @@ trait DossierTrait
         $totalPrice = $pools->sum('price');
 
         return [
-            'pools' => $pools,
+            'partition' => $pools,
             'total_price' => $totalPrice
         ];
     }
@@ -1089,7 +1206,7 @@ trait DossierTrait
         $totalPrice = $pavilion->sum('price');
 
         return [
-            'pools' => $pavilion,
+            'pavilion' => $pavilion,
             'total_price' => $totalPrice
         ];
     }
@@ -1154,7 +1271,7 @@ trait DossierTrait
         $totalPrice = $parking->sum('price');
 
         return [
-            'pools' => $parking,
+            'parking' => $parking,
             'total_price' => $totalPrice
         ];
     }
@@ -1182,12 +1299,12 @@ trait DossierTrait
         $data = [];
 
         foreach ($query as $item) {
-            $state  = PermitStatusesEnum::whichNumberStatic($item->name);
+            $state = PermitStatusesEnum::whichNumberStatic($item->name);
             $description = PermitStatusesEnum::getDescriptionByName($item->name);
-            if($state != null){
-                $data[] =[
+            if ($state != null) {
+                $data[] = [
                     'id' => $item->id,
-                    'title' => $state.': '.$item->name,
+                    'title' => $state . ': ' . $item->name,
                     'description' => $description
                 ];
             }
@@ -1210,6 +1327,8 @@ trait DossierTrait
         LevyBill::create([
             'levy_id' => $levy->id,
             'bill_id' => $bill->id,
+            "key" => null,
+            "value" => null,
         ]);
         $owner = BuildingDossier::join('bdm_owners', 'bdm_building_dossiers.id', '=', 'bdm_owners.dossier_id')
             ->select([
@@ -1230,5 +1349,6 @@ trait DossierTrait
         $payment->generateBill();
         return $bill;
     }
+
 
 }

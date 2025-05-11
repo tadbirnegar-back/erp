@@ -16,7 +16,13 @@ class Plan extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $table = 'bdm_plans';
+
+    protected $fillable = [
+        'file_id',
+        'creator_id',
+        'created_date',
+    ];
 
     public $timestamps = false;
 

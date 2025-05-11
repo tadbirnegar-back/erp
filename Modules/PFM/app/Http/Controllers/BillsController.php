@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Models\State;
@@ -441,6 +442,8 @@ class BillsController extends Controller
         $data = $request->all();
         $pageNum = $data['pageNum'] ?? 1;
         $perPage = $data['perPage'] ?? 10;
+
+        $user = Auth::user();
 
         $data = $this->generateBillsList($pageNum, $perPage);
 

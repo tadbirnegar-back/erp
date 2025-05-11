@@ -17,32 +17,35 @@ trait StructuresTrait
     public function insertStructures($dossierID, $data)
     {
 
-        $buildings = json_decode($data['buildings']);
-        foreach ($buildings as $building) {
-            $building = Building::create([
-                'dossier_id' => $dossierID,
-                'app_id' => $building->appID,
-                'floor_type_id' => $building->floorTypeID,
-                'floor_number_id' => $building->floorNumberID,
-                'all_corbelling_area' => $building->allCorbellingArea,
-                'floor_height' => $building->floorHeight,
-                'building_area' => $building->buildingArea,
-                'storage_area' => $building->storageArea,
-                'stairs_area' => $building->stairsArea,
-                'elevator_shaft' => $building->elevatorShaft,
-                'parking_area' => $building->parkingArea,
-                'corbelling_area' => $building->corbellingArea,
-                'duct_area' => $building->ductArea,
-                'other_parts_area' => $building->otherPartsArea,
-                'is_existed' => $building->isExisted,
-            ]);
+        if(isset($data['buildings'])){
+            $buildings = json_decode($data['buildings']);
+            foreach ($buildings as $building) {
+                $building = Building::create([
+                    'dossier_id' => $dossierID,
+                    'app_id' => $building->app_id,
+                    'floor_type_id' => $building->floor_type_id,
+                    'floor_number_id' => $building->floor_number_id,
+                    'all_corbelling_area' => $building->all_corbelling_area,
+                    'floor_height' => $building->floor_height,
+                    'building_area' => $building->building_area,
+                    'storage_area' => $building->storage_area,
+                    'stairs_area' => $building->stairs_area,
+                    'elevator_shaft' => $building->elevator_shaft,
+                    'parking_area' => $building->parking_area,
+                    'corbelling_area' => $building->corbelling_area,
+                    'duct_area' => $building->duct_area,
+                    'other_parts_area' => $building->other_parts_area,
+                    'is_existed' => $building->is_existed,
+                ]);
 
-            Structure::create([
-                'dossier_id' => $dossierID,
-                'structureable_id' => $building->id,
-                'structureable_type' => Building::class,
-            ]);
+                Structure::create([
+                    'dossier_id' => $dossierID,
+                    'structureable_id' => $building->id,
+                    'structureable_type' => Building::class,
+                ]);
+            }
         }
+
 
         if (isset($data['Partitionings'])) {
             $partitionings = json_decode($data['Partitionings']);
@@ -153,10 +156,10 @@ trait StructuresTrait
         {
             $deletesIds = json_decode($data['BuildingDeleteIds']);
             foreach ($deletesIds as $deleteId) {
-                Building::where('id' , $deleteId)->delete();
-                Structure::where('structureable_id' , $deleteId)
-                    ->where('structureable_type' , Building::class)
-                    ->delete();
+                $structure = Structure::where('id' , $deleteId)->first();
+                $bilding = Building::where('id' , $structure->structureable_id)->delete();
+                $structure->delete();
+
             }
         }
 
@@ -164,10 +167,20 @@ trait StructuresTrait
         {
             $deletesIds = json_decode($data['ParkingDeleteIds']);
             foreach ($deletesIds as $deleteId) {
-                Parking::where('id' , $deleteId)->delete();
-                Structure::where('structureable_id' , $deleteId)
-                    ->where('structureable_type' , Parking::class)
-                    ->delete();
+
+                $structure = Structure::where('id' , $deleteId)->first();
+                $parking = Parking::where('id' , $structure->structureable_id)->delete();
+                $structure->delete();
+            }
+        }
+
+        if(isset($data['PartitioningDeleteIds']))
+        {
+            $deletesIds = json_decode($data['PartitioningDeleteIds']);
+            foreach ($deletesIds as $deleteId) {
+                $structure = Structure::where('id' , $deleteId)->first();
+                $partitioning = Partitioning::where('id' , $structure->structureable_id)->delete();
+                $structure->delete();
             }
         }
 
@@ -175,10 +188,9 @@ trait StructuresTrait
         {
             $deletesIds = json_decode($data['PoolDeleteIds']);
             foreach ($deletesIds as $deleteId) {
-                Pool::where('id' , $deleteId)->delete();
-                Structure::where('structureable_id' , $deleteId)
-                    ->where('structureable_type' , Pool::class)
-                    ->delete();
+                $structure = Structure::where('id' , $deleteId)->first();
+                $pool = Pool::where('id' , $structure->structureable_id)->delete();
+                $structure->delete();
             }
         }
 
@@ -186,10 +198,9 @@ trait StructuresTrait
         {
             $deletesIds = json_decode($data['PavilionDeleteIds']);
             foreach ($deletesIds as $deleteId) {
-                Pavilion::where('id' , $deleteId)->delete();
-                Structure::where('structureable_id' , $deleteId)
-                    ->where('structureable_type' , Pavilion::class)
-                    ->delete();
+                $structure = Structure::where('id' , $deleteId)->first();
+                $pavilion = Pavilion::where('id' , $structure->structureable_id)->delete();
+                $structure->delete();
             }
         }
     }

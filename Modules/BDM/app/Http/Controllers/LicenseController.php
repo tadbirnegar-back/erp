@@ -312,6 +312,7 @@ class LicenseController extends Controller
     {
         $person = Person::find($id);
         $person->load('personable');
+        $person->military_service_status = MilitaryService::with('militaryServiceStatus')->where('person_id', $id)->first();
         return response()->json($person);
     }
 
