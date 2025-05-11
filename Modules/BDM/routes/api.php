@@ -26,6 +26,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/bdm/list-filter/pre_data' , [LicenseController::class, 'onlyLicenseTypesList']);
     Route::get('/bdm/dossier/{id}' , [LicenseController::class, 'showDossier']);
     Route::post('/bdm/estate/update/{id}' , [BDMController::class, 'updateEstate']);
+    Route::get('/bdm/estate/update/{id}' , [BDMController::class, 'updateEstatePreData']);
     Route::get('/bdm/license/submit/{id}' , [LicenseController::class, 'submitLicense']);
     Route::post('/bdm/upload/files/{id}' , [LicenseController::class, 'uploadFiles']);
     Route::get('/bdm/estates/pre-data/{id}' , [EstateController::class, 'getEstatesPreData']);

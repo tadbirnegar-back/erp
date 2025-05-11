@@ -215,7 +215,10 @@ trait DossierTrait
                 'permit_status_name' => PermitStatusesEnum::tenth->value,
                 'permit_status_class_name' => 'primary',
             ];
-            $buttons = $this->getButtons()[$nextStatusData['permit_status_name']];
+            $nextStatusForButtons = PermitStatusesEnum::tenth->value;
+
+            $buttons = $this->getButtons()[$nextStatusForButtons];
+
 
             if ($currentStatusName == PermitStatusesEnum::fifth->value) {
                 $doc = LicenseDocument::where('dossier_id', $dossierID)->where('documentable_type', Form::class)
@@ -239,8 +242,8 @@ trait DossierTrait
                 }
             }
 
-            $percent = $this->getPercentOfDossier($nextStatusData['permit_status_name']);
-            $uploadedFiles = $this->getUploadedFiles($nextStatusData['permit_status_name'], $dossierID);
+            $percent = $this->getPercentOfDossier($nextStatusForButtons);
+            $uploadedFiles = $this->getUploadedFiles($nextStatusForButtons, $dossierID);
             $doneStatuses = $this->doneStatuses($dossierID);
             return ['status' => $nextStatusData, 'percent' => $percent, 'doneStatuses' => $doneStatuses, 'uploadedFiles' => $uploadedFiles, "buttons" => $buttons];
         } else {

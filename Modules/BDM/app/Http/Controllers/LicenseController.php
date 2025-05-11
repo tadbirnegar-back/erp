@@ -265,7 +265,7 @@ class LicenseController extends Controller
         $getFooterDatas = $this->getFooterDatas($id);
         $permitStatusesList = $this->getPermitStatusesList();
 
-        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas , 'permitStatusesList' => $permitStatusesList]);
+        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas, 'permitStatusesList' => $permitStatusesList]);
 
     }
 
@@ -294,12 +294,12 @@ class LicenseController extends Controller
         }
     }
 
-    public function declineDossier( Request $request, $id)
+    public function declineDossier(Request $request, $id)
     {
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $this->makeDossierDeclined($data,$id);
+            $this->makeDossierDeclined($data, $id);
             DB::commit();
             return response()->json(['message' => "رد پرونده با موفقیت انجام پذیرفت"]);
         } catch (\Exception $e) {
@@ -312,6 +312,12 @@ class LicenseController extends Controller
     {
         $person = Person::find($id);
         $person->load('personable');
+        $person->personable->bc_issue_date = convertDateTimeGregorianToJalaliDateTime($person->personable->bc_issue_date);
+        $person->personable->bc_issue_date = explode(' ', $person->personable->bc_issue_date)[0];
+
+        $person->personable->date_of_birth = convertDateTimeGregorianToJalaliDateTime($person->personable->birth_date);
+        $person->personable->date_of_birth = explode(' ', $person->personable->date_of_birth)[0];
+
         $person->military_service_status = MilitaryService::with('militaryServiceStatus')->where('person_id', $id)->first();
         return response()->json($person);
     }
@@ -329,39 +335,42 @@ class LicenseController extends Controller
         $natural->last_name = $data['lastName'];
         $natural->gender_id = $data['gender'];
         $natural->father_name = $data['fatherName'];
-        $natural->birth_date = $data['dateOfBirth'];
+        $natural->birth_date = convertJalaliPersianCharactersToGregorian($data['dateOfBirth']);
         $natural->bc_code = $data['bcCode'];
         $natural->birth_location = $data['birthLocation'];
         $natural->bc_serial = $data['bcSerial'];
-        $natural->bc_issue_date = $data['issueDate'];
+        $natural->bc_issue_date = convertJalaliPersianCharactersToGregorian($data['issueDate']);
         $natural->bc_issue_location = $data['issueLocation'];
 
+        $natural->save();
+        $person->save();
+
         $militaryService = MilitaryService::where('person_id', $id)->first();
-        if($militaryService){
+        if ($militaryService) {
             $militaryService->military_service_status_id = $data['militaryServiceStatusID'];
         }
     }
 
     public function sendDossierBill($id)
     {
-        $buildings  = $this->getBuildingBills($id);
+        $buildings = $this->getBuildingBills($id);
         $partitioning = $this->getPartitioningBills($id);
         $pavilion = $this->getPavilionBills($id);
         $parking = $this->getParkingBills($id);
         $pool = $this->getPoolBills($id);
         $banks = $this->getBankAccs($id);
         $allTotalPrice = $buildings['total_price'] + $partitioning['total_price'] + $pavilion['total_price'] + $parking['total_price'] + $pool['total_price'];
-        return response()->json(["buildings" => $buildings , "partitioning" => $partitioning , "pavilion" => $pavilion , "parking" => $parking , "pool" => $pool , "allTotalPrice" => $allTotalPrice , 'banks' => $banks]);
+        return response()->json(["buildings" => $buildings, "partitioning" => $partitioning, "pavilion" => $pavilion, "parking" => $parking, "pool" => $pool, "allTotalPrice" => $allTotalPrice, 'banks' => $banks]);
     }
 
-    public function publishDossierBill(Request $request ,$id)
+    public function publishDossierBill(Request $request, $id)
     {
         try {
-        DB::beginTransaction();
-        $data = $request->all();
-        $this->publishingDossierBill($data,$id);
-        DB::commit();
-        return response()->json(['message' => 'قبض با موفقیت صادر شد']);
+            DB::beginTransaction();
+            $data = $request->all();
+            $this->publishingDossierBill($data, $id);
+            DB::commit();
+            return response()->json(['message' => 'قبض با موفقیت صادر شد']);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 400);
