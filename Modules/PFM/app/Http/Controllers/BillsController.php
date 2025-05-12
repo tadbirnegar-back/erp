@@ -12,8 +12,10 @@ use Modules\AAA\app\Models\User;
 use Modules\AddressMS\app\Models\State;
 use Modules\AddressMS\app\Models\Town;
 use Modules\BNK\app\Models\BankAccount;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Models\Level;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
@@ -99,8 +101,19 @@ class BillsController extends Controller
 
         $levies = $circularLevies->pluck('levy_id')->toArray();
 
+        $elimiatedlevies = [
+            LeviesListEnum::DIVAR_KESHI->value,
+            LeviesListEnum::ZIRBANA_MASKONI->value,
+            LeviesListEnum::BALKON_PISH_AMADEGI->value,
+            LeviesListEnum::MOSTAHADESAT_MAHOVATEH->value,
+            LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value,
+            LeviesListEnum::TAMDID_PARVANEH_SAKHTEMAN->value,
+            LeviesListEnum::TAJDID_PARVANEH_SAKHTEMAN->value,
+        ];
 
-        $hasAppLevies = Levy::select(['id', 'name'])->where('has_app', true)->whereIn('id', $levies)->get();
+        $hasAppLevies = Levy::select(['id', 'name'])
+            ->whereNotIn('name', $elimiatedlevies)
+            ->where('has_app', true)->whereIn('id', $levies)->get();
 
 
         $data = [];
@@ -302,7 +315,9 @@ class BillsController extends Controller
             }
         }
 
-        $hasNotAppLevies = Levy::select(['id', 'name'])->where('has_app', false)->whereIn('id', $levies)->get();
+        $hasNotAppLevies = Levy::select(['id', 'name'])
+            ->whereNotIn('name', $elimiatedlevies)
+            ->where('has_app', false)->whereIn('id', $levies)->get();
 
         $hasNotAppLevies->each(function ($levy) use (&$data) {
             $data[] = [
@@ -444,8 +459,24 @@ class BillsController extends Controller
         $perPage = $data['perPage'] ?? 10;
 
         $user = Auth::user();
+        $user->load('employee');
+        $employeeID = $user->employee->id;
 
-        $data = $this->generateBillsList($pageNum, $perPage);
+        $scriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
+
+
+        $recruitmentScripts = RecruitmentScript::where('employee_id', $employeeID)->where('script_type_id', $scriptType->id)
+            ->whereHas('latestStatus', function ($query) {
+                $query->where('name', RecruitmentScriptStatusEnum::ACTIVE->value);
+            })->get();
+
+        if ($recruitmentScripts->count() == 0) {
+            return response()->json(['message' => 'شما مسئول فنی نیستید'], 404);
+        }
+
+        $ounits = $recruitmentScripts->pluck('organization_unit_id')->unique()->toArray();
+
+        $data = $this->generateBillsList($pageNum, $perPage , $ounits);
 
         return BillsListResource::collection($data);
     }

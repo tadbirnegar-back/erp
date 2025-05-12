@@ -118,5 +118,17 @@
         "slug": "/bdm/publish-dossier-bill/{id}",
         "moduleName": "BDM",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "صدور قبض",
+        "slug": "/pfm/bill/generator",
+        "moduleName": "PFM",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست قبض ها",
+        "slug": "/pfm/bills/list",
+        "moduleName": "PFM",
+        "permissionTypeName": "sidebar"
     }
 ]

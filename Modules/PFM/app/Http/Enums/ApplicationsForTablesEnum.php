@@ -38,8 +38,8 @@ enum ApplicationsForTablesEnum: string
             self::AMLAK_MOSTAGHELAT_SINGLES => [1, 4],
             self::AMLAK_MOSTAGHELAT_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12, 13], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24], 2 => [25]]],
 
-            self::TAFKIK_ARAZI_SINGLES => [1, 4, 26, 27, 28, 29],
-            self::TAFKIK_ARAZI_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12, 13], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24], 2 => [25]]],
+            self::TAFKIK_ARAZI_SINGLES => [1],
+            self::TAFKIK_ARAZI_MULTIPLES => [1 => [2, 3, 4 ,5, 6, 7, 8, 9, 10, 11, 12, 13 , 14, 15, 16, 17, 18 , 19, 20, 21, 22, 23, 24 , 25]],
 
 
             self::PARVANEH_HESAR_SINGLES => [1, 4, 26],
@@ -52,7 +52,7 @@ enum ApplicationsForTablesEnum: string
             self::PARVANE_BALKON_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12, 13], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24], 2 => [25]]],
 
             self::PARVANEH_MOSTAHADESAT_SINGLES => [1, 4, 26],
-            self::PARVANEH_MOSTAHADESAT_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24], 2 => [25]]],
+            self::PARVANEH_MOSTAHADESAT_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24]] , 5 => [25]],
 
             self::SUDURE_MOJAVEZE_EHDAS_SINGLES => [],
             self::SUDURE_MOJAVEZE_EHDAS_MULTIPLES => [1=>[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]],

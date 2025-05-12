@@ -81,7 +81,6 @@ class testController extends Controller
     <thead>
         <tr>
             <th>نام روستا</th>
-            <th>شماره تراکنش</th>
             <th>مقدار پرداختی</th>
             <th>تاریخ</th>
             <th>کد تراکنش</th>
@@ -95,7 +94,6 @@ class testController extends Controller
             $date = convertDateTimeGregorianToJalaliDateTime($item->payment_date);
             echo "<tr>
         <td>{$item->ounit_name}</td>
-        <td>{$item->payment_id}</td>
         <td>{$item->payment_amount}</td>
         <td>{$date}</td>
         <td>{$item->txID}</td>

@@ -201,7 +201,11 @@ trait BookletTrait
             ->where('pfm_circulars.id', $id)
             ->get();
 
-        $levies = Levy::select(['id as levy_id', 'name as levy_name'])->get();
+        $levies = PfmCirculars::join('pfm_levy_circular' , 'pfm_circulars.id', '=', 'pfm_levy_circular.circular_id')
+            ->join('pfm_levies' , 'pfm_levy_circular.levy_id', '=', 'pfm_levies.id')
+            ->select(['pfm_levies.id as levy_id', 'pfm_levies.name as levy_name'])
+            ->get();
+
 
         $query[0]['levies'] = $levies;
 

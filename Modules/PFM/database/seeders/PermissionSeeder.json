@@ -184,5 +184,12 @@
         "slug": "/pfm/bills/cancel-bill/{id}",
         "moduleName": "PFM",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "صدور قبض",
+        "slug": "/pfm/bills/send-bill",
+        "moduleName": "PFM",
+        "permissionTypeName": "operational"
+    },
     }
 ]

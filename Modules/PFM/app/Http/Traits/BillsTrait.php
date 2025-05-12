@@ -47,7 +47,6 @@ trait BillsTrait
             LeviesListEnum::ZIRBANA_MASKONI->value,
             LeviesListEnum::BALKON_PISH_AMADEGI->value,
             LeviesListEnum::MOSTAHADESAT_MAHOVATEH->value,
-            LeviesListEnum::SUDURE_MOJAVEZE_EHDAS->value,
             LeviesListEnum::TABLIGHAT->value,
         ])) {
             $appID = $data['appID'];
@@ -76,6 +75,8 @@ trait BillsTrait
         } else if (in_array($levy->name, [
             LeviesListEnum::ARZESHE_AFZODEH_OMRAN->value,
             LeviesListEnum::BAHAYE_KHEDMAT->value,
+            LeviesListEnum::SUDURE_MOJAVEZE_EHDAS->value,
+            LeviesListEnum::GHAT_DERAKHTAN->value,
         ])) {
             $itemID = $data['itemID'];
             $fiscalYearID = $data['fiscal_year_id'];
@@ -170,7 +171,7 @@ trait BillsTrait
         return $bill;
     }
 
-    public function generateBillsList($pageNum, $perPage)
+    public function generateBillsList($pageNum, $perPage , $ounits)
     {
         $query = Bill::query()
             ->join('orders', function ($join) {
@@ -192,11 +193,16 @@ trait BillsTrait
             ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
             ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
             ->join('invoices', 'orders.id', '=', 'invoices.order_id')
-//            ->leftJoin('bdm_building_dossiers', function ($join){
-//                $join->on('bdm_building_dossiers.id', '=', 'pfm_bills.dossier_id')
-//                    ->where('pfm_levies.name', LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value)
-//                    ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id');
-//            })
+            ->leftJoin('bdm_building_dossiers', function ($join){
+                $join->on('bdm_building_dossiers.bill_id', '=', 'pfm_bills.id')
+                    ->where('pfm_levies.name', LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value)
+                    ->leftJoin('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+                    ->leftJoin('organization_units as ounit_bdm', 'bdm_estates.ounit_id', '=', 'ounit_bdm.id');
+            })
+            ->leftJoin('pfm_bill_tariff' , 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
+            ->leftJoin('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
+            ->leftJoin('pfm_circular_booklets', 'pfm_circular_tariffs.booklet_id', '=', 'pfm_circular_booklets.id')
+            ->leftJoin('organization_units as booklet_ounit', 'pfm_circular_booklets.ounit_id', '=', 'booklet_ounit.id')
             ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
             ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
             ->select([
@@ -212,6 +218,8 @@ trait BillsTrait
                 'orders.total_price as total_price',
                 'discounts.value as discount_value',
             ])
+            ->whereIn('ounit_bdm.id' , $ounits)
+            ->orWhereIn('booklet_ounit.id' , $ounits)
             ->paginate($perPage, ['*'], 'page', $pageNum);
 
         return $query;

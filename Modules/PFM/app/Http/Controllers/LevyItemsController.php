@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\PFM\app\Http\Enums\PfmCircularStatusesEnum;
 use Modules\PFM\app\Http\Traits\LevyItemTrait;
+use Modules\PFM\app\Models\Levy;
 use Modules\PFM\app\Models\PfmCirculars;
 
 class LevyItemsController extends Controller
@@ -73,7 +74,9 @@ class LevyItemsController extends Controller
         $year = $query->first()->fiscal_year_name;
 
 
-        return response()->json(["data" => $data , 'editable' => $editable, 'year' => $year]);
+        $levyName = Levy::find($id)->name;
+
+        return response()->json(["data" => $data , 'editable' => $editable, 'year' => $year , 'levyName' => $levyName]);
     }
 
     public function update(Request $request, $id)

@@ -18,6 +18,7 @@ use Modules\PFM\app\Http\Enums\PfmCircularStatusesEnum;
 use Modules\PFM\app\Jobs\PublishPfmCircularJob;
 use Modules\PFM\app\Models\Booklet;
 use Modules\PFM\app\Models\LevyCircular;
+use Modules\PFM\app\Models\LevyItem;
 use Modules\PFM\app\Models\PfmCirculars;
 use Modules\PFM\app\Models\PfmCircularStatus;
 use Morilog\Jalali\Jalalian;
@@ -44,22 +45,41 @@ trait PfmCircularTrait
 
         $this->attachDraftStatus($circular->id, $user->id);
 
-//        $this->attachLastCircularItems($circular->id);
-
+        $this->fillLevyItems($data['fiscalYearID'], $circular->id);
     }
 
-//    public function attachLastCircularItems($id)
-//    {
-//        $activeID = $this->ActiveStatus()->id;
-//        if ($id != 0 || $id != 1) {
-//            $lastCircular = PfmCirculars::where('id', $id - 1)->first();
-//            LevyCircular::where('circular_id', $lastCircular->id)
-//                ->whereHas('levy', function ($query) use ($lastCircular) {
-//                    $query->where('status_id', $activeID);
-//                })
-//                ->get();
-//        }
-//    }
+    public function fillLevyItems($fiscalYearID, $circularID)
+    {
+        $currentFiscalyearName = FiscalYear::find($fiscalYearID)->name;
+        $lastFicalYear = FiscalYear::where('name', $currentFiscalyearName - 1)->first();
+        if ($lastFicalYear) {
+            $lastCircular = PfmCirculars::where('fiscal_year_id', $lastFicalYear->id)->first();
+            if ($lastCircular) {
+                $query = LevyCircular::join('pfm_levy_items', 'pfm_levy_circular.id', '=', 'pfm_levy_items.circular_levy_id')
+                    ->select([
+                        'pfm_levy_items.name as item_name',
+                        'pfm_levy_circular.levy_id as levy_id',
+                    ])
+                    ->where('pfm_levy_circular.circular_id', $lastCircular->id)
+                    ->get();
+
+                foreach ($query as $item) {
+                    $CurrentLevyCircular = LevyCircular::where('circular_id', $circularID)
+                        ->where('levy_id', $item->levy_id)
+                        ->first();
+
+                    if ($CurrentLevyCircular) {
+                        LevyItem::create([
+                            'name' => $item->item_name,
+                            'circular_levy_id' => $CurrentLevyCircular->id,
+                            'created_date' => now(),
+                        ]);
+                    }
+                }
+            }
+        }
+
+    }
 
     public function indexCirculars($data, $perPage, $pageNum)
     {
