@@ -17,11 +17,13 @@ use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\PersonMS\app\Http\Traits\PersonTrait;
+use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
     use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
-    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait;
+    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait, PersonTrait;
 
     /**
      * Execute the job.
@@ -46,6 +48,10 @@ class testController extends Controller
 
     function run()
     {
+
+        $p = Person::where('id', 2604)->first();
+        dd($p->militaryService->militaryServiceStatus);
+
         $a = OrganizationUnit::joinRelationship('village')
             ->with('ancestors')
             ->where('unitable_type', VillageOfc::class)

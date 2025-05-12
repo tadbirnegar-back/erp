@@ -10,11 +10,13 @@ class PersonMSDatabaseSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-    {        $this->call([
-        ModuleCategorySeeder::class,
-        ModuleSeeder::class,
-        PermissionSeeder::class,
-    ]);
+    {
+        $this->call([
+//            ModuleCategorySeeder::class,
+//            ModuleSeeder::class,
+//            PermissionSeeder::class,
+            PersonLicenseStatusSeeder::class,
+        ]);
         // $this->call([]);
     }
 }

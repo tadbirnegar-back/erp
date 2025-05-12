@@ -11,6 +11,7 @@ use Modules\HRMS\app\Http\Controllers\LevelController;
 use Modules\HRMS\app\Http\Controllers\NewScriptController;
 use Modules\HRMS\app\Http\Controllers\PositionController;
 use Modules\HRMS\app\Http\Controllers\RecruitmentScriptController;
+use Modules\HRMS\app\Http\Controllers\RegisterEmployeeController;
 use Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController;
 use Modules\HRMS\app\Http\Controllers\SkillController;
 
@@ -179,3 +180,18 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/hrm/rc/ptp/terminate/{id}', [RecruitmentScriptController::class, 'ptpTerminate']);
 
 });
+
+Route::middleware([])->prefix('v2')->name('api.')->group(function () {
+
+    Route::get('/hrm/villages/list', [RegisterEmployeeController::class, 'villagesList']);
+
+    Route::get('/hrm/districts/list', [RegisterEmployeeController::class, 'districtsList']);
+
+    Route::post('/hrm/person/register/check', [RegisterEmployeeController::class, 'checkPersonExistence']);
+
+    Route::post('/hrm/person/register/verify-otp', [RegisterEmployeeController::class, 'verifyPersonByOtp']);
+
+    Route::post('/hrm/person/register/add', [RegisterEmployeeController::class, 'RegisterEmployee']);
+
+});
+

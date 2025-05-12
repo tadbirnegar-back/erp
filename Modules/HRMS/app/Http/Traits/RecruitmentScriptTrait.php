@@ -182,12 +182,6 @@ trait RecruitmentScriptTrait
 
             FileScript::insert($fileScriptsData->toArray());
         }
-        if (isset($data['scriptAgents'])) {
-            $agents = json_decode($data['scriptAgents'], true);
-            $scriptAgentsScripts = $this->sasStore($agents, $rs);
-        }
-        $rs->load('scriptType.confirmationTypes');
-
 
         return $rs;
 

@@ -292,5 +292,13 @@ class RecruitmentScript extends Model
             ->where('dependents.relation_type_id', RelationTypeEnum::CHILD->value);
     }
 
+    public function scopeFinalStatus($query)
+    {
+        return $query->join('recruitment_script_status', 'recruitment_scripts.id', '=', 'recruitment_script_status.recruitment_script_id')
+            ->join('statuses', 'recruitment_script_status.status_id', '=', 'statuses.id')
+            ->whereRaw('recruitment_script_status.create_date = (SELECT MAX(create_date) FROM recruitment_script_status WHERE recruitment_script_id = recruitment_scripts.id)');
+
+    }
+
 
 }

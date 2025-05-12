@@ -3,64 +3,17 @@
 namespace Modules\AAA\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DB;
 use Illuminate\Http\Request;
+use Modules\AAA\app\Http\Traits\OtpTrait;
 use Modules\WidgetsMS\app\Http\Repositories\WidgetRepository;
 use Str;
+use Validator;
 
 
 class AAAController extends Controller
 {
-    public array $data = [];
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id): JsonResponse
-    {
-        //
-
-        return response()->json($this->data);
-    }
+    use OtpTrait;
 
     public function activeWidgets()
     {
@@ -104,5 +57,66 @@ class AAAController extends Controller
 
     // --------------------------------------------------------------------
 
+    public function generateOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mobile' => ['required', 'string', 'min:10', 'max:10'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $otpData = [
+            'mobile' => $request->mobile,
+            'code' => mt_rand(10000, 99999),
+            'expire' => 3,
+        ];
+
+        $this->sendOtp($otpData);
+
+        return response()->json([
+            'message' => 'رمز یکبار مصرف ارسال شد'
+        ]);
+    }
+
+    public function verifyAndRevokeOtp(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'mobile' => 'required|string|min:10|max:10',
+            'otp' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $otp = $this->verifyOtpByMobile($data['mobile'], $data['otp']);
+            if (is_null($otp)) {
+                return response()->json([
+                    'message' => 'کد تایید وارد شده نادرست می باشد',
+                ], 403);
+            }
+            $otp->isUsed = true;
+            $otp->save();
+
+            DB::commit();
+            return response()->json([
+                'message' => 'کاربر با موفقیت تأیید شد',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'message' => 'کد تایید وارد شده نادرست می باشد',
+            ], 500);
+        }
+    }
 
 }

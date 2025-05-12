@@ -292,3 +292,8 @@ function convertGregorianYearToJalaliYear($gregorianYear)
     $jalaliYear = CalendarUtils::strftime('Y', strtotime($gregorianYear));
     return $jalaliYear;
 }
+
+function censorMobile($number)
+{
+    return str_repeat('*', strlen($number) - 4) . substr($number, -4);
+}

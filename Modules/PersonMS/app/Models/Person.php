@@ -18,6 +18,7 @@ use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\Isar;
 use Modules\HRMS\app\Models\MilitaryService;
+use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\HRMS\app\Models\Position;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\Relative;
@@ -78,9 +79,14 @@ class Person extends Model
         return $this->hasOne(WorkForce::class, 'person_id');
     }
 
+    public function employeeWorkforce(): HasOne
+    {
+        return $this->workForce()->where('workforceable_type', Employee::class);
+    }
+
     public function teacherWorkforce(): HasOne
     {
-        return $this->hasOne(WorkForce::class, 'person_id')->where('workforceable_type', Teacher::class);
+        return $this->workForce()->where('workforceable_type', Teacher::class);
     }
 
     public function workForces(): HasMany
@@ -204,6 +210,18 @@ class Person extends Model
         return $this->hasOne(MilitaryService::class, 'person_id');
     }
 
+    public function militaryServiceStatus()
+    {
+        return $this->hasOneThrough(
+            MilitaryServiceStatus::class,
+            MilitaryService::class,
+            'person_id',
+            'id',
+            'id',
+            'military_service_status_id'
+        );
+    }
+
     public function relatives(): HasMany
     {
         return $this->hasMany(Relative::class, 'person_id');
@@ -239,6 +257,11 @@ class Person extends Model
         return $this->hasOne(EducationalRecord::class, 'person_id')
             ->orderByDesc('level_of_educational_id')
             ->orderByDesc('id');
+    }
+
+    public function personLicenses(): HasMany
+    {
+        return $this->hasMany(PersonLicense::class, 'person_id');
     }
 
 }
