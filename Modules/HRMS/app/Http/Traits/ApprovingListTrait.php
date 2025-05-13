@@ -59,6 +59,8 @@ trait ApprovingListTrait
             $preparedData = $this->prepareApprovingData($approves, $rs);
             $result = ScriptApprovingList::insert($preparedData->toArray());
             return $result;
+        }else{
+            $this->attachStatusToRs($rs, $this->activeRsStatus());
         }
         return null;
     }
