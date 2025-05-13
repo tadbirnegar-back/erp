@@ -126,22 +126,12 @@ trait UserTrait
     {
         $roles = Position::with('roles')->find($positionID)->roles->pluck('id');
         $user->roles()->detach($roles->toArray());
-        $a = $roles->pluck('id');
-        $b = $user->allRoles->pluck('id');
 
-// Track counts of $a
-        $aCounts = $a->countBy();
+        $scripts = $user->activeRecruitmentScripts()->with('position.roles')->get();
 
-// Use reject to remove items from $b based on counts
-        $result = $b->reject(function ($value, $key) use (&$aCounts) {
-            if ($aCounts->has($value) && $aCounts[$value] > 0) {
-                $aCounts[$value]--; // Decrease the count
-                return true;        // Remove this element
-            }
-            return false;           // Keep the element
-        });
+        $roles = $scripts->pluck('position')->pluck('roles')->flatten(1)->pluck('id');
+        $user->roles()->attach($roles->toArray());
 
-        $user->roles()->sync($result->toArray());
 
         return true;
     }
