@@ -928,6 +928,8 @@ trait DossierTrait
         $engineers = $query->get();
 
         $engineers->map(function ($engineer) {
+            $engineer->slug = url($engineer->slug);
+            $engineer->working_slug = url($engineer->working_slug);
             $engineer->engineer_type_name = EngineersTypeEnum::getNameById($engineer->engineer_type_id);
         });
 
