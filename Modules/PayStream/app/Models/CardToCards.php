@@ -16,7 +16,7 @@ class CardToCards extends Model
      */
     protected $table = 'card_to_cards';
 
-    protected $fillable = ['receipt_file_id', 'id'];
+    protected $fillable = ['receipt_file_id', 'id' , 'reference_number'];
 
     public $timestamps = false;
 

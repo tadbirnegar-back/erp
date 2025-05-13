@@ -76,7 +76,6 @@ class CourseController extends Controller
             return response()->json(['message' => $exception->getMessage()] , 404);
         }
     }
-
     public function update(Request $request, $id)
     {
         try {
@@ -107,7 +106,6 @@ class CourseController extends Controller
 
 
     }
-
     public function updateDataShow($id)
     {
         $course = Course::find($id);
@@ -117,7 +115,6 @@ class CourseController extends Controller
         $data = $this->showCourseForUpdate($id);
         return new CourseShowForUpdateResource($data);
     }
-
     public function show($id)
     {
         try {
@@ -159,7 +156,6 @@ class CourseController extends Controller
             return response()->json(['message' => $e->getMessage()], 403);
         }
     }
-
     public function courseList(Request $request)
     {
         $data = $request->all();
@@ -169,8 +165,6 @@ class CourseController extends Controller
         $result = $this->courseIndex($perPage, $pageNum, $data);
         return CourseListResource::collection($result);
     }
-
-
     public function registerCourse($id)
     {
         try {
@@ -211,7 +205,6 @@ class CourseController extends Controller
             ], 500);
         }
     }
-
     public function checkPayment(Request $request)
     {
         $data = $request->all();
@@ -241,7 +234,6 @@ class CourseController extends Controller
         }
 
     }
-
     public function lessonList(Request $request)
     {
 
@@ -257,7 +249,6 @@ class CourseController extends Controller
 
 
     }
-
     public function learningShow($id)
     {
         $course = Course::leftJoinRelationship('chapters.lessons')->whereHas('latestStatus', function ($query) {
@@ -290,8 +281,6 @@ class CourseController extends Controller
         return response()->json($sidebar);
 
     }
-
-
     public function courseListAll()
     {
         $query = Course::query();
@@ -302,8 +291,6 @@ class CourseController extends Controller
 
         return response()->json($response);
     }
-
-
     public function liveSearchOunit(Request $request)
     {
         $data = $request->all();
@@ -325,7 +312,6 @@ class CourseController extends Controller
 
         return response()->json(["category" => $response, "jobs" => $jobs]);
     }
-
     public function myEnrolledCourses(Request $request)
     {
         $user = Auth::user();
@@ -333,7 +319,6 @@ class CourseController extends Controller
         $enrolledCourses = $this->enrolledCourses($user);
         return new MyCoursesListResource(collect($enrolledCourses));
     }
-
     public function relatedCoursesList(Request $request)
     {
         $user = Auth::user();
@@ -508,8 +493,6 @@ class CourseController extends Controller
         }
 
     }
-
-
     public function makeCoursePublish($id)
     {
         try {
@@ -545,7 +528,6 @@ class CourseController extends Controller
         }
 
     }
-
     public function deleteCourse($id)
     {
         try {
@@ -562,7 +544,6 @@ class CourseController extends Controller
             return response()->json(["message" => $exception->getMessage()], 400);
         }
     }
-
     public function cancelCourse(Request $request, $id)
     {
         try {
@@ -580,7 +561,6 @@ class CourseController extends Controller
             return response()->json(["message" => $exception->getMessage()], 400);
         }
     }
-
     public function courseTypeList()
     {
         $data = [
@@ -590,5 +570,4 @@ class CourseController extends Controller
         return response()->json($data);
 
     }
-
 }

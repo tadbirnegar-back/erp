@@ -8,6 +8,7 @@ use Modules\HRMS\app\Http\Controllers\HireTypeController;
 use Modules\HRMS\app\Http\Controllers\HRMConfigController;
 use Modules\HRMS\app\Http\Controllers\JobController;
 use Modules\HRMS\app\Http\Controllers\LevelController;
+use Modules\HRMS\app\Http\Controllers\MilitaryServicesController;
 use Modules\HRMS\app\Http\Controllers\NewScriptController;
 use Modules\HRMS\app\Http\Controllers\PositionController;
 use Modules\HRMS\app\Http\Controllers\RecruitmentScriptController;
@@ -192,6 +193,12 @@ Route::middleware([])->prefix('v2')->name('api.')->group(function () {
     Route::post('/hrm/person/register/verify-otp', [RegisterEmployeeController::class, 'verifyPersonByOtp']);
 
     Route::post('/hrm/person/register/add', [RegisterEmployeeController::class, 'RegisterEmployee']);
+
+});
+
+Route::prefix('v1')->group(function () {
+    Route::get('/hrm/military-service/exemption-types', [MilitaryServicesController::class, 'exemptionTypes']);
+    Route::get('/hrm/military-services/statuses', [MilitaryServicesController::class, 'militaryServicesStatuses']);
 
 });
 

@@ -25,5 +25,7 @@
     "ACC": true,
     "BNK": true,
     "PFM": true,
+    "BLM": true,
+    "BDM": true,
     "SMM": true
 }

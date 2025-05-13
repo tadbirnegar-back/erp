@@ -5,10 +5,12 @@ namespace Modules\PFM\app\Http\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Bus\Batch;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Log;
 use Modules\AAA\app\Models\User;
+use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\AddressMS\app\Models\Village;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -16,38 +18,71 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PFM\app\Http\Enums\PfmCircularStatusesEnum;
 use Modules\PFM\app\Jobs\PublishPfmCircularJob;
 use Modules\PFM\app\Models\Booklet;
+use Modules\PFM\app\Models\LevyCircular;
+use Modules\PFM\app\Models\LevyItem;
 use Modules\PFM\app\Models\PfmCirculars;
 use Modules\PFM\app\Models\PfmCircularStatus;
+use Morilog\Jalali\Jalalian;
 
 trait PfmCircularTrait
 
 {
 
-    use LevyTrait, BookletTrait;
+    use LevyTrait, BookletTrait, FiscalYearTrait;
 
     public function storeCircular($data, $user)
     {
-        $fiscalYear = FiscalYear::firstOrCreate(['name' => $data['year']], [
-            'name' => changeNumbersToEnglish($data['year']),
-            'start_date' => convertPersianToGregorianBothHaveTimeAndDont($data['start_date']),
-            'finish_date' => convertPersianToGregorianBothHaveTimeAndDont($data['end_date']),
-        ]);
-
         $circular = PfmCirculars::create([
             'name' => $data['name'],
-            'fiscal_year_id' => $fiscalYear->id,
+            'fiscal_year_id' => $data['fiscalYearID'],
             'description' => $data['description'],
             'file_id' => $data['file_id'],
             'created_date' => now(),
+            'start_date' => convertPersianToGregorianBothHaveTimeAndDont($data['startDate']),
+            'end_date' => convertPersianToGregorianBothHaveTimeAndDont($data['endDate']),
         ]);
 
         $this->FillLevies($circular->id);
 
         $this->attachDraftStatus($circular->id, $user->id);
 
+        $this->fillLevyItems($data['fiscalYearID'], $circular->id);
     }
 
-    public function indexCirculars($data)
+    public function fillLevyItems($fiscalYearID, $circularID)
+    {
+        $currentFiscalyearName = FiscalYear::find($fiscalYearID)->name;
+        $lastFicalYear = FiscalYear::where('name', $currentFiscalyearName - 1)->first();
+        if ($lastFicalYear) {
+            $lastCircular = PfmCirculars::where('fiscal_year_id', $lastFicalYear->id)->first();
+            if ($lastCircular) {
+                $query = LevyCircular::join('pfm_levy_items', 'pfm_levy_circular.id', '=', 'pfm_levy_items.circular_levy_id')
+                    ->select([
+                        'pfm_levy_items.name as item_name',
+                        'pfm_levy_circular.levy_id as levy_id',
+                    ])
+                    ->where('pfm_levy_circular.circular_id', $lastCircular->id)
+                    ->get();
+
+                foreach ($query as $item) {
+                    $CurrentLevyCircular = LevyCircular::where('circular_id', $circularID)
+                        ->where('levy_id', $item->levy_id)
+                        ->first();
+
+                    if ($CurrentLevyCircular) {
+                        LevyItem::create([
+                            'name' => $item->item_name,
+                            'circular_levy_id' => $CurrentLevyCircular->id,
+                            'created_date' => now(),
+                        ]);
+                    }
+                }
+            }
+        }
+
+    }
+
+    public function indexCirculars($data, $perPage, $pageNum)
     {
         $query = PfmCirculars::joinRelationship('fiscalYear')
             ->joinRelationship('statuses', ['statuses' => function ($join) {
@@ -65,10 +100,10 @@ trait PfmCircularTrait
                 'pfm_circular_statuses.created_date as status_created_date',
             ])
             ->distinct('pfm_circulars.id')
-            ->when(isset($data['title']) , function ($query) use ($data) {
-                $query->where('pfm_circulars.name', 'like', '%' . $data['title'] . '%');
+            ->when(isset($data['name']), function ($query) use ($data) {
+                $query->where('pfm_circulars.name', 'like', '%' . $data['name'] . '%');
             })
-            ->get();
+            ->paginate($perPage, ['*'], 'page', $pageNum);
 
         return $query;
     }
@@ -99,6 +134,7 @@ trait PfmCircularTrait
             ->withCount('booklets')
             ->where('pfm_circulars.id', $id)
             ->get();
+
 
         $levies = PfmCirculars::join('pfm_levy_circular as levy_circular', 'pfm_circulars.id', '=', 'levy_circular.circular_id')
             ->join('pfm_levies as levies', 'levy_circular.levy_id', '=', 'levies.id')
@@ -131,11 +167,13 @@ trait PfmCircularTrait
                 'pfm_circulars.name as circular_name',
                 'pfm_circulars.description as circular_description',
                 'pfm_circulars.file_id',
+                'pfm_circulars.start_date as start_date',
+                'pfm_circulars.end_date as end_date',
                 'fiscal_years.name as fiscal_year_name',
-                'fiscal_years.start_date as start_date',
-                'fiscal_years.finish_date as end_date',
+                'fiscal_years.id as fiscal_year_id',
                 'files.slug as file_slug',
                 'files.size as file_size',
+                'files.name as file_name'
             ])
             ->distinct('pfm_circulars.id')
             ->where('pfm_circulars.id', $id)
@@ -147,30 +185,21 @@ trait PfmCircularTrait
 
     public function updateCircular($data, $id)
     {
-        $fiscalYear = FiscalYear::firstOrCreate(['name' => $data['year']], [
-            'name' => changeNumbersToEnglish($data['year']),
-            'start_date' => convertPersianToGregorianBothHaveTimeAndDont($data['start_date']),
-            'finish_date' => convertPersianToGregorianBothHaveTimeAndDont($data['end_date']),
-        ]);
-        if (!$fiscalYear->wasRecentlyCreated) {
-            $fiscalYear->start_date = convertPersianToGregorianBothHaveTimeAndDont($data['start_date']);
-            $fiscalYear->finish_date = convertPersianToGregorianBothHaveTimeAndDont($data['end_date']);
-            $fiscalYear->save();
-        }
-
-
         $circular = PfmCirculars::find($id);
 
+        $circular->fiscal_year_id = $data['fiscal_year_id'];
         $circular->name = $data['name'];
         $circular->description = $data['description'];
         $circular->file_id = $data['file_id'];
+        $circular->start_date = convertPersianToGregorianBothHaveTimeAndDont($data['start_date']);
+        $circular->end_date = convertPersianToGregorianBothHaveTimeAndDont($data['end_date']);
         $circular->save();
     }
 
     public function publishCircular($circularId)
     {
         $includedOunitsForBooklet = $this->ounitsIncludedForPublish($circularId)->chunk(150)->values();
-        $user = User::find(2174);
+        $user = Auth::user();
         $jobs = [];
 
         $ounitIds = [];
@@ -201,7 +230,10 @@ trait PfmCircularTrait
 
     public function takeValidVillagesCount()
     {
-        return VillageOfc::where('hasLicense', true)->count();
+        return OrganizationUnit::where('unitable_type', VillageOfc::class)
+            ->join('village_ofcs as village_ofcs', 'village_ofcs.id', '=', 'organization_units.unitable_id')
+            ->where('village_ofcs.hasLicense', true)
+            ->count();
     }
 
     private function ounitsIncludedForPublish($id)
@@ -211,6 +243,8 @@ trait PfmCircularTrait
                 $join->on('pfm_circular_booklets.ounit_id', '=', 'organization_units.id')
                     ->where('pfm_circular_booklets.pfm_circular_id', $id);
             })
+            ->join('village_ofcs as village_ofcs', 'village_ofcs.id', '=', 'organization_units.unitable_id')
+            ->where('village_ofcs.hasLicense', true)
             ->where('pfm_circular_booklets.id', null)
             ->select([
                 'organization_units.id as ounitID',
