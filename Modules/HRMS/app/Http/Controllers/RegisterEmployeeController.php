@@ -21,6 +21,7 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
+use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Resources\NaturalShowResource;
 use Validator;
 
@@ -87,17 +88,23 @@ class RegisterEmployeeController extends Controller
         }
 
         if (!is_null($person->employee_id)) {
-            $activeRecruitmentScript = RecruitmentScript::query()->finalStatus()
+            $activeRecruitmentScript = RecruitmentScript::query()
+                ->finalStatus()
                 ->joinRelationship('position', function ($join) use ($data) {
                     $join->where('positions.name', $data['positionName']);
                 })
-                ->where('statuses.name', '=', RecruitmentScriptStatusEnum::ACTIVE->value)
+                ->whereIn('statuses.name', [
+                    RecruitmentScriptStatusEnum::ACTIVE->value,
+                    RecruitmentScriptStatusEnum::PENDING_APPROVAL->value,
+                ])
                 ->where('employee_id', $person->employee_id)
                 ->where('organization_unit_id', $data['ounitID'])
-                ->exists();
+                ->addSelect('statuses.name as status_name')
+                ->first();
             if ($activeRecruitmentScript) {
                 return response()->json([
                     'type' => 'alreadyExists',
+                    'status' => $activeRecruitmentScript->status_name,
                 ]);
             }
 
@@ -187,11 +194,24 @@ class RegisterEmployeeController extends Controller
     public function RegisterEmployee(Request $request)
     {
         $data = $request->all();
+        $person = Person::where('national_code', $data['nationalCode'])
+            ->joinRelationship('natural')
+            ->joinRelationship('user')
+            ->addSelect([
+                'naturals.id as natural_id',
+                'users.id as user_id',
+            ])
+            ->first();
+
         $validator = Validator::make($data, [
             'firstName' => ['required'],
             'lastName' => ['required'],
             'fatherName' => ['required'],
-            'mobile' => ['required'],
+            'mobile' => [
+                'required',
+                'unique:naturals,mobile,' . $person?->natural_id,
+                'unique:users,mobile,' . $person?->user_id,
+            ],
             'birthDate' => ['sometimes'],
             'bcCode' => ['sometimes'],
             'gender' => ['required'],
