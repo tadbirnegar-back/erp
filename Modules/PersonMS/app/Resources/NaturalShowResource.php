@@ -35,6 +35,7 @@ class NaturalShowResource extends JsonResource
                     'id' => $license->id,
                     'file' => [
                         'id' => $license->file->id,
+                        'name' => $license->file->name,
                         'slug' => $license->file->slug,
                         'size' => $license->file->size,
                         'type' => $license->file->mimeType->name,

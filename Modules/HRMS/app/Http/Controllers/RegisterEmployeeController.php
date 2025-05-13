@@ -50,8 +50,8 @@ class RegisterEmployeeController extends Controller
     public function districtsList()
     {
         $result = OrganizationUnit::with(['ancestors' => function ($query) {
-                $query->where('unitable_type', '!=', StateOfc::class);
-            }])
+            $query->where('unitable_type', '!=', StateOfc::class);
+        }])
             ->where('unitable_type', DistrictOfc::class)
             ->select([
                 'organization_units.id',
@@ -199,13 +199,13 @@ class RegisterEmployeeController extends Controller
             'bcIssueLocation' => ['sometimes'],
             'birthLocation' => ['sometimes'],
             'bcSerial' => ['sometimes'],
-            'religionID' => ['required'],
+            'religionID' => ['sometimes'],
             'religionTypeID' => ['sometimes'],
             'militaryServiceStatus' => ['sometimes'],
             'nationalCode' => ['required'],
             'ounitID' => ['required'],
             'positionName' => ['required'],
-            'personLicenses' => ['required', 'json'],
+            'personLicenses' => ['sometimes', 'json'],
             'scriptFiles' => ['required', 'json'],
         ]);
 
@@ -227,8 +227,8 @@ class RegisterEmployeeController extends Controller
             DB::beginTransaction();
             $p = $this->personExistenceCheckByNationalCode($data['nationalCode']);
 
-            $data['dateOfBirth'] = convertJalaliPersianCharactersToGregorian($data['birthDate']);
-            $data['bcIssueDate'] = convertJalaliPersianCharactersToGregorian($data['bcIssueDate']);
+            $data['dateOfBirth'] = isset($data['birthDate']) ? convertJalaliPersianCharactersToGregorian($data['birthDate']) : null;
+            $data['bcIssueDate'] = isset($data['bcIssueDate']) ? convertJalaliPersianCharactersToGregorian($data['bcIssueDate']) : null;
 
             $personResult = !is_null($p) ?
                 $this->naturalUpdate($data, $p->natural) :
@@ -237,9 +237,11 @@ class RegisterEmployeeController extends Controller
             $data['personID'] = $personResult->person->id;
             $data['password'] = $data['nationalCode'];
 
-            $personLicenses = json_decode($data['personLicenses'], true);
+            if (isset($data['personLicenses'])) {
+                $personLicenses = json_decode($data['personLicenses'], true);
 
-            $this->bulkStorePersonLicenses($personLicenses, $personResult->person->id);
+                $this->bulkStorePersonLicenses($personLicenses, $personResult->person->id);
+            }
 
             $this->militaryServiceStore($data, $personResult->person->id);
 
