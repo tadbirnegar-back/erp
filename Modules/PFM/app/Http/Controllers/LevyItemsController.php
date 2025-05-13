@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 use Modules\PFM\app\Http\Enums\PfmCircularStatusesEnum;
 use Modules\PFM\app\Http\Traits\LevyItemTrait;
 use Modules\PFM\app\Models\Levy;
+use Modules\PFM\app\Models\LevyCircular;
 use Modules\PFM\app\Models\PfmCirculars;
 
 class LevyItemsController extends Controller
@@ -74,7 +75,11 @@ class LevyItemsController extends Controller
         $year = $query->first()->fiscal_year_name;
 
 
-        $levyName = Levy::find($id)->name;
+
+        $levyName = LevyCircular::join('pfm_levies as levies', 'pfm_levy_circular.levy_id', '=', 'levies.id')
+            ->select([
+                'levies.name as name',
+            ])->find($id)->name;
 
         return response()->json(["data" => $data , 'editable' => $editable, 'year' => $year , 'levyName' => $levyName]);
     }

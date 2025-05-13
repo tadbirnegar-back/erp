@@ -87,7 +87,6 @@ class CircularController extends Controller
                 'circularId' => $id,
                 'userId' => $user->id
             ]);
-//            $this->publishCircular($id);
             return response()->json(['message' => 'بخشنامه با موفقیت ابلاغ گردید'], 200);
         }catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

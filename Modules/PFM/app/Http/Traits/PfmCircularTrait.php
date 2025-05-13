@@ -5,6 +5,7 @@ namespace Modules\PFM\app\Http\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Bus\Batch;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Log;
@@ -198,7 +199,7 @@ trait PfmCircularTrait
     public function publishCircular($circularId)
     {
         $includedOunitsForBooklet = $this->ounitsIncludedForPublish($circularId)->chunk(150)->values();
-        $user = User::find(2174);
+        $user = Auth::user();
         $jobs = [];
 
         $ounitIds = [];

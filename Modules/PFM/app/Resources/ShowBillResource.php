@@ -21,7 +21,7 @@ class ShowBillResource extends JsonResource
             ],
             'person_name' => $this->customer_name,
             'levy_name' => $this->levy_name,
-            'due_date' => EngNumbersToPersian(howManyDaysRemain($this->due_date)),
+            'due_date' => $this->due_date,
             'national_code' => $this->national_code,
             'total_price' => $this->total_price,
             'discount_value' => $this->discount_value,
@@ -39,14 +39,18 @@ class ShowBillResource extends JsonResource
     private function getParams($id)
     {
         $query = Bill::query()
-            ->join('pfm_levy_bill' , 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
+            ->join('pfm_bill_tariff', 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
+            ->join('pfm_bill_item_properties', 'pfm_bill_item_properties.bill_tariff_id', '=', 'pfm_bill_tariff.id')
             ->select([
-                'pfm_levy_bill.key as key',
-                'pfm_levy_bill.value as value',
+                'pfm_bill_item_properties.key',
+                'pfm_bill_item_properties.value',
             ])
             ->where('pfm_bills.id', $id)
+            ->whereNotNull('pfm_bill_item_properties.value')
+            ->where('pfm_bill_item_properties.value', '!=', 'value')
             ->get();
-        return $query;
 
+        return $query;
     }
+
 }

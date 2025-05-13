@@ -201,8 +201,47 @@ trait BookletTrait
             ->where('pfm_circulars.id', $id)
             ->get();
 
-        $levies = PfmCirculars::join('pfm_levy_circular' , 'pfm_circulars.id', '=', 'pfm_levy_circular.circular_id')
-            ->join('pfm_levies' , 'pfm_levy_circular.levy_id', '=', 'pfm_levies.id')
+        $levies = PfmCirculars::join('pfm_levy_circular', 'pfm_circulars.id', '=', 'pfm_levy_circular.circular_id')
+            ->join('pfm_levies', 'pfm_levy_circular.levy_id', '=', 'pfm_levies.id')
+            ->select(['pfm_levies.id as levy_id', 'pfm_levies.name as levy_name'])
+            ->where('pfm_circulars.id', $id)
+            ->get();
+
+
+        $query[0]['levies'] = $levies;
+
+
+        return $query->first();
+    }
+
+    private function getCircularDatasInBookletForBooklet($id)
+    {
+        $query = PfmCirculars::joinRelationship('fiscalYear')
+            ->joinRelationship('statuses', ['statuses' => function ($join) {
+                $join->whereRaw('pfm_circular_statuses.created_date = (SELECT MAX(created_date) FROM pfm_circular_statuses WHERE pfm_circular_id = pfm_circulars.id)');
+            }])
+            ->joinRelationship('file.extension')
+            ->select([
+                'pfm_circulars.id',
+                'pfm_circulars.name as circular_name',
+                'pfm_circulars.description as circular_description',
+                'pfm_circulars.file_id',
+                'pfm_circulars.created_date',
+                'fiscal_years.name as fiscal_year_name',
+                'statuses.name as status_name',
+                'statuses.class_name as status_class',
+                'pfm_circular_statuses.created_date as status_created_date',
+                'files.slug as file_slug',
+                'files.size as file_size',
+                'extensions.name as extension_name',
+
+            ])
+            ->distinct('pfm_circulars.id')
+            ->where('pfm_circulars.id', $id)
+            ->get();
+
+        $levies = PfmCirculars::join('pfm_levy_circular', 'pfm_circulars.id', '=', 'pfm_levy_circular.circular_id')
+            ->join('pfm_levies', 'pfm_levy_circular.levy_id', '=', 'pfm_levies.id')
             ->select(['pfm_levies.id as levy_id', 'pfm_levies.name as levy_name'])
             ->get();
 
@@ -438,7 +477,7 @@ trait BookletTrait
                     'name' => 'مقدار یا ضریب B'
                 ]
             ];
-            return ['tarrifs' => $tariffs, 'applications' => $applications, 'shuruh' => $shuruh, 'tableModel' => 'Model2', 'canEdit' => $canEdit , 'levy_name' => $levy -> name];
+            return ['tarrifs' => $tariffs, 'applications' => $applications, 'shuruh' => $shuruh, 'tableModel' => 'Model2', 'canEdit' => $canEdit, 'levy_name' => $levy->name];
         }
 
 
@@ -552,7 +591,10 @@ trait BookletTrait
             $newTariff->save();
         }
 
-        $this->attachDarEntazarStatus($newBooklet->id, $user->id);
+
+        return $this->attachDarEntazarStatus($newBooklet->id, $user);
+
+
     }
 
 

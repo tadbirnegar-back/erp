@@ -25,6 +25,7 @@ class BillsListResource extends JsonResource
             "total_price" => $this->total_price,
             "discount_value" => $this->discount_value,
             "discounted_price" => $this->total_price - ($this->total_price * $this->discount_value / 100),
+            'ounit_id' => $this->ounit_id,
         ];
     }
 }

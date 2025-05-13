@@ -20,6 +20,7 @@ use Modules\PFM\app\Http\Enums\BookletStatusEnum;
 use Modules\PFM\app\Http\Enums\LeviesListEnum;
 use Modules\PFM\app\Http\Enums\LevyStatusEnum;
 use Modules\PFM\app\Models\Bill;
+use Modules\PFM\app\Models\BillItemProperty;
 use Modules\PFM\app\Models\BillTariff;
 use Modules\PFM\app\Models\Booklet;
 use Modules\PFM\app\Models\BookletStatus;
@@ -48,6 +49,7 @@ trait BillsTrait
             LeviesListEnum::BALKON_PISH_AMADEGI->value,
             LeviesListEnum::MOSTAHADESAT_MAHOVATEH->value,
             LeviesListEnum::TABLIGHAT->value,
+            LeviesListEnum::SUDURE_MOJAVEZE_EHDAS->value,
         ])) {
             $appID = $data['appID'];
             $fiscalYearID = $data['fiscal_year_id'];
@@ -56,11 +58,11 @@ trait BillsTrait
             $circular = PfmCirculars::where('fiscal_year_id', $fiscalYearID)->first();
             $booklet = Booklet::where('pfm_circular_id', $circular->id)->where('ounit_id', $ounitID)->first();
 
+
             $bookletID = $booklet->id;
 
             $itemID = $data['itemID'];
 
-            $booklet = Booklet::find($bookletID);
             $application = PropApplication::find($appID);
             switch ($application->main_prop_type) {
                 case "p_residential":
@@ -71,12 +73,29 @@ trait BillsTrait
                     $filledData['coefficient'] = $tarrifs->value;
                     $filledData['areaPrice'] = $areaPrice;
                     break;
+                case "p_commercial":
+                    $p = $booklet->p_commercial;
+                    $areaPrice = $p * $application->adjustment_coefficient;
+
+                    $tarrifs = Tarrifs::where('item_id', $itemID)->where('app_id', $appID)->where('booklet_id', $bookletID)->select('value')->first();
+                    $filledData['coefficient'] = $tarrifs->value;
+                    $filledData['areaPrice'] = $areaPrice;
+                    break;
+                case "p_administrative":
+                    $p = $booklet->p_administrative;
+                    $areaPrice = $p * $application->adjustment_coefficient;
+
+                    $tarrifs = Tarrifs::where('item_id', $itemID)->where('app_id', $appID)->where('booklet_id', $bookletID)->select('value')->first();
+                    $filledData['coefficient'] = $tarrifs->value;
+                    $filledData['areaPrice'] = $areaPrice;
+                    break;
             }
         } else if (in_array($levy->name, [
             LeviesListEnum::ARZESHE_AFZODEH_OMRAN->value,
             LeviesListEnum::BAHAYE_KHEDMAT->value,
-            LeviesListEnum::SUDURE_MOJAVEZE_EHDAS->value,
             LeviesListEnum::GHAT_DERAKHTAN->value,
+            LeviesListEnum::MASHAGHEL_DAEM->value,
+            LeviesListEnum::ARZESHE_AFZODEH_HADI->value,
         ])) {
             $itemID = $data['itemID'];
             $fiscalYearID = $data['fiscal_year_id'];
@@ -99,7 +118,6 @@ trait BillsTrait
         $nationalCode = $data['nationalCode'];
 
         $person = Person::where('national_code', $nationalCode)->first();
-
 
         if (!$person) {
             $personType = $data['personType'];
@@ -153,25 +171,34 @@ trait BillsTrait
             'bank_account_id' => $data['bank_account_id'],
         ]);
 
+//        foreach ($tableDatas as $tableData) {
+//            LevyBill::create([
+//                'levy_id' => $data['levy_id'],
+//                'bill_id' => $bill->id,
+//                'key' => $tableData->key,
+//                'value' => $tableData->value,
+//            ]);
+//        }
+
+        $billTarif = BillTariff::create([
+            'bill_id' => $bill->id,
+            'tariff_id' => $tariff->id,
+        ]);
+
+
         foreach ($tableDatas as $tableData) {
-            LevyBill::create([
-                'levy_id' => $data['levy_id'],
-                'bill_id' => $bill->id,
+            BillItemProperty::create([
+                'bill_tariff_id' => $billTarif->id,
                 'key' => $tableData->key,
                 'value' => $tableData->value,
             ]);
         }
 
 
-        BillTariff::create([
-            'bill_id' => $bill->id,
-            'tariff_id' => $tariff->id,
-        ]);
-
         return $bill;
     }
 
-    public function generateBillsList($pageNum, $perPage , $ounits)
+    public function generateBillsList($pageNum, $perPage, $ounits)
     {
         $query = Bill::query()
             ->join('orders', function ($join) {
@@ -190,17 +217,12 @@ trait BillsTrait
             ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
             ->join('customers', 'orders.customer_id', '=', 'customers.id')
             ->join('persons', 'customers.person_id', '=', 'persons.id')
-            ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
-            ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
             ->join('invoices', 'orders.id', '=', 'invoices.order_id')
-            ->leftJoin('bdm_building_dossiers', function ($join){
-                $join->on('bdm_building_dossiers.bill_id', '=', 'pfm_bills.id')
-                    ->where('pfm_levies.name', LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value)
-                    ->leftJoin('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
-                    ->leftJoin('organization_units as ounit_bdm', 'bdm_estates.ounit_id', '=', 'ounit_bdm.id');
-            })
-            ->leftJoin('pfm_bill_tariff' , 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
-            ->leftJoin('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
+            ->join('pfm_bill_tariff', 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
+            ->join('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
+            ->join('pfm_levy_items', 'pfm_circular_tariffs.item_id', '=', 'pfm_levy_items.id')
+            ->join('pfm_levy_circular', 'pfm_levy_items.circular_levy_id', '=', 'pfm_levy_circular.id')
+            ->join('pfm_levies', 'pfm_levy_circular.levy_id', '=', 'pfm_levies.id')
             ->leftJoin('pfm_circular_booklets', 'pfm_circular_tariffs.booklet_id', '=', 'pfm_circular_booklets.id')
             ->leftJoin('organization_units as booklet_ounit', 'pfm_circular_booklets.ounit_id', '=', 'booklet_ounit.id')
             ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
@@ -217,9 +239,9 @@ trait BillsTrait
                 'persons.national_code as national_code',
                 'orders.total_price as total_price',
                 'discounts.value as discount_value',
+                'booklet_ounit.id as ounit_id',
             ])
-            ->whereIn('ounit_bdm.id' , $ounits)
-            ->orWhereIn('booklet_ounit.id' , $ounits)
+//            ->whereIn('booklet_ounit.id', $ounits)
             ->paginate($perPage, ['*'], 'page', $pageNum);
 
         return $query;
@@ -227,112 +249,61 @@ trait BillsTrait
 
     public function getBillData($id)
     {
-        $levy = Bill::join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
-            ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
+        $query = Bill::query()
+            ->join('orders', function ($join) {
+                $join->on('orders.orderable_id', '=', 'pfm_bills.id')
+                    ->where('orders.orderable_type', '=', Bill::class);
+            })
+            ->join('process_status', function ($join) {
+                $join->on('process_status.order_id', '=', 'orders.id')
+                    ->whereRaw('process_status.created_date = (SELECT MAX(created_date) FROM process_status WHERE order_id = orders.id)');
+            })
+            ->join('financial_status', function ($join) {
+                $join->on('financial_status.order_id', '=', 'orders.id')
+                    ->whereRaw('financial_status.created_date = (SELECT MAX(created_date) FROM financial_status WHERE order_id = orders.id)');
+            })
+            ->join('statuses as status_fin', 'financial_status.status_id', '=', 'status_fin.id')
+            ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
+            ->join('customers', 'orders.customer_id', '=', 'customers.id')
+            ->join('persons', 'customers.person_id', '=', 'persons.id')
+            ->join('invoices', 'orders.id', '=', 'invoices.order_id')
+            ->leftJoin('ps_payment' , 'invoices.id' , '=' , 'ps_payment.invoice_id')
+            ->leftJoin('card_to_cards' , 'ps_payment.ps_paymentable_id' , '=' , 'card_to_cards.id')
+            ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
+            ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
+            ->join('pfm_bill_tariff', 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
+            ->join('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
+            ->join('pfm_levy_items', 'pfm_circular_tariffs.item_id', '=', 'pfm_levy_items.id')
+            ->join('pfm_levy_circular', 'pfm_levy_items.circular_levy_id', '=', 'pfm_levy_circular.id')
+            ->join('pfm_levies', 'pfm_levy_circular.levy_id', '=', 'pfm_levies.id')
+            ->join('pfm_circular_booklets', 'pfm_circular_tariffs.booklet_id', '=', 'pfm_circular_booklets.id')
+            ->join('organization_units', 'pfm_circular_booklets.ounit_id', '=', 'organization_units.id')
+            ->join('bnk_bank_accounts', 'pfm_bills.bank_account_id', '=', 'bnk_bank_accounts.id')
+            ->join('bnk_bank_branches', 'bnk_bank_accounts.branch_id', '=', 'bnk_bank_branches.id')
+            ->join('bnk_banks', 'bnk_bank_branches.bank_id', '=', 'bnk_banks.id')
             ->select([
-                'pfm_levies.name'
+                'pfm_bills.id as bill_id',
+                'status_fin.name as financial_status_name',
+                'status_fin.class_name as financial_status_class_name',
+                'status_pro.name as process_status_name',
+                'status_pro.class_name as process_status_class_name',
+                'persons.display_name as customer_name',
+                'pfm_levies.name as levy_name',
+                'persons.national_code as national_code',
+                'orders.total_price as total_price',
+                'discounts.value as discount_value',
+                'invoices.due_date as due_date',
+                'organization_units.name as ounit_name',
+                'bnk_banks.name as bank_name',
+                'bnk_bank_accounts.account_number as account_number',
+                'orders.create_date as create_date',
+                'card_to_cards.reference_number as reference_number',
             ])
-            ->find($id);
-        if ($levy->name == LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value) {
-            $query = Bill::join('bdm_building_dossiers', 'pfm_bills.id', '=', 'bdm_building_dossiers.bill_id')
-                ->join('orders', function ($join) {
-                    $join->on('orders.orderable_id', '=', 'pfm_bills.id')
-                        ->where('orders.orderable_type', '=', Bill::class);
-                })
-                ->join('process_status', function ($join) {
-                    $join->on('process_status.order_id', '=', 'orders.id')
-                        ->whereRaw('process_status.created_date = (SELECT MAX(created_date) FROM process_status WHERE order_id = orders.id)');
-                })
-                ->join('financial_status', function ($join) {
-                    $join->on('financial_status.order_id', '=', 'orders.id')
-                        ->whereRaw('financial_status.created_date = (SELECT MAX(created_date) FROM financial_status WHERE order_id = orders.id)');
-                })
-                ->join('statuses as status_fin', 'financial_status.status_id', '=', 'status_fin.id')
-                ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
-                ->join('customers', 'orders.customer_id', '=', 'customers.id')
-                ->join('persons', 'customers.person_id', '=', 'persons.id')
-                ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
-                ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
-                ->join('invoices', 'orders.id', '=', 'invoices.order_id')
-                ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
-                ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
-                ->join('bnk_bank_accounts', 'pfm_bills.bank_account_id', '=', 'bnk_bank_accounts.id')
-                ->join('bnk_bank_branches', 'bnk_bank_accounts.branch_id', '=', 'bnk_bank_branches.id')
-                ->join('bnk_banks', 'bnk_bank_branches.bank_id', '=', 'bnk_banks.id')
-                ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
-                ->join('organization_units', 'bdm_estates.ounit_id', '=', 'organization_units.id')
-                ->select([
-                    'pfm_bills.id as bill_id',
-                    'status_fin.name as financial_status_name',
-                    'status_fin.class_name as financial_status_class_name',
-                    'status_pro.name as process_status_name',
-                    'status_pro.class_name as process_status_class_name',
-                    'persons.display_name as customer_name',
-                    'pfm_levies.name as levy_name',
-                    'persons.national_code as national_code',
-                    'orders.total_price as total_price',
-                    'discounts.value as discount_value',
-                    'invoices.due_date as due_date',
-                    'organization_units.name as ounit_name',
-                    'bnk_banks.name as bank_name',
-                    'bnk_bank_accounts.account_number as account_number',
-                    'orders.create_date as create_date',
-                ])
-                ->find($id);
-            return $query;
+            ->where('pfm_bills.id', $id)
+            ->first();
 
-        } else {
-            $query = Bill::query()
-                ->join('orders', function ($join) {
-                    $join->on('orders.orderable_id', '=', 'pfm_bills.id')
-                        ->where('orders.orderable_type', '=', Bill::class);
-                })
-                ->join('process_status', function ($join) {
-                    $join->on('process_status.order_id', '=', 'orders.id')
-                        ->whereRaw('process_status.created_date = (SELECT MAX(created_date) FROM process_status WHERE order_id = orders.id)');
-                })
-                ->join('financial_status', function ($join) {
-                    $join->on('financial_status.order_id', '=', 'orders.id')
-                        ->whereRaw('financial_status.created_date = (SELECT MAX(created_date) FROM financial_status WHERE order_id = orders.id)');
-                })
-                ->join('statuses as status_fin', 'financial_status.status_id', '=', 'status_fin.id')
-                ->join('statuses as status_pro', 'process_status.status_id', '=', 'status_pro.id')
-                ->join('customers', 'orders.customer_id', '=', 'customers.id')
-                ->join('persons', 'customers.person_id', '=', 'persons.id')
-                ->join('pfm_levy_bill', 'pfm_bills.id', '=', 'pfm_levy_bill.bill_id')
-                ->join('pfm_levies', 'pfm_levy_bill.levy_id', '=', 'pfm_levies.id')
-                ->join('invoices', 'orders.id', '=', 'invoices.order_id')
-                ->leftJoin('discount_invoice', 'invoices.id', '=', 'discount_invoice.invoice_id')
-                ->leftJoin('discounts', 'discount_invoice.discount_id', '=', 'discounts.id')
-                ->join('pfm_bill_tariff', 'pfm_bills.id', '=', 'pfm_bill_tariff.bill_id')
-                ->join('pfm_circular_tariffs', 'pfm_bill_tariff.tariff_id', '=', 'pfm_circular_tariffs.id')
-                ->join('pfm_circular_booklets', 'pfm_circular_tariffs.booklet_id', '=', 'pfm_circular_booklets.id')
-                ->join('organization_units', 'pfm_circular_booklets.ounit_id', '=', 'organization_units.id')
-                ->join('bnk_bank_accounts', 'pfm_bills.bank_account_id', '=', 'bnk_bank_accounts.id')
-                ->join('bnk_bank_branches', 'bnk_bank_accounts.branch_id', '=', 'bnk_bank_branches.id')
-                ->join('bnk_banks', 'bnk_bank_branches.bank_id', '=', 'bnk_banks.id')
-                ->select([
-                    'pfm_bills.id as bill_id',
-                    'status_fin.name as financial_status_name',
-                    'status_fin.class_name as financial_status_class_name',
-                    'status_pro.name as process_status_name',
-                    'status_pro.class_name as process_status_class_name',
-                    'persons.display_name as customer_name',
-                    'pfm_levies.name as levy_name',
-                    'persons.national_code as national_code',
-                    'orders.total_price as total_price',
-                    'discounts.value as discount_value',
-                    'invoices.due_date as due_date',
-                    'organization_units.name as ounit_name',
-                    'bnk_banks.name as bank_name',
-                    'bnk_bank_accounts.account_number as account_number',
-                    'orders.create_date as create_date',
-                ])
-                ->where('pfm_bills.id', $id)
-                ->first();
+        return $query;
 
-            return $query;
-        }
 
     }
 
@@ -349,7 +320,6 @@ trait BillsTrait
             ])
             ->where('pfm_bills.id', $id)
             ->first();
-
 
         $invoiceID = $query->invoice_id;
         $payment = new CardToCardPayment($invoiceID, $data['fileID'], $data['refNumber'], $user);

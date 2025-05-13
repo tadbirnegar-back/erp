@@ -130,5 +130,11 @@
         "slug": "/pfm/bills/list",
         "moduleName": "PFM",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بایگانی پرونده",
+        "slug": "/bdm/make-archive/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
     }
 ]

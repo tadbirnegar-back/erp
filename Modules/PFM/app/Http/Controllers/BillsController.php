@@ -498,7 +498,7 @@ class BillsController extends Controller
             return response()->json(['message' => 'پرداخت قبض تایید شد']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'متاسفانه صدور قبض با مشکل مواجه شد'] , 404);
+            return response()->json(['message' => $e->getMessage()] , 404);
         }
     }
 

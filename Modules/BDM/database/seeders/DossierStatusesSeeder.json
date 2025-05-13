@@ -10,5 +10,9 @@
     {
         "name": "منقضی شده",
         "className": "danger"
+    },
+    {
+        "name": "بایگانی",
+        "className": "warning"
     }
 ]

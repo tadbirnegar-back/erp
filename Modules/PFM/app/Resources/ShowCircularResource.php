@@ -29,7 +29,7 @@ class ShowCircularResource extends JsonResource
             ],
             'publishedDate' => $data['status_name'] == CircularStatusEnum::APPROVED->value ? convertDateTimeGregorianToJalaliDateTime($data['created_date']) : null,
             'file' => [
-                "file_slug" => $data['file_slug'],
+                "file_slug" => url($data['file_slug']),
                 "size" => Number::fileSize($data['file_size'], 2, 3),
                 'type' => $data['extension_name'],
             ],

@@ -50,9 +50,14 @@ class CardToCardPayment
     {
         $invoiceID = $this->invoice->id;
         $discountInvoice = DiscountInvoice::where('invoice_id', $invoiceID)->first();
-        $discount = Discount::where('id', $discountInvoice->discount_id)->first();
-        $value = $discount->value;
-        $discountedPrice = $this->invoice->total_price - ($this->invoice->total_price * $value / 100);
+        if($discountInvoice){
+            $discount = Discount::where('id', $discountInvoice->discount_id)->first();
+
+            $value = $discount->value;
+            $discountedPrice = $this->invoice->total_price - ($this->invoice->total_price * $value / 100);
+        }else{
+            $discountedPrice = $this->invoice->total_price;
+        }
         $payment = PsPayments::create([
             'ps_paymentable_id' => $cardToCard->id,
             'ps_paymentable_type' => CardToCards::class,

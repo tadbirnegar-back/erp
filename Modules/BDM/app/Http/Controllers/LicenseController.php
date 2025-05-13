@@ -20,6 +20,7 @@ use Modules\BDM\app\Http\Traits\EstateTrait;
 use Modules\BDM\app\Http\Traits\LawyersTrait;
 use Modules\BDM\app\Http\Traits\OwnersTrait;
 use Modules\BDM\app\Models\BuildingDossier;
+use Modules\BDM\app\Models\DossierStatus;
 use Modules\BDM\app\Models\PermitStatus;
 use Modules\BDM\app\Resources\LicensesListResource;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
@@ -52,6 +53,26 @@ class LicenseController extends Controller
         $apps = Application::select('id', 'name')->get();
 
         return response()->json(["dossierTypes" => $bdmTypes, "ownershipTypes" => $ownershipTypes, "transferTypes" => $transferTypes, "cities" => $cities, "militaryServices" => $militaryServices, "apps" => $apps]);
+    }
+
+    public function makeArchive($id)
+    {
+        try {
+            DB::beginTransaction();
+            $user = Auth::user();
+            DossierStatus::create([
+                'dossier_id' => $id,
+                'status_id' => $this->archiveStatus()->id,
+                'created_date' => now(),
+                'creator_id' => $user->id,
+            ]);
+            Db::commit();
+            return response()->json(['message' => 'بایگانی با موفقیت انجام شد']);
+        }catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+
     }
 
     public function create(Request $request)
@@ -187,7 +208,7 @@ class LicenseController extends Controller
             ->get();
 
         $bdmTypes = BdmTypesEnum::listWithIds();
-        $permitStatuses = Status::where('model', PermitStatus::class)->select(['id', 'name'])->get();
+        $permitStatuses = Status::where('model', PermitStatus::class)->orderBy('id')->select(['id', 'name'])->get();
 
         $bdmStatuses = Status::where('model', BuildingDossier::class)->select(['id', 'name'])->get();
 

@@ -55,11 +55,20 @@ trait StructuresTrait
                     'partitioning_type_id' => $partitioning->partitioning_type_id,
                     'app_id' => $partitioning->app_id,
                 ]);
-                Structure::create([
-                    'dossier_id' => $dossierID,
-                    'structureable_id' => $partitioning->id,
-                    'structureable_type' => Partitioning::class,
-                ]);
+                $structure = Structure::where('dossier_id' , $dossierID)
+                    ->where('structureable_type' , Partitioning::class)
+                    ->first();
+                if($structure){
+                    $structure->structureable_id = $partitioning->id;
+                    $structure->save();
+                }else{
+                    Structure::create([
+                        'dossier_id' => $dossierID,
+                        'structureable_id' => $partitioning->id,
+                        'structureable_type' => Partitioning::class,
+                    ]);
+                }
+
             }
         }
 
@@ -72,7 +81,7 @@ trait StructuresTrait
                     'width' => $parking->width,
                     'app_id' => $parking->app_id,
                 ]);
-                $structure = Structure::where('structureable_id' , $parking->id)
+                $structure = Structure::where('dossier_id' , $dossierID)
                     ->where('structureable_type' , Parking::class)
                     ->first();
 
@@ -84,11 +93,8 @@ trait StructuresTrait
                         'app_id' => $parking->app_id,
                     ]);
                 }else{
-                    $structure->update([
-                        'dossier_id' => $dossierID,
-                        'structureable_id' => $parking->id,
-                        'structureable_type' => Parking::class,
-                    ]);
+                    $structure->structureable_id = $parking->id;
+                    $structure->save();
                 }
             }
         }
@@ -102,7 +108,7 @@ trait StructuresTrait
                     'length' => $pool->length,
                     'app_id' => $pool->app_id,
                 ]);
-                $structure = Structure::where('structureable_id' , $pool->id)
+                $structure = Structure::where('dossier_id' , $dossierID)
                     ->where('structureable_type' , Pool::class)
                     ->first();
 
@@ -113,11 +119,8 @@ trait StructuresTrait
                         'structureable_type' => Pool::class,
                     ]);
                 }else{
-                    $structure->update([
-                        'dossier_id' => $dossierID,
-                        'structureable_id' => $pool->id,
-                        'structureable_type' => Pool::class,
-                    ]);
+                    $structure->structureable_id = $pool->id;
+                    $structure->save();
                 }
             }
         }
@@ -132,7 +135,7 @@ trait StructuresTrait
                     'length' => $pavilion->length,
                     'app_id' => $pavilion->app_id,
                 ]);
-                $structure = Structure::where('structureable_id' , $pavilion->id)
+                $structure = Structure::where('dossier_id' , $dossierID)
                     ->where('structureable_type' , Pavilion::class)
                     ->first();
 
@@ -143,11 +146,8 @@ trait StructuresTrait
                         'structureable_type' => Pavilion::class,
                     ]);
                 }else{
-                    $structure->update([
-                        'dossier_id' => $dossierID,
-                        'structureable_id' => $pavilion->id,
-                        'structureable_type' => Pavilion::class,
-                    ]);
+                    $structure->structureable_id = $pavilion->id;
+                    $structure->save();
                 }
             }
         }
