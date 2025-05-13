@@ -21,12 +21,14 @@ trait LoginTrait
                 'permissions.slug as permission_slug',
                 'permissions.priority as permission_priority',
                 'modules.icon as module_icon',
+                'modules.id as module_id',
                 'modules.name as module_name',
                 'modules.priority as module_priority',
                 'module_categories.name as module_cat_name',
                 'module_categories.id as module_cat_id',
                 'module_categories.icon as module_cat_icon',
                 'module_categories.priority as module_cat_priority',
+                'module_categories.id as module_cat_id',
             ])
             ->where('users.id' , $user->id)
             ->where('permissions.permission_type_id', PermissionTypesEnum::SIDEBAR->value)
@@ -38,11 +40,13 @@ trait LoginTrait
                     'category_name' => $categoryName,
                     'category_id' => $modules->first()->module_cat_id,
                     'category_icon' => $modules->first()->module_cat_icon,
+                    'category_id' => $modules->first()->module_cat_id,
                     'modules' => $modules->groupBy('module_name')
                         ->map(function ($permissions, $moduleName) {
                             return [
                                 'module_name' => $moduleName,
                                 'module_icon' => $permissions->first()->module_icon,
+                                'module_id' => $permissions->first()->module_id,
                                 'permissions' => $permissions->map(function ($permission) {
                                     return [
                                         'id' => $permission->permission_id,
