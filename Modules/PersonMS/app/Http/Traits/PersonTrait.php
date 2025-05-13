@@ -2,13 +2,16 @@
 
 namespace Modules\PersonMS\app\Http\Traits;
 
+use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\ExemptionType;
 use Modules\HRMS\app\Models\MilitaryService;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
+use Modules\PersonMS\app\Http\Enums\PersonLicenseStatusEnum;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
 use Modules\PersonMS\app\Models\PersonLicense;
+use Modules\StatusMS\app\Models\Status;
 
 trait PersonTrait
 {
@@ -19,6 +22,21 @@ trait PersonTrait
             ->with('user', 'personable.homeAddress.city.state.country', 'avatar', 'status')
             ->first();
 
+
+        return $person;
+    }
+
+    public function personExistenceCheckByNationalCode(string $nationalCode)
+    {
+        $person = Person::where('national_code', $nationalCode)
+            ->leftJoinRelationship('workForce', function ($join) {
+                $join->where('workforceable_type', Employee::class);
+            })
+            ->joinRelationship('natural')
+            ->addSelect([
+                'work_forces.workforceable_id as employee_id',
+                'naturals.mobile as mobile',
+            ])->first();
 
         return $person;
     }
@@ -66,21 +84,14 @@ trait PersonTrait
             'father_name' => $data['fatherName'] ?? null,
             'birth_date' => $data['dateOfBirth'] ?? null,
             'bc_code' => $data['bcCode'] ?? null,
-            'job' => $data['job'] ?? null,
-            'isMarried' => $data['isMarried'] ?? null,
-            'level_of_spouse_education' => $data['levelOfSpouseEducation'] ?? null,
-            'spouse_first_name' => $data['spouseFirstName'] ?? null,
-            'spouse_last_name' => $data['spouseLastName'] ?? null,
-            'home_address_id' => $data['homeAddressID'] ?? null,
-            'job_address_id' => $data['jobAddressID'] ?? null,
             'gender_id' => $data['gender'] ?? 1,
             'bc_issue_date' => $data['bcIssueDate'] ?? null,
             'bc_issue_location' => $data['bcIssueLocation'] ?? null,
+            'birth_location' => $data['birthLocation'] ?? null,
             'bc_serial' => $data['bcSerial'] ?? null,
             'religion_id' => $data['religionID'] ?? null,
             'religion_type_id' => $data['religionTypeID'] ?? null,
-
-
+            'spouse_id' => $data['spouseID'] ?? null,
         ]);
 
 
@@ -462,6 +473,40 @@ trait PersonTrait
             $license->save();
         }
 
+    }
+
+    public function bulkStorePersonLicenses(array $data, int $personID, Status $status = null)
+    {
+        if (is_null($status)) {
+            $status = $this->personLicensePendingStatus();
+        }
+        $data = $this->personLicenseDataPreparation($data, $personID, $status);
+        $result = PersonLicense::upsert($data->toArray(), ['id']);
+
+    }
+
+    public function personLicensePendingStatus()
+    {
+        return PersonLicense::GetAllStatuses()->firstWhere('name', '=', PersonLicenseStatusEnum::PENDING->value);
+    }
+
+    public function personLicenseDataPreparation(array $data, int $personID, ?Status $status)
+    {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $data = [$data];
+        }
+
+
+        $data = collect($data)->map(function ($item) use ($personID, $status) {
+            return [
+                'id' => $item['id'] ?? null,
+                'file_id' => $item['fileID'] ?? null,
+                'person_id' => $personID,
+                'license_type' => $item['licenseTypeID'],
+                'status_id' => $status?->id,
+            ];
+        });
+        return $data;
     }
 
 

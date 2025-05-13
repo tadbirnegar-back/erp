@@ -106,10 +106,10 @@ trait RecruitmentScriptTrait
 
                 FileScript::insert($fileScriptsData->toArray());
             }
-            if (isset($data[$key]['scriptAgents'])) {
-                $agents = json_decode($data[$key]['scriptAgents'], true);
-                $scriptAgentsScripts = $this->sasStore($agents, $rs);
-            }
+//            if (isset($data[$key]['scriptAgents'])) {
+//                $agents = json_decode($data[$key]['scriptAgents'], true);
+//                $scriptAgentsScripts = $this->sasStore($agents, $rs);
+//            }
             $rs->load('scriptType.confirmationTypes');
 
 
@@ -182,12 +182,6 @@ trait RecruitmentScriptTrait
 
             FileScript::insert($fileScriptsData->toArray());
         }
-        if (isset($data['scriptAgents'])) {
-            $agents = json_decode($data['scriptAgents'], true);
-            $scriptAgentsScripts = $this->sasStore($agents, $rs);
-        }
-        $rs->load('scriptType.confirmationTypes');
-
 
         return $rs;
 
@@ -235,7 +229,7 @@ trait RecruitmentScriptTrait
 
     public function rsShow(RecruitmentScript $script)
     {
-        $script->load(['position', 'level', 'job', 'scriptAgents', 'approvers.status', 'approvers.assignedTo']);
+        $script->load(['position', 'level', 'job', 'approvers.status', 'approvers.assignedTo']);
     }
 
 

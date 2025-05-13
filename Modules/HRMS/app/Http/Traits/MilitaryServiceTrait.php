@@ -8,15 +8,18 @@ trait MilitaryServiceTrait
 {
 
     //write crud for military service here
-    public function militaryServiceStore(array $data, ?int $workForceID)
+    public function militaryServiceStore(array $data, ?int $personID)
     {
-        $militaryService = new MilitaryService();
-        $militaryService->military_service_status_id = $data['militaryServiceStatusID'] ?? null;
-        $militaryService->exemption_type_id = $data['exemptionTypeID'] ?? null;
-        $militaryService->issue_date = $data['issueDate'] ?? null;
-        $militaryService->work_force_id = $workForceID ?? null;
-        $militaryService->person_id = $data['personID'] ?? null;
-        $militaryService->save();
+
+        $militaryService = MilitaryService::updateOrCreate(
+            [
+                'person_id' => $personID,
+            ],
+            [
+                'military_service_status_id' => $data['militaryServiceStatus'] ?? null,
+                'issue_date' => $data['endDate'] ?? null,
+            ]
+        );
 
         return $militaryService;
     }

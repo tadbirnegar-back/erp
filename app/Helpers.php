@@ -6,7 +6,6 @@ function convertToDbFriendly($string)
 {
     if ($string instanceof \DateTimeImmutable) {
         // Log the problematic value (or row information if available)
-        \Log::info('Found DateTimeImmutable value', ['value' => $string->format('m/d')]);
         // Convert to string
         $string = $string->format('m/d');
     }
@@ -106,8 +105,8 @@ function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
         return null;
     }
 
-    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
-    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali);
+    $jalali = CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
+    $jalaliPersianNumbers = CalendarUtils::convertNumbers($jalali);
     return $jalaliPersianNumbers;
 }
 
@@ -117,8 +116,8 @@ function convertDateTimeGregorianToJalaliDateTimeOnlyDatePart(?string $value): ?
         return null;
     }
 
-    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
-    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali);
+    $jalali = CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
+    $jalaliPersianNumbers = CalendarUtils::convertNumbers($jalali);
     return explode(' ', $jalaliPersianNumbers)[0];
 }
 
@@ -244,7 +243,7 @@ function removeLeftZero($number)
     }
 }
 
-function DateformatToHumanReadableJalali($date, $showClock = true,$split='/')
+function DateformatToHumanReadableJalali($date, $showClock = true, $split = '/')
 {
     // Check if the date string contains time
     $dateTimeParts = explode(' ', $date);
@@ -328,4 +327,9 @@ function howManyDaysRemain($date)
     $today = new DateTime();
     $interval = $date->diff($today);
     return $interval->format('%a');
+}
+
+function censorMobile($number)
+{
+    return str_repeat('*', strlen($number) - 4) . substr($number, -4);
 }

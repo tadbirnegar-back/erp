@@ -5,7 +5,6 @@ namespace Modules\HRMS\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
@@ -20,7 +19,7 @@ class ApprovingListController extends Controller
     public function showScriptWithApproves($id)
     {
         $user = auth()->user();
-        $script = RecruitmentScript::with('scriptType', 'hireType', 'position', 'level', 'scriptAgents', 'approvers.assignedTo', 'approvers.status', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files')->find($id);
+        $script = RecruitmentScript::with('scriptType', 'hireType', 'position', 'level', 'approvers.assignedTo', 'approvers.status', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files')->find($id);
 
         $canApprove = $script->approvers->where('assigned_to', $user->id)->where('status_id', $this->pendingForCurrentUserStatus()->id)->isNotEmpty();
         $canIssueRevisedScript = false;

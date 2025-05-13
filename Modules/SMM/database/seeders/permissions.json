@@ -1,0 +1,38 @@
+[
+    {
+        "name": "لیست بخشنامه ها",
+        "slug": "/smm/circulars/list",
+        "moduleName": "حقوق و دستمزد",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن بخشنامه",
+        "slug": "/smm/circulars/add",
+        "moduleName": "حقوق و دستمزد",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "مشاهده بخشنامه",
+        "slug": "/smm/circulars/{id}",
+        "moduleName": "حقوق و دستمزد",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی بخشنامه",
+        "slug": "/smm/circulars/update-base/{id}",
+        "moduleName": "حقوق و دستمزد",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی مقادیر بخشنامه",
+        "slug": "/smm/circulars/update-benefits/{id}",
+        "moduleName": "حقوق و دستمزد",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ابلاغ بخشنامه",
+        "slug": "/smm/circulars/dispatch/{id}",
+        "moduleName": "حقوق و دستمزد",
+        "permissionTypeName": "operational"
+    }
+]

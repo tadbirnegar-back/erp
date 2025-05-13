@@ -104,11 +104,11 @@ class RecruitmentScript extends Model
         return $this->belongsTo(ScriptType::class);
     }
 
-    public function scriptAgents(): BelongsToMany
-    {
-        return $this->belongsToMany(ScriptAgent::class, 'script_agent_script', 'script_id', 'script_agent_id')
-            ->withPivot('contract');
-    }
+//    public function scriptAgents(): BelongsToMany
+//    {
+//        return $this->belongsToMany(ScriptAgent::class, 'script_agent_script', 'script_id', 'script_agent_id')
+//            ->withPivot('contract');
+//    }
 
     public function hireType(): BelongsTo
     {
@@ -290,6 +290,14 @@ class RecruitmentScript extends Model
         )
             ->where('work_forces.workforceable_type', Employee::class)
             ->where('dependents.relation_type_id', RelationTypeEnum::CHILD->value);
+    }
+
+    public function scopeFinalStatus($query)
+    {
+        return $query->join('recruitment_script_status', 'recruitment_scripts.id', '=', 'recruitment_script_status.recruitment_script_id')
+            ->join('statuses', 'recruitment_script_status.status_id', '=', 'statuses.id')
+            ->whereRaw('recruitment_script_status.create_date = (SELECT MAX(create_date) FROM recruitment_script_status WHERE recruitment_script_id = recruitment_scripts.id)');
+
     }
 
 

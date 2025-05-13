@@ -47,20 +47,20 @@ class NewScriptController extends Controller
             $scriptType = ScriptType::where('title', 'انتصاب سرپرست دهیاری')->first();
             $job = Job::where('title', 'سرپرست دهیاری')->first();
 
-            $result = $this->getScriptAgentCombos($hireType, $scriptType);
-
-            $sas = $result->map(function ($item) {
-                return [
-                    'scriptAgentID' => $item->id,
-                    'defaultValue' => $item->pivot->default_value ?? 0,
-                ];
-            });
-            $encodedSas = json_encode($sas->toArray());
+//            $result = $this->getScriptAgentCombos($hireType, $scriptType);
+//
+//            $sas = $result->map(function ($item) {
+//                return [
+//                    'scriptAgentID' => $item->id,
+//                    'defaultValue' => $item->pivot->default_value ?? 0,
+//                ];
+//            });
+//            $encodedSas = json_encode($sas->toArray());
             $data['hireTypeID'] = $hireType->id;
             $data['scriptTypeID'] = $scriptType->id;
             $data['jobID'] = $job->id;
             $data['operatorID'] = $user->id;
-            $data['scriptAgents'] = $encodedSas;
+//            $data['scriptAgents'] = $encodedSas;
             $data['positionID'] = Position::where('name', 'سرپرست دهیاری')->first()->id;
             $pendingRsStatus = $this->pendingRsStatus();
 
@@ -87,25 +87,25 @@ class NewScriptController extends Controller
             $scriptType = ScriptType::where('title', 'انتصاب هیئت تطبیق')->first();
             $job = Job::where('title', 'عضو هیئت')->first();
 
-            $result = $this->getScriptAgentCombos($hireType, $scriptType);
+//            $result = $this->getScriptAgentCombos($hireType, $scriptType);
 
-            $sas = $result->map(function ($item) {
-                return [
-                    'scriptAgentID' => $item->id,
-                    'defaultValue' => $item->pivot->default_value ?? 0,
-                ];
-            });
-            $positionsName=Position::whereIn('name',['کارشناس مشورتی','نماینده استانداری'])->get();
-            $ids=$positionsName->pluck('id')->toArray();
-            $dabirId=Position::where('name','مسئول دبیرخانه')->first()->id;
-            $dabir=Position::where('name','مسئول دبیرخانه')->first();
+//            $sas = $result->map(function ($item) {
+//                return [
+//                    'scriptAgentID' => $item->id,
+//                    'defaultValue' => $item->pivot->default_value ?? 0,
+//                ];
+//            });
+            $positionsName = Position::whereIn('name', ['کارشناس مشورتی', 'نماینده استانداری'])->get();
+            $ids = $positionsName->pluck('id')->toArray();
+            $dabirId = Position::where('name', 'مسئول دبیرخانه')->first()->id;
+            $dabir = Position::where('name', 'مسئول دبیرخانه')->first();
 
-            $encodedSas = json_encode($sas->toArray());
+//            $encodedSas = json_encode($sas->toArray());
             $data['hireTypeID'] = $hireType->id;
             $data['scriptTypeID'] = $scriptType->id;
             $data['jobID'] = $job->id;
             $data['operatorID'] = $user->id;
-            $data['scriptAgents'] = $encodedSas;
+//            $data['scriptAgents'] = $encodedSas;
 
             if ($dabir && $dabir->id == $data['positionID']) {
                 $data['scriptTypeID'] = ScriptType::where('title', 'انتصاب دبیر')->value('id');
@@ -114,11 +114,10 @@ class NewScriptController extends Controller
             }
 
 
-
             if (isset($data['positionID']) && in_array($data['positionID'], $ids)) {
                 $job = Job::where('title', 'کارشناس مشورتی')->first();
             }
-            if ($data['positionID']== $dabirId) {
+            if ($data['positionID'] == $dabirId) {
                 $job = Job::where('title', 'مسئول دبیرخانه')->first();
             }
             $data['jobID'] = $job ? $job->id : null;

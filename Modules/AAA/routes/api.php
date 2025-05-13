@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\AAA\app\Http\Controllers\AAAController;
 use Modules\AAA\app\Http\Controllers\Auth\LoginControllerV2;
 
 /*
@@ -35,7 +36,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/users/roles/update/{id}', [\Modules\AAA\app\Http\Controllers\RoleController::class, 'show'])->middleware(['auth:api', 'route'])->name('role.edit');
     Route::post('/permissions/list', [\Modules\AAA\app\Http\Controllers\PermissionController::class, 'index'])->middleware('auth:api');
     Route::post('/users/view/{id}', [\Modules\AAA\app\Http\Controllers\UserController::class, 'show'])->middleware('auth:api', 'route');
-    Route::post('/users/widgets/active', [\Modules\AAA\app\Http\Controllers\AAAController::class, 'activeWidgets'])->middleware('auth:api');
+    Route::post('/users/widgets/active', [AAAController::class, 'activeWidgets'])->middleware('auth:api');
 
 
     Route::get('/widget/profile', [\Modules\AAA\app\Http\Widgets\UserWidgets::class, 'getUserInfo']);
@@ -44,7 +45,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/widget/village_ofc', [\Modules\AAA\app\Http\Widgets\UserWidgets::class, 'userOunits']);
 
     //settings route
-    Route::post('/setting/widgets', [\Modules\AAA\app\Http\Controllers\AAAController::class, 'widgets'])->middleware('auth:api');
+    Route::post('/setting/widgets', [AAAController::class, 'widgets'])->middleware('auth:api');
 
     Route::put('/setting/widgets', [\Modules\WidgetsMS\app\Http\Controllers\WidgetsMSController::class, 'update'])->middleware('auth:api');
 
@@ -67,4 +68,9 @@ Route::middleware(['auth:api'])->prefix('v2')->group(function () {
     Route::get('/get-permissions', [LoginControllerV2::class, 'getPermission']);
     Route::get('/get-user-info', [LoginControllerV2::class, 'getUserInfo']);
     Route::get('/check-payed', [LoginControllerV2::class, 'checkPayed']);
+    Route::post('/login-with-otp', [LoginControllerV2::class, 'loginWithOtp']);
+
+    Route::post('/user/otp/send', [AAAController::class, 'generateOtp']);
+    Route::post('/user/otp/verify', [AAAController::class, 'verifyAndRevokeOtp']);
+
 });

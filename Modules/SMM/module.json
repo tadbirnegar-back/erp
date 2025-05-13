@@ -1,0 +1,11 @@
+{
+    "name": "SMM",
+    "alias": "smm",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\SMM\\app\\Providers\\SMMServiceProvider"
+    ],
+    "files": []
+}
