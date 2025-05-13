@@ -29,12 +29,11 @@ class CircularController extends Controller
             $data = $request->all();
             $user = Auth::user();
             $this->storeCircular($data, $user);
-
             Db::commit();
             return response()->json(['message' => 'بخشنامه با موفقیت ساخته شد'], 200);
         } catch (\Exception $e) {
             Db::rollBack();
-            return response()->json(['message' => 'ایجاد بخشنامه با مشکل مواجه شد'], 400);
+            return response()->json(['message' => $e->getMessage()], 400);
         }
 
     }
@@ -42,7 +41,9 @@ class CircularController extends Controller
     public function index(Request $request)
     {
         $data = $request->all();
-        $data = $this->indexCirculars($data);
+        $pageNum = $data['pageNum'] ?? 1;
+        $perPage = $data['perPage'] ?? 10;
+        $data = $this->indexCirculars($data , $perPage , $pageNum);
         return IndexCircularsResource::collection($data);
     }
 
@@ -67,7 +68,7 @@ class CircularController extends Controller
             return response()->json(['message' => 'بخشنامه با موفقیت بروزرسانی شد'], 200);
         }catch (\Exception $e) {
             Db::rollBack();
-            return response()->json(['message' => 'متاسفانه تغییرات بخشنامه اعمال نگردید'], 400);
+            return response()->json(['message' => $e->getMessage()], 400);
         }
 
     }
@@ -86,7 +87,6 @@ class CircularController extends Controller
                 'circularId' => $id,
                 'userId' => $user->id
             ]);
-//            $this->publishCircular($id);
             return response()->json(['message' => 'بخشنامه با موفقیت ابلاغ گردید'], 200);
         }catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

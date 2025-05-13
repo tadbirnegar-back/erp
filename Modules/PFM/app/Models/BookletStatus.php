@@ -4,6 +4,7 @@ namespace Modules\PFM\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\FileMS\app\Models\File;
 use Modules\PFM\Database\factories\BookletStatusFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -27,6 +28,11 @@ class BookletStatus extends Model
 
     protected $table = 'pfm_booklet_statuses';
 
+
+    public function file()
+    {
+        return $this->belongsTo(File::class, 'file_id', 'id');
+    }
 
 
     public $timestamps = false;

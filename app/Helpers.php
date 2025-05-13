@@ -111,6 +111,17 @@ function convertDateTimeGregorianToJalaliDateTime(?string $value): ?string
     return $jalaliPersianNumbers;
 }
 
+function convertDateTimeGregorianToJalaliDateTimeOnlyDatePart(?string $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    $jalali = \Morilog\Jalali\CalendarUtils::strftime('Y/m/d H:i:s', strtotime($value));
+    $jalaliPersianNumbers = \Morilog\Jalali\CalendarUtils::convertNumbers($jalali);
+    return explode(' ', $jalaliPersianNumbers)[0];
+}
+
 function convertDateTimeHaveDashJalaliPersianCharactersToGregorian(string $persianCharDateTime)
 {
     // Convert Persian numbers to English numbers
@@ -133,6 +144,13 @@ function convertGregorianToJalali(string $gregorianDate)
     $persianCharJalaliDate = CalendarUtils::convertNumbers($jalaliDate, false);
 
     return $persianCharJalaliDate;
+}
+function convertToEnglishNumbersWithoutZeros($input) {
+    $persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    $english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    $output = str_replace($persian, $english , $input);
+
+    return $output;
 }
 
 function convertSecondToMinute($second)
@@ -193,6 +211,15 @@ function persianNumbersToEng(string $persianNumber)
 
     $index = array_search($persianNumber, $persianDigits);
     return $englishDigits[$index];
+}
+
+function EngNumbersToPersian(string $englishNumber)
+{
+    $persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۱۰', '۱۱', '۱۲'];
+    $englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+
+    $index = array_search($englishNumber, $englishDigits);
+    return $persianDigits[$index];
 }
 
 function removeLeftZero($number)
@@ -292,4 +319,13 @@ function convertGregorianYearToJalaliYear($gregorianYear)
 {
     $jalaliYear = CalendarUtils::strftime('Y', strtotime($gregorianYear));
     return $jalaliYear;
+}
+
+
+function howManyDaysRemain($date)
+{
+    $date = new DateTime($date);
+    $today = new DateTime();
+    $interval = $date->diff($today);
+    return $interval->format('%a');
 }

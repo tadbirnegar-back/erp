@@ -2,13 +2,13 @@
 
 namespace Modules\AAA\app\Http\Traits;
 
+use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\Position;
 use Modules\PersonMS\app\Models\Person;
 
 trait UserTrait
 {
-
 
     public function isPersonUserCheck(Person $person): ?User
     {
@@ -35,6 +35,40 @@ trait UserTrait
         $user->statuses()->attach($status->id);
         return $user;
 
+    }
+
+    public function storeUserOrUpdate(array $data)
+    {
+        $user = User::where('mobile', '=', $data['mobile'])->first();
+        if(!$user){
+            if(isset($data['email'])){
+                $userWithSameEmail = User::where('email', '=', $data['email'])->first();
+                if($userWithSameEmail)
+                {
+                    return ['status' => 404 , 'type' => 'email'];
+                }
+            }
+
+            $user = new User();
+            $user->mobile = $data['mobile'];
+            $user->email = $data['email'] ?? null;
+            $user->username = $data['username'] ?? null;
+            $user->person_id = $data['personID'];
+            $user->password = bcrypt($data['password']);
+            $user->save();
+            if (isset($data['roles'])) {
+                $user->roles()->sync($data['roles']);
+            }
+            $status = $this->activeUserStatus();
+            $user->statuses()->attach($status->id);
+            return ['user' => $user , 'status' => 200];
+        }else{
+            if($data['personID'] == $user->person_id){
+                return ['user' => $user , 'status' => 200];
+            }else{
+                return ['status' => 404 , 'type' => 'mobile'];
+            }
+        }
     }
 
     public function showUser(User $user)
@@ -144,6 +178,13 @@ trait UserTrait
         $user->roles()->sync($result->toArray());
 
         return true;
+    }
+    public function attachRoleForEngineer($userID)
+    {
+        $statusID = Role::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+        $role = Role::where('name' , 'مهندس ساختمان')->firstOrCreate(['name' => 'مهندس ساختمان' , 'status_id' => $statusID]);
+        $user = User::find($userID);
+        $user->roles()->attach($role->id);
     }
 
 }

@@ -87,7 +87,7 @@
         "name": "عوارض بر تابلوهای تبلیغاتی",
         "category": "تبلیغات",
         "description": "A = P * S * B * N",
-        "has_app": false,
+        "has_app": true,
         "bg_id": 38
     },
     {
@@ -105,10 +105,17 @@
         "bg_id": 25
     },
     {
-        "name" : "عناوین بهای خدمت",
+        "name": "عناوین بهای خدمت",
         "category": "بهای خدمت",
         "description": "",
         "has_app": false,
         "bg_id": 43
+    },
+    {
+        "name": "عوارض صدور پروانه های ساختمانی",
+        "category": "مستحدثات",
+        "description": "",
+        "has_app": false,
+        "bg_id": 22
     }
 ]

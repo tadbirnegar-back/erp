@@ -1,14 +1,14 @@
 [
     {
         "name": "لغو",
-        "className": ""
+        "className": "danger"
     },
     {
         "name": "در انتظار پرداخت",
-        "className": ""
+        "className": "primary"
     },
     {
         "name": "پرداخت شده",
-        "className": ""
+        "className": "success"
     }
 ]
