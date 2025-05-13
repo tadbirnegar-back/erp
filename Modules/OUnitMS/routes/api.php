@@ -74,3 +74,9 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/oms/districtofc/all/list', [OUnitMSController::class, 'districtsAllList']);
 
 });
+
+
+Route::prefix('v1')->group(function () {
+    Route::get('/oms/districtofc/list/{id}', [OUnitMSController::class, 'districtsIndexPublic']);
+    Route::get('/oms/villageofc/list/{id}', [OUnitMSController::class, 'villageIndexPublic']);
+});

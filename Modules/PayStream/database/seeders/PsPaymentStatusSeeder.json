@@ -1,14 +1,14 @@
 [
     {
         "name": "موفق",
-        "className": ""
+        "className": "success"
     },
     {
         "name": "در انتظار تایید",
-        "className": ""
+        "className": "primary"
     },
     {
         "name": "ناموفق",
-        "className": ""
+        "className": "danger"
     }
 ]

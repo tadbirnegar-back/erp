@@ -24,7 +24,6 @@ class CourseExpirationJob implements ShouldQueue
      */
     public function __construct(int $course)
     {
-        \Log::info($course);
         $this->courseId = $course;
     }
 
@@ -43,8 +42,6 @@ class CourseExpirationJob implements ShouldQueue
                 'create_date' => now(),
                 'description' => null
             ]);
-        }else {
-            \Log::info('not');
         }
     }
 }

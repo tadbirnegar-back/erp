@@ -10,6 +10,17 @@ enum BookletStatusEnum: string
     case DAR_ENTEZAR_SHURA = 'در انتظار تایید شورا روستا';
     case DAR_ENTEZARE_HEYATE_TATBIGH = 'در انتظار هیئت تطبیق';
 
+    /**
+     * Get the timeline for declined statuses.
+     */
+    public static function getTimeLineDeclined(string $statusName): array
+    {
+        $timeline = [
+            self::DAR_ENTEZAR_SABTE_MAGHADIR->value => ['danger', 'secondary', 'secondary'],
+            self::DAR_ENTEZAR_SHURA->value => ['success', 'danger', 'secondary'],
+            self::DAR_ENTEZARE_HEYATE_TATBIGH->value => ['success', 'success', 'danger'],
+        ];
 
-
+        return $timeline[$statusName] ?? [];
+    }
 }

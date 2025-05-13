@@ -1,0 +1,94 @@
+[
+    {
+        "name": "تشکیل پرونده ساخت و ساز",
+        "className": "primary"
+    },
+    {
+        "name": "بررسی اولیه توسط مسئول فنی",
+        "className": "primary"
+    },
+    {
+        "name": "تایید دهیار جهت ارسال به بنیاد مسکن",
+        "className": "primary"
+    },
+    {
+        "name": "استعلام از بنیاد مسکن",
+        "className": "primary"
+    },
+    {
+        "name": "بررسی فنی استعلام بنیاد مسکن",
+        "className": "primary"
+    },
+    {
+        "name": "بررسی مالکیت زمین توسط شورای روستا",
+        "className": "primary"
+    },
+    {
+        "name": "صدور دستور تهیه نقشه ساختمانی",
+        "className": "primary"
+    },
+    {
+        "name": "معرفی مهندسین پروژه",
+        "className": "primary"
+    },
+    {
+        "name": "تهیه و تنظیم نقشه‌های معماری و سازه",
+        "className": "primary"
+    },
+    {
+        "name": "بررسی فنی نقشه‌های ساختمانی",
+        "className": "primary"
+    },
+    {
+        "name": "ثبت تعهدات مهندسین پروژه",
+        "className": "primary"
+    },
+    {
+        "name": "محاسبه و صدور قبض عوارض پروانه ساختمانی",
+        "className": "primary"
+    },
+    {
+        "name": "پرداخت عوارض پروانه ساختمانی",
+        "className": "primary"
+    },
+    {
+        "name": "تأییدیه پرداخت‌ها توسط مسئول مالی",
+        "className": "primary"
+    },
+    {
+        "name": "تأیید نهایی و صدور پروانه",
+        "className": "primary"
+    },
+    {
+        "name": "اجرای فونداسیون و پی‌ریزی ساختمان",
+        "className": "primary"
+    },
+    {
+        "name": "اجرای اسکلت و عملیات سازه‌ای",
+        "className": "primary"
+    },
+    {
+        "name": "اجرای عملیات سفت‌کاری و نازک‌ کاری",
+        "className": "primary"
+    },
+    {
+        "name": "ارائه گزارش نهایی ناظر",
+        "className": "primary"
+    },
+    {
+        "name": "درخواست صدور گواهی پایان کار",
+        "className": "primary"
+    },
+    {
+        "name": "صدور گواهی پایان کار",
+        "className": "primary"
+    },
+    {
+        "name": "بررسی نقشه - رد شده",
+        "className": "danger"
+    },
+    {
+        "name": "رد تعهدات",
+        "className": "danger"
+    }
+]

@@ -2,6 +2,7 @@
 
 namespace Modules\PersonMS\app\Http\Traits;
 
+use Modules\HRMS\app\Models\ExemptionType;
 use Modules\HRMS\app\Models\MilitaryService;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
 use Modules\PersonMS\app\Models\Legal;
@@ -301,7 +302,7 @@ trait PersonTrait
                 $natural->home_address_id = $natural->home_address_id == null ? ($data->home_address_id ?? null) : $natural->home_address_id;
                 $natural->job_address_id = $natural->job_address_id == null ? ($data->job_address_id ?? null) : $natural->job_address_id;
                 $natural->gender_id = $natural->gender_id == null ? ($data->gender_id ?? null) : $natural->gender_id;
-                $natural->bc_issue_date = $natural->bc_issue_date == null ? ($data->bc_issue_date ?? null) : $natural->bc_issue_date;
+                $natural->bc_issue_date = $natural->bc_issue_date == null ? (convertPersianToGregorianBothHaveTimeAndDont($data->bc_issue_date) ?? null) : $natural->bc_issue_date;
                 $natural->bc_issue_location = $natural->bc_issue_location == null ? ($data->bc_issue_location ?? null) : $natural->bc_issue_location;
                 $natural->birth_location = $natural->birth_location == null ? ($data->birth_location ?? null) : $natural->birth_location;
                 $natural->bc_serial = $natural->bc_serial == null ? ($data->bc_serial ?? null) : $natural->bc_serial;
@@ -320,7 +321,7 @@ trait PersonTrait
                 if ($natural->gender_id == 1) {
                     $militaryService = MilitaryService::where('person_id', $person->id)->first();
                     if ($militaryService) {
-                        $newMilitaryService = new MilitaryService();
+                        $newMilitaryService = MilitaryService::where('person_id', $person->id)->first();
                         $newMilitaryService->exemption_type_id = ($militaryService->exemptionType == null) ? ($data->exemptionTypeID ?? null) : $militaryService->exemptionType->id;
                         $newMilitaryService->military_service_status_id = ($militaryService->militaryServiceStatus == null) ? ($data->militaryServiceStatusID ?? null) : $militaryService->militaryServiceStatus->id;
                         $newMilitaryService->work_force_id = null;
@@ -332,7 +333,7 @@ trait PersonTrait
                         $militaryService->exemption_type_id = ($data->exemptionTypeID ?? null);
                         $militaryService->military_service_status_id = ($data->militaryServiceStatusID ?? null);
                         $militaryService->work_force_id = null;
-                        $militaryService->issue_date = (convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? null);
+                        $militaryService->issue_date = isset($data->issueDate) ? convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) : null;
                         $militaryService->person_id = $person->id;
                         $militaryService->save();
                     }
@@ -369,7 +370,7 @@ trait PersonTrait
                 $natural->mobile = $data->mobile ?? null;
                 $natural->phone_number = $data->phone_number ?? null;
                 $natural->father_name = $data->father_name ?? null;
-                $natural->birth_date = convertPersianToGregorianBothHaveTimeAndDont($data->birth_date) ?? null;
+                $natural->birth_date = isset($data->birth_date) ? convertPersianToGregorianBothHaveTimeAndDont($data->birth_date) : null;
                 $natural->bc_code = $data->bc_code ?? null;
                 $natural->job = $data->job ?? null;
                 $natural->isMarried = $data->is_married ?? null;
@@ -379,7 +380,7 @@ trait PersonTrait
                 $natural->home_address_id = $data->home_address_id ?? null;
                 $natural->job_address_id = $data->job_address_id ?? null;
                 $natural->gender_id = $data->gender_id ?? 1;
-                $natural->bc_issue_date = $data->bc_issue_date ?? null;
+                $natural->bc_issue_date = isset($data->bc_issue_date) ? convertPersianToGregorianBothHaveTimeAndDont($data->bc_issue_date) : null;
                 $natural->bc_issue_location = $data->bc_issue_location ?? null;
                 $natural->birth_location = $data->birth_location ?? null;
                 $natural->bc_serial = $data->bc_serial ?? null;
@@ -398,13 +399,16 @@ trait PersonTrait
 
                 $person->save();
                 if ($natural->gender_id == 1) {
-                    MilitaryService::create([
-                        'person_id' => $person->id,
-                        'exemption_type_id' => $data->exemptionTypeID ?? null,
-                        'military_service_status_id' => $data->militaryServiceStatusID,
-                        'work_force_id' => null,
-                        'issue_date' => convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? now(),
-                    ]);
+                    $militaryService = MilitaryService::where('person_id', $person->id)->first();
+                    if (!$militaryService) {
+                        MilitaryService::create([
+                            'person_id' => $person->id,
+                            'exemption_type_id' => $data->exemptionTypeID ?? null,
+                            'military_service_status_id' => $data->militaryServiceStatusID,
+                            'work_force_id' => null,
+                            'issue_date' => isset($data->issueDate) ? convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) : now(),
+                        ]);
+                    }
                 }
 
                 $status = $this->activePersonStatus();
@@ -439,7 +443,7 @@ trait PersonTrait
     public
     function insertLicenses($personId, $data)
     {
-        $nationalLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->value)->where('person_id', $personId)->first();
+        $nationalLicense = PersonLicense::where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->value)->where('person_id', $personId)->first();
         if (!$nationalLicense) {
             $license = new PersonLicense();
             $license->file_id = $data->national_card_file_id ?? null;
@@ -449,7 +453,7 @@ trait PersonTrait
         }
 
 
-        $birthLicense = PersonLicense::where('page_number', 1)->where('license_type', PersonLicensesEnums::BIRTH_CERTIFICATE->value)->where('person_id', $personId)->first();
+        $birthLicense = PersonLicense::where('license_type', PersonLicensesEnums::BIRTH_CERTIFICATE->value)->where('person_id', $personId)->first();
         if (!$birthLicense) {
             $license = new PersonLicense();
             $license->file_id = $data->birth_certificate_file_id ?? null;

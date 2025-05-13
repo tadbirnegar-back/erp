@@ -1,14 +1,22 @@
 [
     {
         "name": "در انتظار مالی",
-        "className": ""
+        "className": "primary"
     },
     {
         "name": "ثبت نام شده",
-        "className": ""
+        "className": "success"
     },
     {
         "name": "لغو شده",
-        "className": ""
+        "className": "danger"
+    },
+    {
+        "name": "تسویه عوارض",
+        "className": "success"
+    },
+    {
+        "name": "منقضی شده",
+        "className": "danger"
     }
 ]

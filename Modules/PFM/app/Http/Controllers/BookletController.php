@@ -25,6 +25,21 @@ class BookletController extends Controller
     {
         $data = $request->all();
 
+        $data['isThisYear'] = false;
+        $pageNum = $data['pageNum'] ?? 1;
+        $perPage = $data['perPage'] ?? 10;
+
+        $user = Auth::user();
+        $data = $this->listOfBooklets($data, $user, $pageNum, $perPage);
+
+        return ListOfBookletsResource::collection($data);
+    }
+
+    public function indexThisYear(Request $request)
+    {
+        $data = $request->all();
+
+        $data['isThisYear'] = true;
         $pageNum = $data['pageNum'] ?? 1;
         $perPage = $data['perPage'] ?? 10;
 
@@ -49,6 +64,8 @@ class BookletController extends Controller
     {
         $data = $request->all();
         $bookletId = $data['booklet_id'];
+
+
         $query = Booklet::joinRelationship('statuses', ['statuses' => function ($join) {
             $join->whereRaw('pfm_booklet_statuses.created_date = (SELECT MAX(created_date) FROM pfm_booklet_statuses WHERE booklet_id = pfm_circular_booklets.id)');
         }])
@@ -62,29 +79,46 @@ class BookletController extends Controller
         return response()->json($res);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $id)
     {
         $data = $request->all();
 
-        $bookletId = $data['bookletID'];
-        $value = $data['value'];
-        $appIds = json_decode($data['applicationIDs']);
-
-        $itemId = $data['itemID'];
-
-        $user = Auth::user();
+        try {
+            DB::beginTransaction();
+            $tariffs = json_decode($data['tariffs']);
 
 
-        collect($appIds)->each(function ($appId) use ($itemId, $bookletId , $value , $user) {
-            Tarrifs::create([
-                'item_id' => $itemId,
-                'booklet_id' => $bookletId,
-                'app_id' => $appId,
-                'value' => $value,
-                'creator_id' => $user->id,
-                'created_date' => now(),
-            ]);
-        });
+            foreach ($tariffs as $tariff) {
+                $value = $tariff->value;
+                $appIds = json_decode($tariff->headerIDs);
+
+                $itemId = $tariff->sideID;
+
+                $user = Auth::user();
+
+                foreach ($appIds as $appId) {
+                    Tarrifs::updateOrCreate(
+                        [
+                            'item_id' => $itemId,
+                            'booklet_id' => $id,
+                            'app_id' => $appId,
+                        ],
+                        [
+                            'value' => $value,
+                            'creator_id' => $user->id,
+                            'created_date' => now(),
+                        ]
+                    );
+
+                }
+            }
+            DB::commit();
+            return response()->json('با موفقیت ثبت شد');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
 
     }
 
@@ -108,7 +142,7 @@ class BookletController extends Controller
             return response()->json(['message' => 'با موفقیت ثبت شد']);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در ثبت مقادیر دفترچه'], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
 
     }
@@ -140,5 +174,45 @@ class BookletController extends Controller
         } catch (Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    public function storeWithoutApp(Request $request, $id)
+    {
+        $data = $request->all();
+
+        try {
+            DB::beginTransaction();
+            $tariffs = json_decode($data['tariffs']);
+
+
+            foreach ($tariffs as $tariff) {
+                $value = $tariff->value;
+
+                $itemId = $tariff->sideID;
+
+
+                $user = Auth::user();
+
+                Tarrifs::updateOrCreate(
+                    [
+                        'item_id' => $itemId,
+                        'booklet_id' => $id,
+                    ],
+                    [
+                        'value' => $value,
+                        'creator_id' => $user->id,
+                        'created_date' => now(),
+                    ]
+                );
+
+
+            }
+            DB::commit();
+            return response()->json('با موفقیت ثبت شد');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
     }
 }

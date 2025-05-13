@@ -29,7 +29,7 @@ class ShowCircularResource extends JsonResource
             ],
             'publishedDate' => $data['status_name'] == CircularStatusEnum::APPROVED->value ? convertDateTimeGregorianToJalaliDateTime($data['created_date']) : null,
             'file' => [
-                "file_slug" => $data['file_slug'],
+                "file_slug" => url($data['file_slug']),
                 "size" => Number::fileSize($data['file_size'], 2, 3),
                 'type' => $data['extension_name'],
             ],
@@ -38,7 +38,9 @@ class ShowCircularResource extends JsonResource
                 "count" => $data['booklets_count'],
                 "approved" => $bookletsStatus['countOfMosavabStatus'],
                 "waiting" => $bookletsStatus['countOfDarEntazarStatus'],
-                "published" => $bookletsStatus['countOfPishnahadShodeStatus'],
+                "suggested" => $bookletsStatus['countOfPishnahadShodeStatus'],
+                'remainVillages' => $this->resource['countOfVillages'] - $data['booklets_count'],
+                'allVillages' => $this->resource['countOfVillages'],
             ],
             'levies' => $data['levies'],
         ];

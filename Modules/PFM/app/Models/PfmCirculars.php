@@ -29,7 +29,9 @@ class PfmCirculars extends Model
         'description',
         'fiscal_year_id',
         'file_id',
-        'created_date'
+        'created_date',
+        'start_date',
+        'end_date',
     ];
 
     public $timestamps = false;

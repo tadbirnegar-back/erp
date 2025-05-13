@@ -1,0 +1,140 @@
+[
+    {
+        "name": "لیست پرونده ها",
+        "slug": "/bdm/licenses/list",
+        "moduleName": "BDM",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست بخشداری های مرتبط با فنی",
+        "slug": "/bdm/related-district/list",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست روستای های مرتبط با فنی",
+        "slug": "/bdm/related-villages/list",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات مورد نیاز لیست",
+        "slug": "/bdm/list-filter/pre_data",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "نمایش پرونده",
+        "slug": "/bdm/dossier/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی پرونده",
+        "slug": "/bdm/estate/update/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید پرونده",
+        "slug": "/bdm/license/submit/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "آپلود فایل ها",
+        "slug": "/bdm/upload/files/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات مورد نیاز ملک",
+        "slug": "/bdm/estates/pre-data/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تکمیل اطلاعات ملک",
+        "slug": "/bdm/estate/full-fill/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "رد پرونده",
+        "slug": "/bdm/decline-dossier/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "شناسایی مهندس",
+        "slug": "/bdm/engineer/detector",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "افزودن مهندس",
+        "slug": "/bdm/add-engineers/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست انواع مهندس",
+        "slug": "/bdm/engineers-type/list",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "دریافت اطلاعات شخص",
+        "slug": "/bdm/get-person-data/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "بروزرسانی اطلاعات شخص",
+        "slug": "/bdm/update-person/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "ذخیره ساختمانها",
+        "slug": "/bdm/store-structures/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات ساختمانها",
+        "slug": "/bdm/pre-data-structures/list/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "اطلاعات صدور قبض پروانه",
+        "slug": "/bdm/send-dossier-bill/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "صدور قبض پروانه",
+        "slug": "/bdm/publish-dossier-bill/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "صدور قبض",
+        "slug": "/pfm/bill/generator",
+        "moduleName": "PFM",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "لیست قبض ها",
+        "slug": "/pfm/bills/list",
+        "moduleName": "PFM",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "بایگانی پرونده",
+        "slug": "/bdm/make-archive/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    }
+]

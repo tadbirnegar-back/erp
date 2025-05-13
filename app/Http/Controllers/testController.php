@@ -11,172 +11,100 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
-use Modules\HRMS\app\Http\Enums\FormulaEnum;
-use Modules\HRMS\app\Http\Enums\HireTypeEnum;
-use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
+use Modules\Gateway\app\Models\Payment;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\HRMS\app\Models\HireType;
-use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\ScriptType;
-use Modules\HRMS\app\Resources\RecruitmentScriptContractResource;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\TownOfc;
-use Modules\PersonMS\app\Models\Natural;
-use Modules\PersonMS\app\Models\Person;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\StatusMS\app\Models\Status;
 
 class testController extends Controller
 {
-    use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
-    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait;
+//    use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
+//    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait;
 
     /**
      * Execute the job.
      */
-    function updateDescendants($parent, $children)
-    {
-        // Optional: update the parent if needed
-        // $parent->field = 'newValue';
-        // $parent->save();
-
-        foreach ($children as $child) {
-            // Update the child
-
-
-            // Check if the child has its own children
-            if ($child->children && $child->children->isNotEmpty()) {
-                $this->updateDescendants($child, $child->children);
-            }
-        }
-    }
+//    function updateDescendants($parent, $children)
+//    {
+//        // Optional: update the parent if needed
+//        // $parent->field = 'newValue';
+//        // $parent->save();
+//
+//        foreach ($children as $child) {
+//            // Update the child
+//
+//
+//            // Check if the child has its own children
+//            if ($child->children && $child->children->isNotEmpty()) {
+//                $this->updateDescendants($child, $child->children);
+//            }
+//        }
+//    }
 
     public function run()
     {
-
-        $p = Person::find(1908);
-        dd($p->latestEducationRecord->levelOfEducation);
-        $script = RecruitmentScript::with(
-            [
-                'person' => function ($query) {
-                    $query->with(['natural', 'isar', 'militaryService' => function ($query) {
-                        $query->with(['exemptionType', 'militaryServiceStatus']);
-                    }]);
-
-                },
-                'ounit.ancestors' => function ($query) {
-                    $query->where('unitable_type', '!=', TownOfc::class);
-                },
-                'scriptAgents.scriptAgentType',
-                'latestEducationRecord',
-                'position'
-            ]
-        )
-            ->withCount('heirs')
-            ->find(5273);
-//        dd($script);
-        return RecruitmentScriptContractResource::make($script);
+        $status = Status::where('model', Payment::class)->where('name', 'پرداخت شده')->first();
 
 
-        $a = ScriptTypesEnum::VILLAGER;
-        $b = HireTypeEnum::PART_TIME;
-        $st = ScriptType::where('title', $a->value)->first();
-        $ht = HireType::where('title', $b->value)->first();
-        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-        $ounit = OrganizationUnit::with(['ancestors' => function ($query) {
-            $query->where('unitable_type', '!=', TownOfc::class);
-        }])->find(5);
-
-        dump(
-            $ounit->ancestors[0],
-            $ounit->ancestors[1],
-            $ounit->ancestors[2]
-        );
-
-        $person = Person::where('personable_type', Natural::class)->first();
-        dump($person->personable);
-
-        $x = new $class($st, $ht, $ounit);
-        $formulas = collect(FormulaEnum::cases());
-
-        $res = $formulas->map(function ($formula) use ($x) {
-            $fn = $formula->getFnName();
-            $res = $x->$fn();
-            return [
-                'default_value' => $res,
-                'label' => $formula->getLabel(),
-            ];
-
-        });
-
-//        $enactments = Enactment::joinRelationship('statuses', ['statuses' => function ($join) {
-//            $join
-//                ->whereRaw('enactment_status.create_date = (SELECT MAX(create_date) FROM enactment_status WHERE enactment_id = enactments.id)')
-//                ->where('statuses.name', '=', EnactmentStatusEnum::PENDING_FOR_BOARD_DATE->value);
-//        }])
-//            ->with(['onlyHeyaatMeeting'])
-//            ->get();
-//
-//        $mts = [];
-
-//        $enactments->each(function ($enactment) use (&$mts) {
-//            if (!in_array($enactment->onlyHeyaatMeeting->id, $mts)) {
-//                $meetingDate3 = convertDateTimeHaveDashJalaliPersianCharactersToGregorian($enactment->onlyHeyaatMeeting->meeting_date);
-//
-//                $alertDate = Carbon::parse($meetingDate3)->subDays(1);
-//
-//                StoreMeetingJob::dispatch($enactment->onlyHeyaatMeeting->id)->delay($alertDate);
-//                $mts[] = $enactment->onlyHeyaatMeeting->id;
-//            }
-//
-//            $meetingDate1 = $enactment->onlyHeyaatMeeting->getRawOriginal('meeting_date');
-//            $meetingDate2 = $enactment->onlyHeyaatMeeting->getRawOriginal('meeting_date');
-//            $meetingDate3 = $enactment->onlyHeyaatMeeting->getRawOriginal('meeting_date');
-//
-//            $delayHeyat = Carbon::parse($meetingDate1)->setTime(23, 50, 0);
-//            $delayKarshenas = Carbon::parse($meetingDate2)->setTime(23, 50, 0);
-//            StoreEnactmentStatusJob::dispatch($enactment->id)->delay($delayHeyat);
-//            StoreEnactmentStatusKarshenasJob::dispatch($enactment->id)->delay($delayKarshenas);
-//            $delayPending = Carbon::parse($meetingDate3);
-
-//            PendingForHeyaatStatusJob::dispatch($enactment->id)->delay($delayPending);
+        $query = OrganizationUnit::join('village_ofcs', function ($join) {
+            $join->on('village_ofcs.id', '=', 'organization_units.unitable_id')
+                ->where('organization_units.unitable_type', VillageOfc::class);
+        })
+            ->join('payments', 'payments.organization_unit_id', '=', 'organization_units.id')
+            ->join('organization_units as town', 'town.id', 'organization_units.parent_id')
+            ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
+            ->join('organization_units as city', 'city.id', 'district.parent_id')
+            ->select([
+                'village_ofcs.id as village_id',
+                'payments.id as payment_id',
+                'payments.amount as payment_amount',
+                'payments.create_date as payment_date',
+                'payments.transactionid as txID',
+                'village_ofcs.ofc_code as national_code',
+                'organization_units.name as ounit_name',
+                'district.name as district_name',
+                'city.name as city_name'
+            ])
+            ->withoutGlobalScopes()
+            ->where('organization_units.unitable_type', VillageOfc::class)
+            ->where('payments.status_id', $status->id)
+            ->orderBy('payment_id')
+            ->get();
 
 
-//        });
-//        dd('done');
-//
-//        dd($enactments);
-//        $enacts = [2615, 2553, 2552, 2551, 2547, 2546, 2545, 2544, 2543, 2542, 2492, 2485, 2483, 2482, 2481, 2480, 2479, 2478, 2477, 2476, 2475, 2474, 2473, 2456, 2431, 2430, 2429, 2427, 2426, 2424, 2423, 2422, 2421, 2420, 2419, 2418, 2415, 2414, 2413, 2412, 2254, 2253, 2252, 2251, 2242, 2241, 2240, 2239, 2238, 2237,2238,2237,2236,2235,2234,];
-//
-////        $enacts = [2425];
-//
-//        foreach ($enacts as $enact) {
-//
-//            StoreEnactmentStatusJob::dispatch($enact)->onQueue('High');
-//            StoreEnactmentStatusKarshenasJob::dispatch($enact)->onQueue('default');
-//            echo "enactment $enact\n";
-//        }
-//        dd(User::first());
+        echo "<table border='1'>
+    <thead>
+        <tr>
+            <th>نام روستا</th>
+            <th>مقدار پرداختی</th>
+            <th>تاریخ</th>
+            <th>کد تراکنش</th>
+            <th>شناسه ملی</th>
+            <th>آدرس</th>
+        </tr>
+    </thead>
+    <tbody>";
 
-//        $ounits = [444
-//        ];
-//        foreach ($ounits as $ounit) {
-//            for ($i = 1; $i <= 3; $i++) {
-//                $fys = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-//                foreach ($fys as $fy) {
-//                    Cache::forget("last_year_confirmed_documents_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
-//
-//                    Cache::forget("three_months_two_years_ago_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
-//
-//                    Cache::forget("nine_month_last_year_ounit_{$ounit}_year_{$fy}_subject_type_{$i}");
-//                }
-//
-//
-//            }
-//
-//        }
-//        dd($ounits);
+        foreach ($query as $item) {
+            $date = convertDateTimeGregorianToJalaliDateTime($item->payment_date);
+            echo "<tr>
+        <td>{$item->ounit_name}</td>
+        <td>{$item->payment_amount}</td>
+        <td>{$date}</td>
+        <td>{$item->txID}</td>
+        <td>{$item->national_code}</td>
+        <td>" . $item->city_name . "، " . $item->district_name . "، " . $item->ounit_name . "</td>
+    </tr>";
+        }
+
+
+        echo "</tbody></table>";
+
 
 //        $accs = Account::where('accountable_type', GlAccount::class)
 //            ->where('status_id', 155)
@@ -298,7 +226,7 @@ class testController extends Controller
 //        }
 
 //
-//        $user = User::whereIntegerInRaw('mobile', ['9144834285',])->with([
+//        $user = User::whereIntegerInRaw('mobile', ['9148005144',])->with([
 //            'activeRecruitmentScripts' => function ($query) {
 //                $query->with(['organizationUnit'])
 //                    ->whereHas('scriptType', function ($query) {
@@ -307,10 +235,16 @@ class testController extends Controller
 //            }
 //
 //        ])->get();
-//
+////        dd($user);
 //        $recruitmentScripts = $user->pluck('activeRecruitmentScripts')->flatten(1);
-//
-//        $a = implode(',', ($recruitmentScripts->pluck('employee_id')->toArray()));
+////        $recruitmentScripts = $user
+////            ->activeRecruitmentScripts()
+////            ->with(['organizationUnit'])
+////            ->whereHas('scriptType', function ($query) {
+////                $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+////            })->get();
+////
+//        $a = implode(',', ($recruitmentScripts->pluck('organization_unit_id')->toArray()));
 //        dd($a);
 //
     }

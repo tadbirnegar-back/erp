@@ -11,7 +11,7 @@ trait OrderTrait {
     private static string $proc_canceled = OrderStatusEnum::PROC_CANCELED->value;
     private static string $proc_registered = OrderStatusEnum::PROC_REGISTERED->value;
     private static string $proc_wait_mali = OrderStatusEnum::PROC_WAITE_MALI->value;
-
+    private static string $proc_payed = OrderStatusEnum::PROC_PAYED->value;
 
     private static string $fin_wait_pardakht = OrderStatusEnum::FIN_WAIT_PARDAKHT->value;
     private static string $fin_canceled = OrderStatusEnum::FIN_CANCELED->value;
@@ -31,6 +31,11 @@ trait OrderTrait {
     public function orderProcWaitMali()
     {
         return ProcessStatus::GetAllStatuses()->firstWhere('name', OrderStatusEnum::PROC_WAITE_MALI->value);
+    }
+
+    public function orderProcPayed()
+    {
+        return ProcessStatus::GetAllStatuses()->firstWhere('name', OrderStatusEnum::PROC_PAYED->value);
     }
 
 
