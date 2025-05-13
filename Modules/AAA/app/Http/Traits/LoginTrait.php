@@ -25,6 +25,7 @@ trait LoginTrait
                 'modules.name as module_name',
                 'modules.priority as module_priority',
                 'module_categories.name as module_cat_name',
+                'module_categories.id as module_cat_id',
                 'module_categories.icon as module_cat_icon',
                 'module_categories.priority as module_cat_priority',
                 'module_categories.id as module_cat_id',
@@ -37,6 +38,7 @@ trait LoginTrait
             ->map(function ($modules, $categoryName) {
                 return [
                     'category_name' => $categoryName,
+                    'category_id' => $modules->first()->module_cat_id,
                     'category_icon' => $modules->first()->module_cat_icon,
                     'category_id' => $modules->first()->module_cat_id,
                     'modules' => $modules->groupBy('module_name')

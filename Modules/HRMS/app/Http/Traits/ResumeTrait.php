@@ -34,6 +34,7 @@ trait ResumeTrait
         $resume->position = $data['position'];
         $resume->salary = $data['salary'] ?? null;
         $resume->work_force_id = $data['workForceID'];
+        $resume->person_id = $data['personID'] ?? null;
         $resume->city = $data['city'];
 
         $resume->save();
@@ -45,7 +46,7 @@ trait ResumeTrait
         $dataToInsert = $this->resumeDataPreparation($data, $workForceID);
     }
 
-    private function resumeDataPreparation(array|Collection $resumes, int $workForceID)
+    private function resumeDataPreparation(array|Collection $resumes, ?int $workForceID)
     {
         if (is_array($resumes)) {
             $resumes = collect($resumes);
@@ -59,7 +60,9 @@ trait ResumeTrait
             'end_date' => $data['endDate'] ?? null,
             'position' => $data['position'],
             'salary' => $data['salary'] ?? null,
-            'work_force_id' => $workForceID,
+            'work_force_id' => $workForceID ?? null,
+            'person_id' => $data['personID'] ?? null,
+
         ],
         );
 

@@ -13,8 +13,8 @@ enum DocumentTypeEnum: int
     public function getLabel()
     {
         return match ($this) {
-            self::TEMPORARY => 'بستن سند موقت',
-            self::NORMAL => 'سند معمولی',
+            self::TEMPORARY => 'سند بستن موقت',
+            self::NORMAL => 'سند عادی',
             self::OPENING => 'سند افتتاحیه',
             self::CLOSING => 'سند اختتامیه',
         };
