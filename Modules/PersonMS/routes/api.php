@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use Modules\PersonMS\app\Http\Controllers\SignatureController;
 /*
     |--------------------------------------------------------------------------
     | API Routes
@@ -83,3 +83,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 });
 Route::put('/person/contact-data/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'contactInfoUpdate']);
+Route::prefix('v1')->group(function () {
+    Route::post('/person/signature/store', [SignatureController::class, 'storeSignature']);
+});
+Route::get('/request-otp/signature', [SignatureController::class, 'sendOtpSignature']);
