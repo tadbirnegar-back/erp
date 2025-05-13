@@ -1611,6 +1611,10 @@ class DocumentController extends Controller
             DB::beginTransaction();
             $document = Document::find($data['documentID']);
 
+            if ($document->description == 'سند تبدیل سرفصل حساب ها به کدینگ جدید') {
+                return response()->json(['message' => 'سند تبدیل سرفصل حساب ها به کدینگ جدید نمی تواند حذف شود'], 400);
+            }
+
             $status = $this->deleteDocumentStatus();
             $this->attachStatusToDocument($document, $status, Auth::user()->id);
 
@@ -1707,7 +1711,7 @@ class DocumentController extends Controller
             return response()->json($response);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(),'trace'=>$e->getTrace()], 500);
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
         }
     }
 
