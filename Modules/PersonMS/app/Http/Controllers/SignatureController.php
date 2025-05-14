@@ -7,7 +7,9 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Http\Enums\OtpPatternsEnum;
 use Modules\AAA\app\Http\Repositories\OtpRepository;
+use Modules\AAA\app\Http\Traits\OtpTrait;
 use Modules\AAA\app\Models\User;
 use Modules\PersonMS\app\Http\Traits\SignaturesTrait;
 use Modules\PersonMS\app\Models\Person;
@@ -15,7 +17,7 @@ use Modules\PersonMS\app\Models\Signature;
 
 class SignatureController extends Controller
 {
-    use SignaturesTrait;
+    use SignaturesTrait , OtpTrait;
 
     public function storeSignature(Request $request)
     {
@@ -59,28 +61,15 @@ class SignatureController extends Controller
         ];
     }
 
-    public function sendOtpSignature(Request $request)
+    public function sendOtpSignature()
     {
         $user = User::find(2174);
-
-        $otpCode = mt_rand(10000, 99999);
-
-
         $data = [
-            'code' => $otpCode,
-            'userID' => $user->id,
-            'isUsed' => false,
-            'expireDate' => Carbon::now()->addMinutes(3),
-
+            'mobile' => $user->mobile,
+            'code' => mt_rand(10000, 99999),
+            'expire' => 60,
         ];
-
-        $otp = OtpRepository::store($data);
-        if (is_null($otp)) {
-            return response()->json(['message' => 'خطا در ارسال رمز یکبار مصرف'], 500);
-
-        }
-        $user->notify((new OtpNotification($otpCode))->onQueue('default'));
-        return response()->json(['message' => 'رمز یکبارمصرف ارسال شد']);
+        $this->sendOtp($data , OtpPatternsEnum::SIGNATURE_OTP->value);
     }
 
 }

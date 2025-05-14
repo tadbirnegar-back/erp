@@ -4,6 +4,7 @@ namespace Modules\AAA\app\Http\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
+use Modules\AAA\app\Http\Enums\OtpPatternsEnum;
 use Modules\AAA\app\Models\Otp;
 use Modules\AAA\app\Notifications\OtpNotification;
 
@@ -31,7 +32,7 @@ trait OtpTrait
         return $result;
     }
 
-    public function sendOtp(array $data)
+    public function sendOtp(array $data , string $patternCode = OtpPatternsEnum::USER_OTP->value)
     {
         $otpData = [
             'mobile' => $data['mobile'],
@@ -41,7 +42,7 @@ trait OtpTrait
         ];
         $otp = $this->storeOTP($otpData);
 
-        Notification::send($otpData['mobile'], (new OtpNotification($otp->code))->onQueue('high'));
+        Notification::send($otpData['mobile'], (new OtpNotification($otp->code , $patternCode))->onQueue('high'));
     }
 
     public function userOtpVerifiedByDate(string $mobile, $date)
