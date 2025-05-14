@@ -2,7 +2,6 @@
 
 namespace Modules\EMS\app\Observers;
 
-use Modules\EMS\app\Events\RecruitmentStatusCreatedEvent;
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
 
 class RecruitmentStatusEMSObserver
@@ -12,7 +11,7 @@ class RecruitmentStatusEMSObserver
      */
     public function created(RecruitmentScriptStatus $recruitmentstatus): void
     {
-        event(new RecruitmentStatusCreatedEvent($recruitmentstatus));
+
     }
 
     /**

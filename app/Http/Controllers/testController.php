@@ -11,6 +11,7 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
+use Modules\HRMS\app\Http\Enums\PositionEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
@@ -48,58 +49,8 @@ class testController extends Controller
 
     function run()
     {
-//        1-روستای اوبابلاغی سند 776231
-//2-روستای اوزان سفلی سند 776238
-//3-روستای آخی جان سند 712629
-//4-روستای آلی چین سند 714584
-//5-روستای دمیرچی سند 776244
-//6-روستای رضا قشلاق سند 716871
-//7-روستای زینالو سند 717939
-//8-روستای صورین سند 722017
-//9-روستای طاهرکندی سند 722399
-//10-روستای قانقانلو سند 722920
-//11-روستای قره اوغلان سند 723845
-//12-روستای قره قیه سند 724566
-//13-روستای قطور سند 724916
-//14-روستای قوزلوی سفلی سند 725165
-//15-روستای قوزلوی علیا سند 777816  (این روستا قراره مجدد ایمپورت بشه با توجه به اون تیکت این تغییر انجام بشه)
-//16-روستای قینرجه سند 725766
-//17-روستای کهریز سند 777521
-//18-روستای کهل سفلی سند726053
-//19-روستای کهل علیا سند 726209
-//20-روستای کوسه سند 726273
-//21-روستای لیک آباد سند 726279
-//22-روستای احمد آباد سند 712173
-//23-روستای آغچه لو سند 712934
-//24-روستای آغچه مسحد سند 713304
-//25-روستای اقبال سند 713602
-//26-روستای پاره سفلی سند714920
-//27-روستای چپلوچه سند 715915
-//28-روستای زمان آباد سند 777562
-//29-روستای سعید آباد سند 719103
-//30-روستای قازان لو سند722786
-//31-روستای قبان کندی سند 723609
-//32-روستای قره قویونلو سند 724239
-//33-روستای قولانجیق سند 725589
-//34-روستای گل سند 835164
-//35-روستای محمد آباد سند 726478
-//36-روستای نجار سند 726765
-
-        $p = Person::where('id', 2604)->first();
-        dd($p->militaryService->militaryServiceStatus);
-
-        $a = OrganizationUnit::joinRelationship('village')
-            ->with('ancestors')
-            ->where('unitable_type', VillageOfc::class)
-            ->where('village_ofcs.hasLicense', 1)
-            ->select([
-                'organization_units.id',
-                'organization_units.parent_id',
-                'organization_units.name as village_name',
-                'village_ofcs.abadi_code as village_abadi_code'
-            ])
-            ->get();
-        dump($a);
+$a=PositionEnum::KARSHENAS_MOSHAVAREH;
+dd($a->isHeyaatMemberPosition());
 //        $p = Person::find(1908);
 //        dd($p->latestEducationRecord->levelOfEducation);
 //        $script = RecruitmentScript::with(
