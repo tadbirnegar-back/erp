@@ -513,7 +513,6 @@ class LoginController extends Controller
         $otp = OtpRepository::store($data);
         if (is_null($otp)) {
             return response()->json(['message' => 'خطا در ارسال رمز یکبار مصرف'], 500);
-
         }
         $user->notify((new OtpNotification($otpCode))->onQueue('default'));
         return response()->json(['message' => 'رمز یکبارمصرف ارسال شد']);

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Notification;
 use Modules\AAA\app\Http\Enums\OtpPatternsEnum;
 use Modules\AAA\app\Models\Otp;
 use Modules\AAA\app\Notifications\OtpNotification;
+use Modules\AAA\app\Notifications\OtpUnRegisteredNotification;
 
 trait OtpTrait
 {
@@ -32,7 +33,7 @@ trait OtpTrait
         return $result;
     }
 
-    public function sendOtp(array $data , string $patternCode = OtpPatternsEnum::USER_OTP->value)
+    public function sendOtp(array $data, string $patternCode = OtpPatternsEnum::USER_OTP->value)
     {
         $otpData = [
             'mobile' => $data['mobile'],
@@ -42,7 +43,9 @@ trait OtpTrait
         ];
         $otp = $this->storeOTP($otpData);
 
-        Notification::send($otpData['mobile'], (new OtpNotification($otp->code , $patternCode))->onQueue('high'));
+        $numberData = ['mobile' => $data['mobile']];
+
+        Notification::send($numberData, (new OtpUnRegisteredNotification($otp->code , $patternCode))->onQueue('default'));
     }
 
     public function userOtpVerifiedByDate(string $mobile, $date)
