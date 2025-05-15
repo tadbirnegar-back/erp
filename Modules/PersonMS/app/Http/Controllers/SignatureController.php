@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\AAA\app\Http\Enums\OtpPatternsEnum;
 use Modules\AAA\app\Http\Repositories\OtpRepository;
@@ -24,7 +25,7 @@ class SignatureController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user = User::find(2174);
+            $user = Auth::user();
             $person = Person::find($user->person_id);
 
             $activeStatus = $this->activeSignatureStatus();
@@ -63,13 +64,43 @@ class SignatureController extends Controller
 
     public function sendOtpSignature()
     {
-        $user = User::find(2174);
+        $user = Auth::user();
         $data = [
             'mobile' => $user->mobile,
             'code' => mt_rand(10000, 99999),
             'expire' => 60,
         ];
         $this->sendOtp($data , OtpPatternsEnum::SIGNATURE_OTP->value);
+    }
+
+
+    public function verifyAndRevokeOtp(Request $request)
+    {
+        $data = $request->all();
+        try {
+            DB::beginTransaction();
+
+            $user = Auth::user();
+            $data['mobile'] = $user->mobile;
+            $otp = $this->verifyOtpByMobile($data['mobile'], $data['otp']);
+            if (is_null($otp)) {
+                return response()->json([
+                    'message' => 'کد تایید وارد شده نادرست می باشد',
+                ], 403);
+            }
+            $otp->isUsed = true;
+            $otp->save();
+
+            DB::commit();
+            return response()->json([
+                'message' => 'کاربر با موفقیت تأیید شد',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'message' => 'کد تایید وارد شده نادرست می باشد',
+            ], 500);
+        }
     }
 
 }

@@ -51,3 +51,4 @@ Route::prefix('v1')->group(function () {
     Route::post('/bdm/engineer/request' , [EngineerController::class, 'requestEngineer']);
     Route::get('/bdm/engineers-request/pre-data' , [EngineerController::class, 'engineersRequestPreData']);
 });
+Route::post('/bdm/generate-form/{id}' , [LicenseController::class, 'generateFormA']);

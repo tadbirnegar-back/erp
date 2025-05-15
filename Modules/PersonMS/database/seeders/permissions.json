@@ -70,5 +70,17 @@
         "slug": "/person/legal/delete/{id}",
         "moduleName": "PersonMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "ثبت امضا",
+        "slug": "/person/signature/store",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "دریافت کد امضا",
+        "slug": "/request-otp/signature",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
     }
 ]

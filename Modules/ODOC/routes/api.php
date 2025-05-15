@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\ODOC\app\Http\Controllers\ODOCController;
 
 /*
     |--------------------------------------------------------------------------
@@ -14,6 +15,6 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('odoc', fn (Request $request) => $request->user())->name('odoc');
+Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
+    Route::post('/odoc/document/create' , [ODOCController::class, 'createOdocDocument']);
 });

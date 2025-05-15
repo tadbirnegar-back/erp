@@ -27,6 +27,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/person/legal/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'legalShow']);
     Route::post('/person/natural/edit/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'naturalShow']);
     Route::post('/person/legal/edit/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'legalShow']);
+    Route::post('/person/signature/store', [SignatureController::class, 'storeSignature']);
+    Route::get('/request-otp/signature', [SignatureController::class, 'sendOtpSignature']);
+    Route::post('/signature-otp/verifier' , [SignatureController::class, 'verifyAndRevokeOtp']);
 });
 
 Route::middleware([])->prefix('v1')->name('api.')->group(function () {
@@ -81,9 +84,8 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
     Route::put('/person/contact-data/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'contactInfoUpdate'])->middleware('auth:api');
 
+
+
 });
 Route::put('/person/contact-data/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'contactInfoUpdate']);
-Route::prefix('v1')->group(function () {
-    Route::post('/person/signature/store', [SignatureController::class, 'storeSignature']);
-});
-Route::get('/request-otp/signature', [SignatureController::class, 'sendOtpSignature']);
+

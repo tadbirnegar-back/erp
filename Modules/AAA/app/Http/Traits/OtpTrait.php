@@ -45,7 +45,7 @@ trait OtpTrait
 
         $numberData = ['mobile' => $data['mobile']];
 
-        Notification::send($numberData, (new OtpUnRegisteredNotification($otp->code , $patternCode))->onQueue('default'));
+        Notification::send($numberData, (new OtpUnRegisteredNotification($otp->code , $patternCode))->onQueue('high'));
     }
 
     public function userOtpVerifiedByDate(string $mobile, $date)

@@ -7,11 +7,13 @@ use DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
 use Modules\BDM\app\Http\Enums\BdmOwnershipTypesEnum;
 use Modules\BDM\app\Http\Enums\BdmTypesEnum;
+use Modules\BDM\app\Http\Enums\DocumentsNameEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
 use Modules\BDM\app\Http\Enums\PermitStatusesEnum;
 use Modules\BDM\app\Http\Enums\TransferTypesEnum;
@@ -30,6 +32,8 @@ use Modules\HRMS\app\Models\MilitaryService;
 use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\ODOC\app\Http\Traits\OdocApproversTrait;
+use Modules\ODOC\app\Http\Traits\OdocDocemntTrait;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -41,7 +45,7 @@ use Modules\StatusMS\app\Models\Status;
 
 class LicenseController extends Controller
 {
-    use PersonTrait, UserTrait, DossierTrait, OwnersTrait, LawyersTrait, EstateTrait;
+    use PersonTrait, UserTrait, DossierTrait, OwnersTrait, LawyersTrait, EstateTrait , OdocDocemntTrait , OdocApproversTrait;
 
     public function licenseTypesList()
     {
@@ -396,5 +400,38 @@ class LicenseController extends Controller
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 400);
         }
+    }
+
+
+    public function generateFormA(Request $request,$id)
+    {
+        $data = [
+            'component_to_render' => 'dossier_form_1_2',
+            'model_id' => $id,
+            'title' => DocumentsNameEnum::FORM_ALEF_ONE_TWO->value,
+            'created_date' => Carbon::now(),
+            'status_id' => $this->PendingOdocDocumentStatus()->id,
+            'status_description' => null,
+            'approvers' => [
+                [
+                    'person_id' => 45,
+                    'status_id' => $this->AssignedApproversStatus()->id,
+                    'signed_date' => Carbon::now(),
+                    'token' => null,
+                    'signature_id' => null,
+                    'document_id' => null,
+                ],
+                [
+                    'person_id' => 46,
+                    'status_id' => $this->PendingApproversStatus()->id,
+                    'signed_date' => Carbon::now(),
+                    'token' => null,
+                    'signature_id' => null,
+                    'document_id' => null,
+                ],
+            ]
+        ];
+        $user = User::find(2174);
+        $this->storeOdocDocument($data,$user->id);
     }
 }

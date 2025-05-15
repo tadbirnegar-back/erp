@@ -6,62 +6,29 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Modules\AAA\app\Models\User;
+use Modules\BDM\app\Models\BuildingDossier;
+use Modules\BDM\app\Models\Form;
+use Modules\ODOC\app\Http\Traits\OdocDocemntTrait;
+use Modules\ODOC\app\Models\Document;
 
 class ODOCController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    use OdocDocemntTrait;
+    public function createOdocDocument(Request $request)
     {
-        return view('odoc::index');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('odoc::create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        //
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        return view('odoc::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('odoc::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): RedirectResponse
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        //
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $user = Auth::user();
+            $this->storeOdocDocument($data , $user);
+            DB::commit();
+            return response()->json(['message' => 'اطلاعات امضا با موفقیت ثبت شد']);
+        }catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 }

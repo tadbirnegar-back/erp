@@ -1,29 +1,33 @@
 <?php
 
-namespace Modules\BDM\app\Models;
+namespace Modules\ODOC\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\BDM\Database\factories\BuildingDossierFactory;
-use Modules\ODOC\app\Http\Enums\ModuleCodeEnum;
+use Modules\ODOC\Database\factories\DocumentFactory;
 use Modules\StatusMS\app\Models\Status;
 
 
-class BuildingDossier extends Model
+class Document extends Model
 {
     use HasFactory;
-
-    public int $code = 11;
 
     /**
      * The attributes that are mass assignable.
      */
 
-    protected $table = 'bdm_building_dossiers';
+    protected $table = 'odoc_documents';
 
     protected $fillable = [
+        'component_to_render',
+        'data',
+        'model',
+        'model_id',
+        'serial_number',
+        'title',
         'created_date',
-        'id'
+        'creator_id',
+        'version'
     ];
 
     public $timestamps = false;

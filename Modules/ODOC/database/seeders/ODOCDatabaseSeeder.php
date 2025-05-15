@@ -11,6 +11,9 @@ class ODOCDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+         $this->call([
+             DocumentStatusesSeeder::class,
+             ApproversStatusesSeeder::class,
+         ]);
     }
 }
