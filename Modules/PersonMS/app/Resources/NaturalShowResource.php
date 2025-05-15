@@ -11,7 +11,7 @@ class NaturalShowResource extends JsonResource
      */
     public function toArray($request): array
     {
-        return [
+        $result = [
             'firstName' => $this->first_name,
             'lastName' => $this->last_name,
             'fatherName' => $this->father_name,
@@ -29,7 +29,7 @@ class NaturalShowResource extends JsonResource
             'bcSerial' => $this->bc_serial,
             'religion' => $this->religion,
             'religionType' => $this->religionType,
-            'militaryServiceStatus' => $this->military,
+            'militaryServiceStatus' => $this?->military,
             'licenses' => $this->licenses->map(function ($license) {
                 return [
                     'id' => $license->id,
@@ -47,5 +47,10 @@ class NaturalShowResource extends JsonResource
                 ];
             }),
         ];
+
+        if ($this->relationLoaded('spouse')) {
+            $result['spouse'] = !is_null($this->spouse) ? self::make($this->spouse) : null;
+        }
+        return $result;
     }
 }

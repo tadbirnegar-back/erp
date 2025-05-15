@@ -11,6 +11,7 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
+use Modules\EMS\app\Models\Enactment;
 use Modules\HRMS\app\Http\Enums\PositionEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
@@ -49,8 +50,8 @@ class testController extends Controller
 
     function run()
     {
-$a=PositionEnum::KARSHENAS_MOSHAVAREH;
-dd($a->isHeyaatMemberPosition());
+        $a = Enactment::find(32);
+        dd($a->attachments);
 //        $p = Person::find(1908);
 //        dd($p->latestEducationRecord->levelOfEducation);
 //        $script = RecruitmentScript::with(

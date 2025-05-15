@@ -3,7 +3,6 @@
 namespace Modules\PersonMS\app\Http\Traits;
 
 use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Models\ExemptionType;
 use Modules\HRMS\app\Models\MilitaryService;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
 use Modules\PersonMS\app\Http\Enums\PersonLicenseStatusEnum;
@@ -80,10 +79,10 @@ trait PersonTrait
             'first_name' => convertToDbFriendly($data['firstName']),
             'last_name' => convertToDbFriendly($data['lastName']),
             'mobile' => $data['mobile'] ?? null,
-            'phone_number' => $data['phoneNumber'] ?? null,
             'father_name' => $data['fatherName'] ?? null,
             'birth_date' => $data['dateOfBirth'] ?? null,
             'bc_code' => $data['bcCode'] ?? null,
+            'isMarried' => $data['isMarried'] ?? null,
             'gender_id' => $data['gender'] ?? 1,
             'bc_issue_date' => $data['bcIssueDate'] ?? null,
             'bc_issue_location' => $data['bcIssueLocation'] ?? null,
@@ -168,18 +167,11 @@ trait PersonTrait
         $naturalPerson->fill([
             'first_name' => $data['firstName'],
             'last_name' => $data['lastName'],
-            'mobile' => $data['mobile'] ?? null,
-            'phone_number' => $data['phoneNumber'] ?? null,
+            'mobile' => $data['mobile'] ?? $naturalPerson->mobile,
             'father_name' => $data['fatherName'] ?? null,
             'birth_date' => $data['dateOfBirth'] ?? null,
             'bc_code' => $data['bcCode'] ?? null,
-            'job' => $data['job'] ?? null,
             'isMarried' => $data['isMarried'] ?? null,
-            'level_of_spouse_education' => $data['levelOfSpouseEducation'] ?? null,
-            'spouse_first_name' => $data['spouseFirstName'] ?? null,
-            'spouse_last_name' => $data['spouseLastName'] ?? null,
-            'home_address_id' => $data['homeAddressID'] ?? null,
-            'job_address_id' => $data['jobAddressID'] ?? null,
             'gender_id' => $data['gender'],
             'bc_issue_date' => $data['bcIssueDate'] ?? null,
             'bc_issue_location' => $data['bcIssueLocation'] ?? null,
@@ -193,8 +185,8 @@ trait PersonTrait
 
         $person = $naturalPerson->person;
         $person->display_name = $naturalPerson->first_name . ' ' . $naturalPerson->last_name;
-        $person->national_code = $data['nationalCode'];
-        $person->profile_picture_id = $data['avatar'] ?? null;
+        $person->national_code = $data['nationalCode'] ?? $person->national_code;
+        $person->profile_picture_id = $data['avatar'] ?? $person->profile_picture_id;
 
         $naturalPerson->person()->save($person);
         $statusID = $person->status;

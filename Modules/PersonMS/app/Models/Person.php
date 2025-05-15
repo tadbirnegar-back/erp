@@ -69,7 +69,7 @@ class Person extends Model
         return $this->belongsToMany(Status::class)->latest('create_date');
     }
 
-    public function avatar()
+    public function avatar(): BelongsTo
     {
         return $this->belongsTo(File::class, 'profile_picture_id');
     }
@@ -250,6 +250,11 @@ class Person extends Model
     public function dependents(): HasMany
     {
         return $this->hasMany(Dependent::class, 'main_person_id');
+    }
+
+    public function heirs()
+    {
+        return $this->hasManyThrough(Person::class, Dependent::class, 'main_person_id', 'id', 'id', 'related_person_id');
     }
 
     public function latestEducationRecord()
