@@ -27,10 +27,10 @@ trait EducationRecordTrait
 
     }
 
-    public function EducationalRecordSingleStore(array|Collection $dataToInsert, ?int $personID)
+    public function EducationalRecordSingleStore(array|Collection $data, ?int $personID)
     {
-        if (!isset($dataToInsert[0]) || !is_array($dataToInsert[0])) {
-            $dataToInsert = [$dataToInsert];
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $dataToInsert = [$data];
         }
 
         $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToInsert, $personID);
@@ -38,25 +38,25 @@ trait EducationRecordTrait
         $educationalRecord = EducationalRecord::create($preparedData->toArray()[0]);
         $educationalRecord->load('levelOfEducation');
 
-        $files = json_decode($dataToInsert['files'], true);
+        $files = json_decode($data['files'], true);
         $this->attachEducationalRecordFiles($educationalRecord, $files);
 
         return $educationalRecord;
 
     }
 
-    public function EducationalRecordSingleUpdate(array|Collection $dataToInsert, ?int $personID)
+    public function EducationalRecordSingleUpdate(array|Collection $data, EducationalRecord $educationalRecord)
     {
-        if (!isset($dataToInsert[0]) || !is_array($dataToInsert[0])) {
-            $dataToInsert = [$dataToInsert];
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $dataToInsert = [$data];
         }
 
-        $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToInsert, $personID);
+        $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToInsert, $educationalRecord->person_id);
 
-        $educationalRecord = EducationalRecord::create($preparedData->toArray()[0]);
+        $educationalRecord->update($preparedData->toArray()[0]);
         $educationalRecord->load('levelOfEducation');
 
-        $files = json_decode($dataToInsert['files'], true);
+        $files = json_decode($data['files'], true);
         $this->attachEducationalRecordFiles($educationalRecord, $files);
 
         return $educationalRecord;
@@ -140,7 +140,7 @@ trait EducationRecordTrait
     {
         $attachments = collect($files)->map(function ($file) use ($educationalRecord) {
             return [
-                'id' => $file['attachID'],
+                'id' => $file['attachID'] ?? null,
                 'attachment_id' => $file['fileID'],
                 'title' => $file['title'] ?? null,
                 'attachmentable_id' => $educationalRecord->id,

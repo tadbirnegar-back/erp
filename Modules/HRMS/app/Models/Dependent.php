@@ -18,7 +18,15 @@ class Dependent extends Model
      * The attributes that are mass assignable.
      */
 
-    //protected $fillable = [];
+    protected $fillable = [
+        'main_person_id',
+        'related_person_id',
+        'relation_type_id',
+        'status_id',
+        'approver_id',
+        'create_date',
+        'approve_date',
+    ];
 
     public $timestamps = false;
 

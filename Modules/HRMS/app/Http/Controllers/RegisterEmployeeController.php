@@ -178,7 +178,7 @@ class RegisterEmployeeController extends Controller
                 }]);
             $person->natural->setAttribute('military', $person->militaryService->militaryServiceStatus);
             $person->natural->setAttribute('licenses', $person->personLicenses);
-
+            $person->natural->setAttribute('national_code', $person->national_code);
             return NaturalShowResource::make($person->natural)->additional([
                 'message' => 'کاربر با موفقیت تأیید شد',
             ]);

@@ -11,16 +11,12 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
-use Modules\EMS\app\Models\Enactment;
-use Modules\HRMS\app\Http\Enums\PositionEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\OUnitMS\app\Models\OrganizationUnit;
-use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
-use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
@@ -50,9 +46,12 @@ class testController extends Controller
 
     function run()
     {
-        $a = Enactment::find(32);
-        dd($a->attachments);
-//        $p = Person::find(1908);
+
+        $eduRecords = EducationalRecord::where('person_id', 1908)
+            ->with(['levelOfEducation', 'attachments.mimeType'])
+            ->get();
+        dd($eduRecords);
+
 //        dd($p->latestEducationRecord->levelOfEducation);
 //        $script = RecruitmentScript::with(
 //            [

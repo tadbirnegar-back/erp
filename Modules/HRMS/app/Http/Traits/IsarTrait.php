@@ -4,6 +4,7 @@ namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Facades\Cache;
 use Modules\HRMS\app\Http\Enums\EducationalRecordStatusEnum;
+use Modules\HRMS\app\Http\Enums\IsarStatusEnum;
 use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Isar;
 
@@ -38,14 +39,14 @@ trait IsarTrait
     public function pendingApproveIsarStatus()
     {
         return Cache::rememberForever('isar_pending_approve_status', function () {
-            return EducationalRecord::GetAllStatuses()->firstWhere('name', EducationalRecordStatusEnum::PENDING_APPROVE->value);
+            return Isar::GetAllStatuses()->firstWhere('name', IsarStatusEnum::PENDING_APPROVE->value);
         });
     }
 
     public function approvedIsarStatus()
     {
         return Cache::rememberForever('isar_approved_status', function () {
-            return EducationalRecord::GetAllStatuses()->firstWhere('name', EducationalRecordStatusEnum::APPROVED->value);
+            return Isar::GetAllStatuses()->firstWhere('name', IsarStatusEnum::APPROVED->value);
         });
     }
 }

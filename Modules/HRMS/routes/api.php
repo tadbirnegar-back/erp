@@ -8,6 +8,7 @@ use Modules\HRMS\app\Http\Controllers\HireTypeController;
 use Modules\HRMS\app\Http\Controllers\HRMConfigController;
 use Modules\HRMS\app\Http\Controllers\JobController;
 use Modules\HRMS\app\Http\Controllers\LevelController;
+use Modules\HRMS\app\Http\Controllers\LevelsOfEducationController;
 use Modules\HRMS\app\Http\Controllers\MilitaryServicesController;
 use Modules\HRMS\app\Http\Controllers\NewScriptController;
 use Modules\HRMS\app\Http\Controllers\PositionController;
@@ -50,7 +51,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/recruitment/list/village_ofc', [RecruitmentScriptController::class, 'villageOfcs']);
     Route::post('/hrm/ounit/positions/list', [PositionController::class, 'getByOrganizationUnit']);
     Route::get('/hrm/employee/add', [EmployeeController::class, 'addEmployeeBaseInfo'])->middleware('auth:api');
-    Route::post('/hrm/education-levels/list', [\Modules\HRMS\app\Http\Controllers\LevelsOfEducationController::class, 'index']);
+    Route::post('/hrm/education-levels/list', [LevelsOfEducationController::class, 'index']);
     Route::post('/hrm/register/dehyar', [EmployeeController::class, 'registerDehyar']);
     Route::post('/hrm/register/sarparast', [EmployeeController::class, 'registerSarparast']);
 
@@ -193,6 +194,8 @@ Route::middleware([])->prefix('v2')->name('api.')->group(function () {
     Route::post('/hrm/person/register/verify-otp', [RegisterEmployeeController::class, 'verifyPersonByOtp']);
 
     Route::post('/hrm/person/register/add', [RegisterEmployeeController::class, 'RegisterEmployee']);
+
+    Route::get('/hrm/isar-types/list', [EmployeeController::class, 'isarsStatusesIndex']);
 
 });
 

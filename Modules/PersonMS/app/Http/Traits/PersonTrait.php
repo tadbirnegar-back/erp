@@ -167,7 +167,7 @@ trait PersonTrait
         $naturalPerson->fill([
             'first_name' => $data['firstName'],
             'last_name' => $data['lastName'],
-            'mobile' => $data['mobile'] ?? $naturalPerson->mobile,
+            'mobile' => $data['mobile'] ?? $naturalPerson->person->user?->mobile,
             'father_name' => $data['fatherName'] ?? null,
             'birth_date' => $data['dateOfBirth'] ?? null,
             'bc_code' => $data['bcCode'] ?? null,

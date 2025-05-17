@@ -16,6 +16,7 @@ class NaturalShowResource extends JsonResource
             'lastName' => $this->last_name,
             'fatherName' => $this->father_name,
             'mobile' => $this->mobile,
+            'nationalCode'=>$this->national_code,
             'birthDate' => !is_null($this->birth_date) ? convertGregorianToJalali($this->birth_date) : null,
             'bcCode' => $this->bc_code,
             'isMarried' => $this->isMarried,
@@ -30,7 +31,7 @@ class NaturalShowResource extends JsonResource
             'religion' => $this->religion,
             'religionType' => $this->religionType,
             'militaryServiceStatus' => $this?->military,
-            'licenses' => $this->licenses->map(function ($license) {
+            'licenses' =>$this->licenses?->isNotEmpty()? $this->licenses->map(function ($license) {
                 return [
                     'id' => $license->id,
                     'file' => [
@@ -45,7 +46,7 @@ class NaturalShowResource extends JsonResource
                         'name' => $license->license_type->name(),
                     ],
                 ];
-            }),
+            }):[],
         ];
 
         if ($this->relationLoaded('spouse')) {

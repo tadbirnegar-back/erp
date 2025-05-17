@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\PersonMS\app\Http\Controllers\PersonLicenseController;
 
 /*
     |--------------------------------------------------------------------------
@@ -83,3 +84,35 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
 
 });
 Route::put('/person/contact-data/update/{id}', [\Modules\PersonMS\app\Http\Controllers\PersonMSController::class, 'contactInfoUpdate']);
+
+Route::middleware(['auth:api'])->prefix('v2')->name('api.')->group(function () {
+
+    Route::get('/person/info/summary', [PersonLicenseController::class, 'personInfoSummary']);
+
+    Route::get('/person/info/get-personal-data', [PersonLicenseController::class, 'getPersonalData']);
+
+    Route::get('/person/info/get-spouse-data', [PersonLicenseController::class, 'getSpouse']);
+
+    Route::get('/person/info/get-children-data', [PersonLicenseController::class, 'getChildren']);
+
+    Route::get('/person/info/get-isar-data', [PersonLicenseController::class, 'getIsar']);
+
+    Route::get('/person/info/get-educational-records-data', [PersonLicenseController::class, 'getEducationalRecords']);
+
+    Route::post('/person/check-national-code', [PersonLicenseController::class, 'checkPersonExistence']);
+
+
+    Route::put('/person/info/update-personal-data', [PersonLicenseController::class, 'updatePersonalData']);
+
+    Route::put('/person/info/add-spouse-data', [PersonLicenseController::class, 'storeSpouse']);
+
+    Route::put('/person/info/add-children-data', [PersonLicenseController::class, 'storeChildren']);
+
+    Route::put('/person/info/update-children-data', [PersonLicenseController::class, 'updateChild']);
+
+    Route::put('/person/info/update-isar-data', [PersonLicenseController::class, 'updateIsar']);
+
+    Route::put('/person/info/add-educational-records-data', [PersonLicenseController::class, 'insertEducationalRecord']);
+
+    Route::put('/person/info/update-educational-records-data', [PersonLicenseController::class, 'updateEducationalRecord']);
+});

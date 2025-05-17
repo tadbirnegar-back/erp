@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mockery\Exception;
+use Modules\AAA\app\Http\Traits\OtpTrait;
 use Modules\HRMS\app\Http\Enums\RelationTypeEnum;
 use Modules\HRMS\app\Http\Traits\DependentTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
@@ -25,7 +26,7 @@ use Validator;
 
 class PersonLicenseController extends Controller
 {
-    use PersonTrait, MilitaryServiceTrait, DependentTrait, IsarTrait, EducationRecordTrait;
+    use PersonTrait, MilitaryServiceTrait, DependentTrait, IsarTrait, EducationRecordTrait, OtpTrait;
 
     public function personInfoSummary(Request $request)
     {
@@ -131,7 +132,8 @@ class PersonLicenseController extends Controller
                     'name' => $person->avatar->name,
                     'size' => $person->avatar->size,
 //                    'type'=>$person->avatar->mimeType->name,
-                ]
+                ],
+                'personnelCode' => '-',
             ],
             'statuses' => [
                 'personalData' => $personalInfoStatusObject,
@@ -152,8 +154,6 @@ class PersonLicenseController extends Controller
         $data = $request->all();
         $validator = Validator::make($data, [
             'nationalCode' => 'required|string|min:10|max:10',
-            'positionName' => 'required',
-            'ounitID' => 'required|integer|exists:organization_units,id',
         ]);
 
         if ($validator->fails()) {
@@ -169,18 +169,42 @@ class PersonLicenseController extends Controller
                 'type' => 'notFound',
             ]);
         }
-        $person->load([
-            'militaryService.militaryServiceStatus',
-            'personLicenses.file.mimeType',
-            'natural' => function ($query) {
-                $query->with(['religion', 'religionType']);
-            }]);
 
-        $person->natural->setAttribute('licenses', $person->personLicenses);
+        if ($person->natural->mobile) {
+            $otpData = [
+                'mobile' => $person->natural->mobile,
+                'code' => mt_rand(10000, 99999),
+                'expire' => 3,
+            ];
 
-        return NaturalShowResource::make($person->natural)->additional([
-            'type' => 'found',
-        ]);
+            $this->sendOtp($otpData);
+            return response()->json([
+                'type' => 'otp',
+                'person' => [
+                    'mobile' => censorMobile($person->natural->mobile),
+                    'displayName' => $person->display_name,
+                ],
+                'message' => 'رمز یکبار مصرف ارسال شد']);
+
+        } else {
+            $person->load([
+                'personLicenses' => function ($query) {
+                    $query->whereIn('license_type', [
+                        PersonLicensesEnums::BIRTH_CERTIFICATE->value,
+                        PersonLicensesEnums::MARRIAGE_PAGE->value,
+                        PersonLicensesEnums::CHILDREN_PAGE->value,
+                    ]);
+
+                }
+            ]);
+            $person->natural->setAttribute('licenses', $person->personLicenses);
+            $person->natural->setAttribute('national_code', $person->national_code);
+
+            return NaturalShowResource::make($person->natural)->additional([
+                'type' => 'found',
+            ]);
+        }
+
     }
 
 
@@ -205,8 +229,9 @@ class PersonLicenseController extends Controller
             }])
             ->first();
 
-        $person->natural->setAttribute('military', $person->militaryService->militaryServiceStatus);
+        $person->natural->setAttribute('military', $person->militaryService?->militaryServiceStatus);
         $person->natural->setAttribute('licenses', $person->personLicenses);
+        $person->natural->setAttribute('national_code', $person->national_code);
 
         return NaturalShowResource::make($person->natural);
     }
@@ -284,16 +309,33 @@ class PersonLicenseController extends Controller
             ->with(['spouse.natural' => function ($query) {
                 $query->with(['religion', 'religionType']);
 
-            }])
+            }, 'spouse.personLicenses.file.mimeType'])
             ->first();
+
         $spouse = $personNatural->spouse;
         if ($spouse) {
             $spouseNatural = $spouse->natural;
+
             $spouseNatural->setAttribute('national_code', $spouse->national_code);
+
             $personNatural->setAttribute('spouse', $spouseNatural);
 
+            $spouseNatural->setAttribute('licenses', $spouse->personLicenses);
+
         }
-        return NaturalShowResource::make($personNatural);
+        if (is_null($personNatural->spouse)) {
+            return response()->json([
+                'data' => null,
+                'isMarried' => !is_null($personNatural->isMarried) ? (bool)$personNatural->isMarried : null
+            ]);
+        }
+
+        return NaturalShowResource::make($spouseNatural)
+            ->additional(
+                [
+                    'isMarried' => !is_null($personNatural->isMarried) ? (bool)$personNatural->isMarried : null
+                ]
+            );
 
     }
 
@@ -301,18 +343,16 @@ class PersonLicenseController extends Controller
     {
         $data = $request->all();
         $validator = Validator::make($data, [
+
+            'nationalCode' => ['required'],
             'firstName' => ['required'],
             'lastName' => ['required'],
             'fatherName' => ['required'],
             'birthDate' => ['sometimes'],
             'bcCode' => ['sometimes'],
             'gender' => ['required'],
-            'bcIssueDate' => ['sometimes'],
-            'bcIssueLocation' => ['sometimes'],
             'birthLocation' => ['sometimes'],
             'bcSerial' => ['sometimes'],
-            'religionID' => ['sometimes'],
-            'religionTypeID' => ['sometimes'],
             'militaryServiceStatus' => ['sometimes'],
             'personLicenses' => ['sometimes', 'json'],
 
@@ -334,15 +374,19 @@ class PersonLicenseController extends Controller
                 $data['dateOfBirth'] = isset($data['birthDate']) ? convertJalaliPersianCharactersToGregorian($data['birthDate']) : null;
                 $data['bcIssueDate'] = isset($data['bcIssueDate']) ? convertJalaliPersianCharactersToGregorian($data['bcIssueDate']) : null;
 
-                $personResult = $this->naturalStore($data);
+                $spousePerson = Person::where('national_code', $data['nationalCode'])->first();
+
+                $personResult = is_null($spousePerson) ? $this->naturalStore($data) : $this->naturalUpdate($data, $spousePerson->natural);
+
                 $spouse = $personResult->person;
                 if (isset($data['personLicenses'])) {
                     $personLicenses = json_decode($data['personLicenses'], true);
 
                     $this->bulkStorePersonLicenses($personLicenses, $spouse->id);
                 }
+
                 $n = $person->natural;
-                $n->spouse_id = $personResult->id;
+                $n->spouse_id = $spouse->id;
                 $n->isMarried = true;
                 $n->save();
             } else {
@@ -375,44 +419,30 @@ class PersonLicenseController extends Controller
         $user = Auth::user();
         $personID = $data['personID'] ?? $user->person_id;
 
-        $children = Person::with(['heirs' => function ($query) {
-            $query->where('relation_type_id', RelationTypeEnum::CHILD->value)
-                ->with(['natural', 'personLicenses.file']);
-        }])->find($personID);
 
-        $result = $children->heirs->map(function ($heir) {
-            return [
-                'id' => $heir->id,
-                'name' => $heir->display_name,
-                'nationalCode' => $heir->national_code,
-                'birthDate' => !is_null($heir->natural->birth_date) ? convertGregorianToJalali($heir->natural->birth_date) : null,
-                'birthLocation' => $heir->birth_location,
-                'bcCode' => $heir->bc_code,
-                'gender' => [
-                    'id' => $heir->gender_id,
-                    'name' => $heir->gender_id == 1 ? 'مرد' : 'زن',
-                ],
-                'licenses' => $heir->personLicenses->map(function ($license) {
-                    return [
-                        'id' => $license->id,
-                        'licenseType' => [
-                            'id' => $license->license_type,
-                            'name' => $license->license_type->name(),
-                        ],
-                        'file' => [
-                            'id' => $license->file->id,
-                            'name' => $license->file->name,
-                            'slug' => $license->file->slug,
-                            'size' => $license->file->size,
-                            'type' => $license->file->mimeType->name,
-                        ],
-                    ];
-                })
-            ];
-        });
+        $children = Dependent::where('main_person_id', $personID)
+            ->where('relation_type_id', RelationTypeEnum::CHILD->value)
+            ->with(['relatedPerson.natural', 'relatedPerson.personLicenses.file.mimeType'])
+            ->get();
+
+        if ($children->isNotEmpty()) {
+            $kids = $children->pluck('relatedPerson')->map(function ($kid) {
+                $kidNatural = $kid->natural;
+
+                $kidNatural->setAttribute('national_code', $kid->national_code);
 
 
-        return response()->json($result);
+                $kidNatural->setAttribute('licenses', $kid->personLicenses);
+
+                return $kidNatural;
+            });
+
+            return NaturalShowResource::collection($kids);
+
+        } else {
+            return response()->json([]);
+        }
+
 
     }
 
@@ -422,7 +452,7 @@ class PersonLicenseController extends Controller
         $validator = Validator::make($data, [
             'firstName' => ['required'],
             'lastName' => ['required'],
-            'fatherName' => ['required'],
+            'nationalCode' => ['required'],
             'birthDate' => ['sometimes'],
             'bcCode' => ['sometimes'],
             'gender' => ['required'],
@@ -449,10 +479,15 @@ class PersonLicenseController extends Controller
             $data['personID'] = $data['personID'] ?? $user->person_id;
             $person = Person::with('natural')->find($data['personID']);
 
+            $data['fatherName'] = $person->natural->father_name;
+
             $data['dateOfBirth'] = isset($data['birthDate']) ? convertJalaliPersianCharactersToGregorian($data['birthDate']) : null;
             $data['bcIssueDate'] = isset($data['bcIssueDate']) ? convertJalaliPersianCharactersToGregorian($data['bcIssueDate']) : null;
 
-            $personResult = $this->naturalStore($data);
+            $heir = Person::where('national_code', $data['nationalCode'])->first();
+
+            $personResult = is_null($heir) ? $this->naturalStore($data) : $this->naturalUpdate($data, $heir->natural);
+
             $child = $personResult->person;
             if (isset($data['personLicenses'])) {
                 $personLicenses = json_decode($data['personLicenses'], true);
@@ -477,10 +512,9 @@ class PersonLicenseController extends Controller
     {
         $data = $request->all();
         $validator = Validator::make($data, [
-            'heirID' => ['required'],
             'firstName' => ['required'],
             'lastName' => ['required'],
-            'fatherName' => ['required'],
+            'nationalCode' => ['required'],
             'birthDate' => ['sometimes'],
             'bcCode' => ['sometimes'],
             'gender' => ['required'],
@@ -505,11 +539,16 @@ class PersonLicenseController extends Controller
             $user = Auth::user();
 
             $data['personID'] = $data['personID'] ?? $user->person_id;
-            $child = Dependent::where('id', $data['heirID'])
+
+            $child = Dependent::joinRelationship('relatedPerson', function ($join) use ($data) {
+                $join->where('persons.national_code', $data['nationalCode']);
+            })
                 ->where('main_person_id', $data['personID'])
                 ->with('relatedPerson.natural')
                 ->first();
             $person = Person::with('natural')->find($data['personID']);
+
+            $data['fatherName'] = $person->natural->father_name;
 
             $data['dateOfBirth'] = isset($data['birthDate']) ? convertJalaliPersianCharactersToGregorian($data['birthDate']) : null;
             $data['bcIssueDate'] = isset($data['bcIssueDate']) ? convertJalaliPersianCharactersToGregorian($data['bcIssueDate']) : null;
@@ -550,7 +589,7 @@ class PersonLicenseController extends Controller
             ->first();
 
         return response()->json([
-            'isarType' => $isar?->isar_status,
+            'isarType' => $isar?->isarStatus,
             'isarCard' => !is_null($isarCard) ? [
                 'id' => $isarCard->id,
                 'file' => [
@@ -572,10 +611,8 @@ class PersonLicenseController extends Controller
     {
         $data = $request->all();
         $validate = Validator::make($data, [
-            'isarStatusID' => 'sometimes',
-            'relativeTypeID' => 'sometimes',
-            'length' => 'sometimes',
-            'percentage' => 'sometimes',
+            'isarStatusID' => 'required',
+            'personLicenses' => ['required', 'json'],
             'personID' => 'sometimes',
         ]);
         if ($validate->fails()) {
@@ -632,14 +669,14 @@ class PersonLicenseController extends Controller
                 'levelOfEducational' => $eduRecord->levelOfEducation,
                 'attachments' => $eduRecord->attachments->map(function ($attachment) {
                     return [
-                        'id' => $attachment->attch_id,
-                        'title' => $attachment->pivot_title,
+                        'id' => $attachment->pivot->id,
+                        'title' => $attachment->pivot->title,
                         'slug' => $attachment->slug,
                         'size' => $attachment->size,
                         'type' => $attachment->mimeType->name,
 
                     ];
-                }),
+                })->first(),
             ];
         });
 
@@ -656,7 +693,7 @@ class PersonLicenseController extends Controller
             'startDate' => 'required',
             'endDate' => 'required',
             'average' => 'required',
-            'levelOfEducational' => 'required',
+            'levelOfEducationalID' => 'required',
             'files' => ['required', 'json'],
         ]);
 
@@ -694,7 +731,7 @@ class PersonLicenseController extends Controller
             'startDate' => 'required',
             'endDate' => 'required',
             'average' => 'required',
-            'levelOfEducational' => 'required',
+            'levelOfEducationalID' => 'required',
             'files' => ['required', 'json'],
         ]);
 
@@ -706,10 +743,7 @@ class PersonLicenseController extends Controller
         try {
             $er = EducationalRecord::find($data['erID']);
             DB::beginTransaction();
-            $this->EducationalRecordUpdate($data, $er);
-
-            $files = json_decode($data['files'], true);
-            $this->attachment($files, $er);
+            $this->EducationalRecordSingleUpdate($data, $er);
 
             DB::commit();
 

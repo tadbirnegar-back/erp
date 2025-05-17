@@ -55,7 +55,7 @@ class EducationalRecord extends Model
             'attachmentables',
             'attachmentable_id',
             'attachment_id')
-            ->withPivot(['title', 'attachmentables.id as attach_id']);
+            ->withPivot(['title', 'id']);
     }
 
     public static function GetAllStatuses()
