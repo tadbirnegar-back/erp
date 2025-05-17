@@ -4,7 +4,10 @@ namespace Modules\ODOC\app\Events;
 
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Modules\BDM\app\Models\BuildingDossier;
+use Modules\ODOC\app\Http\Services\DossierService;
 use Modules\ODOC\app\Models\Approvers;
+use Modules\ODOC\app\Models\Document;
 
 class OdocApproversEvent
 {
@@ -16,9 +19,10 @@ class OdocApproversEvent
      */
     public function __construct(Approvers $approver)
     {
-        $approvers = Approvers::where('document_id', $approver->document_id)->select('status_id')->get();
-        $statuses = $approvers->pluck('status_id')->toArray();
-
+        $documnet = Document::find($approver->document_id);
+        if($documnet->model == BuildingDossier::class){
+            new DossierService($approver->document_id, $approver->status_id , $documnet);
+        }
     }
 
     /**

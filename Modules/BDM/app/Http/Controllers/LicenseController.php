@@ -33,7 +33,7 @@ use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\ODOC\app\Http\Traits\OdocApproversTrait;
-use Modules\ODOC\app\Http\Traits\OdocDocemntTrait;
+use Modules\ODOC\app\Http\Traits\OdocDocumentTrait;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -45,7 +45,7 @@ use Modules\StatusMS\app\Models\Status;
 
 class LicenseController extends Controller
 {
-    use PersonTrait, UserTrait, DossierTrait, OwnersTrait, LawyersTrait, EstateTrait , OdocDocemntTrait , OdocApproversTrait;
+    use PersonTrait, UserTrait, DossierTrait, OwnersTrait, LawyersTrait, EstateTrait, OdocDocumentTrait, OdocApproversTrait;
 
     public function licenseTypesList()
     {
@@ -72,7 +72,7 @@ class LicenseController extends Controller
             ]);
             Db::commit();
             return response()->json(['message' => 'بایگانی با موفقیت انجام شد']);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 400);
         }
@@ -402,36 +402,4 @@ class LicenseController extends Controller
         }
     }
 
-
-    public function generateFormA(Request $request,$id)
-    {
-        $data = [
-            'component_to_render' => 'dossier_form_1_2',
-            'model_id' => $id,
-            'title' => DocumentsNameEnum::FORM_ALEF_ONE_TWO->value,
-            'created_date' => Carbon::now(),
-            'status_id' => $this->PendingOdocDocumentStatus()->id,
-            'status_description' => null,
-            'approvers' => [
-                [
-                    'person_id' => 45,
-                    'status_id' => $this->AssignedApproversStatus()->id,
-                    'signed_date' => Carbon::now(),
-                    'token' => null,
-                    'signature_id' => null,
-                    'document_id' => null,
-                ],
-                [
-                    'person_id' => 46,
-                    'status_id' => $this->PendingApproversStatus()->id,
-                    'signed_date' => Carbon::now(),
-                    'token' => null,
-                    'signature_id' => null,
-                    'document_id' => null,
-                ],
-            ]
-        ];
-        $user = User::find(2174);
-        $this->storeOdocDocument($data,$user->id);
-    }
 }

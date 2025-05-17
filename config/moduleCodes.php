@@ -1,6 +1,6 @@
 <?php
 
-use Modules\FormGMS\app\Models\Form;
+use Modules\BDM\app\Models\Form;
 
 return [
     'modules' => [

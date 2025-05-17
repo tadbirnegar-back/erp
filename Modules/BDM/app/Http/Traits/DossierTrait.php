@@ -9,10 +9,12 @@ use Modules\AAA\app\Http\Enums\PermissionTypesEnum;
 use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\BDM\app\Http\Enums\BdmOwnershipTypesEnum;
+use Modules\BDM\app\Http\Enums\BdmTypesEnum;
 use Modules\BDM\app\Http\Enums\DocumentsNameEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
 use Modules\BDM\app\Http\Enums\EngineersTypeEnum;
 use Modules\BDM\app\Http\Enums\FloorNumbersEnum;
+use Modules\BDM\app\Http\Enums\GeographicalCordinatesTypesEnum;
 use Modules\BDM\app\Http\Enums\PermitStatusesEnum;
 use Modules\BDM\app\Models\Building;
 use Modules\BDM\app\Models\BuildingDossier;
@@ -28,6 +30,8 @@ use Modules\BDM\app\Models\PermitStatus;
 use Modules\BDM\app\Models\Plan;
 use Modules\BDM\app\Models\Pool;
 use Modules\BDM\app\Models\Structure;
+use Modules\ODOC\app\Http\Enums\OdocDocumentComponentsTypeEnum;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
@@ -337,7 +341,7 @@ trait DossierTrait
         $engineers = $this->getEngineers($id);
         $payments = $this->getPayments($id);
         $plan = $this->getPlan($id);
-        return ['estate' => $estateData, 'owners' => $ownersData, 'lawyers' => $lawyers, "structures" => $structures, 'engineers' => $engineers, 'payments' => $payments , 'plan' => $plan];
+        return ['estate' => $estateData, 'owners' => $ownersData, 'lawyers' => $lawyers, "structures" => $structures, 'engineers' => $engineers, 'payments' => $payments, 'plan' => $plan];
     }
 
     public function getEstates($dossierID)
@@ -515,10 +519,14 @@ trait DossierTrait
 
     public function upgradeOneLevel($id)
     {
-        $user = \Auth::user();
+//        $user = \Auth::user();
+        $user = User::find(2174);
         $currentStatus = $this->findCurrentPermitStatusOfDossier($id);
 
         $currentStatusName = $currentStatus->permit_status_name;
+
+        $this->fullFillOdocDocument($id, $currentStatusName);
+
 
         if ($currentStatusName == PermitStatusesEnum::failed->value) {
             $status = $this->ninthStatus();
@@ -572,6 +580,151 @@ trait DossierTrait
 
     }
 
+    public function fullFillOdocDocument($id, $currentStatusName)
+    {
+        if ($currentStatusName == permitStatusesEnum::first->value) {
+            $dossier = BuildingDossier::join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+                ->join('organization_units as village', 'bdm_estates.ounit_id', '=', 'village.id')
+                ->join('organization_units as town', 'village.parent_id', '=', 'town.id')
+                ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
+                ->join('organization_units as city', 'district.parent_id', '=', 'city.id')
+                ->join('bdm_owners', function ($join) {
+                    $join->on('bdm_owners.dossier_id', '=', 'bdm_building_dossiers.id')
+                        ->where('is_main_owner', '=', true);
+                })
+                ->join('persons', 'bdm_owners.person_id', '=', 'persons.id')
+                ->join('naturals', function ($join) {
+                    $join->on('persons.personable_id', '=', 'naturals.id')
+                        ->where('persons.personable_type', '=', Natural::class);
+                })
+                ->join('bdm_geographic_cordinates', function ($join) {
+                    $join->on('bdm_geographic_cordinates.dossier_id', '=', 'bdm_building_dossiers.id')
+                        ->where('bdm_geographic_cordinates.type_id', '=', GeographicalCordinatesTypesEnum::SUBMITTED->id());
+                })
+                ->select([
+                    'persons.display_name',
+                    'persons.national_code',
+                    'bdm_building_dossiers.id',
+                    'bdm_building_dossiers.tracking_code',
+                    'bdm_building_dossiers.created_date',
+                    'bdm_building_dossiers.bdm_type_id',
+                    'naturals.father_name',
+                    'naturals.gender_id',
+                    'naturals.birth_location',
+                    'naturals.bc_code',
+                    'city.name as city_name',
+                    'district.name as district_name',
+                    'village.id as village_id',
+                    'village.name as village_name',
+                    'bdm_estates.building_number',
+                    'bdm_estates.area',
+                    'bdm_estates.address',
+                    'bdm_geographic_cordinates.east',
+                    'bdm_geographic_cordinates.north',
+                    'bdm_geographic_cordinates.west',
+                    'bdm_geographic_cordinates.south',
+                    'naturals.bc_issue_location as bc_issue_location',
+                ])
+                ->find($id);
+            $dossier->bdm_type_name = BdmTypesEnum::getNameById($dossier->bdm_type_id);
+            $dossier->created_date = convertGregorianToJalali($dossier->created_date);
+            $dossier->gender_name = $dossier->gender_id == 1 ? 'مرد' : 'زن';
+            $dossier->ounit_id = $dossier->village_id;
+            $approver = OrganizationUnit::find($dossier->village_id)->head_id;
+            $user = User::find($approver);
+            $dossier->approvers = [
+                [
+                    'person_id' => $user->person_id,
+                    'status_id' => $this->PendingApproversStatus()->id,
+                    'signed_date' => Carbon::now(),
+                    'token' => null,
+                    'signature_id' => null,
+                    'document_id' => null,
+                ]
+            ];
+
+            $dossier->component_to_render = OdocDocumentComponentsTypeEnum::BONYADE_MASKAN->value;
+            $dossier->model_id = $id;
+            $dossier->version = '1';
+            $dossier->status_id = $this->PendingOdocDocumentStatus()->id;
+            $dossier->model = BuildingDossier::class;
+            $dossier->title = 'نامه استعلام از بنیاد مسکن';
+            $this->storeOdocDocument($dossier, $user->id);
+            return $dossier;
+        }
+
+        if($currentStatusName == permitStatusesEnum::fifth->value){
+            $formNumber2 = BuildingDossier::join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+                ->join('organization_units as village', 'bdm_estates.ounit_id', '=', 'village.id')
+                ->join('organization_units as town', 'village.parent_id', '=', 'town.id')
+                ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
+                ->join('organization_units as city', 'district.parent_id', '=', 'city.id')
+                ->join('bdm_owners', function ($join) {
+                    $join->on('bdm_owners.dossier_id', '=', 'bdm_building_dossiers.id')
+                        ->where('is_main_owner', '=', true);
+                })
+                ->join('persons', 'bdm_owners.person_id', '=', 'persons.id')
+                ->join('naturals', function ($join) {
+                    $join->on('persons.personable_id', '=', 'naturals.id')
+                        ->where('persons.personable_type', '=', Natural::class);
+                })
+                ->join('bdm_geographic_cordinates', function ($join) {
+                    $join->on('bdm_geographic_cordinates.dossier_id', '=', 'bdm_building_dossiers.id')
+                        ->where('bdm_geographic_cordinates.type_id', '=', GeographicalCordinatesTypesEnum::SUBMITTED->id());
+                })
+                ->select([
+                    'persons.display_name',
+                    'persons.national_code',
+                    'bdm_building_dossiers.id',
+                    'bdm_building_dossiers.tracking_code',
+                    'bdm_building_dossiers.created_date',
+                    'bdm_building_dossiers.bdm_type_id',
+                    'naturals.father_name',
+                    'naturals.gender_id',
+                    'naturals.birth_location',
+                    'naturals.bc_code',
+                    'city.name as city_name',
+                    'district.name as district_name',
+                    'village.id as village_id',
+                    'village.name as village_name',
+                    'bdm_estates.building_number',
+                    'bdm_estates.area',
+                    'bdm_estates.address',
+                    'bdm_geographic_cordinates.east',
+                    'bdm_geographic_cordinates.north',
+                    'bdm_geographic_cordinates.west',
+                    'bdm_geographic_cordinates.south',
+                    'naturals.bc_issue_location as bc_issue_location',
+                ])
+                ->find($id);
+            $formNumber2->bdm_type_name = BdmTypesEnum::getNameById($formNumber2->bdm_type_id);
+            $formNumber2->created_date = convertGregorianToJalali($formNumber2->created_date);
+            $formNumber2->gender_name = $formNumber2->gender_id == 1 ? 'مرد' : 'زن';
+            $formNumber2->ounit_id = $formNumber2->village_id;
+            $approver = OrganizationUnit::find($formNumber2->village_id)->head_id;
+            $user = User::find($approver);
+            $formNumber2->approvers = [
+                [
+                    'person_id' => $user->person_id,
+                    'status_id' => $this->PendingApproversStatus()->id,
+                    'signed_date' => Carbon::now(),
+                    'token' => null,
+                    'signature_id' => null,
+                    'document_id' => null,
+                ]
+            ];
+
+            $formNumber2->component_to_render = OdocDocumentComponentsTypeEnum::BONYADE_MASKAN->value;
+            $formNumber2->model_id = $id;
+            $formNumber2->version = '1';
+            $formNumber2->status_id = $this->PendingOdocDocumentStatus()->id;
+            $formNumber2->model = BuildingDossier::class;
+            $formNumber2->title = 'نامه استعلام از بنیاد مسکن';
+            $this->storeOdocDocument($formNumber2, $user->id);
+            return $formNumber2;
+        }
+    }
+
     public function uploadFilesByStatus($id, $fileID, $fileName, $user)
     {
         $lastStatus = $this->findCurrentPermitStatusOfDossier($id);
@@ -604,7 +757,8 @@ trait DossierTrait
         }
     }
 
-    public function uploadFilesToForms($dossierID, $fileID, $fileName, $user)
+    public
+    function uploadFilesToForms($dossierID, $fileID, $fileName, $user)
     {
         $form = Form::create([
             'file_id' => $fileID,
@@ -620,7 +774,8 @@ trait DossierTrait
         ]);
     }
 
-    public function uploadFilesToPlans($dossierID, $fileID, $fileName, $user)
+    public
+    function uploadFilesToPlans($dossierID, $fileID, $fileName, $user)
     {
         $license = LicenseDocument::where('dossier_id', $dossierID)
             ->where('documentable_type', Plan::class)
@@ -647,7 +802,8 @@ trait DossierTrait
 
     }
 
-    public function uploadFilesToObligation($dossierID, $fileID, $fileName, $user)
+    public
+    function uploadFilesToObligation($dossierID, $fileID, $fileName, $user)
     {
 
         $license = LicenseDocument::where('dossier_id', $dossierID)
@@ -676,7 +832,8 @@ trait DossierTrait
     }
 
 
-    public function getUploadedFiles($statusName, $dossierID)
+    public
+    function getUploadedFiles($statusName, $dossierID)
     {
         $files = [];
 
@@ -705,7 +862,8 @@ trait DossierTrait
 
     }
 
-    public function makeDossierDeclined($data, $dossierID)
+    public
+    function makeDossierDeclined($data, $dossierID)
     {
         $status = $this->findCurrentPermitStatusOfDossier($dossierID);
         $statusName = $status->permit_status_name;
@@ -745,7 +903,8 @@ trait DossierTrait
         }
     }
 
-    public function getStructures($dossierID)
+    public
+    function getStructures($dossierID)
     {
         $building = Structure::join('bdm_building', function ($join) {
             $join->on('bdm_building.id', '=', 'bdm_structures.structureable_id')
@@ -862,7 +1021,8 @@ trait DossierTrait
         return ["buildings" => $building, "pools" => $pool, "pavilions" => $pavilion, "parkings" => $parking, "partitionings" => $partitioning];
     }
 
-    public function getButtons()
+    public
+    function getButtons()
     {
         return [
             PermitStatusesEnum::first->value => ['submit', 'archive'],
@@ -889,7 +1049,8 @@ trait DossierTrait
         ];
     }
 
-    public function getEngineers($dossierID)
+    public
+    function getEngineers($dossierID)
     {
         $query = BuildingDossier::join('bdm_engineers_building', 'bdm_engineers_building.dossier_id', '=', 'bdm_building_dossiers.id')
             ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
@@ -936,7 +1097,8 @@ trait DossierTrait
         return $engineers;
     }
 
-    public function getPayments($id)
+    public
+    function getPayments($id)
     {
         $Dossier = BuildingDossier::find($id);
         if ($Dossier->bill_id != null) {
@@ -947,7 +1109,8 @@ trait DossierTrait
         }
     }
 
-    public function getPlan($id)
+    public
+    function getPlan($id)
     {
         $query = BuildingDossier::join('bdm_license_documents', function ($join) {
             $join->on('bdm_license_documents.dossier_id', '=', 'bdm_building_dossiers.id')
@@ -962,10 +1125,10 @@ trait DossierTrait
                             ->where('statuses.name', '=', PermitStatusesEnum::tenth->value);
                     });
             })
-            ->leftJoin('users' , function ($join) {
+            ->leftJoin('users', function ($join) {
                 $join->on('users.id', '=', 'bdm_building_permit_status.creator_id');
             })
-            ->leftJoin('persons' , 'users.person_id' , '=' , 'persons.id')
+            ->leftJoin('persons', 'users.person_id', '=', 'persons.id')
             ->select([
                 'bdm_building_dossiers.id as dossier_id',
                 'bdm_building_permit_status.status_id as permit_status_id',
@@ -975,13 +1138,14 @@ trait DossierTrait
                 'files.slug as license_file_slug',
             ])
             ->find($id);
-        if($query){
+        if ($query) {
             $query->license_file_slug = url($query->license_file_slug);
         }
         return $query;
     }
 
-    public function getBuildingBills($id)
+    public
+    function getBuildingBills($id)
     {
         $building = BuildingDossier::join('bdm_structures', function ($join) {
             $join->on('bdm_structures.dossier_id', '=', 'bdm_building_dossiers.id')
@@ -1071,7 +1235,8 @@ trait DossierTrait
         ];
     }
 
-    public function getPartitioningBills($id)
+    public
+    function getPartitioningBills($id)
     {
         $pools = BuildingDossier::join('bdm_structures', function ($join) {
             $join->on('bdm_structures.dossier_id', '=', 'bdm_building_dossiers.id')
@@ -1132,7 +1297,8 @@ trait DossierTrait
         ];
     }
 
-    public function getPoolBills($dossierID)
+    public
+    function getPoolBills($dossierID)
     {
         $pool = BuildingDossier::join('bdm_structures', function ($join) {
             $join->on('bdm_structures.dossier_id', '=', 'bdm_building_dossiers.id')
@@ -1194,7 +1360,8 @@ trait DossierTrait
         ];
     }
 
-    public function getPavilionBills($dossierID)
+    public
+    function getPavilionBills($dossierID)
     {
         $pavilion = BuildingDossier::join('bdm_structures', function ($join) {
             $join->on('bdm_structures.dossier_id', '=', 'bdm_building_dossiers.id')
@@ -1256,7 +1423,8 @@ trait DossierTrait
         ];
     }
 
-    public function getParkingBills($dossierID)
+    public
+    function getParkingBills($dossierID)
     {
         $parking = BuildingDossier::join('bdm_structures', function ($join) {
             $join->on('bdm_structures.dossier_id', '=', 'bdm_building_dossiers.id')
@@ -1318,7 +1486,8 @@ trait DossierTrait
         ];
     }
 
-    public function getBankAccs($dossierID)
+    public
+    function getBankAccs($dossierID)
     {
         $query = BuildingDossier::join('bdm_estates', 'bdm_estates.dossier_id', '=', 'bdm_building_dossiers.id')
             ->join('bnk_bank_accounts', 'bnk_bank_accounts.ounit_id', '=', 'bdm_estates.ounit_id')
@@ -1334,7 +1503,8 @@ trait DossierTrait
         return $query;
     }
 
-    public function getPermitStatusesList()
+    public
+    function getPermitStatusesList()
     {
         $query = Status::where('model', PermitStatus::class)->select(['id', 'name'])->get();
 
@@ -1354,7 +1524,8 @@ trait DossierTrait
         return $data;
     }
 
-    public function publishingDossierBill($data, $id)
+    public
+    function publishingDossierBill($data, $id)
     {
         $bill = Bill::create([
             'bank_account_id' => $data['bank_account_id'],
@@ -1409,5 +1580,64 @@ trait DossierTrait
         return $bill;
     }
 
+    public
+    function StoreBdmFormA1_2($id)
+    {
+
+
+        $this->findBDMApprovers($id);
+
+
+        $data = [
+            'component_to_render' => 'dossier_form_1_2',
+            'model_id' => $id,
+            'title' => DocumentsNameEnum::FORM_ALEF_ONE_TWO->value,
+            'created_date' => \Illuminate\Support\Carbon::now(),
+            'status_id' => $this->PendingOdocDocumentStatus()->id,
+            'status_description' => null,
+            'approvers' => [
+                [
+                    'person_id' => 45,
+                    'status_id' => $this->AssignedApproversStatus()->id,
+                    'signed_date' => Carbon::now(),
+                    'token' => null,
+                    'signature_id' => null,
+                    'document_id' => null,
+                ],
+                [
+                    'person_id' => 46,
+                    'status_id' => $this->PendingApproversStatus()->id,
+                    'signed_date' => Carbon::now(),
+                    'token' => null,
+                    'signature_id' => null,
+                    'document_id' => null,
+                ],
+            ]
+        ];
+        $user = User::find(2174);
+        $this->storeOdocDocument($data, $user->id);
+    }
+
+    private
+    function findBDMApprovers($id)
+    {
+        $status = $this->findCurrentPermitStatusOfDossier($id);
+        if ($status->permit_status_name == PermitStatusesEnum::first->value) {
+            $this->BdmApproversProccess($id);
+        }
+    }
+
+    private
+    function BdmApproversProccess($id)
+    {
+        $query = BuildingDossier::join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->join('organization_units as village', 'bdm_estates.ounit_id', '=', 'village.id')
+            ->join('users', 'organization_uints.head_id', '=', 'users.id')
+            ->select([
+                'users.person_id',
+            ])
+            ->find($id);
+        $personID = $query->person_id;
+    }
 
 }

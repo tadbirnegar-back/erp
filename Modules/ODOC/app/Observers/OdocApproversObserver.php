@@ -13,7 +13,6 @@ class OdocApproversObserver
      */
     public function created(Approvers $odocapprovers): void
     {
-        event(new OdocApproversEvent($odocapprovers));
     }
 
     /**

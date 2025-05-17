@@ -2,8 +2,10 @@
 
 namespace Modules\ODOC\app\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\BDM\app\Models\BuildingDossier;
 use Modules\ODOC\Database\factories\DocumentFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -27,18 +29,31 @@ class Document extends Model
         'title',
         'created_date',
         'creator_id',
-        'version'
+        'version',
+        'ounit_id'
     ];
 
     public $timestamps = false;
 
-     public static function getTableName()
-     {
-            return with(new static)->getTable();
-     }
+    public function model(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if ($value == BuildingDossier::class) {
+                    return 'پروانه های ساختمانی';
+                }
+                return null;
+            }
+        );
+    }
+
+    public static function getTableName()
+    {
+        return with(new static)->getTable();
+    }
 
     public static function GetAllStatuses()
     {
-        return Status::where('model',self::class);
+        return Status::where('model', self::class);
     }
 }

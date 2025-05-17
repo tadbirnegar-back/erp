@@ -15,6 +15,10 @@ use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
+use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Enroll;
+use Modules\LMS\app\Models\Student;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
@@ -23,13 +27,14 @@ use Modules\PersonMS\app\Models\Person;
 class testController extends Controller
 {
     use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
-    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait, PersonTrait;
+    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait, PersonTrait, AnswerSheetTrait;
 
     /**
      * Execute the job.
      */
     function updateDescendants($parent, $children)
     {
+
         // Optional: update the parent if needed
         // $parent->field = 'newValue';
         // $parent->save();
@@ -48,6 +53,42 @@ class testController extends Controller
 
     function run()
     {
+        $enrolls = Enroll::join('courses', 'courses.id', 'enrolls.course_id')
+            ->join('orders', function ($query) {
+                $query->on('orders.orderable_id', '=', 'enrolls.id')
+                    ->where('orders.orderable_type', Enroll::class);
+            })
+            ->join('customers', function ($query) {
+                $query->on('customers.id', '=', 'orders.customer_id')
+                    ->where('customers.customerable_type', Student::class);
+            })
+            ->join('persons', 'persons.id', '=', 'customers.person_id')
+            ->join('users', 'persons.id', '=', 'users.person_id')
+            ->join('organization_units as village', 'village.head_id', '=', 'users.id')
+            ->join('organization_units as town', 'town.id', '=', 'village.parent_id')
+            ->join('organization_units as district', 'district.id', '=', 'town.parent_id')
+            ->join('organization_units as city', 'city.id', '=', 'district.parent_id')
+            ->join('village_ofcs', 'village.unitable_id', '=', 'village_ofcs.id')
+            ->leftJoin('answer_sheets', 'answer_sheets.student_id', '=', 'customers.customerable_id')
+            ->join('chapters', 'chapters.course_id', '=', 'courses.id')
+            ->join('lessons', 'chapters.id', '=', 'lessons.chapter_id')
+            ->join('contents', 'contents.lesson_id', '=', 'lessons.id')
+            ->leftJoin('content_consume_log', function ($query) {
+                $query->on('content_consume_log.student_id', '=', 'customers.customerable_id')
+                    ->on('content_consume_log.content_id', '=', 'contents.id');
+            })
+            ->join('files', 'files.id', '=', 'contents.file_id')
+            ->select([
+                'files.duration as duration',
+                'content_consume_log.consume_round as consume_round',
+                'content_consume_log.consume_data as consume_data',
+                'persons.display_name as person_name',
+                'persons.id as person_id',
+            ])
+            ->distinct()
+            ->where('courses.id', 9)
+            ->get();
+        return response() -> json($enrolls);
 //        1-روستای اوبابلاغی سند 776231
 //2-روستای اوزان سفلی سند 776238
 //3-روستای آخی جان سند 712629
@@ -85,21 +126,21 @@ class testController extends Controller
 //35-روستای محمد آباد سند 726478
 //36-روستای نجار سند 726765
 
-        $p = Person::where('id', 2604)->first();
-        dd($p->militaryService->militaryServiceStatus);
-
-        $a = OrganizationUnit::joinRelationship('village')
-            ->with('ancestors')
-            ->where('unitable_type', VillageOfc::class)
-            ->where('village_ofcs.hasLicense', 1)
-            ->select([
-                'organization_units.id',
-                'organization_units.parent_id',
-                'organization_units.name as village_name',
-                'village_ofcs.abadi_code as village_abadi_code'
-            ])
-            ->get();
-        dump($a);
+//        $p = Person::where('id', 2604)->first();
+//        dd($p->militaryService->militaryServiceStatus);
+//
+//        $a = OrganizationUnit::joinRelationship('village')
+//            ->with('ancestors')
+//            ->where('unitable_type', VillageOfc::class)
+//            ->where('village_ofcs.hasLicense', 1)
+//            ->select([
+//                'organization_units.id',
+//                'organization_units.parent_id',
+//                'organization_units.name as village_name',
+//                'village_ofcs.abadi_code as village_abadi_code'
+//            ])
+//            ->get();
+//        dump($a);
 //        $p = Person::find(1908);
 //        dd($p->latestEducationRecord->levelOfEducation);
 //        $script = RecruitmentScript::with(

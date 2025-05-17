@@ -33,6 +33,15 @@ trait OtpTrait
         return $result;
     }
 
+    public function verifyOtpByMobileMultiAccess($mobile, string|int $code)
+    {
+        $result = Otp::where('mobile', $mobile)
+            ->where('code', $code)
+            ->where('expire_date', '>', now())->first();
+
+        return $result;
+    }
+
     public function sendOtp(array $data, string $patternCode = OtpPatternsEnum::USER_OTP->value)
     {
         $otpData = [

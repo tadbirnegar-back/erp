@@ -14,6 +14,7 @@ class ODOCDatabaseSeeder extends Seeder
          $this->call([
              DocumentStatusesSeeder::class,
              ApproversStatusesSeeder::class,
+             PermissionsSeeder::class
          ]);
     }
 }

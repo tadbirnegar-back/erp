@@ -1,0 +1,32 @@
+[
+    {
+        "name": "لیست امضا ها",
+        "slug": "/odoc/document/list",
+        "moduleName": "ODOC",
+        "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "افزودن امضا",
+        "slug": "/odoc/document/create",
+        "moduleName": "ODOC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده امضا",
+        "slug": "/odoc/document/show/{id}",
+        "moduleName": "ODOC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید امضا",
+        "slug": "/odoc/document/approve/{id}",
+        "moduleName": "ODOC",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "رد امضا",
+        "slug": "/odoc/document/decline/{id}",
+        "moduleName": "ODOC",
+        "permissionTypeName": "operational"
+    }
+]

@@ -17,4 +17,9 @@ use Modules\ODOC\app\Http\Controllers\ODOCController;
 
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::post('/odoc/document/create' , [ODOCController::class, 'createOdocDocument']);
+    Route::post('/odoc/document/list' , [ODOCController::class, 'listOfOdocDocuments']);
+    Route::get('/odoc/document/show/{id}' , [ODOCController::class, 'showOdocDocument']);
+    Route::post('/odoc/document/approve/{id}' , [ODOCController::class, 'approveOdocDocument']);
+    Route::post('/odoc/document/decline/{id}' , [ODOCController::class, 'declineOdocDocument']);
 });
+Route::get('/odoc/document/show/{id}' , [ODOCController::class, 'showOdocDocument']);
