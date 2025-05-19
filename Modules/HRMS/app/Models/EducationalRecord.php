@@ -48,6 +48,11 @@ class EducationalRecord extends Model
         return $this->belongsTo(WorkForce::class, 'work_force_id');
     }
 
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
     public function attachments(): MorphToMany
     {
         return $this->morphToMany(File::class,

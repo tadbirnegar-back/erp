@@ -6,6 +6,7 @@ use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\MilitaryService;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
 use Modules\PersonMS\app\Http\Enums\PersonLicenseStatusEnum;
+use Modules\PersonMS\app\Http\Enums\PersonStatusEnum;
 use Modules\PersonMS\app\Models\Legal;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
@@ -107,9 +108,10 @@ trait PersonTrait
 
         $naturalPerson->person()->save($person);
 
-        $status = $this->activePersonStatus();
+        $createStatus = $this->caseCreatePersonStatus();
+        $pendingToFillStatus = $this->pendingToFillPersonStatus();
 
-        $naturalPerson->person->status()->attach($status->id);
+        $naturalPerson->person->status()->attach([$createStatus->id, $pendingToFillStatus->id]);
 
 
         return $naturalPerson;
@@ -189,9 +191,10 @@ trait PersonTrait
         $person->profile_picture_id = $data['avatar'] ?? $person->profile_picture_id;
 
         $naturalPerson->person()->save($person);
-        $statusID = $person->status;
-        if (isset($data['statusID']) && $statusID[0]->id != $data['statusID']) {
-            $naturalPerson->person->status()->attach($data['statusID']);
+        if ($person->latestStatus->name == PersonStatusEnum::PENDING_TO_FILL->value || $person->latestStatus->name == PersonStatusEnum::PENDING_TO_APPROVE->value) {
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
+            $naturalPerson->person->status()->attach([$updateStatus->id, $pendingStatus->id]);
         }
 
         return $naturalPerson;
@@ -475,6 +478,31 @@ trait PersonTrait
         $data = $this->personLicenseDataPreparation($data, $personID, $status);
         $result = PersonLicense::upsert($data->toArray(), ['id']);
 
+    }
+
+    public function caseCreatePersonStatus()
+    {
+        return Person::GetAllStatuses()->firstWhere('name', '=', PersonStatusEnum::CASE_CREATED->value);
+    }
+
+    public function pendingToFillPersonStatus()
+    {
+        return Person::GetAllStatuses()->firstWhere('name', '=', PersonStatusEnum::PENDING_TO_FILL->value);
+    }
+
+    public function pendingToApprovePersonStatus()
+    {
+        return Person::GetAllStatuses()->firstWhere('name', '=', PersonStatusEnum::PENDING_TO_APPROVE->value);
+    }
+
+    public function confirmedPersonStatus()
+    {
+        return Person::GetAllStatuses()->firstWhere('name', '=', PersonStatusEnum::CONFIRMED->value);
+    }
+
+    public function updatedPersonStatus()
+    {
+        return Person::GetAllStatuses()->firstWhere('name', '=', PersonStatusEnum::CONFIRMED->value);
     }
 
     public function personLicensePendingStatus()

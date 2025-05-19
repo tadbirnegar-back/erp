@@ -11,17 +11,19 @@ use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
-use Modules\HRMS\app\Models\EducationalRecord;
-use Modules\PersonMS\app\Http\Traits\PersonTrait;
+use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
+use Modules\PersonMS\app\Http\Enums\PersonStatusEnum;
+use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
     use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
-    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait, PersonTrait;
+    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait, AnswerSheetTrait;
 
     /**
      * Execute the job.
@@ -32,79 +34,233 @@ class testController extends Controller
         // $parent->field = 'newValue';
         // $parent->save();
 
-//        foreach ($children as $child) {
-//            // Update the child
-//
-//
-//            // Check if the child has its own children
-//            if ($child->children && $child->children->isNotEmpty()) {
-//                $this->updateDescendants($child, $child->children);
-//            }
-//        }
+        // foreach ($children as $child) {
+        //     // Update the child
+
+
+        //     // Check if the child has its own children
+        //     if ($child->children && $child->children->isNotEmpty()) {
+        //         $this->updateDescendants($child, $child->children);
+        //     }
+        // }
     }
 
-
-    function run()
+    public function run()
     {
-
-        $eduRecords = EducationalRecord::where('person_id', 1908)
-            ->with(['levelOfEducation', 'attachments.mimeType'])
+        $pList = Person::joinRelationship('natural')->finalStatus()
+            ->whereIn('statuses.name', [PersonStatusEnum::PENDING_TO_APPROVE->value])
+            ->with(['recruitmentScripts'=>function ($query) {
+                $query->finalStatus()->whereIn('statuses.name',[
+                    RecruitmentScriptStatusEnum::ACTIVE->value,
+                    RecruitmentScriptStatusEnum::PENDING_APPROVAL->value,
+                ])
+                ->with(['organizationUnit','position']);
+            }])
             ->get();
-        dd($eduRecords);
 
-//        dd($p->latestEducationRecord->levelOfEducation);
-//        $script = RecruitmentScript::with(
-//            [
-//                'person' => function ($query) {
-//                    $query->with(['natural', 'isar', 'militaryService' => function ($query) {
-//                        $query->with(['exemptionType', 'militaryServiceStatus']);
-//                    }]);
+        dd($pList);
+
+//        $status = Status::where('model', Payment::class)->where('name', 'پرداخت شده')->first();
 //
-//                },
-//                'ounit.ancestors' => function ($query) {
-//                    $query->where('unitable_type', '!=', TownOfc::class);
-//                },
-//                'scriptAgents.scriptAgentType',
-//                'latestEducationRecord',
-//                'position'
-//            ]
-//        )
-//            ->withCount('heirs')
-//            ->find(5273);
-////        dd($script);
-//        return RecruitmentScriptContractResource::make($script);
+//        $query = OrganizationUnit::join('village_ofcs', function ($join) {
+//            $join->on('village_ofcs.id', '=', 'organization_units.unitable_id')
+//                ->where('organization_units.unitable_type', VillageOfc::class);
+//        })
+//            ->join('payments', 'payments.organization_unit_id', '=', 'organization_units.id')
+//            ->join('organization_units as town', 'town.id', 'organization_units.parent_id')
+//            ->join('organization_units as district', 'town.parent_id', '=', 'district.id')
+//            ->join('organization_units as city', 'city.id', 'district.parent_id')
+//            ->select([
+//                'village_ofcs.id as village_id',
+//                'payments.id as payment_id',
+//                'payments.amount as payment_amount',
+//                'payments.create_date as payment_date',
+//                'payments.transactionid as txID',
+//                'village_ofcs.national_uid as national_uid',
+//                'village_ofcs.abadi_code as code_posti',
+//                'organization_units.name as ounit_name',
+//                'district.name as district_name',
+//                'city.name as city_name'
+//            ])
+//            ->withoutGlobalScopes()
+//            ->where('organization_units.unitable_type', VillageOfc::class)
+//            ->where('payments.status_id', $status->id)
+//            ->orderBy('payment_id')
+//            ->get();
+//
+//        echo "<table border='1'>
+//    <thead>
+//        <tr>
+//            <th>نام روستا</th>
+//            <th>شماره تراکنش</th>
+//            <th>مقدار پرداختی</th>
+//            <th>تاریخ</th>
+//            <th>کد تراکنش</th>
+//            <th>شناسه ملی</th>
+//            <th>کد آبادی</th>
+//            <th>آدرس</th>
+//        </tr>
+//    </thead>
+//    <tbody>";
+//
+//        foreach ($query as $item) {
+//            $date = convertDateTimeGregorianToJalaliDateTime($item->payment_date);
+//            echo "<tr>
+//        <td>{$item->ounit_name}</td>
+//        <td>{$item->payment_id}</td>
+//        <td>{$item->payment_amount}</td>
+//        <td>{$date}</td>
+//        <td>{$item->txID}</td>
+//        <td>{$item->national_uid}</td>
+//        <td>{$item->code_posti}</td>
+//        <td>" . $item->city_name . "، " . $item->district_name . "، " . $item->ounit_name . "</td>
+//    </tr>";
+//        }
 //
 //
-//        $a = ScriptTypesEnum::VILLAGER;
-//        $b = HireTypeEnum::PART_TIME;
-//        $st = ScriptType::where('title', $a->value)->first();
-//        $ht = HireType::where('title', $b->value)->first();
-//        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-//        $ounit = OrganizationUnit::with(['ancestors' => function ($query) {
-//            $query->where('unitable_type', '!=', TownOfc::class);
-//        }])->find(5);
+//        echo "</tbody></table>";
+
+//        $activeAnswerSheetStatusID = $this->answerSheetApprovedStatus()->id;
+//        $declinedAnswerSheetStatusID = $this->answerSheetDeclinedStatus()->id;
 //
-//        dump(
-//            $ounit->ancestors[0],
-//            $ounit->ancestors[1],
-//            $ounit->ancestors[2]
-//        );
+//        $courses = Course::get(['id'])->pluck('id')->toArray();
 //
-//        $person = Person::where('personable_type', Natural::class)->first();
-//        dump($person->personable);
+//        $keys = array_keys($courses);
+//        $firstKey = reset($keys);
+//        $lastKey = end($keys);
 //
-//        $x = new $class($st, $ht, $ounit);
-//        $formulas = collect(FormulaEnum::cases());
+//        foreach ($courses as $key => $course) {
+//            $courseExams = CourseExam::
+//            where('course_id', $course)
+//                ->
+//                select('exam_id')->get();
+//            $examIds = $courseExams->pluck('exam_id')->toArray();
 //
-//        $res = $formulas->map(function ($formula) use ($x) {
-//            $fn = $formula->getFnName();
-//            $res = $x->$fn();
-//            return [
-//                'default_value' => $res,
-//                'label' => $formula->getLabel(),
-//            ];
+//            if (!empty($examIds)) {
+//                $enrolls = Enroll::join('courses', 'courses.id', 'enrolls.course_id')
+//                    ->join('orders', function ($query) {
+//                        $query->on('orders.orderable_id', '=', 'enrolls.id')
+//                            ->where('orders.orderable_type', Enroll::class);
+//                    })
+//                    ->join('customers', function ($query) {
+//                        $query->on('customers.id', '=', 'orders.customer_id')
+//                            ->where('customers.customerable_type', Student::class);
+//                    })
+//                    ->join('persons', 'persons.id', '=', 'customers.person_id')
+//                    ->join('users', 'persons.id', '=', 'users.person_id')
+//                    ->join('organization_units as village', 'village.head_id', '=', 'users.id')
+//                    ->join('organization_units as town', 'town.id', '=', 'village.parent_id')
+//                    ->join('organization_units as district', 'district.id', '=', 'town.parent_id')
+//                    ->join('organization_units as city', 'city.id', '=', 'district.parent_id')
+//                    ->join('village_ofcs', 'village.unitable_id', '=', 'village_ofcs.id')
+//                    ->join('chapters', 'chapters.course_id', '=', 'courses.id')
+//                    ->join('lessons', 'chapters.id', '=', 'lessons.chapter_id')
+//                    ->join('contents', 'contents.lesson_id', '=', 'lessons.id')
+//                    ->leftJoin('answer_sheets', function ($join) use ($declinedAnswerSheetStatusID, $activeAnswerSheetStatusID, $examIds) {
+//                        $join->on('answer_sheets.student_id', '=', 'customers.customerable_id')
+//                            ->whereIn('answer_sheets.exam_id', $examIds)
+//                            ->whereIn('answer_sheets.status_id', [$declinedAnswerSheetStatusID, $activeAnswerSheetStatusID])
+//                            ->whereRaw('answer_sheets.id = (
+//                        SELECT MAX(a2.id)
+//                        FROM answer_sheets AS a2
+//                        WHERE a2.student_id = answer_sheets.student_id
+//                        AND a2.exam_id IN (' . implode(',', $examIds) . ')
+//                    )');
+//                    })
+//                    ->leftJoin('content_consume_log', function ($query) {
+//                        $query->on('content_consume_log.student_id', '=', 'customers.customerable_id')
+//                            ->on('content_consume_log.content_id', '=', 'contents.id');
+//                    })
+//                    ->join('files', 'files.id', '=', 'contents.file_id')
+//                    ->select([
+//                        'files.duration as duration',
+//                        'content_consume_log.consume_round as consume_round',
+//                        'content_consume_log.consume_data as consume_data',
+//                        'content_consume_log.content_id as content_id',
+//                        'persons.display_name as person_name',
+//                        'contents.id as content_id',
+//                        'courses.id as course_id',
+//                        'courses.title as course_title',
+//                        'persons.id as person_id',
+//                        'customers.customerable_id as student_id',
+//                        'village.name as village_name',
+//                        'district.name as district_name',
+//                        'city.name as city_name',
+//                        'answer_sheets.score',
+//                        'enrolls.study_completed as is_completed',
+//                        'answer_sheets.finish_date_time as finish_date',
+//                        'village_ofcs.abadi_code'
+//                    ])
+//                    ->where('courses.id', $course)
+//                    ->distinct()
+//                    ->get();
+//                $enrolls->map(function ($item) use ($examIds) {
+//                    $item->total = ($item->duration * $item->consume_round) + $item->consume_data;
+//                });
+//                $groupedByPerson = $enrolls->groupBy('person_id');
 //
-//        });
+//                // Sum total for each person
+//                $personTotals = $groupedByPerson->map(function ($items) {
+//                    return $items->sum('total');
+//                });
+//            }
+//
+//
+//            if ($key == $firstKey) {
+//                echo "<table border='1' cellpadding='8' cellspacing='0'>";
+//                echo "<thead><tr>
+//                <th>شماره دوره</th>
+//                <th>نام دوره</th>
+//                <th>نام دهیار</th>
+//                <th>مجموع کل مصرف</th>
+//                <th>نمره</th>
+//                <th>به پایان رسانده</th>
+//                <th>شهر</th>
+//                <th>بخش</th>
+//                <th>دهیاری</th>
+//                <th>تاریخ</th>
+//                <th>کد آبادی</th>
+//            </tr></thead>";
+//                echo "<tbody>";
+//            }
+//
+//            if (isset($groupedByPerson)) {
+//                foreach ($groupedByPerson as $personId => $items) {
+//                    $first = $items->first();
+//                    $totalSeconds = $personTotals[$personId];
+//
+//                    // Convert total seconds to h:m:s
+//                    $hours = floor($totalSeconds / 3600);
+//                    $minutes = floor(($totalSeconds % 3600) / 60);
+//                    $seconds = $totalSeconds % 60;
+//
+//                    $isCompleted = ($first->is_completed == 1) ? 'بله' : 'خیر';
+//                    // Format as h:m:s
+//                    $formattedTime = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+//
+//                    $date = is_null($first->finish_date) ? '' : convertDateTimeGregorianToJalaliDateTime($first->finish_date);
+//
+//                    echo "<tr>
+//                    <td>{$first->course_id}</td>
+//                    <td>{$first->course_title}</td>
+//                    <td>{$first->person_name}</td>
+//                    <td>{$formattedTime}</td>
+//                    <td>{$first->score}</td>
+//                    <td>{$isCompleted}</td>
+//                    <td>{$first->village_name}</td>
+//                    <td>{$first->district_name}</td>
+//                    <td>{$first->city_name}</td>
+//                    <td>{$date}</td>
+//                    <td>{$first->abadi_code}</td>
+//                </tr>";
+//                }
+//            }
+//
+//            if ($key == $lastKey) {
+//                echo "</tbody></table>";
+//            }
+//        }
+
 
 //        $enactments = Enactment::joinRelationship('statuses', ['statuses' => function ($join) {
 //            $join

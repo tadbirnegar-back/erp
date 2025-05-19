@@ -35,6 +35,11 @@ class Dependent extends Model
         return $this->belongsTo(Person::class, 'related_person_id');
     }
 
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
     public static function getTableName()
     {
         return with(new static)->getTable();

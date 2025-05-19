@@ -32,6 +32,11 @@ class Isar extends Model
         return $this->belongsTo(IsarStatus::class, 'isar_status_id');
     }
 
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
     public function relativeType(): BelongsTo
     {
         return $this->belongsTo(RelativeType::class, 'relative_type_id');

@@ -69,6 +69,20 @@ class Person extends Model
         return $this->belongsToMany(Status::class)->latest('create_date');
     }
 
+    public function latestStatus()
+    {
+        return $this->hasOneThrough(Status::class, PersonStatus::class, 'person_id', 'id', 'id', 'status_id');
+    }
+
+
+    public function scopeFinalStatus($query)
+    {
+        return $query->join('person_status', 'persons.id', '=', 'person_status.person_id')
+            ->join('statuses', 'person_status.status_id', '=', 'statuses.id')
+            ->whereRaw('person_status.create_date = (SELECT MAX(create_date) FROM person_status WHERE person_id = persons.id)');
+
+    }
+
     public function avatar(): BelongsTo
     {
         return $this->belongsTo(File::class, 'profile_picture_id');

@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mockery\Exception;
 use Modules\AAA\app\Http\Traits\OtpTrait;
+use Modules\HRMS\app\Http\Enums\DependentStatusEnum;
+use Modules\HRMS\app\Http\Enums\EducationalRecordStatusEnum;
+use Modules\HRMS\app\Http\Enums\IsarStatusEnum;
 use Modules\HRMS\app\Http\Enums\RelationTypeEnum;
 use Modules\HRMS\app\Http\Traits\DependentTrait;
 use Modules\HRMS\app\Http\Traits\EducationRecordTrait;
@@ -41,87 +44,54 @@ class PersonLicenseController extends Controller
         $user = Auth::user();
         $personID = $data['personID'] ?? $user->person_id;
 
-        $person = Person::with(['natural', 'avatar'])->find($personID);
+        $person = Person::with([
+            'natural.spouse.latestStatus', 'avatar', 'latestStatus'])->find($personID);
 
-        $natural = $person->natural;
+        $childrenStatus = Dependent::where('main_person_id', $personID)->joinRelationship('status', function ($join) {
+            $join->where('name', DependentStatusEnum::PENDING->value);
+        })->exists();
 
-        $requiredColumns = [
-            'first_name',
-            'last_name',
-            'father_name',
-            'birth_date',
-            'bc_code',
-            'gender_id',
-            'bc_issue_date',
-            'bc_issue_location',
-            'birth_location',
-            'bc_serial',
-            'religion_id',
+        $isarStatus = Isar::where('person_id', $personID)->joinRelationship('status', function ($join) {
+            $join->where('name', IsarStatusEnum::PENDING_APPROVE->value);
+        })->exists();
+
+        $educationStatus = EducationalRecord::where('person_id', $personID)->joinRelationship('status', function ($join) {
+
+            $join->where('name', EducationalRecordStatusEnum::PENDING_APPROVE->value);
+        })->exists();
+
+        $personalInfoStatusObject = [
+            'name' => $person->latestStatus->name,
+            'className' => $person->latestStatus->class_name,
         ];
 
-        $filledCount = count(array_filter($requiredColumns, function ($column) use ($natural) {
-            return !is_null($natural->{$column}) && $natural->{$column} !== '';
-        }));
-
-        if ($filledCount == count($requiredColumns)) {
-            $personalStatus = true;
-        } else {
-            $personalStatus = false;
-        }
-
-        if ($natural->isMarried == 1 && $natural->spouse_id != null) {
-            $spouseStatus = true;
-        } elseif ($natural->isMarried == 0) {
-            $spouseStatus = false;
-        } else {
-            $spouseStatus = null;
-        }
-
-        $childrenStatus = true;
-        $isarStatus = true;
-        $educationStatus = $person->educationalRecords()->count() > 0;
-
-        $personalInfoStatusObject = $personalStatus ? [
-            'name' => 'تکمیل شده',
-            'className' => 'success'
-        ] : [
-            'name' => 'در انتظار تکمیل',
-            'className' => 'warning'
+        $spouseInfoStatusObject = [
+            'name' => $person->natural->spouse->latestStatus->name,
+            'className' => $person->natural->spouse->latestStatus->class_name,
         ];
 
-        $spouseInfoStatusObject = $spouseStatus ? [
-            'name' => 'تکمیل شده',
-            'className' => 'success'
-        ] : (is_null($spouseStatus) ? [
-            'name' => 'در انتظار تکمیل',
-            'className' => 'warning'
-        ] : [
-            'name' => 'تکمیل شده',
-            'className' => 'success'
-        ]);
-
-        $childrenInfoStatusObject = $childrenStatus ? [
-            'name' => 'تکمیل شده',
+        $childrenInfoStatusObject = (!$childrenStatus) ? [
+            'name' => DependentStatusEnum::ACTIVE->value,
             'className' => 'success'
         ] : [
-            'name' => 'در انتظار تکمیل',
-            'className' => 'warning'
+            'name' => DependentStatusEnum::PENDING->value,
+            'className' => 'primary'
         ];
 
-        $isarInfoStatusObject = $isarStatus ? [
-            'name' => 'تکمیل شده',
+        $isarInfoStatusObject = (!$isarStatus) ? [
+            'name' => IsarStatusEnum::APPROVED->value,
             'className' => 'success'
         ] : [
-            'name' => 'در انتظار تکمیل',
-            'className' => 'warning'
+            'name' => IsarStatusEnum::PENDING_APPROVE->value,
+            'className' => 'primary'
         ];
 
-        $educationInfoStatusObject = $educationStatus ? [
-            'name' => 'تکمیل شده',
+        $educationInfoStatusObject = (!$educationStatus) ? [
+            'name' => EducationalRecordStatusEnum::APPROVED->value,
             'className' => 'success'
         ] : [
-            'name' => 'در انتظار تکمیل',
-            'className' => 'warning'
+            'name' => EducationalRecordStatusEnum::PENDING_APPROVE->value,
+            'className' => 'primary'
         ];
 
         $result = [
@@ -396,6 +366,9 @@ class PersonLicenseController extends Controller
                 $n->save();
             }
 
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
+            $person->status()->attach([$updateStatus->id, $pendingStatus->id]);
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد']);
         } catch (\Exception $e) {
@@ -497,7 +470,9 @@ class PersonLicenseController extends Controller
             $data['relatedPersonID'] = $child->id;
             $this->storeDependent($data, $person);
 
-
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
+            $person->status()->attach([$updateStatus->id, $pendingStatus->id]);
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد']);
         } catch (\Exception $e) {
@@ -560,6 +535,9 @@ class PersonLicenseController extends Controller
 
                 $this->bulkStorePersonLicenses($personLicenses, $child->id);
             }
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
+            $person->status()->attach([$updateStatus->id, $pendingStatus->id]);
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد']);
         } catch (\Exception $e) {
@@ -622,7 +600,7 @@ class PersonLicenseController extends Controller
             DB::beginTransaction();
             $user = Auth::user();
             $personID = $data['personID'] ?? $user->person_id;
-
+            $person = Person::find($personID);
             $this->isarStore($data, $personID);
 
             if (isset($data['personLicenses'])) {
@@ -630,6 +608,10 @@ class PersonLicenseController extends Controller
 
                 $this->bulkStorePersonLicenses($personLicenses, $personID);
             }
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
+            $person->status()->attach([$updateStatus->id, $pendingStatus->id]);
+
             DB::commit();
 
             return response()->json(['message' => 'با موفقیت اضافه شد.'], 200);
@@ -702,9 +684,16 @@ class PersonLicenseController extends Controller
         }
         $user = Auth::user();
         $personID = $data['personID'] ?? $user->person_id;
+        $person = Person::find($personID);
+
         try {
             DB::beginTransaction();
             $this->EducationalRecordSingleStore($data, $personID);
+
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
+
+            $person->status()->attach([$updateStatus->id, $pendingStatus->id]);
             DB::commit();
 
             return response()->json(['message' => 'با موفقیت ثبت شد']);
@@ -744,7 +733,11 @@ class PersonLicenseController extends Controller
             $er = EducationalRecord::find($data['erID']);
             DB::beginTransaction();
             $this->EducationalRecordSingleUpdate($data, $er);
+            $person = Person::find($personID);
 
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
+            $person->status()->attach([$updateStatus->id, $pendingStatus->id]);
             DB::commit();
 
             return response()->json(['message' => 'با موفقیت ثبت شد']);

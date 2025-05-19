@@ -45,7 +45,7 @@ trait EmployeeTrait
 
     public function employeeIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $employeeQuery = Employee::with('person.avatar', 'status', 'positions')->distinct();
+        $employeeQuery = Employee::with(['person.avatar', 'status', 'positions'])->distinct();
 
         $searchTerm = $data['name'] ?? null;
         $position = $data['positionID'] ?? null;
@@ -284,9 +284,9 @@ trait EmployeeTrait
         $b = HireTypeEnum::tryFrom($hireType->title);
         $scriptAgents = $hireType->scriptAgents;
         $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-        $calculator = new $class($scriptType, $hireType, $ounit,\Auth::user()->person);
+        $calculator = new $class($scriptType, $hireType, $ounit, \Auth::user()->person);
 
-        $scriptAgents->each(function ($scriptAgent)use ($calculator) {
+        $scriptAgents->each(function ($scriptAgent) use ($calculator) {
             if (!is_null($scriptAgent->pivot->formula)) {
 
                 $formula = FormulaEnum::from($scriptAgent->pivot->formula);

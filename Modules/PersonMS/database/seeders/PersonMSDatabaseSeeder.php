@@ -16,6 +16,7 @@ class PersonMSDatabaseSeeder extends Seeder
 //            ModuleSeeder::class,
 //            PermissionSeeder::class,
             PersonLicenseStatusSeeder::class,
+            PersonStatusSeeder::class,
         ]);
         // $this->call([]);
     }
