@@ -439,7 +439,7 @@ class AccountsController extends Controller
                         'root_account.chain_code',
                         'acc_articles.credit_amount',
                         'acc_articles.debt_amount',
-                        'acc_documents.description as doc_description',
+                        'acc_articles.description as doc_description',
                         'acc_documents.id as doc_id',
                         'acc_documents.document_number as document_number',
                         'acc_documents.document_date as document_date',
@@ -498,15 +498,16 @@ class AccountsController extends Controller
         $accounts = $accounts->map(function ($item) {
             return [
                 'id' => $item->id,
-                'name' =>$item->chain_code.' - '. $item->name .($item->status_id == 155 ? ' (غیرفعال) ' : ''),
+                'name' => $item->chain_code . ' - ' . $item->name . ($item->status_id == 155 ? ' (غیرفعال) ' : ''),
             ];
 
         });
 
-            return response()->json([
-                'data' => $accounts,
-            ]);
+        return response()->json([
+            'data' => $accounts,
+        ]);
     }
+
     public function accountRemainingValue(Request $request)
     {
         $data = $request->all();
