@@ -297,21 +297,76 @@ class OUnitMSController extends Controller
         return response()->json($result);
 
     }
+
     public function districtsIndexPublic($id)
     {
-        $districts = OrganizationUnit::where('unitable_type', DistrictOfc::class)->where('parent_id' , $id)->select(['id', 'name'])->get();
+        $districts = OrganizationUnit::where('unitable_type', DistrictOfc::class)->where('parent_id', $id)->select(['id', 'name'])->get();
         return response()->json($districts);
     }
 
     public function villageIndexPublic($id)
     {
 
-        $towns = OrganizationUnit::where('unitable_type', TownOfc::class)->where('parent_id' , $id)->select(['id', 'name'])->get();
+        $towns = OrganizationUnit::where('unitable_type', TownOfc::class)->where('parent_id', $id)->select(['id', 'name'])->get();
 
         $townIds = $towns->pluck('id')->toArray();
 
-        $villages = OrganizationUnit::where('unitable_type', VillageOfc::class)->whereIn('parent_id' , $townIds)->select(['id', 'name'])->get();
+        $villages = OrganizationUnit::where('unitable_type', VillageOfc::class)->whereIn('parent_id', $townIds)->select(['id', 'name'])->get();
         return response()->json($villages);
+    }
+
+    public function cityOunitIndex()
+    {
+        $ounits = OrganizationUnit::where('unitable_type', CityOfc::class)->select(['id', 'name'])->get();
+
+        return response()->json($ounits);
+    }
+
+    public function districtOunitIndex(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'cityID' => 'required',
+        ]);
+        if ($validate->fails()) {
+            return response()->json(['error' => $validate->errors()], 422);
+        }
+        $ounits = OrganizationUnit::where('unitable_type', DistrictOfc::class)
+            ->where('parent_id', $data['cityID'])
+            ->select(['id', 'name'])
+            ->get();
+
+        return response()->json($ounits);
+    }
+
+    public function villageOunitIndex(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'districtID' => 'required',
+        ]);
+        if ($validate->fails()) {
+            return response()->json(['error' => $validate->errors()], 422);
+        }
+
+        $district = OrganizationUnit::find($data['districtID']);
+
+        $ounits = $district->descendants()
+            ->where('unitable_type', VillageOfc::class)
+            ->get();
+
+
+        $ounits = $ounits->map(function ($village) {
+            return [
+                'id' => $village->id,
+                'name' => $village->name ,
+            ];
+        });
+
+
+        return response()->json($ounits);
+
+
     }
 
 }

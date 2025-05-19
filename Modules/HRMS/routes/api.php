@@ -16,6 +16,7 @@ use Modules\HRMS\app\Http\Controllers\RecruitmentScriptController;
 use Modules\HRMS\app\Http\Controllers\RegisterEmployeeController;
 use Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController;
 use Modules\HRMS\app\Http\Controllers\SkillController;
+use Modules\PersonMS\app\Http\Controllers\PersonLicenseController;
 
 /*
     |--------------------------------------------------------------------------
@@ -196,6 +197,8 @@ Route::middleware([])->prefix('v2')->name('api.')->group(function () {
     Route::post('/hrm/person/register/add', [RegisterEmployeeController::class, 'RegisterEmployee']);
 
     Route::get('/hrm/isar-types/list', [EmployeeController::class, 'isarsStatusesIndex']);
+
+    Route::post('/hrm/person/confirm-list', [PersonLicenseController::class, 'pendingIndex']);
 
 });
 

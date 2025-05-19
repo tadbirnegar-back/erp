@@ -18,8 +18,14 @@ use Modules\HRMS\app\Http\Traits\IsarTrait;
 use Modules\HRMS\app\Http\Traits\MilitaryServiceTrait;
 use Modules\HRMS\app\Models\Dependent;
 use Modules\HRMS\app\Models\EducationalRecord;
+use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\Isar;
+use Modules\HRMS\app\Resources\PersonListWithPositionAndRSList;
+use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
+use Modules\PersonMS\app\Http\Enums\PersonStatusEnum;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Natural;
 use Modules\PersonMS\app\Models\Person;
@@ -30,6 +36,87 @@ use Validator;
 class PersonLicenseController extends Controller
 {
     use PersonTrait, MilitaryServiceTrait, DependentTrait, IsarTrait, EducationRecordTrait, OtpTrait;
+
+    public function pendingIndex(Request $request)
+    {
+
+        $searchTerm = $request->name ?? null;
+        $perPage = $request->perPage ?? 10;
+        $pageNum = $request->pageNum ?? 1;
+        $ounitID = $request->ounitID ?? null;
+        $positionID = $request->positionID ?? null;
+
+        $startDate = $request->has('startDate') ? convertJalaliPersianCharactersToGregorian($request->startDate) : null;
+        $endDate = $request->has('endDate') ? convertJalaliPersianCharactersToGregorian($request->endDate) : null;
+
+        if ($ounitID) {
+            $ounit = OrganizationUnit::with(['descendantsAndSelf'])->find($ounitID);
+            $ounitIDs = $ounit->descendantsAndSelf->pluck('id')->toArray();
+        } else {
+            $ounitIDs = null;
+        }
+
+        $pList = Employee::joinRelationship('workForce.person.natural', [
+            'person' => function ($join) {
+                $join->finalPersonStatus()
+                    ->whereIn('statuses.name', [PersonStatusEnum::PENDING_TO_APPROVE->value]);
+            }
+        ])
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->SearchDisplayName($searchTerm);
+            })
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('person_status.create_date', [$startDate, $endDate]);
+            })
+            ->when($positionID || $ounitIDs, function ($query) use ($ounitIDs, $positionID) {
+                $query
+                    ->joinRelationship('recruitmentScripts')
+                    ->when($ounitIDs, function ($query) use ($ounitIDs) {
+                        $query
+                            ->whereIntegerInRaw('recruitment_scripts.organization_unit_id', $ounitIDs);
+                    })
+                    ->when($positionID, function ($query) use ($ounitIDs, $positionID) {
+                        $query
+                            ->where('recruitment_scripts.position_id', $positionID);
+                    });
+            })
+            ->addSelect([
+                'naturals.mobile',
+                'naturals.gender_id',
+                'persons.display_name',
+                'persons.national_code',
+                'person_status.create_date as last_updated',
+            ])
+            ->with(['recruitmentScripts' => function ($query) use ($ounitIDs) {
+                $query
+                    ->finalStatus()
+                    ->join('positions', 'recruitment_scripts.position_id', '=', 'positions.id')
+                    ->join('script_types', 'recruitment_scripts.script_type_id', '=', 'script_types.id')
+                    ->select([
+                        'recruitment_scripts.*',
+                        'positions.name as position_name',
+                        'script_types.title as script_type_title',
+                        'statuses.name as status_name',
+                        'statuses.class_name as status_class_name',
+                    ])
+                    ->with(['organizationUnit' => function ($query) {
+                        $query->leftJoin('village_ofcs', function ($join) {
+                            $join->on('village_ofcs.id', '=', 'organization_units.unitable_id')
+                                ->where('unitable_type', '=', VillageOfc::class);
+                        })
+                            ->select([
+                                'village_ofcs.abadi_code as abadi_code',
+                                'organization_units.*'
+                            ])
+                            ->with(['ancestors' => function ($query) {
+                                $query->where('unitable_type', '!=', StateOfc::class);
+                            }]);
+                    },]);
+            }])
+            ->paginate($perPage, page: $pageNum);
+
+        return PersonListWithPositionAndRSList::collection($pList);
+    }
 
     public function personInfoSummary(Request $request)
     {

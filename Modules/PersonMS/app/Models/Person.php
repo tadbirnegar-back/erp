@@ -75,7 +75,7 @@ class Person extends Model
     }
 
 
-    public function scopeFinalStatus($query)
+    public function scopeFinalPersonStatus($query)
     {
         return $query->join('person_status', 'persons.id', '=', 'person_status.person_id')
             ->join('statuses', 'person_status.status_id', '=', 'statuses.id')
@@ -204,6 +204,25 @@ class Person extends Model
             ->latest('create_date');
     }
 
+    public function totalRecruitmentScripts()
+    {
+        return $this->hasManyDeep(
+            RecruitmentScript::class,
+            [WorkForce::class, Employee::class], // Intermediate models
+            [
+                'person_id',                // Foreign key on the WorkForce model
+                'id',         // Foreign key on the Employee model
+                'employee_id'               // Foreign key on the RecruitmentScript model
+            ],
+            [
+                'id',                       // Local key on the current model
+                'workforceable_id',                       // Local key on the WorkForce model
+                'id'                        // Local key on the Employee model
+            ]
+        )
+            ->where('workforceable_type', Employee::class);
+    }
+
     public function customers()
     {
         return $this->hasMany(Customer::class, 'person_id');
@@ -281,6 +300,20 @@ class Person extends Model
     public function personLicenses(): HasMany
     {
         return $this->hasMany(PersonLicense::class, 'person_id');
+    }
+
+    public function scopeSearchDisplayName($query, $term)
+    {
+        // Split the term into words
+        $words = explode(' ', $term);
+
+        // Add `*` wildcard to each word and ensure minimum 3 characters
+        $filteredWords = array_map(fn($word) => strlen($word) >= 3 ? $word . '*' : $word, $words);
+
+        // Join with `+` for Boolean Mode (all terms must match)
+        $searchTerm = '+' . implode(' +', $filteredWords);
+
+        return $query->whereRaw('MATCH(display_name) AGAINST (? IN BOOLEAN MODE)', [$searchTerm]);
     }
 
 }

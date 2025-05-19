@@ -344,7 +344,8 @@ class OrganizationUnit extends Model
 
     public function village(): HasOne
     {
-        return $this->hasOne(VillageOfc::class, 'id', 'unitable_id');
+        return $this->hasOne(VillageOfc::class, 'id', 'unitable_id')
+            ->where('unitable_type', VillageOfc::class);
     }
 
     public function fiscalYears()
