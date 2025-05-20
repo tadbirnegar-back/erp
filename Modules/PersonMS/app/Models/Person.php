@@ -305,13 +305,13 @@ class Person extends Model
 
     public function scopeSearchDisplayName($query, $term)
     {
-        // Split the term into words
+        // Split
         $words = explode(' ', $term);
 
-        // Add `*` wildcard to each word and ensure minimum 3 characters
+        // Add `*` wildcard
         $filteredWords = array_map(fn($word) => strlen($word) >= 3 ? $word . '*' : $word, $words);
 
-        // Join with `+` for Boolean Mode (all terms must match)
+        // Join with `+` for Boolean Mode
         $searchTerm = '+' . implode(' +', $filteredWords);
 
         return $query->whereRaw('MATCH(display_name) AGAINST (? IN BOOLEAN MODE)', [$searchTerm]);

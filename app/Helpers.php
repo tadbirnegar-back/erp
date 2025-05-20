@@ -134,20 +134,25 @@ function convertDateTimeHaveDashJalaliPersianCharactersToGregorian(string $persi
     return $dateTimeString;
 }
 
-function convertGregorianToJalali(string $gregorianDate)
+function convertGregorianToJalali(string $gregorianDate, bool $returnPersian = true)
 {
     // Convert the Gregorian date to a Jalali date
     $jalaliDate = CalendarUtils::strftime('Y/m/d', strtotime($gregorianDate));
 
-    // Convert numbers to Persian characters
-    $persianCharJalaliDate = CalendarUtils::convertNumbers($jalaliDate, false);
+    if ($returnPersian) {
+        // Convert numbers to Persian characters
+        $persianCharJalaliDate = CalendarUtils::convertNumbers($jalaliDate, false);
 
-    return $persianCharJalaliDate;
+        return $persianCharJalaliDate;
+    }
+    return $jalaliDate;
 }
-function convertToEnglishNumbersWithoutZeros($input) {
+
+function convertToEnglishNumbersWithoutZeros($input)
+{
     $persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
     $english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    $output = str_replace($persian, $english , $input);
+    $output = str_replace($persian, $english, $input);
 
     return $output;
 }

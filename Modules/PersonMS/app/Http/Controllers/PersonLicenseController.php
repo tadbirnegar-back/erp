@@ -57,14 +57,14 @@ class PersonLicenseController extends Controller
         }
 
         $pList = Employee::joinRelationship('workForce.person.natural', [
-            'person' => function ($join) {
+            'person' => function ($join) use ($searchTerm) {
                 $join->finalPersonStatus()
-                    ->whereIn('statuses.name', [PersonStatusEnum::PENDING_TO_APPROVE->value]);
+                    ->whereIn('statuses.name', [PersonStatusEnum::PENDING_TO_APPROVE->value])
+                    ->when($searchTerm, function ($query) use ($searchTerm) {
+                        $query->searchDisplayName($searchTerm);
+                    });
             }
         ])
-            ->when($searchTerm, function ($query) use ($searchTerm) {
-                $query->SearchDisplayName($searchTerm);
-            })
             ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('person_status.create_date', [$startDate, $endDate]);
             })
@@ -85,6 +85,7 @@ class PersonLicenseController extends Controller
                 'naturals.gender_id',
                 'persons.display_name',
                 'persons.national_code',
+                'persons.id as p_id',
                 'person_status.create_date as last_updated',
             ])
             ->with(['recruitmentScripts' => function ($query) use ($ounitIDs) {
@@ -113,6 +114,7 @@ class PersonLicenseController extends Controller
                             }]);
                     },]);
             }])
+            ->distinct('employees.id')
             ->paginate($perPage, page: $pageNum);
 
         return PersonListWithPositionAndRSList::collection($pList);
@@ -438,6 +440,8 @@ class PersonLicenseController extends Controller
 
             $data['personID'] = $data['personID'] ?? $user->person_id;
             $person = Person::with('natural')->find($data['personID']);
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
 
             if ($data['isMarried'] == 1) {
                 $data['dateOfBirth'] = isset($data['birthDate']) ? convertJalaliPersianCharactersToGregorian($data['birthDate']) : null;
@@ -458,6 +462,8 @@ class PersonLicenseController extends Controller
                 $n->spouse_id = $spouse->id;
                 $n->isMarried = true;
                 $n->save();
+
+                $spouse->status()->attach([$updateStatus->id, $pendingStatus->id]);
             } else {
                 $n = $person->natural;
                 $n->isMarried = false;
@@ -465,8 +471,7 @@ class PersonLicenseController extends Controller
                 $n->save();
             }
 
-            $updateStatus = $this->updatedPersonStatus();
-            $pendingStatus = $this->pendingToApprovePersonStatus();
+
             $person->status()->attach([$updateStatus->id, $pendingStatus->id]);
             DB::commit();
             return response()->json(['message' => 'با موفقیت ثبت شد']);
@@ -851,5 +856,193 @@ class PersonLicenseController extends Controller
         }
 
 
+    }
+
+    // ======================================= hrm confirm =======================================
+
+    public function confirmPersonalData(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'personID' => ['required'],
+            'firstName' => ['required'],
+            'lastName' => ['required'],
+            'fatherName' => ['required'],
+            'birthDate' => ['sometimes'],
+            'bcCode' => ['sometimes'],
+            'gender' => ['required'],
+            'bcIssueDate' => ['sometimes'],
+            'bcIssueLocation' => ['sometimes'],
+            'birthLocation' => ['sometimes'],
+            'bcSerial' => ['sometimes'],
+            'religionID' => ['sometimes'],
+            'religionTypeID' => ['sometimes'],
+            'militaryServiceStatus' => ['sometimes'],
+            'personLicenses' => ['sometimes', 'json'],
+
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            $this->updatePersonalData($request);
+            $person = Person::find($data['personID']);
+
+            $person->statuses()->attach([$this->confirmedPersonStatus()->id]);
+            DB::commit();
+            return response()->json([
+                'message' => 'با موفقیت تایید شد'
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'errors' => $e->getMessage()
+            ], 500);
+        }
+
+
+    }
+
+    public function confirmSpouse(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'personID' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        try {
+            DB::beginTransaction();
+            $person = Person::with('natural.spouse')->find($data['personID']);
+            if ($person->natural->spouse) {
+                $person->natural->spouse->status()->attach($this->confirmedPersonStatus()->id);
+            } else {
+                $person->status()->attach($this->confirmedPersonStatus()->id);
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت تایید شد']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'errors' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function confirmChildren(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'personID' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        try {
+            DB::beginTransaction();
+            $children = Dependent::where('main_person_id', $data['personID'])
+                ->where('relation_type_id', RelationTypeEnum::CHILD->value)
+                ->joinRelationship('status', function ($join) {
+                    $join->where('statuses.name', '=', DependentStatusEnum::PENDING->value);
+                })
+                ->get();
+
+            $activeStatus = $this->approvedDependentStatus();
+
+            $children->each(function (Dependent $child) use ($activeStatus) {
+                $child->status_id = $activeStatus->id;
+                $child->save();
+            });
+
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت تایید شد']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'errors' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function confirmIsar(Request $request)
+    {
+        $data = $request->all();
+
+        $validator = Validator::make($data, [
+            'personID' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            $activePersonLicense = $this->personLicenseApprovedStatus();
+            $activeIsarStatus = $this->approvedIsarStatus();
+
+            $isar = Isar::where('person_id', $data['personID'])->with('isarStatus')->first();
+            $isar->status_id = $activeIsarStatus->id;
+            $isar->save();
+
+            $isarCard = PersonLicense::where('license_type', PersonLicensesEnums::ISAR->value)
+                ->where('person_id', $data['personID'])
+                ->with('file')
+                ->first();
+
+            $isarCard->status_id = $activePersonLicense->id;
+            $isarCard->save();
+
+            DB::commit();
+            return response()->json(['message' => 'با موفقیت تایید شد']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'errors' => [
+                    'message' => $e->getMessage()
+                ]
+            ], 500);
+        }
+    }
+
+    public function confirmEducationalRecord(Request $request)
+    {
+        $data = $request->all();
+
+        $validator = Validator::make($data, [
+            'personID' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $eduStatus = $this->approvedEducationalRecordStatus();
+            $eduRecords = EducationalRecord::where('person_id', $data['personID'])
+                ->where('status_id', $this->pendingApproveEducationalRecordStatus()->id)
+                ->update(['status_id' => $eduStatus->id]);
+
+
+        } catch (Exception $e) {
+            return response()->json([
+                'errors' => [
+                    'message' => $e->getMessage()
+                ]
+            ], 500);
+        }
     }
 }

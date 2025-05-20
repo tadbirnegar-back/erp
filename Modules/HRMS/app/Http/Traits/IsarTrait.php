@@ -3,9 +3,7 @@
 namespace Modules\HRMS\app\Http\Traits;
 
 use Illuminate\Support\Facades\Cache;
-use Modules\HRMS\app\Http\Enums\EducationalRecordStatusEnum;
 use Modules\HRMS\app\Http\Enums\IsarStatusEnum;
-use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Isar;
 
 trait IsarTrait

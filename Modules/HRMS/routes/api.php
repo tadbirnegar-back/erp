@@ -202,6 +202,22 @@ Route::middleware([])->prefix('v2')->name('api.')->group(function () {
 
 });
 
+Route::middleware(['auth:api'])->prefix('v2')->name('api.')->group(function () {
+
+    Route::post('/hrm/confirm/info/summary', [PersonLicenseController::class, 'personInfoSummary']);
+
+    Route::post('/hrm/confirm/info/get-personal-data', [PersonLicenseController::class, 'getPersonalData']);
+
+    Route::post('/hrm/confirm/info/get-spouse-data', [PersonLicenseController::class, 'getSpouse']);
+
+    Route::post('/hrm/confirm/info/get-children-data', [PersonLicenseController::class, 'getChildren']);
+
+    Route::post('/hrm/confirm/info/get-isar-data', [PersonLicenseController::class, 'getIsar']);
+
+    Route::post('/hrm/confirm/info/get-educational-records-data', [PersonLicenseController::class, 'getEducationalRecords']);
+
+});
+
 Route::prefix('v1')->group(function () {
     Route::get('/hrm/military-service/exemption-types', [MilitaryServicesController::class, 'exemptionTypes']);
     Route::get('/hrm/military-services/statuses', [MilitaryServicesController::class, 'militaryServicesStatuses']);

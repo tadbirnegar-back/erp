@@ -192,9 +192,9 @@ trait PersonTrait
 
         $naturalPerson->person()->save($person);
 //        if ($person->latestStatus->name == PersonStatusEnum::PENDING_TO_FILL->value || $person->latestStatus->name == PersonStatusEnum::PENDING_TO_APPROVE->value) {
-            $updateStatus = $this->updatedPersonStatus();
-            $pendingStatus = $this->pendingToApprovePersonStatus();
-            $naturalPerson->person->statuses()->attach([$updateStatus->id, $pendingStatus->id]);
+        $updateStatus = $this->updatedPersonStatus();
+        $pendingStatus = $this->pendingToApprovePersonStatus();
+        $naturalPerson->person->statuses()->attach([$updateStatus->id, $pendingStatus->id]);
 //        }
 
         return $naturalPerson;
@@ -508,6 +508,11 @@ trait PersonTrait
     public function personLicensePendingStatus()
     {
         return PersonLicense::GetAllStatuses()->firstWhere('name', '=', PersonLicenseStatusEnum::PENDING->value);
+    }
+
+    public function personLicenseApprovedStatus()
+    {
+        return PersonLicense::GetAllStatuses()->firstWhere('name', '=', PersonLicenseStatusEnum::APPROVED->value);
     }
 
     public function personLicenseDataPreparation(array $data, int $personID, ?Status $status)

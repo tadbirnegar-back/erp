@@ -13,12 +13,12 @@ class PersonListWithPositionAndRSList extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->p_id,
             'displayName' => $this->display_name,
             'personnelCode' => $this->personnel_code,
             'nationalCode' => $this->national_code,
             'mobile' => $this->mobile,
-            'lastUpdated' => convertGregorianToJalali($this->last_updated),
+            'lastUpdated' => DateformatToHumanReadableJalali(convertGregorianToJalali($this->last_updated,),false),
             'positions' => $this->recruitmentScripts->map(function ($rs) {
                 return [
                     $rs->position_name . ' - ' . OunitCategoryEnum::getOunitCatByUnitableType($rs?->organizationUnit->unitable_type)->getLabel() . ' ' . $rs?->organizationUnit->name,
