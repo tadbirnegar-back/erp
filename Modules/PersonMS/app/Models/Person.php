@@ -71,7 +71,8 @@ class Person extends Model
 
     public function latestStatus()
     {
-        return $this->hasOneThrough(Status::class, PersonStatus::class, 'person_id', 'id', 'id', 'status_id');
+        return $this->hasOneThrough(Status::class, PersonStatus::class, 'person_id', 'id', 'id', 'status_id')
+            ->orderByDesc('person_status.id');
     }
 
 

@@ -21,11 +21,13 @@ use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Enums\PersonStatusEnum;
+use Modules\PersonMS\app\Http\Traits\PersonTrait;
+use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
     use BankTrait, ChequeTrait, TransactionTrait, FiscalYearTrait, DocumentTrait, AccountTrait, ArticleTrait, CircularSubjectsTrait;
-    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait, AnswerSheetTrait;
+    use JobTrait, PositionTrait, LevelTrait, JobTrait, RecruitmentScriptTrait, AnswerSheetTrait, PersonTrait;
 
     /**
      * Execute the job.
@@ -49,47 +51,8 @@ class testController extends Controller
 
     public function run()
     {
-        $pList = Employee::joinRelationship('workForce.person.natural', [
-            'person' => function ($join) {
-                $join->finalPersonStatus()
-                    ->whereIn('statuses.name', [PersonStatusEnum::PENDING_TO_APPROVE->value]);
-            }
-        ])
-            ->addSelect([
-                'naturals.mobile',
-                'naturals.gender_id',
-                'persons.display_name',
-                'person_status.create_date as last_updated',
-            ])
-            ->with(['recruitmentScripts' => function ($query) {
-                $query
-                    ->finalStatus()
-                    ->join('positions', 'recruitment_scripts.position_id', '=', 'positions.id')
-                    ->join('script_types', 'recruitment_scripts.script_type_id', '=', 'script_types.id')
-                    ->select([
-                        'recruitment_scripts.*',
-                        'positions.name as position_name',
-                        'script_types.title as script_type_title',
-                        'statuses.name as status_name',
-                        'statuses.class_name as status_class_name',
-                    ])
-                    ->with(['organizationUnit' => function ($query) {
-                        $query->leftJoin('village_ofcs', function ($join) {
-                            $join->on('village_ofcs.id', '=', 'organization_units.unitable_id')
-                                ->where('unitable_type', '=', VillageOfc::class);
-                        })
-                            ->select([
-                                'village_ofcs.abadi_code as abadi_code',
-                                'organization_units.*'
-                            ])
-                            ->with(['ancestors' => function ($query) {
-                                $query->where('unitable_type', '!=', StateOfc::class);
-                            }]);
-                    },]);
-            }])
-            ->paginate(10, page: 1);
 
-        return PersonListWithPositionAndRSList::collection($pList);
+
 
 //        $pList = Person::joinRelationship('natural')
 //            ->finalPersonStatus()
@@ -121,7 +84,7 @@ class testController extends Controller
 //            }])
 //            ->paginate(10, page: 1);
 
-        dump($pList);
+//        dump($pList);
 
 //        $status = Status::where('model', Payment::class)->where('name', 'پرداخت شده')->first();
 //

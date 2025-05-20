@@ -142,20 +142,26 @@ class PersonLicenseController extends Controller
             $join->where('name', IsarStatusEnum::PENDING_APPROVE->value);
         })->exists();
 
-        $educationStatus = EducationalRecord::where('person_id', $personID)->joinRelationship('status', function ($join) {
-
-            $join->where('name', EducationalRecordStatusEnum::PENDING_APPROVE->value);
-        })->exists();
+        $educationStatus = EducationalRecord::where('person_id', $personID)->joinRelationship('status')
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+            ])
+            ->get();
 
         $personalInfoStatusObject = [
             'name' => $person->latestStatus->name,
             'className' => $person->latestStatus->class_name,
         ];
 
-        $spouseInfoStatusObject = [
-            'name' => $person->natural->spouse->latestStatus->name,
-            'className' => $person->natural->spouse->latestStatus->class_name,
-        ];
+        $spouseInfoStatusObject = is_null($person->natural->isMarried) && is_null($person->natural->spouse) ? [
+            'name' => PersonStatusEnum::PENDING_TO_FILL->value,
+            'className' => PersonStatusEnum::PENDING_TO_FILL->getClassName(),
+
+        ] : ($person->natural->isMarried != 1 ? $personalInfoStatusObject : [
+            'name' => $person->natural?->spouse?->latestStatus->name,
+            'className' => $person->natural?->spouse?->latestStatus->class_name,
+        ]);
 
         $childrenInfoStatusObject = (!$childrenStatus) ? [
             'name' => DependentStatusEnum::ACTIVE->value,
@@ -173,21 +179,26 @@ class PersonLicenseController extends Controller
             'className' => 'primary'
         ];
 
-        $educationInfoStatusObject = (!$educationStatus) ? [
-            'name' => EducationalRecordStatusEnum::APPROVED->value,
-            'className' => 'success'
-        ] : [
-            'name' => EducationalRecordStatusEnum::PENDING_APPROVE->value,
-            'className' => 'primary'
-        ];
+        $educationInfoStatusObject = $educationStatus->isEmpty() ? [
+            'name' => EducationalRecordStatusEnum::PENDING_TO_FILL->value,
+            'className' => 'warning'
+        ] : ($educationStatus->where('status_name', EducationalRecordStatusEnum::PENDING_APPROVE->value)->isNotEmpty()
+            ? [
+                'name' => EducationalRecordStatusEnum::PENDING_APPROVE->value,
+                'className' => 'primary'
+            ]
+            : [
+                'name' => EducationalRecordStatusEnum::APPROVED->value,
+                'className' => 'success'
+            ]);
 
         $result = [
             'person' => [
                 'displayName' => $person->display_name,
                 'avatar' => [
-                    'slug' => $person->avatar->slug,
-                    'name' => $person->avatar->name,
-                    'size' => $person->avatar->size,
+                    'slug' => $person->avatar?->slug,
+                    'name' => $person->avatar?->name,
+                    'size' => $person->avatar?->size,
 //                    'type'=>$person->avatar->mimeType->name,
                 ],
                 'personnelCode' => '-',
@@ -401,13 +412,14 @@ class PersonLicenseController extends Controller
         $data = $request->all();
         $validator = Validator::make($data, [
 
-            'nationalCode' => ['required'],
-            'firstName' => ['required'],
-            'lastName' => ['required'],
-            'fatherName' => ['required'],
+            'nationalCode' => ['sometimes'],
+            'isMarried' => ['required'],
+            'firstName' => ['sometimes'],
+            'lastName' => ['sometimes'],
+            'fatherName' => ['sometimes'],
             'birthDate' => ['sometimes'],
             'bcCode' => ['sometimes'],
-            'gender' => ['required'],
+            'gender' => ['sometimes'],
             'birthLocation' => ['sometimes'],
             'bcSerial' => ['sometimes'],
             'militaryServiceStatus' => ['sometimes'],
