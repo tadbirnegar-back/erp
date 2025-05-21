@@ -250,9 +250,6 @@ class RegisterEmployeeController extends Controller
                 $this->naturalUpdate($data, $p->natural) :
                 $this->naturalStore($data);
 
-            $updateStatus = $this->updatedPersonStatus();
-            $pendingStatus = $this->pendingToApprovePersonStatus();
-            $personResult->person->statuses()->attach([$updateStatus->id, $pendingStatus->id]);
 
             $data['personID'] = $personResult->person->id;
             $data['password'] = $data['nationalCode'];

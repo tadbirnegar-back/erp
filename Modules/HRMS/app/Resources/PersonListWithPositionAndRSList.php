@@ -18,7 +18,7 @@ class PersonListWithPositionAndRSList extends JsonResource
             'personnelCode' => $this->personnel_code,
             'nationalCode' => $this->national_code,
             'mobile' => $this->mobile,
-            'lastUpdated' => DateformatToHumanReadableJalali(convertGregorianToJalali($this->last_updated,),false),
+            'lastUpdated' => DateformatToHumanReadableJalali(convertGregorianToJalali($this->last_updated,), false),
             'positions' => $this->recruitmentScripts->map(function ($rs) {
                 return [
                     $rs->position_name . ' - ' . OunitCategoryEnum::getOunitCatByUnitableType($rs?->organizationUnit->unitable_type)->getLabel() . ' ' . $rs?->organizationUnit->name,
@@ -37,6 +37,7 @@ class PersonListWithPositionAndRSList extends JsonResource
                 ];
             }),
             'gender' => $this->gender_id == 1 ? 'مرد' : 'زن',
+            'isMarried' => is_null($this->isMarried) ? '-' : ($this->isMarried == 1 ? 'متاهل' : 'مجرد'),
 
         ];
     }

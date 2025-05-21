@@ -37,6 +37,7 @@ use Modules\HRMS\app\Models\RelativeType;
 use Modules\HRMS\app\Models\Resume;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Notifications\RegisterNotification;
+use Modules\HRMS\app\Resources\PersonListWithPositionAndRSList;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Person;
@@ -80,6 +81,13 @@ class EmployeeController extends Controller
         $result = $this->employeeIndex($perPage, $pageNum, $data);
 
         return response()->json($result);
+    }
+
+    public function indexAdvancedV2(Request $request)
+    {
+        $pList = $this->employeeListWithFilter($request->all());
+
+        return PersonListWithPositionAndRSList::collection($pList);
     }
 
     /**

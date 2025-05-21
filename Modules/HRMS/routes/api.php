@@ -226,6 +226,9 @@ Route::middleware(['auth:api', 'route'])->prefix('v2')->name('api.')->group(func
 
     Route::put('/hrm/approve/info/educational-records-data', [PersonLicenseController::class, 'confirmEducationalRecord']);
 
+    Route::post('/hrm/employee/list', [EmployeeController::class, 'indexAdvancedV2']);
+
+
 });
 
 Route::prefix('v1')->group(function () {
