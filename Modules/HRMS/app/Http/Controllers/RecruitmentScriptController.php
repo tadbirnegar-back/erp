@@ -136,7 +136,7 @@ class RecruitmentScriptController extends Controller
 
         if ($user->hasPermissionForRoute($requestedRoute) || $script->employee->person->id == $user->person->id) {
 
-            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position.levels', 'level', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason.person.avatar', 'rejectReason.attachment');
+            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position.levels', 'level', 'employee.person.natural', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason.person.avatar', 'rejectReason.attachment');
         } else {
             return response()->json(['message' => 'شما به این بخش دسترسی ندارید'], 403);
         }
