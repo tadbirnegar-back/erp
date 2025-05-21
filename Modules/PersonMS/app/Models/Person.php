@@ -80,7 +80,7 @@ class Person extends Model
     {
         return $query->join('person_status', 'persons.id', '=', 'person_status.person_id')
             ->join('statuses', 'person_status.status_id', '=', 'statuses.id')
-            ->whereRaw('person_status.create_date = (SELECT MAX(create_date) FROM person_status WHERE person_id = persons.id)');
+            ->whereRaw('person_status.id = (SELECT MAX(id) FROM person_status WHERE person_id = persons.id)');
 
     }
 

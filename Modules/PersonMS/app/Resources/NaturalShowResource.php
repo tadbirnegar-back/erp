@@ -52,6 +52,8 @@ class NaturalShowResource extends JsonResource
         if ($this->relationLoaded('spouse')) {
             $result['spouse'] = !is_null($this->spouse) ? self::make($this->spouse) : null;
         }
+
+        $result['childStatus'] = $this->childStatus;
         return $result;
     }
 }

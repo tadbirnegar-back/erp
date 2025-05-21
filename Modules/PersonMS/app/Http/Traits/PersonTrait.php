@@ -173,7 +173,7 @@ trait PersonTrait
             'father_name' => $data['fatherName'] ?? null,
             'birth_date' => $data['dateOfBirth'] ?? null,
             'bc_code' => $data['bcCode'] ?? null,
-            'isMarried' => $data['isMarried'] ?? null,
+            'isMarried' => $data['isMarried'] ?? $naturalPerson->isMarried,
             'gender_id' => $data['gender'],
             'bc_issue_date' => $data['bcIssueDate'] ?? null,
             'bc_issue_location' => $data['bcIssueLocation'] ?? null,

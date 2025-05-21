@@ -25,6 +25,7 @@ use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
+use Modules\PersonMS\app\Http\Enums\PersonLicenseStatusEnum;
 use Modules\PersonMS\app\Http\Enums\PersonStatusEnum;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
 use Modules\PersonMS\app\Models\Natural;
@@ -134,7 +135,31 @@ class PersonLicenseController extends Controller
         $personID = $data['personID'] ?? $user->person_id;
 
         $person = Person::with([
-            'natural.spouse.latestStatus', 'avatar', 'latestStatus'])->find($personID);
+            'natural.spouse.latestStatus', 'avatar', 'latestStatus'])
+            ->joinRelationship('workForce.employee')
+            ->finalPersonStatus()
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+                'employees.personnel_code',
+            ])
+            ->find($personID);
+        $pls = PersonLicense::where('person_id', $person->id)
+            ->whereIntegerInRaw('license_type', [
+                PersonLicensesEnums::BIRTH_CERTIFICATE->value,
+                PersonLicensesEnums::MARRIAGE_PAGE->value,
+                PersonLicensesEnums::CHILDREN_PAGE->value,
+                PersonLicensesEnums::NATIONAL_ID_CARD->value,
+                PersonLicensesEnums::BACK_OF_ID_CARD->value,
+            ])
+            ->joinRelationship('status')
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+            ])
+            ->get();
+        $confirmedPLs = $pls->where('status_name', PersonLicenseStatusEnum::APPROVED->value);
+        $pendingPLs = $pls->where('status_name', PersonLicenseStatusEnum::PENDING->value);
 
         $childrenStatus = Dependent::where('main_person_id', $personID)->joinRelationship('status', function ($join) {
             $join->where('name', DependentStatusEnum::PENDING->value);
@@ -151,16 +176,22 @@ class PersonLicenseController extends Controller
             ])
             ->get();
 
-        $personalInfoStatusObject = [
-            'name' => $person->latestStatus->name,
-            'className' => $person->latestStatus->class_name,
-        ];
+        $personalInfoStatusObject = $pls->isEmpty() ? [
+            'name' => PersonStatusEnum::PENDING_TO_FILL->value,
+            'className' => PersonStatusEnum::PENDING_TO_FILL->getClassName(),
+        ] : ($confirmedPLs->isEmpty() && $pendingPLs->isNotEmpty() ? [
+            'name' => PersonStatusEnum::PENDING_TO_APPROVE->value,
+            'className' => PersonStatusEnum::PENDING_TO_APPROVE->getClassName(),
+        ] : [
+            'name' => PersonStatusEnum::CONFIRMED->value,
+            'className' => PersonStatusEnum::CONFIRMED->getClassName(),
+        ]);
 
         $spouseInfoStatusObject = is_null($person->natural->isMarried) && is_null($person->natural->spouse) ? [
             'name' => PersonStatusEnum::PENDING_TO_FILL->value,
             'className' => PersonStatusEnum::PENDING_TO_FILL->getClassName(),
 
-        ] : ($person->natural->isMarried != 1 ? $personalInfoStatusObject : [
+        ] : ($person->natural->isMarried != 1 && !is_null($person->natural->isMarried) ? $personalInfoStatusObject : [
             'name' => $person->natural?->spouse?->latestStatus->name,
             'className' => $person->natural?->spouse?->latestStatus->class_name,
         ]);
@@ -203,7 +234,11 @@ class PersonLicenseController extends Controller
                     'size' => $person->avatar?->size,
 //                    'type'=>$person->avatar->mimeType->name,
                 ],
-                'personnelCode' => '-',
+                'personnelCode' => $person->personnel_code,
+                'status' => [
+                    'name' => $person->status_name,
+                    'className' => $person->status_class_name,
+                ],
             ],
             'statuses' => [
                 'personalData' => $personalInfoStatusObject,
@@ -499,14 +534,24 @@ class PersonLicenseController extends Controller
 
         $children = Dependent::where('main_person_id', $personID)
             ->where('relation_type_id', RelationTypeEnum::CHILD->value)
+            ->joinRelationship('status')
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+            ])
             ->with(['relatedPerson.natural', 'relatedPerson.personLicenses.file.mimeType'])
             ->get();
 
         if ($children->isNotEmpty()) {
-            $kids = $children->pluck('relatedPerson')->map(function ($kid) {
-                $kidNatural = $kid->natural;
+            $kids = $children->map(function ($kid) {
+                $kidNatural = $kid->relatedPerson->natural;
 
-                $kidNatural->setAttribute('national_code', $kid->national_code);
+                $kidNatural->setAttribute('national_code', $kid->relatedPerson->national_code);
+                $status = [
+                    'name' => $kid->status_name,
+                    'className' => $kid->status_class_name,
+                ];
+                $kidNatural->setAttribute('childStatus', $status);
 
 
                 $kidNatural->setAttribute('licenses', $kid->personLicenses);
@@ -741,6 +786,11 @@ class PersonLicenseController extends Controller
         $personID = $data['personID'] ?? $user->person_id;
 
         $eduRecords = EducationalRecord::where('person_id', $personID)
+            ->joinRelationship('status')
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+            ])
             ->with(['levelOfEducation', 'attachments.mimeType'])
             ->get();
 
@@ -763,6 +813,10 @@ class PersonLicenseController extends Controller
 
                     ];
                 })->first(),
+                'status' => [
+                    'name' => $eduRecord->status_name,
+                    'className' => $eduRecord->status_class_name,
+                ],
             ];
         });
 
@@ -893,7 +947,18 @@ class PersonLicenseController extends Controller
             $this->updatePersonalData($request);
             $person = Person::find($data['personID']);
 
-            $person->statuses()->attach([$this->confirmedPersonStatus()->id]);
+            $pls = PersonLicense::where('person_id', $person->id)
+                ->whereIntegerInRaw('license_type', [
+                    PersonLicensesEnums::BIRTH_CERTIFICATE->value,
+                    PersonLicensesEnums::MARRIAGE_PAGE->value,
+                    PersonLicensesEnums::CHILDREN_PAGE->value,
+                    PersonLicensesEnums::NATIONAL_ID_CARD->value,
+                    PersonLicensesEnums::BACK_OF_ID_CARD->value,
+                ])
+                ->joinRelationship('status', function ($join) {
+                    $join->where('statuses.name', '=', PersonLicenseStatusEnum::PENDING->value);
+                })->update(['status_id' => $this->personLicenseApprovedStatus()->id]);
+
             DB::commit();
             return response()->json([
                 'message' => 'با موفقیت تایید شد'
@@ -921,6 +986,8 @@ class PersonLicenseController extends Controller
         try {
             DB::beginTransaction();
             $person = Person::with('natural.spouse')->find($data['personID']);
+            $this->storeSpouse($request);
+
             if ($person->natural->spouse) {
                 $person->natural->spouse->status()->attach($this->confirmedPersonStatus()->id);
             } else {
@@ -949,19 +1016,19 @@ class PersonLicenseController extends Controller
         }
         try {
             DB::beginTransaction();
+            $activeStatus = $this->approvedDependentStatus();
             $children = Dependent::where('main_person_id', $data['personID'])
                 ->where('relation_type_id', RelationTypeEnum::CHILD->value)
                 ->joinRelationship('status', function ($join) {
                     $join->where('statuses.name', '=', DependentStatusEnum::PENDING->value);
                 })
-                ->get();
+                ->update(['status_id' => $activeStatus->id]);
 
-            $activeStatus = $this->approvedDependentStatus();
 
-            $children->each(function (Dependent $child) use ($activeStatus) {
-                $child->status_id = $activeStatus->id;
-                $child->save();
-            });
+//            $children->each(function (Dependent $child) use ($activeStatus) {
+//                $child->status_id = $activeStatus->id;
+//                $child->save();
+//            });
 
             DB::commit();
             return response()->json(['message' => 'با موفقیت تایید شد']);
@@ -991,7 +1058,7 @@ class PersonLicenseController extends Controller
             DB::beginTransaction();
             $activePersonLicense = $this->personLicenseApprovedStatus();
             $activeIsarStatus = $this->approvedIsarStatus();
-
+            $this->updateIsar($request);
             $isar = Isar::where('person_id', $data['personID'])->with('isarStatus')->first();
             $isar->status_id = $activeIsarStatus->id;
             $isar->save();
@@ -1031,11 +1098,14 @@ class PersonLicenseController extends Controller
         }
 
         try {
+            DB::beginTransaction();
             $eduStatus = $this->approvedEducationalRecordStatus();
             $eduRecords = EducationalRecord::where('person_id', $data['personID'])
                 ->where('status_id', $this->pendingApproveEducationalRecordStatus()->id)
                 ->update(['status_id' => $eduStatus->id]);
+            DB::commit();
 
+            return response()->json(['message' => 'با موفقیت تایید شد']);
 
         } catch (Exception $e) {
             return response()->json([

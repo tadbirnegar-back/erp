@@ -216,6 +216,16 @@ Route::middleware(['auth:api'])->prefix('v2')->name('api.')->group(function () {
 
     Route::post('/hrm/confirm/info/get-educational-records-data', [PersonLicenseController::class, 'getEducationalRecords']);
 
+    Route::put('/hrm/approve/info/personal-data', [PersonLicenseController::class, 'confirmPersonalData']);
+
+    Route::put('/hrm/approve/info/spouse-data', [PersonLicenseController::class, 'confirmSpouse']);
+
+    Route::put('/hrm/approve/info/children-data', [PersonLicenseController::class, 'confirmChildren']);
+
+    Route::put('/hrm/approve/info/isar-data', [PersonLicenseController::class, 'confirmIsar']);
+
+    Route::put('/hrm/approve/info/educational-records-data', [PersonLicenseController::class, 'confirmEducationalRecord']);
+
 });
 
 Route::prefix('v1')->group(function () {

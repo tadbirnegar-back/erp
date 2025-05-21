@@ -17,7 +17,7 @@ class EducationRecordStatusSeeder extends Seeder
         $plStatuses = collect(EducationalRecordStatusEnum::cases());
 
         $plStatuses->each(function ($plStatus) {
-            Status::insertOrIgnore([
+            Status::updateOrCreate([
                 'name' => $plStatus->value,
                 'model' => EducationalRecord::class,
             ]);
