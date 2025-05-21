@@ -15,7 +15,7 @@ class DependentStatusSeeder extends Seeder
         $userStatusesData = json_decode(file_get_contents(realpath(__DIR__ . '/DependentStatus.json')), true);
 
         foreach ($userStatusesData as $userStatus) {
-            \DB::table('statuses')->insertGetId([
+            \DB::table('statuses')->updateOrInsert([
                 'name' => $userStatus['name'],
                 'model' => Dependent::class,
             ]);

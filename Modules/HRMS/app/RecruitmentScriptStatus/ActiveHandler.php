@@ -262,6 +262,7 @@ class ActiveHandler implements StatusHandlerInterface
     public function changePendingScriptsToNewUser()
     {
         $oldScript = RecruitmentScript::query()
+            ->finalStatus()
             ->where('organization_unit_id', $this->script->organization_unit_id)
             ->where('position_id', $this->script->position_id)
             ->where('script_type_id', $this->script->script_type_id)

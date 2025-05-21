@@ -198,12 +198,12 @@ Route::middleware([])->prefix('v2')->name('api.')->group(function () {
 
     Route::get('/hrm/isar-types/list', [EmployeeController::class, 'isarsStatusesIndex']);
 
-    Route::post('/hrm/person/confirm-list', [PersonLicenseController::class, 'pendingIndex']);
 
 });
 
-Route::middleware(['auth:api'])->prefix('v2')->name('api.')->group(function () {
+Route::middleware(['auth:api', 'route'])->prefix('v2')->name('api.')->group(function () {
 
+    Route::post('/hrm/person/confirm-list', [PersonLicenseController::class, 'pendingIndex']);
     Route::post('/hrm/confirm/info/summary', [PersonLicenseController::class, 'personInfoSummary']);
 
     Route::post('/hrm/confirm/info/get-personal-data', [PersonLicenseController::class, 'getPersonalData']);

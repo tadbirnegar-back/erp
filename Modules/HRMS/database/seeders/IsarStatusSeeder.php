@@ -17,7 +17,7 @@ class IsarStatusSeeder extends Seeder
         $plStatuses = collect(IsarStatusEnum::cases());
 
         $plStatuses->each(function ($plStatus) {
-            Status::insertOrIgnore([
+            Status::updateOrCreate([
                 'name' => $plStatus->value,
                 'model' => Isar::class,
             ]);

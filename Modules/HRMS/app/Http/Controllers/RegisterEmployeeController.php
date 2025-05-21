@@ -235,13 +235,9 @@ class RegisterEmployeeController extends Controller
             ], 422);
         }
 
-        $userVerified = $this->userOtpVerifiedByDate($data['mobile'], now()->subHours(1));
+//        $userVerified = $this->userOtpVerifiedByDate($data['mobile'], now()->subHours(1));
 
-        if (!$userVerified) {
-            return response()->json([
-                'message' => 'کاربر تایید نشده است',
-            ], 403);
-        }
+
 
         try {
             DB::beginTransaction();
@@ -253,6 +249,10 @@ class RegisterEmployeeController extends Controller
             $personResult = !is_null($p) ?
                 $this->naturalUpdate($data, $p->natural) :
                 $this->naturalStore($data);
+
+            $updateStatus = $this->updatedPersonStatus();
+            $pendingStatus = $this->pendingToApprovePersonStatus();
+            $personResult->person->statuses()->attach([$updateStatus->id, $pendingStatus->id]);
 
             $data['personID'] = $personResult->person->id;
             $data['password'] = $data['nationalCode'];

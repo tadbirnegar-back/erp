@@ -493,7 +493,7 @@ class RecruitmentScriptController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در تایید حکم', 'error', 'error'], 500);
+            return response()->json(['message' => 'خطا در تایید حکم', $e->getMessage(), $e->getTrace()], 500);
         }
     }
 
