@@ -2,7 +2,13 @@
 
 namespace Modules\PersonMS\app\Http\Traits;
 
+use Modules\HRMS\app\Http\Enums\DependentStatusEnum;
+use Modules\HRMS\app\Http\Enums\EducationalRecordStatusEnum;
+use Modules\HRMS\app\Http\Enums\IsarStatusEnum;
+use Modules\HRMS\app\Models\Dependent;
+use Modules\HRMS\app\Models\EducationalRecord;
 use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\Isar;
 use Modules\HRMS\app\Models\MilitaryService;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
 use Modules\PersonMS\app\Http\Enums\PersonLicenseStatusEnum;
@@ -513,6 +519,137 @@ trait PersonTrait
     public function personLicenseApprovedStatus()
     {
         return PersonLicense::GetAllStatuses()->firstWhere('name', '=', PersonLicenseStatusEnum::APPROVED->value);
+    }
+
+    public function calculatePersonStatus(int $personID)
+    {
+        $person = Person::with([
+            'natural.spouse.latestStatus', 'avatar', 'latestStatus'])
+            ->joinRelationship('workForce.employee')
+            ->finalPersonStatus()
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+                'employees.personnel_code',
+            ])
+            ->find($personID);
+        $pls = PersonLicense::where('person_id', $person->id)
+            ->whereIntegerInRaw('license_type', [
+                PersonLicensesEnums::BIRTH_CERTIFICATE->value,
+                PersonLicensesEnums::MARRIAGE_PAGE->value,
+                PersonLicensesEnums::CHILDREN_PAGE->value,
+                PersonLicensesEnums::NATIONAL_ID_CARD->value,
+                PersonLicensesEnums::BACK_OF_ID_CARD->value,
+            ])
+            ->joinRelationship('status')
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+            ])
+            ->get();
+        $confirmedPLs = $pls->where('status_name', PersonLicenseStatusEnum::APPROVED->value);
+        $pendingPLs = $pls->where('status_name', PersonLicenseStatusEnum::PENDING->value);
+
+        $childrenStatus = Dependent::where('main_person_id', $personID)->joinRelationship('status', function ($join) {
+            $join->where('name', DependentStatusEnum::PENDING->value);
+        })->exists();
+
+        $isarStatus = Isar::where('person_id', $personID)->joinRelationship('status', function ($join) {
+            $join->where('name', IsarStatusEnum::PENDING_APPROVE->value);
+        })->exists();
+
+        $educationStatus = EducationalRecord::where('person_id', $personID)->joinRelationship('status')
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+            ])
+            ->get();
+
+        $personalInfoStatusObject = $pls->isEmpty() ? [
+            'name' => PersonStatusEnum::PENDING_TO_FILL->value,
+            'className' => PersonStatusEnum::PENDING_TO_FILL->getClassName(),
+        ] : ($confirmedPLs->isEmpty() && $pendingPLs->isNotEmpty() ? [
+            'name' => PersonStatusEnum::PENDING_TO_APPROVE->value,
+            'className' => PersonStatusEnum::PENDING_TO_APPROVE->getClassName(),
+        ] : [
+            'name' => PersonStatusEnum::CONFIRMED->value,
+            'className' => PersonStatusEnum::CONFIRMED->getClassName(),
+        ]);
+
+        $spouseInfoStatusObject = is_null($person->natural->isMarried) && is_null($person->natural->spouse) ? [
+            'name' => PersonStatusEnum::PENDING_TO_FILL->value,
+            'className' => PersonStatusEnum::PENDING_TO_FILL->getClassName(),
+
+        ] : ($person->natural->isMarried != 1 && !is_null($person->natural->isMarried) ? $personalInfoStatusObject : [
+            'name' => $person->natural?->spouse?->latestStatus->name,
+            'className' => $person->natural?->spouse?->latestStatus->class_name,
+        ]);
+
+        $childrenInfoStatusObject = (!$childrenStatus) ? [
+            'name' => DependentStatusEnum::ACTIVE->value,
+            'className' => 'success'
+        ] : [
+            'name' => DependentStatusEnum::PENDING->value,
+            'className' => 'primary'
+        ];
+
+        $isarInfoStatusObject = (!$isarStatus) ? [
+            'name' => IsarStatusEnum::APPROVED->value,
+            'className' => 'success'
+        ] : [
+            'name' => IsarStatusEnum::PENDING_APPROVE->value,
+            'className' => 'primary'
+        ];
+
+        $educationInfoStatusObject = $educationStatus->isEmpty() ? [
+            'name' => EducationalRecordStatusEnum::PENDING_TO_FILL->value,
+            'className' => 'warning'
+        ] : ($educationStatus->where('status_name', EducationalRecordStatusEnum::PENDING_APPROVE->value)->isNotEmpty()
+            ? [
+                'name' => EducationalRecordStatusEnum::PENDING_APPROVE->value,
+                'className' => 'primary'
+            ]
+            : [
+                'name' => EducationalRecordStatusEnum::APPROVED->value,
+                'className' => 'success'
+            ]);
+
+        $result = [
+            'person' => [
+                'displayName' => $person->display_name,
+                'avatar' => [
+                    'slug' => $person->avatar?->slug,
+                    'name' => $person->avatar?->name,
+                    'size' => $person->avatar?->size,
+//                    'type'=>$person->avatar->mimeType->name,
+                ],
+                'personnelCode' => $person->personnel_code,
+                'status' => [
+                    'name' => $person->status_name,
+                    'className' => $person->status_class_name,
+                ],
+            ],
+            'statuses' => [
+                'personalData' => $personalInfoStatusObject,
+                'spouseData' => $spouseInfoStatusObject,
+                'childrenData' => $childrenInfoStatusObject,
+                'isarData' => $isarInfoStatusObject,
+                'educationData' => $educationInfoStatusObject,
+            ],
+        ];
+
+        return $result;
+    }
+
+    public function confirmPerson(Person $person)
+    {
+        $calcStatus = $this->calculatePersonStatus($person->id);
+        $statuses = array_column($calcStatus['statuses'], 'name');
+        $uniqueValues = array_unique($statuses);
+
+        if (count($uniqueValues) === 1 && reset($uniqueValues) === PersonStatusEnum::CONFIRMED->value) {
+            $person->statuses()->attach($this->confirmedPersonStatus()->id);
+        }
     }
 
     public function personLicenseDataPreparation(array $data, int $personID, ?Status $status)
