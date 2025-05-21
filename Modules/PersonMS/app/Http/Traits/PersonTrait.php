@@ -554,9 +554,12 @@ trait PersonTrait
             $join->where('name', DependentStatusEnum::PENDING->value);
         })->exists();
 
-        $isarStatus = Isar::where('person_id', $personID)->joinRelationship('status', function ($join) {
-            $join->where('name', IsarStatusEnum::PENDING_APPROVE->value);
-        })->exists();
+        $isarStatus = Isar::where('person_id', $personID)->joinRelationship('status')
+            ->addSelect([
+                'statuses.name as status_name',
+                'statuses.class_name as status_class_name',
+            ])
+            ->first();
 
         $educationStatus = EducationalRecord::where('person_id', $personID)->joinRelationship('status')
             ->addSelect([
@@ -594,11 +597,11 @@ trait PersonTrait
         ];
 
         $isarInfoStatusObject = (!$isarStatus) ? [
-            'name' => IsarStatusEnum::APPROVED->value,
-            'className' => 'success'
+            'name' => IsarStatusEnum::PENDING_TO_FILL->value,
+            'className' => 'warning'
         ] : [
-            'name' => IsarStatusEnum::PENDING_APPROVE->value,
-            'className' => 'primary'
+            'name' => $isarStatus->status_name,
+            'className' => $isarStatus->status_class_name
         ];
 
         $educationInfoStatusObject = $educationStatus->isEmpty() ? [

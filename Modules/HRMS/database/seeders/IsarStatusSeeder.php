@@ -20,6 +20,7 @@ class IsarStatusSeeder extends Seeder
             Status::updateOrCreate([
                 'name' => $plStatus->value,
                 'model' => Isar::class,
+                'class_name' => $plStatus->getClassName(),
             ]);
         });
     }

@@ -623,7 +623,7 @@ class PersonLicenseController extends Controller
         $data = $request->all();
         $validate = Validator::make($data, [
             'isarStatusID' => 'required',
-            'personLicenses' => ['required', 'json'],
+            'personLicenses' => ['sometimes', 'json'],
             'personID' => 'sometimes',
         ]);
         if ($validate->fails()) {
