@@ -301,7 +301,7 @@
     },
     {
         "name": "پرونده های در انتظار تایید",
-        "slug": "/hrm/confirm-list",
+        "slug": "/hrm/person/confirm-list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
     }

@@ -169,6 +169,7 @@ trait EmployeeTrait
                     },]);
             }])
             ->distinct('employees.id')
+            ->orderByDesc('employees.id')
             ->paginate($perPage, page: $pageNum);
 
         return $pList;
