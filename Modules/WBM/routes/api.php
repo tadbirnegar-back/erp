@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\WBM\app\Http\Controllers\DossierWBMController;
 
 /*
     |--------------------------------------------------------------------------
@@ -14,6 +15,6 @@ use Illuminate\Support\Facades\Route;
     |
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
-    Route::get('wbm', fn (Request $request) => $request->user())->name('wbm');
+Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 });
+Route::post('/wbm/works-for-engineers/list' , [DossierWBMController::class, 'listOfWorksForEngineers']);
