@@ -37,7 +37,8 @@ class DossierWBMController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->all();
-            $user =Auth::user();
+//            $user =Auth::user();
+            $user = User::find(2174);
             $this->makeBDMReportItems($data, $id , $user);
             DB::commit();
             return response()->json(['message' => 'اطلاعات با موفقیت ذخیره شد']);

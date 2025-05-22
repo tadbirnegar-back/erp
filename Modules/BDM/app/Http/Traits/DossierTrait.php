@@ -34,6 +34,7 @@ use Modules\BDM\app\Models\Pool;
 use Modules\BDM\app\Models\Structure;
 use Modules\FileMS\app\Models\File;
 use Modules\ODOC\app\Http\Enums\OdocDocumentComponentsTypeEnum;
+use Modules\ODOC\app\Http\Enums\TypeOfOdocDocumentsEnum;
 use Modules\ODOC\app\Http\Traits\OdocApproversTrait;
 use Modules\ODOC\app\Models\Document;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -1770,7 +1771,7 @@ trait DossierTrait
         $banks = $this->getBankAccs($id);
         $allTotalPrice = $buildings['total_price'] + $partitioning['total_price'] + $pavilion['total_price'] + $parking['total_price'] + $pool['total_price'];
 
-        $mainData =  ["dossierData" => $dossier,"buildings" => $buildings, "partitioning" => $partitioning, "pavilion" => $pavilion, "parking" => $parking, "pool" => $pool, "allTotalPrice" => $allTotalPrice, 'banks' => $banks , "component_to_render" => OdocDocumentComponentsTypeEnum::TaxesBillPDF->value];
+        $mainData = ["dossierData" => $dossier, "buildings" => $buildings, "partitioning" => $partitioning, "pavilion" => $pavilion, "parking" => $parking, "pool" => $pool, "allTotalPrice" => $allTotalPrice, 'banks' => $banks, "component_to_render" => OdocDocumentComponentsTypeEnum::TaxesBillPDF->value];
         return [OdocDocumentComponentsTypeEnum::TaxesBillPDF->value => $mainData];
     }
 
@@ -2181,8 +2182,43 @@ trait DossierTrait
                 $approvers = $this->findStartWorkingObligationApprovers($id);
                 $this->setApprovers($id, $approvers);
                 break;
-
+            case OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value ||
+                OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value ||
+                OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value ||
+                OdocDocumentComponentsTypeEnum::FinalReportPDF->value:
+                $approvers = $this->findNazerEngineerApprovers($id);
+                $this->setApprovers($id, $approvers);
+                break;
         }
+    }
+
+    public function findNazerEngineerApprovers($id)
+    {
+        $document = Document::find($id);
+        $dossier = BuildingDossier::join('bdm_engineers_building', function ($join) {
+            $join->on('bdm_engineers_building.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('bdm_engineers_building.engineer_type_id', '=', EngineersTypeEnum::NAZER->id());
+        })
+            ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
+            ->join('signatures' , function ($join) {
+                $join->on('signatures.person_id' , '=' , 'bdm_engineers.person_id')
+                    ->where('signatures.status_id' , $this->activeSignatureStatus()->id);
+            })
+            ->select([
+                'bdm_engineers.person_id',
+                'signatures.id as signature_id'
+            ])
+            ->find($document->model_id);
+        return [
+            [
+                'person_id' => $dossier->person_id,
+                'status_id' => $this->AssignedApproversStatus()->id,
+                'signed_date' => now(),
+                'token' => null,
+                'signature_id' => $dossier->signature_id,
+                'document_id' => $id,
+            ]
+        ];
     }
 
     public function findStartWorkingObligationApprovers($id)
@@ -2318,7 +2354,6 @@ trait DossierTrait
         ];
     }
 
-
     public
     function findBuildingPlanApprovers($id)
     {
@@ -2369,4 +2404,24 @@ trait DossierTrait
 
     }
 
+    public function makeReportPdfs($id, $itemsForPdf, $user)
+    {
+        $data = $itemsForPdf;
+        $data['model_id'] = $id;
+        $data['model'] = BuildingDossier::class;
+        $data['version'] = '1';
+        $estate = Estate::where('dossier_id', $id)->first();
+        if ($estate) {
+            $data['ounit_id'] = $estate->ounit_id;
+        } else {
+            return response()->json(['message' => 'اطلاعات ملک  ثبت شده در سیستم وجود ندارد'], 404);
+        }
+        $moduleData = config('moduleCodes.modules.BDM');
+        $moduleCode = $moduleData['code'];
+        $model = $moduleData['models']["Modules\\BDM\\app\\Models\\BuildingDossier"];
+        $lastFiscalYear = FiscalYear::orderBy('name', 'desc')->first();
+
+        $data['serial_number'] = $lastFiscalYear->name . TypeOfOdocDocumentsEnum::DAKHELI->value . $data['ounit_id'] . $moduleCode . $model . $data['model_id'];
+        $this->storeOdocDocument($data, $user->id);
+    }
 }

@@ -24,6 +24,14 @@ enum OdocDocumentComponentsTypeEnum: string
 
     case TaxesBillPDF = "TaxBillPDF";
 
+    case FoundationConcreteLayingPDF = "FoundationConcreteLayingPDF";
+
+    case StructureSekeletonPDF = "StructureSekeletonPDF";
+
+    case HardeningSofteningStructurePDF = "HardeningSofteningStructurePDF";
+
+    case FinalReportPDF = "FinalReportPDF";
+
     public static function getName($name): string
     {
         return match ($name) {
@@ -36,6 +44,10 @@ enum OdocDocumentComponentsTypeEnum: string
             self::BUILDING_PLAN->value => 'دستور تهیه نقشه',
             self::StartWorkingObligation->value => 'اعلام شروع به کار عملیات ساختمانی',
             self::TaxesBillPDF->value => 'صورت حساب قیض',
+            self::FoundationConcreteLayingPDF->value => 'گزارش بتن ریزی پی',
+            self::StructureSekeletonPDF->value => 'اجرای اسکله و عملیات سازه‌ها',
+            self::HardeningSofteningStructurePDF->value => 'اجرای عملیات سفت کاری و نازک کاری',
+            self::FinalReportPDF->value => 'گزارش نهایی کار',
         };
     }
 }

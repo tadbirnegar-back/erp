@@ -17,6 +17,7 @@ use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\ODOC\app\Http\Enums\OdocDocumentComponentsTypeEnum;
 use Modules\PersonMS\app\Models\Natural;
 
 trait DossierWBMTrait
@@ -156,15 +157,42 @@ trait DossierWBMTrait
         }
 
         $items = json_decode($data['report_items']);
+        $lastStatus = $this->findCurrentPermitStatusOfDossier($dossierID);
+        if($lastStatus->permit_status_name != PermitStatusesEnum::fifteenth->value)
+        {
+            $componentToRender = OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value;
+        }
+        if($lastStatus->permit_status_name == PermitStatusesEnum::sixteenth->value)
+        {
+            $componentToRender = OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value;
+        }
+
+        if($lastStatus->permit_status_name == PermitStatusesEnum::seventeenth->value)
+        {
+            $componentToRender = OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value;
+        }
+
+        if($lastStatus->permit_status_name == PermitStatusesEnum::eighteenth->value)
+        {
+            $componentToRender = OdocDocumentComponentsTypeEnum::FinalReportPDF->value;
+        }
+
+        $itemsForPdf = [
+            "component_to_render" => $componentToRender,
+            "items" => []
+        ];
         foreach ($items as $item) {
             $reportDataItem = ReportDataItem::where('report_id', $dossierReport->id)
                 ->where('report_item_id', $item)
                 ->first();
             if (!$reportDataItem) {
-                $reportItemData = $this->prepareReportDataItem($dossierReport->id, $item);
-                ReportDataItem::create($reportItemData);
+                $reportDataItem = $this->prepareReportDataItem($dossierReport->id, $item);
+                 ReportDataItem::create($reportDataItem);
             }
+            $itemsForPdf["items"][] = $reportDataItem;
         }
+
+        $this->makeReportPdfs($dossierID , $itemsForPdf , $user);
 
         $this->upgradeOneLevel($dossierID);
     }
