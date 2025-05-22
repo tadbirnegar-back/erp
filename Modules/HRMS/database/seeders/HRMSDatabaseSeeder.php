@@ -14,7 +14,7 @@ class HRMSDatabaseSeeder extends Seeder
         $this->call([
 //            ModuleCategorySeeder::class,
 //            ModuleSeeder::class,
-            PermissionSeeder::class,
+//            PermissionSeeder::class,
 //            LevelOfEducationSeeder::class,
 //            LevelStatusSeeder::class,
 //            MilitaryServiceStatusSeeder::class,
@@ -29,13 +29,16 @@ class HRMSDatabaseSeeder extends Seeder
 //            HireTypeStatusSeeder::class,
 //ScriptTypeStatusSeeder::class,
 //ScriptAgentStatusSeeder::class,
-//            PermissionSeeder::class,
+            PermissionSeeder::class,
 //            StatusSeeder::class,
 //            FreeZonePositionsSeeder::class,
 //            FreeZoneJobsSeeder::class,
 //            FreeZoneScriptTypeSeeder::class,
 //            AddAccRcs::class,
-            ScriptAgentSeeder::class,
+//            ScriptAgentSeeder::class,
+            DependentStatusSeeder::class,
+            IsarStatusSeeder::class,
+            EducationRecordStatusSeeder::class,
         ]);
         // $this->call([]);
     }

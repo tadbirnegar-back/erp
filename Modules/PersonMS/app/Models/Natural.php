@@ -2,11 +2,10 @@
 
 namespace Modules\PersonMS\app\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AddressMS\app\Models\Address;
-use Modules\FileMS\app\Models\File;
 use Modules\HRMS\app\Models\LevelOfEducation;
 use Modules\PersonMS\Database\factories\NaturalFactory;
 
@@ -64,17 +63,22 @@ class Natural extends Model
 
     public function religion()
     {
-        return $this->belongsTo(Religion::class,'religion_id');
+        return $this->belongsTo(Religion::class, 'religion_id');
     }
 
     public function religionType()
     {
-        return $this->belongsTo(ReligionType::class,'religion_type_id');
+        return $this->belongsTo(ReligionType::class, 'religion_type_id');
     }
 
-    public function educationalLevel() : BelongsTo
+    public function educationalLevel(): BelongsTo
     {
-        return $this->belongsTo(LevelOfEducation::class,'level_of_education_id');
+        return $this->belongsTo(LevelOfEducation::class, 'level_of_education_id');
+    }
+
+    public function spouse(): BelongsTo
+    {
+        return $this->belongsTo(Person::class, 'spouse_id');
     }
 
 

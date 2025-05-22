@@ -232,5 +232,77 @@
         "slug": "/hrm/educational-record/approve",
         "moduleName": "HRMS",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده وضعیت تایید شخص",
+        "slug": "/hrm/confirm/info/summary",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده و تایید اطلاعات شخصی",
+        "slug": "/hrm/confirm/info/get-personal-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده و تایید اطلاعات تاهل شخص",
+        "slug": "/hrm/confirm/info/get-spouse-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده و تایید اطلاعات فرزندان شخص",
+        "slug": "/hrm/confirm/info/get-children-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده و تایید اطلاعات ایثارگری شخص",
+        "slug": "/hrm/confirm/info/get-isar-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "مشاهده و تایید اطلاعات تحصیلی شخص",
+        "slug": "/hrm/confirm/info/get-educational-records-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید اطلاعات شخصی",
+        "slug": "/hrm/approve/info/personal-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید اطلاعات تاهل",
+        "slug": "/hrm/approve/info/spouse-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید اطلاعات فرزندان",
+        "slug": "/hrm/approve/info/children-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید اطلاعات ایثارگری شخص",
+        "slug": "/hrm/approve/info/isar-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید اطلاعات تحصیلی شخص",
+        "slug": "/hrm/approve/info/educational-records-data",
+        "moduleName": "HRMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "پرونده های در انتظار تایید",
+        "slug": "/hrm/person/confirm-list",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
     }
 ]

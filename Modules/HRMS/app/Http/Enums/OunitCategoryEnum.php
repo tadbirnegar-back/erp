@@ -123,5 +123,15 @@ enum OunitCategoryEnum: int
         return $models;
     }
 
+    public static function getOunitCatByUnitableType($uType)
+    {
+        foreach (self::cases() as $case) {
+            if ($case->getUnitableType() === $uType) {
+                return $case;
+            }
+        }
+        return null;
+    }
+
 
 }

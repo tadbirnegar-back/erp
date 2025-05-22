@@ -3,7 +3,9 @@
 namespace Modules\HRMS\database\seeders;
 
 use Illuminate\Database\Seeder;
+use Modules\HRMS\app\Http\Enums\EducationalRecordStatusEnum;
 use Modules\HRMS\app\Models\EducationalRecord;
+use Modules\StatusMS\app\Models\Status;
 
 class EducationRecordStatusSeeder extends Seeder
 {
@@ -12,14 +14,14 @@ class EducationRecordStatusSeeder extends Seeder
      */
     public function run(): void
     {
-        $userStatusesData = json_decode(file_get_contents(realpath(__DIR__ . '/EducationRecordStatus.json')), true);
+        $plStatuses = collect(EducationalRecordStatusEnum::cases());
 
-        foreach ($userStatusesData as $userStatus) {
-            \DB::table('statuses')->insertGetId([
-                'name' => $userStatus['name'],
+        $plStatuses->each(function ($plStatus) {
+            Status::updateOrCreate([
+                'name' => $plStatus->value,
                 'model' => EducationalRecord::class,
             ]);
-        }
+        });
         // $this->call([]);
     }
 }

@@ -1,0 +1,11 @@
+{
+    "name": "WBM",
+    "alias": "wbm",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\WBM\\app\\Providers\\WBMServiceProvider"
+    ],
+    "files": []
+}

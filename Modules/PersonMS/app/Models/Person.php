@@ -69,7 +69,22 @@ class Person extends Model
         return $this->belongsToMany(Status::class)->latest('create_date');
     }
 
-    public function avatar()
+    public function latestStatus()
+    {
+        return $this->hasOneThrough(Status::class, PersonStatus::class, 'person_id', 'id', 'id', 'status_id')
+            ->orderByDesc('person_status.id');
+    }
+
+
+    public function scopeFinalPersonStatus($query)
+    {
+        return $query->join('person_status', 'persons.id', '=', 'person_status.person_id')
+            ->join('statuses', 'person_status.status_id', '=', 'statuses.id')
+            ->whereRaw('person_status.id = (SELECT MAX(id) FROM person_status WHERE person_id = persons.id)');
+
+    }
+
+    public function avatar(): BelongsTo
     {
         return $this->belongsTo(File::class, 'profile_picture_id');
     }
@@ -190,6 +205,25 @@ class Person extends Model
             ->latest('create_date');
     }
 
+    public function totalRecruitmentScripts()
+    {
+        return $this->hasManyDeep(
+            RecruitmentScript::class,
+            [WorkForce::class, Employee::class], // Intermediate models
+            [
+                'person_id',                // Foreign key on the WorkForce model
+                'id',         // Foreign key on the Employee model
+                'employee_id'               // Foreign key on the RecruitmentScript model
+            ],
+            [
+                'id',                       // Local key on the current model
+                'workforceable_id',                       // Local key on the WorkForce model
+                'id'                        // Local key on the Employee model
+            ]
+        )
+            ->where('workforceable_type', Employee::class);
+    }
+
     public function customers()
     {
         return $this->hasMany(Customer::class, 'person_id');
@@ -252,6 +286,11 @@ class Person extends Model
         return $this->hasMany(Dependent::class, 'main_person_id');
     }
 
+    public function heirs()
+    {
+        return $this->hasManyThrough(Person::class, Dependent::class, 'main_person_id', 'id', 'id', 'related_person_id');
+    }
+
     public function latestEducationRecord()
     {
         return $this->hasOne(EducationalRecord::class, 'person_id')
@@ -262,6 +301,20 @@ class Person extends Model
     public function personLicenses(): HasMany
     {
         return $this->hasMany(PersonLicense::class, 'person_id');
+    }
+
+    public function scopeSearchDisplayName($query, $term)
+    {
+        // Split
+        $words = explode(' ', $term);
+
+        // Add `*` wildcard
+        $filteredWords = array_map(fn($word) => strlen($word) >= 3 ? $word . '*' : $word, $words);
+
+        // Join with `+` for Boolean Mode
+        $searchTerm = '+' . implode(' +', $filteredWords);
+
+        return $query->whereRaw('MATCH(display_name) AGAINST (? IN BOOLEAN MODE)', [$searchTerm]);
     }
 
 }

@@ -13,6 +13,9 @@ use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
+use Modules\OUnitMS\app\Models\StateOfc;
+use Modules\OUnitMS\app\Models\VillageOfc;
+use Modules\PersonMS\app\Http\Enums\PersonStatusEnum;
 use Modules\PersonMS\app\Models\Person;
 
 trait EmployeeTrait
@@ -45,7 +48,7 @@ trait EmployeeTrait
 
     public function employeeIndex(int $perPage = 10, int $pageNumber = 1, array $data = [])
     {
-        $employeeQuery = Employee::with('person.avatar', 'status', 'positions')->distinct();
+        $employeeQuery = Employee::with(['person.avatar', 'status', 'positions'])->distinct();
 
         $searchTerm = $data['name'] ?? null;
         $position = $data['positionID'] ?? null;
@@ -83,6 +86,93 @@ trait EmployeeTrait
         $result = $employeeQuery->paginate($perPage, page: $pageNumber);
 
         return $result;
+    }
+
+    public function employeeListWithFilter(array $data)
+    {
+        $searchTerm = $data['name'] ?? null;
+        $perPage = $data['perPage'] ?? 10;
+        $pageNum = $data['pageNum'] ?? 1;
+        $ounitID = $data['ounitID'] ?? null;
+        $positionID = $data['positionID'] ?? null;
+        $personStatuses= $data['personStatus'] ?? null;
+
+        $startDate = isset($data['startDate']) ? convertJalaliPersianCharactersToGregorian(($data['startDate'])) : null;
+        $endDate = isset($data['endDate']) ? convertJalaliPersianCharactersToGregorian($data['endDate']) : null;
+
+        if ($ounitID) {
+            $ounit = OrganizationUnit::with(['descendantsAndSelf'])->find($ounitID);
+            $ounitIDs = $ounit->descendantsAndSelf->pluck('id')->toArray();
+        } else {
+            $ounitIDs = null;
+        }
+
+        $pList = Employee::joinRelationship('workForce.person.natural', [
+            'person' => function ($join) use ($searchTerm,$personStatuses) {
+                $join->finalPersonStatus()
+                    ->when($personStatuses, function ($query) use ($personStatuses) {
+                        $query->whereIn('statuses.name', $personStatuses);
+                    })
+                    ->when($searchTerm, function ($query) use ($searchTerm) {
+                        $query->searchDisplayName($searchTerm);
+                    });
+            }
+        ])
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('person_status.create_date', [$startDate, $endDate]);
+            })
+            ->when($positionID || $ounitIDs, function ($query) use ($ounitIDs, $positionID) {
+                $query
+                    ->joinRelationship('recruitmentScripts')
+                    ->when($ounitIDs, function ($query) use ($ounitIDs) {
+                        $query
+                            ->whereIntegerInRaw('recruitment_scripts.organization_unit_id', $ounitIDs);
+                    })
+                    ->when($positionID, function ($query) use ($ounitIDs, $positionID) {
+                        $query
+                            ->where('recruitment_scripts.position_id', $positionID);
+                    });
+            })
+            ->addSelect([
+                'naturals.mobile',
+                'naturals.gender_id',
+                'naturals.isMarried',
+                'persons.display_name',
+                'persons.national_code',
+                'persons.id as p_id',
+                'person_status.create_date as last_updated',
+            ])
+            ->with(['recruitmentScripts' => function ($query) use ($ounitIDs) {
+                $query
+                    ->finalStatus()
+                    ->join('positions', 'recruitment_scripts.position_id', '=', 'positions.id')
+                    ->join('script_types', 'recruitment_scripts.script_type_id', '=', 'script_types.id')
+                    ->select([
+                        'recruitment_scripts.*',
+                        'positions.name as position_name',
+                        'script_types.title as script_type_title',
+                        'statuses.name as status_name',
+                        'statuses.class_name as status_class_name',
+                    ])
+                    ->with(['organizationUnit' => function ($query) {
+                        $query->leftJoin('village_ofcs', function ($join) {
+                            $join->on('village_ofcs.id', '=', 'organization_units.unitable_id')
+                                ->where('unitable_type', '=', VillageOfc::class);
+                        })
+                            ->select([
+                                'village_ofcs.abadi_code as abadi_code',
+                                'organization_units.*'
+                            ])
+                            ->with(['ancestors' => function ($query) {
+                                $query->where('unitable_type', '!=', StateOfc::class);
+                            }]);
+                    },]);
+            }])
+            ->distinct('employees.id')
+            ->orderByDesc('employees.id')
+            ->paginate($perPage, page: $pageNum);
+
+        return $pList;
     }
 
     public function getEmployeesByPersonName(string $searchTerm)
@@ -284,9 +374,9 @@ trait EmployeeTrait
         $b = HireTypeEnum::tryFrom($hireType->title);
         $scriptAgents = $hireType->scriptAgents;
         $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-        $calculator = new $class($scriptType, $hireType, $ounit,\Auth::user()->person);
+        $calculator = new $class($scriptType, $hireType, $ounit, \Auth::user()->person);
 
-        $scriptAgents->each(function ($scriptAgent)use ($calculator) {
+        $scriptAgents->each(function ($scriptAgent) use ($calculator) {
             if (!is_null($scriptAgent->pivot->formula)) {
 
                 $formula = FormulaEnum::from($scriptAgent->pivot->formula);

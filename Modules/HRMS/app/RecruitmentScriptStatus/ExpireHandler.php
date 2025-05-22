@@ -4,14 +4,18 @@ namespace Modules\HRMS\app\RecruitmentScriptStatus;
 
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
+use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
+use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MR;
 use Modules\HRMS\app\Contracts\StatusHandlerInterface;
+use Modules\HRMS\app\Http\Enums\PositionEnum;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Notifications\ScriptExpireNotification;
 
 class ExpireHandler implements StatusHandlerInterface
 {
-    use UserTrait, RecruitmentScriptTrait;
+    use UserTrait, RecruitmentScriptTrait, MeetingMemberTrait;
 
     private RecruitmentScript $script;
     private ?User $user;
@@ -28,6 +32,7 @@ class ExpireHandler implements StatusHandlerInterface
         $this->detachHeadIdFromOunit($this->script, $this->script->user->id);
         $this->notifyScriptUser();
         $this->AddFinishDate($this->script);
+        $this->removeUserFromHeyaatMemberTemplate();
 
     }
 
@@ -48,5 +53,40 @@ class ExpireHandler implements StatusHandlerInterface
     public function AddFinishDate($script): void
     {
         $this->UpdateFinishDate($script, now());
+    }
+
+    public function removeUserFromHeyaatMemberTemplate()
+    {
+        $script = $this->script;
+        $positionEnum = PositionEnum::tryFrom($script->position->name);
+
+        if ($positionEnum && $positionEnum->isHeyaatMemberPosition()) {
+            $script = $this->script;
+            $user = $script->user;
+
+            $organ = $script->ounit;
+
+            $positionTitle = $script->position->name;
+            $mrInfo = $this->getMrIdUsingPositionTitle($positionTitle);
+
+            $mrId = $mrInfo['title'];
+            $mr = MR::where('title', $mrId)->first();
+            $meetingTemplate = Meeting::where('isTemplate', true)
+                ->where('ounit_id', $organ->id)
+                ->with(['meetingMembers' => function ($query) use ($mr, $user) {
+                    $query
+                        ->where('employee_id', $user->id)
+                        ->where('mr_id', $mr->id);
+                }])->first();
+
+            if ($meetingTemplate) {
+
+                $meetingMember = $meetingTemplate->meetingMembers->first();
+                if (!is_null($meetingMember)) {
+                    $meetingMember->employee_id = null;
+                    $meetingMember->save();
+                }
+            }
+        }
     }
 }

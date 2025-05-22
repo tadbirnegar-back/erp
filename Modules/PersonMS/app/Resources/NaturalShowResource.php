@@ -11,11 +11,12 @@ class NaturalShowResource extends JsonResource
      */
     public function toArray($request): array
     {
-        return [
+        $result = [
             'firstName' => $this->first_name,
             'lastName' => $this->last_name,
             'fatherName' => $this->father_name,
             'mobile' => $this->mobile,
+            'nationalCode'=>$this->national_code,
             'birthDate' => !is_null($this->birth_date) ? convertGregorianToJalali($this->birth_date) : null,
             'bcCode' => $this->bc_code,
             'isMarried' => $this->isMarried,
@@ -29,8 +30,8 @@ class NaturalShowResource extends JsonResource
             'bcSerial' => $this->bc_serial,
             'religion' => $this->religion,
             'religionType' => $this->religionType,
-            'militaryServiceStatus' => $this->military,
-            'licenses' => $this->licenses->map(function ($license) {
+            'militaryServiceStatus' => $this?->military,
+            'licenses' =>$this->licenses?->isNotEmpty()? $this->licenses->map(function ($license) {
                 return [
                     'id' => $license->id,
                     'file' => [
@@ -45,7 +46,14 @@ class NaturalShowResource extends JsonResource
                         'name' => $license->license_type->name(),
                     ],
                 ];
-            }),
+            }):[],
         ];
+
+        if ($this->relationLoaded('spouse')) {
+            $result['spouse'] = !is_null($this->spouse) ? self::make($this->spouse) : null;
+        }
+
+        $result['childStatus'] = $this->childStatus;
+        return $result;
     }
 }

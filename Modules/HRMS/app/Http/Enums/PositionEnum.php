@@ -79,4 +79,24 @@ enum PositionEnum: string
             default => null,
         };
     }
+
+    public static function getHeyaatMemberPositions()
+    {
+        return collect([
+            self::KARSHENAS_MOSHAVAREH,
+            self::OZV_HEYAAT,
+            self::MASOOL_DABIRKHANEH,
+            self::NAIBB_E_QOHE_QAZAEIEH,
+            self::SHORA_E_SHAHRESTAN_MEMBER,
+            self::NAIBB_E_OSTANDEHARI,
+        ]);
+    }
+
+    public function isHeyaatMemberPosition()
+    {
+
+        return self::getHeyaatMemberPositions()->contains($this);
+    }
+
+
 }

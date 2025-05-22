@@ -136,7 +136,7 @@ class RecruitmentScriptController extends Controller
 
         if ($user->hasPermissionForRoute($requestedRoute) || $script->employee->person->id == $user->person->id) {
 
-            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position.levels', 'level', 'employee.person', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason.person.avatar', 'rejectReason.attachment');
+            $script->load('approvers.status', 'approvers.assignedTo', 'scriptType', 'hireType', 'position.levels', 'level', 'employee.person.natural', 'latestStatus', 'organizationUnit.ancestors', 'job', 'files', 'rejectReason.person.avatar', 'rejectReason.attachment');
         } else {
             return response()->json(['message' => 'شما به این بخش دسترسی ندارید'], 403);
         }
@@ -493,7 +493,7 @@ class RecruitmentScriptController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'خطا در تایید حکم', 'error', 'error'], 500);
+            return response()->json(['message' => 'خطا در تایید حکم', $e->getMessage(), $e->getTrace()], 500);
         }
     }
 

@@ -60,7 +60,7 @@ class Enactment extends Model
             'attachmentables',
             'attachmentable_id',
             'attachment_id')
-            ->withPivot('title');
+            ->withPivot(['title','attachmentables.id as attach_id']);
     }
 
     public function statuses(): BelongsToMany

@@ -23,6 +23,7 @@ class PersonLicense extends Model
         'file_id',
         'person_id',
         'license_type',
+        'status_id'
     ];
 
     public $timestamps = false;
@@ -33,6 +34,11 @@ class PersonLicense extends Model
     public function file(): BelongsTo
     {
         return $this->belongsTo(File::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
     }
 
     public static function getTableName()

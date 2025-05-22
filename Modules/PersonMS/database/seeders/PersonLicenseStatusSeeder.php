@@ -17,7 +17,7 @@ class PersonLicenseStatusSeeder extends Seeder
         $plStatuses = collect(PersonLicenseStatusEnum::cases());
 
         $plStatuses->each(function ($plStatus) {
-            Status::insertOrIgnore([
+            Status::firstOrCreate([
                 'name' => $plStatus->value,
                 'model' => PersonLicense::class,
             ]);

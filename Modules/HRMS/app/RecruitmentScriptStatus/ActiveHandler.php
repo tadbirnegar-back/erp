@@ -7,12 +7,22 @@ use Modules\AAA\app\Models\User;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Models\Account;
 use Modules\ACC\app\Models\SubAccount;
+use Modules\EMS\app\Http\Traits\MeetingMemberTrait;
+use Modules\EMS\app\Http\Traits\MeetingTrait;
+use Modules\EMS\app\Models\Meeting;
+use Modules\EMS\app\Models\MeetingMember;
+use Modules\EMS\app\Models\MeetingType;
+use Modules\EMS\app\Models\MR;
 use Modules\HRMS\app\Contracts\StatusHandlerInterface;
+use Modules\HRMS\app\Http\Enums\PositionEnum;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
+use Modules\HRMS\app\Http\Traits\ApprovingListTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Jobs\ExpireScriptJob;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\RecruitmentScriptStatus;
+use Modules\HRMS\app\Models\ScriptApprovingList;
 use Modules\HRMS\app\Notifications\ApproveRsNotification;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\TownOfc;
@@ -20,7 +30,7 @@ use Modules\OUnitMS\app\Models\VillageOfc;
 
 class ActiveHandler implements StatusHandlerInterface
 {
-    use RecruitmentScriptTrait, AccountTrait;
+    use RecruitmentScriptTrait, AccountTrait, MeetingMemberTrait, MeetingTrait, ApprovingListTrait;
 
     private RecruitmentScript $script;
     private ?User $user;
@@ -36,6 +46,8 @@ class ActiveHandler implements StatusHandlerInterface
         \DB::transaction(function () {
             $this->addRolesOfScriptToUser();
             $this->activateScriptUser();
+            $this->changePendingScriptsToNewUser();
+            $this->setOldHeyaatMemberPendingForTerminate();
             $this->setOldHeadAsPendingForTerminate();
             $this->updateHeadByNewScript();
 //            $this->notifyNewUser();
@@ -83,6 +95,87 @@ class ActiveHandler implements StatusHandlerInterface
             }
 
         }
+    }
+
+    public function setOldHeyaatMemberPendingForTerminate()
+    {
+        $script = $this->script;
+        $positionEnum = PositionEnum::tryFrom($script->position->name);
+
+        if ($positionEnum && $positionEnum->isHeyaatMemberPosition()) {
+            $this->setUserAsMM();
+        }
+
+
+    }
+
+    public function setUserAsMM()
+    {
+
+        $script = $this->script;
+        $user = $script->user;
+
+        $organ = $script->ounit;
+
+        $positionTitle = $script->position->name;
+        $mrInfo = $this->getMrIdUsingPositionTitle($positionTitle);
+
+        $mrId = $mrInfo['title'];
+        $mr = MR::where('title', $mrId)->first();
+        $meetingTemplate = Meeting::where('isTemplate', true)
+            ->where('ounit_id', $script->organization_unit_id)
+            ->with(['meetingMembers' => function ($query) use ($mr) {
+                $query->where('mr_id', $mr->id);
+            }])->first();
+
+
+        if ($meetingTemplate) {
+
+            $meetingMember = $meetingTemplate->meetingMembers->first();
+            if (is_null($meetingMember)) {
+                $mm = new MeetingMember();
+                $mm->employee_id = $user->id;
+                $mm->meeting_id = $meetingTemplate->id;
+                $mm->mr_id = $mr->id;
+                $mm->save();
+            } else {
+
+                $oldUser = User::with(['activeRecruitmentScript' => function ($q) use ($organ, $script) {
+                    $q->where('organization_unit_id', '=', $organ->id)
+                        ->where('script_type_id', '=', $script->script_type_id)
+                        ->where('position_id', '=', $script->position_id);
+                }])->find($meetingMember->employee_id);
+
+                $activeRs = $oldUser->activeRecruitmentScript;
+                if ($activeRs->isNotEmpty()) {
+
+
+                    $statusAzlId = $this->pendingTerminateRsStatus();
+
+                    $this->attachStatusToRs($activeRs->first(), $statusAzlId);
+
+
+                }
+                $meetingMember->employee_id = $user->id;
+                $meetingMember->save();
+            }
+        } else {
+
+
+            $data['creatorID'] = $user->id;
+            $data['meetingTypeID'] = MeetingType::where('title', 'الگو')->first()->id;
+            $data['isTemplate'] = true;
+            $data['ounitID'] = $organ->id;
+            $meeting = $this->storeMeeting($data);
+
+            MeetingMember::create([
+                'employee_id' => $user->id,
+                'meeting_id' => $meeting->id,
+                'mr_id' => $mr->id,
+            ]);
+
+        }
+
     }
 
     public function updateHeadByNewScript()
@@ -163,6 +256,38 @@ class ActiveHandler implements StatusHandlerInterface
                 ];
                 $this->firstOrStoreAccount($accData, $parentAccount, 1);
             }
+        }
+    }
+
+    public function changePendingScriptsToNewUser()
+    {
+        $oldScript = RecruitmentScript::query()
+            ->finalStatus()
+            ->where('organization_unit_id', $this->script->organization_unit_id)
+            ->where('position_id', $this->script->position_id)
+            ->where('script_type_id', $this->script->script_type_id)
+            ->where('job_id', $this->script->job_id)
+            ->where('statuses.name', '=', RecruitmentScriptStatusEnum::ACTIVE->value)
+            ->with('user')
+            ->first();
+        $newUser = $this->script->user;
+
+        if ($oldScript) {
+            $oldUser = $oldScript->user;
+            $approvings = ScriptApprovingList::where('assigned_to', $oldUser->id)
+                ->whereHas('status', function ($query) {
+                    $query->whereIn('name', [
+                        $this::$currentUserPendingStatus,
+                        $this::$pendingStatus,
+                    ]);
+                })
+                ->get();
+
+            $approvings->each(function ($approving) use ($newUser) {
+                $approving->assigned_to = $newUser->id;
+                $approving->save();
+            });
+
         }
     }
 }

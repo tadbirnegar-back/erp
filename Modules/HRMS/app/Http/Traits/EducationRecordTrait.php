@@ -18,7 +18,7 @@ trait EducationRecordTrait
 
         $preparedData = $this->EducationalRecordDataPreparation($dataToInsert, $personID);
 
-        $educationalRecord = EducationalRecord::insert($preparedData->toArray()[0]);
+        $educationalRecord = EducationalRecord::create($preparedData->toArray()[0]);
 
         $records = EducationalRecord::orderBy('id', 'desc')->take(count($dataToInsert))->get();
 
@@ -27,16 +27,37 @@ trait EducationRecordTrait
 
     }
 
-    public function EducationalRecordSingleStore(array|Collection $dataToInsert, ?int $personID)
+    public function EducationalRecordSingleStore(array|Collection $data, ?int $personID)
     {
-        if (!isset($dataToInsert[0]) || !is_array($dataToInsert[0])) {
-            $dataToInsert = [$dataToInsert];
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $dataToInsert = [$data];
         }
 
-        $preparedData = $this->EducationalRecordDataPreparation($dataToInsert, $personID);
+        $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToInsert, $personID);
 
         $educationalRecord = EducationalRecord::create($preparedData->toArray()[0]);
         $educationalRecord->load('levelOfEducation');
+
+        $files = json_decode($data['files'], true);
+        $this->attachEducationalRecordFiles($educationalRecord, $files);
+
+        return $educationalRecord;
+
+    }
+
+    public function EducationalRecordSingleUpdate(array|Collection $data, EducationalRecord $educationalRecord)
+    {
+        if (!isset($data[0]) || !is_array($data[0])) {
+            $dataToInsert = [$data];
+        }
+
+        $preparedData = $this->EducationalRecordDataPreparationForUpsert($dataToInsert, $educationalRecord->person_id);
+
+        $educationalRecord->update($preparedData->toArray()[0]);
+        $educationalRecord->load('levelOfEducation');
+
+        $files = json_decode($data['files'], true);
+        $this->attachEducationalRecordFiles($educationalRecord, $files);
 
         return $educationalRecord;
 
@@ -54,6 +75,7 @@ trait EducationRecordTrait
         if (is_array($educations)) {
             $educations = collect($educations);
         }
+        $status = $this->pendingApproveEducationalRecordStatus();
         $recordsToInsert = $educations->map(fn($data) => [
             'id' => $data['erID'] ?? null,
             'university_name' => $data['universityName'] ?? null,
@@ -62,7 +84,7 @@ trait EducationRecordTrait
             'end_date' => $data['endDate'] ?? null,
             'average' => $data['average'] ?? null,
             'person_id' => $personID,
-            'status_id' => $data['statusID'] ?? null,
+            'status_id' => $status->id,
             'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
         ]);
         return $recordsToInsert;
@@ -74,6 +96,8 @@ trait EducationRecordTrait
         if (is_array($educations)) {
             $educations = collect($educations);
         }
+        $status = $this->pendingApproveEducationalRecordStatus();
+
         $recordsToInsert = $educations->map(fn($data) => [
             'id' => $data['erID'] ?? null,
             'university_name' => $data['universityName'] ?? null,
@@ -82,6 +106,7 @@ trait EducationRecordTrait
             'end_date' => convertJalaliPersianCharactersToGregorian($data['endDate']) ?? null,
             'average' => $data['average'] ?? null,
             'person_id' => $personID,
+            'status_id' => $status->id,
             'level_of_educational_id' => $data['levelOfEducationalID'] ?? null,
         ]);
         return $recordsToInsert;
@@ -115,6 +140,7 @@ trait EducationRecordTrait
     {
         $attachments = collect($files)->map(function ($file) use ($educationalRecord) {
             return [
+                'id' => $file['attachID'] ?? null,
                 'attachment_id' => $file['fileID'],
                 'title' => $file['title'] ?? null,
                 'attachmentable_id' => $educationalRecord->id,
@@ -122,7 +148,7 @@ trait EducationRecordTrait
             ];
         })->toArray();
 
-        Attachmentable::insert($attachments);
+        Attachmentable::upsert($attachments, ['id']);
     }
 
 

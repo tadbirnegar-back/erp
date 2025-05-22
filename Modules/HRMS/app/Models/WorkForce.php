@@ -110,4 +110,9 @@ class WorkForce extends Model
         return $this->belongsTo(Teacher::class, 'workforceable_id');
     }
 
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'workforceable_id', 'id');
+    }
+
 }

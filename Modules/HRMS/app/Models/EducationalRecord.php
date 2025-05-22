@@ -48,6 +48,11 @@ class EducationalRecord extends Model
         return $this->belongsTo(WorkForce::class, 'work_force_id');
     }
 
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
     public function attachments(): MorphToMany
     {
         return $this->morphToMany(File::class,
@@ -55,7 +60,7 @@ class EducationalRecord extends Model
             'attachmentables',
             'attachmentable_id',
             'attachment_id')
-            ->withPivot('title');
+            ->withPivot(['title', 'id']);
     }
 
     public static function GetAllStatuses()

@@ -8,6 +8,7 @@ use Modules\HRMS\app\Http\Controllers\HireTypeController;
 use Modules\HRMS\app\Http\Controllers\HRMConfigController;
 use Modules\HRMS\app\Http\Controllers\JobController;
 use Modules\HRMS\app\Http\Controllers\LevelController;
+use Modules\HRMS\app\Http\Controllers\LevelsOfEducationController;
 use Modules\HRMS\app\Http\Controllers\MilitaryServicesController;
 use Modules\HRMS\app\Http\Controllers\NewScriptController;
 use Modules\HRMS\app\Http\Controllers\PositionController;
@@ -15,6 +16,7 @@ use Modules\HRMS\app\Http\Controllers\RecruitmentScriptController;
 use Modules\HRMS\app\Http\Controllers\RegisterEmployeeController;
 use Modules\HRMS\app\Http\Controllers\ScriptAgentTypeController;
 use Modules\HRMS\app\Http\Controllers\SkillController;
+use Modules\PersonMS\app\Http\Controllers\PersonLicenseController;
 
 /*
     |--------------------------------------------------------------------------
@@ -50,7 +52,7 @@ Route::middleware([])->prefix('v1')->name('api.')->group(function () {
     Route::post('/recruitment/list/village_ofc', [RecruitmentScriptController::class, 'villageOfcs']);
     Route::post('/hrm/ounit/positions/list', [PositionController::class, 'getByOrganizationUnit']);
     Route::get('/hrm/employee/add', [EmployeeController::class, 'addEmployeeBaseInfo'])->middleware('auth:api');
-    Route::post('/hrm/education-levels/list', [\Modules\HRMS\app\Http\Controllers\LevelsOfEducationController::class, 'index']);
+    Route::post('/hrm/education-levels/list', [LevelsOfEducationController::class, 'index']);
     Route::post('/hrm/register/dehyar', [EmployeeController::class, 'registerDehyar']);
     Route::post('/hrm/register/sarparast', [EmployeeController::class, 'registerSarparast']);
 
@@ -193,6 +195,39 @@ Route::middleware([])->prefix('v2')->name('api.')->group(function () {
     Route::post('/hrm/person/register/verify-otp', [RegisterEmployeeController::class, 'verifyPersonByOtp']);
 
     Route::post('/hrm/person/register/add', [RegisterEmployeeController::class, 'RegisterEmployee']);
+
+    Route::get('/hrm/isar-types/list', [EmployeeController::class, 'isarsStatusesIndex']);
+
+
+});
+
+Route::middleware(['auth:api', 'route'])->prefix('v2')->name('api.')->group(function () {
+
+    Route::post('/hrm/person/confirm-list', [PersonLicenseController::class, 'pendingIndex']);
+    Route::post('/hrm/confirm/info/summary', [PersonLicenseController::class, 'personInfoSummary']);
+
+    Route::post('/hrm/confirm/info/get-personal-data', [PersonLicenseController::class, 'getPersonalData']);
+
+    Route::post('/hrm/confirm/info/get-spouse-data', [PersonLicenseController::class, 'getSpouse']);
+
+    Route::post('/hrm/confirm/info/get-children-data', [PersonLicenseController::class, 'getChildren']);
+
+    Route::post('/hrm/confirm/info/get-isar-data', [PersonLicenseController::class, 'getIsar']);
+
+    Route::post('/hrm/confirm/info/get-educational-records-data', [PersonLicenseController::class, 'getEducationalRecords']);
+
+    Route::put('/hrm/approve/info/personal-data', [PersonLicenseController::class, 'confirmPersonalData']);
+
+    Route::put('/hrm/approve/info/spouse-data', [PersonLicenseController::class, 'confirmSpouse']);
+
+    Route::put('/hrm/approve/info/children-data', [PersonLicenseController::class, 'confirmChildren']);
+
+    Route::put('/hrm/approve/info/isar-data', [PersonLicenseController::class, 'confirmIsar']);
+
+    Route::put('/hrm/approve/info/educational-records-data', [PersonLicenseController::class, 'confirmEducationalRecord']);
+
+    Route::post('/hrm/employee/list', [EmployeeController::class, 'indexAdvancedV2']);
+
 
 });
 

@@ -178,7 +178,7 @@ class RegisterEmployeeController extends Controller
                 }]);
             $person->natural->setAttribute('military', $person->militaryService->militaryServiceStatus);
             $person->natural->setAttribute('licenses', $person->personLicenses);
-
+            $person->natural->setAttribute('national_code', $person->national_code);
             return NaturalShowResource::make($person->natural)->additional([
                 'message' => 'کاربر با موفقیت تأیید شد',
             ]);
@@ -235,13 +235,9 @@ class RegisterEmployeeController extends Controller
             ], 422);
         }
 
-        $userVerified = $this->userOtpVerifiedByDate($data['mobile'], now()->subHours(1));
+//        $userVerified = $this->userOtpVerifiedByDate($data['mobile'], now()->subHours(1));
 
-        if (!$userVerified) {
-            return response()->json([
-                'message' => 'کاربر تایید نشده است',
-            ], 403);
-        }
+
 
         try {
             DB::beginTransaction();
@@ -253,6 +249,7 @@ class RegisterEmployeeController extends Controller
             $personResult = !is_null($p) ?
                 $this->naturalUpdate($data, $p->natural) :
                 $this->naturalStore($data);
+
 
             $data['personID'] = $personResult->person->id;
             $data['password'] = $data['nationalCode'];
