@@ -5,6 +5,7 @@ namespace Modules\ODOC\app\Http\Traits;
 use Illuminate\Support\Facades\Cache;
 use Modules\ODOC\app\Http\Enums\ApproversStatusEnum;
 use Modules\ODOC\app\Models\Approvers;
+use Modules\PersonMS\app\Models\Signature;
 
 trait OdocApproversTrait
 {
@@ -30,6 +31,28 @@ trait OdocApproversTrait
         }
 
         return $data;
+    }
+
+    public function documentApproval($id , $data)
+    {
+        $approver = Approvers::where('person_id', $data['person_id'])
+            ->where('document_id', $id)
+            ->first();
+
+        if ($approver) {
+            $statusID = $this->AssignedApproversStatus()->id;
+            $signature = Signature::where('person_id', $data['person_id'])
+                ->where('status_id', $this->ActiveSignatureStatus()->id)
+                ->first();
+
+            $approver->update([
+                'status_id' => $statusID,
+                'signed_date' => now(),
+                'token' => null,
+                'signature_id' => $signature->id,
+            ]);
+        }
+
     }
 
     public function DeclinedApproversStatus()

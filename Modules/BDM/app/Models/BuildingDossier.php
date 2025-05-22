@@ -23,7 +23,9 @@ class BuildingDossier extends Model
 
     protected $fillable = [
         'created_date',
-        'id'
+        'id',
+        'bdm_type_id',
+        'tracking_code'
     ];
 
     public $timestamps = false;

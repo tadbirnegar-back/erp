@@ -79,7 +79,19 @@
     },
     {
         "name": "دریافت کد امضا",
-        "slug": "/request-otp/signature",
+        "slug": "/person/request-otp/signature",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "دریافت کد برای امضا",
+        "slug": "/person/request-otp-to-approve/signature",
+        "moduleName": "PersonMS",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "تایید کد امضا",
+        "slug": "/person/signature-otp/verifier",
         "moduleName": "PersonMS",
         "permissionTypeName": "operational"
     }

@@ -82,6 +82,26 @@ class SignatureController extends Controller
 
     }
 
+    public function sendOtpSignatureToApprove()
+    {
+        try {
+            DB::beginTransaction();
+            $user = Auth::user();
+            $data = [
+                'mobile' => $user->mobile,
+                'code' => mt_rand(10000, 99999),
+                'expire' => 60,
+            ];
+            $this->sendOtp($data , OtpPatternsEnum::SIGNATURE_OTP->value);
+            DB::commit();
+            return response()->json(['mobile' => $user->mobile]);
+        }catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+    }
+
+
 
     public function verifyAndRevokeOtp(Request $request)
     {

@@ -17,6 +17,8 @@ use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
 use Modules\LMS\app\Models\AnswerSheet;
+use Modules\LMS\app\Models\Course;
+use Modules\LMS\app\Models\CourseExam;
 use Modules\LMS\app\Models\Enroll;
 use Modules\LMS\app\Models\Student;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
@@ -53,6 +55,13 @@ class testController extends Controller
 
     function run()
     {
+        $activeAnswerSheetStatusID = $this->answerSheetApprovedStatus()->id;
+        $declinedAnswerSheetStatusID = $this->answerSheetDeclinedStatus()->id;
+
+
+        $courseExams = CourseExam::where('course_id', 9)->select('exam_id')->get();
+        $examIds = $courseExams->pluck('exam_id')->toArray();
+
         $enrolls = Enroll::join('courses', 'courses.id', 'enrolls.course_id')
             ->join('orders', function ($query) {
                 $query->on('orders.orderable_id', '=', 'enrolls.id')
@@ -69,10 +78,21 @@ class testController extends Controller
             ->join('organization_units as district', 'district.id', '=', 'town.parent_id')
             ->join('organization_units as city', 'city.id', '=', 'district.parent_id')
             ->join('village_ofcs', 'village.unitable_id', '=', 'village_ofcs.id')
-            ->leftJoin('answer_sheets', 'answer_sheets.student_id', '=', 'customers.customerable_id')
             ->join('chapters', 'chapters.course_id', '=', 'courses.id')
             ->join('lessons', 'chapters.id', '=', 'lessons.chapter_id')
             ->join('contents', 'contents.lesson_id', '=', 'lessons.id')
+            ->leftJoin('answer_sheets', function ($join) use ($declinedAnswerSheetStatusID, $examIds) {
+                $join->on('answer_sheets.student_id', '=', 'customers.customerable_id')
+                    ->whereIn('answer_sheets.exam_id', $examIds)
+                    ->whereIn('answer_sheets.status_id', $declinedAnswerSheetStatusID)
+                    ->whereRaw('answer_sheets.id = (
+            SELECT MAX(a2.id)
+            FROM answer_sheets AS a2
+            WHERE a2.student_id = answer_sheets.student_id
+            AND a2.exam_id IN (' . implode(',', $examIds) . ')
+            AND a2.status_id = ?
+        )', [$declinedAnswerSheetStatusID]);
+            })
             ->leftJoin('content_consume_log', function ($query) {
                 $query->on('content_consume_log.student_id', '=', 'customers.customerable_id')
                     ->on('content_consume_log.content_id', '=', 'contents.id');
@@ -82,13 +102,78 @@ class testController extends Controller
                 'files.duration as duration',
                 'content_consume_log.consume_round as consume_round',
                 'content_consume_log.consume_data as consume_data',
+                'content_consume_log.content_id as content_id',
                 'persons.display_name as person_name',
+                'contents.id as content_id',
+                'courses.id as course_id',
                 'persons.id as person_id',
+                'customers.customerable_id as student_id',
+                'village.name as village_name',
+                'district.name as district_name',
+                'city.name as city_name',
+                'answer_sheets.score',
+                'enrolls.study_completed as is_completed',
+                'answer_sheets.finish_date_time as finish_date',
+                'village_ofcs.abadi_code'
             ])
-            ->distinct()
             ->where('courses.id', 9)
+            ->distinct()
             ->get();
-        return response() -> json($enrolls);
+
+
+        $enrolls->map(function ($item) use ($examIds) {
+            $item->total = ($item->duration * $item->consume_round) + $item->consume_data;
+        });
+        $groupedByPerson = $enrolls->groupBy('person_id');
+
+        // Sum total for each person
+        $personTotals = $groupedByPerson->map(function ($items) {
+            return $items->sum('total');
+        });
+
+        echo "<table border='1' cellpadding='8' cellspacing='0'>";
+        echo "<thead><tr>
+                <th>نام دهیار</th>
+                <th>مجموع کل مصرف</th>
+                <th>نمره</th>
+                <th>به پایان رسانده</th>
+                <th>شهر</th>
+                <th>بخش</th>
+                <th>دهیاری</th>
+                <th>تاریخ</th>
+                <th>کد آبادی</th>
+            </tr></thead>";
+        echo "<tbody>";
+
+        foreach ($groupedByPerson as $personId => $items) {
+            $first = $items->first();
+            $totalSeconds = $personTotals[$personId];
+
+            // Convert total seconds to h:m:s
+            $hours = floor($totalSeconds / 3600);
+            $minutes = floor(($totalSeconds % 3600) / 60);
+            $seconds = $totalSeconds % 60;
+
+            $isCompleted = ($first->is_completed == 1) ? 'بله' : 'خیر';
+            // Format as h:m:s
+            $formattedTime = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+
+            $date = is_null($first->finish_date) ? '' : convertDateTimeGregorianToJalaliDateTime($first->finish_date);
+
+            echo "<tr>
+                    <td>{$first->person_name}</td>
+                    <td>{$formattedTime}</td>
+                    <td>{$first->score}</td>
+                    <td>{$isCompleted}</td>
+                    <td>{$first->village_name}</td>
+                    <td>{$first->district_name}</td>
+                    <td>{$first->city_name}</td>
+                    <td>{$date}</td>
+                    <td>{$first->abadi_code}</td>
+                </tr>";
+        }
+
+        echo "</tbody></table>";
 //        1-روستای اوبابلاغی سند 776231
 //2-روستای اوزان سفلی سند 776238
 //3-روستای آخی جان سند 712629

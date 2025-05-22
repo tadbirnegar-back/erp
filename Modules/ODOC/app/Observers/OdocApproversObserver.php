@@ -2,6 +2,7 @@
 
 namespace Modules\ODOC\app\Observers;
 
+use Illuminate\Support\Facades\Log;
 use Modules\EMS\app\Events\EnactmentMeetingEvent;
 use Modules\ODOC\app\Events\OdocApproversEvent;
 use Modules\ODOC\app\Models\Approvers;

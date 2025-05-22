@@ -42,6 +42,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/bdm/pre-data-structures/list/{id}' , [StructuresController::class, 'preDataStructures']);
     Route::get('/bdm/send-dossier-bill/{id}' , [LicenseController::class, 'sendDossierBill']);
     Route::post('/bdm/publish-dossier-bill/{id}' , [LicenseController::class, 'publishDossierBill']);
+    Route::post('/bdm/set-odoc/{id}' , [LicenseController::class, 'setOdocDocument']);
 });
 
 
@@ -51,4 +52,3 @@ Route::prefix('v1')->group(function () {
     Route::post('/bdm/engineer/request' , [EngineerController::class, 'requestEngineer']);
     Route::get('/bdm/engineers-request/pre-data' , [EngineerController::class, 'engineersRequestPreData']);
 });
-Route::get('/bdm/license/submit/{id}' , [LicenseController::class, 'submitLicense']);

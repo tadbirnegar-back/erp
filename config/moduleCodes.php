@@ -1,5 +1,6 @@
 <?php
 
+use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Models\Form;
 
 return [
@@ -7,7 +8,7 @@ return [
         'BDM' => [
             'code' => '1',
             'models' => [
-                Form::class => '11',
+                BuildingDossier::class => '11',
             ],
         ],
     ],

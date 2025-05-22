@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\BDM\app\Models\BuildingDossier;
+use Modules\ODOC\app\Http\Enums\TypeOfModelsEnum;
+use Modules\ODOC\app\Observers\DocumentObserver;
 use Modules\ODOC\Database\factories\DocumentFactory;
 use Modules\StatusMS\app\Models\Status;
 
@@ -40,11 +42,19 @@ class Document extends Model
         return Attribute::make(
             get: function ($value) {
                 if ($value == BuildingDossier::class) {
-                    return 'پروانه های ساختمانی';
+                    return TypeOfModelsEnum::BuildingDossier->value;
                 }
                 return null;
             }
         );
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Register the observer
+        static::observe(DocumentObserver::class);
     }
 
     public static function getTableName()
