@@ -3,11 +3,14 @@
 namespace Modules\WBM\app\Http\Traits;
 
 
+use Modules\BDM\app\Http\Enums\BdmReportTypesEnum;
 use Modules\BDM\app\Http\Enums\EngineersTypeEnum;
 use Modules\BDM\app\Http\Enums\PermitStatusesEnum;
 use Modules\BDM\app\Http\Traits\DossierTrait;
 use Modules\BDM\app\Http\Traits\PermitTrait;
 use Modules\BDM\app\Models\Engineer;
+use Modules\BDM\app\Models\ReportItem;
+use Modules\BDM\app\Models\ReportType;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\Employee;
@@ -93,5 +96,43 @@ trait DossierWBMTrait
         });
 
         return $engineers;
+    }
+
+    public function ItemsForEngineers($id)
+    {
+        $status = $this->findCurrentPermitStatusOfDossier($id);
+        if($status->permit_status_name == PermitStatusesEnum::fifteenth->value){
+            $items = ReportItem::where('report_type_id' , BdmReportTypesEnum::FIRST_REPORT->value)->get();
+            $reportType = ReportType::where('name' , BdmReportTypesEnum::FIRST_REPORT->getName())->first();
+            return [
+                'dossier_id' => $id,
+                'report_type' => $reportType,
+                'items' => $items,
+            ];
+        }else if($status->permit_status_name == PermitStatusesEnum::sixteenth->value){
+            $items = ReportItem::where('report_type_id' , BdmReportTypesEnum::SECOND_REPORT->value)->get();
+            $reportType = ReportType::where('name' , BdmReportTypesEnum::SECOND_REPORT->getName())->first();
+            return [
+                'dossier_id' => $id,
+                'report_type' => $reportType,
+                'items' => $items,
+            ];
+        }else if($status->permit_status_name == PermitStatusesEnum::seventeenth->value){
+            $items = ReportItem::where('report_type_id' , BdmReportTypesEnum::THIRD_REPORT->value)->get();
+            $reportType = ReportType::where('name' , BdmReportTypesEnum::THIRD_REPORT->getName())->first();
+            return [
+                'dossier_id' => $id,
+                'report_type' => $reportType,
+                'items' => $items,
+            ];
+        }else if($status->permit_status_name == PermitStatusesEnum::eighteenth->value){
+            $items = ReportItem::where('report_type_id' , BdmReportTypesEnum::FOURTH_REPORT->value)->get();
+            $reportType = ReportType::where('name' , BdmReportTypesEnum::FOURTH_REPORT->getName())->first();
+            return [
+                'dossier_id' => $id,
+                'report_type' => $reportType,
+                'items' => $items,
+            ];
+        }
     }
 }

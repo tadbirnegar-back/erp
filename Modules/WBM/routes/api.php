@@ -18,3 +18,4 @@ use Modules\WBM\app\Http\Controllers\DossierWBMController;
 Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
 });
 Route::post('/wbm/works-for-engineers/list' , [DossierWBMController::class, 'listOfWorksForEngineers']);
+Route::get('/wbm/items-list/engineers/{id}' , [DossierWBMController::class, 'listOfItemsForEngineers']);
