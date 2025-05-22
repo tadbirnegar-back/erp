@@ -515,7 +515,8 @@ trait DossierTrait
 
     public function upgradeOneLevel($id)
     {
-        $user = \Auth::user();
+//        $user = \Auth::user();
+        $user = Auth::user();
         $currentStatus = $this->findCurrentPermitStatusOfDossier($id);
 
         $currentStatusName = $currentStatus->permit_status_name;
