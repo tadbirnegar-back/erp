@@ -3,26 +3,25 @@
 namespace App\Http\Controllers;
 
 
+use DB;
+use Modules\AAA\app\Models\User;
 use Modules\ACC\app\Http\Traits\AccountTrait;
 use Modules\ACC\app\Http\Traits\ArticleTrait;
 use Modules\ACC\app\Http\Traits\DocumentTrait;
+use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
 use Modules\ACMS\app\Http\Trait\CircularSubjectsTrait;
 use Modules\ACMS\app\Http\Trait\FiscalYearTrait;
 use Modules\BNK\app\Http\Traits\BankTrait;
 use Modules\BNK\app\Http\Traits\ChequeTrait;
 use Modules\BNK\app\Http\Traits\TransactionTrait;
+use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
 use Modules\HRMS\app\Http\Traits\JobTrait;
 use Modules\HRMS\app\Http\Traits\LevelTrait;
 use Modules\HRMS\app\Http\Traits\PositionTrait;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Resources\PersonListWithPositionAndRSList;
 use Modules\LMS\app\Http\Traits\AnswerSheetTrait;
-use Modules\OUnitMS\app\Models\StateOfc;
-use Modules\OUnitMS\app\Models\VillageOfc;
-use Modules\PersonMS\app\Http\Enums\PersonStatusEnum;
 use Modules\PersonMS\app\Http\Traits\PersonTrait;
-use Modules\PersonMS\app\Models\Person;
 
 class testController extends Controller
 {
@@ -51,8 +50,56 @@ class testController extends Controller
 
     public function run()
     {
+        $user = User::find(1905);
+        $recruitmentScripts = $user
+            ->activeRecruitmentScripts()
+            ->joinRelationship('scriptType', function ($query) {
+                $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
+            })
+            ->get(['organization_unit_id'])->pluck('organization_unit_id')->flatten(1);
+        dd($recruitmentScripts);
+        $emps = Employee::joinRelationship('recruitmentScripts.scriptType', [
+            'recruitmentScripts' => function ($join) {
+                $join->finalStatus()
+                    ->where('statuses.name', RecruitmentScriptStatusEnum::ACTIVE->value)
+                    ->join('positions', 'recruitment_scripts.position_id', '=', 'positions.id')
+                    ->join('organization_units', 'recruitment_scripts.organization_unit_id', '=', 'organization_units.id');
+            }
+        ])
+            ->joinRelationship('workForce.person.natural', [
+                'person' => function ($join) {
+                    $join->leftJoin('files', function ($on) {
+                        $on->on('persons.profile_picture_id', '=', 'files.id');
+                    });
+                }
+            ])->select(
+                'organization_units.id as organization_unit_id',
+                'organization_units.name as organization_unit_name',
+                DB::raw('JSON_ARRAYAGG(JSON_OBJECT("employee_id", employees.id, "display_name", persons.display_name, "national_code", persons.national_code,"gender",naturals.gender_id, "person_id", persons.id, "file_id", files.id, "file_slug", files.slug, "file_size", files.size, "file_name", files.name, "position_name", positions.name, "script_name", script_types.title)) as
+employees')
+            )
+            ->groupBy('organization_units.id', 'organization_units.name')
+            ->get();
 
+//        $results = DB::table('employees')
+//            ->join('recruitment_scripts', 'employees.id', '=', 'recruitment_scripts.employee_id')
+//            ->join('organization_units', 'recruitment_scripts.organization_unit_id', '=', 'organization_units.id')
+//            ->join('work_forces', 'employees.id', '=', 'work_forces.workforceable_id')
+//            ->join('persons', 'work_forces.person_id', '=', 'persons.id')
+//            ->join('recruitment_script_status', 'recruitment_scripts.id', '=', 'recruitment_script_status.recruitment_script_id')
+//            ->join('statuses', 'recruitment_script_status.status_id', '=', 'statuses.id')
+//            ->whereRaw('recruitment_script_status.create_date = (SELECT MAX(create_date) FROM recruitment_script_status WHERE recruitment_script_id = recruitment_scripts.id)')
+//            ->where('statuses.name', 'فعال')
+//            ->select(
+//                'organization_units.id as organization_unit_id',
+//                'organization_units.name as organization_unit_name',
+//                DB::raw('JSON_ARRAYAGG(JSON_OBJECT("employee_id", employees.id, "display_name", persons.display_name)) as
+//employees')
+//            )
+//            ->groupBy('organization_units.id', 'organization_units.name')
+//            ->get();
 
+        dump(json_decode($emps));
 
 //        $pList = Person::joinRelationship('natural')
 //            ->finalPersonStatus()
