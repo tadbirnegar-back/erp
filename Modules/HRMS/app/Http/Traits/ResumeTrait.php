@@ -52,7 +52,7 @@ trait ResumeTrait
             $resumes = collect($resumes);
         }
 
-        $resumes = $resumes->map(fn($data) => [
+        return $resumes->map(fn($data) => [
             'id' => $data['id'] ?? null,
             'company_name' => $data['companyName'],
             'city' => $data['city'],
@@ -65,7 +65,5 @@ trait ResumeTrait
 
         ],
         );
-
-        return $resumes;
     }
 }
