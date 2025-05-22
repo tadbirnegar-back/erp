@@ -16,13 +16,14 @@ class DossierReport extends Model
      * The attributes that are mass assignable.
      */
 
+    protected $table = 'bdm_reports';
+
     protected $fillable = [
         'dossier_id',
         'report_type_id',
         'description',
         'created_date',
         'creator_id',
-        'file_id',
     ];
 
     public $timestamps = false;
