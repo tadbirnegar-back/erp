@@ -1463,7 +1463,7 @@ trait DossierTrait
         $pools->map(function ($item) {
             $item->partition_name = LevyItem::where('id', $item->partitioning_type_id)->first()->name;
             if ($item->main_prop_type == ApplicationsCoefficientEnum::residential->value) {
-                $item->price = $item->value * $item->height->$item->p_residential * $item->adjustment_coefficient;
+                $item->price = $item->value * $item->height * $item->p_residential * $item->adjustment_coefficient;
             }
             if ($item->main_prop_type == ApplicationsCoefficientEnum::commercial->value) {
                 $item->price = $item->value * $item->height * $item->p_commercial * $item->adjustment_coefficient;
