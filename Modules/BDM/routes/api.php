@@ -43,6 +43,7 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->group(function () {
     Route::get('/bdm/send-dossier-bill/{id}' , [LicenseController::class, 'sendDossierBill']);
     Route::post('/bdm/publish-dossier-bill/{id}' , [LicenseController::class, 'publishDossierBill']);
     Route::post('/bdm/set-odoc/{id}' , [LicenseController::class, 'setOdocDocument']);
+    Route::get('/bdm/pdf-pre-data/{id}' , [LicenseController::class, 'getPdfPreDatas']);
 });
 
 

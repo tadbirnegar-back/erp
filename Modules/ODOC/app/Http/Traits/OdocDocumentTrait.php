@@ -24,6 +24,7 @@ trait OdocDocumentTrait
     public function storeOdocDocument($data, $userID)
     {
         $json = json_decode($data['json']);
+
         foreach ($json as $object) {
             $data['component_to_render'] = $object->component_to_render;
             $data['json'] = encrypt_json([$object]);
@@ -94,6 +95,7 @@ trait OdocDocumentTrait
             ->when(isset($data['title']), function ($query) use ($data) {
                 $query->where('odoc_documents.title', 'like', '%' . $data['title'] . '%');
             })
+            ->distinct()
             ->paginate($perPage, ['*'], 'page', $pageNum);
         return $query;
 

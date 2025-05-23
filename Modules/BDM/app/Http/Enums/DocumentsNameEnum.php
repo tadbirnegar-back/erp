@@ -13,4 +13,6 @@ enum DocumentsNameEnum: string
     case FORM_SIX = 'فرم ۶: برگ تعهد محاسبات سازه';
     case FORM_SEVEN = 'فرم ۷: برگ تعهد نظارت';
     case FORM_EIGHT = 'فرم ۸: اعلام شروع به کار عملیات ساختمانی';
+
+    case TaxesBillPDF = 'صورت حساب قبض';
 }

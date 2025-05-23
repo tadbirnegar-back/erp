@@ -3,6 +3,7 @@
 namespace Modules\ODOC\app\Http\Traits;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Modules\ODOC\app\Http\Enums\ApproversStatusEnum;
 use Modules\ODOC\app\Models\Approvers;
 use Modules\PersonMS\app\Models\Signature;
@@ -35,9 +36,8 @@ trait OdocApproversTrait
 
     public function documentApproval($id , $data)
     {
-        $approver = Approvers::where('person_id', $data['person_id'])
-            ->where('document_id', $id)
-            ->first();
+        $approver = Approvers::where('document_id', $id)->first();
+        Log::info($approver);
 
         if ($approver) {
             $statusID = $this->AssignedApproversStatus()->id;

@@ -35,10 +35,6 @@ class EngineerController extends Controller
     {
         try {
             $data = $request->all();
-
-            $password = '';
-            $mobile = '';
-            //store owners and partners
             $createdOrUpdatedPerson = $this->personUpdateOrInsert((object)$data);
             if (isset($createdOrUpdatedPerson['type'])) {
                 return response()->json(['message' => 'شماره موبایل قبلا در سامانه ثبت شده'], 404);
@@ -51,6 +47,7 @@ class EngineerController extends Controller
             $this->attachRoleForEngineer($userID);
             $this->EducationalRecordStore($data, $createdOrUpdatedPerson->id);
             $this->storeEngineer($data, $personId);
+            $this->insertLicenses($personId, (object)$data);
             return response()->json(['data' => [
                 'national_code' => $data['password'],
                 'mobile' => $data['mobile'],

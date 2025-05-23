@@ -8,4 +8,5 @@ enum UserRolesEnum: string
     case KARSHENAS = 'کارشناس مشورتی';
     case DABIRKHANE = 'مسئول دبیرخانه';
     case OZV_HEYAAT = 'عضو هیئت';
+    case BUILDING_ENGINEER = 'مهندس ساختمان';
 }

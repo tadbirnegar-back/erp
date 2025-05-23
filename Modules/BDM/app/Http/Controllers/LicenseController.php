@@ -153,6 +153,22 @@ class LicenseController extends Controller
 
     }
 
+
+    public function getPdfPreDatas($id)
+    {
+        $currentStatus = $this->findCurrentPermitStatusOfDossier($id);
+
+        $currentEnum = PermitStatusesEnum::tryFrom($currentStatus->permit_status_name);
+        if ($currentEnum) {
+            $currentId = $currentEnum->id();
+            $nextEnum = array_filter(PermitStatusesEnum::cases(), fn($case) => $case->id() === $currentId + 1);
+            $nextEnum = reset($nextEnum);
+        }
+        $getPdfDatas = $this->getPdfDatas($id , $nextEnum->value);
+        return response()->json($getPdfDatas);
+
+    }
+
     public function licenseList(Request $request)
     {
         $data = $request->all();
@@ -292,10 +308,9 @@ class LicenseController extends Controller
         $getTimeLineData = $this->getTimelineData($id);
         $getFooterDatas = $this->getFooterDatas($id);
         $permitStatusesList = $this->getPermitStatusesList();
-        $getPdfDatas = $this->getPdfDatas($id , $getTimeLineData['status']['permit_status_name']);
         $getFilesNeeded = $this->getFilesNeeded($id);
 
-        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas, 'permitStatusesList' => $permitStatusesList , 'getPdfDatas' => $getPdfDatas , 'getFilesNeeded' => $getFilesNeeded]);
+        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas, 'permitStatusesList' => $permitStatusesList , 'getFilesNeeded' => $getFilesNeeded]);
 
     }
 

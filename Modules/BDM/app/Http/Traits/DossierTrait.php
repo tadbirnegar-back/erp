@@ -36,6 +36,7 @@ use Modules\FileMS\app\Models\File;
 use Modules\ODOC\app\Http\Enums\OdocDocumentComponentsTypeEnum;
 use Modules\ODOC\app\Http\Enums\TypeOfOdocDocumentsEnum;
 use Modules\ODOC\app\Http\Traits\OdocApproversTrait;
+use Modules\ODOC\app\Http\Traits\OdocDocumentTrait;
 use Modules\ODOC\app\Models\Document;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Http\Enums\PersonLicensesEnums;
@@ -61,7 +62,7 @@ use Modules\VCM\app\Models\VcmVersions;
 
 trait DossierTrait
 {
-    use PermitTrait, BillsTrait, OdocApproversTrait, SignaturesTrait;
+    use PermitTrait, BillsTrait, OdocApproversTrait, SignaturesTrait , OdocDocumentTrait;
 
     public function makeDossier($ounitID, $ownershipTypeID, $bdmTypeID)
     {
@@ -1771,7 +1772,7 @@ trait DossierTrait
         $banks = $this->getBankAccs($id);
         $allTotalPrice = $buildings['total_price'] + $partitioning['total_price'] + $pavilion['total_price'] + $parking['total_price'] + $pool['total_price'];
 
-        $mainData = ["dossierData" => $dossier, "buildings" => $buildings, "partitioning" => $partitioning, "pavilion" => $pavilion, "parking" => $parking, "pool" => $pool, "allTotalPrice" => $allTotalPrice, 'banks' => $banks, "component_to_render" => OdocDocumentComponentsTypeEnum::TaxesBillPDF->value];
+        $mainData = ["dossierData" => $dossier, "buildings" => $buildings, "partitioning" => $partitioning, "pavilion" => $pavilion, "parking" => $parking, "pool" => $pool, "allTotalPrice" => $allTotalPrice, 'banks' => $banks, "component_to_render" => OdocDocumentComponentsTypeEnum::TaxesBillPDF->value , "title" =>  DocumentsNameEnum::TaxesBillPDF->value];
         return [OdocDocumentComponentsTypeEnum::TaxesBillPDF->value => $mainData];
     }
 
@@ -1837,6 +1838,7 @@ trait DossierTrait
         $nazer->main_owner_gender_name = $nazer->main_owner_gender_id == 1 ? 'مرد' : 'زن';
         $nazer->license_topic = '';
         $nazer->rules = '';
+        $nazer->title = DocumentsNameEnum::FORM_EIGHT->value;
         return [OdocDocumentComponentsTypeEnum::StartWorkingObligation->value => $nazer];
     }
 
@@ -1891,6 +1893,7 @@ trait DossierTrait
         $mohaseb->gender_name = $mohaseb->gender_id == 1 ? 'مرد' : 'زن';
         $mohaseb->license_topic = '';
         $mohaseb->rules = '';
+        $mohaseb->title = DocumentsNameEnum::FORM_SIX->value;
         return [OdocDocumentComponentsTypeEnum::MOHASEB_OBLIGATION->value => $mohaseb];
     }
 
@@ -1945,6 +1948,7 @@ trait DossierTrait
         $nazer->gender_name = $nazer->gender_id == 1 ? 'مرد' : 'زن';
         $nazer->license_topic = '';
         $nazer->rules = '';
+        $nazer->title = DocumentsNameEnum::FORM_SEVEN->value;
         return [OdocDocumentComponentsTypeEnum::NAZER_OBLIGATION->value => $nazer];
     }
 
@@ -1999,6 +2003,7 @@ trait DossierTrait
         $memar->gender_name = $memar->gender_id == 1 ? 'مرد' : 'زن';
         $memar->license_topic = '';
         $memar->rules = '';
+        $memar->title = DocumentsNameEnum::FORM_FIVE->value;
         return [OdocDocumentComponentsTypeEnum::MEMAR_OBLIGATION->value => $memar];
     }
 
@@ -2090,6 +2095,7 @@ trait DossierTrait
         $levyItem = LevyItem::where('name', LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value)->orderBy('id', 'desc')->first();
 
         $booklet = Booklet::where('ounit_id', $ounitID)->orderBy('id', 'desc')->first();
+
 
 
         $tariff = Tarrifs::where('booklet_id', $booklet->id)
@@ -2420,7 +2426,7 @@ trait DossierTrait
         $moduleCode = $moduleData['code'];
         $model = $moduleData['models']["Modules\\BDM\\app\\Models\\BuildingDossier"];
         $lastFiscalYear = FiscalYear::orderBy('name', 'desc')->first();
-
+        $data['json'] = json_encode([$itemsForPdf]);
         $data['serial_number'] = $lastFiscalYear->name . TypeOfOdocDocumentsEnum::DAKHELI->value . $data['ounit_id'] . $moduleCode . $model . $data['model_id'];
         $this->storeOdocDocument($data, $user->id);
     }
