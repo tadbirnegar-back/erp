@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\SMM\app\Http\Controllers\CircularController;
+use Modules\SMM\app\Http\Controllers\StaffController;
 
 /*
     |--------------------------------------------------------------------------
@@ -27,4 +28,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::put('/smm/circulars/update-benefits/{id}', [CircularController::class, 'updateCircularBenefits']);
 
     Route::post('/smm/circulars/dispatch/{id}', [CircularController::class, 'dispatchCircular']);
+
+    Route::post('/smm/contracts/list', [StaffController::class, 'FinancialManagerIndex']);
 });

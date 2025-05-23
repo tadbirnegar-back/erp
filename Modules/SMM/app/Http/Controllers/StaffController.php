@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\ACMS\app\Http\Enums\AccountantScriptTypeEnum;
+use Modules\SMM\app\Resources\OunitEmployeesResource;
 use Modules\SMM\app\Traits\StaffTrait;
 
 class StaffController extends Controller
 {
     use StaffTrait;
 
-    public function FinancialManagerIndex(Request $request): JsonResponse
+    public function FinancialManagerIndex(Request $request)
     {
         $user = \Auth::user();
         $data = $request->all();
@@ -23,7 +24,8 @@ class StaffController extends Controller
             })
             ->get(['organization_unit_id'])->pluck('organization_unit_id')->flatten(1);
         $result = $this->employeesListForContract($data, $recruitmentScripts);
-        return response()->json($result);
+
+        return OunitEmployeesResource::collection($result);
     }
 
 

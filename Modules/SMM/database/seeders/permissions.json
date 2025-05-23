@@ -34,5 +34,11 @@
         "slug": "/smm/circulars/dispatch/{id}",
         "moduleName": "حقوق و دستمزد",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست قرارداد ها",
+        "slug": "/smm/contracts/list",
+        "moduleName": "حقوق و دستمزد",
+        "permissionTypeName": "sidebar"
     }
 ]
