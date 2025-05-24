@@ -105,6 +105,9 @@ class DossierService
         if ($PendingApprovers->count() == 0) {
             $declinedApprovers = Approvers::where('document_id', $this->odocID)->where('status_id', $declinedApproversStatus)->get();
             if ($declinedApprovers->count() == 0) {
+                if($this->document->component_to_render == OdocDocumentComponentsTypeEnum::BuildingDossierPDF->value || $this->document->component_to_render == OdocDocumentComponentsTypeEnum::WorkOverReportPDF->value){
+                    $this->upgradeOneLevel($this->document->model_id);
+                }
                 $this->makeOdocApprove();
             } else {
                 $this->makeOdocDecline();

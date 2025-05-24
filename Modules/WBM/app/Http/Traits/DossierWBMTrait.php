@@ -26,7 +26,7 @@ trait DossierWBMTrait
 {
     use RecruitmentScriptTrait, PermitTrait, DossierTrait;
 
-    public function TasksOfEngineers($pageNum, $perPage, $personID)
+    public function TasksOfEngineers($data,$pageNum, $perPage, $personID)
     {
         $scriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
         $activeScriptStatus = $this->activeRsStatus();
@@ -86,6 +86,10 @@ trait DossierWBMTrait
                 'masuleFani_naturals.mobile as masuleFani_mobile',
             ])
             ->whereIn('status_permit.id', $PermitStatuses)
+            ->when(isset($data['name']), function ($query) use ($data) {
+                $query->where('bdm_building_dossiers.tracking_code', 'like', '%' . $data['name'] . '%');
+            })
+
             ->where('bdm_engineers.person_id', '=', $personID)
             ->paginate($perPage, ['*'], 'page', $pageNum);
         $engineers->map(function ($item) {

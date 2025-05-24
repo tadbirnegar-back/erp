@@ -10,6 +10,7 @@ use Modules\AAA\app\Http\Enums\PermissionTypesEnum;
 use Modules\AAA\app\Models\User;
 use Modules\ACMS\app\Models\FiscalYear;
 use Modules\BDM\app\Http\Enums\BdmOwnershipTypesEnum;
+use Modules\BDM\app\Http\Enums\BdmReportTypesEnum;
 use Modules\BDM\app\Http\Enums\BdmTypesEnum;
 use Modules\BDM\app\Http\Enums\DocumentsNameEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
@@ -33,6 +34,11 @@ use Modules\BDM\app\Models\Plan;
 use Modules\BDM\app\Models\Pool;
 use Modules\BDM\app\Models\Structure;
 use Modules\FileMS\app\Models\File;
+use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
+use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
+use Modules\HRMS\app\Models\Employee;
+use Modules\HRMS\app\Models\RecruitmentScript;
+use Modules\HRMS\app\Models\ScriptType;
 use Modules\ODOC\app\Http\Enums\OdocDocumentComponentsTypeEnum;
 use Modules\ODOC\app\Http\Enums\TypeOfOdocDocumentsEnum;
 use Modules\ODOC\app\Http\Traits\OdocApproversTrait;
@@ -62,7 +68,7 @@ use Modules\VCM\app\Models\VcmVersions;
 
 trait DossierTrait
 {
-    use PermitTrait, BillsTrait, OdocApproversTrait, SignaturesTrait , OdocDocumentTrait;
+    use PermitTrait, BillsTrait, OdocApproversTrait, SignaturesTrait, OdocDocumentTrait, RecruitmentScriptTrait;
 
     public function makeDossier($ounitID, $ownershipTypeID, $bdmTypeID)
     {
@@ -345,7 +351,22 @@ trait DossierTrait
         $engineers = $this->getEngineers($id);
         $payments = $this->getPayments($id);
         $plan = $this->getPlan($id);
-        return ['estate' => $estateData, 'owners' => $ownersData, 'lawyers' => $lawyers, "structures" => $structures, 'engineers' => $engineers, 'payments' => $payments, 'plan' => $plan];
+        $utms = $this->getUtms($id);
+        return ['estate' => $estateData, 'owners' => $ownersData, 'lawyers' => $lawyers, "structures" => $structures, 'engineers' => $engineers, 'payments' => $payments, 'plan' => $plan, 'utms' => $utms];
+    }
+
+    public function getUtms($dossierID)
+    {
+        $query = BuildingDossier::join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->join('bdm_estate_utm', 'bdm_estates.id', '=', 'bdm_estate_utm.estate_id')
+            ->select([
+                'bdm_estate_utm.x',
+                'bdm_estate_utm.y',
+                'bdm_estate_utm.zone',
+                'bdm_estate_utm.is_center',
+            ])
+            ->find($dossierID);
+        return $query;
     }
 
     public function getEstates($dossierID)
@@ -372,8 +393,13 @@ trait DossierTrait
                 'district.name as district_name',
                 'village.name as village_name',
                 'bdm_estates.address as address',
+                'bdm_estates.propery_sketch_file_id as propery_sketch_file_id'
             ])
             ->find($dossierID);
+
+        if ($query->propery_sketch_file_id != null) {
+            $query->propery_sketch_file_slug = File::find($query->propery_sketch_file_id)->slug;
+        }
 
         $query->ownership_type_name = BdmOwnershipTypesEnum::getNameById($query->ownership_type_id);
 
@@ -1737,11 +1763,91 @@ trait DossierTrait
                 $payment = $this->paymentPDF($id);
                 return [$payment];
                 break;
+            case PermitStatusesEnum::thirteenth->value:
+                $dossierPDF = $this->publishDossierPDF($id);
+                return [$dossierPDF];
+                break;
+            case PermitStatusesEnum::twentieth->value:
+                $dossierPDF = $this->lastpdf($id);
+                $finalPdfOfNazerEngineer = $this->finalPDFOfNazerEngineer($id);
+                return [$finalPdfOfNazerEngineer, $dossierPDF];
+                break;
             default:
                 return null;
         }
     }
 
+    public function finalPDFOfNazerEngineer($id)
+    {
+        $query = BuildingDossier::join('bdm_owners', function ($join) {
+            $join->on('bdm_owners.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('is_main_owner', '=', true);
+        })
+            ->join('bdm_engineers_building', function ($join) {
+                $join->on('bdm_engineers_building.dossier_id', '=', 'bdm_building_dossiers.id')
+                    ->where('bdm_engineers_building.engineer_type_id', '=', EngineersTypeEnum::NAZER->id());
+            })
+            ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
+            ->join('persons as nazer', 'bdm_engineers.person_id', '=', 'nazer.id')
+            ->join('naturals as nazer_naturals', function ($join) {
+                $join->on('nazer_naturals.id', '=', 'nazer.personable_id')
+                    ->where('nazer.personable_type', '=', Natural::class);
+            })
+            ->join('persons as main_owner', 'bdm_owners.person_id', '=', 'main_owner.id')
+            ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->join('organization_units as village', 'bdm_estates.ounit_id', '=', 'village.id')
+            ->join('users', 'village.head_id', '=', 'users.id')
+            ->join('persons as dehyar', 'users.person_id', '=', 'dehyar.id')
+            ->select([
+                'bdm_building_dossiers.id as dossier_id',
+                'bdm_building_dossiers.tracking_code as tracking_code',
+                'bdm_building_dossiers.created_date as created_date',
+                'main_owner.display_name as owner_name',
+                'nazer.display_name as nazer_name',
+                'bdm_engineers.dossier_number',
+                'bdm_engineers.registration_number',
+                'bdm_estates.allow_floor',
+                'bdm_estates.area',
+                'village.name as village_name',
+                'dehyar.display_name as dehyar_name',
+                'nazer_naturals.bc_code as nazer_bc_code',
+                'nazer_naturals.bc_issue_date as nazer_bc_issue_date',
+
+            ])
+            ->find($id);
+
+        $documents = Document::where('model_id', $id)
+            ->where('model', BuildingDossier::class)
+            ->whereIn('component_to_render', [OdocDocumentComponentsTypeEnum::FinalReportPDF->value,
+                OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value,
+                OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value,
+                OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value])
+            ->get();
+        return [
+            OdocDocumentComponentsTypeEnum::BuildingOperationProgressPDF->value => [
+                'documents' => $documents,
+                'dossier' => $query,
+                'component_to_render' => OdocDocumentComponentsTypeEnum::BuildingOperationProgressPDF->value,
+                'title' => DocumentsNameEnum::BuildingOperationProgressPDF->value,
+            ],
+        ];
+    }
+
+    public function lastpdf($id)
+    {
+        $data = $this->getFooterDatas($id);
+        $data['title'] = DocumentsNameEnum::WorkOverReportPDF->value;
+        $data['component_to_render'] = OdocDocumentComponentsTypeEnum::WorkOverReportPDF->value;
+        return [OdocDocumentComponentsTypeEnum::WorkOverReportPDF->value => $data];
+    }
+
+    public function publishDossierPDF($id)
+    {
+        $data = $this->getFooterDatas($id);
+        $data['title'] = DocumentsNameEnum::BuildingDossierPDF->value;
+        $data['component_to_render'] = OdocDocumentComponentsTypeEnum::BuildingDossierPDF->value;
+        return [OdocDocumentComponentsTypeEnum::BuildingDossierPDF->value => $data];
+    }
 
     public function paymentPDF($id)
     {
@@ -1772,7 +1878,7 @@ trait DossierTrait
         $banks = $this->getBankAccs($id);
         $allTotalPrice = $buildings['total_price'] + $partitioning['total_price'] + $pavilion['total_price'] + $parking['total_price'] + $pool['total_price'];
 
-        $mainData = ["dossierData" => $dossier, "buildings" => $buildings, "partitioning" => $partitioning, "pavilion" => $pavilion, "parking" => $parking, "pool" => $pool, "allTotalPrice" => $allTotalPrice, 'banks' => $banks, "component_to_render" => OdocDocumentComponentsTypeEnum::TaxesBillPDF->value , "title" =>  DocumentsNameEnum::TaxesBillPDF->value];
+        $mainData = ["dossierData" => $dossier, "buildings" => $buildings, "partitioning" => $partitioning, "pavilion" => $pavilion, "parking" => $parking, "pool" => $pool, "allTotalPrice" => $allTotalPrice, 'banks' => $banks, "component_to_render" => OdocDocumentComponentsTypeEnum::TaxesBillPDF->value, "title" => DocumentsNameEnum::TaxesBillPDF->value];
         return [OdocDocumentComponentsTypeEnum::TaxesBillPDF->value => $mainData];
     }
 
@@ -2059,11 +2165,277 @@ trait DossierTrait
                 ];
                 $files = [];
                 break;
+            case PermitStatusesEnum::fifteenth->value:
+                $parvaneData = $this->getFooterDatas($id);
+                $parvaneData['title'] = DocumentsNameEnum::BuildingDossierPDF->value;
+                $parvaneData['component_to_render'] = OdocDocumentComponentsTypeEnum::BuildingDossierPDF->value;
+                $odocs = array([
+                    OdocDocumentComponentsTypeEnum::BuildingDossierPDF->value => $parvaneData,
+                ]);
+                $files = [];
+                break;
+            case PermitStatusesEnum::sixteenth->value:
+                $odocs = [
+                    $this->firstReportPdf($id),
+                ];
+                $files = [];
+                break;
+            case PermitStatusesEnum::seventeenth->value:
+                $odocs = [
+                    $this->secoundReportPdf($id),
+                ];
+                $files = [];
+                break;
+
+            case PermitStatusesEnum::eighteenth->value:
+                $odocs = [
+                    $this->ThirdReportPdf($id),
+                ];
+                $files = [];
+                break;
+            case PermitStatusesEnum::nineteenth->value:
+                $odocs = [
+                    $this->FourthReportPdf($id),
+                ];
+                $files = [];
+                break;
+
+            case PermitStatusesEnum::twentyfirst->value:
+                $odocs = [
+                    $this->lastpdf($id),
+                ];
+                $files = [];
+                break;
             default:
                 return [];
                 break;
         }
         return ['odocs' => $odocs, 'files' => $files];
+    }
+
+    public function FourthReportPdf($id)
+    {
+        $items = BuildingDossier::join('bdm_reports', function ($join) {
+            $join->on('bdm_reports.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('bdm_reports.report_type_id', '=', BdmReportTypesEnum::FOURTH_REPORT->value);
+        })
+            ->join('bdm_report_data_items', 'bdm_report_data_items.report_id', '=', 'bdm_reports.id')
+            ->join('bdm_report_items', 'bdm_report_items.id', '=', 'bdm_report_data_items.report_item_id')
+            ->select([
+                'bdm_reports.id as report_id',
+                'bdm_report_items.id as report_item_id',
+                'bdm_report_items.name as report_item_name',
+
+            ])
+            ->where('bdm_building_dossiers.id', $id)
+            ->get();
+        $dossier = BuildingDossier::join('bdm_owners', function ($join) {
+            $join->on('bdm_owners.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('is_main_owner', '=', true);
+        })
+            ->join('bdm_engineers_building', function ($join) {
+                $join->on('bdm_engineers_building.dossier_id', '=', 'bdm_building_dossiers.id')
+                    ->where('bdm_engineers_building.engineer_type_id', '=', EngineersTypeEnum::NAZER->id());
+            })
+            ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
+            ->join('persons as nazer', 'bdm_engineers.person_id', '=', 'nazer.id')
+            ->join('persons as main_owner', 'bdm_owners.person_id', '=', 'main_owner.id')
+            ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->select([
+                'bdm_building_dossiers.id as dossier_id',
+                'bdm_building_dossiers.tracking_code as tracking_code',
+                'bdm_building_dossiers.created_date as created_date',
+                'main_owner.display_name as owner_name',
+                'nazer.display_name as nazer_name',
+                'bdm_engineers.dossier_number',
+                'bdm_engineers.registration_number',
+                'bdm_estates.allow_floor',
+                'bdm_estates.area',
+            ])
+            ->find($id);
+        $dossier->building_material = '';
+        $items->map(function ($item) {
+            $item->report_item_name = str_replace('_', ' ', $item->report_item_name);
+        });
+
+        return [
+            OdocDocumentComponentsTypeEnum::FinalReportPDF->value => [
+                'items' => $items,
+                'dossier' => $dossier,
+                'component_to_render' => OdocDocumentComponentsTypeEnum::FinalReportPDF->value,
+                'title' => DocumentsNameEnum::FinalReportPDF->value,
+            ],
+
+        ];
+    }
+
+    public function ThirdReportPdf($id)
+    {
+        $items = BuildingDossier::join('bdm_reports', function ($join) {
+            $join->on('bdm_reports.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('bdm_reports.report_type_id', '=', BdmReportTypesEnum::THIRD_REPORT->value);
+        })
+            ->join('bdm_report_data_items', 'bdm_report_data_items.report_id', '=', 'bdm_reports.id')
+            ->join('bdm_report_items', 'bdm_report_items.id', '=', 'bdm_report_data_items.report_item_id')
+            ->select([
+                'bdm_reports.id as report_id',
+                'bdm_report_items.id as report_item_id',
+                'bdm_report_items.name as report_item_name',
+
+            ])
+            ->where('bdm_building_dossiers.id', $id)
+            ->get();
+        $dossier = BuildingDossier::join('bdm_owners', function ($join) {
+            $join->on('bdm_owners.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('is_main_owner', '=', true);
+        })
+            ->join('bdm_engineers_building', function ($join) {
+                $join->on('bdm_engineers_building.dossier_id', '=', 'bdm_building_dossiers.id')
+                    ->where('bdm_engineers_building.engineer_type_id', '=', EngineersTypeEnum::NAZER->id());
+            })
+            ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
+            ->join('persons as nazer', 'bdm_engineers.person_id', '=', 'nazer.id')
+            ->join('persons as main_owner', 'bdm_owners.person_id', '=', 'main_owner.id')
+            ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->select([
+                'bdm_building_dossiers.id as dossier_id',
+                'bdm_building_dossiers.tracking_code as tracking_code',
+                'bdm_building_dossiers.created_date as created_date',
+                'main_owner.display_name as owner_name',
+                'nazer.display_name as nazer_name',
+                'bdm_engineers.dossier_number',
+                'bdm_engineers.registration_number',
+                'bdm_estates.allow_floor',
+                'bdm_estates.area',
+            ])
+            ->find($id);
+        $dossier->building_material = '';
+        $items->map(function ($item) {
+            $item->report_item_name = str_replace('_', ' ', $item->report_item_name);
+        });
+
+        return [
+            OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value => [
+                'items' => $items,
+                'dossier' => $dossier,
+                'component_to_render' => OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value,
+                'title' => DocumentsNameEnum::HardeningSofteningStructurePDF->value,
+            ],
+
+        ];
+    }
+
+
+    public function secoundReportPdf($id)
+    {
+        $items = BuildingDossier::join('bdm_reports', function ($join) {
+            $join->on('bdm_reports.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('bdm_reports.report_type_id', '=', BdmReportTypesEnum::SECOND_REPORT->value);
+        })
+            ->join('bdm_report_data_items', 'bdm_report_data_items.report_id', '=', 'bdm_reports.id')
+            ->join('bdm_report_items', 'bdm_report_items.id', '=', 'bdm_report_data_items.report_item_id')
+            ->select([
+                'bdm_reports.id as report_id',
+                'bdm_report_items.id as report_item_id',
+                'bdm_report_items.name as report_item_name',
+
+            ])
+            ->where('bdm_building_dossiers.id', $id)
+            ->get();
+        $dossier = BuildingDossier::join('bdm_owners', function ($join) {
+            $join->on('bdm_owners.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('is_main_owner', '=', true);
+        })
+            ->join('bdm_engineers_building', function ($join) {
+                $join->on('bdm_engineers_building.dossier_id', '=', 'bdm_building_dossiers.id')
+                    ->where('bdm_engineers_building.engineer_type_id', '=', EngineersTypeEnum::NAZER->id());
+            })
+            ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
+            ->join('persons as nazer', 'bdm_engineers.person_id', '=', 'nazer.id')
+            ->join('persons as main_owner', 'bdm_owners.person_id', '=', 'main_owner.id')
+            ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->select([
+                'bdm_building_dossiers.id as dossier_id',
+                'bdm_building_dossiers.tracking_code as tracking_code',
+                'bdm_building_dossiers.created_date as created_date',
+                'main_owner.display_name as owner_name',
+                'nazer.display_name as nazer_name',
+                'bdm_engineers.dossier_number',
+                'bdm_engineers.registration_number',
+                'bdm_estates.allow_floor',
+                'bdm_estates.area',
+            ])
+            ->find($id);
+        $dossier->building_material = '';
+        $items->map(function ($item) {
+            $item->report_item_name = str_replace('_', ' ', $item->report_item_name);
+        });
+
+        return [
+            OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value => [
+                'items' => $items,
+                'dossier' => $dossier,
+                'component_to_render' => OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value,
+                'title' => DocumentsNameEnum::StructureSekeletonPDF->value,
+            ],
+
+        ];
+    }
+
+    public function firstReportPdf($id)
+    {
+        $items = BuildingDossier::join('bdm_reports', function ($join) {
+            $join->on('bdm_reports.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('bdm_reports.report_type_id', '=', BdmReportTypesEnum::FIRST_REPORT->value);
+        })
+            ->join('bdm_report_data_items', 'bdm_report_data_items.report_id', '=', 'bdm_reports.id')
+            ->join('bdm_report_items', 'bdm_report_items.id', '=', 'bdm_report_data_items.report_item_id')
+            ->select([
+                'bdm_reports.id as report_id',
+                'bdm_report_items.id as report_item_id',
+                'bdm_report_items.name as report_item_name',
+
+            ])
+            ->where('bdm_building_dossiers.id', $id)
+            ->get();
+        $dossier = BuildingDossier::join('bdm_owners', function ($join) {
+            $join->on('bdm_owners.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('is_main_owner', '=', true);
+        })
+            ->join('bdm_engineers_building', function ($join) {
+                $join->on('bdm_engineers_building.dossier_id', '=', 'bdm_building_dossiers.id')
+                    ->where('bdm_engineers_building.engineer_type_id', '=', EngineersTypeEnum::NAZER->id());
+            })
+            ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
+            ->join('persons as nazer', 'bdm_engineers.person_id', '=', 'nazer.id')
+            ->join('persons as main_owner', 'bdm_owners.person_id', '=', 'main_owner.id')
+            ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->select([
+                'bdm_building_dossiers.id as dossier_id',
+                'bdm_building_dossiers.tracking_code as tracking_code',
+                'bdm_building_dossiers.created_date as created_date',
+                'main_owner.display_name as owner_name',
+                'nazer.display_name as nazer_name',
+                'bdm_engineers.dossier_number',
+                'bdm_engineers.registration_number',
+                'bdm_estates.allow_floor',
+                'bdm_estates.area',
+            ])
+            ->find($id);
+        $dossier->building_material = '';
+        $items->map(function ($item) {
+            $item->report_item_name = str_replace('_', ' ', $item->report_item_name);
+        });
+
+        return [
+            OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value => [
+                'items' => $items,
+                'dossier' => $dossier,
+                'component_to_render' => OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value,
+                'title' => DocumentsNameEnum::FoundationConcreteLayingPDF->value,
+            ],
+
+        ];
     }
 
     public
@@ -2095,7 +2467,6 @@ trait DossierTrait
         $levyItem = LevyItem::where('name', LeviesListEnum::SUDURE_PARVANEH_SAKHTEMAN->value)->orderBy('id', 'desc')->first();
 
         $booklet = Booklet::where('ounit_id', $ounitID)->orderBy('id', 'desc')->first();
-
 
 
         $tariff = Tarrifs::where('booklet_id', $booklet->id)
@@ -2188,14 +2559,178 @@ trait DossierTrait
                 $approvers = $this->findStartWorkingObligationApprovers($id);
                 $this->setApprovers($id, $approvers);
                 break;
-            case OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value ||
-                OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value ||
-                OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value ||
-                OdocDocumentComponentsTypeEnum::FinalReportPDF->value:
+            case OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value:
+            case OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value:
+            case OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value:
+            case OdocDocumentComponentsTypeEnum::FinalReportPDF->value:
                 $approvers = $this->findNazerEngineerApprovers($id);
                 $this->setApprovers($id, $approvers);
                 break;
+            case OdocDocumentComponentsTypeEnum::BuildingDossierPDF->value:
+                $approvers = $this->findBuildingDossierApprovers($id);
+                $this->setApprovers($id, $approvers);
+                break;
+            case OdocDocumentComponentsTypeEnum::WorkOverReportPDF->value:
+                $approvers = $this->findWorkOverReportPDFApprovers($id);
+                $this->setApprovers($id, $approvers);
+                break;
+
+
         }
+    }
+
+    public function findWorkOverReportPDFApprovers($id)
+    {
+        $document = Document::find($id);
+        $financialScriptType = ScriptType::where('title', ScriptTypesEnum::FINANCIAL->value)->first();
+        $faniScriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
+        $activeRS = $this->activeRsStatus();
+        $financialScript = RecruitmentScript::join('recruitment_script_status', function ($join) use ($financialScriptType) {
+            $join->on('recruitment_scripts.id', '=', 'recruitment_script_status.recruitment_script_id')
+                ->whereRaw('recruitment_script_status.id = (SELECT MAX(id) FROM recruitment_script_status WHERE recruitment_script_id = recruitment_scripts.id)')
+                ->where('recruitment_scripts.script_type_id', $financialScriptType->id);
+        })
+            ->join('statuses', function ($join) use ($activeRS) {
+                $join->on('recruitment_script_status.status_id', '=', 'statuses.id')
+                    ->where('statuses.id', '=', $activeRS->id);
+            })
+            ->join('work_forces', function ($join) {
+                $join->on('work_forces.workforceable_id', '=', 'recruitment_scripts.employee_id')
+                    ->where('work_forces.workforceable_type', '=', Employee::class);
+            })
+            ->select([
+                'work_forces.person_id as person_id',
+            ])
+            ->where('recruitment_scripts.organization_unit_id', $document->ounit_id)
+            ->first();
+        $faniScript = RecruitmentScript::join('recruitment_script_status', function ($join) use ($faniScriptType) {
+            $join->on('recruitment_scripts.id', '=', 'recruitment_script_status.recruitment_script_id')
+                ->whereRaw('recruitment_script_status.id = (SELECT MAX(id) FROM recruitment_script_status WHERE recruitment_script_id = recruitment_scripts.id)')
+                ->where('recruitment_scripts.script_type_id', $faniScriptType->id);
+        })
+            ->join('statuses', function ($join) use ($activeRS) {
+                $join->on('recruitment_script_status.status_id', '=', 'statuses.id')
+                    ->where('statuses.id', '=', $activeRS->id);
+            })
+            ->join('work_forces', function ($join) {
+                $join->on('work_forces.workforceable_id', '=', 'recruitment_scripts.employee_id')
+                    ->where('work_forces.workforceable_type', '=', Employee::class);
+            })
+            ->select([
+                'work_forces.person_id as person_id',
+            ])
+            ->where('recruitment_scripts.organization_unit_id', $document->ounit_id)
+            ->first();
+        $dehyar = OrganizationUnit::join('users', 'organization_units.head_id', '=', 'users.id')
+            ->where('organization_units.id', $document->ounit_id)
+            ->select([
+                'users.person_id as person_id',
+            ])
+            ->first();
+
+        return [
+            [
+                'person_id' => $financialScript->person_id,
+                'status_id' => $this->PendingApproversStatus()->id,
+                'signed_date' => null,
+                'token' => null,
+                'signature_id' => null,
+                'document_id' => $id,
+            ],
+            [
+                'person_id' => $faniScript->person_id,
+                'status_id' => $this->PendingApproversStatus()->id,
+                'signed_date' => null,
+                'token' => null,
+                'signature_id' => null,
+                'document_id' => $id,
+            ],
+            [
+                'person_id' => $dehyar->person_id,
+                'status_id' => $this->PendingApproversStatus()->id,
+                'signed_date' => null,
+                'token' => null,
+                'signature_id' => null,
+                'document_id' => $id,
+            ]
+        ];
+    }
+
+    public function findBuildingDossierApprovers($id)
+    {
+        $document = Document::find($id);
+        $financialScriptType = ScriptType::where('title', ScriptTypesEnum::FINANCIAL->value)->first();
+        $faniScriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
+        $activeRS = $this->activeRsStatus();
+        $financialScript = RecruitmentScript::join('recruitment_script_status', function ($join) use ($financialScriptType) {
+            $join->on('recruitment_scripts.id', '=', 'recruitment_script_status.recruitment_script_id')
+                ->whereRaw('recruitment_script_status.id = (SELECT MAX(id) FROM recruitment_script_status WHERE recruitment_script_id = recruitment_scripts.id)')
+                ->where('recruitment_scripts.script_type_id', $financialScriptType->id);
+        })
+            ->join('statuses', function ($join) use ($activeRS) {
+                $join->on('recruitment_script_status.status_id', '=', 'statuses.id')
+                    ->where('statuses.id', '=', $activeRS->id);
+            })
+            ->join('work_forces', function ($join) {
+                $join->on('work_forces.workforceable_id', '=', 'recruitment_scripts.employee_id')
+                    ->where('work_forces.workforceable_type', '=', Employee::class);
+            })
+            ->select([
+                'work_forces.person_id as person_id',
+            ])
+            ->where('recruitment_scripts.organization_unit_id', $document->ounit_id)
+            ->first();
+        $faniScript = RecruitmentScript::join('recruitment_script_status', function ($join) use ($faniScriptType) {
+            $join->on('recruitment_scripts.id', '=', 'recruitment_script_status.recruitment_script_id')
+                ->whereRaw('recruitment_script_status.id = (SELECT MAX(id) FROM recruitment_script_status WHERE recruitment_script_id = recruitment_scripts.id)')
+                ->where('recruitment_scripts.script_type_id', $faniScriptType->id);
+        })
+            ->join('statuses', function ($join) use ($activeRS) {
+                $join->on('recruitment_script_status.status_id', '=', 'statuses.id')
+                    ->where('statuses.id', '=', $activeRS->id);
+            })
+            ->join('work_forces', function ($join) {
+                $join->on('work_forces.workforceable_id', '=', 'recruitment_scripts.employee_id')
+                    ->where('work_forces.workforceable_type', '=', Employee::class);
+            })
+            ->select([
+                'work_forces.person_id as person_id',
+            ])
+            ->where('recruitment_scripts.organization_unit_id', $document->ounit_id)
+            ->first();
+        $dehyar = OrganizationUnit::join('users', 'organization_units.head_id', '=', 'users.id')
+            ->where('organization_units.id', $document->ounit_id)
+            ->select([
+                'users.person_id as person_id',
+            ])
+            ->first();
+
+        return [
+            [
+                'person_id' => $financialScript->person_id,
+                'status_id' => $this->PendingApproversStatus()->id,
+                'signed_date' => null,
+                'token' => null,
+                'signature_id' => null,
+                'document_id' => $id,
+            ],
+            [
+                'person_id' => $faniScript->person_id,
+                'status_id' => $this->PendingApproversStatus()->id,
+                'signed_date' => null,
+                'token' => null,
+                'signature_id' => null,
+                'document_id' => $id,
+            ],
+            [
+                'person_id' => $dehyar->person_id,
+                'status_id' => $this->PendingApproversStatus()->id,
+                'signed_date' => null,
+                'token' => null,
+                'signature_id' => null,
+                'document_id' => $id,
+            ]
+        ];
     }
 
     public function findNazerEngineerApprovers($id)
@@ -2206,9 +2741,9 @@ trait DossierTrait
                 ->where('bdm_engineers_building.engineer_type_id', '=', EngineersTypeEnum::NAZER->id());
         })
             ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
-            ->join('signatures' , function ($join) {
-                $join->on('signatures.person_id' , '=' , 'bdm_engineers.person_id')
-                    ->where('signatures.status_id' , $this->activeSignatureStatus()->id);
+            ->join('signatures', function ($join) {
+                $join->on('signatures.person_id', '=', 'bdm_engineers.person_id')
+                    ->where('signatures.status_id', $this->activeSignatureStatus()->id);
             })
             ->select([
                 'bdm_engineers.person_id',

@@ -36,12 +36,15 @@ trait OdocApproversTrait
 
     public function documentApproval($id , $data)
     {
-        $approver = Approvers::where('document_id', $id)->first();
-        Log::info($approver);
+        $approver = Approvers::where('document_id', $id)
+            ->where('person_id', $data['person_id'])
+            ->where('signed_date', null)
+            ->first();
 
         if ($approver) {
             $statusID = $this->AssignedApproversStatus()->id;
             $signature = Signature::where('person_id', $data['person_id'])
+
                 ->where('status_id', $this->ActiveSignatureStatus()->id)
                 ->first();
 

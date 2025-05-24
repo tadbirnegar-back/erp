@@ -64,7 +64,6 @@ class ODOCController extends Controller
     {
         try {
             $data = Document::find($id);
-            $user = Auth::user();
 
 
             $data->data = decrypt_json($data->data);

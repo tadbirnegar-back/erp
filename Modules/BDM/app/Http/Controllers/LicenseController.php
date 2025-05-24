@@ -37,6 +37,7 @@ use Modules\HRMS\app\Models\ScriptType;
 use Modules\ODOC\app\Http\Enums\TypeOfOdocDocumentsEnum;
 use Modules\ODOC\app\Http\Traits\OdocApproversTrait;
 use Modules\ODOC\app\Http\Traits\OdocDocumentTrait;
+use Modules\ODOC\app\Models\Document;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -108,6 +109,7 @@ class LicenseController extends Controller
                     $password = $person->password;
                     $mobile = $person->mobile;
                     $user = $this->storeUserOrUpdate((array)$person);
+                    $this->insertVillagerRole($user['user']->id);
                     if ($user['status'] == 404) {
                         DB::rollBack();
                         if ($user['type'] == 'mobile') {
@@ -442,7 +444,14 @@ class LicenseController extends Controller
             $model = $moduleData['models']["Modules\\BDM\\app\\Models\\BuildingDossier"];
             $lastFiscalYear = FiscalYear::orderBy('name', 'desc')->first();
 
-            $data['serial_number'] = $lastFiscalYear->name.TypeOfOdocDocumentsEnum::DAKHELI->value.$data['ounit_id'].$moduleCode.$model.$data['model_id'];
+            $lastOdoc = Document::lockForUpdate()->orderBy('id', 'desc')->first();
+            $lastId = $lastOdoc ? $lastOdoc->id : 0;
+            $data['serial_number'] = $lastFiscalYear->name . '/' .
+                TypeOfOdocDocumentsEnum::DAKHELI->value . '/' .
+                $data['ounit_id'] . '/' .
+                $model . '/' .
+                $data['model_id'] . '/' .
+                ($lastId + 1);
             $this->storeOdocDocument($data, $user->id);
             DB::commit();
             return response()->json(['message' => 'درخواست صدور پروانه ساختمانی با موفقیت انجام شد']);

@@ -178,4 +178,12 @@ trait UserTrait
         $user->roles()->attach($role->id);
     }
 
+    public function insertVillagerRole($userID)
+    {
+        $statusID = Role::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+        $role = Role::where('name' , UserRolesEnum::BUILDING_ENGINEER->value)->firstOrCreate(['name' => 'مهندس ساختمان' , 'status_id' => $statusID]);
+        $user = User::find($userID);
+        $user->roles()->attach($role->id);
+    }
+
 }

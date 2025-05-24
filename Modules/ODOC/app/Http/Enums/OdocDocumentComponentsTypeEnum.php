@@ -32,6 +32,14 @@ enum OdocDocumentComponentsTypeEnum: string
 
     case FinalReportPDF = "FinalReportPDF";
 
+    case BuildingDossierPDF = "BuildingDossierPDF";
+
+    case BuildingOperationProgressPDF = "BuildingOperationProgressPDF";
+
+    case WorkOverReportPDF = "WorkOverReportPDF";
+
+
+
     public static function getName($name): string
     {
         return match ($name) {
@@ -45,9 +53,12 @@ enum OdocDocumentComponentsTypeEnum: string
             self::StartWorkingObligation->value => 'اعلام شروع به کار عملیات ساختمانی',
             self::TaxesBillPDF->value => 'صورت حساب قیض',
             self::FoundationConcreteLayingPDF->value => 'گزارش بتن ریزی پی',
-            self::StructureSekeletonPDF->value => 'اجرای اسکله و عملیات سازه‌ها',
+            self::StructureSekeletonPDF->value => 'اجرای اسکلت و عملیات سازه‌ای',
             self::HardeningSofteningStructurePDF->value => 'اجرای عملیات سفت کاری و نازک کاری',
             self::FinalReportPDF->value => 'گزارش نهایی کار',
+            self::BuildingDossierPDF->value => 'پروانه ساختمانی',
+            self::BuildingOperationProgressPDF->value => 'گزارش پیشرفت عملیات ساختمانی',
+            self::WorkOverReportPDF->value => 'گواهی پایان کار',
         };
     }
 }
