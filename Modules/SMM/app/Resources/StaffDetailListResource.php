@@ -23,7 +23,7 @@ class StaffDetailListResource extends JsonResource
             'startDate' => '-',
             'file' => !is_null($this->file_id) ? [
                 'fileID' => $this->file_id,
-                'fileSlug' => $this->file_slug,
+                'fileSlug' => url('/') . '/' . $this->file_slug,
                 'fileSize' => $this->file_size,
                 'fileName' => $this->file_name,
             ] : null,

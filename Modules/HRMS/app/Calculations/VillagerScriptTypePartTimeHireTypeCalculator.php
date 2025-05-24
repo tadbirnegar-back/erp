@@ -3,23 +3,17 @@
 namespace Modules\HRMS\app\Calculations;
 
 use Modules\HRMS\app\Http\Enums\RelationTypeEnum;
-use Modules\HRMS\app\Models\HireType;
-use Modules\HRMS\app\Models\ScriptType;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 
 class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
 {
-    private ScriptType $scriptType;
-    private HireType $hireType;
     private OrganizationUnit $organizationUnit;
     private Person $person;
     private $baseSalary;
 
-    public function __construct(ScriptType $scriptType, HireType $hireType, OrganizationUnit $organizationUnit, Person $person)
+    public function __construct(OrganizationUnit $organizationUnit, Person $person)
     {
-        $this->scriptType = $scriptType;
-        $this->hireType = $hireType;
         $this->organizationUnit = $organizationUnit;
         $this->person = $person;
         $this->baseSalary = $this->getBaseSalary();

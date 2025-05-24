@@ -15,7 +15,6 @@ use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
 use Modules\OUnitMS\app\Models\VillageOfc;
-use Modules\PersonMS\app\Http\Enums\PersonStatusEnum;
 use Modules\PersonMS\app\Models\Person;
 
 trait EmployeeTrait
@@ -95,7 +94,7 @@ trait EmployeeTrait
         $pageNum = $data['pageNum'] ?? 1;
         $ounitID = $data['ounitID'] ?? null;
         $positionID = $data['positionID'] ?? null;
-        $personStatuses= $data['personStatus'] ?? null;
+        $personStatuses = $data['personStatus'] ?? null;
 
         $startDate = isset($data['startDate']) ? convertJalaliPersianCharactersToGregorian(($data['startDate'])) : null;
         $endDate = isset($data['endDate']) ? convertJalaliPersianCharactersToGregorian($data['endDate']) : null;
@@ -108,7 +107,7 @@ trait EmployeeTrait
         }
 
         $pList = Employee::joinRelationship('workForce.person.natural', [
-            'person' => function ($join) use ($searchTerm,$personStatuses) {
+            'person' => function ($join) use ($searchTerm, $personStatuses) {
                 $join->finalPersonStatus()
                     ->when($personStatuses, function ($query) use ($personStatuses) {
                         $query->whereIn('statuses.name', $personStatuses);
@@ -374,7 +373,7 @@ trait EmployeeTrait
         $b = HireTypeEnum::tryFrom($hireType->title);
         $scriptAgents = $hireType->scriptAgents;
         $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-        $calculator = new $class($scriptType, $hireType, $ounit, \Auth::user()->person);
+        $calculator = new $class($ounit, \Auth::user()->person);
 
         $scriptAgents->each(function ($scriptAgent) use ($calculator) {
             if (!is_null($scriptAgent->pivot->formula)) {
