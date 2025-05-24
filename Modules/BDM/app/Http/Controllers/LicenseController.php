@@ -7,11 +7,14 @@ use DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Modules\AAA\app\Http\Traits\UserTrait;
 use Modules\AAA\app\Models\User;
+use Modules\ACMS\app\Models\FiscalYear;
 use Modules\BDM\app\Http\Enums\BdmOwnershipTypesEnum;
 use Modules\BDM\app\Http\Enums\BdmTypesEnum;
+use Modules\BDM\app\Http\Enums\DocumentsNameEnum;
 use Modules\BDM\app\Http\Enums\DossierStatusesEnum;
 use Modules\BDM\app\Http\Enums\PermitStatusesEnum;
 use Modules\BDM\app\Http\Enums\TransferTypesEnum;
@@ -21,6 +24,7 @@ use Modules\BDM\app\Http\Traits\LawyersTrait;
 use Modules\BDM\app\Http\Traits\OwnersTrait;
 use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Models\DossierStatus;
+use Modules\BDM\app\Models\Estate;
 use Modules\BDM\app\Models\PermitStatus;
 use Modules\BDM\app\Resources\LicensesListResource;
 use Modules\HRMS\app\Http\Enums\RecruitmentScriptStatusEnum;
@@ -30,6 +34,10 @@ use Modules\HRMS\app\Models\MilitaryService;
 use Modules\HRMS\app\Models\MilitaryServiceStatus;
 use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\ODOC\app\Http\Enums\TypeOfOdocDocumentsEnum;
+use Modules\ODOC\app\Http\Traits\OdocApproversTrait;
+use Modules\ODOC\app\Http\Traits\OdocDocumentTrait;
+use Modules\ODOC\app\Models\Document;
 use Modules\OUnitMS\app\Models\CityOfc;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\VillageOfc;
@@ -41,7 +49,7 @@ use Modules\StatusMS\app\Models\Status;
 
 class LicenseController extends Controller
 {
-    use PersonTrait, UserTrait, DossierTrait, OwnersTrait, LawyersTrait, EstateTrait;
+    use PersonTrait, UserTrait, DossierTrait, OwnersTrait, LawyersTrait, EstateTrait, OdocDocumentTrait, OdocApproversTrait;
 
     public function licenseTypesList()
     {
@@ -68,7 +76,7 @@ class LicenseController extends Controller
             ]);
             Db::commit();
             return response()->json(['message' => 'بایگانی با موفقیت انجام شد']);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 400);
         }
@@ -101,6 +109,7 @@ class LicenseController extends Controller
                     $password = $person->password;
                     $mobile = $person->mobile;
                     $user = $this->storeUserOrUpdate((array)$person);
+                    $this->insertVillagerRole($user['user']->id);
                     if ($user['status'] == 404) {
                         DB::rollBack();
                         if ($user['type'] == 'mobile') {
@@ -143,6 +152,22 @@ class LicenseController extends Controller
             return response()->json(['message' => $e->getMessage()], 400);
         }
 
+
+    }
+
+
+    public function getPdfPreDatas($id)
+    {
+        $currentStatus = $this->findCurrentPermitStatusOfDossier($id);
+
+        $currentEnum = PermitStatusesEnum::tryFrom($currentStatus->permit_status_name);
+        if ($currentEnum) {
+            $currentId = $currentEnum->id();
+            $nextEnum = array_filter(PermitStatusesEnum::cases(), fn($case) => $case->id() === $currentId + 1);
+            $nextEnum = reset($nextEnum);
+        }
+        $getPdfDatas = $this->getPdfDatas($id , $nextEnum->value);
+        return response()->json($getPdfDatas);
 
     }
 
@@ -285,8 +310,9 @@ class LicenseController extends Controller
         $getTimeLineData = $this->getTimelineData($id);
         $getFooterDatas = $this->getFooterDatas($id);
         $permitStatusesList = $this->getPermitStatusesList();
+        $getFilesNeeded = $this->getFilesNeeded($id);
 
-        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas, 'permitStatusesList' => $permitStatusesList]);
+        return response()->json(['getTimeLineData' => $getTimeLineData, 'getFooterDatas' => $getFooterDatas, 'permitStatusesList' => $permitStatusesList , 'getFilesNeeded' => $getFilesNeeded]);
 
     }
 
@@ -397,4 +423,42 @@ class LicenseController extends Controller
             return response()->json(['message' => $e->getMessage()], 400);
         }
     }
+
+    public function setOdocDocument(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+            $user = Auth::user();
+            $data = $request->all();
+            $data['model_id'] = $id;
+            $data['model'] = BuildingDossier::class;
+            $data['version'] = '1';
+            $estate = Estate::where('dossier_id', $id)->first();
+            if($estate){
+                $data['ounit_id'] = $estate->ounit_id;
+            }else{
+                return response()->json(['message' => 'اطلاعات ملک  ثبت شده در سیستم وجود ندارد'], 404);
+            }
+            $moduleData = config('moduleCodes.modules.BDM');
+            $moduleCode = $moduleData['code'];
+            $model = $moduleData['models']["Modules\\BDM\\app\\Models\\BuildingDossier"];
+            $lastFiscalYear = FiscalYear::orderBy('name', 'desc')->first();
+
+            $lastOdoc = Document::lockForUpdate()->orderBy('id', 'desc')->first();
+            $lastId = $lastOdoc ? $lastOdoc->id : 0;
+            $data['serial_number'] = $lastFiscalYear->name . '/' .
+                TypeOfOdocDocumentsEnum::DAKHELI->value . '/' .
+                $data['ounit_id'] . '/' .
+                $model . '/' .
+                $data['model_id'] . '/' .
+                ($lastId + 1);
+            $this->storeOdocDocument($data, $user->id);
+            DB::commit();
+            return response()->json(['message' => 'درخواست صدور پروانه ساختمانی با موفقیت انجام شد']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
 }

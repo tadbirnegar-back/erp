@@ -32,6 +32,11 @@ class LicenseDocument extends Model
             return with(new static)->getTable();
      }
 
+     public function documentable()
+     {
+         return $this->morphTo();
+     }
+
     public static function GetAllStatuses()
     {
         return Status::where('model',self::class);

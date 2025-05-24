@@ -2,6 +2,7 @@
 
 namespace Modules\AAA\app\Http\Traits;
 
+use Modules\AAA\app\Http\Enums\UserRolesEnum;
 use Modules\AAA\app\Models\Role;
 use Modules\AAA\app\Models\User;
 use Modules\HRMS\app\Models\Position;
@@ -172,7 +173,15 @@ trait UserTrait
     public function attachRoleForEngineer($userID)
     {
         $statusID = Role::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
-        $role = Role::where('name' , 'مهندس ساختمان')->firstOrCreate(['name' => 'مهندس ساختمان' , 'status_id' => $statusID]);
+        $role = Role::where('name' , UserRolesEnum::BUILDING_ENGINEER->value)->firstOrCreate(['name' => 'مهندس ساختمان' , 'status_id' => $statusID]);
+        $user = User::find($userID);
+        $user->roles()->attach($role->id);
+    }
+
+    public function insertVillagerRole($userID)
+    {
+        $statusID = Role::GetAllStatuses()->where('name', '=', 'فعال')->first()->id;
+        $role = Role::where('name' , UserRolesEnum::BUILDING_ENGINEER->value)->firstOrCreate(['name' => 'مهندس ساختمان' , 'status_id' => $statusID]);
         $user = User::find($userID);
         $user->roles()->attach($role->id);
     }

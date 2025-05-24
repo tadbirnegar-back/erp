@@ -337,7 +337,7 @@ trait PersonTrait
                         $newMilitaryService->exemption_type_id = ($militaryService->exemptionType == null) ? ($data->exemptionTypeID ?? null) : $militaryService->exemptionType->id;
                         $newMilitaryService->military_service_status_id = ($militaryService->militaryServiceStatus == null) ? ($data->militaryServiceStatusID ?? null) : $militaryService->militaryServiceStatus->id;
                         $newMilitaryService->work_force_id = null;
-                        $newMilitaryService->issue_date = ($militaryService->issueDate == null) ? (convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? null) : $militaryService->issueDate;
+                        $newMilitaryService->issue_date = (is_null($militaryService->issue_date)) ? (isset($data->issueDate) ? (convertPersianToGregorianBothHaveTimeAndDont($data->issueDate) ?? null) : null) : $militaryService->issue_date;
                         $newMilitaryService->person_id = $person->id;
                         $newMilitaryService->save();
                     } else {
@@ -456,11 +456,13 @@ trait PersonTrait
     function insertLicenses($personId, $data)
     {
         $nationalLicense = PersonLicense::where('license_type', PersonLicensesEnums::NATIONAL_ID_CARD->value)->where('person_id', $personId)->first();
+        $status = $this->personLicenseApprovedStatus()->id;
         if (!$nationalLicense) {
             $license = new PersonLicense();
             $license->file_id = $data->national_card_file_id ?? null;
             $license->person_id = $personId;
             $license->license_type = PersonLicensesEnums::NATIONAL_ID_CARD->value;
+            $license->status_id = $status;
             $license->save();
         }
 
@@ -471,6 +473,7 @@ trait PersonTrait
             $license->file_id = $data->birth_certificate_file_id ?? null;
             $license->person_id = $personId;
             $license->license_type = PersonLicensesEnums::BIRTH_CERTIFICATE->value;
+            $license->status_id = $status;
             $license->save();
         }
 

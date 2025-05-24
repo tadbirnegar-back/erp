@@ -36,7 +36,7 @@ enum ApplicationsForTablesEnum: string
     {
         return match ($this) {
             self::AMLAK_MOSTAGHELAT_SINGLES => [1, 4],
-            self::AMLAK_MOSTAGHELAT_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12, 13], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24], 2 => [25]]],
+            self::AMLAK_MOSTAGHELAT_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12, 13], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24], 2 => [25]] , 5 => [26 , 27 , 28 , 29 , 30 , 31 , 32]],
 
             self::TAFKIK_ARAZI_SINGLES => [1],
             self::TAFKIK_ARAZI_MULTIPLES => [1 => [2, 3, 4 ,5, 6, 7, 8, 9, 10, 11, 12, 13 , 14, 15, 16, 17, 18 , 19, 20, 21, 22, 23, 24 , 25]],
@@ -49,7 +49,7 @@ enum ApplicationsForTablesEnum: string
             self::PARVANE_ZIRBANA_MULTIPLES => [1 => [2, 3], 2 => [12, 6, 11, 7, 8, 9], 3 => [23, 24, 21, 31, 32], 4 => [14, 27], 5 => [28, 29, 17]],
 
             self::PARVANE_BALKON_SINGLES => [1, 4],
-            self::PARVANE_BALKON_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12, 13], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24], 2 => [25]]],
+            self::PARVANE_BALKON_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12, 13], 3 => [14, 15, 16, 17, 18], 4 => [19, 20, 21, 22, 23, 24] , 5 => [25]],
 
             self::PARVANEH_MOSTAHADESAT_SINGLES => [1, 4, 26],
             self::PARVANEH_MOSTAHADESAT_MULTIPLES => [1 => [2, 3], 2 => [5, 6, 7, 8, 9, 10, 11, 12], 3 => [14, 15, 16, 17, 18], 4 => [1 => [19, 20, 21, 22, 23, 24]] , 5 => [25]],

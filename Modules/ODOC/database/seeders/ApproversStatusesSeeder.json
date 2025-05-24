@@ -1,0 +1,14 @@
+[
+    {
+        "name": "امضا شده",
+        "class_name": "success"
+    },
+    {
+        "name": "منسوخ شده",
+        "class_name": "danger"
+    },
+    {
+        "name": "در انتظار امضا",
+        "class_name": "primary"
+    }
+]

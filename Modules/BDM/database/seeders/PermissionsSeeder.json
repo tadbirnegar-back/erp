@@ -136,5 +136,17 @@
         "slug": "/bdm/make-archive/{id}",
         "moduleName": "BDM",
         "permissionTypeName": "operational"
+    },
+    {
+        "name": "ثبت اسناد پروانه",
+        "slug": "/bdm/set-odoc/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "پیش نمایش پی دی اف در پروانه",
+        "slug": "/bdm/pdf-pre-data/{id}",
+        "moduleName": "BDM",
+        "permissionTypeName": "operational"
     }
 ]

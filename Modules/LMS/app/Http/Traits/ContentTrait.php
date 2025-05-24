@@ -47,22 +47,22 @@ trait ContentTrait
             ->where('student_id', $user->student->id)
             ->first();
 
-        // Determine if it's a new entry or an update
-        $isNewEntry = !$contentLog;
-
-        return ContentConsumeLog::updateOrCreate(
-            [
+        if ($contentLog) {
+            $contentLog->consume_data = $data['consumeData'];
+            $contentLog->last_played = $data['lastPlayed'];
+            $contentLog->set = $data['set'];
+            $contentLog->last_modified = now();
+        }else{
+            ContentConsumeLog::create([
                 'content_id' => $data['contentID'],
                 'student_id' => $user->student->id,
-            ],
-            [
                 'consume_data' => $data['consumeData'],
                 'last_played' => $data['lastPlayed'],
                 'set' => $data['set'],
-                'create_date' => $isNewEntry ? now() : $contentLog->create_date,
+                'create_date' => now(),
                 'last_modified' => now(),
-            ]
-        );
+            ]);
+        }
     }
 
     public function calculateRounds($data, $user)

@@ -1,0 +1,14 @@
+[
+    {
+        "name": "تکمیل شده",
+        "class_name": "success"
+    },
+    {
+        "name": "در انتظار تایید",
+        "class_name": "primary"
+    },
+    {
+        "name": "منسوخ شده",
+        "class_name": "danger"
+    }
+]

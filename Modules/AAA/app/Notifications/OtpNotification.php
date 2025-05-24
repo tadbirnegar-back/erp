@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Modules\AAA\app\Http\Enums\OtpPatternsEnum;
 use Tzsk\Sms\Builder;
 use Tzsk\Sms\Channels\SmsChannel;
 use Tzsk\Sms\Exceptions\InvalidMessageException;
@@ -18,7 +19,6 @@ class OtpNotification extends Notification implements ShouldQueue
      * Create a new notification instance.
      */
     private string $otpCode;
-
     /**
      * @param string $otpCode
      */
@@ -56,8 +56,9 @@ class OtpNotification extends Notification implements ShouldQueue
     public function toSms($notifiable)
     {
         try {
+            $patternCode = $this->patternCode;
             $a= (new Builder)->via('farazsmspattern') # via() is Optional
-            ->send("patterncode=l9i5x7nfvw7oofq \n verification-code={$this->otpCode}")
+            ->send("patterncode=$patternCode \n verification-code={$this->otpCode}")
                 ->to($notifiable->mobile);
 
 
