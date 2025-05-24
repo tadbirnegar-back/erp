@@ -11,7 +11,7 @@ class OunitEmployeesResource extends JsonResource
      */
     public function toArray($request): array
     {
-        $employees = json_encode($this->employees);
+        $employees = collect(json_decode($this->employees));
         return [
             'ounitID' => $this->organization_unit_id,
             'ounitName' => $this->organization_unit_name,

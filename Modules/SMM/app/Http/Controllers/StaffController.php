@@ -23,7 +23,7 @@ class StaffController extends Controller
                 $query->where('title', AccountantScriptTypeEnum::ACCOUNTANT_SCRIPT_TYPE->value);
             })
             ->get(['organization_unit_id'])->pluck('organization_unit_id')->flatten(1);
-        $result = $this->employeesListForContract($data, $recruitmentScripts);
+        $result = $this->employeesListForContract($data, $recruitmentScripts->toArray());
 
         return OunitEmployeesResource::collection($result);
     }
