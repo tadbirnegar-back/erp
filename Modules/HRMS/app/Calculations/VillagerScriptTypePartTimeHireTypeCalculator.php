@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Calculations;
 
 use Modules\HRMS\app\Http\Enums\RelationTypeEnum;
+use Modules\HRMS\app\Models\RecruitmentScript;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\PersonMS\app\Models\Person;
 
@@ -12,17 +13,23 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
     private Person $person;
     private $baseSalary;
 
-    public function __construct(OrganizationUnit $organizationUnit, Person $person)
+    public function __construct(RecruitmentScript $rs)
     {
-        $this->organizationUnit = $organizationUnit;
-        $this->person = $person;
+        $this->organizationUnit = OrganizationUnit::with(['village', 'ancestors'])->find($rs->ounit_id);
+        $this->person = Person::find($rs->p_id);
         $this->baseSalary = $this->getBaseSalary();
     }
 
-    public function calculate()
+    public function getOunit()
     {
-
+        return $this->organizationUnit;
     }
+
+    public function getPerson()
+    {
+        return $this->person;
+    }
+
 
     //پایه
     public function getBaseSalary()
@@ -48,7 +55,7 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
             1, 2 => 0.1,
             3, 4 => 0.15,
             5, 6 => 0.2,
-//            default => 0.25,
+            default => 0,
         };
 
         $formula = '$baseSalary * $percentage';
@@ -188,7 +195,7 @@ class VillagerScriptTypePartTimeHireTypeCalculator extends CalculatorAbstract
     public function getMarriageExtra()
     {
         $natural = $this->person->natural;
-        if ($natural->isMarried) {
+        if ($natural->isMarried && $natural->spouse_id != null) {
             return 5000000;
         }
         return 0;

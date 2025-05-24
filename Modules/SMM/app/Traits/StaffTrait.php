@@ -17,7 +17,7 @@ trait StaffTrait
         $emps = Employee::joinRelationship('recruitmentScripts.scriptType', [
             'recruitmentScripts' => function ($join) use ($ounitIDs) {
                 $join->finalStatus()
-                    ->where('statuses.name', RecruitmentScriptStatusEnum::ACTIVE->value)
+                    ->where('rss.name', RecruitmentScriptStatusEnum::ACTIVE->value)
                     ->whereIntegerInRaw('recruitment_scripts.organization_unit_id', $ounitIDs)
                     ->join('positions', 'recruitment_scripts.position_id', '=', 'positions.id')
                     ->join('organization_units', 'recruitment_scripts.organization_unit_id', '=', 'organization_units.id');
@@ -33,7 +33,18 @@ trait StaffTrait
             ->select(
                 'organization_units.id as organization_unit_id',
                 'organization_units.name as organization_unit_name',
-                DB::raw('JSON_ARRAYAGG(JSON_OBJECT("employee_id", employees.id, "display_name", persons.display_name, "national_code", persons.national_code,"gender",naturals.gender_id, "person_id", persons.id, "file_id", files.id, "file_slug", files.slug, "file_size", files.size, "file_name", files.name, "position_name", positions.name, "script_name", script_types.title)) as
+                DB::raw('JSON_ARRAYAGG(JSON_OBJECT("employee_id", employees.id,
+                 "display_name", persons.display_name,
+                  "national_code", persons.national_code,
+                  "gender",naturals.gender_id,
+                  "person_id", persons.id,
+                  "file_id", files.id,
+                  "file_slug", files.slug,
+                  "file_size", files.size,
+                  "file_name", files.name,
+                  "position_name", positions.name,
+                  "script_name", script_types.title,
+                  "rs_id",recruitmentScripts.id)) as
                  employees')
             )
             ->groupBy('organization_units.id', 'organization_units.name')

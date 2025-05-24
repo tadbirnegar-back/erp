@@ -15,7 +15,8 @@ class CheckRoutePermission
     {
         $user = Auth::user();  // Get the authenticated user
         $requestedRoute = $request->route()->uri(); // Get the requested route name
-        $requestedRoute = preg_replace('#^/(api/v\d+)#', '', $requestedRoute);
+        $requestedRoute = str_replace('api/v1', '', $requestedRoute);
+        $requestedRoute = str_replace('api/v2', '', $requestedRoute);
         $requestedRoute = str_replace('\\', '', $requestedRoute);
 //        return response()->json($user->hasPermissionForRoute($requestedRoute));
         // Check if the user has permission for the route

@@ -295,7 +295,7 @@ class RecruitmentScript extends Model
     public function scopeFinalStatus($query)
     {
         return $query->join('recruitment_script_status', 'recruitment_scripts.id', '=', 'recruitment_script_status.recruitment_script_id')
-            ->join('statuses', 'recruitment_script_status.status_id', '=', 'statuses.id')
+            ->join('statuses as rss', 'recruitment_script_status.status_id', '=', 'rss.id')
             ->whereRaw('recruitment_script_status.create_date = (SELECT MAX(create_date) FROM recruitment_script_status WHERE recruitment_script_id = recruitment_scripts.id)');
 
     }

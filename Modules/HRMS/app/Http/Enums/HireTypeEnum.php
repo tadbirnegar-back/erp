@@ -38,4 +38,26 @@ enum HireTypeEnum: string
 
         return $hireType;
     }
+
+    public static function getcontactDaysByOunit(OrganizationUnit $ounit)
+    {
+        $village = $ounit->village;
+        if ($village) {
+            $population = $village->population_1395;
+            $hireType = match ($population) {
+                $population < 100 => 17,
+                $population >= 100 && $population <= 200 => 17,
+                $population > 200 && $population <= 400 => 19,
+                $population > 400 && $population <= 600 => 21,
+                $population > 600 && $population <= 800 => 24,
+                $population > 800 && $population <= 999 => 27,
+                default => 30,
+
+            };
+        } else {
+            $hireType = 30;
+        }
+
+        return $hireType;
+    }
 }

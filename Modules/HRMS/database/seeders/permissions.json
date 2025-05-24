@@ -304,5 +304,11 @@
         "slug": "/hrm/person/confirm-list",
         "moduleName": "HRMS",
         "permissionTypeName": "sidebar"
+    },
+    {
+        "name": "پیشنمایش قرارداد",
+        "slug": "/smm/contracts/preview",
+        "moduleName": "HRMS",
+        "permissionTypeName": "sidebar"
     }
 ]

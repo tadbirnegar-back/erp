@@ -30,4 +30,6 @@ Route::middleware(['auth:api', 'route'])->prefix('v1')->name('api.')->group(func
     Route::post('/smm/circulars/dispatch/{id}', [CircularController::class, 'dispatchCircular']);
 
     Route::post('/smm/contracts/list', [StaffController::class, 'FinancialManagerIndex']);
+
+    Route::get('/smm/contracts/preview', [StaffController::class, 'getContractPreview']);
 });

@@ -79,7 +79,7 @@ class Person extends Model
     public function scopeFinalPersonStatus($query)
     {
         return $query->join('person_status', 'persons.id', '=', 'person_status.person_id')
-            ->join('statuses', 'person_status.status_id', '=', 'statuses.id')
+            ->join('statuses as ps', 'person_status.status_id', '=', 'ps.id')
             ->whereRaw('person_status.id = (SELECT MAX(id) FROM person_status WHERE person_id = persons.id)');
 
     }

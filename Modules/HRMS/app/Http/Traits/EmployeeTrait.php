@@ -2,15 +2,15 @@
 
 namespace Modules\HRMS\app\Http\Traits;
 
+use Modules\HRMS\app\Calculations\VillagerScriptTypePartTimeHireTypeCalculator;
 use Modules\HRMS\app\Http\Enums\FormulaEnum;
 use Modules\HRMS\app\Http\Enums\HireTypeEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypeOriginEnum;
 use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Models\Employee;
-use Modules\HRMS\app\Models\HireType;
 use Modules\HRMS\app\Models\IssueTime;
 use Modules\HRMS\app\Models\RecruitmentScript;
-use Modules\HRMS\app\Models\ScriptType;
+use Modules\HRMS\app\Models\ScriptAgent;
 use Modules\HRMS\app\Models\WorkForce;
 use Modules\OUnitMS\app\Models\OrganizationUnit;
 use Modules\OUnitMS\app\Models\StateOfc;
@@ -150,8 +150,8 @@ trait EmployeeTrait
                         'recruitment_scripts.*',
                         'positions.name as position_name',
                         'script_types.title as script_type_title',
-                        'statuses.name as status_name',
-                        'statuses.class_name as status_class_name',
+                        'rss.name as status_name',
+                        'rss.class_name as status_class_name',
                     ])
                     ->with(['organizationUnit' => function ($query) {
                         $query->leftJoin('village_ofcs', function ($join) {
@@ -187,8 +187,6 @@ trait EmployeeTrait
                 $query->selectRaw('persons.*, MATCH(display_name) AGAINST(?) AS relevance', [$searchTerm]);
             }, 'person.user'])
             ->get();
-
-
     }
 
 
@@ -230,7 +228,6 @@ trait EmployeeTrait
 
         $employee->load('workForce');
         return $employee;
-
     }
 
     public function activeEmployeeStatus()
@@ -276,7 +273,6 @@ trait EmployeeTrait
         }
 
         return $employee;
-
     }
 
     public function employeeShow(int $id)
@@ -338,10 +334,10 @@ trait EmployeeTrait
                 $query->where('employee_id', $employeeID)
                     ->whereHas('latestStatus', function ($query) {
 
-//                    $query->where(function ($query) {
+                        //                    $query->where(function ($query) {
                         $query->where('name', '=', self::$activeEmployeeStatus);
-//                            ->orWhere('name', '=', self::$inActiveRsStatus);
-//                    });
+                        //                            ->orWhere('name', '=', self::$inActiveRsStatus);
+                        //                    });
                     })->with(['scriptType', 'hireType', 'organizationUnit']);
             }])
             ->get();
@@ -360,28 +356,35 @@ trait EmployeeTrait
         return $recruitmentScripts;
     }
 
-    public function getScriptAgentCombos(HireType $hireType, ScriptType $scriptType, ?OrganizationUnit $ounit = null)
+    public function getScriptAgentCombos(RecruitmentScript $rs)
     {
-        $hireTypeId = $hireType->id;
-        $scriptTypeId = $scriptType->id;
-        $hireType->load(['scriptAgents' => function ($query) use ($scriptTypeId) {
-            $query->where('script_type_id', $scriptTypeId);
+//        $hireTypeId = $rs->hire_type_id;
+//        $scriptTypeId = $rs->script_type_id;
 
-        }]);
 
-        $a = ScriptTypesEnum::tryFrom($scriptType->title);
-        $b = HireTypeEnum::tryFrom($hireType->title);
-        $scriptAgents = $hireType->scriptAgents;
-        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
-        $calculator = new $class($ounit, \Auth::user()->person);
+        $a = ScriptTypesEnum::tryFrom($rs->scriptType->title);
+        $b = HireTypeEnum::tryFrom($rs->hireType->title);
+        $scriptAgents = ScriptAgent::joinRelationship('combos', function ($join) use ($rs) {
+            $join->where('hire_type_id', $rs->hire_type_id)->where('script_type_id', $rs->script_type_id);
+        })
+            ->joinRelationship('scriptAgentType')
+            ->addSelect([
+                'script_agent_combos.formula',
+                'script_agent_types.id as sa_type_id',
+                'script_agent_types.title as sa_type_title',
+
+            ]);
+//        $class = 'Modules\HRMS\app\Calculations\\' . $a->getCalculateClassPrefix() . 'ScriptType' . $b->getCalculateClassPrefix() . 'HireTypeCalculator';
+        $class = VillagerScriptTypePartTimeHireTypeCalculator::class;
+        $calculator = new $class($rs);
 
         $scriptAgents->each(function ($scriptAgent) use ($calculator) {
-            if (!is_null($scriptAgent->pivot->formula)) {
+            if (!is_null($scriptAgent->formula)) {
 
-                $formula = FormulaEnum::from($scriptAgent->pivot->formula);
+                $formula = FormulaEnum::from($scriptAgent->formula);
                 $fn = $formula->getFnName();
 
-                $scriptAgent->pivot->default_value = $calculator->$fn();
+                $scriptAgent->setAttribute('default_value', $calculator->$fn());
             }
         });
 
@@ -398,7 +401,5 @@ trait EmployeeTrait
         }
         $status = RecruitmentScript::GetAllStatuses()->firstWhere('name', '=', $statusName);
         $this->attachStatusToRs($parentScript, $status);
-
-
     }
 }

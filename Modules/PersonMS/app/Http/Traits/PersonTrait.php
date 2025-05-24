@@ -528,8 +528,8 @@ trait PersonTrait
             ->joinRelationship('workForce.employee')
             ->finalPersonStatus()
             ->addSelect([
-                'statuses.name as status_name',
-                'statuses.class_name as status_class_name',
+                'ps.name as status_name',
+                'ps.class_name as status_class_name',
                 'employees.personnel_code',
             ])
             ->find($personID);

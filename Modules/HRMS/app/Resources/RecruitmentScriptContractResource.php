@@ -3,6 +3,7 @@
 namespace Modules\HRMS\app\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\HRMS\app\Http\Enums\HireTypeEnum;
 
 class RecruitmentScriptContractResource extends JsonResource
 {
@@ -11,9 +12,9 @@ class RecruitmentScriptContractResource extends JsonResource
      */
     public function toArray($request): array
     {
-        $agents = $this->scriptAgents->groupBy('scriptAgentType.title');
+        $agents = $this->agents;
         return [
-            'contractDays'=>$this->contract_days,
+            'contractDays' => HireTypeEnum::getcontactDaysByOunit($this->ounit),
             'ounit' => [
                 'name' => $this->ounit->name,
                 'ancestors' => [
@@ -45,7 +46,7 @@ class RecruitmentScriptContractResource extends JsonResource
                         $agents->map(function ($agent) {
                             return [
                                 'name' => $agent->title,
-                                'contract' => $agent->pivot->contract,
+                                'contract' => $agent->default_value,
                             ];
                         })->toArray(),
 

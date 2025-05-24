@@ -13,6 +13,7 @@ class StaffDetailListResource extends JsonResource
     {
         return [
             'employeeID' => $this->employee_id,
+            'scriptID' => $this->rs_id,
             'displayName' => $this->display_name,
             'nationalCode' => $this->national_code,
             'gender' => is_null($this->gender) ? '-' : ($this->gender == 1 ? 'مرد' : 'زن'),
