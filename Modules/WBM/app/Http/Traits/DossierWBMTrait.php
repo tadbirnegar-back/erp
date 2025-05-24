@@ -8,6 +8,7 @@ use Modules\BDM\app\Http\Enums\EngineersTypeEnum;
 use Modules\BDM\app\Http\Enums\PermitStatusesEnum;
 use Modules\BDM\app\Http\Traits\DossierTrait;
 use Modules\BDM\app\Http\Traits\PermitTrait;
+use Modules\BDM\app\Models\BuildingDossier;
 use Modules\BDM\app\Models\DossierReport;
 use Modules\BDM\app\Models\Engineer;
 use Modules\BDM\app\Models\ReportDataItem;
@@ -17,13 +18,15 @@ use Modules\HRMS\app\Http\Enums\ScriptTypesEnum;
 use Modules\HRMS\app\Http\Traits\RecruitmentScriptTrait;
 use Modules\HRMS\app\Models\Employee;
 use Modules\HRMS\app\Models\ScriptType;
+use Modules\ODOC\app\Http\Enums\OdocDocumentComponentsTypeEnum;
+use Modules\ODOC\app\Models\Document;
 use Modules\PersonMS\app\Models\Natural;
 
 trait DossierWBMTrait
 {
     use RecruitmentScriptTrait, PermitTrait, DossierTrait;
 
-    public function TasksOfEngineers($pageNum, $perPage, $personID)
+    public function TasksOfEngineers($data,$pageNum, $perPage, $personID)
     {
         $scriptType = ScriptType::where('title', ScriptTypesEnum::MASOULE_FAANI->value)->first();
         $activeScriptStatus = $this->activeRsStatus();
@@ -83,6 +86,10 @@ trait DossierWBMTrait
                 'masuleFani_naturals.mobile as masuleFani_mobile',
             ])
             ->whereIn('status_permit.id', $PermitStatuses)
+            ->when(isset($data['name']), function ($query) use ($data) {
+                $query->where('bdm_building_dossiers.tracking_code', 'like', '%' . $data['name'] . '%');
+            })
+
             ->where('bdm_engineers.person_id', '=', $personID)
             ->paginate($perPage, ['*'], 'page', $pageNum);
         $engineers->map(function ($item) {
@@ -109,6 +116,12 @@ trait DossierWBMTrait
     public function ItemsForEngineers($id)
     {
         $status = $this->findCurrentPermitStatusOfDossier($id);
+        $currentEnum = PermitStatusesEnum::tryFrom($status->permit_status_name);
+        if ($currentEnum) {
+            $currentId = $currentEnum->id();
+            $nextEnum = array_filter(PermitStatusesEnum::cases(), fn($case) => $case->id() === $currentId + 1);
+            $nextEnum = reset($nextEnum);
+        }
         if ($status->permit_status_name == PermitStatusesEnum::fifteenth->value) {
             $items = ReportItem::where('report_type_id', BdmReportTypesEnum::FIRST_REPORT->value)->get();
             $reportType = ReportType::where('name', BdmReportTypesEnum::FIRST_REPORT->getName())->first();
@@ -116,6 +129,7 @@ trait DossierWBMTrait
                 'dossier_id' => $id,
                 'report_type' => $reportType,
                 'items' => $items,
+                'nextStatus' => $nextEnum->value,
             ];
         } else if ($status->permit_status_name == PermitStatusesEnum::sixteenth->value) {
             $items = ReportItem::where('report_type_id', BdmReportTypesEnum::SECOND_REPORT->value)->get();
@@ -124,6 +138,7 @@ trait DossierWBMTrait
                 'dossier_id' => $id,
                 'report_type' => $reportType,
                 'items' => $items,
+                'nextStatus' => $nextEnum->value,
             ];
         } else if ($status->permit_status_name == PermitStatusesEnum::seventeenth->value) {
             $items = ReportItem::where('report_type_id', BdmReportTypesEnum::THIRD_REPORT->value)->get();
@@ -132,6 +147,7 @@ trait DossierWBMTrait
                 'dossier_id' => $id,
                 'report_type' => $reportType,
                 'items' => $items,
+                'nextStatus' => $nextEnum->value,
             ];
         } else if ($status->permit_status_name == PermitStatusesEnum::eighteenth->value) {
             $items = ReportItem::where('report_type_id', BdmReportTypesEnum::FOURTH_REPORT->value)->get();
@@ -140,6 +156,7 @@ trait DossierWBMTrait
                 'dossier_id' => $id,
                 'report_type' => $reportType,
                 'items' => $items,
+                'nextStatus' => $nextEnum->value,
             ];
         }
     }
@@ -156,15 +173,130 @@ trait DossierWBMTrait
         }
 
         $items = json_decode($data['report_items']);
+        $lastStatus = $this->findCurrentPermitStatusOfDossier($dossierID);
+        if($lastStatus->permit_status_name == PermitStatusesEnum::fifteenth->value)
+        {
+            $componentToRender = OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value;
+        }
+        if($lastStatus->permit_status_name == PermitStatusesEnum::sixteenth->value)
+        {
+            $componentToRender = OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value;
+        }
+
+        if($lastStatus->permit_status_name == PermitStatusesEnum::seventeenth->value)
+        {
+            $componentToRender = OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value;
+        }
+
+        if($lastStatus->permit_status_name == PermitStatusesEnum::eighteenth->value)
+        {
+            $componentToRender = OdocDocumentComponentsTypeEnum::FinalReportPDF->value;
+        }
+
+        $dossier = BuildingDossier::join('bdm_owners' , function ($join) {
+            $join->on('bdm_owners.dossier_id', '=', 'bdm_building_dossiers.id')
+                ->where('is_main_owner', '=', true);
+        })
+            ->join('bdm_engineers_building' , function ($join) {
+                $join->on('bdm_engineers_building.dossier_id', '=', 'bdm_building_dossiers.id')
+                    ->where('bdm_engineers_building.engineer_type_id', '=', EngineersTypeEnum::NAZER->id());
+            })
+            ->join('bdm_engineers', 'bdm_engineers_building.engineer_id', '=', 'bdm_engineers.id')
+            ->join('persons as nazer', 'bdm_engineers.person_id', '=', 'nazer.id')
+            ->join('persons as main_owner', 'bdm_owners.person_id', '=', 'main_owner.id')
+            ->join('bdm_estates', 'bdm_building_dossiers.id', '=', 'bdm_estates.dossier_id')
+            ->select([
+                'bdm_building_dossiers.id as dossier_id',
+                'bdm_building_dossiers.tracking_code as tracking_code',
+                'bdm_building_dossiers.created_date as created_date',
+                'main_owner.display_name as owner_name',
+                'nazer.display_name as nazer_name',
+                'bdm_engineers.dossier_number',
+                'bdm_engineers.registration_number',
+                'bdm_estates.allow_floor',
+                'bdm_estates.area',
+            ])
+            ->find($dossierID);
+        $dossier->building_material = '';
+
+        if(in_array($lastStatus->permit_status_name, [PermitStatusesEnum::fifteenth->value , PermitStatusesEnum::sixteenth->value , PermitStatusesEnum::seventeenth->value])){
+            $itemsForPdf = [
+                "component_to_render" => $componentToRender,
+                "items" => [],
+                'description' => $dossierReport->description,
+                'report_violation_id' => $dossierReport->report_violation_id,
+                'tracking_code' => $dossier->tracking_code,
+                'dossier_date' => $dossier->created_date,
+                'nazer_name' => $dossier->nazer_name,
+                'registration_number' => $dossier->registration_number,
+                'dossier_number' => $dossier->dossier_number,
+                'building_material' => $dossier->building_material,
+                'floor_area' => $dossier->area,
+                'allow_floor' => $dossier->allow_floor,
+                'owner_name' => $dossier->owner_name,
+            ];
+        }else{
+            $foundation = Document::where('model_id', $dossierID)
+                ->where('model', BuildingDossier::class)
+                ->where('component_to_render', OdocDocumentComponentsTypeEnum::FoundationConcreteLayingPDF->value)
+                ->select([
+                    'component_to_render',
+                    'title',
+                    'serial_number'
+                ])
+                ->first();
+            $structure = Document::where('model_id', $dossierID)
+                ->where('model', BuildingDossier::class)
+                ->where('component_to_render', OdocDocumentComponentsTypeEnum::StructureSekeletonPDF->value)
+                ->select([
+                    'component_to_render',
+                    'title',
+                    'serial_number'
+                ])
+                ->first();
+            $hardening = Document::where('model_id', $dossierID)
+                ->where('model', BuildingDossier::class)
+                ->where('component_to_render', OdocDocumentComponentsTypeEnum::HardeningSofteningStructurePDF->value)
+                ->select([
+                    'component_to_render',
+                    'title',
+                    'serial_number'
+                ])
+                ->first();
+            $itemsForPdf = [
+                "component_to_render" => $componentToRender,
+                "items" => [],
+                'description' => $dossierReport->description,
+                'report_violation_id' => $dossierReport->report_violation_id,
+                'tracking_code' => $dossier->tracking_code,
+                'dossier_date' => $dossier->created_date,
+                'nazer_name' => $dossier->nazer_name,
+                'registration_number' => $dossier->registration_number,
+                'dossier_number' => $dossier->dossier_number,
+                'building_material' => $dossier->building_material,
+                'floor_area' => $dossier->area,
+                'allow_floor' => $dossier->allow_floor,
+                'owner_name' => $dossier->owner_name,
+                'foundation' => $foundation,
+                'structure' => $structure,
+                'hardening' => $hardening,
+            ];
+
+        }
+
+
         foreach ($items as $item) {
             $reportDataItem = ReportDataItem::where('report_id', $dossierReport->id)
                 ->where('report_item_id', $item)
                 ->first();
             if (!$reportDataItem) {
-                $reportItemData = $this->prepareReportDataItem($dossierReport->id, $item);
-                ReportDataItem::create($reportItemData);
+                $reportDataItem = $this->prepareReportDataItem($dossierReport->id, $item);
+                 ReportDataItem::create($reportDataItem);
             }
+            $itemsForPdf["items"][] = $reportDataItem;
         }
+
+        $this->makeReportPdfs($dossierID , $itemsForPdf , $user);
 
         $this->upgradeOneLevel($dossierID);
     }
@@ -175,6 +307,7 @@ trait DossierWBMTrait
             'dossier_id' => $dossierID,
             'report_type_id' => $data['reportTypeID'],
             'description' => $data['description'] ?? null,
+            'report_violation_id' => $data['reportViolationID'] ?? null,
             'creator_id' => $user->id,
             'created_date' => now(),
         ];

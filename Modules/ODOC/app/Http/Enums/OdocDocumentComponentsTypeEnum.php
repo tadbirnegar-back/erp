@@ -1,0 +1,64 @@
+<?php
+
+namespace Modules\ODOC\app\Http\Enums;
+
+use Modules\BDM\app\Models\BuildingDossier;
+
+enum OdocDocumentComponentsTypeEnum: string
+{
+    case BONYADE_MASKAN = 'HousingFoundationPDF';
+
+    case FORM_2 = "BuildingDossierIssuancePDF";
+
+    case FORM_3 = "LandOwnershipPDF";
+
+    case MEMAR_OBLIGATION = "ArchitecturalCommitmentPDF";
+
+    case MOHASEB_OBLIGATION = "StructuralCalculationsCommitmentPDF";
+
+    case NAZER_OBLIGATION = "OverseeringCommitmentPDF";
+
+    case StartWorkingObligation = "StartOperationPDF";
+
+    case BUILDING_PLAN = "BuildingPlanPDF";
+
+    case TaxesBillPDF = "TaxBillPDF";
+
+    case FoundationConcreteLayingPDF = "FoundationConcreteLayingPDF";
+
+    case StructureSekeletonPDF = "StructureSekeletonPDF";
+
+    case HardeningSofteningStructurePDF = "HardeningSofteningStructurePDF";
+
+    case FinalReportPDF = "FinalReportPDF";
+
+    case BuildingDossierPDF = "BuildingDossierPDF";
+
+    case BuildingOperationProgressPDF = "BuildingOperationProgressPDF";
+
+    case WorkOverReportPDF = "WorkOverReportPDF";
+
+
+
+    public static function getName($name): string
+    {
+        return match ($name) {
+            self::BONYADE_MASKAN->value => 'نامه استعلام از بنیاد مسکن',
+            self::FORM_2->value => 'درخواست صدور پروانه',
+            self::FORM_3->value => 'کواهی مالکیت زمین',
+            self::MEMAR_OBLIGATION->value => 'فرم تعهد معمار',
+            self::MOHASEB_OBLIGATION->value => 'فرم تعهد محاسبات سازه',
+            self::NAZER_OBLIGATION->value => 'فرم تعهد نظارت',
+            self::BUILDING_PLAN->value => 'دستور تهیه نقشه',
+            self::StartWorkingObligation->value => 'اعلام شروع به کار عملیات ساختمانی',
+            self::TaxesBillPDF->value => 'صورت حساب قیض',
+            self::FoundationConcreteLayingPDF->value => 'گزارش بتن ریزی پی',
+            self::StructureSekeletonPDF->value => 'اجرای اسکلت و عملیات سازه‌ای',
+            self::HardeningSofteningStructurePDF->value => 'اجرای عملیات سفت کاری و نازک کاری',
+            self::FinalReportPDF->value => 'گزارش نهایی کار',
+            self::BuildingDossierPDF->value => 'پروانه ساختمانی',
+            self::BuildingOperationProgressPDF->value => 'گزارش پیشرفت عملیات ساختمانی',
+            self::WorkOverReportPDF->value => 'گواهی پایان کار',
+        };
+    }
+}

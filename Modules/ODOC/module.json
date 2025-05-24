@@ -1,0 +1,11 @@
+{
+    "name": "ODOC",
+    "alias": "odoc",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ODOC\\app\\Providers\\ODOCServiceProvider"
+    ],
+    "files": []
+}

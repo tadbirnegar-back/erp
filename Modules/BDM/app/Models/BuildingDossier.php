@@ -5,12 +5,15 @@ namespace Modules\BDM\app\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\BDM\Database\factories\BuildingDossierFactory;
+use Modules\ODOC\app\Http\Enums\ModuleCodeEnum;
 use Modules\StatusMS\app\Models\Status;
 
 
 class BuildingDossier extends Model
 {
     use HasFactory;
+
+    public int $code = 11;
 
     /**
      * The attributes that are mass assignable.
@@ -20,7 +23,9 @@ class BuildingDossier extends Model
 
     protected $fillable = [
         'created_date',
-        'id'
+        'id',
+        'bdm_type_id',
+        'tracking_code'
     ];
 
     public $timestamps = false;

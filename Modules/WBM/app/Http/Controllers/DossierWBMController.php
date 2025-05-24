@@ -22,7 +22,7 @@ class DossierWBMController extends Controller
         $pageNum = $data['pageNum'] ?? 1;
         $perPage = $data['perPage'] ?? 10;
         $user = Auth::user();
-        $tasks = $this->TasksOfEngineers($pageNum, $perPage, $user->person_id);
+        $tasks = $this->TasksOfEngineers($data,$pageNum, $perPage, $user->person_id);
         return response()->json($tasks);
     }
 

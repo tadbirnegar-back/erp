@@ -134,7 +134,7 @@ function convertDateTimeHaveDashJalaliPersianCharactersToGregorian(string $persi
     return $dateTimeString;
 }
 
-function convertGregorianToJalali(string $gregorianDate, bool $returnPersian = true)
+function convertGregorianToJalali(string $gregorianDate,bool $returnPersian=true)
 {
     // Convert the Gregorian date to a Jalali date
     $jalaliDate = CalendarUtils::strftime('Y/m/d', strtotime($gregorianDate));
@@ -337,4 +337,34 @@ function howManyDaysRemain($date)
 function censorMobile($number)
 {
     return str_repeat('*', strlen($number) - 4) . substr($number, -4);
+}
+
+function encrypt_json(array $data): string {
+
+    $secretKey = env('SECRET_KEY_FOR_ENCRYPT');
+    $secretIV = env('SECRET_IV');
+    $json = json_encode($data);
+    $output = openssl_encrypt(
+        $json,
+        'AES-256-CBC',
+        $secretKey,
+        0,
+        $secretIV
+    );
+    return base64_encode($output);
+}
+
+
+function decrypt_json(string $encrypted): array {
+    $secretKey = env('SECRET_KEY_FOR_ENCRYPT');
+    $secretIV = env('SECRET_IV');
+    $decoded = base64_decode($encrypted);
+    $decrypted = openssl_decrypt(
+        $decoded,
+        'AES-256-CBC',
+        $secretKey,
+        0,
+        $secretIV
+    );
+    return json_decode($decrypted, true);
 }

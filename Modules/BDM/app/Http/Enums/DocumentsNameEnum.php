@@ -13,4 +13,20 @@ enum DocumentsNameEnum: string
     case FORM_SIX = 'فرم ۶: برگ تعهد محاسبات سازه';
     case FORM_SEVEN = 'فرم ۷: برگ تعهد نظارت';
     case FORM_EIGHT = 'فرم ۸: اعلام شروع به کار عملیات ساختمانی';
+
+    case TaxesBillPDF = 'صورت حساب قبض';
+
+    case BuildingDossierPDF = 'پروانه ساختمانی';
+
+    case FoundationConcreteLayingPDF = 'گزارش بتن ریزی پی';
+
+    case HardeningSofteningStructurePDF = 'گزارش سفت کاری و نازک کاری';
+
+    case StructureSekeletonPDF = 'اجرای اسکلت و عملیات سازه‌ای';
+
+    case FinalReportPDF = 'گزارش نهایی کار';
+
+    case BuildingOperationProgressPDF = 'گزارش پیشرفت عملیات ساختمانی';
+
+    case WorkOverReportPDF = 'گواهی پایان کار';
 }

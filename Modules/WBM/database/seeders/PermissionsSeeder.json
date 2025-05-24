@@ -1,0 +1,20 @@
+[
+    {
+        "name": "ذخیره گزارشات",
+        "slug": "/wbm/items-report/store/{id}",
+        "moduleName": "WBM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست بند های گزارشات",
+        "slug": "/wbm/items-list/engineers/{id}",
+        "moduleName": "WBM",
+        "permissionTypeName": "operational"
+    },
+    {
+        "name": "لیست وظایف مهندسان",
+        "slug": "/wbm/works-for-engineers/list",
+        "moduleName": "WBM",
+        "permissionTypeName": "sidebar"
+    }
+]

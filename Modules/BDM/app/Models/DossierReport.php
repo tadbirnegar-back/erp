@@ -24,6 +24,7 @@ class DossierReport extends Model
         'description',
         'created_date',
         'creator_id',
+        'report_violation_id'
     ];
 
     public $timestamps = false;
